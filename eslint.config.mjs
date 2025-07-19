@@ -1,22 +1,17 @@
-import path from "path";
-import { fileURLToPath } from "url";
+import path from "path"
+import { fileURLToPath } from "url"
 import tsParser from "@typescript-eslint/parser"
 import typescriptEslint from "@typescript-eslint/eslint-plugin"
 import vuePlugin from "eslint-plugin-vue"
 import vueParser from "vue-eslint-parser"
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // импорт кастомного правила
 // const noConsoleLog = await import(path.resolve(__dirname, "eslint-rules/no-console-log.js")).then(m => m.default ?? m);
 
 export default [
   {
-    ignores: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.nuxt/**",
-      "**/coverage/**",
-    ]
+    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/coverage/**"]
   },
 
   // === Для TypeScript и JavaScript файлов ===
@@ -64,7 +59,6 @@ export default [
       }
     },
     rules: {
-
       // Vue
       "vue/no-unused-vars": "error",
       "vue/html-self-closing": "off",
