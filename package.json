@@ -1,0 +1,46 @@
+{
+  "name": "altera",
+  "version": "1.0.0",
+  "description": "Altera is a digital magazine and creative platform that brings together culture, art, sports, music, photography, travel, and human thought. Users can publish their own articles, essays, visual chronicles, and reviews using a modern editor based on the MDC format.",
+  "author": "Egor Bondarenko",
+  "private": false,
+  "scripts": {
+    "test": "pnpm -r test",
+    "lint": "pnpm -r exec eslint .",
+    "format": "pnpm -r exec prettier --check .",
+    "format:fix": "pnpm -r exec prettier --write ."
+  },
+  "keywords": [
+    "digital magazine",
+    "creative platform",
+    "culture",
+    "art",
+    "sports",
+    "music",
+    "photography",
+    "travel",
+    "human thought",
+    "articles",
+    "essays",
+    "visual chronicles",
+    "music reviews",
+    "sport reflections",
+    "MDC format",
+    "markdown",
+    "components",
+    "user generated content",
+    "editorial platform"
+  ],
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.4",
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
+    "eslint-plugin-vue": "^10.3.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2",
+    "vue-eslint-parser": "^10.2.0"
+  }
+}
