@@ -1,7 +1,7 @@
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 import { schema } from "./graphql/schema"
-import { createContext, GraphQLContext } from "./context"
+import { createContext, GraphQLContext } from "./prisma"
 
 const PORT = process.env.PORT || 4000
 

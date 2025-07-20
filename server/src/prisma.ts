@@ -1,6 +1,5 @@
-import { PrismaClient } from "./prisma"
+import { PrismaClient } from "./generated/prisma"
 
-// Создадим один экземпляр PrismaClient
 const prisma = new PrismaClient()
 
 export interface GraphQLContext {
