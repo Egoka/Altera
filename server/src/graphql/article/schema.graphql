@@ -1,0 +1,28 @@
+enum ArticleStatus {
+  draft
+  review
+  published
+  archived
+}
+
+type Article {
+  id: ID!
+  title: String!
+  slug: String!
+  dek: String
+  body: String!
+  excerpt: String
+  featuredImage: String
+  status: ArticleStatus!
+  publishedAt: String
+  createdAt: String!
+  updatedAt: String!
+  author: User!
+  contentType: ContentType!
+  sectionTags: [SectionTag!]!
+}
+
+extend type Query {
+  articles: [Article!]!
+  article(slug: String!): Article
+}

@@ -1,0 +1,12 @@
+<script setup lang="ts">
+  definePageMeta({
+    layout: "admin",
+    middleware: ["admin"]
+  })
+</script>
+
+<template>
+  <div>/admin/articles/:slug/edit</div>
+</template>
+
+<style scoped></style>
