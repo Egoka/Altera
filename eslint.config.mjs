@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default [
   {
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/coverage/**"]
+    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/coverage/**", "server/src/prisma/*"]
   },
 
   // === Для TypeScript и JavaScript файлов ===

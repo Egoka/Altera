@@ -1,0 +1,23 @@
+scalar JSON
+enum Role {
+  user
+  admin
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  bio: String
+  photoUrl: String
+  role: Role!
+  slug: String!
+  socialLinks: JSON
+  createdAt: String!
+  updatedAt: String!
+}
+
+extend type Query {
+  users: [User!]!
+  hello: String
+}

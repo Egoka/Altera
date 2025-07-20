@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  bio         String?
+  photoUrl    String?
+  role        Role
+  slug        String    @unique
+  socialLinks Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  articles    Article[]
+
+  @@map("users")
+}
+
+model ContentType {
+  id          String            @id @default(uuid())
+  name        String
+  slug        String            @unique
+  description String?
+  order       Int
+  status      ContentTypeStatus @default(active)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  articles    Article[]
+
+  @@map("content_types")
+}
+
+model SectionTag {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  articles    Article[] @relation("ArticleToSectionTag")
+
+  @@map("section_tags")
+}
+
+model Article {
+  id            String        @id @default(uuid())
+  title         String
+  slug          String        @unique
+  dek           String?
+  body          String
+  excerpt       String?
+  featuredImage String?
+  status        ArticleStatus @default(draft)
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  authorId      String
+  typeId        String
+  author        User          @relation(fields: [authorId], references: [id])
+  contentType   ContentType   @relation(fields: [typeId], references: [id])
+  sectionTags   SectionTag[]  @relation("ArticleToSectionTag")
+
+  @@map("articles")
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum ContentTypeStatus {
+  active
+  archived
+}
+
+enum ArticleStatus {
+  draft
+  review
+  published
+  archived
+}

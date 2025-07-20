@@ -1,0 +1,19 @@
+enum ContentTypeStatus {
+  active
+  archived
+}
+
+type ContentType {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  order: Int!
+  status: ContentTypeStatus!
+  createdAt: String!
+  updatedAt: String!
+}
+
+extend type Query {
+  contentTypes: [ContentType!]!
+}
