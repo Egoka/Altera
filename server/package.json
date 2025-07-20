@@ -5,14 +5,15 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/server.ts",
-    "build": "tsc && npm run copy-graphql && prisma generate && cp -r src/generated dist/",
+    "build": "prisma generate && prisma migrate deploy && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "start": "node dist/server.js",
     "copy-graphql": "node scripts/copy-graphql.js",
     "prisma:dev": "npx prisma studio",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:dev": "npx prisma migrate dev --name init",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
-    "prisma:seed": "ts-node seed/seed.ts"
+    "prisma:seed": "ts-node seed/seed.ts",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
