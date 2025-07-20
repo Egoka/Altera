@@ -1,4 +1,4 @@
-import { GraphQLContext } from "../../context"
+import { GraphQLContext } from "../../prisma"
 
 export default {
   Query: {
