@@ -37,7 +37,7 @@
 - Use CSS variables for theming
 
 ### API Design
-- RESTful endpoints
+- GraphQL-specific endpoints
 - Proper HTTP status codes
 - Input validation with Zod
 - Error handling with try-catch blocks
@@ -59,10 +59,71 @@
 
 ## Security
 - Input sanitization
-- Authentication and authorization
+- Authentication and authorization using Magic Link and JWT
 - Rate limiting
 - CORS configuration
 - Environment variable usage
+
+## Authentication and Authorization Strategy
+
+### Core Principle
+Access control is managed within GraphQL resolvers based on the `currentUser` object available in the GraphQL context.
+
+### User States
+1.  **Anonymous User (Guest)**
+    - Represented by `currentUser: null` in the context.
+    - **No database entry is created for guests.**
+    - Can only access public queries and mutations (e.g., reading a published article).
+
+2.  **Registered User (`reader`)**
+    - A user who has logged in via Magic Link.
+    - `currentUser` contains the user's data from the database.
+    - The default role is `reader`.
+    - Can perform actions available to all logged-in users (e.g., profile management, future features like comments/likes).
+
+3.  **Content Creator (`author`, `editor`)**
+    - A registered user with elevated privileges.
+    - Can create, edit, and manage content in addition to all reader actions.
+
+### Implementation in Resolvers
+Access control checks should be the first step in any non-public resolver.
+
+**Example 1: Public Resolver (e.g., get public article)**
+No checks are needed. The query should filter for public content.
+```typescript
+getArticleBySlug: async (_, { slug }, { prisma }) => {
+  // No auth check needed, just return public data
+  return prisma.article.findFirst({
+    where: { slug, status: 'published' },
+  });
+},
+```
+
+**Example 2: Authenticated-Only Resolver (e.g., get my profile)**
+Check for the existence of `currentUser`.
+```typescript
+getMyProfile: async (_, __, { prisma, currentUser }) => {
+  if (!currentUser) {
+    throw new Error('Authentication required. Please log in.');
+  }
+  return currentUser;
+},
+```
+
+**Example 3: Role-Based Resolver (e.g., create article)**
+Check for `currentUser` and their specific role.
+```typescript
+createArticle: async (_, { input }, { prisma, currentUser }) => {
+  if (!currentUser) {
+    throw new Error('Authentication required.');
+  }
+  if (currentUser.role !== 'author' && currentUser.role !== 'editor') {
+    throw new Error('Permission denied. You do not have rights to publish.');
+  }
+  // Proceed with creation logic
+  return prisma.article.create({ data: { ...input, authorId: currentUser.id } });
+},
+```
 
 ## Performance
 - Lazy loading for images
