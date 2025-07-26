@@ -29,14 +29,16 @@ Whether you’re writing an essay on Baroque architecture, sharing a photo trave
 
 ---
 
-## 📦 Tech Stack (planned or in-progress)
+## 📦 Tech Stack
 
-- Vue / Nuxt (frontend)
-- MDC rendering engine (custom blocks)
-- Markdown + slots / typed components
-- PostgreSQL or SQLite (content storage)
-- Supabase / Auth.js for authentication
-- Vite / Vitest / ESLint strict typing
+- **Frontend**: `Nuxt` / `Vue`, hosted on **Vercel**.
+- **Backend**: `Node.js` server with `GraphQL Yoga`, hosted on **Render**.
+- **Database**: `Neon` (Serverless PostgreSQL).
+- **ORM**: `Prisma`.
+- **API**: `GraphQL`.
+- **Authentication**: `Auth.js` (OAuth with Google, Yandex, etc.).
+- **Content**: MDC (Markdown + Components) rendering engine.
+- **Tooling**: Vite, Vitest, ESLint.
 
 ---
 
