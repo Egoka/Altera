@@ -1,6 +1,8 @@
 scalar JSON
 enum Role {
-  user
+  reader
+  author
+  editor
   admin
 }
 
