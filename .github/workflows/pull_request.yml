@@ -4,9 +4,7 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened ]
     branches:
-      - master
-      - web
-      - server
+      - app
 jobs:
   test:
     runs-on: ubuntu-latest
