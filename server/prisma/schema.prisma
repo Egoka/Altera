@@ -15,7 +15,7 @@ model User {
   email       String    @unique
   bio         String?
   photoUrl    String?
-  role        Role
+  role        Role      @default(reader)
   slug        String    @unique
   socialLinks Json?
   createdAt   DateTime  @default(now())
@@ -73,7 +73,9 @@ model Article {
 }
 
 enum Role {
-  user
+  reader
+  author
+  editor
   admin
 }
 
