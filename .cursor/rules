@@ -1,0 +1,84 @@
+# Altera Project Rules for AI Assistant
+
+## Project Overview
+- Altera is a digital magazine and creative platform
+- Frontend: Nuxt.js 3 with Vue 3 Composition API
+- Backend: Node.js with Prisma ORM
+- Content format: MDC (Markdown Components)
+- Package manager: pnpm
+- TypeScript throughout the project
+
+## Code Conventions
+
+### Vue.js Components
+- Use Composition API with `<script setup>`
+- PascalCase for component names
+- Props should be typed with TypeScript interfaces
+- Emit events with proper typing
+- Use composables for reusable logic
+
+### Nuxt.js Structure
+- Pages in `pages/` directory
+- Components in `components/` directory
+- Composables in `composables/` directory
+- API routes in `server/api/` directory
+- Middleware in `middleware/` directory
+
+### TypeScript
+- Always provide proper types
+- Use interfaces for object shapes
+- Prefer `type` for unions and intersections
+- Export types from dedicated type files
+
+### Styling
+- Use Tailwind CSS for styling
+- Follow utility-first approach
+- Create custom components for complex UI patterns
+- Use CSS variables for theming
+
+### API Design
+- RESTful endpoints
+- Proper HTTP status codes
+- Input validation with Zod
+- Error handling with try-catch blocks
+- Response formatting consistency
+
+### Database (Prisma)
+- Use descriptive model names
+- Include proper relationships
+- Add indexes for performance
+- Use migrations for schema changes
+- Include proper constraints
+
+## Content Management
+- MDC format for rich content
+- Support for articles, essays, reviews
+- Media upload and management
+- User-generated content moderation
+- SEO optimization
+
+## Security
+- Input sanitization
+- Authentication and authorization
+- Rate limiting
+- CORS configuration
+- Environment variable usage
+
+## Performance
+- Lazy loading for images
+- Code splitting
+- Caching strategies
+- Database query optimization
+- Bundle size optimization
+
+## Testing
+- Unit tests for components
+- Integration tests for API
+- E2E tests for critical flows
+- Test coverage requirements
+
+## Documentation
+- JSDoc comments for functions
+- README files for components
+- API documentation
+- Setup instructions

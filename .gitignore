@@ -88,3 +88,6 @@ docs/.vitepress/cache
 
 .idea
 .npmrc
+
+# Cursor AI settings (optional - you can commit these for team consistency)
+# .cursor/

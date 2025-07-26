@@ -1,0 +1,39 @@
+{
+  "ai": {
+    "model": "claude-3.5-sonnet",
+    "temperature": 0.1,
+    "maxTokens": 4000,
+    "contextWindow": 200000
+  },
+  "editor": {
+    "autoComplete": true,
+    "inlineSuggest": true,
+    "suggestOnTriggerCharacters": true,
+    "acceptSuggestionOnEnter": "on",
+    "tabCompletion": "on"
+  },
+  "chat": {
+    "defaultSystemPrompt": "You are an expert full-stack developer working on the Altera project - a digital magazine and creative platform. The project uses Nuxt.js for frontend, Node.js/Prisma for backend, and MDC format for content. Always provide practical, production-ready code with proper TypeScript types and Vue.js best practices.",
+    "includeContext": true,
+    "contextLines": 50,
+    "autoScroll": true
+  },
+  "codeGeneration": {
+    "includeTests": true,
+    "includeDocumentation": true,
+    "followProjectConventions": true,
+    "useTypeScript": true,
+    "preferCompositionAPI": true
+  },
+  "project": {
+    "framework": "nuxt",
+    "language": "typescript",
+    "packageManager": "pnpm",
+    "conventions": {
+      "components": "PascalCase",
+      "composables": "camelCase",
+      "pages": "kebab-case",
+      "api": "RESTful"
+    }
+  }
+}
