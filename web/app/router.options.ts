@@ -33,6 +33,12 @@ export default <RouterConfig>{
     })
   },
   routes: () => [
+    {
+      name: "start",
+      path: "/",
+      component: () => import("@/pages/index.vue"),
+      meta: { public: true }
+    },
     // === Публичные маршруты ===
     {
       name: "article-view",
