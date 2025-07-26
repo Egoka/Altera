@@ -1,0 +1,164 @@
+{
+  "Vue Component": {
+    "prefix": "vue-comp",
+    "body": [
+      "<template>",
+      "  <div class=\"${1:component-name}\">",
+      "    $2",
+      "  </div>",
+      "</template>",
+      "",
+      "<script setup lang=\"ts\">",
+      "interface Props {",
+      "  $3",
+      "}",
+      "",
+      "interface Emits {",
+      "  $4",
+      "}",
+      "",
+      "const props = defineProps<Props>()",
+      "const emit = defineEmits<Emits>()",
+      "",
+      "$5",
+      "</script>",
+      "",
+      "<style scoped>",
+      "$6",
+      "</style>"
+    ],
+    "description": "Create a Vue 3 component with TypeScript"
+  },
+  "Nuxt Page": {
+    "prefix": "nuxt-page",
+    "body": [
+      "<template>",
+      "  <div>",
+      "    <h1>${1:Page Title}</h1>",
+      "    $2",
+      "  </div>",
+      "</template>",
+      "",
+      "<script setup lang=\"ts\">",
+      "// SEO",
+      "useHead({",
+      "  title: '${1:Page Title}',",
+      "  meta: [",
+      "    { name: 'description', content: '${3:Page description}' }",
+      "  ]",
+      "})",
+      "",
+      "$4",
+      "</script>"
+    ],
+    "description": "Create a Nuxt.js page with SEO"
+  },
+  "API Route": {
+    "prefix": "api-route",
+    "body": [
+      "import { z } from 'zod'",
+      "import { PrismaClient } from '@prisma/client'",
+      "",
+      "const prisma = new PrismaClient()",
+      "",
+      "// Validation schema",
+      "const ${1:SchemaName} = z.object({",
+      "  $2",
+      "})",
+      "",
+      "export default defineEventHandler(async (event) => {",
+      "  try {",
+      "    $3",
+      "    ",
+      "    return {",
+      "      success: true,",
+      "      data: $4",
+      "    }",
+      "  } catch (error) {",
+      "    throw createError({",
+      "      statusCode: 500,",
+      "      statusMessage: 'Internal server error'",
+      "    })",
+      "  }",
+      "})"
+    ],
+    "description": "Create a Nuxt API route with validation"
+  },
+  "Composable": {
+    "prefix": "composable",
+    "body": [
+      "export const use${1:ComposableName} = () => {",
+      "  const ${2:state} = ref(${3:initialValue})",
+      "  ",
+      "  const ${4:function} = async () => {",
+      "    try {",
+      "      $5",
+      "    } catch (error) {",
+      "      console.error('Error:', error)",
+      "    }",
+      "  }",
+      "  ",
+      "  return {",
+      "    ${2:state},",
+      "    ${4:function}",
+      "  }",
+      "}"
+    ],
+    "description": "Create a Vue composable"
+  },
+  "Prisma Model": {
+    "prefix": "prisma-model",
+    "body": [
+      "model ${1:ModelName} {",
+      "  id        String   @id @default(cuid())",
+      "  createdAt DateTime @default(now())",
+      "  updatedAt DateTime @updatedAt",
+      "  ",
+      "  $2",
+      "  ",
+      "  @@map(\"${3:table_name}\")",
+      "}"
+    ],
+    "description": "Create a Prisma model"
+  },
+  "TypeScript Interface": {
+    "prefix": "ts-interface",
+    "body": [
+      "export interface ${1:InterfaceName} {",
+      "  $2",
+      "}"
+    ],
+    "description": "Create a TypeScript interface"
+  },
+  "Zod Schema": {
+    "prefix": "zod-schema",
+    "body": [
+      "import { z } from 'zod'",
+      "",
+      "export const ${1:SchemaName} = z.object({",
+      "  $2",
+      "})",
+      "",
+      "export type ${1:SchemaName}Type = z.infer<typeof ${1:SchemaName}>"
+    ],
+    "description": "Create a Zod validation schema"
+  },
+  "Test File": {
+    "prefix": "test-file",
+    "body": [
+      "import { describe, it, expect } from 'vitest'",
+      "import { mount } from '@vue/test-utils'",
+      "import ${1:ComponentName} from './${1:ComponentName}.vue'",
+      "",
+      "describe('${1:ComponentName}', () => {",
+      "  it('renders properly', () => {",
+      "    const wrapper = mount(${1:ComponentName})",
+      "    expect(wrapper.exists()).toBe(true)",
+      "  })",
+      "  ",
+      "  $2",
+      "})"
+    ],
+    "description": "Create a test file"
+  }
+}

@@ -1,0 +1,112 @@
+# Custom Prompts for Altera Project
+
+## Component Generation
+### Vue Component
+```
+Create a Vue 3 component using Composition API with <script setup> for [DESCRIPTION]. 
+Include TypeScript interfaces for props and emits. 
+Use Tailwind CSS for styling and follow the project's design system.
+```
+
+### Nuxt Page
+```
+Create a Nuxt.js page for [PAGE_NAME] with proper SEO meta tags, 
+loading states, and error handling. Include TypeScript types and follow the project structure.
+```
+
+## API Development
+### REST Endpoint
+```
+Create a REST API endpoint for [RESOURCE] with proper validation using Zod, 
+error handling, and TypeScript types. Include Prisma queries and follow REST conventions.
+```
+
+### Prisma Model
+```
+Create a Prisma model for [MODEL_NAME] with proper relationships, 
+indexes, and constraints. Include comments for documentation.
+```
+
+## Content Management
+### MDC Component
+```
+Create an MDC (Markdown Components) component for [CONTENT_TYPE] 
+that supports rich content editing and proper rendering.
+```
+
+### Article Component
+```
+Create a component for displaying articles with proper typography, 
+image handling, and responsive design using Tailwind CSS.
+```
+
+## Testing
+### Unit Test
+```
+Create unit tests for [COMPONENT/API] using Vitest and Vue Test Utils. 
+Include tests for props, events, and edge cases.
+```
+
+### Integration Test
+```
+Create integration tests for [API_ENDPOINT] using Supertest. 
+Test all HTTP methods, validation, and error scenarios.
+```
+
+## Documentation
+### Component Documentation
+```
+Create comprehensive documentation for [COMPONENT] including props, 
+events, slots, and usage examples with code snippets.
+```
+
+### API Documentation
+```
+Create API documentation for [ENDPOINT] including request/response schemas, 
+examples, and error codes.
+```
+
+## Performance Optimization
+### Component Optimization
+```
+Optimize [COMPONENT] for performance by implementing lazy loading, 
+memoization, and proper key usage in lists.
+```
+
+### Database Query
+```
+Optimize the database query for [OPERATION] by adding proper indexes, 
+using efficient Prisma queries, and implementing caching where appropriate.
+```
+
+## Security
+### Input Validation
+```
+Add comprehensive input validation for [FORM/API] using Zod schemas, 
+sanitization, and proper error messages.
+```
+
+### Authentication
+```
+Implement authentication middleware for [ROUTE] with proper JWT handling, 
+role-based access control, and security best practices.
+```
+
+## Common Patterns
+### Form Handling
+```
+Create a form component for [FORM_TYPE] with validation, 
+error handling, and proper TypeScript types using Vue 3 Composition API.
+```
+
+### Data Fetching
+```
+Create a composable for fetching [DATA_TYPE] with loading states, 
+error handling, caching, and proper TypeScript types.
+```
+
+### State Management
+```
+Implement state management for [FEATURE] using Pinia store with 
+proper TypeScript types, actions, and getters.
+```
