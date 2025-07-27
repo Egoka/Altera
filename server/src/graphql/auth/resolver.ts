@@ -54,7 +54,6 @@ export default {
       return true
     },
     verifyMagicLink: async (_: any, { token }: { token: string }, { prisma }: any) => {
-      // eslint-disable-line @typescript-eslint/no-explicit-any
       const magicLinkToken = await prisma.magicLinkToken.findUnique({
         where: { token },
         include: { user: true }
