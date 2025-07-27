@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 4000
 
 const yoga = createYoga<GraphQLContext>({
   schema,
-  context: createContext,
+  context: (initialContext) => createContext(initialContext),
   cors: {
     origin: process.env.FRONTEND_URL,
     credentials: true,

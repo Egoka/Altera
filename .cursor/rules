@@ -37,7 +37,7 @@
 - Use CSS variables for theming
 
 ### API Design
-- RESTful endpoints
+- GraphQL-specific endpoints
 - Proper HTTP status codes
 - Input validation with Zod
 - Error handling with try-catch blocks
@@ -59,10 +59,74 @@
 
 ## Security
 - Input sanitization
-- Authentication and authorization
+- Authentication and authorization using Magic Link and JWT
 - Rate limiting
 - CORS configuration
 - Environment variable usage
+
+## Authentication and Authorization Strategy
+
+### Core Principle
+Access control is managed within GraphQL resolvers based on the `currentUser` object available in the GraphQL context.
+
+### User States
+1.  **Anonymous User (Guest)**
+    - Represented by `currentUser: null` in the context.
+    - **No database entry is created for guests.**
+    - Can only access public queries and mutations (e.g., reading a published article).
+
+2.  **Registered User (`reader`)**
+    - A user who has logged in via Magic Link.
+    - `currentUser` contains the user's data from the database.
+    - The default role is `reader`.
+    - Can perform actions available to all logged-in users (e.g., profile management, future features like comments/likes).
+
+3.  **Content Creator (`author`, `editor`)**
+    - A registered user with elevated privileges.
+    - Can create, edit, and manage content in addition to all reader actions.
+
+### Implementation in Resolvers
+Access control is managed via guard functions. **All non-public resolvers MUST call an appropriate guard function as their first line of code.**
+
+#### Guard Function Location and Convention
+- **Location**: All permission-related guard functions must be placed in the `server/src/exceptions/` directory.
+- **Error Handling**: These functions must throw `GraphQLError` to ensure client-friendly error messages are returned.
+
+#### Usage Examples
+
+**Example 1: Public Resolver (e.g., get public article)**
+No checks are needed. The query should filter for public content.
+```typescript
+getArticleBySlug: async (_, { slug }, { prisma }) => {
+  // No auth check needed, just return public data
+  return prisma.article.findFirst({
+    where: { slug, status: 'published' },
+  });
+},
+```
+
+**Example 2: Authenticated-Only Resolver (e.g., get my profile)**
+Use `ensureAuthenticated` to protect the route.
+```typescript
+import { ensureAuthenticated } from '../../exceptions/permissions';
+
+getMyProfile: async (_, __, { prisma, currentUser }) => {
+  ensureAuthenticated(currentUser);
+  return currentUser;
+},
+```
+
+**Example 3: Role-Based Resolver (e.g., create article)**
+Use `ensureHasRole` for fine-grained access control.
+```typescript
+import { ensureHasRole } from '../../exceptions/permissions';
+
+createArticle: async (_, { input }, { prisma, currentUser }) => {
+  ensureHasRole(currentUser, ['author', 'editor']);
+  // Proceed with creation logic
+  return prisma.article.create({ data: { ...input, authorId: currentUser.id } });
+},
+```
 
 ## Performance
 - Lazy loading for images
@@ -82,3 +146,14 @@
 - README files for components
 - API documentation
 - Setup instructions
+
+## Форматирование кода (Prettier)
+Проект использует Prettier для автоматического форматирования кода. Конфигурация хранится в файле `.prettierrc`. Придерживайтесь следующих основных правил:
+
+- **Отступы**: Используйте 2 пробела для отступов (`"tabWidth": 2`, `"useTabs": false`).
+- **Точки с запятой**: Не используйте точки с запятой в конце выражений (`"semi": false`).
+- **Висячие запятые**: Не используйте висячие запятые (`"trailingComma": "none"`).
+- **Длина строки**: Максимальная длина строки - 120 символов (`"printWidth": 120`).
+- **Стрелочные функции**: Всегда используйте скобки для аргументов стрелочных функций (`"arrowParens": "always"`).
+- **Скобки в HTML/Vue**: Размещайте закрывающую скобку многострочного тега на той же строке (`"bracketSameLine": true`).
+- **Отступы в Vue**: Блоки `<script>` и `<style>` в `.vue` файлах имеют отступ (`"vueIndentScriptAndStyle": true`).

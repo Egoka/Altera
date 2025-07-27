@@ -21,8 +21,22 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   articles    Article[]
+  magicLink   MagicLinkToken?
 
   @@map("users")
+}
+
+model MagicLinkToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@map("magic_link_tokens")
 }
 
 model ContentType {

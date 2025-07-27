@@ -36,7 +36,7 @@ Whether you’re writing an essay on Baroque architecture, sharing a photo trave
 - **Database**: `Neon` (Serverless PostgreSQL).
 - **ORM**: `Prisma`.
 - **API**: `GraphQL`.
-- **Authentication**: `Auth.js` (OAuth with Google, Yandex, etc.).
+- **Authentication**: Magic Link (passwordless email-based login) with JWT.
 - **Content**: MDC (Markdown + Components) rendering engine.
 - **Tooling**: Vite, Vitest, ESLint.
 

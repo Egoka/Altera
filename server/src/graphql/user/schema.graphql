@@ -19,7 +19,8 @@ type User {
   updatedAt: String!
 }
 
-extend type Query {
-  users: [User!]!
-  hello: String
+type Query {
+  user(slug: String!): User
+  users: [User!]
+  me: User
 }
