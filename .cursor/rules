@@ -86,7 +86,13 @@ Access control is managed within GraphQL resolvers based on the `currentUser` ob
     - Can create, edit, and manage content in addition to all reader actions.
 
 ### Implementation in Resolvers
-Access control checks should be the first step in any non-public resolver.
+Access control is managed via guard functions. **All non-public resolvers MUST call an appropriate guard function as their first line of code.**
+
+#### Guard Function Location and Convention
+- **Location**: All permission-related guard functions must be placed in the `server/src/exceptions/` directory.
+- **Error Handling**: These functions must throw `GraphQLError` to ensure client-friendly error messages are returned.
+
+#### Usage Examples
 
 **Example 1: Public Resolver (e.g., get public article)**
 No checks are needed. The query should filter for public content.
@@ -100,26 +106,23 @@ getArticleBySlug: async (_, { slug }, { prisma }) => {
 ```
 
 **Example 2: Authenticated-Only Resolver (e.g., get my profile)**
-Check for the existence of `currentUser`.
+Use `ensureAuthenticated` to protect the route.
 ```typescript
+import { ensureAuthenticated } from '../../exceptions/permissions';
+
 getMyProfile: async (_, __, { prisma, currentUser }) => {
-  if (!currentUser) {
-    throw new Error('Authentication required. Please log in.');
-  }
+  ensureAuthenticated(currentUser);
   return currentUser;
 },
 ```
 
 **Example 3: Role-Based Resolver (e.g., create article)**
-Check for `currentUser` and their specific role.
+Use `ensureHasRole` for fine-grained access control.
 ```typescript
+import { ensureHasRole } from '../../exceptions/permissions';
+
 createArticle: async (_, { input }, { prisma, currentUser }) => {
-  if (!currentUser) {
-    throw new Error('Authentication required.');
-  }
-  if (currentUser.role !== 'author' && currentUser.role !== 'editor') {
-    throw new Error('Permission denied. You do not have rights to publish.');
-  }
+  ensureHasRole(currentUser, ['author', 'editor']);
   // Proceed with creation logic
   return prisma.article.create({ data: { ...input, authorId: currentUser.id } });
 },
