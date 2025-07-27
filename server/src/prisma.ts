@@ -2,8 +2,10 @@ import { PrismaClient, User } from "./generated/prisma"
 import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 
-// TODO: Move to environment variables
-const JWT_ACCESS_SECRET = "your-super-secret-access-key"
+if (!process.env.JWT_ACCESS_SECRET) {
+  throw new Error("JWT_ACCESS_SECRET must be defined in environment variables.")
+}
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
 
 const prisma = new PrismaClient()
 
@@ -25,8 +27,11 @@ export async function createContext(initialContext: YogaInitialContext): Promise
           where: { id: decoded.userId }
         })
       }
-    } catch (error) {
-      console.error("JWT verification error:", error)
+    } catch (error: any) {
+      // We only want to log unexpected errors, not expected ones like token expiration.
+      if (error.name !== "TokenExpiredError") {
+        console.error("JWT verification error:", error)
+      }
       currentUser = null // Ensure user is null if token is invalid
     }
   }

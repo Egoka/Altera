@@ -1,4 +1,5 @@
 import { GraphQLContext } from "../../prisma"
+import { GraphQLError } from "graphql"
 
 export default {
   Query: {
@@ -6,7 +7,7 @@ export default {
 
     me: async (_parent: any, _args: any, ctx: GraphQLContext) => {
       if (!ctx.currentUser) {
-        throw new Error("Authentication required.")
+        throw new GraphQLError("Authentication required.")
       }
       return ctx.currentUser
     }

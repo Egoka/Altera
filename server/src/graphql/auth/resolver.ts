@@ -1,10 +1,14 @@
 import { addMinutes } from "date-fns"
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
+import { GraphQLError } from "graphql"
 
-// TODO: Move to environment variables
-const JWT_ACCESS_SECRET = "your-super-secret-access-key"
-const JWT_REFRESH_SECRET = "your-super-secret-refresh-key"
+if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
+  throw new Error("JWT secrets must be defined in environment variables.")
+}
+
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
 
 export default {
   Mutation: {
@@ -26,10 +30,16 @@ export default {
       }
 
       const token = crypto.randomBytes(32).toString("hex")
-      const expiresAt = addMinutes(new Date(), 15) // Token expires in 15 minutes
+      const expiresAt = addMinutes(new Date(), 15)
 
-      await prisma.magicLinkToken.create({
-        data: {
+      await prisma.magicLinkToken.upsert({
+        where: { userId: targetUser.id },
+        update: {
+          token,
+          expiresAt,
+          usedAt: null // Ensure the token is marked as not used on update
+        },
+        create: {
           token,
           userId: targetUser.id,
           expiresAt
@@ -44,21 +54,22 @@ export default {
       return true
     },
     verifyMagicLink: async (_: any, { token }: { token: string }, { prisma }: any) => {
+      // eslint-disable-line @typescript-eslint/no-explicit-any
       const magicLinkToken = await prisma.magicLinkToken.findUnique({
         where: { token },
         include: { user: true }
       })
 
       if (!magicLinkToken) {
-        throw new Error("Invalid or expired magic link.")
+        throw new GraphQLError("Invalid or expired magic link.")
       }
 
       if (magicLinkToken.usedAt) {
-        throw new Error("This magic link has already been used.")
+        throw new GraphQLError("This magic link has already been used.")
       }
 
       if (new Date() > magicLinkToken.expiresAt) {
-        throw new Error("This magic link has expired.")
+        throw new GraphQLError("This magic link has expired.")
       }
 
       // Mark the token as used

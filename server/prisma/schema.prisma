@@ -21,7 +21,7 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   articles    Article[]
-  magicLinks  MagicLinkToken[]
+  magicLink   MagicLinkToken?
 
   @@map("users")
 }
@@ -29,7 +29,7 @@ model User {
 model MagicLinkToken {
   id        String   @id @default(cuid())
   token     String   @unique
-  userId    String
+  userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
