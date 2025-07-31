@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "prisma generate && prisma migrate deploy && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
+    "build:ci": "prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "start": "node dist/server.js",
     "copy-graphql": "node scripts/copy-graphql.js",
     "prisma:dev": "npx prisma studio",

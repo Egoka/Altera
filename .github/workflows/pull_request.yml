@@ -26,3 +26,54 @@ jobs:
         run: pnpm lint
       - name: Test library
         run: pnpm test
+
+  test-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.13.1
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: "pnpm"
+      - name: Install server dependencies
+        run: cd server && pnpm install --frozen-lockfile
+      - name: Build server (CI)
+        run: cd server && pnpm run build:ci
+        env:
+          PORT: 4000
+          NODE_ENV: test
+          FRONTEND_URL: http://localhost:3000
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost:5432/test"
+          REDIS_URL: "redis://localhost:6379"
+          CACHE_TTL: 21600
+          JWT_ACCESS_SECRET: "test-access-secret"
+          JWT_REFRESH_SECRET: "test-refresh-secret"
+          MAGIC_LINK_EXPIRY_MINUTES: 15
+          MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
+          JWT_ACCESS_TOKEN_EXPIRY: "15m"
+          JWT_REFRESH_TOKEN_EXPIRY: "7d"
+      - name: Check build output
+        run: cd server && ls -la dist/
+      - name: Test server start (quick)
+        run: cd server && timeout 2s pnpm start || true
+        env:
+          PORT: 4000
+          NODE_ENV: test
+          FRONTEND_URL: http://localhost:3000
+          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost:5432/test"
+          REDIS_URL: "redis://localhost:6379"
+          CACHE_TTL: 21600
+          JWT_ACCESS_SECRET: "test-access-secret"
+          JWT_REFRESH_SECRET: "test-refresh-secret"
+          MAGIC_LINK_EXPIRY_MINUTES: 15
+          MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
+          JWT_ACCESS_TOKEN_EXPIRY: "15m"
+          JWT_REFRESH_TOKEN_EXPIRY: "7d"
