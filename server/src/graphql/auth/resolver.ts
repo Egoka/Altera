@@ -83,11 +83,11 @@ export default {
 
       const user = magicLinkToken.user
 
-      const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_ACCESS_SECRET, {
+      const accessToken = (jwt as any).sign({ userId: user.id, role: user.role }, JWT_ACCESS_SECRET, {
         expiresIn: JWT_ACCESS_TOKEN_EXPIRY
       })
 
-      const refreshToken = jwt.sign({ userId: user.id }, JWT_REFRESH_SECRET, {
+      const refreshToken = (jwt as any).sign({ userId: user.id }, JWT_REFRESH_SECRET, {
         expiresIn: JWT_REFRESH_TOKEN_EXPIRY
       })
 

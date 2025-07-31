@@ -9,7 +9,3 @@ node_modules
 .nuxt
 .output
 pnpm-lock.yaml
-dist/
-**/dist/
-dist/**
-**/dist/**
