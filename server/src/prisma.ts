@@ -1,6 +1,8 @@
 import { PrismaClient, User } from "./generated/prisma"
 import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
+import { Redis } from "ioredis"
+import { redis } from "./redis"
 
 if (!process.env.JWT_ACCESS_SECRET) {
   throw new Error("JWT_ACCESS_SECRET must be defined in environment variables.")
@@ -12,6 +14,7 @@ const prisma = new PrismaClient()
 export interface GraphQLContext {
   prisma: PrismaClient
   currentUser: User | null
+  redis: Redis
 }
 
 export async function createContext(initialContext: YogaInitialContext): Promise<GraphQLContext> {
@@ -36,5 +39,5 @@ export async function createContext(initialContext: YogaInitialContext): Promise
     }
   }
 
-  return { prisma, currentUser }
+  return { prisma, currentUser, redis }
 }

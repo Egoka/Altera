@@ -22,7 +22,75 @@ type Article {
   sectionTags: [SectionTag!]!
 }
 
+type ArticleDetail {
+  article: Article!
+  recommendedArticles: [Article!]!
+  relatedArticles: [Article!]!
+  articleStats: ArticleStats
+}
+
+type ArticleStats {
+  readTime: Int! # В минутах
+  wordCount: Int!
+  viewCount: Int # В будущем
+  shareCount: Int # В будущем
+}
+
+type RelatedArticlesResponse {
+  articles: [Article!]!
+  totalCount: Int!
+}
+
 extend type Query {
   articles: [Article!]!
   article(slug: String!): Article
+
+  # Комплексный запрос для страницы статьи
+  articleDetail(slug: String!): ArticleDetail
+
+  # Отдельные запросы для страницы статьи
+  recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
+  relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
+  articleStats(slug: String!): ArticleStats
+
+  # Запросы для главной страницы
+  featuredArticles(limit: Int = 5): [Article!]!
+  latestArticles(limit: Int = 20, excludeFeatured: Boolean = false): [Article!]!
+  popularArticles(timeRange: String = "week", limit: Int = 10): [Article!]!
+}
+
+# Типы для мутаций
+input CreateArticleInput {
+  title: String!
+  body: String!
+  slug: String!
+  dek: String
+  excerpt: String
+  featuredImage: String
+  typeId: ID!
+  sectionTags: [ID!]
+}
+
+input UpdateArticleInput {
+  title: String
+  body: String
+  slug: String
+  dek: String
+  excerpt: String
+  featuredImage: String
+  typeId: ID
+  sectionTags: [ID!]
+}
+
+extend type Mutation {
+  createArticle(input: CreateArticleInput!): Article!
+  updateArticle(id: ID!, input: UpdateArticleInput!): Article!
+
+  # Мутации для смены статуса
+  archiveArticle(id: ID!): Article!
+  requestReview(id: ID!): Article!
+  revertToDraft(id: ID!): Article!
+
+  # Только для администраторов
+  setArticleStatus(id: ID!, status: ArticleStatus!): Article!
 }

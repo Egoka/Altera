@@ -5,8 +5,29 @@ type SectionTag {
   description: String
   createdAt: String!
   updatedAt: String!
+  # Связь со статьями
+  articles: [Article!]
+}
+
+type TagStats {
+  totalArticles: Int!
+  articlesThisMonth: Int!
+  averageReadTime: Float
+  popularAuthors: [User!]
+}
+
+type ArticlesByTagResponse {
+  articles: [Article!]!
+  totalCount: Int!
+  totalPages: Int!
+  currentPage: Int!
 }
 
 extend type Query {
   sectionTags: [SectionTag!]!
+
+  # Запросы для страницы тега
+  tag(slug: String!): SectionTag
+  articlesByTag(tagSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByTagResponse!
+  tagStats(tagSlug: String!): TagStats
 }

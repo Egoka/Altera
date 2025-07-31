@@ -157,3 +157,45 @@ createArticle: async (_, { input }, { prisma, currentUser }) => {
 - **Стрелочные функции**: Всегда используйте скобки для аргументов стрелочных функций (`"arrowParens": "always"`).
 - **Скобки в HTML/Vue**: Размещайте закрывающую скобку многострочного тега на той же строке (`"bracketSameLine": true`).
 - **Отступы в Vue**: Блоки `<script>` и `<style>` в `.vue` файлах имеют отступ (`"vueIndentScriptAndStyle": true`).
+
+## Article Workflow and Permissions
+
+The project enforces a strict workflow for article management to ensure content quality and security.
+
+- **Creation**: Users can create articles, which always start with a `draft` status. The `status` field cannot be set directly via the `createArticle` mutation.
+- **Ownership**: Users can only edit, archive, or manage the status of their **own** articles.
+- **Status Changes (User)**:
+    - A user can submit their article for review (`draft` -> `review`) via `requestReview`.
+    - A user can revert an article from review back to a draft (`review` -> `draft`) via `revertToDraft`.
+    - A user archives their own article (`*` -> `archived`) via `archiveArticle`. This is a soft delete.
+- **Status Changes (Admin)**:
+    - An `admin` can set any status on any article using the `setArticleStatus` mutation. This is used for publishing, un-archiving, etc.
+- **Deletion**: True deletion is an admin-only action, handled by a separate, dedicated mutation.
+
+This ensures a clear separation of concerns and prevents users from bypassing the editorial workflow.
+
+## Caching Strategy (Redis)
+
+To enhance performance and reduce database load, the project utilizes Redis for caching frequently accessed data.
+
+### Core Principles
+1.  **Default Cache Duration (TTL):** All cached entities should have a Time-To-Live (TTL) of **2 minutes (120 seconds)**. This provides a good balance between performance and data freshness for most use cases.
+
+2.  **Cache Invalidation Strategy:** A **Write-Around Caching** approach is mandatory.
+    - **On Update/Delete:** Whenever a mutation (e.g., `updateUser`, `deleteArticle`) modifies or deletes an entity, the corresponding cache key for that entity **MUST** be invalidated (deleted) from Redis. This ensures that subsequent requests will fetch the fresh data from the database.
+    - **On Create:** When a new entity is created, there's no need to cache it immediately. The cache will be populated on the first read request for that entity.
+
+### Implementation in Resolvers
+
+**Reading Data (Queries):**
+1.  Generate a unique cache key for the requested entity (e.g., `user:123`, `article:some-slug`).
+2.  Attempt to fetch the data from Redis using the cache key.
+3.  **Cache Hit:** If data is found in Redis, parse it and return it directly.
+4.  **Cache Miss:** If data is not in Redis, fetch it from the primary database (PostgreSQL).
+5.  After fetching from the database, store the result in Redis using the cache key and the standard TTL of 120 seconds.
+6.  Return the data to the client.
+
+**Writing Data (Mutations):**
+1.  Perform the create, update, or delete operation in the database.
+2.  Generate the cache key for the entity that was just modified.
+3.  Use the `redis.del(cacheKey)` command to remove the outdated entry from the cache.

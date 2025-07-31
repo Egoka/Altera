@@ -1,0 +1,260 @@
+# Комплексный запрос для получения всей информации для страницы статьи
+# (Рекомендуемый способ)
+query GetArticlePage($slug: String!) {
+  # 1. Полная информация о статье
+  article(slug: $slug) {
+    id
+    title
+    slug
+    dek
+    body
+    excerpt
+    featuredImage
+    status
+    publishedAt
+    createdAt
+    updatedAt
+    author {
+      id
+      name
+      slug
+      bio
+      photoUrl
+      socialLinks
+    }
+    contentType {
+      id
+      name
+      slug
+      description
+    }
+    sectionTags {
+      id
+      name
+      slug
+      description
+    }
+  }
+
+  # 2. Рекомендуемые статьи (похожие по тегам)
+  recommendedArticles(articleSlug: $slug, limit: 5) {
+    id
+    title
+    slug
+    excerpt
+    featuredImage
+    publishedAt
+    author {
+      name
+      slug
+      photoUrl
+    }
+    contentType {
+      name
+      slug
+    }
+    sectionTags {
+      name
+      slug
+    }
+  }
+
+  # 3. Связанные статьи (по автору и типу контента)
+  relatedArticles(articleSlug: $slug, limit: 10) {
+    id
+    title
+    slug
+    excerpt
+    publishedAt
+    author {
+      name
+      slug
+    }
+    contentType {
+      name
+      slug
+    }
+  }
+
+  # 4. Статистика статьи
+  articleStats(slug: $slug) {
+    readTime
+    wordCount
+    viewCount
+    shareCount
+  }
+}
+
+# --- Отдельные запросы ---
+
+# Запрос только информации о статье
+query GetArticleInfo($slug: String!) {
+  article(slug: $slug) {
+    id
+    title
+    slug
+    dek
+    body
+    excerpt
+    featuredImage
+    status
+    publishedAt
+    createdAt
+    updatedAt
+    author {
+      id
+      name
+      slug
+      bio
+      photoUrl
+      socialLinks
+    }
+    contentType {
+      id
+      name
+      slug
+      description
+    }
+    sectionTags {
+      id
+      name
+      slug
+      description
+    }
+  }
+}
+
+# Запрос только рекомендуемых статей
+query GetRecommendedArticles($slug: String!, $limit: Int = 5) {
+  recommendedArticles(articleSlug: $slug, limit: $limit) {
+    id
+    title
+    slug
+    excerpt
+    featuredImage
+    publishedAt
+    author {
+      name
+      slug
+      photoUrl
+    }
+    contentType {
+      name
+      slug
+    }
+    sectionTags {
+      name
+      slug
+    }
+  }
+}
+
+# Запрос только связанных статей
+query GetRelatedArticles($slug: String!, $limit: Int = 10) {
+  relatedArticles(articleSlug: $slug, limit: $limit) {
+    id
+    title
+    slug
+    excerpt
+    publishedAt
+    author {
+      name
+      slug
+    }
+    contentType {
+      name
+      slug
+    }
+  }
+}
+
+# Запрос только статистики статьи
+query GetArticleStats($slug: String!) {
+  articleStats(slug: $slug) {
+    readTime
+    wordCount
+    viewCount
+    shareCount
+  }
+}
+
+# Комплексный запрос articleDetail (альтернативный способ)
+query GetArticleDetail($slug: String!) {
+  articleDetail(slug: $slug) {
+    article {
+      id
+      title
+      slug
+      dek
+      body
+      excerpt
+      featuredImage
+      status
+      publishedAt
+      createdAt
+      updatedAt
+      author {
+        id
+        name
+        slug
+        bio
+        photoUrl
+        socialLinks
+      }
+      contentType {
+        id
+        name
+        slug
+        description
+      }
+      sectionTags {
+        id
+        name
+        slug
+        description
+      }
+    }
+    recommendedArticles {
+      id
+      title
+      slug
+      excerpt
+      featuredImage
+      publishedAt
+      author {
+        name
+        slug
+        photoUrl
+      }
+      contentType {
+        name
+        slug
+      }
+      sectionTags {
+        name
+        slug
+      }
+    }
+    relatedArticles {
+      id
+      title
+      slug
+      excerpt
+      publishedAt
+      author {
+        name
+        slug
+      }
+      contentType {
+        name
+        slug
+      }
+    }
+    articleStats {
+      readTime
+      wordCount
+      viewCount
+      shareCount
+    }
+  }
+} 
