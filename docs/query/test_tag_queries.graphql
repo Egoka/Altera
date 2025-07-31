@@ -1,0 +1,102 @@
+# Комплексный запрос для получения всей информации для страницы тега
+# (Рекомендуемый способ)
+query GetTagPage($slug: String!, $page: Int = 1, $limit: Int = 10) {
+  # 1. Публичная информация о теге
+  tag(slug: $slug) {
+    id
+    name
+    slug
+    description
+    createdAt
+  }
+
+  # 2. Список статей с этим тегом с пагинацией
+  articlesByTag(tagSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      id
+      title
+      slug
+      excerpt
+      featuredImage
+      publishedAt
+      author {
+        name
+        slug
+        photoUrl
+      }
+      contentType {
+        name
+        slug
+      }
+      sectionTags {
+        name
+        slug
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+  }
+
+  # 3. Статистика тега
+  tagStats(tagSlug: $slug) {
+    totalArticles
+    articlesThisMonth
+    averageReadTime
+    popularAuthors {
+      id
+      name
+      slug
+      photoUrl
+    }
+  }
+}
+
+# --- Отдельные запросы ---
+
+# Запрос только информации о теге
+query GetTagInfo($slug: String!) {
+  tag(slug: $slug) {
+    id
+    name
+    slug
+    description
+    createdAt
+    updatedAt
+  }
+}
+
+# Запрос только статей с тегом с пагинацией
+query GetTagArticles($slug: String!, $page: Int, $limit: Int) {
+  articlesByTag(tagSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      id
+      title
+      slug
+      excerpt
+      publishedAt
+      author {
+        name
+        slug
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+  }
+}
+
+# Запрос только статистики тега
+query GetTagStats($slug: String!) {
+  tagStats(tagSlug: $slug) {
+    totalArticles
+    articlesThisMonth
+    averageReadTime
+    popularAuthors {
+      id
+      name
+      slug
+      photoUrl
+    }
+  }
+} 

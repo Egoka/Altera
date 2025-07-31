@@ -12,8 +12,30 @@ type ContentType {
   status: ContentTypeStatus!
   createdAt: String!
   updatedAt: String!
+  # Связь со статьями
+  articles: [Article!]
+}
+
+type ContentTypeStats {
+  totalArticles: Int!
+  articlesThisMonth: Int!
+  averageReadTime: Float
+  popularTags: [SectionTag!]
+  topAuthors: [User!]
+}
+
+type ArticlesByContentTypeResponse {
+  articles: [Article!]!
+  totalCount: Int!
+  totalPages: Int!
+  currentPage: Int!
 }
 
 extend type Query {
   contentTypes: [ContentType!]!
+
+  # Запросы для страницы типа контента
+  contentType(slug: String!): ContentType
+  articlesByContentType(contentTypeSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByContentTypeResponse!
+  contentTypeStats(contentTypeSlug: String!): ContentTypeStats
 }

@@ -1,0 +1,81 @@
+# Комплексный запрос для получения всей информации для страницы автора
+# (Рекомендуемый способ)
+query GetAuthorPage($slug: String!, $page: Int = 1, $limit: Int = 10) {
+  # 1. Публичная информация об авторе
+  author(slug: $slug) {
+    id
+    name
+    bio
+    photoUrl
+    socialLinks
+  }
+
+  # 2. Список опубликованных статей автора с пагинацией
+  articlesByAuthor(authorSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      id
+      title
+      slug
+      excerpt
+      featuredImage
+      publishedAt
+      contentType {
+        name
+        slug
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+  }
+
+  # 3. Статистика автора
+  authorStats(authorSlug: $slug) {
+    totalArticles
+    articlesThisMonth
+    popularTags {
+      name
+      slug
+    }
+  }
+}
+
+# --- Отдельные запросы ---
+
+# Запрос только информации об авторе
+query GetAuthorInfo($slug: String!) {
+  author(slug: $slug) {
+    id
+    name
+    bio
+    photoUrl
+    socialLinks
+    createdAt
+  }
+}
+
+# Запрос только статей автора с пагинацией
+query GetAuthorArticles($slug: String!, $page: Int, $limit: Int) {
+  articlesByAuthor(authorSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      id
+      title
+      slug
+      publishedAt
+    }
+    totalPages
+    currentPage
+  }
+}
+
+# Запрос только статистики автора
+query GetAuthorStats($slug: String!) {
+    authorStats(authorSlug: $slug) {
+        totalArticles
+        articlesThisMonth
+        popularTags {
+            name
+            slug
+        }
+    }
+}

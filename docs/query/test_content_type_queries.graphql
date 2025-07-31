@@ -1,0 +1,114 @@
+# Комплексный запрос для получения всей информации для страницы типа контента
+# (Рекомендуемый способ)
+query GetContentTypePage($slug: String!, $page: Int = 1, $limit: Int = 10) {
+  # 1. Публичная информация о типе контента
+  contentType(slug: $slug) {
+    id
+    name
+    slug
+    description
+    order
+    status
+    createdAt
+  }
+
+  # 2. Список статей этого типа с пагинацией
+  articlesByContentType(contentTypeSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      id
+      title
+      slug
+      excerpt
+      featuredImage
+      publishedAt
+      author {
+        name
+        slug
+        photoUrl
+      }
+      contentType {
+        name
+        slug
+      }
+      sectionTags {
+        name
+        slug
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+  }
+
+  # 3. Статистика типа контента
+  contentTypeStats(contentTypeSlug: $slug) {
+    totalArticles
+    articlesThisMonth
+    averageReadTime
+    popularTags {
+      name
+      slug
+    }
+    topAuthors {
+      id
+      name
+      slug
+      photoUrl
+    }
+  }
+}
+
+# --- Отдельные запросы ---
+
+# Запрос только информации о типе контента
+query GetContentTypeInfo($slug: String!) {
+  contentType(slug: $slug) {
+    id
+    name
+    slug
+    description
+    order
+    status
+    createdAt
+    updatedAt
+  }
+}
+
+# Запрос только статей типа контента с пагинацией
+query GetContentTypeArticles($slug: String!, $page: Int, $limit: Int) {
+  articlesByContentType(contentTypeSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      id
+      title
+      slug
+      excerpt
+      publishedAt
+      author {
+        name
+        slug
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+  }
+}
+
+# Запрос только статистики типа контента
+query GetContentTypeStats($slug: String!) {
+  contentTypeStats(contentTypeSlug: $slug) {
+    totalArticles
+    articlesThisMonth
+    averageReadTime
+    popularTags {
+      name
+      slug
+    }
+    topAuthors {
+      id
+      name
+      slug
+      photoUrl
+    }
+  }
+} 

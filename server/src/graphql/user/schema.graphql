@@ -17,10 +17,38 @@ type User {
   socialLinks: JSON
   createdAt: String!
   updatedAt: String!
+  # Для страницы автора
+  articles: [Article!]
 }
 
-type Query {
-  user(slug: String!): User
+type ArticleStats {
+  total: Int!
+  published: Int!
+  draft: Int!
+  review: Int!
+  archived: Int!
+}
+
+type AuthorStats {
+  totalArticles: Int!
+  articlesThisMonth: Int!
+  popularTags: [SectionTag!]
+}
+
+type ArticlesByAuthorResponse {
+  articles: [Article!]!
+  totalCount: Int!
+  totalPages: Int!
+  currentPage: Int!
+}
+
+extend type Query {
   users: [User!]
   me: User
+  myArticlesStats: ArticleStats
+
+  # Запросы для страницы автора
+  author(slug: String!): User
+  articlesByAuthor(authorSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByAuthorResponse!
+  authorStats(authorSlug: String!): AuthorStats
 }

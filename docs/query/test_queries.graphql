@@ -1,0 +1,170 @@
+# Тестовые GraphQL запросы для проверки кэширования
+
+# Запрос для главной страницы (соответствует GET_HOME_PAGE_ARTICLES)
+query getHomePageArticles {
+  featuredArticles(limit: 5) {
+    id
+    title
+    slug
+    dek
+    excerpt
+    featuredImage
+    publishedAt
+    author {
+      name
+      slug
+      photoUrl
+    }
+    contentType {
+      name
+      slug
+    }
+  }
+  
+  latestArticles(limit: 20, excludeFeatured: true) {
+    id
+    title
+    slug
+    dek
+    excerpt
+    featuredImage
+    publishedAt
+    author {
+      name
+      slug
+    }
+    contentType {
+      name
+      slug
+    }
+    sectionTags {
+      name
+      slug
+    }
+  }
+  
+  popularArticles(timeRange: "week", limit: 10) {
+    id
+    title
+    slug
+    author {
+      name
+      slug
+    }
+  }
+}
+
+# Запрос профиля (соответствует GET_MY_PROFILE)
+query getMyProfile {
+  me {
+    id
+    name
+    email
+    bio
+    photoUrl
+    role
+    slug
+    socialLinks
+    createdAt
+  }
+  
+  myArticlesStats {
+    total
+    published
+    draft
+    review
+    archived
+  }
+}
+
+# Тестовый запрос отдельной статьи
+query getArticle($slug: String!) {
+  article(slug: $slug) {
+    id
+    title
+    slug
+    dek
+    body
+    excerpt
+    featuredImage
+    status
+    publishedAt
+    createdAt
+    updatedAt
+    author {
+      id
+      name
+      slug
+      bio
+      photoUrl
+    }
+    contentType {
+      name
+      slug
+    }
+    sectionTags {
+      name
+      slug
+    }
+  }
+}
+
+# === Простые запросы для тестирования (без переменных) ===
+
+# Запрос конкретной статьи без переменных
+query getFirstArticle {
+  article(slug: "first-published-article") {
+    id
+    title
+    slug
+    dek
+    excerpt
+    status
+    publishedAt
+    author {
+      name
+      slug
+    }
+    contentType {
+      name
+      slug
+    }
+    sectionTags {
+      name
+      slug
+    }
+  }
+}
+
+# Запрос популярной статьи
+query getPopularArticle {
+  article(slug: "third-popular-article") {
+    id
+    title
+    slug
+    dek
+    body
+    featuredImage
+    status
+    publishedAt
+    author {
+      name
+      slug
+    }
+  }
+}
+
+# Запрос всех статей (для отладки)
+query getAllArticles {
+  articles {
+    id
+    title
+    slug
+    status
+    publishedAt
+    author {
+      name
+      slug
+    }
+  }
+} 

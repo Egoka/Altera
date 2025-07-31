@@ -6,10 +6,13 @@ import { User, Role } from "../generated/prisma"
  * Throws a GraphQLError if the user is not logged in.
  * @param currentUser - The user object from the GraphQL context.
  */
-export function ensureAuthenticated(currentUser: User | null): void {
+export function ensureAuthenticated(currentUser: User | null): User {
   if (!currentUser) {
-    throw new GraphQLError("Authentication required. Please log in.")
+    throw new GraphQLError("Authentication required. Please log in.", {
+      extensions: { code: "UNAUTHENTICATED" }
+    })
   }
+  return currentUser
 }
 
 /**

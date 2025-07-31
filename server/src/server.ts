@@ -1,3 +1,4 @@
+import "dotenv/config"
 import { createServer } from "node:http"
 import { createYoga } from "graphql-yoga"
 import { useCSRFPrevention } from "@graphql-yoga/plugin-csrf-prevention"

@@ -9,6 +9,10 @@ if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
+const JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || "15m"
+const JWT_REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_TOKEN_EXPIRY || "7d"
+const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
+const MAGIC_LINK_BASE_URL = process.env.MAGIC_LINK_BASE_URL || "http://localhost:3000/auth/verify"
 
 export default {
   Mutation: {
@@ -30,7 +34,7 @@ export default {
       }
 
       const token = crypto.randomBytes(32).toString("hex")
-      const expiresAt = addMinutes(new Date(), 15)
+      const expiresAt = addMinutes(new Date(), MAGIC_LINK_EXPIRY_MINUTES)
 
       await prisma.magicLinkToken.upsert({
         where: { userId: targetUser.id },
@@ -48,7 +52,7 @@ export default {
 
       // In a real app, you'd send an email here.
       // For now, we'll log the link to the console.
-      const magicLink = `http://localhost:3000/auth/verify?token=${token}`
+      const magicLink = `${MAGIC_LINK_BASE_URL}?token=${token}`
       console.log(`✨ Magic Link for ${email}: ${magicLink}`)
 
       return true
@@ -80,11 +84,11 @@ export default {
       const user = magicLinkToken.user
 
       const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_ACCESS_SECRET, {
-        expiresIn: "15m"
+        expiresIn: JWT_ACCESS_TOKEN_EXPIRY
       })
 
       const refreshToken = jwt.sign({ userId: user.id }, JWT_REFRESH_SECRET, {
-        expiresIn: "7d"
+        expiresIn: JWT_REFRESH_TOKEN_EXPIRY
       })
 
       return {
