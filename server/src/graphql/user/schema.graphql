@@ -21,7 +21,7 @@ type User {
   articles: [Article!]
 }
 
-type ArticleStats {
+type UserArticleStats {
   total: Int!
   published: Int!
   draft: Int!
@@ -44,8 +44,9 @@ type ArticlesByAuthorResponse {
 
 extend type Query {
   users: [User!]
+  user(slug: String!): User
   me: User
-  myArticlesStats: ArticleStats
+  myArticlesStats: UserArticleStats
 
   # Запросы для страницы автора
   author(slug: String!): User
