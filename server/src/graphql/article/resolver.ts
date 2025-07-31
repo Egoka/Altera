@@ -12,7 +12,7 @@ const RECOMMENDED_ARTICLES_CACHE_PREFIX = "recommended_articles:"
 const RELATED_ARTICLES_CACHE_PREFIX = "related_articles:"
 const ARTICLE_STATS_CACHE_PREFIX = "article_stats:"
 
-const CACHE_TTL = 120 // 2 минуты
+const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
 
 export default {
   Query: {

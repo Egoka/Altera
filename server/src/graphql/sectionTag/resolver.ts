@@ -3,7 +3,7 @@ import { GraphQLContext } from "../../prisma"
 const TAG_CACHE_PREFIX = "tag:"
 const TAG_ARTICLES_CACHE_PREFIX = "tag_articles:"
 const TAG_STATS_CACHE_PREFIX = "tag_stats:"
-const CACHE_TTL = 120 // 2 minutes in seconds
+const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
 
 export default {
   Query: {

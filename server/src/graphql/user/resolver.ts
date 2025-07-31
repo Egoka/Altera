@@ -5,7 +5,7 @@ const USER_CACHE_PREFIX = "user:"
 const USER_STATS_CACHE_PREFIX = "user_stats:"
 const AUTHOR_ARTICLES_CACHE_PREFIX = "author_articles:"
 const AUTHOR_STATS_CACHE_PREFIX = "author_stats:"
-const CACHE_TTL = 120 // 2 minutes in seconds
+const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
 
 export default {
   Query: {
