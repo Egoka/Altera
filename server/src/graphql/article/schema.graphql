@@ -22,6 +22,38 @@ type Article {
   sectionTags: [SectionTag!]!
 }
 
+# Специфичные для статей фильтры
+input ArticleFiltersInput {
+  # Наследуем базовые фильтры
+  base: BaseFiltersInput
+
+  # Статус статей
+  status: [ArticleStatus!]
+
+  # Специфичные для статей
+  authorId: [ID!]
+  typeId: [ID!]
+  tagIds: [ID!]
+  publishedAt: DateRangeInput
+}
+
+type ArticlesResponse {
+  articles: [Article!]!
+  pagination: PaginationInfo!
+  filters: ArticleFilters!
+  sort: SortInfo!
+  search: SearchInfo
+}
+
+type ArticleFilters {
+  base: BaseFiltersInfo
+  status: [ArticleStatus!]
+  authorId: [ID!]
+  typeId: [ID!]
+  tagIds: [ID!]
+  publishedAt: DateRangeInfo
+}
+
 type ArticleDetail {
   article: Article!
   recommendedArticles: [Article!]!
@@ -42,7 +74,6 @@ type RelatedArticlesResponse {
 }
 
 extend type Query {
-  articles: [Article!]!
   article(slug: String!): Article
 
   # Комплексный запрос для страницы статьи
@@ -57,6 +88,14 @@ extend type Query {
   featuredArticles(limit: Int = 5): [Article!]!
   latestArticles(limit: Int = 20, excludeFeatured: Boolean = false): [Article!]!
   popularArticles(timeRange: String = "week", limit: Int = 10): [Article!]!
+
+  # Запросы для управления статьями (требуют права admin)
+  articles(
+    pagination: PaginationInput!
+    sort: SortInput!
+    filters: ArticleFiltersInput!
+    search: SearchInput
+  ): ArticlesResponse!
 }
 
 # Типы для мутаций
@@ -93,4 +132,6 @@ extend type Mutation {
 
   # Только для администраторов
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
+  bulkDeleteArticles(ids: [ID!]!): [Article!]!
+  bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
 }

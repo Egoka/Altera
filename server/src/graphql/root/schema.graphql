@@ -1,3 +1,67 @@
+# Общие типы для пагинации и фильтрации
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input PaginationInput {
+  page: Int! = 1
+  limit: Int! = 20
+  maxLimit: Int = 100
+}
+
+input SortInput {
+  field: String!
+  direction: SortDirection! = ASC
+}
+
+input DateRangeInput {
+  from: String # ISO 8601 формат
+  to: String # ISO 8601 формат
+}
+
+input SearchInput {
+  query: String!
+  fields: [String!] # Поля для поиска
+}
+
+input BaseFiltersInput {
+  # Дата создания
+  createdAt: DateRangeInput
+
+  # Дата обновления
+  updatedAt: DateRangeInput
+}
+
+type PaginationInfo {
+  currentPage: Int!
+  totalPages: Int!
+  totalItems: Int!
+  itemsPerPage: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+type BaseFiltersInfo {
+  createdAt: DateRangeInfo
+  updatedAt: DateRangeInfo
+}
+
+type DateRangeInfo {
+  from: String
+  to: String
+}
+
+type SearchInfo {
+  query: String!
+  fields: [String!]
+}
+
+type SortInfo {
+  field: String!
+  direction: SortDirection!
+}
+
 type Query {
   _empty: String
 }

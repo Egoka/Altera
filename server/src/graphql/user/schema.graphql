@@ -19,6 +19,35 @@ type User {
   updatedAt: String!
   # Для страницы автора
   articles: [Article!]
+  # Количество статей (для админ панели)
+  _count: UserCount
+}
+
+type UserCount {
+  articles: Int!
+}
+
+# Специфичные для пользователей фильтры
+input UserFiltersInput {
+  base: BaseFiltersInput
+
+  # Специфичные для пользователей
+  role: [Role!]
+  hasArticles: Boolean
+}
+
+type UsersResponse {
+  users: [User!]!
+  pagination: PaginationInfo!
+  filters: UserFilters!
+  sort: SortInfo!
+  search: SearchInfo
+}
+
+type UserFilters {
+  base: BaseFiltersInfo
+  role: [Role!]
+  hasArticles: Boolean
 }
 
 type UserArticleStats {
@@ -43,7 +72,6 @@ type ArticlesByAuthorResponse {
 }
 
 extend type Query {
-  users: [User!]
   user(slug: String!): User
   me: User
   myArticlesStats: UserArticleStats
@@ -52,4 +80,7 @@ extend type Query {
   author(slug: String!): User
   articlesByAuthor(authorSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByAuthorResponse!
   authorStats(authorSlug: String!): AuthorStats
+
+  # Запросы для управления пользователями (требуют права admin)
+  users(pagination: PaginationInput!, sort: SortInput!, filters: UserFiltersInput!, search: SearchInput): UsersResponse!
 }

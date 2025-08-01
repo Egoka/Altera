@@ -14,6 +14,35 @@ type ContentType {
   updatedAt: String!
   # Связь со статьями
   articles: [Article!]
+  # Количество статей (для админ панели)
+  _count: ContentTypeCount
+}
+
+type ContentTypeCount {
+  articles: Int!
+}
+
+# Специфичные для типов контента фильтры
+input ContentTypeFiltersInput {
+  base: BaseFiltersInput
+
+  # Специфичные для типов контента
+  status: [ContentTypeStatus!]
+  hasArticles: Boolean
+}
+
+type ContentTypesResponse {
+  contentTypes: [ContentType!]!
+  pagination: PaginationInfo!
+  filters: ContentTypeFilters!
+  sort: SortInfo!
+  search: SearchInfo
+}
+
+type ContentTypeFilters {
+  base: BaseFiltersInfo
+  status: [ContentTypeStatus!]
+  hasArticles: Boolean
 }
 
 type ContentTypeStats {
@@ -32,10 +61,51 @@ type ArticlesByContentTypeResponse {
 }
 
 extend type Query {
-  contentTypes: [ContentType!]!
-
   # Запросы для страницы типа контента
   contentType(slug: String!): ContentType
   articlesByContentType(contentTypeSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByContentTypeResponse!
   contentTypeStats(contentTypeSlug: String!): ContentTypeStats
+
+  # Запросы для управления типами контента (требуют права admin)
+  contentTypes(
+    pagination: PaginationInput!
+    sort: SortInput!
+    filters: ContentTypeFiltersInput!
+    search: SearchInput
+  ): ContentTypesResponse!
+}
+
+# Input типы для мутаций
+input CreateContentTypeInput {
+  name: String!
+  slug: String!
+  description: String
+  order: Int!
+  status: ContentTypeStatus = ACTIVE
+}
+
+input UpdateContentTypeInput {
+  name: String
+  slug: String
+  description: String
+  order: Int
+  status: ContentTypeStatus
+}
+
+input ReorderContentTypesInput {
+  items: [ReorderItemInput!]!
+}
+
+input ReorderItemInput {
+  id: ID!
+  order: Int!
+}
+
+extend type Mutation {
+  # Админ мутации для управления типами контента
+  createContentType(input: CreateContentTypeInput!): ContentType!
+  updateContentType(id: ID!, input: UpdateContentTypeInput!): ContentType!
+  deleteContentType(id: ID!): ContentType!
+  reorderContentTypes(input: ReorderContentTypesInput!): [ContentType!]!
+  archiveContentType(id: ID!): ContentType!
 }

@@ -179,7 +179,7 @@ This ensures a clear separation of concerns and prevents users from bypassing th
 To enhance performance and reduce database load, the project utilizes Redis for caching frequently accessed data.
 
 ### Core Principles
-1.  **Default Cache Duration (TTL):** All cached entities should have a Time-To-Live (TTL) of **2 minutes (120 seconds)**. This provides a good balance between performance and data freshness for most use cases.
+1.  **Default Cache Duration (TTL):** All cached entities should have a Time-To-Live (TTL) of **360 minutes (21600 seconds)**. This provides a good balance between performance and data freshness for most use cases.
 
 2.  **Cache Invalidation Strategy:** A **Write-Around Caching** approach is mandatory.
     - **On Update/Delete:** Whenever a mutation (e.g., `updateUser`, `deleteArticle`) modifies or deletes an entity, the corresponding cache key for that entity **MUST** be invalidated (deleted) from Redis. This ensures that subsequent requests will fetch the fresh data from the database.
@@ -192,7 +192,7 @@ To enhance performance and reduce database load, the project utilizes Redis for 
 2.  Attempt to fetch the data from Redis using the cache key.
 3.  **Cache Hit:** If data is found in Redis, parse it and return it directly.
 4.  **Cache Miss:** If data is not in Redis, fetch it from the primary database (PostgreSQL).
-5.  After fetching from the database, store the result in Redis using the cache key and the standard TTL of 120 seconds.
+5.  After fetching from the database, store the result in Redis using the cache key and the standard TTL of 21600 seconds.
 6.  Return the data to the client.
 
 **Writing Data (Mutations):**

@@ -4,7 +4,7 @@ type AuthPayload {
   user: User!
 }
 
-type Mutation {
+extend type Mutation {
   requestMagicLink(email: String!): Boolean!
   verifyMagicLink(token: String!): AuthPayload!
 }

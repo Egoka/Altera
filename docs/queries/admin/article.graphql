@@ -1,0 +1,367 @@
+# Тестовые запросы для админ панели статей
+
+# 1. Получение всех статей с базовой пагинацией
+query GetAdminArticlesBasic {
+  articles(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: { base: {} }
+  ) {
+    articles {
+      id
+      title
+      slug
+      status
+      createdAt
+      publishedAt
+      author {
+        id
+        name
+        email
+      }
+      contentType {
+        id
+        name
+        slug
+      }
+      sectionTags {
+        id
+        name
+        slug
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+    filters {
+      base {
+        status
+        createdAt {
+          from
+          to
+        }
+        updatedAt {
+          from
+          to
+        }
+        search {
+          query
+          fields
+        }
+      }
+      authorId
+      typeId
+      tagIds
+      publishedAt {
+        from
+        to
+      }
+    }
+    sort {
+      field
+      direction
+    }
+  }
+}
+
+# 2. Фильтрация по статусу
+query GetAdminArticlesByStatus {
+  articles(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "updatedAt", direction: DESC }
+    filters: {
+      base: {
+        status: [DRAFT, REVIEW]
+      }
+    }
+  ) {
+    articles {
+      id
+      title
+      status
+      updatedAt
+      author { name }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+    }
+  }
+}
+
+# 3. Поиск по содержимому
+query GetAdminArticlesSearch {
+  articles(
+    pagination: { page: 1, limit: 15 }
+    sort: { field: "title", direction: ASC }
+    filters: {
+      base: {
+        search: {
+          query: "React"
+          fields: ["title", "body", "excerpt"]
+        }
+      }
+    }
+  ) {
+    articles {
+      id
+      title
+      excerpt
+      status
+      author { name }
+    }
+    pagination {
+      totalItems
+      totalPages
+    }
+  }
+}
+
+# 4. Фильтрация по автору
+query GetAdminArticlesByAuthor {
+  articles(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "publishedAt", direction: DESC }
+    filters: {
+      authorId: ["user-id-1", "user-id-2"]
+      base: {
+        status: [PUBLISHED]
+      }
+    }
+  ) {
+    articles {
+      id
+      title
+      publishedAt
+      author { name }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 5. Фильтрация по типу контента
+query GetAdminArticlesByContentType {
+  articles(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: {
+      typeId: ["content-type-id-1"]
+      base: {
+        status: [PUBLISHED, REVIEW]
+      }
+    }
+  ) {
+    articles {
+      id
+      title
+      contentType { name }
+      status
+    }
+  }
+}
+
+# 6. Фильтрация по тегам
+query GetAdminArticlesByTags {
+  articles(
+    pagination: { page: 1, limit: 15 }
+    sort: { field: "title", direction: ASC }
+    filters: {
+      tagIds: ["tag-id-1", "tag-id-2"]
+      base: {
+        status: [PUBLISHED]
+      }
+    }
+  ) {
+    articles {
+      id
+      title
+      sectionTags { name }
+    }
+  }
+}
+
+# 7. Фильтрация по дате публикации
+query GetAdminArticlesByPublishDate {
+  articles(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "publishedAt", direction: DESC }
+    filters: {
+      publishedAt: {
+        from: "2024-01-01T00:00:00Z"
+        to: "2024-12-31T23:59:59Z"
+      }
+      base: {
+        status: [PUBLISHED]
+      }
+    }
+  ) {
+    articles {
+      id
+      title
+      publishedAt
+    }
+  }
+}
+
+# 8. Комплексная фильтрация
+query GetAdminArticlesComplex {
+  articles(
+    pagination: { page: 2, limit: 10 }
+    sort: { field: "updatedAt", direction: DESC }
+    filters: {
+      base: {
+        status: [DRAFT, REVIEW, PUBLISHED]
+        search: {
+          query: "JavaScript"
+          fields: ["title", "body"]
+        }
+        createdAt: {
+          from: "2024-01-01T00:00:00Z"
+        }
+      }
+      authorId: ["user-id-1"]
+      typeId: ["content-type-id-1"]
+      tagIds: ["tag-id-1"]
+    }
+  ) {
+    articles {
+      id
+      title
+      status
+      createdAt
+      updatedAt
+      author { name }
+      contentType { name }
+      sectionTags { name }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+# 9. Сортировка по разным полям
+query GetAdminArticlesSortByTitle {
+  articles(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "title", direction: ASC }
+    filters: { base: {} }
+  ) {
+    articles {
+      id
+      title
+      status
+    }
+  }
+}
+
+query GetAdminArticlesSortByAuthor {
+  articles(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "author.name", direction: ASC }
+    filters: { base: {} }
+  ) {
+    articles {
+      id
+      title
+      author { name }
+    }
+  }
+}
+
+# 10. Пагинация
+query GetAdminArticlesPagination {
+  articles(
+    pagination: { page: 3, limit: 5 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: { base: {} }
+  ) {
+    articles {
+      id
+      title
+      createdAt
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+# Мутации для админ панели
+
+# 11. Изменение статуса статьи
+mutation SetArticleStatus {
+  setArticleStatus(id: "article-id-1", status: PUBLISHED) {
+    id
+    title
+    status
+    publishedAt
+  }
+}
+
+# 12. Массовое удаление статей
+mutation BulkDeleteArticles {
+  bulkDeleteArticles(ids: ["article-id-1", "article-id-2", "article-id-3"]) {
+    id
+    title
+    status
+  }
+}
+
+# 13. Массовое изменение статуса статей
+mutation BulkUpdateArticleStatus {
+  bulkUpdateArticleStatus(
+    ids: ["article-id-1", "article-id-2"]
+    status: PUBLISHED
+  ) {
+    id
+    title
+    status
+    publishedAt
+  }
+}
+
+# 14. Изменение статуса на архив
+mutation ArchiveArticle {
+  setArticleStatus(id: "article-id-1", status: ARCHIVED) {
+    id
+    title
+    status
+  }
+}
+
+# 15. Изменение статуса на черновик
+mutation SetArticleToDraft {
+  setArticleStatus(id: "article-id-1", status: DRAFT) {
+    id
+    title
+    status
+  }
+}
+
+# 16. Изменение статуса на рецензию
+mutation SetArticleToReview {
+  setArticleStatus(id: "article-id-1", status: REVIEW) {
+    id
+    title
+    status
+  }
+} 
