@@ -7,6 +7,33 @@ type SectionTag {
   updatedAt: String!
   # Связь со статьями
   articles: [Article!]
+  # Количество статей (для админ панели)
+  _count: SectionTagCount
+}
+
+type SectionTagCount {
+  articles: Int!
+}
+
+# Специфичные для тегов фильтры
+input TagFiltersInput {
+  base: BaseFiltersInput
+
+  # Специфичные для тегов
+  hasArticles: Boolean
+}
+
+type TagsResponse {
+  tags: [SectionTag!]!
+  pagination: PaginationInfo!
+  filters: TagFilters!
+  sort: SortInfo!
+  search: SearchInfo
+}
+
+type TagFilters {
+  base: BaseFiltersInfo
+  hasArticles: Boolean
 }
 
 type TagStats {
@@ -24,10 +51,42 @@ type ArticlesByTagResponse {
 }
 
 extend type Query {
-  sectionTags: [SectionTag!]!
-
   # Запросы для страницы тега
   tag(slug: String!): SectionTag
   articlesByTag(tagSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByTagResponse!
   tagStats(tagSlug: String!): TagStats
+
+  # Запросы для управления тегами (требуют права admin)
+  sectionTags(
+    pagination: PaginationInput!
+    sort: SortInput!
+    filters: TagFiltersInput!
+    search: SearchInput
+  ): TagsResponse!
+}
+
+# Input типы для мутаций
+input CreateTagInput {
+  name: String!
+  slug: String!
+  description: String
+}
+
+input UpdateTagInput {
+  name: String
+  slug: String
+  description: String
+}
+
+input MergeTagsInput {
+  sourceTagIds: [ID!]!
+  targetTagId: ID!
+}
+
+extend type Mutation {
+  # Админ мутации для управления тегами
+  createTag(input: CreateTagInput!): SectionTag!
+  updateTag(id: ID!, input: UpdateTagInput!): SectionTag!
+  deleteTag(id: ID!): SectionTag!
+  mergeTags(input: MergeTagsInput!): SectionTag!
 }

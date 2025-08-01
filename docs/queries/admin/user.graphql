@@ -1,0 +1,285 @@
+# Тестовые запросы для админ панели пользователей
+
+# 1. Получение всех пользователей с базовой пагинацией
+query GetAdminUsersBasic {
+  users(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: { base: {} }
+  ) {
+    users {
+      id
+      name
+      email
+      role
+      slug
+      bio
+      photoUrl
+      createdAt
+      updatedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+    filters {
+      base {
+        search {
+          query
+          fields
+        }
+        createdAt {
+          from
+          to
+        }
+        updatedAt {
+          from
+          to
+        }
+      }
+      role
+      hasArticles
+    }
+    sort {
+      field
+      direction
+    }
+  }
+}
+
+# 2. Фильтрация по роли
+query GetAdminUsersByRole {
+  users(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "name", direction: ASC }
+    filters: {
+      role: [AUTHOR, ADMIN]
+    }
+  ) {
+    users {
+      id
+      name
+      email
+      role
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 3. Фильтрация пользователей с статьями
+query GetAdminUsersWithArticles {
+  users(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "_count.articles", direction: DESC }
+    filters: {
+      hasArticles: true
+    }
+  ) {
+    users {
+      id
+      name
+      email
+      role
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 4. Поиск пользователей по содержимому
+query GetAdminUsersSearch {
+  users(
+    pagination: { page: 1, limit: 15 }
+    sort: { field: "name", direction: ASC }
+    filters: {
+      base: {
+        search: {
+          query: "john"
+          fields: ["name", "email", "bio"]
+        }
+      }
+    }
+  ) {
+    users {
+      id
+      name
+      email
+      bio
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 5. Фильтрация по дате создания
+query GetAdminUsersByDate {
+  users(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: {
+      base: {
+        createdAt: {
+          from: "2024-01-01T00:00:00Z"
+          to: "2024-12-31T23:59:59Z"
+        }
+      }
+    }
+  ) {
+    users {
+      id
+      name
+      createdAt
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 6. Сортировка по количеству статей
+query GetAdminUsersSortByArticleCount {
+  users(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "_count.articles", direction: DESC }
+    filters: { base: {} }
+  ) {
+    users {
+      id
+      name
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 7. Комплексная фильтрация
+query GetAdminUsersComplex {
+  users(
+    pagination: { page: 2, limit: 10 }
+    sort: { field: "updatedAt", direction: DESC }
+    filters: {
+      base: {
+        search: {
+          query: "author"
+          fields: ["name", "bio"]
+        }
+        createdAt: {
+          from: "2024-01-01T00:00:00Z"
+        }
+      }
+      role: [AUTHOR]
+      hasArticles: true
+    }
+  ) {
+    users {
+      id
+      name
+      email
+      bio
+      role
+      createdAt
+      updatedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+# 8. Фильтрация только читателей
+query GetAdminReaders {
+  users(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "name", direction: ASC }
+    filters: {
+      role: [READER]
+    }
+  ) {
+    users {
+      id
+      name
+      email
+      role
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 9. Фильтрация пользователей без статей
+query GetAdminUsersWithoutArticles {
+  users(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: {
+      hasArticles: false
+    }
+  ) {
+    users {
+      id
+      name
+      email
+      role
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 10. Пагинация пользователей
+query GetAdminUsersPagination {
+  users(
+    pagination: { page: 3, limit: 5 }
+    sort: { field: "name", direction: ASC }
+    filters: { base: {} }
+  ) {
+    users {
+      id
+      name
+      email
+      role
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+} 

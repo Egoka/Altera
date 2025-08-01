@@ -1,0 +1,358 @@
+# Тестовые запросы для админ панели тегов
+
+# 1. Получение всех тегов с базовой пагинацией
+query GetAdminTagsBasic {
+  sectionTags(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "name", direction: ASC }
+    filters: { base: {} }
+  ) {
+    tags {
+      id
+      name
+      slug
+      description
+      createdAt
+      updatedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+    filters {
+      base {
+        search {
+          query
+          fields
+        }
+        createdAt {
+          from
+          to
+        }
+        updatedAt {
+          from
+          to
+        }
+      }
+      hasArticles
+    }
+    sort {
+      field
+      direction
+    }
+  }
+}
+
+# 2. Фильтрация тегов с статьями
+query GetAdminTagsWithArticles {
+  sectionTags(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "_count.articles", direction: DESC }
+    filters: {
+      hasArticles: true
+    }
+  ) {
+    tags {
+      id
+      name
+      slug
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 3. Фильтрация тегов без статей
+query GetAdminTagsWithoutArticles {
+  sectionTags(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: {
+      hasArticles: false
+    }
+  ) {
+    tags {
+      id
+      name
+      slug
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 4. Поиск тегов по содержимому
+query GetAdminTagsSearch {
+  sectionTags(
+    pagination: { page: 1, limit: 15 }
+    sort: { field: "name", direction: ASC }
+    filters: {
+      base: {
+        search: {
+          query: "javascript"
+          fields: ["name", "description", "slug"]
+        }
+      }
+    }
+  ) {
+    tags {
+      id
+      name
+      description
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 5. Фильтрация по дате создания
+query GetAdminTagsByDate {
+  sectionTags(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: {
+      base: {
+        createdAt: {
+          from: "2024-01-01T00:00:00Z"
+          to: "2024-12-31T23:59:59Z"
+        }
+      }
+    }
+  ) {
+    tags {
+      id
+      name
+      createdAt
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 6. Сортировка по количеству статей
+query GetAdminTagsSortByArticleCount {
+  sectionTags(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "_count.articles", direction: DESC }
+    filters: { base: {} }
+  ) {
+    tags {
+      id
+      name
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 7. Комплексная фильтрация
+query GetAdminTagsComplex {
+  sectionTags(
+    pagination: { page: 2, limit: 10 }
+    sort: { field: "updatedAt", direction: DESC }
+    filters: {
+      base: {
+        search: {
+          query: "web"
+          fields: ["name", "description"]
+        }
+        createdAt: {
+          from: "2024-01-01T00:00:00Z"
+        }
+      }
+      hasArticles: true
+    }
+  ) {
+    tags {
+      id
+      name
+      description
+      createdAt
+      updatedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+# Мутации для админ панели тегов
+
+# 8. Создание нового тега
+mutation CreateTag {
+  createTag(
+    input: {
+      name: "React Development"
+      slug: "react-development"
+      description: "Articles about React development and best practices"
+    }
+  ) {
+    id
+    name
+    slug
+    description
+    createdAt
+    _count {
+      articles
+    }
+  }
+}
+
+# 9. Обновление тега
+mutation UpdateTag {
+  updateTag(
+    id: "tag-id-1"
+    input: {
+      name: "Updated Tag Name"
+      description: "Updated description for the tag"
+    }
+  ) {
+    id
+    name
+    slug
+    description
+    updatedAt
+    _count {
+      articles
+    }
+  }
+}
+
+# 10. Удаление тега (только если нет статей)
+mutation DeleteTag {
+  deleteTag(id: "tag-id-1") {
+    id
+    name
+    slug
+  }
+}
+
+# 11. Объединение тегов
+mutation MergeTags {
+  mergeTags(
+    input: {
+      sourceTagIds: ["tag-id-1", "tag-id-2", "tag-id-3"]
+      targetTagId: "tag-id-4"
+    }
+  ) {
+    id
+    name
+    slug
+    _count {
+      articles
+    }
+  }
+}
+
+# 12. Создание тега с минимальными данными
+mutation CreateTagMinimal {
+  createTag(
+    input: {
+      name: "New Tag"
+      slug: "new-tag"
+    }
+  ) {
+    id
+    name
+    slug
+    description
+    createdAt
+  }
+}
+
+# 13. Обновление только slug
+mutation UpdateTagSlug {
+  updateTag(
+    id: "tag-id-1"
+    input: {
+      slug: "new-slug-name"
+    }
+  ) {
+    id
+    name
+    slug
+    updatedAt
+  }
+}
+
+# 14. Обновление только описания
+mutation UpdateTagDescription {
+  updateTag(
+    id: "tag-id-1"
+    input: {
+      description: "New description for the tag"
+    }
+  ) {
+    id
+    name
+    description
+    updatedAt
+  }
+}
+
+# 15. Объединение двух тегов
+mutation MergeTwoTags {
+  mergeTags(
+    input: {
+      sourceTagIds: ["tag-id-1"]
+      targetTagId: "tag-id-2"
+    }
+  ) {
+    id
+    name
+    _count {
+      articles
+    }
+  }
+}
+
+# 16. Пагинация тегов
+query GetAdminTagsPagination {
+  sectionTags(
+    pagination: { page: 3, limit: 5 }
+    sort: { field: "name", direction: ASC }
+    filters: { base: {} }
+  ) {
+    tags {
+      id
+      name
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+} 

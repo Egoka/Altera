@@ -1,5 +1,21 @@
 import { GraphQLContext } from "../../prisma"
-import { ensureAuthenticated } from "../../exceptions/permissions"
+import { ensureAuthenticated, ensureHasRole } from "../../exceptions/permissions"
+import {
+  validatePagination,
+  validateSort,
+  buildBaseWhereClause,
+  buildOrderBy,
+  calculatePagination,
+  getCacheKey,
+  getCachedOrFetch,
+  validateDateRange,
+  validateSearchInput,
+  logAdminOperation,
+  PaginationInput,
+  SortInput,
+  BaseFilters,
+  SearchInput
+} from "../../utils/admin"
 
 const USER_CACHE_PREFIX = "user:"
 const USER_STATS_CACHE_PREFIX = "user_stats:"
@@ -9,8 +25,6 @@ const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жи�
 
 export default {
   Query: {
-    users: async (_parent: any, _args: any, ctx: GraphQLContext) => ctx.prisma.user.findMany(),
-
     user: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
       const cacheKey = `${USER_CACHE_PREFIX}slug:${args.slug}`
       const cachedUser = await ctx.redis.get(cacheKey)
@@ -212,6 +226,117 @@ export default {
 
       await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(stats))
       return stats
+    },
+
+    // Запрос для управления пользователями (требует права admin)
+    users: async (
+      _parent: any,
+      args: {
+        pagination: PaginationInput
+        sort: SortInput
+        filters: {
+          base: BaseFilters
+          role?: string[]
+          hasArticles?: boolean
+        }
+        search?: SearchInput
+      },
+      ctx: GraphQLContext
+    ) => {
+      // Проверка прав доступа
+      ensureHasRole(ctx.currentUser, "admin")
+
+      const { pagination, sort, filters, search } = args
+
+      // Валидация входных параметров
+      validatePagination(pagination)
+      validateSort(sort, ["id", "name", "email", "role", "slug", "createdAt", "updatedAt", "_count.articles"])
+
+      if (search) {
+        validateSearchInput(search, ["name", "email", "bio", "slug"])
+      }
+
+      if (filters.base.createdAt) {
+        validateDateRange(filters.base.createdAt)
+      }
+
+      if (filters.base.updatedAt) {
+        validateDateRange(filters.base.updatedAt)
+      }
+
+      // Строим WHERE условие
+      const where: any = buildBaseWhereClause(filters.base, search)
+
+      // Добавляем специфичные фильтры для пользователей
+      if (filters.role?.length) {
+        where.role = { in: filters.role }
+      }
+
+      if (filters.hasArticles !== undefined) {
+        if (filters.hasArticles) {
+          where.articles = { some: {} }
+        } else {
+          where.articles = { none: {} }
+        }
+      }
+
+      // Создаем ключ кеша
+      const cacheKey = getCacheKey("admin_users", { pagination, sort, filters })
+
+      // Получаем данные с кешированием
+      const result = await getCachedOrFetch(ctx, cacheKey, async () => {
+        // Получаем общее количество
+        const total = await ctx.prisma.user.count({ where })
+
+        // Рассчитываем пагинацию
+        const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
+
+        // Получаем данные
+        const users = await ctx.prisma.user.findMany({
+          where,
+          skip,
+          take,
+          orderBy: buildOrderBy(sort),
+          include: {
+            _count: {
+              select: { articles: true }
+            }
+          }
+        })
+
+        return {
+          users,
+          pagination: paginationInfo,
+          filters: {
+            base: {
+              status: filters.base.status,
+              createdAt: filters.base.createdAt,
+              updatedAt: filters.base.updatedAt
+            },
+            role: filters.role,
+            hasArticles: filters.hasArticles
+          },
+          sort: {
+            field: sort.field,
+            direction: sort.direction
+          },
+          search: search
+            ? {
+                query: search.query,
+                fields: search.fields
+              }
+            : null
+        }
+      })
+
+      // Логируем операцию
+      logAdminOperation("admin_users", ctx.currentUser?.id || "unknown", {
+        pagination,
+        sort,
+        filters
+      })
+
+      return result
     }
   }
 }

@@ -1,0 +1,405 @@
+# Тестовые запросы для админ панели типов контента
+
+# 1. Получение всех типов контента с базовой пагинацией
+query GetAdminContentTypesBasic {
+  contentTypes(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "order", direction: ASC }
+    filters: { base: {} }
+  ) {
+    contentTypes {
+      id
+      name
+      slug
+      description
+      order
+      status
+      createdAt
+      updatedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+    filters {
+      base {
+        search {
+          query
+          fields
+        }
+        createdAt {
+          from
+          to
+        }
+        updatedAt {
+          from
+          to
+        }
+      }
+      status
+      hasArticles
+    }
+    sort {
+      field
+      direction
+    }
+  }
+}
+
+# 2. Фильтрация по статусу
+query GetAdminContentTypesByStatus {
+  contentTypes(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "name", direction: ASC }
+    filters: {
+      status: [ACTIVE]
+    }
+  ) {
+    contentTypes {
+      id
+      name
+      status
+      order
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 3. Фильтрация типов контента с статьями
+query GetAdminContentTypesWithArticles {
+  contentTypes(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "_count.articles", direction: DESC }
+    filters: {
+      hasArticles: true
+    }
+  ) {
+    contentTypes {
+      id
+      name
+      slug
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 4. Поиск типов контента по содержимому
+query GetAdminContentTypesSearch {
+  contentTypes(
+    pagination: { page: 1, limit: 15 }
+    sort: { field: "name", direction: ASC }
+    filters: {
+      base: {
+        search: {
+          query: "article"
+          fields: ["name", "description", "slug"]
+        }
+      }
+    }
+  ) {
+    contentTypes {
+      id
+      name
+      description
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+# 5. Сортировка по порядку
+query GetAdminContentTypesSortByOrder {
+  contentTypes(
+    pagination: { page: 1, limit: 20 }
+    sort: { field: "order", direction: ASC }
+    filters: { base: {} }
+  ) {
+    contentTypes {
+      id
+      name
+      order
+      status
+    }
+  }
+}
+
+# 6. Комплексная фильтрация
+query GetAdminContentTypesComplex {
+  contentTypes(
+    pagination: { page: 2, limit: 10 }
+    sort: { field: "updatedAt", direction: DESC }
+    filters: {
+      base: {
+        search: {
+          query: "blog"
+          fields: ["name", "description"]
+        }
+        createdAt: {
+          from: "2024-01-01T00:00:00Z"
+        }
+      }
+      status: [ACTIVE]
+      hasArticles: true
+    }
+  ) {
+    contentTypes {
+      id
+      name
+      description
+      order
+      status
+      createdAt
+      updatedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+# Мутации для админ панели типов контента
+
+# 7. Создание нового типа контента
+mutation CreateContentType {
+  createContentType(
+    input: {
+      name: "Blog Post"
+      slug: "blog-post"
+      description: "Regular blog posts and articles"
+      order: 1
+      status: ACTIVE
+    }
+  ) {
+    id
+    name
+    slug
+    description
+    order
+    status
+    createdAt
+    _count {
+      articles
+    }
+  }
+}
+
+# 8. Обновление типа контента
+mutation UpdateContentType {
+  updateContentType(
+    id: "content-type-id-1"
+    input: {
+      name: "Updated Content Type"
+      description: "Updated description for the content type"
+      order: 2
+    }
+  ) {
+    id
+    name
+    slug
+    description
+    order
+    status
+    updatedAt
+    _count {
+      articles
+    }
+  }
+}
+
+# 9. Удаление типа контента (только если нет статей)
+mutation DeleteContentType {
+  deleteContentType(id: "content-type-id-1") {
+    id
+    name
+    slug
+  }
+}
+
+# 10. Изменение порядка типов контента
+mutation ReorderContentTypes {
+  reorderContentTypes(
+    input: {
+      items: [
+        { id: "content-type-id-1", order: 1 }
+        { id: "content-type-id-2", order: 2 }
+        { id: "content-type-id-3", order: 3 }
+      ]
+    }
+  ) {
+    id
+    name
+    order
+    status
+  }
+}
+
+# 11. Архивирование типа контента
+mutation ArchiveContentType {
+  archiveContentType(id: "content-type-id-1") {
+    id
+    name
+    status
+    updatedAt
+  }
+}
+
+# 12. Создание типа контента с минимальными данными
+mutation CreateContentTypeMinimal {
+  createContentType(
+    input: {
+      name: "New Content Type"
+      slug: "new-content-type"
+      order: 5
+    }
+  ) {
+    id
+    name
+    slug
+    description
+    order
+    status
+    createdAt
+  }
+}
+
+# 13. Обновление только порядка
+mutation UpdateContentTypeOrder {
+  updateContentType(
+    id: "content-type-id-1"
+    input: {
+      order: 10
+    }
+  ) {
+    id
+    name
+    order
+    updatedAt
+  }
+}
+
+# 14. Обновление только статуса
+mutation UpdateContentTypeStatus {
+  updateContentType(
+    id: "content-type-id-1"
+    input: {
+      status: ARCHIVED
+    }
+  ) {
+    id
+    name
+    status
+    updatedAt
+  }
+}
+
+# 15. Изменение порядка нескольких типов
+mutation ReorderMultipleContentTypes {
+  reorderContentTypes(
+    input: {
+      items: [
+        { id: "content-type-id-1", order: 1 }
+        { id: "content-type-id-2", order: 2 }
+        { id: "content-type-id-3", order: 3 }
+        { id: "content-type-id-4", order: 4 }
+        { id: "content-type-id-5", order: 5 }
+      ]
+    }
+  ) {
+    id
+    name
+    order
+  }
+}
+
+# 16. Пагинация типов контента
+query GetAdminContentTypesPagination {
+  contentTypes(
+    pagination: { page: 3, limit: 5 }
+    sort: { field: "name", direction: ASC }
+    filters: { base: {} }
+  ) {
+    contentTypes {
+      id
+      name
+      order
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+# 17. Фильтрация архивных типов контента
+query GetAdminArchivedContentTypes {
+  contentTypes(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "updatedAt", direction: DESC }
+    filters: {
+      status: [ARCHIVED]
+    }
+  ) {
+    contentTypes {
+      id
+      name
+      status
+      updatedAt
+      _count {
+        articles
+      }
+    }
+  }
+}
+
+# 18. Сортировка по количеству статей
+query GetAdminContentTypesSortByArticleCount {
+  contentTypes(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "_count.articles", direction: DESC }
+    filters: { base: {} }
+  ) {
+    contentTypes {
+      id
+      name
+      _count {
+        articles
+      }
+    }
+  }
+} 
