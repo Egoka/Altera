@@ -16,10 +16,11 @@ const yoga = createYoga<GraphQLContext>({
     credentials: true,
     methods: ["POST"]
   },
+  graphqlEndpoint: "/",
   plugins: [useCSRFPrevention(), process.env.NODE_ENV === "production" && blockFieldSuggestionsPlugin()].filter(Boolean)
 })
 
 const server = createServer(yoga)
 server.listen(PORT, () => {
-  console.info(`Server is running on http://localhost:${PORT}/graphql`)
+  console.info(`Server is running on http://localhost:${PORT}/`)
 })
