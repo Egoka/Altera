@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(() => {
   // const user = useAuth().value
   //
   // if (to.meta.requiresAuth && !user) {

@@ -1,9 +1,9 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div>
+  <div class="pt-14">
     <AppHeader />
-    <main>
+    <main class="mx-auto max-w-7xl">
       <slot />
     </main>
     <AppFooter />

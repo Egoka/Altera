@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware(() => {
   // const user = useAuth().value
   //
   // // auth должен уже быть выполнен, поэтому user должен быть

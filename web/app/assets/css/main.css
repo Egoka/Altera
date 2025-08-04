@@ -1,18 +1,126 @@
 @import "tailwindcss";
 
+/* Bergamasco Thin */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Thin.ttf") format("truetype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Light */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/BergamascoLight.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Regular */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Medium */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Semibold */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Semibold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Bold */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Thin Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Thin Italic.ttf") format("truetype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Light Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Light Italic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Regular Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Medium Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular Italic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Semibold Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Semibold Italic.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Bold Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Bold Italic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 @theme {
   /* Primary - Оригинальная палитра Altera */
-  --color-primary: #1a1a1a;
-  --color-primary-50: #f8f9fa;
-  --color-primary-100: #e9ecef;
-  --color-primary-200: #dee2e6;
-  --color-primary-300: #ced4da;
-  --color-primary-400: #adb5bd;
-  --color-primary-500: #6c757d;
-  --color-primary-600: #495057;
-  --color-primary-700: #343a40;
-  --color-primary-800: #212529;
-  --color-primary-900: #1a1a1a;
+  --color-primary: #ff5a1f;
+  --color-primary-50: #fff8f1;
+  --color-primary-100: #feecdc;
+  --color-primary-200: #fcd9bd;
+  --color-primary-300: #fdba8c;
+  --color-primary-400: #ff8a4c;
+  --color-primary-500: #ff5a1f;
+  --color-primary-600: #d03801;
+  --color-primary-700: #b43403;
+  --color-primary-800: #8a2c0d;
+  --color-primary-900: #771d1d;
 
   /* Secondary - Акцентная палитра */
   --color-secondary-50: #fff8f1;
@@ -85,13 +193,20 @@
   --color-neutral-700: #374151;
   --color-neutral-800: #1f2937;
   --color-neutral-900: #111827;
+
+  /* Fonts */
+  --font-bergamasco: "Bergamasco", serif; /* Временно используем Georgia */
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-poppins: "Poppins", system-ui, sans-serif;
+  --font-roboto: "Roboto", system-ui, sans-serif;
+  --font-open-sans: "Open Sans", system-ui, sans-serif;
 }
 
 /* Типографика - вдохновлена The Atlantic */
 @layer base {
   /* Основные шрифты */
   html {
-    font-family: "Georgia", "Times New Roman", serif;
+    /*font-family: var(--font-inter);*/
     line-height: 1.6;
     color: var(--color-primary-900);
   }
@@ -103,7 +218,7 @@
   h4,
   h5,
   h6 {
-    font-family: "Georgia", "Times New Roman", serif;
+    /*font-family: var(--font-bergamasco);*/
     font-weight: 700;
     line-height: 1.2;
     color: var(--color-primary-900);
@@ -128,7 +243,7 @@
   p {
     font-size: 1.125rem;
     line-height: 1.7;
-    margin-bottom: 1.5rem;
+    /*margin-bottom: 1.5rem;*/
     color: var(--color-primary-700);
   }
 
@@ -145,7 +260,7 @@
 
   /* Кнопки */
   button {
-    font-family: "Georgia", "Times New Roman", serif;
+    /*font-family: var(--font-inter);*/
     font-weight: 600;
   }
 
@@ -153,6 +268,12 @@
   nav a {
     font-weight: 500;
     font-size: 1rem;
+  }
+
+  /* Анимации для header */
+  header {
+    will-change: transform;
+    transform: translateZ(0);
   }
 }
 

@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite"
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
-  devtools: { enabled: true },
+  devtools: { enabled: false },
 
   modules: [
     "@nuxt/eslint",
@@ -21,6 +21,37 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()]
+  },
+
+  // Конфигурация шрифтов
+  fonts: {
+    families: [
+      {
+        name: "Inter",
+        weights: [300, 400, 500, 600, 700],
+        styles: ["normal", "italic"]
+      },
+      {
+        name: "Poppins",
+        weights: [300, 400, 500, 600, 700],
+        styles: ["normal", "italic"]
+      },
+      {
+        name: "Roboto",
+        weights: [300, 400, 500, 700],
+        styles: ["normal", "italic"]
+      },
+      {
+        name: "Open Sans",
+        weights: [300, 400, 500, 600, 700],
+        styles: ["normal", "italic"]
+      },
+      {
+        name: "Bergamasco",
+        weights: [100, 300, 400, 500, 600, 700],
+        styles: ["normal", "italic"]
+      }
+    ]
   },
 
   // Конфигурация цветовых режимов

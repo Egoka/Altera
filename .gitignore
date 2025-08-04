@@ -5,6 +5,7 @@ lib/pnpm-lock.yaml
 node_modules
 .DS_Store
 .vercel
+.data
 dist
 dist_types
 dist-ssr

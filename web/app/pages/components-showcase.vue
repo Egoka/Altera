@@ -166,14 +166,14 @@
         </h2>
         <div class="flex items-center space-x-8">
           <div class="flex items-center space-x-2">
-            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
             <span class="text-gray-600 dark:text-gray-400">{{ $t("common.loading") }}</span>
           </div>
           <div class="flex items-center space-x-2">
-            <div class="animate-pulse bg-gray-300 dark:bg-gray-600 h-4 w-32 rounded"></div>
+            <div class="animate-pulse bg-gray-300 dark:bg-gray-600 h-4 w-32 rounded" />
           </div>
           <div class="flex items-center space-x-2">
-            <div class="animate-bounce bg-blue-500 h-4 w-4 rounded-full"></div>
+            <div class="animate-bounce bg-blue-500 h-4 w-4 rounded-full" />
             <span class="text-gray-600 dark:text-gray-400">Bouncing loader</span>
           </div>
         </div>
