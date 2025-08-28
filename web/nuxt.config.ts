@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { defineNuxtConfig } from "nuxt/config"
 import tailwindcss from "@tailwindcss/vite"
 
 export default defineNuxtConfig({
@@ -14,13 +15,42 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "@vueuse/nuxt",
     "@nuxtjs/color-mode",
-    "@nuxtjs/i18n"
+    "@nuxtjs/i18n",
+    "fishtvue/module"
   ],
 
   css: ["~/assets/css/main.css"],
 
   vite: {
     plugins: [tailwindcss()]
+  },
+  fishtvue: {
+    prefix: "",
+    theme: {
+      semantic: {
+        customThemeColor: 150,
+        customThemeColorContrast: 85
+      }
+    },
+    componentsOptions: {
+      Button: {
+        class: "font-semibold"
+      }
+    },
+    optionsTheme: {
+      isNotMinifyCSS: true,
+      darkModeSelector: "html.dark"
+    }
+  },
+
+  // Конфигурация иконок
+  icon: {
+    customCollections: [
+      {
+        prefix: "a-icon",
+        dir: "./app/assets/icons"
+      }
+    ]
   },
 
   // Конфигурация шрифтов

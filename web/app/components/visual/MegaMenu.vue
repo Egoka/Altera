@@ -1,6 +1,7 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onUnmounted } from "vue"
+  import { computed, onUnmounted, ref, watch } from "vue"
   import { useBreakpoint } from "~/composables/useBreakpoint"
+  import { useRoute } from "vue-router"
 
   interface Props {
     isOpen?: boolean
@@ -20,6 +21,9 @@
 
   // Используем breakpoint для определения высоты меню
   const { isLg } = useBreakpoint()
+
+  // Отслеживаем изменения роутера для автоматического закрытия меню
+  const route = useRoute()
 
   const menuHeight = computed(() => {
     if (!props.isOpen) return "0px"
@@ -69,6 +73,16 @@
       }
     },
     { immediate: true }
+  )
+
+  // Автоматически закрываем меню при смене роутера
+  watch(
+    () => route.path,
+    () => {
+      if (props.isOpen) {
+        handleClose()
+      }
+    }
   )
 
   // Очистка при размонтировании компонента
@@ -202,7 +216,6 @@
 </script>
 
 <template>
-  <!-- Backdrop (стеклянный фон) - только под header -->
   <div
     v-if="isOpen"
     class="fixed z-40 transition-opacity duration-300"
@@ -229,19 +242,20 @@
       'opacity-100': isOpen,
       'opacity-0': !isOpen
     }">
-    <!-- Контент мега-меню -->
     <div
-      class="relative max-w-7xl mx-auto px-6 lg:px-8 py-8 border-t border-gray-200 overflow-auto lg:overflow-hidden"
+      class="relative max-w-7xl mx-auto border-t border-gray-200 overflow-auto lg:overflow-hidden"
+      :class="[menuHeight === '0px' ? 'p-0' : 'px-6 lg:px-8 py-8']"
       :style="{ height: menuHeight }">
       <div class="grid grid-cols-1 lg:grid-cols-10">
-        <!-- Первый столбец - Топ тематики с картинками (40%) -->
         <div class="lg:col-span-8 lg:pr-5">
           <div class="flex justify-between items-end mb-3">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Топ тематики</h3>
-            <button
-              class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
-              Открыть все
-            </button>
+            <NuxtLink to="/types">
+              <button
+                class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
+                Открыть все
+              </button>
+            </NuxtLink>
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div
@@ -265,11 +279,10 @@
           </div>
         </div>
 
-        <!-- Третий столбец - Топ теги (30%) -->
         <div class="lg:col-span-2 lg:border-l lg:pl-5 lg:border-gray-200">
           <h3 class="text-lg font-semibold text-gray-900 mb-4">Популярные теги</h3>
           <div class="relative">
-            <div class="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pb-2">
+            <div class="flex flex-wrap gap-2 max-h-[300px] overflow-y-hidden pb-2">
               <a
                 v-for="tag in topTags.slice(0, 20)"
                 :key="tag"
@@ -280,16 +293,16 @@
             </div>
             <div
               class="hidden lg:block absolute bottom-[36px] left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-gray-900 dark:via-gray-900/90 pointer-events-none" />
-            <!-- Градиент - только на lg и выше -->
-            <button
-              class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
-              Посмотреть все
-            </button>
+            <NuxtLink to="/tags">
+              <button
+                class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
+                Посмотреть все
+              </button>
+            </NuxtLink>
           </div>
         </div>
       </div>
 
-      <!-- Кнопка закрытия -->
       <button
         class="hidden lg:block absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
         aria-label="Закрыть меню"

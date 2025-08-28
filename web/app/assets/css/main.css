@@ -108,6 +108,39 @@
   font-display: swap;
 }
 
+/* Waterway Display Font */
+@font-face {
+  font-family: "Waterway";
+  src: url("../fonts/Waterway Display Font/Waterway Display Font.ttf") format("truetype");
+}
+
+/* Garamond Libre Regular */
+@font-face {
+  font-family: "Garamond Libre";
+  src: url("../fonts/Garamond Libre Font Family/GaramondLibre-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Garamond Libre Bold */
+@font-face {
+  font-family: "Garamond Libre";
+  src: url("../fonts/Garamond Libre Font Family/GaramondLibre-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Garamond Libre Italic */
+@font-face {
+  font-family: "Garamond Libre";
+  src: url("../fonts/Garamond Libre Font Family/GaramondLibre-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @theme {
   /* Primary - Оригинальная палитра Altera */
   --color-primary: #ff5a1f;
@@ -195,7 +228,9 @@
   --color-neutral-900: #111827;
 
   /* Fonts */
-  --font-bergamasco: "Bergamasco", serif; /* Временно используем Georgia */
+  --font-bergamasco: "Bergamasco", serif;
+  --font-waterway: "Waterway", serif;
+  --font-garamond-libre: "Garamond Libre", serif;
   --font-inter: "Inter", system-ui, sans-serif;
   --font-poppins: "Poppins", system-ui, sans-serif;
   --font-roboto: "Roboto", system-ui, sans-serif;
@@ -203,79 +238,79 @@
 }
 
 /* Типографика - вдохновлена The Atlantic */
-@layer base {
-  /* Основные шрифты */
-  html {
-    /*font-family: var(--font-inter);*/
-    line-height: 1.6;
-    color: var(--color-primary-900);
-  }
+/*@layer base {*/
+/*  !* Основные шрифты *!*/
+/*  html {*/
+/*    !*font-family: var(--font-inter);*!*/
+/*    line-height: 1.6;*/
+/*    color: var(--color-primary-900);*/
+/*  }*/
 
-  /* Заголовки */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    /*font-family: var(--font-bergamasco);*/
-    font-weight: 700;
-    line-height: 1.2;
-    color: var(--color-primary-900);
-  }
+/*  !* Заголовки *!*/
+/*  h1,*/
+/*  h2,*/
+/*  h3,*/
+/*  h4,*/
+/*  h5,*/
+/*  h6 {*/
+/*    !*font-family: var(--font-bergamasco);*!*/
+/*    font-weight: 700;*/
+/*    line-height: 1.2;*/
+/*    color: var(--color-primary-900);*/
+/*  }*/
 
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
+/*  h1 {*/
+/*    font-size: 2.5rem;*/
+/*    margin-bottom: 1rem;*/
+/*  }*/
 
-  h2 {
-    font-size: 2rem;
-    margin-bottom: 0.875rem;
-  }
+/*  h2 {*/
+/*    font-size: 2rem;*/
+/*    margin-bottom: 0.875rem;*/
+/*  }*/
 
-  h3 {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-  }
+/*  h3 {*/
+/*    font-size: 1.5rem;*/
+/*    margin-bottom: 0.75rem;*/
+/*  }*/
 
-  /* Параграфы */
-  p {
-    font-size: 1.125rem;
-    line-height: 1.7;
-    /*margin-bottom: 1.5rem;*/
-    color: var(--color-primary-700);
-  }
+/*  !* Параграфы *!*/
+/*  p {*/
+/*    font-size: 1.125rem;*/
+/*    line-height: 1.7;*/
+/*    !*margin-bottom: 1.5rem;*!*/
+/*    color: var(--color-primary-700);*/
+/*  }*/
 
-  /* Ссылки */
-  a {
-    color: var(--color-secondary-600);
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
+/*  !* Ссылки *!*/
+/*  a {*/
+/*    color: var(--color-secondary-600);*/
+/*    text-decoration: none;*/
+/*    transition: color 0.2s ease;*/
+/*  }*/
 
-  a:hover {
-    color: var(--color-secondary-800);
-  }
+/*  a:hover {*/
+/*    color: var(--color-secondary-800);*/
+/*  }*/
 
-  /* Кнопки */
-  button {
-    /*font-family: var(--font-inter);*/
-    font-weight: 600;
-  }
+/*  !* Кнопки *!*/
+/*  button {*/
+/*    !*font-family: var(--font-inter);*!*/
+/*    font-weight: 600;*/
+/*  }*/
 
-  /* Навигация */
-  nav a {
-    font-weight: 500;
-    font-size: 1rem;
-  }
+/*  !* Навигация *!*/
+/*  nav a {*/
+/*    font-weight: 500;*/
+/*    font-size: 1rem;*/
+/*  }*/
 
-  /* Анимации для header */
-  header {
-    will-change: transform;
-    transform: translateZ(0);
-  }
-}
+/*  !* Анимации для header *!*/
+/*  header {*/
+/*    will-change: transform;*/
+/*    transform: translateZ(0);*/
+/*  }*/
+/*}*/
 
 /* Dark mode настройки */
 @custom-variant dark (&:where(.dark, .dark *));
