@@ -103,11 +103,12 @@
 </script>
 
 <template>
-  <section class="homepage-top py-8 border-b border-gray-200 dark:border-gray-700">
+  <section class="py-8 border-b border-gray-200 dark:border-gray-700">
     <div class="mx-auto px-8 max-w-7xl">
       <div
-        class="grid grid-cols-1 sm:grid-cols-12 divide-y space-y-8 divide-gray-200 dark:divide-gray-700 sm:divide-y-0 sm:space-y-0">
-        <div class="hidden lg:block lg:col-span-3 sm:pr-4 md:pr-8">
+        class="grid grid-cols-1 sm:grid-cols-12 gap-x-4 lg:gap-x-6 divide-y space-y-8 divide-gray-200 dark:divide-gray-700 sm:divide-y-0 sm:space-y-0">
+        <div
+          class="hidden lg:block lg:col-span-3 sm:pr-4 md:pr-8 sm:border-r sm:border-gray-200 sm:dark:border-gray-700">
           <ul class="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
             <li v-for="article in leftArticles" :key="article.id" class="pb-8 last:pb-0">
               <ArticleBase :article="article" />
@@ -116,13 +117,13 @@
         </div>
 
         <div
-          class="col-span-12 sm:col-span-8 lg:col-span-6 lg:px-8 sm:border-x sm:border-gray-200 sm:dark:border-gray-700 sm:pr-4 md:pr-8 pb-8 last:pb-0">
+          class="col-span-12 sm:col-span-8 lg:col-span-6 sm:border-r sm:border-gray-200 sm:dark:border-gray-700 sm:pr-4 lg:pr-6 pb-8 last:pb-0">
           <div class="lede" v-if="mainArticle">
             <ArticleLede :article="mainArticle" />
           </div>
         </div>
 
-        <div class="col-span-12 sm:col-span-4 lg:col-span-3 sm:pl-4 md:pl-8 pb-8 last:pb-0 sm:pb-0">
+        <div class="col-span-12 sm:col-span-4 lg:col-span-3 pb-8 last:pb-0 sm:pb-0">
           <ul class="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
             <li v-for="article in rightArticles" :key="article.id" class="pb-8 last:pb-0">
               <ArticleBase :article="article" />

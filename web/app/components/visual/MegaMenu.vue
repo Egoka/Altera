@@ -25,6 +25,10 @@
   // Отслеживаем изменения роутера для автоматического закрытия меню
   const route = useRoute()
 
+  // Состояние для показа контента с задержкой
+  const showContent = ref(false)
+  let contentTimeout: ReturnType<typeof setTimeout> | null = null
+
   const menuHeight = computed(() => {
     if (!props.isOpen) return "0px"
 
@@ -68,8 +72,18 @@
     (isOpen) => {
       if (isOpen) {
         lockScroll()
+        // Показываем контент с задержкой после анимации открытия
+        contentTimeout = setTimeout(() => {
+          showContent.value = true
+        }, 300) // Задержка соответствует duration-300
       } else {
         unlockScroll()
+        // Сразу скрываем контент при закрытии
+        showContent.value = false
+        if (contentTimeout) {
+          clearTimeout(contentTimeout)
+          contentTimeout = null
+        }
       }
     },
     { immediate: true }
@@ -88,6 +102,9 @@
   // Очистка при размонтировании компонента
   onUnmounted(() => {
     unlockScroll()
+    if (contentTimeout) {
+      clearTimeout(contentTimeout)
+    }
   })
 
   // Данные для MegaMenu (2 колонки по 4 строки = 16 элементов)
@@ -246,7 +263,13 @@
       class="relative max-w-7xl mx-auto border-t border-gray-200 overflow-auto lg:overflow-hidden"
       :class="[menuHeight === '0px' ? 'p-0' : 'px-6 lg:px-8 py-8']"
       :style="{ height: menuHeight }">
-      <div class="grid grid-cols-1 lg:grid-cols-10">
+      <div
+        v-show="showContent"
+        class="grid grid-cols-1 lg:grid-cols-10 transition-opacity duration-300"
+        :class="{
+          'opacity-100': showContent,
+          'opacity-0': !showContent
+        }">
         <div class="lg:col-span-8 lg:pr-5">
           <div class="flex justify-between items-end mb-3">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Топ тематики</h3>
@@ -304,6 +327,7 @@
       </div>
 
       <button
+        v-if="showContent"
         class="hidden lg:block absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
         aria-label="Закрыть меню"
         @click="handleClose">

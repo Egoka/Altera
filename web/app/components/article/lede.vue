@@ -16,7 +16,7 @@
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
-          class="w-full h-64 sm:h-80 md:h-96 lg:h-[350px] object-cover rounded-md transition-transform duration-300" />
+          class="w-full h-64 sm:h-80 md:h-96 lg:h-[350px] object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
       <figcaption class="text-sm text-gray-500 dark:text-gray-400 font-light mt-3">
         <NuxtLink :to="contentType" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
@@ -28,7 +28,7 @@
     <div class="lede-title mb-6 text-center">
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-normal">
+        class="font-garamond-libre text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-tight">
         {{ article.title }}
       </NuxtLink>
     </div>

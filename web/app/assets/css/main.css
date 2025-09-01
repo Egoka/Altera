@@ -329,16 +329,16 @@
     --color-primary-900: #f8f9fa;
   }
 
-  body.dark h1,
-  body.dark h2,
-  body.dark h3,
-  body.dark h4,
-  body.dark h5,
-  body.dark h6 {
-    color: var(--color-primary-50);
-  }
+  /*body.dark h1,*/
+  /*body.dark h2,*/
+  /*body.dark h3,*/
+  /*body.dark h4,*/
+  /*body.dark h5,*/
+  /*body.dark h6 {*/
+  /*  color: var(--color-primary-50);*/
+  /*}*/
 
-  body.dark p {
-    color: var(--color-primary-200);
-  }
+  /*body.dark p {*/
+  /*  color: var(--color-primary-200);*/
+  /*}*/
 }
