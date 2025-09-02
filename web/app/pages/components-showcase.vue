@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <div class="container mx-auto px-4 py-8">
-      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8">
+      <h1 class="text-4xl font-bold text-zinc-900 dark:text-zinc-300 dark:text-white mb-8">
         {{ $t("components.showcase") }}
       </h1>
 
@@ -65,7 +65,7 @@
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <img src="https://via.placeholder.com/400x200" alt="Placeholder" class="w-full h-48 object-cover" />
             <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Article Title</h3>
+              <h3 class="text-xl font-semibold text-zinc-900 dark:text-zinc-300 dark:text-white mb-2">Article Title</h3>
               <p class="text-gray-600 dark:text-gray-400 mb-4">
                 This is a sample article description that shows how the card component looks with content.
               </p>
@@ -80,11 +80,11 @@
 
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Author Card</h3>
+              <h3 class="text-xl font-semibold text-zinc-900 dark:text-zinc-300 dark:text-white mb-2">Author Card</h3>
               <div class="flex items-center mb-4">
                 <img src="https://via.placeholder.com/50x50" alt="Author" class="w-12 h-12 rounded-full mr-4" />
                 <div>
-                  <p class="font-medium text-gray-900 dark:text-white">Author Name</p>
+                  <p class="font-medium text-zinc-900 dark:text-zinc-300 dark:text-white">Author Name</p>
                   <p class="text-sm text-gray-500 dark:text-gray-400">Author Bio</p>
                 </div>
               </div>
@@ -93,7 +93,7 @@
           </div>
 
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Tag Card</h3>
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-zinc-300 dark:text-white mb-2">Tag Card</h3>
             <div class="flex flex-wrap gap-2 mb-4">
               <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"> Technology </span>
               <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"> Science </span>
@@ -113,21 +113,28 @@
         <nav class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-8">
-              <a href="#" class="text-gray-900 dark:text-white font-medium">
+              <a href="#" class="text-zinc-900 dark:text-zinc-300 dark:text-white font-medium">
                 {{ $t("common.home") }}
               </a>
-              <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <a
+                href="#"
+                class="text-gray-600 dark:text-gray-400 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                 {{ $t("common.articles") }}
               </a>
-              <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <a
+                href="#"
+                class="text-gray-600 dark:text-gray-400 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                 {{ $t("common.authors") }}
               </a>
-              <a href="#" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <a
+                href="#"
+                class="text-gray-600 dark:text-gray-400 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                 {{ $t("common.tags") }}
               </a>
             </div>
             <div class="flex items-center space-x-4">
-              <button class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <button
+                class="text-gray-600 dark:text-gray-400 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
                 {{ $t("common.search") }}
               </button>
               <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">

@@ -17,18 +17,18 @@
         <div class="mb-4">
           <NuxtLink
             :to="slug"
-            class="font-garamond-libre text-2xl font-bold text-gray-900 dark:text-white transition-colors leading-tight mb-5">
+            class="font-garamond-libre text-2xl font-bold text-zinc-900 dark:text-zinc-300 transition-colors leading-tight mb-5">
             {{ article.title }}
           </NuxtLink>
         </div>
         <div
           v-if="article.dek"
-          class="font-garamond-libre text-md text-gray-900 dark:text-white font-light leading-tight mb-4">
+          class="font-garamond-libre text-md text-zinc-900 dark:text-zinc-300 font-light leading-tight mb-4">
           {{ article.dek }}
         </div>
         <NuxtLink
           :to="author"
-          class="font-waterway text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-wide">
+          class="font-waterway text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
           {{ article.author.name }}
         </NuxtLink>
       </div>
@@ -43,8 +43,8 @@
               class="w-full h-48 max-h-48 rounded-sm object-cover transition-transform duration-300" />
           </NuxtLink>
 
-          <figcaption class="text-xs text-gray-500 dark:text-gray-400 font-light mt-2">
-            <NuxtLink :to="contentType" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+          <figcaption class="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-2">
+            <NuxtLink :to="contentType">
               {{ article.contentType.name }}
             </NuxtLink>
           </figcaption>

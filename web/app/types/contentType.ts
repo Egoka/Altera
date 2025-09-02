@@ -4,6 +4,7 @@ export default interface ContentType {
   name: string
   slug: string
   description?: string
+  iconUrl?: string
   order: number
   status: ContentTypeStatus
   createdAt: string

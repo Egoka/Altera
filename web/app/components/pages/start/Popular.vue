@@ -115,28 +115,30 @@
 <template>
   <section class="latest-articles pt-8">
     <div class="mx-auto px-8 max-w-7xl">
-      <h2 class="font-waterway text-3xl font-bold tracking-widest sm:mb-8 text-gray-900 dark:text-white">Популярное</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-gray-200 dark:divide-gray-700">
+      <h2 class="font-waterway text-3xl font-bold tracking-widest sm:mb-8 text-zinc-900 dark:text-zinc-300">
+        Популярное
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-700">
         <div
           v-for="(article, index) in articles"
           :key="article.id"
-          class="flex items-start py-6 border-gray-200 dark:border-gray-800"
+          class="flex items-start py-6 border-zinc-200 dark:border-zinc-800"
           :class="[!(index % 2) ? 'md:pr-6 lg:pr-8 md:border-r' : 'md:pl-6 lg:pl-8']">
           <ArticleText :index :article />
         </div>
       </div>
 
       <div v-if="articles.length === 0" class="animate-pulse mt-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-gray-200 dark:divide-gray-700">
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-700">
           <div
             v-for="n in 10"
             :key="n"
-            class="flex items-start py-6 space-x-3 border-gray-200 dark:border-gray-800"
+            class="flex items-start py-6 space-x-3 border-zinc-200 dark:border-zinc-800"
             :class="[n % 2 ? 'md:pr-6 lg:pr-8 md:border-r' : 'md:pl-6 lg:pl-8']">
-            <div class="min-w-14 w-6 h-10 bg-gray-200 dark:bg-gray-700 rounded flex-shrink-0"></div>
+            <div class="min-w-14 w-6 h-10 bg-zinc-200 dark:bg-zinc-700 rounded flex-shrink-0"></div>
             <div class="flex-1 space-y-2">
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+              <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4"></div>
+              <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-1/4"></div>
             </div>
           </div>
         </div>

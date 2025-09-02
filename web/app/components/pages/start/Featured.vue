@@ -103,12 +103,12 @@
 </script>
 
 <template>
-  <section class="featured-articles py-8 border-b border-gray-200 dark:border-gray-700">
+  <section class="featured-articles py-8 border-b border-zinc-200 dark:border-zinc-800">
     <div class="mx-auto px-8 max-w-7xl">
       <div
-        class="grid grid-cols-1 sm:grid-cols-12 gap-x-4 lg:gap-x-6 divide-y space-y-8 divide-gray-200 dark:divide-gray-700 sm:divide-y-0 sm:space-y-0">
+        class="grid grid-cols-1 sm:grid-cols-12 gap-x-4 lg:gap-x-6 divide-y space-y-8 divide-zinc-200 dark:divide-zinc-800 sm:divide-y-0 sm:space-y-0">
         <div class="hidden lg:block lg:col-span-3">
-          <ul class="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
+          <ul class="space-y-8 divide-y divide-zinc-200 dark:divide-zinc-800">
             <li v-for="article in leftArticles" :key="article.id" class="pb-8 last:pb-0">
               <ArticleBase :article="article" />
             </li>
@@ -116,23 +116,23 @@
         </div>
 
         <div
-          class="col-span-12 sm:col-span-8 lg:col-span-6 sm:border-r lg:border-x sm:border-gray-200 sm:dark:border-gray-700 sm:pr-4 lg:px-6 pb-8 last:pb-0">
+          class="col-span-12 sm:col-span-8 lg:col-span-6 sm:border-r lg:border-x sm:border-zinc-200 dark:sm:border-zinc-800 sm:pr-4 lg:px-6 pb-8 last:pb-0">
           <div class="lede" v-if="mainArticle">
             <ArticleLede :article="mainArticle" />
           </div>
         </div>
 
         <div class="col-span-12 sm:col-span-4 lg:col-span-3 pb-8 last:pb-0 sm:pb-0">
-          <ul class="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
+          <ul class="space-y-8 divide-y divide-zinc-200 dark:divide-zinc-800">
             <li v-for="article in rightArticles" :key="article.id" class="pb-8 last:pb-0">
               <ArticleBase :article="article" />
             </li>
           </ul>
         </div>
 
-        <div class="lg:hidden col-span-12 sm:pt-5 sm:mt-5 border-t border-gray-200 dark:border-gray-700">
+        <div class="lg:hidden col-span-12 sm:pt-5 sm:mt-5 border-t border-zinc-200 dark:border-zinc-800">
           <ul
-            class="divide-y space-y-8 sm:divide-y-0 sm:space-y-0 sm:flex sm:flex-row sm:space-x-8 sm:divide-x divide-gray-200 dark:divide-gray-700">
+            class="divide-y space-y-8 sm:divide-y-0 sm:space-y-0 sm:flex sm:flex-row sm:space-x-8 sm:divide-x divide-zinc-200 dark:divide-zinc-800">
             <li v-for="article in leftArticles" :key="article.id" class="pb-8 last:pb-0 sm:pb-0 sm:pr-8 last:sm:pr-0">
               <ArticleBase :article="article" />
             </li>

@@ -2,8 +2,8 @@
 
 <template>
   <Html class="scroll-pt-16 font-sans antialiased">
-    <Body class="bg-gray-50 dark:bg-gray-950">
-      <NuxtLoadingIndicator color="var(--color-gray-500)" />
+    <Body class="bg-zinc-50 dark:bg-zinc-950">
+      <NuxtLoadingIndicator color="var(--color-zinc-500)" />
       <NuxtRouteAnnouncer />
       <NuxtLayout>
         <NuxtPage />

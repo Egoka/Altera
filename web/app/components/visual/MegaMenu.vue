@@ -250,7 +250,7 @@
 
   <!-- MegaMenu -->
   <div
-    class="fixed left-0 right-0 bg-white border-b border-gray-200 shadow-lg transition-all duration-300 ease-in-out z-50"
+    class="fixed left-0 right-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-lg transition-all duration-300 ease-in-out z-50"
     :style="{
       top: `${HEADER_HEIGHT}px`,
       height: menuHeight
@@ -260,7 +260,7 @@
       'opacity-0': !isOpen
     }">
     <div
-      class="relative max-w-7xl mx-auto border-t border-gray-200 overflow-auto lg:overflow-hidden"
+      class="relative max-w-7xl mx-auto border-t border-zinc-200 dark:border-zinc-800 overflow-auto lg:overflow-hidden"
       :class="[menuHeight === '0px' ? 'p-0' : 'px-6 lg:px-8 py-8']"
       :style="{ height: menuHeight }">
       <div
@@ -270,12 +270,12 @@
           'opacity-100': showContent,
           'opacity-0': !showContent
         }">
-        <div class="lg:col-span-8 lg:pr-5">
+        <div class="lg:col-span-8 lg:pr-5 mb-8 md:mb-0">
           <div class="flex justify-between items-end mb-3">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Топ тематики</h3>
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-300 mb-4">Топ тематики</h3>
             <NuxtLink to="/types">
               <button
-                class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
+                class="inline-block mt-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-800 dark:hover:text-primary-300 transition-colors">
                 Открыть все
               </button>
             </NuxtLink>
@@ -284,16 +284,17 @@
             <div
               v-for="topic in topTopics.slice(0, 8)"
               :key="topic.id"
-              class="group cursor-pointer hover:bg-gray-50 rounded-lg p-3 transition-all duration-200">
+              class="group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg p-3 transition-all duration-200">
               <div class="flex items-start gap-3">
                 <div class="flex-shrink-0">
                   <img :src="topic.image" :alt="topic.title" class="w-16 h-12 object-cover rounded-md" />
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h4 class="font-medium text-gray-900 group-hover:text-primary-600 transition-colors h-6 truncate">
+                  <h4
+                    class="font-medium text-zinc-800 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-zinc-100 transition-colors h-6 truncate">
                     {{ topic.title }}
                   </h4>
-                  <p class="text-sm text-gray-600 truncate">
+                  <p class="text-sm text-zinc-600 dark:text-zinc-500 truncate">
                     {{ topic.description }}
                   </p>
                 </div>
@@ -302,23 +303,23 @@
           </div>
         </div>
 
-        <div class="lg:col-span-2 lg:border-l lg:pl-5 lg:border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Популярные теги</h3>
+        <div class="lg:col-span-2 lg:border-l lg:pl-5 lg:border-zinc-200 dark:border-zinc-800">
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-300 mb-4">Популярные теги</h3>
           <div class="relative">
             <div class="flex flex-wrap gap-2 max-h-[300px] overflow-y-hidden pb-2">
               <a
                 v-for="tag in topTags.slice(0, 20)"
                 :key="tag"
                 href="#"
-                class="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
+                class="inline-block px-3 py-1 bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300 rounded-full text-sm hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-800 dark:hover:text-primary-300 transition-colors">
                 {{ tag }}
               </a>
             </div>
             <div
-              class="hidden lg:block absolute bottom-[36px] left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-gray-900 dark:via-gray-900/90 pointer-events-none" />
+              class="hidden lg:block absolute bottom-[36px] left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-zinc-900 dark:via-zinc-900/90 pointer-events-none" />
             <NuxtLink to="/tags">
               <button
-                class="inline-block mt-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 transition-colors">
+                class="inline-block mt-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-md text-sm hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-800 dark:hover:text-primary-300 transition-colors">
                 Посмотреть все
               </button>
             </NuxtLink>
@@ -328,7 +329,7 @@
 
       <button
         v-if="showContent"
-        class="hidden lg:block absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+        class="hidden lg:block absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
         aria-label="Закрыть меню"
         @click="handleClose">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -18,7 +18,7 @@
           <!-- Заголовок -->
           <NuxtLink :to="slug" class="block group">
             <h2
-              class="font-garamond-libre text-2xl lg:text-3xl xl:text-4xl font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
+              class="font-garamond-libre text-2xl lg:text-3xl xl:text-4xl font-medium text-zinc-900 dark:text-zinc-300 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
               {{ article.title }}
             </h2>
           </NuxtLink>
@@ -26,7 +26,7 @@
           <!-- Подзаголовок -->
           <p
             v-if="article.dek"
-            class="font-waterway text-lg lg:text-xl text-gray-700 dark:text-gray-300 font-light leading-relaxed">
+            class="font-waterway text-lg lg:text-xl text-zinc-700 dark:text-zinc-300 font-light leading-relaxed">
             {{ article.dek }}
           </p>
 
@@ -34,7 +34,7 @@
           <div class="pt-2">
             <NuxtLink
               :to="author"
-              class="font-waterway text-sm lg:text-base font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-wider transition-colors">
+              class="font-waterway text-sm lg:text-base font-medium text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-wider transition-colors">
               {{ article.author.name }}
             </NuxtLink>
           </div>
@@ -43,7 +43,7 @@
           <div class="pt-1">
             <NuxtLink
               :to="contentType"
-              class="text-xs lg:text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-light">
+              class="text-xs lg:text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-light">
               {{ article.contentType.name }}
             </NuxtLink>
           </div>
@@ -61,7 +61,7 @@
           </NuxtLink>
 
           <!-- Кредиты фотографа (как на изображении) -->
-          <figcaption class="text-xs text-gray-500 dark:text-gray-400 font-light mt-2 text-right">
+          <figcaption class="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-2 text-right">
             <span class="opacity-75">© {{ article.author.name }}</span>
           </figcaption>
         </figure>

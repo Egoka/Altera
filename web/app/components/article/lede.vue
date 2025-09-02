@@ -18,8 +18,8 @@
           :alt="article.title"
           class="w-full h-64 sm:h-80 md:h-96 lg:h-[350px] object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
-      <figcaption class="text-sm text-gray-500 dark:text-gray-400 font-light mt-3">
-        <NuxtLink :to="contentType" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+      <figcaption class="text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3">
+        <NuxtLink :to="contentType">
           {{ article.contentType.name }}
         </NuxtLink>
       </figcaption>
@@ -28,13 +28,13 @@
     <div class="lede-title mb-6 text-center">
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-tight">
+        class="font-garamond-libre text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-300 transition-colors leading-tight">
         {{ article.title }}
       </NuxtLink>
     </div>
 
     <p
-      class="lede-dek font-garamond-libre text-lg sm:text-xl text-gray-700 dark:text-gray-300 mb-6 text-center leading-normal max-w-3xl mx-auto">
+      class="lede-dek font-garamond-libre text-lg sm:text-xl text-zinc-700 dark:text-zinc-300 mb-6 text-center leading-normal max-w-3xl mx-auto">
       {{ article.dek }}
     </p>
 
@@ -42,7 +42,7 @@
       <div class="byline">
         <NuxtLink
           :to="author"
-          class="font-waterway text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-wider">
+          class="font-waterway text-sm font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
           {{ article.author.name }}
         </NuxtLink>
       </div>

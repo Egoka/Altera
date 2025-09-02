@@ -94,18 +94,18 @@
 </script>
 
 <template>
-  <section class="py-6 border-b border-gray-200 dark:border-gray-700">
+  <section class="py-6 border-b border-zinc-200 dark:border-zinc-700">
     <div class="hidden lg:grid lg:gap-x-6" :style="gridStyles">
       <div
         v-for="(article, index) in articles"
         :key="article.id"
         :style="{ 'grid-area': getItemArea(index) }"
-        :class="`w-full ${needsDivider(index) ? 'border-r border-gray-200 dark:border-gray-700 pr-6' : ''}`">
+        :class="`w-full ${needsDivider(index) ? 'border-r border-zinc-200 dark:border-zinc-700 pr-6' : ''}`">
         <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-3xl" />
         <ArticleSmall
           v-else
           :article
-          :class="!(index % 2) ? 'pt-4 mt-2 border-t border-gray-200 dark:border-gray-700' : ''" />
+          :class="!(index % 2) ? 'pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700' : ''" />
       </div>
     </div>
 
@@ -113,22 +113,22 @@
       <div
         v-for="(article, index) in articles"
         :key="`tablet-${article.id}`"
-        :class="`w-full ${index === 0 ? 'col-span-2 ' : ''}${index !== 0 && index % 2 ? 'pr-4 border-r border-gray-200 dark:border-gray-700' : ''}`">
+        :class="`w-full ${index === 0 ? 'col-span-2 ' : ''}${index !== 0 && index % 2 ? 'pr-4 border-r border-zinc-200 dark:border-zinc-700' : ''}`">
         <ArticleLarge
           v-if="index === 0"
           :article
-          class="m-auto max-w-3xl pb-6 mb-6 border-b border-gray-200 dark:border-gray-700" />
+          class="m-auto max-w-3xl pb-6 mb-6 border-b border-zinc-200 dark:border-zinc-700" />
         <ArticleSmall
           v-else
           :article
-          :class="`${4 === index || 3 === index ? 'pt-4 mt-2 border-t border-gray-200 dark:border-gray-700' : ''}`" />
+          :class="`${4 === index || 3 === index ? 'pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700' : ''}`" />
       </div>
     </div>
 
     <div class="grid sm:hidden grid-cols-1">
       <div v-for="(article, index) in articles" :key="`mobile-${article.id}`" class="w-full">
         <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-md" />
-        <ArticleSmall v-else :article="article" class="pt-4 mt-2 border-t border-gray-200 dark:border-gray-700" />
+        <ArticleSmall v-else :article="article" class="pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700" />
       </div>
     </div>
   </section>

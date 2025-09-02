@@ -108,6 +108,51 @@
   font-display: swap;
 }
 
+/* Cormorant SC Light */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC Regular */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC Medium */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC SemiBold */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC Bold */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Waterway Display Font */
 @font-face {
   font-family: "Waterway";
@@ -231,6 +276,7 @@
   --font-bergamasco: "Bergamasco", serif;
   --font-waterway: "Waterway", serif;
   --font-garamond-libre: "Garamond Libre", serif;
+  --font-cormorant: "Cormorant SC", serif;
   --font-inter: "Inter", system-ui, sans-serif;
   --font-poppins: "Poppins", system-ui, sans-serif;
   --font-roboto: "Roboto", system-ui, sans-serif;

@@ -26,18 +26,18 @@
 
 <template>
   <header
-    class="fixed top-0 left-0 right-0 z-50 bg-white transition-all duration-300 ease-in-out"
+    class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 transition-all duration-300 ease-in-out"
     :class="{
       'shadow-lg': isScrolled,
-      'bg-white/95 backdrop-blur-sm': isScrolled,
+      'bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm': isScrolled,
       '-translate-y-full': !isHeaderVisible
     }">
     <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between h-14 px-3 lg:px-10">
       <div class="hidden lg:flex lg:flex-1 lg:gap-x-12">
         <button
           :class="{
-            'text-primary-600': isMegaMenuOpen,
-            'text-gray-900': !isMegaMenuOpen
+            'text-zinc-600 dark:text-zinc-100': isMegaMenuOpen,
+            'text-zinc-900 dark:text-zinc-300': !isMegaMenuOpen
           }"
           class="relative flex items-center gap-x-1 py-3.5 text-sm/6 font-semibold transition-colors cursor-pointer"
           @click="toggleMegaMenu">
@@ -48,8 +48,8 @@
             data-slot="icon"
             aria-hidden="true"
             :class="{
-              'text-primary-600 rotate-180': isMegaMenuOpen,
-              'text-gray-400': !isMegaMenuOpen
+              'text-zinc-600 dark:text-zinc-100 rotate-180': isMegaMenuOpen,
+              'text-zinc-400 dark:text-zinc-500': !isMegaMenuOpen
             }"
             class="size-5 flex-none transition-transform duration-200">
             <path
@@ -59,13 +59,13 @@
           </svg>
         </button>
 
-        <a href="#" class="py-3.5 text-sm/6 font-semibold text-gray-900">Popular</a>
-        <a href="#" class="py-3.5 text-sm/6 font-semibold text-gray-900">Latest</a>
+        <a href="#" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Popular</a>
+        <a href="#" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Latest</a>
       </div>
       <div class="flex lg:hidden">
         <button
           type="button"
-          class="w-14 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          class="w-14 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           @click="toggleMegaMenu">
           <span class="sr-only">Open main menu</span>
           <IconBurger :is-open="isMegaMenuOpen" />
@@ -79,7 +79,7 @@
       </div>
 
       <div class="lg:flex lg:flex-1 lg:justify-end">
-        <a href="#" class="px-2 py-3.5 text-sm/6 font-semibold text-gray-900">Log in</a>
+        <a href="#" class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Log in</a>
       </div>
     </nav>
     <VisualMegaMenu :is-open="isMegaMenuOpen && isHeaderVisible" @close="closeMegaMenu" />
