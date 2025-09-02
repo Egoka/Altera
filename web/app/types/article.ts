@@ -34,3 +34,17 @@ export interface ArticleResponse {
     slug: string
   }
 }
+
+export interface PopularArticleData {
+  id: string
+  title: string
+  slug: string
+  author: {
+    name: string
+    slug: string
+  }
+}
+
+export interface PopularArticlesResponse {
+  popularArticles: PopularArticleData[]
+}

@@ -95,8 +95,7 @@
 
 <template>
   <section class="py-6 border-b border-gray-200 dark:border-gray-700">
-    <!-- Desktop layout (lg: 1024px+) -->
-    <div class="hidden lg:grid gap-x-4 lg:gap-x-6" :style="gridStyles">
+    <div class="hidden lg:grid lg:gap-x-6" :style="gridStyles">
       <div
         v-for="(article, index) in articles"
         :key="article.id"
@@ -105,12 +104,11 @@
         <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-3xl" />
         <ArticleSmall
           v-else
-          :article="article"
+          :article
           :class="!(index % 2) ? 'pt-4 mt-2 border-t border-gray-200 dark:border-gray-700' : ''" />
       </div>
     </div>
 
-    <!-- Tablet layout (sm: 640px - lg: 1024px) -->
     <div class="hidden sm:grid lg:hidden grid-cols-2 gap-x-4">
       <div
         v-for="(article, index) in articles"
@@ -118,16 +116,15 @@
         :class="`w-full ${index === 0 ? 'col-span-2 ' : ''}${index !== 0 && index % 2 ? 'pr-4 border-r border-gray-200 dark:border-gray-700' : ''}`">
         <ArticleLarge
           v-if="index === 0"
-          :article="article"
+          :article
           class="m-auto max-w-3xl pb-6 mb-6 border-b border-gray-200 dark:border-gray-700" />
         <ArticleSmall
           v-else
-          :article="article"
+          :article
           :class="`${4 === index || 3 === index ? 'pt-4 mt-2 border-t border-gray-200 dark:border-gray-700' : ''}`" />
       </div>
     </div>
 
-    <!-- Mobile layout (sm: 640px-) -->
     <div class="grid sm:hidden grid-cols-1">
       <div v-for="(article, index) in articles" :key="`mobile-${article.id}`" class="w-full">
         <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-md" />

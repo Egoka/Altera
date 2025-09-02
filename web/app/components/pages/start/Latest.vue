@@ -374,7 +374,7 @@
 <template>
   <section class="latest-articles pt-8">
     <div class="mx-auto px-8 max-w-7xl">
-      <h2 class="font-waterway text-3xl font-bold sm:mb-8 text-gray-900 dark:text-white">Последние статьи</h2>
+      <h2 class="font-waterway text-3xl font-bold tracking-widest sm:mb-8 text-gray-900 dark:text-white">Новое</h2>
       <ArticleGroup
         v-for="(group, index) in articleGroups"
         :key="index"
