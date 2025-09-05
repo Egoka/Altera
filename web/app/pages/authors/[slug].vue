@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleListItem, Pagination } from "~/query/types"
+  import type { ArticleListItem } from "~/query/types"
   import type User from "~/types/user"
 
   definePageMeta({
@@ -101,51 +101,28 @@
     }
   ]
 
-  // Моковые данные статистики
-  const mockStats = {
-    totalArticles: 15,
-    articlesThisMonth: 3,
-    popularTags: ["Foreign Policy", "Middle East", "Psychology", "Security", "Journalism"]
-  }
-
   console.log("slug", slug)
 
   // Используем моковые данные вместо API запроса
   const user = computed<User>(() => mockUser)
   const articles = computed<ArticleListItem[]>(() => mockArticles)
-  const pagination = computed<Pagination>(() => ({
-    totalCount: mockArticles.length,
-    totalPages: 1,
-    currentPage: 1
-  }))
-  const stats = computed(() => mockStats)
 </script>
 
 <template>
   <div>
     <HeaderUser v-if="user" :user="user" />
 
-    <!-- Статистика автора -->
-    <!--    <div v-if="stats" class="max-w-7xl mx-auto px-8 sm:px-10 py-8">-->
-    <!--      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">-->
-    <!--        <div class="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-lg">-->
-    <!--          <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ stats.totalArticles }}</div>-->
-    <!--          <div class="text-zinc-600 dark:text-zinc-400">Всего статей</div>-->
-    <!--        </div>-->
-    <!--        <div class="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-lg">-->
-    <!--          <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ stats.articlesThisMonth }}</div>-->
-    <!--          <div class="text-zinc-600 dark:text-zinc-400">Статей в этом месяце</div>-->
-    <!--        </div>-->
-    <!--        <div class="bg-zinc-50 dark:bg-zinc-800 p-6 rounded-lg">-->
-    <!--          <div class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ stats.popularTags?.length || 0 }}</div>-->
-    <!--          <div class="text-zinc-600 dark:text-zinc-400">Популярные теги</div>-->
-    <!--        </div>-->
-    <!--      </div>-->
-    <!--    </div>-->
-
     <section class="px-8 sm:px-10 py-12">
       <div class="grid gap-8 max-w-3xl m-auto divide-y divide-zinc-200 dark:divide-zinc-800">
-        <div v-for="(article, index) in articles" :key="`featured-${index + 1}`" class="pb-8">
+        <div
+          v-for="(article, index) in articles"
+          :key="`featured-${index + 1}`"
+          :class="[
+            'pb-8 border-b',
+            'border-zinc-200 dark:border-zinc-800',
+            'hover:border-zinc-400 dark:hover:border-zinc-400',
+            'transition-colors duration-500'
+          ]">
           <ArticleAuthor :article="article" />
         </div>
       </div>

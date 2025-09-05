@@ -20,7 +20,7 @@
             {{ article.title }}
           </NuxtLink>
         </div>
-        <div ref="bottomRef" class="mt-auto flex justify-between flex-wrap gap-x-3 flex-row items-start">
+        <div ref="bottomRef" class="mt-auto flex justify-start flex-wrap gap-x-5 flex-row items-start">
           <ShowAuthor :link="author" :name="article.author.name" class="block" />
           <ShowType :link="contentType" :name="article.contentType.name" class="block" />
         </div>
