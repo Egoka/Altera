@@ -120,6 +120,9 @@
                 <li>
                   <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">License</a>
                 </li>
+                <li>
+                  <a href="/fonts-showcase" class="text-sm/6 text-gray-400 hover:text-gray-300">Fonts</a>
+                </li>
               </ul>
             </div>
           </div>

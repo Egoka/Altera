@@ -7,14 +7,26 @@
   const slug = computed(() => `/articles/${props.article.slug}`)
   const contentType = computed(() => `/types/${props.article.contentType.slug}`)
   const author = computed(() => `/authors/${props.article.author.slug}`)
+
+  // Refs для composable
+  const containerRef = ref<HTMLElement>()
+  const titleRef = ref<HTMLElement>()
+  const bottomRef = ref<HTMLElement>()
+
+  // Используем composable для динамического line-clamp
+  const { lineClampStyle, lineClampClasses } = useLineClamp(containerRef, titleRef, bottomRef, {
+    lineHeight: 20, // text-md + leading-tight
+    maxLines: 6,
+    minLines: 1
+    // containerHeight вычисляется автоматически из containerRef
+  })
 </script>
 
 <template>
   <article v-if="slug && article.title">
     <div class="flex flex-col sm:flex-row gap-6 items-start">
-      <!-- Текст (слева на sm+, снизу на минимальном экране) -->
-      <div class="flex-1 sm:max-w-1/2 order-2 sm:order-1">
-        <div class="mb-4">
+      <div ref="containerRef" class="h-48 max-h-48 flex flex-col flex-1 sm:max-w-1/2 order-2 sm:order-1">
+        <div ref="titleRef" class="mb-4">
           <NuxtLink
             :to="slug"
             class="font-garamond-libre text-2xl font-bold text-zinc-900 dark:text-zinc-300 transition-colors leading-tight mb-5">
@@ -23,14 +35,19 @@
         </div>
         <div
           v-if="article.dek"
-          class="font-garamond-libre text-md text-zinc-900 dark:text-zinc-300 font-light leading-tight mb-4">
+          :class="[
+            'font-garamond-libre text-md font-light leading-tight',
+            'text-zinc-900 dark:text-zinc-300',
+            'mb-4',
+            lineClampClasses
+          ]"
+          :style="lineClampStyle">
           {{ article.dek }}
         </div>
-        <NuxtLink
-          :to="author"
-          class="font-waterway text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
-          {{ article.author.name }}
-        </NuxtLink>
+        <div ref="bottomRef" class="mt-auto flex justify-between flex-wrap gap-x-3 flex-row items-start">
+          <ShowAuthor :link="author" :name="article.author.name" class="block" />
+          <ShowType :link="contentType" :name="article.contentType.name" class="block" />
+        </div>
       </div>
 
       <!-- Изображение (справа на sm+, сверху на минимальном экране) -->
@@ -42,12 +59,6 @@
               :alt="article.title"
               class="w-full h-48 max-h-48 rounded-sm object-cover transition-transform duration-300" />
           </NuxtLink>
-
-          <figcaption class="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-2">
-            <NuxtLink :to="contentType">
-              {{ article.contentType.name }}
-            </NuxtLink>
-          </figcaption>
         </figure>
       </div>
     </div>

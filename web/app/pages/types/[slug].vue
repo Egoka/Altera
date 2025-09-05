@@ -12,9 +12,10 @@
     name: "National Security",
     slug: "national-security",
     description: "The Atlantic's coverage of national security, military intelligence, global conflict, and more",
-    iconUrl: "images/Art.png",
-    // "images/Sport.png",
-    // "https://cdn.theatlantic.com/thumbor/bsofsE3P6DEt6k04rWoKU6v9kD8=/0x0:960x960/200x200/media/img/collections/icon/Layer_1_1/original.png",
+    iconUrl:
+      // "images/Art.png",
+      // "images/Sport.png",
+      "https://cdn.theatlantic.com/thumbor/bsofsE3P6DEt6k04rWoKU6v9kD8=/0x0:960x960/200x200/media/img/collections/icon/Layer_1_1/original.png",
     order: 1,
     status: "active",
     createdAt: "2025-01-01T00:00:00Z",
@@ -48,11 +49,10 @@
     <section class="px-8 sm:px-10 py-12">
       <div class="grid gap-8 max-w-3xl m-auto divide-y divide-zinc-200 dark:divide-zinc-800">
         <div v-for="(article, index) in articles" :key="`featured-${index + 1}`" class="pb-8">
-          <ArticleTypeContent :article="article" />
+          <ArticleType :article="article" />
         </div>
       </div>
     </section>
-    <!--    <DemoScreenSizeIndicator />-->
   </div>
 </template>
 

@@ -12,7 +12,7 @@
 <template>
   <article v-if="slug && article.title">
     <div class="flex flex-row gap-6 items-start">
-      <div class="flex-1 min-w-0">
+      <div class="h-20 max-h-24 flex flex-col flex-1 min-w-0">
         <div class="mb-2 leading-4">
           <NuxtLink
             :to="slug"
@@ -20,27 +20,20 @@
             {{ article.title }}
           </NuxtLink>
         </div>
-        <NuxtLink
-          :to="author"
-          class="font-waterway text-[10px] font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
-          {{ article.author.name }}
-        </NuxtLink>
+        <div ref="bottomRef" class="mt-auto flex justify-between flex-wrap gap-x-3 flex-row items-start">
+          <ShowAuthor :link="author" :name="article.author.name" class="block" />
+          <ShowType :link="contentType" :name="article.contentType.name" class="block" />
+        </div>
       </div>
 
       <!-- Изображение (правая сторона) -->
-      <figure class="relative flex-shrink-0">
+      <figure class="relative flex-shrink-0 flex flex-col items-end">
         <NuxtLink :to="slug" class="block group">
           <NuxtImg
             :src="article.featuredImage"
             :alt="article.title"
             class="max-w-28 w-28 h-20 rounded-sm object-cover transition-transform duration-300" />
         </NuxtLink>
-
-        <figcaption class="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-2">
-          <NuxtLink :to="contentType" class="transition-colors">
-            {{ article.contentType.name }}
-          </NuxtLink>
-        </figcaption>
       </figure>
     </div>
   </article>

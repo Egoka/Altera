@@ -7,7 +7,7 @@
       slug: "typescript-5-new-features",
       dek: "Обзор ключевых нововведений в TypeScript 5.0",
       excerpt: "Изучаем новые возможности TypeScript 5.0: декораторы, const type parameters и другие улучшения.",
-      featuredImage: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=6",
       publishedAt: "2024-01-20T08:30:00Z",
       author: {
         name: "Алексей Волков",
@@ -29,7 +29,7 @@
       slug: "docker-containerization-advanced",
       dek: "Полное руководство по Docker",
       excerpt: "От базовых концепций до продвинутых техник оптимизации Docker контейнеров.",
-      featuredImage: "https://images.unsplash.com/photo-1605745341112-85968b19335b?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=7",
       publishedAt: "2024-01-18T15:45:00Z",
       author: {
         name: "Ольга Морозова",
@@ -51,7 +51,7 @@
       slug: "graphql-vs-rest-comparison",
       dek: "Сравнение подходов к API",
       excerpt: "Детальное сравнение GraphQL и REST API с практическими примерами использования.",
-      featuredImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=8",
       publishedAt: "2024-01-16T12:20:00Z",
       author: {
         name: "Игорь Смирнов",
@@ -74,7 +74,7 @@
       slug: "vue-3-composition-api-guide",
       dek: "Освоение Composition API",
       excerpt: "Подробное руководство по использованию Composition API в Vue.js 3 с практическими примерами.",
-      featuredImage: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=9",
       publishedAt: "2024-01-14T10:15:00Z",
       author: {
         name: "Екатерина Новикова",
@@ -96,7 +96,7 @@
       slug: "kubernetes-beginners-guide",
       dek: "Основы оркестрации контейнеров",
       excerpt: "Пошаговое руководство по развертыванию и управлению приложениями в Kubernetes.",
-      featuredImage: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=10",
       publishedAt: "2024-01-12T16:30:00Z",
       author: {
         name: "Денис Лебедев",
@@ -118,7 +118,7 @@
       slug: "nodejs-performance-optimization",
       dek: "Техники повышения производительности",
       excerpt: "Практические методы оптимизации производительности Node.js приложений.",
-      featuredImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=11",
       publishedAt: "2024-01-10T14:00:00Z",
       author: {
         name: "Андрей Козлов",
@@ -140,7 +140,7 @@
       slug: "css-grid-flexbox-modern-layout",
       dek: "Освоение современных CSS техник",
       excerpt: "Подробное руководство по использованию CSS Grid и Flexbox для создания адаптивных макетов.",
-      featuredImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=12",
       publishedAt: "2024-01-08T11:45:00Z",
       author: {
         name: "Наталья Соколова",
@@ -162,7 +162,7 @@
       slug: "postgresql-query-optimization",
       dek: "Повышение производительности БД",
       excerpt: "Техники оптимизации запросов PostgreSQL для улучшения производительности приложений.",
-      featuredImage: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=13",
       publishedAt: "2024-01-06T09:20:00Z",
       author: {
         name: "Михаил Петров",
@@ -184,7 +184,7 @@
       slug: "git-workflow-branching-strategies",
       dek: "Лучшие практики Git",
       excerpt: "Обзор популярных стратегий ветвления Git и их применение в реальных проектах.",
-      featuredImage: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=14",
       publishedAt: "2024-01-04T13:15:00Z",
       author: {
         name: "Татьяна Иванова",
@@ -206,7 +206,7 @@
       slug: "webpack-5-configuration-optimization",
       dek: "Современная сборка проектов",
       excerpt: "Подробное руководство по настройке и оптимизации Webpack 5 для современных веб-проектов.",
-      featuredImage: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=15",
       publishedAt: "2024-01-02T16:00:00Z",
       author: {
         name: "Сергей Морозов",
@@ -228,7 +228,7 @@
       slug: "react-hooks-advanced-patterns",
       dek: "Создание кастомных хуков",
       excerpt: "Изучаем продвинутые паттерны использования React Hooks и создание кастомных хуков.",
-      featuredImage: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=16",
       publishedAt: "2024-01-01T10:30:00Z",
       author: {
         name: "Анна Сидорова",
@@ -250,7 +250,7 @@
       slug: "mongodb-aggregation-complex-queries",
       dek: "Мощные возможности MongoDB",
       excerpt: "Изучаем возможности MongoDB Aggregation Framework для выполнения сложных запросов.",
-      featuredImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=17",
       publishedAt: "2023-12-30T14:45:00Z",
       author: {
         name: "Дмитрий Волков",
@@ -272,7 +272,7 @@
       slug: "jest-testing-advanced-techniques",
       dek: "Полное покрытие тестами",
       excerpt: "Подробное руководство по тестированию с Jest: от базовых тестов до продвинутых техник.",
-      featuredImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=18",
       publishedAt: "2023-12-28T11:20:00Z",
       author: {
         name: "Елена Козлова",
@@ -294,7 +294,7 @@
       slug: "redis-caching-strategies-patterns",
       dek: "Оптимизация производительности",
       excerpt: "Изучаем различные стратегии кэширования с Redis и их применение в реальных проектах.",
-      featuredImage: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=19",
       publishedAt: "2023-12-26T15:10:00Z",
       author: {
         name: "Игорь Морозов",
@@ -316,7 +316,7 @@
       slug: "websocket-real-time-communication",
       dek: "Двусторонняя связь в веб-приложениях",
       excerpt: "Практическое руководство по реализации WebSocket для создания приложений реального времени.",
-      featuredImage: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=20",
       publishedAt: "2023-12-24T12:30:00Z",
       author: {
         name: "Мария Лебедева",
@@ -336,10 +336,10 @@
 
   // Конфигурация групп статей: количество статей и позиция для каждой группы
   const groupConfig = [
-    { count: 5, position: "center" as const },
     { count: 3, position: "left" as const },
-    { count: 5, position: "right" as const },
-    { count: 3, position: "center" as const },
+    { count: 3, position: "right" as const },
+    { count: 3, position: "left" as const },
+    { count: 3, position: "right" as const },
     { count: 3, position: "left" as const },
     { count: 2, position: "right" as const }
   ]

@@ -28,7 +28,7 @@
       :style="{
         opacity: textOpacity,
         transform: `translateX(${isScrolled ? '-10px' : '0px'})`,
-        width: isScrolled ? '0px' : '70px'
+        width: isScrolled ? '0px' : '100px'
       }">
       ltera
     </span>

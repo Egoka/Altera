@@ -18,25 +18,17 @@
           :alt="article.title"
           class="w-full h-52 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
-      <figcaption class="text-xs text-zinc-500 dark:text-zinc-400 font-light mt-2">
-        <NuxtLink :to="contentType" class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-          {{ article.contentType.name }}
-        </NuxtLink>
-      </figcaption>
     </figure>
 
     <div>
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-lg sm:text-xl font-medium text-zinc-900 dark:text-zinc-300 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors leading-1">
+        class="font-garamond-libre text-lg sm:text-xl font-medium text-zinc-900 dark:text-zinc-300 leading-1">
         {{ article.title }}
       </NuxtLink>
-      <div>
-        <NuxtLink
-          :to="author"
-          class="font-waterway text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-wide">
-          {{ article.author.name }}
-        </NuxtLink>
+      <div ref="bottomRef" class="mt-3 flex justify-between flex-wrap gap-x-3 flex-row items-start">
+        <ShowAuthor :link="author" :name="article.author.name" class="block" />
+        <ShowType :link="contentType" :name="article.contentType.name" class="block" />
       </div>
     </div>
   </article>

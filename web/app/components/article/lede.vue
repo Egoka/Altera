@@ -10,22 +10,17 @@
 </script>
 
 <template>
-  <article class="lede-article">
-    <figure class="lede-figure mb-8">
+  <article class="lede-article flex flex-col gap-6">
+    <figure class="">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
           class="w-full h-64 sm:h-80 md:h-96 lg:h-[350px] object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
-      <figcaption class="text-sm text-zinc-500 dark:text-zinc-400 font-light mt-3">
-        <NuxtLink :to="contentType">
-          {{ article.contentType.name }}
-        </NuxtLink>
-      </figcaption>
     </figure>
 
-    <div class="lede-title mb-6 text-center">
+    <div class="text-center">
       <NuxtLink
         :to="slug"
         class="font-garamond-libre text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-300 transition-colors leading-tight">
@@ -34,18 +29,13 @@
     </div>
 
     <p
-      class="lede-dek font-garamond-libre text-lg sm:text-xl text-zinc-700 dark:text-zinc-300 mb-6 text-center leading-normal max-w-3xl mx-auto">
+      class="lede-dek font-garamond-libre text-lg sm:text-xl text-zinc-700 dark:text-zinc-300 text-center leading-normal max-w-3xl mx-auto">
       {{ article.dek }}
     </p>
 
-    <div class="homepage-metadata text-center">
-      <div class="byline">
-        <NuxtLink
-          :to="author"
-          class="font-waterway text-sm font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
-          {{ article.author.name }}
-        </NuxtLink>
-      </div>
+    <div class="text-center">
+      <ShowAuthor :link="author" :name="article.author.name" class="block" />
+      <ShowType :link="contentType" :name="article.contentType.name" class="block mt-1" />
     </div>
   </article>
 </template>

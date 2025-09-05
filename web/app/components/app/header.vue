@@ -29,7 +29,9 @@
     class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 transition-all duration-300 ease-in-out"
     :class="{
       'shadow-lg': isScrolled,
-      'bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm': isScrolled,
+      '!bg-transparent': !isScrolled,
+      'bg-white/75 dark:bg-zinc-950/75 backdrop-blur-sm': isScrolled,
+      '!bg-white dark:!bg-zinc-950': isMegaMenuOpen,
       '-translate-y-full': !isHeaderVisible
     }">
     <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between h-14 px-3 lg:px-10">
@@ -59,8 +61,12 @@
           </svg>
         </button>
 
-        <a href="#" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Popular</a>
-        <a href="#" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Latest</a>
+        <NuxtLink to="/types/popular" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
+          Popular
+        </NuxtLink>
+        <NuxtLink to="/types/latest" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
+          Latest
+        </NuxtLink>
       </div>
       <div class="flex lg:hidden">
         <button

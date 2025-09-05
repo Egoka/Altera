@@ -8,7 +8,7 @@
       dek: "Как ИИ меняет подход к созданию программного обеспечения",
       excerpt:
         "Исследуем влияние искусственного интеллекта на современные методы разработки, от автоматизации тестирования до генерации кода.",
-      featuredImage: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=1",
       publishedAt: "2024-01-15T10:00:00Z",
       author: {
         name: "Анна Петрова",
@@ -27,7 +27,7 @@
       dek: "Практическое руководство по внедрению микросервисов",
       excerpt:
         "Подробный разбор принципов микросервисной архитектуры с реальными примерами и рекомендациями по внедрению.",
-      featuredImage: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=2",
       publishedAt: "2024-01-12T14:30:00Z",
       author: {
         name: "Дмитрий Соколов",
@@ -46,7 +46,7 @@
       dek: "Обзор ключевых нововведений в React 18",
       excerpt:
         "Изучаем новые возможности React 18: Concurrent Features, Suspense, автоматическая батчинг и многое другое.",
-      featuredImage: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=3",
       publishedAt: "2024-01-10T09:15:00Z",
       author: {
         name: "Мария Иванова",
@@ -65,7 +65,7 @@
       dek: "Стратегии создания высокопроизводительных DevOps команд",
       excerpt:
         "Практические советы по формированию DevOps культуры в организации и построению эффективных команд разработки.",
-      featuredImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=4",
       publishedAt: "2024-01-08T16:45:00Z",
       author: {
         name: "Сергей Козлов",
@@ -83,7 +83,7 @@
       slug: "web-security-2024",
       dek: "Актуальные угрозы и методы защиты",
       excerpt: "Обзор современных угроз безопасности веб-приложений и эффективные методы защиты от них.",
-      featuredImage: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=400&fit=crop",
+      featuredImage: "https://picsum.photos/800/400?random=5",
       publishedAt: "2024-01-05T11:20:00Z",
       author: {
         name: "Елена Сидорова",
@@ -118,7 +118,7 @@
         <div
           class="col-span-12 sm:col-span-8 lg:col-span-6 sm:border-r lg:border-x sm:border-zinc-200 dark:sm:border-zinc-800 sm:pr-4 lg:px-6 pb-8 last:pb-0">
           <div class="lede" v-if="mainArticle">
-            <ArticleLede :article="mainArticle" />
+            <ArticleLede :article="mainArticle" class="mt-14" />
           </div>
         </div>
 

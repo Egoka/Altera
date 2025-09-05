@@ -10,7 +10,7 @@
   const position = computed(() => props.position ?? "left")
 
   // Определяем, нужен ли разделитель для блока
-  const needsDivider = (index: number) => {
+  const needsBorder = (index: number) => {
     const area = getItemArea(index)
     const count = articles.value.length
 
@@ -23,7 +23,7 @@
     } else if (position.value === "center") {
       // При position center: разделитель нужен элементам, которые не находятся в последней колонке
       if (count === 5 || count === 4) return area !== "d" && area !== "e"
-      if (count === 3) return area !== "a"
+      if (count === 3) return area !== "b" && area !== "c"
       if (count === 2) return area !== "b"
       return false
     } else {
@@ -100,7 +100,7 @@
         v-for="(article, index) in articles"
         :key="article.id"
         :style="{ 'grid-area': getItemArea(index) }"
-        :class="`w-full ${needsDivider(index) ? 'border-r border-zinc-200 dark:border-zinc-700 pr-6' : ''}`">
+        :class="`w-full ${needsBorder(index) ? 'border-r border-zinc-200 dark:border-zinc-700 pr-6' : ''}`">
         <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-3xl" />
         <ArticleSmall
           v-else
