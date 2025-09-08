@@ -111,24 +111,24 @@
   const topTopics = [
     {
       id: 1,
-      title: "Искусственный интеллект",
-      slug: "artificial-intelligence",
-      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=200&h=120&fit=crop",
-      description: "Новейшие разработки в области ИИ"
+      title: "National Security",
+      slug: "national-security",
+      image:
+        "https://cdn.theatlantic.com/thumbor/bsofsE3P6DEt6k04rWoKU6v9kD8=/0x0:960x960/200x200/media/img/collections/icon/Layer_1_1/original.png",
+      description: "The Atlantic's coverage of national security, military intelligence, global conflict, and more"
     },
     {
       id: 2,
-      title: "Климатические изменения",
+      title: "Sports",
       slug: "climate-change",
-      image:
-        "https://images.unsplash.com/photo-1599057857385-07c4d54ac76e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      image: "images/Sport.png",
       description: "Глобальные экологические вызовы"
     },
     {
       id: 3,
       title: "Цифровая экономика",
       slug: "digital-economy",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&h=120&fit=crop",
+      image: "images/Art.png",
       description: "Трансформация бизнеса в цифровую эпоху"
     },
     {
@@ -156,7 +156,7 @@
       id: 7,
       title: "Нейроинтерфейсы",
       slug: "neural-interfaces",
-      image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=200&h=120&fit=crop",
+      // image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=200&h=120&fit=crop",
       description: "Прямое подключение мозга к компьютерам"
     },
     {
@@ -296,24 +296,28 @@
               </button>
             </NuxtLink>
           </div>
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <NuxtLink
-              v-for="topic in topTopics.slice(0, 8)"
+              v-for="topic in topTopics.slice(0, 12)"
               :key="topic.id"
-              :to="`/types/${topic.slug}`"
-              class="group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg p-3 transition-all duration-200">
-              <div class="flex items-start gap-3">
+              :to="`/${topic.slug}`"
+              class="group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg p-3 transition-all duration-200">
+              <div class="flex items-center gap-3 h-full">
                 <div class="flex-shrink-0">
-                  <img :src="topic.image" :alt="topic.title" class="w-16 h-12 object-cover rounded-md" />
+                  <NuxtImg
+                    v-if="topic.image"
+                    :src="topic.image"
+                    :alt="topic.title"
+                    class="min-w-16 h-12 object-contain rounded-md dark:invert-100" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <h4
                     class="font-medium text-zinc-800 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-zinc-100 transition-colors h-6 truncate">
                     {{ topic.title }}
                   </h4>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-500 truncate">
-                    {{ topic.description }}
-                  </p>
+                  <!--<p class="text-sm text-zinc-600 dark:text-zinc-500 truncate">-->
+                  <!--  {{ topic.description }}-->
+                  <!--</p>-->
                 </div>
               </div>
             </NuxtLink>
@@ -324,13 +328,7 @@
           <h3 class="text-lg font-semibold text-zinc-900 dark:text-zinc-300 mb-4">Популярные теги</h3>
           <div class="relative">
             <div class="flex flex-wrap gap-2 max-h-[300px] overflow-y-hidden pb-2">
-              <NuxtLink
-                v-for="tag in topTags.slice(0, 20)"
-                :key="tag.slug"
-                :to="`/tags/${tag.slug}`"
-                class="inline-block px-3 py-1 bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300 rounded-full text-sm hover:bg-primary-100 hover:text-primary-700 dark:hover:bg-primary-800 dark:hover:text-primary-300 transition-colors">
-                {{ tag.name }}
-              </NuxtLink>
+              <ShowTag v-for="tag in topTags.slice(0, 20)" :key="tag.slug" :link="tag.slug" :name="tag.name" />
             </div>
             <div
               class="hidden lg:block absolute bottom-[36px] left-0 right-0 h-16 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-zinc-950 dark:via-zinc-950/90 pointer-events-none" />

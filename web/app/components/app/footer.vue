@@ -1,14 +1,16 @@
 <script setup lang="ts"></script>
 
 <template>
-  <footer class="bg-gray-900">
+  <footer class="bg-zinc-100 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800">
     <div class="mx-auto max-w-7xl px-6 pt-16 pb-8 sm:pt-24 lg:px-8 lg:pt-32">
       <div class="xl:grid xl:grid-cols-3 xl:gap-8">
         <div class="space-y-8">
-          <IconLogo width="35" class="fill-white" />
+          <IconLogo width="35" class="fill-zinc-500 dark:fill-zinc-300" />
           <p class="text-sm/6 text-balance text-gray-400">Where culture speaks differently.</p>
           <div class="flex gap-x-6">
-            <a href="#" class="text-gray-400 hover:text-gray-300">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500">
               <span class="sr-only">Facebook</span>
               <svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -17,7 +19,9 @@
                   clip-rule="evenodd" />
               </svg>
             </a>
-            <a href="#" class="text-gray-400 hover:text-gray-300">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500">
               <span class="sr-only">Instagram</span>
               <svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -26,14 +30,18 @@
                   clip-rule="evenodd" />
               </svg>
             </a>
-            <a href="#" class="text-gray-400 hover:text-gray-300">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500">
               <span class="sr-only">X</span>
               <svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   d="M13.6823 10.6218L20.2391 3H18.6854L12.9921 9.61788L8.44486 3H3.2002L10.0765 13.0074L3.2002 21H4.75404L10.7663 14.0113L15.5685 21H20.8131L13.6819 10.6218H13.6823ZM11.5541 13.0956L10.8574 12.0991L5.31391 4.16971H7.70053L12.1742 10.5689L12.8709 11.5655L18.6861 19.8835H16.2995L11.5541 13.096V13.0956Z" />
               </svg>
             </a>
-            <a href="#" class="text-gray-400 hover:text-gray-300">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500">
               <span class="sr-only">GitHub</span>
               <svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -42,7 +50,9 @@
                   clip-rule="evenodd" />
               </svg>
             </a>
-            <a href="#" class="text-gray-400 hover:text-gray-300">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500">
               <span class="sr-only">YouTube</span>
               <svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path
@@ -56,72 +66,136 @@
         <div class="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
           <div class="md:grid md:grid-cols-2 md:gap-8">
             <div>
-              <h3 class="text-sm/6 font-semibold text-white">Solutions</h3>
+              <h3 class="text-sm/6 font-semibold text-zinc-500">Solutions</h3>
               <ul role="list" class="mt-6 space-y-4">
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Marketing</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Marketing</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Analytics</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Analytics</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Automation</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Automation</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Commerce</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Commerce</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Insights</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Insights</a
+                  >
                 </li>
               </ul>
             </div>
             <div class="mt-10 md:mt-0">
-              <h3 class="text-sm/6 font-semibold text-white">Support</h3>
+              <h3 class="text-sm/6 font-semibold text-zinc-500">Support</h3>
               <ul role="list" class="mt-6 space-y-4">
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Submit ticket</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Submit ticket</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Documentation</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Documentation</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Guides</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Guides</a
+                  >
                 </li>
               </ul>
             </div>
           </div>
           <div class="md:grid md:grid-cols-2 md:gap-8">
             <div>
-              <h3 class="text-sm/6 font-semibold text-white">Company</h3>
+              <h3 class="text-sm/6 font-semibold text-zinc-500">Company</h3>
               <ul role="list" class="mt-6 space-y-4">
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">About</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >About</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Blog</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Blog</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Jobs</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Jobs</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Press</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Press</a
+                  >
                 </li>
               </ul>
             </div>
             <div class="mt-10 md:mt-0">
-              <h3 class="text-sm/6 font-semibold text-white">Legal</h3>
+              <h3 class="text-sm/6 font-semibold text-zinc-500">Legal</h3>
               <ul role="list" class="mt-6 space-y-4">
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Terms of service</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Terms of service</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">Privacy policy</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Privacy policy</a
+                  >
                 </li>
                 <li>
-                  <a href="#" class="text-sm/6 text-gray-400 hover:text-gray-300">License</a>
+                  <a
+                    href="#"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >License</a
+                  >
                 </li>
                 <li>
-                  <a href="/fonts-showcase" class="text-sm/6 text-gray-400 hover:text-gray-300">Fonts</a>
+                  <a
+                    href="/fonts-showcase"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Fonts</a
+                  >
                 </li>
               </ul>
             </div>

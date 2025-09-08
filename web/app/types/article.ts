@@ -39,6 +39,10 @@ export interface PopularArticleData {
   id: string
   title: string
   slug: string
+  contentType: {
+    name: string
+    slug: string
+  }
   author: {
     name: string
     slug: string

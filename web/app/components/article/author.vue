@@ -4,8 +4,8 @@
   const props = defineProps<{
     article: ArticleListItem
   }>()
-  const slug = computed(() => `/articles/${props.article.slug}`)
-  const contentType = computed(() => `/types/${props.article.contentType.slug}`)
+  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
+  const contentType = computed(() => `/${props.article.contentType.slug}`)
 
   // Refs для composable
   const containerRef = ref<HTMLElement>()

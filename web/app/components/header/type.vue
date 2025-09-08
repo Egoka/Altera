@@ -5,7 +5,7 @@
         <div class="relative mb-6">
           <NuxtImg
             :alt="contentType.name + ' Icon'"
-            class="block mx-auto mb-6 md:mb-6 sm:mb-4 w-30 h-30 object-cover invert-30 dark:invert-80"
+            class="block mx-auto mb-6 md:mb-6 sm:mb-4 w-30 h-30 object-contain dark:invert-100"
             :src="contentType.iconUrl"
             width="120"
             height="120" />

@@ -16,6 +16,10 @@
       id: "1",
       title: "Микросервисная архитектура: от теории к практике",
       slug: "microservices-architecture-practice",
+      contentType: {
+        name: "Технологии",
+        slug: "technology"
+      },
       author: {
         name: "Дмитрий Соколов",
         slug: "dmitry-sokolov"
@@ -25,6 +29,10 @@
       id: "2",
       title: "React 18: новые возможности и лучшие практики",
       slug: "react-18-new-features",
+      contentType: {
+        name: "Технологии",
+        slug: "technology"
+      },
       author: {
         name: "Мария Иванова",
         slug: "maria-ivanova"
@@ -34,6 +42,10 @@
       id: "3",
       title: "DevOps культура: как построить эффективную команду",
       slug: "devops-culture-effective-team",
+      contentType: {
+        name: "Бизнес",
+        slug: "business"
+      },
       author: {
         name: "Сергей Козлов",
         slug: "sergey-kozlov"
@@ -43,6 +55,10 @@
       id: "4",
       title: "Безопасность веб-приложений в 2024 году",
       slug: "web-security-2024",
+      contentType: {
+        name: "Безопасность",
+        slug: "security"
+      },
       author: {
         name: "Елена Сидорова",
         slug: "elena-sidorova"
@@ -52,6 +68,10 @@
       id: "5",
       title: "Искусственный интеллект в современной разработке",
       slug: "ai-in-modern-development",
+      contentType: {
+        name: "ИИ и Машинное обучение",
+        slug: "ai-ml"
+      },
       author: {
         name: "Анна Петрова",
         slug: "anna-petrova"
@@ -61,6 +81,10 @@
       id: "6",
       title: "Kubernetes в production: опыт внедрения",
       slug: "kubernetes-production-experience",
+      contentType: {
+        name: "DevOps",
+        slug: "devops"
+      },
       author: {
         name: "Александр Волков",
         slug: "alexander-volkov"
@@ -70,6 +94,10 @@
       id: "7",
       title: "GraphQL vs REST: когда использовать каждый подход",
       slug: "graphql-vs-rest-comparison",
+      contentType: {
+        name: "API",
+        slug: "api"
+      },
       author: {
         name: "Ольга Смирнова",
         slug: "olga-smirnova"
@@ -79,6 +107,10 @@
       id: "8",
       title: "TypeScript 5.0: что нового в последней версии",
       slug: "typescript-5-new-features",
+      contentType: {
+        name: "Технологии",
+        slug: "technology"
+      },
       author: {
         name: "Павел Федоров",
         slug: "pavel-fedorov"
@@ -88,6 +120,10 @@
       id: "9",
       title: "Мониторинг и логирование в Node.js приложениях",
       slug: "nodejs-monitoring-logging",
+      contentType: {
+        name: "Backend",
+        slug: "backend"
+      },
       author: {
         name: "Наталья Кузнецова",
         slug: "natalia-kuznetsova"
@@ -97,6 +133,10 @@
       id: "10",
       title: "Frontend архитектура для крупных проектов",
       slug: "frontend-architecture-large-projects",
+      contentType: {
+        name: "Frontend",
+        slug: "frontend"
+      },
       author: {
         name: "Игорь Морозов",
         slug: "igor-morozov"

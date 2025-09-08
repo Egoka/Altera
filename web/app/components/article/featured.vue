@@ -4,8 +4,8 @@
   const props = defineProps<{
     article: ArticleResponse
   }>()
-  const slug = computed(() => `/articles/${props.article.slug}`)
-  const contentType = computed(() => `/types/${props.article.contentType.slug}`)
+  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
+  const contentType = computed(() => `/${props.article.contentType.slug}`)
   const author = computed(() => `/authors/${props.article.author.slug}`)
 
   // Refs для composable

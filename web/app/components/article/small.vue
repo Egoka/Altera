@@ -4,8 +4,8 @@
   const props = defineProps<{
     article: ArticleResponse
   }>()
-  const slug = computed(() => `/articles/${props.article.slug}`)
-  const contentType = computed(() => `/types/${props.article.contentType.slug}`)
+  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
+  const contentType = computed(() => `/${props.article.contentType.slug}`)
   const author = computed(() => `/authors/${props.article.author.slug}`)
 </script>
 
@@ -16,12 +16,12 @@
         <div class="mb-2 leading-4">
           <NuxtLink
             :to="slug"
-            class="font-garamond-libre text-md font-medium text-zinc-900 dark:text-zinc-300 transition-colors mb-5">
+            class="font-garamond-libre text-md font-semibold text-zinc-900 dark:text-zinc-300 transition-colors mb-5">
             {{ article.title }}
           </NuxtLink>
         </div>
         <div ref="bottomRef" class="mt-auto flex justify-start flex-wrap gap-x-5 flex-row items-start">
-          <ShowAuthor :link="author" :name="article.author.name" class="block" />
+          <ShowAuthor :link="author" :name="article.author.name" class="block text-sm leading-6" />
           <ShowType :link="contentType" :name="article.contentType.name" class="block" />
         </div>
       </div>

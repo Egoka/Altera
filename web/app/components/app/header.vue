@@ -61,10 +61,10 @@
           </svg>
         </button>
 
-        <NuxtLink to="/types/popular" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
+        <NuxtLink to="/popular" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
           Popular
         </NuxtLink>
-        <NuxtLink to="/types/latest" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
+        <NuxtLink to="/latest" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
           Latest
         </NuxtLink>
       </div>
