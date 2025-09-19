@@ -78,14 +78,14 @@
         </button>
       </div>
       <div class="flex">
-        <a href="#" class="-m-1.5 p-1.5">
+        <NuxtLink to="/" class="-m-1.5 p-1.5">
           <span class="sr-only">Altera</span>
           <VisualLogo />
-        </a>
+        </NuxtLink>
       </div>
 
       <div class="lg:flex lg:flex-1 lg:justify-end">
-        <a href="#" class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Log in</a>
+        <NuxtLink to="/" class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Log in</NuxtLink>
       </div>
     </nav>
     <VisualMegaMenu :is-open="isMegaMenuOpen && isHeaderVisible" @close="closeMegaMenu" />

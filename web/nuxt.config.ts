@@ -29,7 +29,7 @@ export default defineNuxtConfig({
     theme: {
       semantic: {
         customThemeColor: 150,
-        customThemeColorContrast: 85
+        customThemeColorContrast: 0
       }
     },
     componentsOptions: {
