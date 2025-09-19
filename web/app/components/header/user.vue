@@ -9,6 +9,7 @@
 
   const isExpanded = ref(false)
   const shouldApplyLineClamp = ref(false)
+  const showToggleButton = ref(false)
 
   // Состояние для отслеживания подписки
   const isFollowing = ref(false)
@@ -58,6 +59,8 @@
       tempStyle.overflow = "visible"
 
       bioHeight.value = bioContent.value.scrollHeight
+
+      showToggleButton.value = bioHeight.value > bioContent.value.offsetHeight
 
       // Восстанавливаем стили
       tempStyle.maxHeight = originalMaxHeight
@@ -126,6 +129,7 @@
             </div>
 
             <button
+              v-show="showToggleButton"
               @click="toggleExpanded"
               class="mt-3 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500 font-serif hover:text-zinc-700 dark:hover:text-zinc-400 transition-colors">
               {{ isExpanded ? "read less -" : "read more +" }}
@@ -133,7 +137,9 @@
           </div>
 
           <button
-            @click="toggleFollow"
+            @click.stop.prevent="toggleFollow"
+            @mousedown.stop
+            @mouseup.stop
             :class="[
               'flex items-center gap-2 pr-4 pl-3 py-1 rounded-md transition-all duration-300',
               isFollowing
@@ -142,7 +148,7 @@
             ]">
             <Icon
               :name="isFollowing ? 'a-icon:round-remove-circle' : 'a-icon:round-add-circle'"
-              :class="isFollowing ? 'text-zinc-600 dark:text-zinc-400' : 'text-red-500'" />
+              :class="isFollowing ? 'text-zinc-600 dark:text-zinc-400' : 'text-red-500 dark:text-red-800'" />
             <span
               :class="[
                 'font-serif font-medium tracking-wide',

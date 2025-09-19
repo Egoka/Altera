@@ -78,10 +78,10 @@
         </button>
       </div>
       <div class="flex">
-        <a href="#" class="-m-1.5 p-1.5">
+        <NuxtLink to="/" class="-m-1.5 p-1.5">
           <span class="sr-only">Altera</span>
           <VisualLogo />
-        </a>
+        </NuxtLink>
       </div>
 
       <div class="lg:flex lg:flex-1 lg:justify-end">

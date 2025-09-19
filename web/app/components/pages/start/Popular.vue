@@ -153,7 +153,7 @@
 </script>
 
 <template>
-  <section class="latest-articles pt-8">
+  <section class="latest-articles pt-12">
     <div class="mx-auto px-8 max-w-7xl">
       <h2 class="font-waterway text-3xl font-bold tracking-widest sm:mb-8 text-zinc-900 dark:text-zinc-300">
         Популярное

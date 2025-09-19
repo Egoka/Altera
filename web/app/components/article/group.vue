@@ -94,7 +94,7 @@
 </script>
 
 <template>
-  <section class="py-6 border-b border-zinc-200 dark:border-zinc-700">
+  <section class="py-12 border-b border-zinc-200 dark:border-zinc-700">
     <div class="hidden lg:grid lg:gap-x-6" :style="gridStyles">
       <div
         v-for="(article, index) in articles"
