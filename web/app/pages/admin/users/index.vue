@@ -5,8 +5,6 @@
   })
 </script>
 
-<template>
-  <div>/admin/tags</div>
-</template>
+<template>users</template>
 
 <style scoped></style>

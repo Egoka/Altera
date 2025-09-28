@@ -79,7 +79,15 @@
     "users": "Пользователи",
     "statistics": "Статистика",
     "moderation": "Модерация",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "menu": {
+      "Dashboard": "Дашборд",
+      "Articles": "Статьи",
+      "Tags": "Теги",
+      "Types": "Типы",
+      "Users": "Пользователи",
+      "Profiles": "Профили"
+    }
   },
   "components": {
     "showcase": "Демонстрация компонентов",

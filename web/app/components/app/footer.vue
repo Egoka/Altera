@@ -197,6 +197,13 @@
                     >Fonts</a
                   >
                 </li>
+                <li>
+                  <a
+                    href="/admin"
+                    class="text-sm/6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-500"
+                    >Admin</a
+                  >
+                </li>
               </ul>
             </div>
           </div>

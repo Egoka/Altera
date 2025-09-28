@@ -71,7 +71,7 @@
       <div class="flex lg:hidden">
         <button
           type="button"
-          class="w-14 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          class="w-10 ml-0 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           @click="toggleMegaMenu">
           <span class="sr-only">Open main menu</span>
           <IconBurger :is-open="isMegaMenuOpen" />

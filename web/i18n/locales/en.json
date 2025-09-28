@@ -79,7 +79,15 @@
     "users": "Users",
     "statistics": "Statistics",
     "moderation": "Moderation",
-    "settings": "Settings"
+    "settings": "Settings",
+    "menu": {
+      "Dashboard": "Dashboard",
+      "Articles": "Articles",
+      "Tags": "Tags",
+      "Types": "Types",
+      "Users": "Users",
+      "Profiles": "Profiles"
+    }
   },
   "components": {
     "showcase": "Components Showcase",

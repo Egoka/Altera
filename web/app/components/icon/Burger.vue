@@ -4,7 +4,7 @@
     fill="none"
     stroke="currentColor"
     stroke-width="2"
-    class="size-6 transition-all duration-300 ease-in-out text-gray-700 dark:text-gray-300"
+    class="size-5 transition-all duration-300 ease-in-out text-gray-700 dark:text-gray-300"
     style="transform-origin: center">
     <!-- Верхняя линия -->
     <path
