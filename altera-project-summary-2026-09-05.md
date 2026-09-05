@@ -107,7 +107,7 @@ Source: architect review (ALTE-2) + independent tester verification, same snapsh
 - `web eslint app`: **fail** — unused `mockStats` in `web/app/pages/types/index.vue:105`
 - Web typecheck (`vue-tsc`): **gap** — `vue-tsc` not installed; Node 24 incompatibility with fallback
 - Automated tests: **none** — `test` scripts absent in `server/package.json` and `web/package.json`
-- Playwright browser check: **blocked** — no Altera dev/server process found; `:3000` is a Next.js project at a different path
+- Playwright browser check: **completed with findings** — Altera confirmed at `127.0.0.1:3100`; the home page rendered and navigation to `/popular` worked. `/_ipx/_/images/Sport.png` and `/_ipx/_/images/Art.png` returned HTTP 500 due to a pre-existing IPX/static-content defect; screenshot evidence is attached to ALTE-2.
 - Context7 Vue docs lookup: confirms `vue-tsc` is the recommended CLI typecheck tool for SFCs — consistent with the setup gap finding
 
 ---
