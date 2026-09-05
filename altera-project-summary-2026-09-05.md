@@ -1,3 +1,5 @@
+> **Исторический документ.** Срез на коммите `e1b9a97` заменён проверенным срезом реальности [docs/vision/00-reality-check.md](docs/vision/00-reality-check.md) (коммит `8cb987c`, 2026-09-05); расхождения перечислены там в §8.
+
 # Altera — Project State Summary
 **Revision**: HEAD `e1b9a97da23e02de9a3fb3e801e323531b08c825` · Branch `server/api` · Date 2026-09-05
 

@@ -1,3 +1,5 @@
+> **Исторический документ.** Содержимое не соответствует коду с сентября 2025 года и сохранено как свидетельство намерений. Актуальное состояние проекта — [docs/vision/00-reality-check.md](../vision/00-reality-check.md), целевая архитектура — [docs/vision/02-target-architecture.md](../vision/02-target-architecture.md).
+
 # Структура GraphQL запросов
 
 Этот документ описывает организацию GraphQL запросов в проекте Altera.
