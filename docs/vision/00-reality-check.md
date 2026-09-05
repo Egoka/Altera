@@ -433,3 +433,47 @@ magic link в логе, отсутствие rate limit, отсутствие т
 | SEO | `robots.txt` | — | meta, canonical, sitemap, RSS, OG, hreflang |
 | Инженерия | `tsc` сервера, ESLint-конфиг, Prettier, commitlint, husky | CI «зелёный» ни о чём | тесты, честный CI, сиды, деплой, откат, бэкапы, логи, метрики |
 | Документация | `authentication_guide`, `ENV_SETUP`, `article_workflow` (почти) | `admin_query_standards` | остальное устарело или противоречиво |
+
+---
+
+## 10. Дополнение по итогам осмотра компонентов веба
+
+Добавлено 2026-09-05 после детального осмотра `web/app/components/**`, `web/app/pages/**`,
+`web/node_modules/fishtvue` и папок `.cursor/`, `.qoder/`.
+
+- **FishtVue 0.2.11 — собственная библиотека владельца** [ФАКТ: `web/node_modules/fishtvue/package.json`,
+  автор совпадает с автором проекта]: 23 виджета (Accordion, Alert, Badge, Button, Calendar,
+  Dialog, Form, Input, Menu, Pagination, Select, Split, Switch, Table, TextEditor и др.), три
+  темы, режимы `filled/outlined/underlined`; типографических и «редакционных» компонентов
+  нет. В `web/app` импортируются только типы (`#fishtvue/table|form|split`) в четырёх
+  админских страницах. `TextEditor` — обёртка над Quill 2 (`@vueup/vue-quill`) с выводом
+  Delta/HTML/text в диалоге [ФАКТ: `fishtvue/texteditor/TextEditor.d.ts`].
+- **Фактические роли гарнитур**: Bergamasco — только логотип [ФАКТ: `components/visual/Logo.vue:27`];
+  Waterway — H1 страниц и H2 секций [ФАКТ: `components/header/tag.vue:15`, `pages/start/Popular.vue:158`];
+  Garamond Libre — заголовки и деки всех карточек; Cormorant SC — подпись автора
+  [ФАКТ: `components/show/Author.vue:12`]; `font-sans` — кикер типа, дата, навигация;
+  `font-serif` — кнопки «read more» и «Follow»; `font-mono` — только отладочные компоненты.
+- **Шесть несовместимых схем горизонтальных отступов** при одном контейнере `max-w-7xl`:
+  `px-3 lg:px-10` (шапка), `px-6 lg:px-8` (футер), `px-8` (секции главной), `px-8 sm:px-10`
+  (шапки страниц), `px-4 sm:px-6 lg:px-8` (теги), `container px-4` (демо) — секции не
+  выравниваются ни на одном breakpoint.
+- **Мёртвый код**: `components/article/featured.vue` (0 использований), вся папка
+  `components/demo/` (4 файла, 0 использований); `article/type.vue` и `article/author.vue` —
+  почти дубликаты с разными типами пропсов; `ref="bottomRef"` без объявления в `base.vue:29`,
+  `small.vue:23`; `{{ $t("test") }}` в `pages/components-showcase.vue:172`.
+- **Устаревший API Nuxt**: `process.client` в `composables/useBreakpoint.ts` и других
+  composables (8 вхождений) вместо `import.meta.client` — в Nuxt 4 удалён, поэтому
+  `getBreakpoint()` может всегда возвращать SSR-значение `"lg"` [ДОПУЩЕНИЕ по поведению].
+- **Два механизма темы**: `nuxt.config.ts:44` задаёт FishtVue `darkModeSelector: "html.dark"`,
+  `main.css:364` переопределяет палитру для `body.dark`, `useTheme` пишет свой ключ в
+  `localStorage`.
+- **Футер** [ФАКТ: `components/app/footer.vue`]: статичный шаблон — колонки «Solutions /
+  Support / Company / Legal» со ссылками на `#`, соцсети на `#`, «© 2024 Your Company, Inc.»,
+  ссылки «Fonts» → `/fonts-showcase` и «Admin» → `/admin` в разделе Legal; без i18n.
+- **Фикстуры с чужим контентом**: дословная биография автора The Atlantic (~2 700 знаков) в
+  `pages/authors/[slug].vue:17` и `pages/[slugTypeContent]/index.vue:15`; hotlink на
+  `cdn.theatlantic.com` в `components/visual/MegaMenu.vue:117` и `pages/[slugTypeContent]/index.vue:19`.
+- **`.cursor/`** содержит правила для AI-ассистента, описывающие продукт как MDC-платформу;
+  `settings.json` объявляет `api: RESTful`, `rules` — GraphQL: файлы противоречат друг другу и
+  коду. `.qoder/` — пустая папка `quests/`. Упоминаний The Atlantic в них нет; «вдохновлена
+  The Atlantic» — комментарий в `main.css:286` и записи в `docs/status/*`.
