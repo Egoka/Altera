@@ -1,12 +1,19 @@
 <script setup lang="ts">
   import type { GroupMenu, ItemMenu, MenuExpose } from "#fishtvue"
 
+  const adminStore = useAdminStore()
+
+  const toggleMenuCollapsed = () => {
+    adminStore.toggleMenuCollapsed()
+  }
+
   const menuGroups = (): GroupMenu[] => {
     const { $i18n } = useNuxtApp()
     const { t } = $i18n
+
     return [
       {
-        class: "item-menu",
+        class: "h-[calc(100vh-48px-112px-12px-13px-15px-40px)]",
         items: [
           {
             name: "Dashboard",
@@ -47,10 +54,21 @@
   const menu = ref(menuGroups())
   const route = useRoute()
 
-  const findActiveMenuItem = () => menuApp.value?.listGroups[0]?.items?.find((item) => item.to === route.path)
+  const findActiveMenuItem = () => {
+    return menuApp.value?.listGroups[0]?.items?.find((item) => {
+      if (!item.to) return false
+      // Точное совпадение
+      if (item.to === route.path) return true
+      // Исключение для Dashboard - только точное совпадение
+      if (item.to === '/admin') return false
+      // Проверка подроутеров: путь должен начинаться с item.to и следующий символ должен быть /
+      return route.path.startsWith(item.to + '/')
+    })
+  }
 
   onMounted(() => {
     const activeItem = findActiveMenuItem()
+
     if (activeItem) {
       activePage.value = activeItem.to
       menuApp.value?.setSelectedItem(activeItem["_key"] ?? "")
@@ -79,38 +97,105 @@
   const toggleMenu = () => {
     isOpen.value = !isOpen.value
   }
+
+  // Моковые данные пользователя
+  const user = ref({
+    firstName: "Александр",
+    lastName: "Иванов",
+    email: "alex.ivanov@example.com"
+  })
 </script>
 
 <template>
   <header>
-    <div class="hidden md:flex h-full">
+    <div class="hidden md:flex h-[calc(100vh-24px)]">
       <Menu
         ref="menuApp"
         :groups="menu"
-        only-icons
-        class="shadow-none border-0 min-w-[64px]"
+        :only-icons="adminStore.isMenuCollapsed"
+        :class="[
+          'w-full shadow-none border-0 bg-transparent dark:bg-transparent transition-all duration-300',
+          adminStore.isMenuCollapsed ? 'min-w-[64px]' : 'min-w-[200px]'
+        ]"
+        :separator="{ classBodyLine: 'text-zinc-200 dark:text-zinc-500' }"
         :styles="{
           height: '100%',
           class: {
             body: 'p-3 z-30',
-            title: 'p-0 mb-3',
-            item: 'size-10 justify-center mb-3'
+            title: 'p-0 mb-3 bg-transparent dark:bg-transparent',
+            item: 'h-10 justify-start pl-3.5 mb-3 overflow-auto',
+            separator: 'text-zinc-200 dark:text-zinc-500 t4444'
           },
-          selectedRows: 'bg-zinc-100 dark:bg-zinc-900'
+          selectedRows: 'bg-zinc-100 dark:bg-zinc-950'
         }"
         selected
         @onClick="switchPage">
         <template #title>
-          <NuxtLink to="/" class="size-10 flex items-center justify-center">
-            <IconLogo class="size-6 fill-neutral-700 dark:fill-neutral-200" />
+          <NuxtLink to="/" class="h-10 flex items-center justify-start">
+            <IconLogo class="ml-2 mb-0.5 size-6 fill-neutral-700 dark:fill-neutral-200" />
+            <Transition
+              enter-active-class="transition-all duration-300 ease-out"
+              enter-from-class="opacity-0"
+              enter-to-class="opacity-100"
+              leave-active-class="transition-all duration-300 ease-in"
+              leave-from-class="opacity-100"
+              leave-to-class="opacity-0">
+              <span
+                v-if="!adminStore.isMenuCollapsed"
+                class="text-neutral-700 dark:text-neutral-200 font-bergamasco font-light text-[2rem] pl-0.5 leading-6 transition-all duration-300 ease-in-out">
+                ltera
+              </span>
+            </Transition>
           </NuxtLink>
+          <Button
+            mode="ghost"
+            icon="uim:web-section-alt"
+            class="my-4 mx-0 h-10 w-10 p-2"
+            @click="toggleMenuCollapsed"></Button>
+        </template>
+        <template #item="{ data }">
+          <Icons
+            :type="data.icon"
+            class="fv fishtvue-icons text-gray-900 dark:text-gray-100 h-5 w-4 opacity-60 select-none" />
+          <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-all duration-300 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0">
+            <span v-show="!adminStore.isMenuCollapsed" class="w-max ml-4">
+              {{ data.title }}
+            </span>
+          </Transition>
+          <FixWindow v-if="adminStore.isMenuCollapsed" position="right" :delay="500" :margin-px="10" mode="outlined">
+            <span :data-title="!!data?.title" class="w-max">{{ data.title }}</span>
+          </FixWindow>
         </template>
         <template #footer>
-          <img src="/avatars/William_Taylor.jpg" alt="avatar" class="mt-3 size-10 rounded-full object-cover" />
+          <div class="mt-[15px] flex items-center gap-3">
+            <img src="/avatars/William_Taylor.jpg" alt="avatar" class="size-10 rounded-full object-cover" />
+            <Transition
+              enter-active-class="transition-all duration-300 ease-out"
+              enter-from-class="opacity-0"
+              enter-to-class="opacity-100"
+              leave-active-class="transition-all duration-300 ease-in"
+              leave-from-class="opacity-100"
+              leave-to-class="opacity-0">
+              <div v-if="!adminStore.isMenuCollapsed" class="flex flex-col min-w-0">
+                <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                  {{ user.firstName }} {{ user.lastName }}
+                </div>
+                <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                  {{ user.email }}
+                </div>
+              </div>
+            </Transition>
+          </div>
         </template>
       </Menu>
     </div>
-    <div class="md:hidden h-11 w-[calc(100vw-24px)]">
+    <div class="md:hidden h-14 w-screen">
       <div class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 transition-all duration-300 ease-in-out">
         <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between h-14 px-3 lg:px-10">
           <div class="flex lg:hidden">
@@ -169,9 +254,3 @@
     </div>
   </header>
 </template>
-
-<style scoped lang="css">
-  :deep(.item-menu) {
-    height: calc(100vh - 48px - 52px - 13px - 56px);
-  }
-</style>

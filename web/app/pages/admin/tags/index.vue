@@ -75,6 +75,7 @@
     {
       dataField: "name",
       name: "name",
+      type: "string",
       caption: "Название",
       visible: true,
       width: 200,
@@ -86,6 +87,7 @@
     {
       dataField: "slug",
       name: "slug",
+      type: "string",
       caption: "URL-адрес",
       visible: true,
       width: 150,
@@ -96,6 +98,7 @@
     {
       dataField: "description",
       name: "description",
+      type: "string",
       caption: "Описание",
       visible: true,
       width: 300,
@@ -106,6 +109,7 @@
     {
       dataField: "isActive",
       name: "isActive",
+      type: "select",
       caption: "Статус",
       visible: true,
       width: 120,
@@ -117,6 +121,7 @@
     {
       dataField: "articlesCount",
       name: "articlesCount",
+      type: "number",
       caption: "Статей",
       visible: true,
       width: 100,
@@ -128,24 +133,24 @@
     {
       dataField: "createdAt",
       name: "createdAt",
+      type: "date",
       caption: "Создан",
       visible: true,
       width: 150,
       minWidth: 120,
       isFilter: true,
-      isSort: true,
-      cellTemplate: "date"
+      isSort: true
     },
     {
       dataField: "updatedAt",
       name: "updatedAt",
+      type: "date",
       caption: "Обновлён",
       visible: true,
       width: 150,
       minWidth: 120,
       isFilter: true,
-      isSort: true,
-      cellTemplate: "date"
+      isSort: true
     }
   ])
 
@@ -184,20 +189,6 @@
       <Badge :class="[rowData.isActive ? green : red]">
         {{ rowData.isActive ? "Активен" : "Неактивен" }}
       </Badge>
-    </template>
-
-    <template #date="{ value }">
-      <span class="text-sm">
-        {{
-          new Date(value).toLocaleDateString("ru-RU", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit"
-          })
-        }}
-      </span>
     </template>
   </Table>
 </template>

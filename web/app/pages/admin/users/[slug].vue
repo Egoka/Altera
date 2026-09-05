@@ -7,6 +7,7 @@
   })
 
   const route = useRoute()
+  const router = useRouter()
   const slugUser = route.params.slugUser as string
 
   // Моковые данные для пользователей (в реальном приложении это будет API запрос)
@@ -175,6 +176,22 @@
           label: "Описание",
           placeholder: "Введите описание пользователя",
           classCol: "sm:col-span-6"
+        },
+        {
+          typeComponent: "Aria",
+          name: "bio",
+          rules: {},
+          label: "Описание",
+          placeholder: "Введите описание пользователя",
+          classCol: "sm:col-span-6"
+        },
+        {
+          typeComponent: "Aria",
+          name: "bio",
+          rules: {},
+          label: "Описание",
+          placeholder: "Введите описание пользователя",
+          classCol: "sm:col-span-6"
         }
       ]
     }
@@ -232,21 +249,64 @@
   })
 
   // Отслеживаем изменения slug в роуте
-  watch(() => route.params.slugUser, (newSlug) => {
-    if (newSlug) {
-      loadUserData(newSlug as string)
+  watch(
+    () => route.params.slugUser,
+    (newSlug) => {
+      if (newSlug) {
+        loadUserData(newSlug as string)
+      }
     }
-  })
+  )
+
+  // Флаг для отслеживания возврата по истории
+  const isNavigatingBack = ref(false)
+
+  // Отслеживаем изменения роута после возврата
+  watch(
+    () => route.path,
+    (newPath) => {
+      if (isNavigatingBack.value) {
+        // Если мы вернулись назад, но не попали на /admin/users, перенаправляем
+        if (!newPath.startsWith("/admin/users")) {
+          navigateTo("/admin/users")
+        }
+        isNavigatingBack.value = false
+      }
+    }
+  )
+
+  // Функция закрытия с возвратом по истории
+  const close = () => {
+    // Проверяем referrer, если он есть и начинается с /admin/users
+    const referrer = document.referrer
+    const referrerPath = referrer ? new URL(referrer).pathname : null
+
+    if (referrerPath && referrerPath.startsWith("/admin/users")) {
+      // Устанавливаем флаг и возвращаемся назад по истории
+      isNavigatingBack.value = true
+      router.back()
+    } else {
+      // Если предыдущий роут не начинается с /admin/users, переходим на /admin/users
+      navigateTo("/admin/users")
+    }
+  }
 </script>
 
 <template>
   <div class="sm:rounded-xl h-full bg-zinc-100 dark:bg-zinc-900 p-3">
     <div class="relative h-[calc(100vh-50px)] overflow-y-auto">
+      <div class="flex absolute top-1 right-1 z-10">
+        <Button
+          class="bg-white dark:bg-zinc-950"
+          class-icon="text-zinc-700 dark:text-zinc-400"
+          type="icon"
+          :mode="'primary'"
+          icon="x-mark"
+          @click="close" />
+      </div>
       <div class="pt-2.5">
         <div class="px-4 mb-6">
-          <h2 class="text-xl font-semibold text-black dark:text-zinc-300 mb-2 truncate">
-            Редактирование пользователя
-          </h2>
+          <h2 class="text-xl font-semibold text-black dark:text-zinc-300 mb-2 truncate">Редактирование пользователя</h2>
           <p class="text-sm text-neutral-400 dark:text-neutral-500 truncate">
             Измените данные пользователя и нажмите "Сохранить"
           </p>
@@ -255,7 +315,7 @@
           :formFields="formValues"
           :structure="formStructure"
           modeValidate="onChange"
-          structureClass="h-[calc(100vh-216px)] border-b border-neutral-200 dark:border-neutral-800 pb-12"
+          structureClass="h-[calc(100vh-250px)] sm:h-[calc(100vh-216px)] overflow-auto border-b border-neutral-200 dark:border-neutral-800 pb-12"
           submitButton="Сохранить"
           @submit="handleSubmit" />
       </div>
