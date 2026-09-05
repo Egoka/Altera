@@ -92,3 +92,17 @@ docs/.vitepress/cache
 
 # Cursor AI settings (optional - you can commit these for team consistency)
 # .cursor/
+
+# Local agent runtime
+.claude/
+CLAUDE.md
+AGENTS.md
+.multica/
+.trace-mcp/
+
+# Playwright runtime artifacts
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+.playwright-mcp/
