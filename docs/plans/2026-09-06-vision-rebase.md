@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: e4552b4
 - **Отчёт**: docs/reports/2026-09-06-vision-rebase-report.md
-- **Статус**: выполняется
+- **Статус**: завершён (отчёт — docs/reports/2026-09-06-vision-rebase-report.md)
 
 ## 1. Цель
 
