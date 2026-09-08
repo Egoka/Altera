@@ -25,7 +25,8 @@
    (значения по умолчанию, лимиты, тексты); `[ВОПРОС ВЛАДЕЛЬЦУ]` — только с последствием
    («если да — …, если нет — …»). Вопросы каждого файла собираются в его последнем разделе и
    сводятся в `OPEN-QUESTIONS.md` при приёмке фазы.
-6. **Словарь** — только из `docs/vision/01-product.md` ревизии 2. Слова «контур», «витрина»,
+6. **Словарь** — `docs/vision/01-product.md` ревизии 2; при расхождении главнее журнал
+   решений Г1 `docs/decisions/role-review-working-log-2026-09-08.md` и реестры. Слова «контур», «витрина»,
    «отбор», «правило-арбитр» допустимы лишь в историческом контексте.
 
 ## Статусы файла
@@ -54,7 +55,8 @@ _templates/            шаблоны: page, admin-section, flow, role, ranking,
                        complaints, ai-reviews, ranking-config, audit-log, media-library,
                        legal-texts, system-settings, …)
 50-access/             роли (roles/*.md) и политики (visibility, permission-checks,
-                       session-lifecycle, rate-limits, escalation-and-demotion)
+                       permission-exceptions, session-lifecycle, rate-limits,
+                       escalation-and-demotion)
 60-ranking/            рейтинг (article-score, author-score, views-counting, ai-review,
                        pro-boost, freshness-decay, topic-relevance, home-sections,
                        feed-principles, anti-fraud, explainability)
