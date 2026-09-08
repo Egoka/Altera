@@ -27,9 +27,9 @@
 | 4 | `feed.read` | ленты по рейтингу (2) / по дате (1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | vis | — | — | `60-ranking/feed-principles.md` | утверждён |
 | 5 | `author.read.public` | имя, хэндл, «о себе», аватар, соцсети, грейд | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | `NOT_FOUND` | `50-access/visibility.md` | утверждён |
 | 6 | `user.read.private` | e-mail, роль, план, срок, состояние аккаунта, сессии | — | свои | свои | — | — | ✓ (журнал #11, #22) | ✓ (журнал #13) | ✓ | auth, role | `admin.read.personal` | `FORBIDDEN` | `50-access/visibility.md` | утверждён |
-| 7 | `article.score.read` | разложение рейтинга (2); AI в него не входит | словами | словами | свои числа | свои | ✓ | ✓ | ✓ | ✓ | vis, own | — | — | `60-ranking/explainability.md` | утверждён; параметры — Г4 |
+| 7 | `article.score.read` | числовой рейтинг и разложение (2): публично не показываются, объяснения позиции нет (журнал §21.18–19); AI не входит | — | — | свои числа | редакционные | ✓ | ✓ | ✓ | ✓ | vis, own | — | `NOT_FOUND` (чужая статья) | `60-ranking/explainability.md` | утверждён; Г4 |
 | 8 | `article.aiCheck.read` | вердикт AI и критические причины отказа (журнал #42) | — | — | свои | редакционные | ✓ | ✓ чтение (журнал #52) | ✓ (журнал #56) | ✓ | own, role | — | `FORBIDDEN` | `40-admin/ai-processes.md` | утверждён; Г2: `analyst` читает причины отказа |
-| 9 | `article.stats.read` | прочтения (2): standard — сумма, pro — по дням; только валидные записи | — | — | свои | свои | ✓ | ✓ (аудит) | ✓ | ✓ | own, plan(stats), role | `admin.read.personal` | `PLAN_LIMIT` | `60-ranking/views-counting.md` | утверждён |
+| 9 | `article.stats.read` | личная аналитика вовлечённости (2): только допустимые события; состав по плану — отложено; публично — счётчик прочтений от ста округлённо (журнал §21.30) | счётчик от ста | счётчик от ста | свои | редакционные | ✓ | ✓ (аудит) | ✓ | ✓ | own, plan(stats), role | `admin.read.personal` | `PLAN_LIMIT` | `60-ranking/views-counting.md` | утверждён; Г4 |
 | 10 | `search.query` (3) | поиск | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | vis, лимит | — | `RATE_LIMITED` | `50-access/rate-limits.md` | утверждён |
 | 11 | `taxonomy.read` | рубрики, форматы, теги | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | `50-access/visibility.md` | утверждён |
 | 12 | `legal.read` | юридические тексты с версией | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | `50-access/visibility.md` | утверждён |
@@ -38,7 +38,7 @@
 
 | # | Действие (код) | Данные / сущность | Гость | Reader | Author | Editor | Moderator | Analyst | Admin | Owner | Где проверяется | Аудит | Ошибка (код) | Файл политики | Статус |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 13 | `bookmark.add` / `bookmark.remove` | `Bookmark` | — | свои | свои | — | — | — | — | — | auth, role ∈ {reader, author} | — | `UNAUTHENTICATED`, `FORBIDDEN` | `50-access/permission-checks.md` | утверждён; Г2: только `reader` и `author` (журнал #58) |
+| 13 | `bookmark.add` / `bookmark.remove` | `Bookmark` | — | свои | свои | — | — | — | — | — | auth, role ∈ {reader, author} | — | `UNAUTHENTICATED`, `FORBIDDEN` | `50-access/permission-checks.md` | утверждён; Г2: только `reader` и `author` (журнал #58); Г4: закладка — сигнал рейтинга (§21.3) |
 | 14 | `bookmark.list` | `Bookmark` | — | свои | свои | — | — | — | — | — | auth, role ∈ {reader, author} | — | `UNAUTHENTICATED`, `FORBIDDEN` | `50-access/permission-checks.md` | утверждён; Г2: журнал #58 |
 | 15 | `author.follow` / `author.unfollow` (3) | `AuthorFollow` | — | ✓ | ✓ | — | — | — | — | — | auth, role ∈ {reader, author} | — | `UNAUTHENTICATED`, `FORBIDDEN` | `50-access/permission-checks.md` | утверждён; Г2: журнал #58 |
 | 16 | `report.create` | `Report` | ✓ (лимит) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | лимит | — | `RATE_LIMITED` | `10-flows/complaint.md` | отложено: жалобы — отдельный разбор |
@@ -117,12 +117,12 @@
 
 | # | Действие (код) | Данные / сущность | Гость | Reader | Author | Editor | Moderator | Analyst | Admin | Owner | Где проверяется | Аудит | Ошибка (код) | Файл политики | Статус |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 67 | `read.beacon` | `ReadEvent` без ПДн | ✓ (лимит) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | фильтр ботов, лимит | метрика `read` | `RATE_LIMITED` | `60-ranking/views-counting.md` | утверждён |
-| 68 | `ranking.config.read` | `RankingConfig` | — | — | — | — | — | ✓ | ✓ | ✓ | role | — | `FORBIDDEN` | `40-admin/ranking-config.md` | утверждён |
-| 69 | `ranking.config.change` | новая версия весов (значения — Г4) | — | — | — | — | — | — | — (нет прав записи — журнал #13) | ✓ | perm(owner) | `ranking.config.change` | `FORBIDDEN`, `VALIDATION_ERROR` | `40-admin/ranking-config.md` | утверждён |
-| 70 | `ranking.recompute` | полный пересчёт | — | — | — | — | — | — | — | ✓ | perm(owner) | `ranking.recompute` | `FORBIDDEN` | `60-ranking/recompute.md` | утверждён |
-| 71 | `reads.exclude` / `reads.include` | пометить запись просмотров ошибочной и исключить из расчётов; история сохраняется (журнал #26–27) | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance) | `reads.exclude` (причина, сотрудник) | `FORBIDDEN` | `60-ranking/anti-fraud.md` | утверждён |
-| 72 | `boost.end` | досрочное завершение буста | — | — | — | — | ✓ `[ДОПУЩЕНИЕ]` | — | — | ✓ | perm(review) | `boost.end` | `FORBIDDEN` | `60-ranking/pro-boost.md` | утверждён; правила буста — Г4 |
+| 67 | `read.beacon` | `ReadEvent` без ПДн | ✓ (лимит) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | фильтр ботов, лимит | метрика `read` | `RATE_LIMITED` | `60-ranking/engagement-tracking.md` | утверждён |
+| 68 | `ranking.state.read` | состояние движка, версия правил, прогоны, аномалии, сохранённые значения (журнал §21.35–36) | — | — | — | — | — | ✓ | ✓ | ✓ | role | — | `FORBIDDEN` | `40-admin/ranking-config.md` | утверждён; Г4: бывший `ranking.config.read` |
+| 69 | `ranking.config.change` | — | — | — | — | — | — | — | — | — | — | — | — | — | отменено: веса и правила фиксированы в движке, не настраиваются через интерфейс (журнал §21.32) |
+| 70 | `ranking.recompute` | — | — | — | — | — | — | — | — | — | — | — | — | — | отменено: пересчёт автоматический раз в час, повтор при сбое — по журналу ошибок (журнал §21.36, §21.40) |
+| 71 | `reads.exclude` / `reads.include` | — | — | — | — | — | — | — | — | — | — | — | — | — | отменено: просмотры и события исключаются только автоматически (журнал §23.6); пометка платежей — #108 |
+| 72 | `boost.end` | — | — | — | — | — | — | — | — | — | — | — | — | — | отменено: буста на сутки нет, Pro-балл постоянный (журнал §21.16) |
 
 ## AI (бинарная проверка допустимости — журнал #41–42)
 
@@ -202,6 +202,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 116 | `account.restore.self` | самостоятельное восстановление аккаунта, архивированного самим пользователем: после успешного входа — экран состояния и кнопка «Восстановить аккаунт»; доступ к плану — на остаток срока; статьи остаются в архиве (журнал #4, #50, §5.2); при административной блокировке недоступно | — | свои (`archiveMode = self`) | свои | свои | свои | свои | свои | свои | ограниченная сессия архивированного аккаунта, `archiveMode = self` | `user.restore.self` | `FORBIDDEN` (административный архив), `CONFLICT` | `30-account/reader/archived-state.md` | утверждён (Г3) |
 | 117 | `support.request.create` | обращение в поддержку с темой: `broken_link` с кнопки 404 (журнал §20.15), общее письмо с `/contact`; попадает в очередь `admin`/`owner` | ✓ (лимит) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | лимит по IP и аккаунту | лог `support.request.created` | `RATE_LIMITED`, `VALIDATION_ERROR` | `20-public/contact.md` | утверждён (Г3); экран обращений в админке — заход 8a `[ДОПУЩЕНИЕ: внутри раздела «Пользователи» или «Письма»]` |
+| 118 | `article.share.create` / `author.share.create` | публичная ссылка распространения с непрозрачным идентификатором источника, не связанным с личностью (журнал §21.5, §23.4) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | опубликованный ресурс, лимит | метрика `article.share.create` (#83) | `NOT_FOUND`, `RATE_LIMITED` | `60-ranking/engagement-tracking.md` | утверждён (Г4) |
  `10-flows/archive-account.md` | утверждён |
 
 ## Инварианты, которые матрица не выражает (проверяются политиками)

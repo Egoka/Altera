@@ -8,7 +8,7 @@
   pino; `metric` — счётчик или событие для статистики (без ПДн).
 - Префиксы кодов по подсистемам: `auth.`, `session.`, `user.`, `admin.`, `plan.`,
   `subscription.`, `payment.`, `webhook.`, `article.`, `translation.`, `review.`, `revision.`,
-  `media.`, `ai.`, `mail.`, `ranking.`, `read.`, `boost.`, `bookmark.`, `follow.`, `report.`,
+  `media.`, `ai.`, `mail.`, `ranking.`, `engagement.`, `article.`, `author.`, `bookmark.`, `follow.`, `report.`,
   `tag.`, `section.`, `role.`, `permission.`, `entity.`, `job.`, `newsletter.`, `legal.`,
   `settings.`, `system.`. Код — нижний регистр, точки, без ПДн в значениях.
 - Аудит (журнал #6): любое чтение персональных данных через административные инструменты —
@@ -58,8 +58,8 @@
 | 28 | `revision.restore` (не автором) | audit | — | api | owner | `translationId`, `fromRevisionId` | бессрочно | `/admin/audit` | `50-access/permission-checks.md` | утверждён |
 | 29 | `ai.score.override` | audit | — | — | — | — | — | — | — | отменено: AI не выдаёт балл (журнал #41) |
 | 30 | `ai.review.rerun` | audit | — | — | — | — | — | — | — | отменено: ручного повтора AI нет (журнал #14) |
-| 31 | `ranking.config.change` / `ranking.recompute` | audit | — | api | owner | `version`, `diff` | бессрочно | `/admin/audit` | `40-admin/ranking-config.md` | утверждён; параметры — Г4 |
-| 32 | `reads.exclude` / `boost.end` | audit | — | api | analyst, admin, owner (`reads.exclude`); moderator, owner (`boost.end`) | `articleId`, `days` / `boostId`, `reason`, сотрудник (журнал #27) | бессрочно | `/admin/audit` | `60-ranking/anti-fraud.md` | утверждён |
+| 31 | `ranking.config.change` / `ranking.recompute` | audit | — | — | — | — | — | — | — | отменено: веса фиксированы в движке, ручного пересчёта нет (журнал §21.32, §21.36); смена правил — релиз |
+| 32 | `reads.exclude` / `boost.end` | audit | — | — | — | — | — | — | — | отменено: исключения только автоматические (#84, журнал §23.6); буста нет (§21.16) |
 | 33 | `report.resolve` | audit | — | api | moderator, owner | `reportId`, `resolution` | бессрочно | `/admin/audit` | `10-flows/complaint.md` | отложено: жалобы — отдельный разбор |
 | 34 | `media.replace` | audit | — | api | автор, editor (свои), owner | `assetId` | бессрочно | `/admin/audit` | `85-media-and-binary/upload-pipeline.md` | утверждён (`media.hide` — отложено с жалобами; `media.delete` → `entity.delete.permanent`) |
 | 35 | `section.update` / `section.archive` / `section.restore` / `format.update` / `tag.merge` / `tag.archive` / `tag.restore` | audit | — | api | admin, owner (журнал #29) | `id`, `diff` | бессрочно | `/admin/audit` | `40-admin/categories.md`, `40-admin/tags.md` | утверждён |
@@ -80,7 +80,7 @@
 | 45 | `translation.submit` / `translation.withdraw` / `translation.reedit` | log | info | api | автор | `translationId`, `revisionId`, `branch` (ai / manual) | 30 дней | логи; автору — история | `10-flows/write-and-publish.md` | утверждён (`appeal` удалён — журнал #40) |
 | 46 | `ai.job.created` / `.started` / `.running` / `.done` / `.failed` | log | info / error | api worker | система | `jobId`, `kind` (check / translate), `translationId`, `model`, `promptVersion`, `costMinor`, `durationMs`; для `check` — `verdict` (publish / reject) без балла (журнал #34, #41) | 30 дней; раздел «AI-процессы» — история со статусами (этап 1) | `/admin/ai` | `40-admin/ai-processes.md` | утверждён |
 | 47 | `ai.translate.*` (3) | log | — | — | — | — | — | — | — | отменено: объединено с #46 (`kind = translate`) |
-| 48 | `ranking.recompute.started` / `.done` | log | info | api worker | система / owner | `configVersion`, `articles`, `durationMs` | 30 дней | логи | `60-ranking/recompute.md` | утверждён |
+| 48 | `ranking.run.started` / `ranking.run.done` / `ranking.run.failed` | log | info / error | движок рейтинга | система | `runId`, `kind` (initial / hourly / full), `rulesVersion`, `affected`, `durationMs`; при сбое — повтор по журналу ошибок (журнал §21.40) | 30 дней | `/admin/ranking`, `/admin/errors` | `60-ranking/recompute.md` | утверждён; Г4 |
 | 49 | `webhook.received` / `webhook.processed` / `webhook.failed` | log | info / error | api | провайдер | `provider`, `eventId`, `type` | 30 дней; раздел «Платежи» — история обработок со статусами (журнал #34) | `/admin/payments` | `70-plans-and-billing/payment-provider.md` | утверждён |
 | 50 | `subscription.activated` / `.deactivated` / `.expired` / `.renewed` / `.remainder_resumed` | log | info | api worker | система | `subscriptionId`, `tier`, `reason` (payment_failed / canceled / expired); без льготного периода (журнал #20); отложенный остаток (журнал #24) | 30 дней | логи; `/admin/subscriptions` | `70-plans-and-billing/subscription-lifecycle.md` | утверждён |
 | 51 | `mail.queued` / `mail.sent` / `mail.failed` | log | info / error | api | система | `template`, `messageId`, `status`; уведомления автору о решениях по статье — по email (журнал #43) | 30 дней; раздел «Письма» — история со статусами (этап 1, журнал #34) | `/admin/mail` | `40-admin/mail.md` | утверждён |
@@ -92,14 +92,14 @@
 
 | # | Код события | Тип | Уровень | Источник | Кто инициирует | Поля (без ПДн) | Ретенция | Где смотреть | Файл | Статус |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 55 | `read` | metric | — | api | посетитель | `articleId`, `day`, `visitorHash`; в расчёты входят только валидные (журнал #26) | события 8 дней, агрегаты бессрочно | статистика; рейтинг | `60-ranking/views-counting.md` | утверждён |
+| 55 | `read` | metric | — | — | — | — | — | — | — | отменено: заменён событиями вовлечённости #83 с `visitorId` (журнал §23.1–2) |
 | 56 | `bookmark.add` / `bookmark.remove` | metric | — | api | аккаунт | `articleId` | агрегаты | статистика | `30-account/reader/bookmarks.md` | утверждён |
 | 57 | `follow.add` / `follow.remove` (3) | metric | — | api | аккаунт | `authorId` | агрегаты | статистика | `10-flows/bookmark-and-follow.md` | утверждён |
 | 58 | `search.query` / `search.zero_results` (3) | metric | — | api | любой | `queryHash`, `locale`, `filters` | агрегаты | статистика | `20-public/search.md` | утверждён |
 | 59 | `checkout.started` / `checkout.succeeded` / `checkout.failed` | metric | — | api | аккаунт | `tier`, `interval`, `promo` (да/нет) | агрегаты | статистика | `70-plans-and-billing/subscription-lifecycle.md` | утверждён |
 | 60 | `registration` / `author.profile.completed` | metric | — | api | пользователь | `day` | агрегаты | статистика (воронка) | `40-admin/statistics.md` | утверждён |
 | 61 | `translation.published` | metric | — | api | система / moderator | `articleId`, `locale`, `via` (ai_auto / manual), `daysToDecision` | агрегаты | статистика | `40-admin/statistics.md` | утверждён |
-| 62 | `boost.start` / `boost.end` | metric | — | api | система | `articleId` | агрегаты | статистика | `60-ranking/pro-boost.md` | утверждён; правила — Г4 |
+| 62 | `boost.start` / `boost.end` | metric | — | — | — | — | — | — | — | отменено: буста нет, Pro-балл фиксируется при публикации (журнал §21.15–16) |
 | 63 | `report.created` | metric | — | api | любой | `reason` | агрегаты | статистика | `40-admin/complaints.md` | отложено: жалобы — отдельный разбор |
 | 64 | `page.error` (фронт) | metric | — | web | любой | `route`, `code`, `requestId` | 30 дней | сборщик ошибок | `80-observability/error-collector.md` | утверждён |
 
@@ -124,7 +124,9 @@
 | 79 | `user.restore.self` | audit | — | api | сам пользователь | `targetId`, `archivedAt`, `planUntil` (журнал #50, §5.2) | бессрочно | `/admin/audit` | `30-account/reader/archived-state.md` | утверждён (Г3) |
 | 80 | `support.request.created` | log | info | api | любой | `topic` (`broken_link`, `general`, `restore`), `route` (шаблон), `requestId` — без ПДн отправителя в логе | 30 дней; сами обращения — бессрочно в очереди | админка | `20-public/contact.md` | утверждён (Г3, журнал §20.15) |
 | 81 | `backend.error` (журнал ошибок бэкенда) | log | error | api, web, worker | система | `requestId`, `code`, `route`, `service`, стек (без ПДн), время — источник раздела «Ошибки и состояние» (журнал §20.19) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/errors` | `40-admin/errors-and-health.md` | черновик (заход 8b) |
-| 82 | `read.anomaly` | log | warn | api worker | система | `articleId`, `day`, `signals[]` (всплеск, диапазон, UA, без прокрутки), значения — без ПДн | 90 дней `[ДОПУЩЕНИЕ]`; `ReadAnomaly` до разбора | «Конфигурация рейтинга», сводка analyst | `60-ranking/anti-fraud.md` | черновик (заход 4; пороги — Г4) |
+| 82 | `engagement.anomaly` | log | warn | обработчик событий | система | объект (статья / автор), `day`, `signals[]`, значения — без ПДн и текстов (`60-ranking/engagement-tracking.md` §8) | по политике ретенции; `EngagementAnomaly` до разбора | `/admin/ranking`, `/admin/errors` | `60-ranking/anti-fraud.md` | утверждён; Г4 (пороги — отложено) |
+| 83 | `article.open` / `article.read.qualified` / `article.read.repeat` / `article.share.create` / `article.share.open` / `author.profile.open` / `author.share.open` | metric | — | api (`POST /api/engagement`), SSR-резерв | посетитель по `visitorId` | `visitorId`, объект, `day`, `source` (internal / external / shared / direct), диагностический IP только для защиты (`engagement-tracking.md` §3, §5, §12) | сырые — короткий операционный период; дневные агрегаты — бессрочно | рейтинг; личная аналитика; статистика | `60-ranking/engagement-tracking.md` | утверждён; Г4 |
+| 84 | `engagement.exclusion` | audit | — | обработчик событий | система | объект, `day`, основание (сработавшие правила), время; ручного возврата нет (журнал §23.6; `engagement-tracking.md` §15) | бессрочно | `/admin/audit`, `/admin/ranking` | `60-ranking/anti-fraud.md` | утверждён; Г4 |
 
 ## Правила
 

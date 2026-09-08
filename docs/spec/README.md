@@ -58,7 +58,7 @@ _templates/            шаблоны: page, admin-section, flow, role, ranking,
                        permission-exceptions, session-lifecycle, rate-limits,
                        escalation-and-demotion)
 60-ranking/            рейтинг (article-score, author-score, views-counting, ai-review,
-                       pro-boost, freshness-decay, topic-relevance, home-sections,
+                       pro-score (бывший pro-boost), freshness-decay, topic-relevance, home-sections,
                        feed-principles, anti-fraud, explainability)
 70-plans-and-billing/  планы и биллинг (plan-free, plan-standard, plan-pro,
                        subscription-lifecycle, role-derivation, payment-provider,

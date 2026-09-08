@@ -99,7 +99,7 @@
 | 64 | `/health` (Nuxt) и `GET /health` (API) | infra | все (без данных) | О | — | `80-observability/health-and-alerts.md` | 0 | утверждён |
 | 65 | `POST /api/graphql` (BFF-прокси Nuxt → API) | infra | по роли запроса | — | — | `50-access/permission-checks.md` | 0 | утверждён |
 | 66 | `POST /api/webhooks/psp/{provider}` (API) | infra | провайдер по подписи | О (подпись), Д | — | `70-plans-and-billing/payment-provider.md` | 1 | утверждён |
-| 67 | `POST /api/read` (маяк прочтения) | infra | все | О, лимит | — | `60-ranking/views-counting.md` | 2 | утверждён |
+| 67 | `POST /api/engagement` (события вовлечённости, заголовок `X-Visitor-Id`) | infra | все | О, лимит | — | `60-ranking/engagement-tracking.md` | 2 | утверждён; Г4: заменяет маяк прочтения (журнал §23) |
 | 68 | `/me/articles/{id}/edit?token=` (ссылка из письма о снятии на доработку) | infra | автор по ссылке | Н | noindex | `30-account/author/article-edit.md` §3 | 1 | утверждён |
 
 ## Только в dev
