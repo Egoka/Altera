@@ -26,7 +26,7 @@
 | 10 | `/search?q=`, `/en/search?q=` | public | все | З, П, О | noindex | `20-public/search.md` | 3 | утверждён |
 | 11 | `/pricing`, `/en/pricing` | public | все | З, О, Пл (уже на плане) | index, c, h | `20-public/pricing.md` | 1 | утверждён |
 | 12 | `/login`, `/en/login` | public | посетитель (аккаунт → редирект в `/me`) | З, О, лимит | noindex | `20-public/login.md` | 1 | утверждён |
-| 13 | `/auth/verify?token=` | public | посетитель по ссылке | З, О, Н (ссылка), А (аккаунт в архиве → поддержка) | noindex | `20-public/verify.md` | 1 | утверждён |
+| 13 | `/auth/verify?token=` | public | посетитель по ссылке | З, О, Н (ссылка), А (аккаунт в архиве → сообщение и переход к `/auth/appeal`) | noindex | `20-public/verify.md` | 1 | утверждён; Г2: переход к оспариванию (журнал #48) |
 | 14 | `/about`, `/en/about` | public | все | З, О | index, c, h | `20-public/about.md` | 1 | утверждён |
 | 15 | `/contact`, `/en/contact` | public | все | З, О, лимит | index, c, h | `20-public/contact.md` | 1 | утверждён |
 | 16 | `/legal/terms`, `/en/legal/terms` | public | все | З, О | index, c, h | `20-public/legal-terms.md` | 1 | утверждён |
@@ -85,6 +85,7 @@
 | 59 | `/admin/newsletter`, `/admin/newsletter/{id}` | admin | — | — | — | `40-admin/newsletter.md` | 4 | отложено: правила рассылок — отдельный разбор |
 | 60 | `/admin/settings` | admin | owner | З, О, Д | noindex | `40-admin/system-settings.md` | 4 | утверждён (настройки провайдеров — этап 4, журнал #36) |
 | 70 | `/admin/mail`, `/admin/mail/{id}` | admin | admin (чтение), owner; editor, moderator — письма по своим статьям | З, П, О, Д, Н | noindex | `40-admin/mail.md` | 1 | утверждён (новый — журнал #34) |
+| 71 | `/auth/appeal?token=`, `/en/auth/appeal?token=` | public | пользователь архивированного аккаунта по токену входа | З, О, Н (токен), лимит, конфликт (оспаривание уже подано) | noindex | `20-public/blocked-appeal.md` | 1 | утверждён (новый — Г2, журнал #48) |
 
 ## Инфраструктура и API
 

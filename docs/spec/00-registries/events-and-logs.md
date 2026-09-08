@@ -41,7 +41,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|
 | 12 | `user.role.change` | audit | — | api | owner (журнал #7) | `targetId`, `before`, `after` | бессрочно | `/admin/audit` | `40-admin/admins.md` | утверждён |
 | 13 | `owner.transfer` | audit | — | — | — | — | — | — | — | отменено: заменено `role.assign.owner` / `role.revoke.owner` (#65) (журнал #10) |
-| 14 | `user.archive` / `user.restore` | audit | — | api | admin, owner | `targetId`, `reason`, `cascadeArticles` | бессрочно | `/admin/audit` | `10-flows/archive-account.md` | утверждён (бывшие `user.block` / `user.unblock` — блокировка = архив, журнал #30) |
+| 14 | `user.archive` / `user.restore` | audit | — | api | admin, owner | `targetId`, `reason`, `cascadeArticles`, `mode` (admin / emergency — журнал #48), `planUntil` на момент архива (срок продолжается — журнал #48, #50) | бессрочно | `/admin/audit` | `10-flows/archive-account.md` | утверждён (бывшие `user.block` / `user.unblock` — блокировка = архив, журнал #30; Г2: `mode`, план) |
 | 15 | `user.sessions.revoke` | audit | — | api | admin, owner | `targetId`, `count` | бессрочно | `/admin/audit` | `50-access/session-lifecycle.md` | утверждён |
 | 16 | `user.archive.self` | audit | — | api | сам пользователь | `mode` (архив / оставить с подписью) | бессрочно | `/admin/audit` | `10-flows/delete-account.md` | утверждён (бывший `user.delete`) |
 | 17 | `user.email.change` | audit | — | api | сам / admin, owner | `targetId`, `via` (self / recovery) | бессрочно | `/admin/audit` | `10-flows/email-change-and-recovery.md` | утверждён |
@@ -54,7 +54,7 @@
 | 24 | `translation.publish.manual` / `translation.rework.request` | audit | — | api | moderator, owner | `translationId`, `revisionId`, `reason` или рекомендации (журнал #14, #16) | бессрочно | `/admin/audit`; автору — история | `10-flows/moderation.md` | утверждён (бывшие `approve` / `reject`) |
 | 25 | `translation.unpublish` | audit | — | api | moderator, owner | `translationId`, `reason` (обязательна — журнал #18) | бессрочно | `/admin/audit`; автору — история | `10-flows/moderation.md` | утверждён |
 | 26 | `translation.status.set` | audit | — | — | — | — | — | — | — | отменено: произвольных переходов нет (матрица #28) |
-| 27 | `article.archive` / `article.restore` | audit | — | api | автор, moderator (archive), owner | `articleId`, `actorRoleLevel` (журнал #2), `reason` | бессрочно | `/admin/audit` | `10-flows/archive-and-restore-article.md` | утверждён (бывшие `article.delete` / `article.taxonomy.change`) |
+| 27 | `article.archive` / `article.restore` | audit | — | api | автор, editor (редакционные), moderator и admin (только archive — журнал #53), owner | `articleId`, `actorRoleLevel` (журнал #2), `reason` | бессрочно | `/admin/audit` | `10-flows/archive-and-restore-article.md` | утверждён (бывшие `article.delete` / `article.taxonomy.change`) |
 | 28 | `revision.restore` (не автором) | audit | — | api | owner | `translationId`, `fromRevisionId` | бессрочно | `/admin/audit` | `50-access/permission-checks.md` | утверждён |
 | 29 | `ai.score.override` | audit | — | — | — | — | — | — | — | отменено: AI не выдаёт балл (журнал #41) |
 | 30 | `ai.review.rerun` | audit | — | — | — | — | — | — | — | отменено: ручного повтора AI нет (журнал #14) |
@@ -108,8 +108,8 @@
 | # | Код события | Тип | Уровень | Источник | Кто инициирует | Поля (без ПДн) | Ретенция | Где смотреть | Файл | Статус |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 65 | `role.assign.owner` / `role.revoke.owner` / `owner.deactivate` | audit | — | api | owner | `targetId`, `remainingOwners` (≥ 1, журнал #10) | бессрочно | `/admin/audit` | `10-flows/appoint-admin.md` | утверждён |
-| 66 | `permission.exception.grant` / `permission.exception.revoke` | audit | — | api | owner | `targetId`, `permission`, `reason` (журнал #7) | бессрочно | `/admin/audit` | `50-access/permission-exceptions.md` | утверждён |
-| 67 | `admin.read.personal` | audit | — | api | analyst, admin, owner (и любая служебная роль при чтении ПДн) | `actorId`, `subjectId`, `context` (раздел, карточка), `purpose` (журнал #6, #22) | бессрочно | `/admin/audit` | `50-access/visibility.md` | утверждён |
+| 66 | `permission.exception.grant` / `permission.exception.revoke` / `permission.exception.expire` | audit | — | api, планировщик (`expire`) | owner; система для `expire` | `targetId`, `permission`, `reason`, `endsAt` (журнал #7, #54) | бессрочно | `/admin/audit` | `50-access/permission-exceptions.md` | утверждён; Г2: `expire` при автоматическом прекращении (журнал #54) |
+| 67 | `admin.read.personal` | audit | — | api | analyst, admin, owner (и любая служебная роль при чтении ПДн) | `actorId`, `subjectId`, `context` (раздел, карточка), `purpose` — оба заполняются системой по разделу и действию, сотрудник ничего не вводит (журнал #6, #22, #59) | бессрочно | `/admin/audit` (только чтение — журнал #59) | `50-access/visibility.md` | утверждён; Г2: контекст автоматический |
 | 68 | `entity.delete.permanent` | audit | — | api | owner | `entityType`, `entityId`, `confirmedName`, `reason` (журнал #1) | бессрочно | `/admin/audit` | `10-flows/permanent-delete.md` | утверждён |
 | 69 | `translation.reject.final` | audit | — | api | moderator, owner | `translationId`, `reason` (журнал #12) | бессрочно | `/admin/audit`; автору — история | `10-flows/moderation.md` | утверждён |
 | 70 | `review.message` | audit | — | api | moderator, owner | `translationId`, `decision` (rework / unpublish / publish / reject_final), `message`, автор, время (журнал #16) | бессрочно | история по статье; `/admin/audit` | `10-flows/moderation.md` | утверждён |
@@ -118,6 +118,9 @@
 | 73 | `payment.exclude` / `payment.include` | audit | — | api | analyst, admin, owner | `paymentId`, `reason`, сотрудник (журнал #27) | бессрочно | `/admin/audit` | `70-plans-and-billing/refunds.md` | утверждён |
 | 74 | `subscription.extend.manual` | audit | — | api | analyst, admin, owner | `subscriptionId`, `days`, `newPeriodEnd` (журнал #25) | бессрочно | `/admin/audit` | `40-admin/subscriptions.md` | утверждён |
 | 75 | `admin.change` (общая оболочка) | audit | — | api | служебные роли | `entity`, `entityId`, `fields` со значениями до/после (журнал #6) — обязательна для каждого административного изменения, конкретные коды выше уточняют `action` | бессрочно | `/admin/audit` | `40-admin/audit-log.md` | утверждён |
+| 76 | `user.create.staff` | audit | — | api | admin, owner | `targetId`, `role`, e-mail — только хэш (журнал #47) | бессрочно | `/admin/audit` | `10-flows/appoint-admin.md` | утверждён (Г2) |
+| 77 | `user.appeal.submit` / `user.appeal.decide` | audit | — | api | пользователь по ссылке входа архивированного аккаунта; admin, owner (`decide`) | `targetId`, `appealId`, `decision` (restore / confirm_block), `reason` (журнал #48) | бессрочно | `/admin/audit`; пользователю — письмо | `10-flows/archive-account.md` | утверждён (Г2) |
+| 78 | `plan.action.rejected` | log | info | api | система | `userId`, `operation`, `planTier`, `planUntil` — отказ `PLAN_LIMIT` при сохранённой сессии (журнал #55) | 30 дней | логи | `50-access/session-lifecycle.md` | утверждён (Г2) |
 
 ## Правила
 
