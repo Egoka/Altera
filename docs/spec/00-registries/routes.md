@@ -49,7 +49,7 @@
 | 28 | `/me/sessions` | account | акк. | З, П, О, Д | noindex | `30-account/reader/sessions.md` | 1 | утверждён |
 | 29 | `/me/email`, `/me/email/confirm?token=` | account | акк. | З, О, Д, Н (ссылка) | noindex | `30-account/reader/email-change.md` | 1 | утверждён |
 | 30 | `/me/bookmarks` | account | акк. | З, П, О, Д | noindex | `30-account/reader/bookmarks.md` | 1 | утверждён |
-| 31 | `/me/subscription` | account | акк. | З, О, Д, Пл (все состояния; без льготного периода — журнал #20) | noindex | `30-account/reader/subscription.md` | 1 | утверждён |
+| 31 | `/me/subscription` | account | акк. | З, О, Д, Пл (все состояния; очередь периодов — журнал §8.22) | noindex | `30-account/reader/subscription.md` | 1 | утверждён |
 | 32 | `/me/subscription/checkout?plan=&interval=&promo=` | account | акк. | З, О, Д, Пл (уже на плане) | noindex | `30-account/reader/checkout.md` | 1 | утверждён |
 | 33 | `/me/subscription/result?payment=` | account | акк. | З (ожидание вебхука), О (отказ → план не включён), Д | noindex | `30-account/reader/checkout.md` §8 | 1 | утверждён |
 | 34 | `/me/articles` (фильтры `?status=archived`, `?status=rejected`) | account | автор; бывший автор — чтение и архивирование; `editor` — свои | З, П, О, Д, Пл | noindex | `30-account/author/articles.md` | 1 | утверждён |

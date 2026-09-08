@@ -31,7 +31,7 @@
 | 17 | Правила публикации | routes #18 | все | прочитать | `legalText` | 2 | обычный | `20-public/legal-content-rules.md` | утверждён |
 | 18 | Лицензия на контент | routes #19 | все | прочитать | `legalText` | 2 | обычный | `20-public/legal-license.md` | утверждён |
 | 19 | Условия платных услуг | routes #20 | все | прочитать | `legalText` | 2 | обычный | `20-public/legal-paid-services.md` | утверждён |
-| 20 | Политика возвратов | routes #21 | все | прочитать; возврат не сокращает период (журнал #21) | `legalText` | 2 | обычный | `20-public/legal-refunds.md` | утверждён |
+| 20 | Политика возвратов | routes #21 | все | прочитать; запрос возврата из кабинета, одобренный возврат прекращает подписку (журнал §8.18) | `legalText` | 2 | обычный | `20-public/legal-refunds.md` | утверждён |
 | 21 | 404 | routes #22 | все | вернуться на главную или в поиск | — | 1 | обычный | `20-public/not-found.md` | утверждён |
 | 22 | 410 «снято» | routes #23 | все | перейти к автору или рубрике | `gone(locale, slug)` — заголовок без текста | 1 | обычный | `20-public/gone.md` | утверждён |
 | 23 | 500 | routes #24 | все | скопировать идентификатор запроса, написать в редакцию | — | 1 | обычный | `20-public/error.md` | утверждён |
@@ -47,7 +47,7 @@
 | 28 | Сессии и устройства | routes #28 | акк. | отозвать сессию | `me.sessions`, `revokeSession`, `revokeAllSessions` | 2 | обычный | `30-account/reader/sessions.md` | утверждён |
 | 29 | Смена почты | routes #29 | акк. | сменить e-mail с подтверждением с обоих адресов | `requestEmailChange`, `confirmEmailChange(token)` | 2 | обычный | `30-account/reader/email-change.md` | утверждён |
 | 30 | Закладки | routes #30 | акк. | открыть сохранённое; убрать закладку | `me.bookmarks(cursor)`, `removeBookmark` | 2 | обычный | `30-account/reader/bookmarks.md` | утверждён |
-| 31 | Подписка | routes #31 | акк. | увидеть состояние; сменить план (pro сразу с отложенным остатком, понижение со следующего периода — журнал #23–24); отменить; продлить; чеки | `me.subscription`, `me.payments`, `cancelSubscription`, `resumeSubscription`, `changePlan` | 4 | обычный | `30-account/reader/subscription.md` | утверждён |
+| 31 | Подписка | routes #31 | акк. | увидеть состояние; очередь оплаченных периодов (§8.22); купить период; отменить; продлить; «Запросить возврат» (§8.18); чеки | `me.subscription`, `me.payments`, `cancelSubscription`, `resumeSubscription`, `requestRefund` | 4 | обычный | `30-account/reader/subscription.md` | утверждён |
 | 32 | Оплата | routes #32, #33 | акк. | выбрать интервал, промокод (механика отложена), перейти к провайдеру, увидеть результат; полная стоимость (журнал #35) | `plans`, `startCheckout` → адрес провайдера; результат по `payment` | 3 | обычный | `30-account/reader/checkout.md` | утверждён |
 | 33 | Выгрузка данных | routes #39 | акк. | запросить и скачать JSON | `requestExport`, `me.exports` | 2 | обычный | `30-account/reader/export.md` | утверждён |
 | 34 | «Удалить аккаунт» (архивирование) | routes #40 | акк. | выбрать судьбу материалов; подтвердить письмом; доступ закрывается сразу, восстановление — через поддержку (журнал §5.1–2) | `requestAccountArchive(mode)`, `confirmAccountArchive(token)` | 2 | обычный | `30-account/reader/delete-account.md` | утверждён |

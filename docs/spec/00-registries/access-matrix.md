@@ -5,7 +5,7 @@
   журнал §1–16; ADR-0014, ADR-0018, ADR-0035, ADR-0041 в части, не противоречащей журналу.
   Колонки — `README.md`.
 - Обозначения: `✓` — может; `свои` — только над своими объектами; `—` — нельзя; `акт.` — только
-  при активной подписке или выдаче плана (журнал #5, #20); `(n)` — этап появления;
+  при активной подписке или выдаче плана (журнал #5, §8.15); `(n)` — этап появления;
   `[ДОПУЩЕНИЕ]` — журнал молчит, оставлено прежнее значение и вынесено в отчёт.
 - **Иерархии по включению нет** (журнал §1): у каждой служебной роли свой дефолтный набор;
   `owner` может всё, включая действия ревьюера; индивидуальные исключения для служебных ролей
@@ -101,13 +101,13 @@
 | # | Действие (код) | Данные / сущность | Гость | Reader | Author | Editor | Moderator | Analyst | Admin | Owner | Где проверяется | Аудит | Ошибка (код) | Файл политики | Статус |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 55 | `plan.list` | планы и цены | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | `70-plans-and-billing/plan-*.md` | утверждён |
-| 56 | `checkout.start` | платёж у провайдера; полная стоимость плана, без доплаты (журнал #35) | — | ✓ | ✓ (смена плана) | ✓ | ✓ | ✓ | ✓ | ✓ | auth, «нет активной той же» | лог `checkout.started` | `CONFLICT`, `PROVIDER_UNAVAILABLE` | `70-plans-and-billing/subscription-lifecycle.md` | утверждён |
+| 56 | `checkout.start` | покупка оплаченного периода: полная стоимость без доплаты (журнал #35), период в очередь по приоритету (§8.22); Т-Касса первой (§8.14); служебной записи — нет (§8.17) | — | ✓ | ✓ (смена плана) | ✓ | ✓ | ✓ | ✓ | ✓ | auth, role ∈ {reader, author} | лог `checkout.started` | `FORBIDDEN`, `PROVIDER_UNAVAILABLE` | `70-plans-and-billing/subscription-lifecycle.md` | утверждён |
 | 57 | `promo.validate` / `promo.apply` | `PromoCode` на checkout | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | auth | — | `NOT_FOUND`, `CONFLICT` | `70-plans-and-billing/grants-and-promo.md` | отложено: механика применения промокодов — отдельный разбор |
 | 58 | `subscription.read` | своя подписка, платежи, чеки | — | свои | свои | свои | свои | свои | свои | свои | auth | — | — | `30-account/reader/subscription.md` | утверждён |
 | 59 | `subscription.cancel` / `subscription.resume` | отмена с конца периода; возврат к активной | — | свои | свои | свои | свои | свои | свои | свои | auth, own | лог | `CONFLICT` | `70-plans-and-billing/subscription-lifecycle.md` | утверждён |
-| 60 | `subscription.changePlan` | standard → pro сразу с отложенным остатком (журнал #24); pro → standard со следующего периода (журнал #23); полная стоимость (журнал #35) | — | — | свои | ✓ | ✓ | ✓ | ✓ | ✓ | auth, own | лог | `CONFLICT` | `70-plans-and-billing/subscription-lifecycle.md` | утверждён |
+| 60 | `subscription.changePlan` | — | — | — | — | — | — | — | — | — | — | — | — | — | отменено: отдельной смены плана нет — покупка периода в очередь по приоритету (журнал §8.22; #56) |
 | 61 | `subscription.admin.grant` / `.change` / `.cancel` | ручная выдача, изменение, отмена подписки пользователя | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance) | `subscription.grant`, `subscription.change`, `subscription.cancel` (причина, платёжные данные, до/после) | `FORBIDDEN` | `40-admin/subscriptions.md` | утверждён |
-| 62 | `payment.refund` | возврат через провайдера; оплаченный период не сокращается (журнал #21) | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance) | `payment.refund` | `FORBIDDEN`, `CONFLICT` | `70-plans-and-billing/refunds.md` | утверждён |
+| 62 | `payment.refund` / `refund.reject` | решение по обращению: одобренный возврат прекращает подписку сразу; отклонение — план не меняется (журнал §8.18) | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance) | `payment.refund`, `refund.rejected` | `FORBIDDEN`, `CONFLICT` | `70-plans-and-billing/refunds.md` | утверждён; Г5 |
 | 63 | `plan.grant` / `plan.revoke` | `PlanGrant`: выдача плана вручную | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance), срок обязателен | `plan.grant`, `plan.revoke` | `FORBIDDEN`, `VALIDATION_ERROR` | `70-plans-and-billing/grants-and-promo.md` | утверждён |
 | 64 | `promo.create` / `promo.disable` | `PromoCode` | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance) | `promo.create`, `promo.disable` | `FORBIDDEN`, `DUPLICATE` | `70-plans-and-billing/grants-and-promo.md` | утверждён; механика применения — отложено |
 | 65 | `plan.update` | условия и цены планов | — | — | — | — | — | ✓ | ✓ | ✓ | perm(finance) | `plan.update` | `FORBIDDEN` | `40-admin/subscriptions.md` | утверждён |
@@ -203,6 +203,7 @@
 | 116 | `account.restore.self` | самостоятельное восстановление аккаунта, архивированного самим пользователем: после успешного входа — экран состояния и кнопка «Восстановить аккаунт»; доступ к плану — на остаток срока; статьи остаются в архиве (журнал #4, #50, §5.2); при административной блокировке недоступно | — | свои (`archiveMode = self`) | свои | свои | свои | свои | свои | свои | ограниченная сессия архивированного аккаунта, `archiveMode = self` | `user.restore.self` | `FORBIDDEN` (административный архив), `CONFLICT` | `30-account/reader/archived-state.md` | утверждён (Г3) |
 | 117 | `support.request.create` | обращение в поддержку с темой: `broken_link` с кнопки 404 (журнал §20.15), общее письмо с `/contact`; попадает в очередь `admin`/`owner` | ✓ (лимит) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | лимит по IP и аккаунту | лог `support.request.created` | `RATE_LIMITED`, `VALIDATION_ERROR` | `20-public/contact.md` | утверждён (Г3); экран обращений в админке — заход 8a `[ДОПУЩЕНИЕ: внутри раздела «Пользователи» или «Письма»]` |
 | 118 | `article.share.create` / `author.share.create` | публичная ссылка распространения с непрозрачным идентификатором источника, не связанным с личностью (журнал §21.5, §23.4) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | опубликованный ресурс, лимит | метрика `article.share.create` (#83) | `NOT_FOUND`, `RATE_LIMITED` | `60-ranking/engagement-tracking.md` | утверждён (Г4) |
+| 119 | `refund.request` | кнопка «Запросить возврат» в кабинете: обращение на ручное рассмотрение; до решения план не меняется (журнал §8.18) | — | свои платежи | свои | — | — | — | — | — | auth, own, нет открытого обращения | лог `refund.requested` | `CONFLICT`, `NOT_FOUND` | `70-plans-and-billing/refunds.md` | утверждён (Г5) |
  `10-flows/archive-account.md` | утверждён |
 
 ## Инварианты, которые матрица не выражает (проверяются политиками)
