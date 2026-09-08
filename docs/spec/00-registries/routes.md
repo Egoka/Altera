@@ -26,7 +26,7 @@
 | 10 | `/search?q=`, `/en/search?q=` | public | все | З, П, О | noindex | `20-public/search.md` | 3 | утверждён |
 | 11 | `/pricing`, `/en/pricing` | public | все | З, О, Пл (уже на плане) | index, c, h | `20-public/pricing.md` | 1 | утверждён |
 | 12 | `/login`, `/en/login` | public | посетитель (аккаунт → редирект в `/me`) | З, О, лимит | noindex | `20-public/login.md` | 1 | утверждён |
-| 13 | `/auth/verify?token=` | public | посетитель по ссылке | З, О, Н (ссылка), А (аккаунт в архиве → сообщение и переход к `/auth/appeal`) | noindex | `20-public/verify.md` | 1 | утверждён; Г2: переход к оспариванию (журнал #48) |
+| 13 | `/auth/verify?token=` | public | посетитель по ссылке | З, О, Н (ссылка), А (самостоятельный архив → `/me/archived`; административный → `/auth/appeal`) | noindex | `20-public/verify.md` | 1 | утверждён; Г2: оспаривание; Г3: экран состояния (журнал §5.2) |
 | 14 | `/about`, `/en/about` | public | все | З, О | index, c, h | `20-public/about.md` | 1 | утверждён |
 | 15 | `/contact`, `/en/contact` | public | все | З, О, лимит | index, c, h | `20-public/contact.md` | 1 | утверждён |
 | 16 | `/legal/terms`, `/en/legal/terms` | public | все | З, О | index, c, h | `20-public/legal-terms.md` | 1 | утверждён |
@@ -86,6 +86,8 @@
 | 60 | `/admin/settings` | admin | owner | З, О, Д | noindex | `40-admin/system-settings.md` | 4 | утверждён (настройки провайдеров — этап 4, журнал #36) |
 | 70 | `/admin/mail`, `/admin/mail/{id}` | admin | admin (чтение), owner; editor, moderator — письма по своим статьям | З, П, О, Д, Н | noindex | `40-admin/mail.md` | 1 | утверждён (новый — журнал #34) |
 | 71 | `/auth/appeal?token=`, `/en/auth/appeal?token=` | public | пользователь архивированного аккаунта по токену входа | З, О, Н (токен), лимит, конфликт (оспаривание уже подано) | noindex | `20-public/blocked-appeal.md` | 1 | утверждён (новый — Г2, журнал #48) |
+| 72 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (новый — Г3, журнал §20.19) |
+| 73 | `/me/archived` | account | пользователь самостоятельно архивированного аккаунта (ограниченная сессия); остальным — редирект в `/me` | З, О, Д | noindex | `30-account/reader/archived-state.md` | 1 | утверждён (новый — Г3, журнал §5.2) |
 
 ## Инфраструктура и API
 

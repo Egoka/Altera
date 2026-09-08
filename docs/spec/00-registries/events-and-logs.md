@@ -43,7 +43,7 @@
 | 13 | `owner.transfer` | audit | — | — | — | — | — | — | — | отменено: заменено `role.assign.owner` / `role.revoke.owner` (#65) (журнал #10) |
 | 14 | `user.archive` / `user.restore` | audit | — | api | admin, owner | `targetId`, `reason`, `cascadeArticles`, `mode` (admin / emergency — журнал #48), `planUntil` на момент архива (срок продолжается — журнал #48, #50) | бессрочно | `/admin/audit` | `10-flows/archive-account.md` | утверждён (бывшие `user.block` / `user.unblock` — блокировка = архив, журнал #30; Г2: `mode`, план) |
 | 15 | `user.sessions.revoke` | audit | — | api | admin, owner | `targetId`, `count` | бессрочно | `/admin/audit` | `50-access/session-lifecycle.md` | утверждён |
-| 16 | `user.archive.self` | audit | — | api | сам пользователь | `mode` (архив / оставить с подписью) | бессрочно | `/admin/audit` | `10-flows/delete-account.md` | утверждён (бывший `user.delete`) |
+| 16 | `user.archive.self` | audit | — | api | сам пользователь | `mode` (архив / оставить с подписью), `planUntil` на момент архива | бессрочно | `/admin/audit` | `10-flows/delete-account.md` | утверждён (бывший `user.delete`; Г3: самовосстановление — #79) |
 | 17 | `user.email.change` | audit | — | api | сам / admin, owner | `targetId`, `via` (self / recovery) | бессрочно | `/admin/audit` | `10-flows/email-change-and-recovery.md` | утверждён |
 | 18 | `plan.grant` / `plan.revoke` | audit | — | api | analyst, admin, owner | `targetId`, `tier`, `until`, `reason` | бессрочно | `/admin/audit` | `70-plans-and-billing/grants-and-promo.md` | утверждён |
 | 19 | `plan.update` | audit | — | api | analyst, admin, owner | `planId`, `diff` (до/после) | бессрочно | `/admin/audit` | `40-admin/subscriptions.md` | утверждён |
@@ -121,6 +121,9 @@
 | 76 | `user.create.staff` | audit | — | api | admin, owner | `targetId`, `role`, e-mail — только хэш (журнал #47) | бессрочно | `/admin/audit` | `10-flows/appoint-admin.md` | утверждён (Г2) |
 | 77 | `user.appeal.submit` / `user.appeal.decide` | audit | — | api | пользователь по ссылке входа архивированного аккаунта; admin, owner (`decide`) | `targetId`, `appealId`, `decision` (restore / confirm_block), `reason` (журнал #48) | бессрочно | `/admin/audit`; пользователю — письмо | `10-flows/archive-account.md` | утверждён (Г2) |
 | 78 | `plan.action.rejected` | log | info | api | система | `userId`, `operation`, `planTier`, `planUntil` — отказ `PLAN_LIMIT` при сохранённой сессии (журнал #55) | 30 дней | логи | `50-access/session-lifecycle.md` | утверждён (Г2) |
+| 79 | `user.restore.self` | audit | — | api | сам пользователь | `targetId`, `archivedAt`, `planUntil` (журнал #50, §5.2) | бессрочно | `/admin/audit` | `30-account/reader/archived-state.md` | утверждён (Г3) |
+| 80 | `support.request.created` | log | info | api | любой | `topic` (`broken_link`, `general`, `restore`), `route` (шаблон), `requestId` — без ПДн отправителя в логе | 30 дней; сами обращения — бессрочно в очереди | админка | `20-public/contact.md` | утверждён (Г3, журнал §20.15) |
+| 81 | `backend.error` (журнал ошибок бэкенда) | log | error | api, web, worker | система | `requestId`, `code`, `route`, `service`, стек (без ПДн), время — источник раздела «Ошибки и состояние» (журнал §20.19) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/errors` | `40-admin/errors-and-health.md` | черновик (заход 8b) |
 
 ## Правила
 
