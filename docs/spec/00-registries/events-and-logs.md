@@ -124,6 +124,7 @@
 | 79 | `user.restore.self` | audit | — | api | сам пользователь | `targetId`, `archivedAt`, `planUntil` (журнал #50, §5.2) | бессрочно | `/admin/audit` | `30-account/reader/archived-state.md` | утверждён (Г3) |
 | 80 | `support.request.created` | log | info | api | любой | `topic` (`broken_link`, `general`, `restore`), `route` (шаблон), `requestId` — без ПДн отправителя в логе | 30 дней; сами обращения — бессрочно в очереди | админка | `20-public/contact.md` | утверждён (Г3, журнал §20.15) |
 | 81 | `backend.error` (журнал ошибок бэкенда) | log | error | api, web, worker | система | `requestId`, `code`, `route`, `service`, стек (без ПДн), время — источник раздела «Ошибки и состояние» (журнал §20.19) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/errors` | `40-admin/errors-and-health.md` | черновик (заход 8b) |
+| 82 | `read.anomaly` | log | warn | api worker | система | `articleId`, `day`, `signals[]` (всплеск, диапазон, UA, без прокрутки), значения — без ПДн | 90 дней `[ДОПУЩЕНИЕ]`; `ReadAnomaly` до разбора | «Конфигурация рейтинга», сводка analyst | `60-ranking/anti-fraud.md` | черновик (заход 4; пороги — Г4) |
 
 ## Правила
 
