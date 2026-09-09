@@ -13,10 +13,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      # Версия pnpm берётся из поля packageManager в корневом package.json.
+      # Дублировать её здесь нельзя: action-setup падает с «Multiple versions of pnpm specified».
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.13.1
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -68,10 +68,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      # Версия pnpm берётся из поля packageManager в корневом package.json.
+      # Дублировать её здесь нельзя: action-setup падает с «Multiple versions of pnpm specified».
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.13.1
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
