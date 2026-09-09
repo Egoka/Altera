@@ -3,7 +3,7 @@
 - **Дата**: 2026-09-09
 - **Базовый коммит**: 4d5523a
 - **Отчёт**: docs/reports/2026-09-09-g5b-sync-launch-and-public-report.md
-- **Статус**: завершён (отчёт — docs/reports/2026-09-09-spec-06-account-report.md)
+- **Статус**: завершён (отчёт — docs/reports/2026-09-09-g5b-sync-launch-and-public-report.md)
 
 ## Контекст
 
