@@ -1,7 +1,7 @@
 # Страница: Подписка
 
 - **Реестр**: `00-registries/pages.md` #31 · `00-registries/routes.md` #31
-- **Статус**: на утверждении
+- **Статус**: утверждён (гейт Г6, 2026-09-09)
 - **ADR**: ADR-0010, ADR-0035, ADR-0044 (в части, не противоречащей журналу); журнал §8.15,
   §8.16, §8.18, §8.20–22, #50, #55, §24.1, §24.4; `70-plans-and-billing/subscription-lifecycle.md`,
   `refunds.md`; `10-flows/pay-and-upgrade.md` (#6), `subscription-expires.md` (#7)
@@ -44,7 +44,7 @@
 | Запрос / мутация | Аргументы | Поля | Права | Кеш | Ошибки (коды ADR-0032) |
 |---|---|---|---|---|---|
 | `me.subscription` | — | `active { tier, interval, startsAt, periodEnd, source: payment \| grant, cancelAtPeriodEnd }`, `queue[] { id, tier, interval, source, expectedStartsAt, paymentId }` по приоритету (§8.22), `renewal { nextChargeAt, attemptsToday, lastAttemptStatus }` (§8.15), `expired { tier, endedAt }` | #58 свои | нет | `UNAUTHENTICATED` |
-| `me.payments(cursor)` | курсор | `id`, `createdAt`, `amountMinor`, `currency`, `tier`, `interval`, `status` (succeeded / refunded / failed), `receiptUrl`, `refundRequest { status, createdAt }`, `excludedFromAnalytics` | #58 | нет | — |
+| `me.payments(cursor)` | курсор | `id`, `createdAt`, `amountMinor`, `currency`, `tier`, `interval`, `status` (succeeded / refunded / failed / erroneous — понятный статус и дата, журнал §25.11), `receiptUrl` (только `succeeded` / `refunded`), `refundRequest { status, createdAt }` | #58 | нет | — |
 | `cancelSubscription` | — | `cancelAtPeriodEnd: true` | #59 свои | — | `CONFLICT` (нет активного платного периода) |
 | `resumeSubscription` | — | `cancelAtPeriodEnd: false` | #59 | — | `CONFLICT` |
 | `requestRefund(paymentId, reason?)` | платёж; причина — обязательна для активного или завершившегося периода, не требуется для неактивного периода очереди (§24.4) | `refundRequest { id, status: submitted }` | `refund.request` (#119) свои | — | `NOT_FOUND`, `CONFLICT` (открытое обращение), `VALIDATION_ERROR` (нет причины там, где нужна) |
@@ -143,10 +143,9 @@
   платёжные мутации на первом запуске — `FORBIDDEN`; текст карточки базового плана (§24.1).
 - `[ДОПУЩЕНИЕ]` Код лога для отмены/возобновления автопродления — в составе #50
   (`subscription.canceled` / `.resumed`) — закрывается в 8b (`log-event-registry.md`).
-- Отложено (§8.19): состав чека и документов; (§8.23) письма о списании и решении; (§8.12) цены;
+- Отложено (§8.19): состав чека и документов; (§25.13) письма о списании и решении; (§8.12) цены;
   (промокоды) применение кодов — на checkout.
 - Закрыто Г5–Г5b (§8.15, §8.18, §8.22, §24.4): серия списаний; «Запросить возврат» с
   неизменным планом до решения; очередь по приоритету; возврат неактивного периода без причины.
-- `[ВОПРОС ВЛАДЕЛЬЦУ]` Показывать ли в списке платежей платёж, исключённый сотрудником из
-  аналитики как ошибочный (журнал #26–27)? Если да — с пометкой «ошибочный, не учитывается»;
-  если нет — скрыт, виден только в админке.
+- Закрыто Г6 (§25.11): ошибочные и неуспешные платежи остаются в истории с понятным статусом и
+  датой, но не считаются оплатой и не входят в финансовую аналитику.

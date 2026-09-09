@@ -49,7 +49,7 @@ _templates/            шаблоны: page, admin-section, flow, role, ranking,
 30-account/reader/     кабинет читателя (profile-edit, bookmarks, sessions, subscription,
                        email-change, delete-account)
 30-account/author/     кабинет автора (articles, article-new, article-edit, article-stats,
-                       payment, ai-review-view)
+                       stats-overview, review-history)
 40-admin/              разделы админки (dashboard, categories, tags, articles, review-queue,
                        users, admins, statistics, subscriptions, payments-and-refunds,
                        complaints, ai-reviews, ranking-config, audit-log, media-library,

@@ -47,7 +47,7 @@
 | 26 | `/me` | account | акк. | З, О, Д (→ `/login`), Пл (истёк) | noindex | `30-account/reader/dashboard.md` | 1 | утверждён |
 | 27 | `/me/settings` | account | акк. | З, О, Д | noindex | `30-account/reader/profile-edit.md` | 1 | утверждён |
 | 28 | `/me/sessions` | account | акк. | З, П, О, Д | noindex | `30-account/reader/sessions.md` | 1 | утверждён |
-| 29 | `/me/email`, `/me/email/confirm?token=` | account | акк. | З, О, Д, Н (ссылка) | noindex | `30-account/reader/email-change.md` | 1 | утверждён |
+| 29 | `/me/email` | account | акк. | З, О, Д | noindex | `30-account/reader/email-change.md` | 1 | утверждён; Г6: код на новый адрес в том же окне (журнал §25.8), маршрута подтверждения по ссылке нет |
 | 30 | `/me/bookmarks` | account | акк. | З, П, О, Д | noindex | `30-account/reader/bookmarks.md` | 1 | утверждён |
 | 31 | `/me/subscription` | account | акк. | З, О, Д, Пл (все состояния; очередь периодов — журнал §8.22) | noindex | `30-account/reader/subscription.md` | 1 | утверждён |
 | 32 | `/me/subscription/checkout?plan=&interval=&promo=` | account | акк. | З, О, Д, Пл (уже на плане) | noindex | `30-account/reader/checkout.md` | 1 | утверждён |
@@ -88,6 +88,7 @@
 | 71 | `/auth/appeal?token=`, `/en/auth/appeal?token=` | public | пользователь архивированного аккаунта по токену входа | З, О, Н (токен), лимит, конфликт (оспаривание уже подано) | noindex | `20-public/blocked-appeal.md` | 1 | утверждён (новый — Г2, журнал #48) |
 | 72 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (новый — Г3, журнал §20.19) |
 | 73 | `/me/archived` | account | пользователь самостоятельно архивированного аккаунта (ограниченная сессия); остальным — редирект в `/me` | З, О, Д | noindex | `30-account/reader/archived-state.md` | 1 | утверждён (новый — Г3, журнал §5.2) |
+| 74 | `/me/stats` | account | автор; бывший автор — чтение | З, П, О, Д, Пл | noindex | `30-account/author/stats-overview.md` | 2 | черновик (новый — Г6, журнал §25.5) |
 
 ## Инфраструктура и API
 
