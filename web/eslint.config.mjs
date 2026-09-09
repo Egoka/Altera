@@ -5,7 +5,9 @@ import vueParser from "vue-eslint-parser"
 
 export default [
   {
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/coverage/**", "server/src/generated/*"]
+    // .output и .data — сборочный вывод Nuxt: минифицированные чанки не являются исходным
+    // кодом. .prettierignore их уже исключает, eslint исключал только .nuxt.
+    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/.output/**", "**/.data/**", "**/coverage/**"]
   },
   {
     files: ["**/*.ts", "**/*.js"],

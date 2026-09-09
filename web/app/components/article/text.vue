@@ -6,9 +6,9 @@
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
   const author = computed(() => `/authors/${props.article.author.slug}`)
-  
+
   const router = useRouter()
-  
+
   const handleArticleClick = () => {
     router.push(slug.value)
   }
@@ -16,7 +16,7 @@
 
 <template>
   <article v-if="slug && article.title">
-    <div 
+    <div
       class="flex group space-x-3 cursor-pointer rounded-lg p-2 -m-2 transition-colors duration-200"
       @click="handleArticleClick">
       <span

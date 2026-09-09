@@ -60,9 +60,9 @@
       // Точное совпадение
       if (item.to === route.path) return true
       // Исключение для Dashboard - только точное совпадение
-      if (item.to === '/admin') return false
+      if (item.to === "/admin") return false
       // Проверка подроутеров: путь должен начинаться с item.to и следующий символ должен быть /
-      return route.path.startsWith(item.to + '/')
+      return route.path.startsWith(item.to + "/")
     })
   }
 

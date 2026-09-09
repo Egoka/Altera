@@ -101,15 +101,6 @@
     }
   ]
 
-  // Моковые данные для статистики
-  const mockStats = {
-    totalContentTypes: 8,
-    activeContentTypes: 8,
-    archivedContentTypes: 0,
-    totalArticles: 1247,
-    articlesThisMonth: 89
-  }
-
   // Реактивные данные
   const contentTypes = ref<ContentType[]>(mockContentTypes)
   const searchQuery = ref("")
