@@ -59,8 +59,8 @@
 | `withdrawTranslation(id)` | версия | `status: draft` | #21 свои | — | `CONFLICT` (не в `ai_check`/`review`) |
 | `revisions(translationId, cursor)` | версия | `id`, `createdAt`, `kind`, `size` | #34 свои | нет | — |
 | `restoreRevision(translationId, revisionId)` (4) | — | новая ревизия из старой | #35 | — | `PLAN_LIMIT` |
-| `uploadMedia(translationId, file, license, attribution, alt)` | файл ≤ 20 МБ `[ДОПУЩЕНИЕ]`, лицензия из справочника (ADR-0008) | `MediaAsset { id, variants }` | #39 свои | — | `VALIDATION_ERROR` (без лицензии), `RATE_LIMITED` (п. 9), `PLAN_LIMIT` (квота плана) |
-| `updateMediaMeta` / `deleteMedia` | `alt` (черновик формирует лёгкая AI-модель при загрузке — журнал §29.11; автор правит в свойствах медиа), подпись, атрибуция, лицензия, фокус | — | #40, #41 свои | — | — |
+| `uploadMedia(translationId, file, license, attribution)` | файл ≤ 20 МБ `[ДОПУЩЕНИЕ]`, лицензия из справочника (ADR-0008) | `MediaAsset { id, variants }` | #39 свои | — | `VALIDATION_ERROR` (без лицензии), `RATE_LIMITED` (п. 9), `PLAN_LIMIT` (квота плана) |
+| `updateMediaMeta` / `deleteMedia` | подпись, атрибуция, лицензия, фокус; `alt` — единое из медиафайла, создано AI при загрузке (журнал §29.11, §29.13), автору показывается без редактирования, узел документа его не переопределяет | — | #40, #41 свои | — | — |
 | `setTaxonomy(articleId, sectionId, formatId, tagIds)` | — | — | #30 свои | — | `VALIDATION_ERROR` |
 | `setSlug(translationId, slug)` | до первой публикации | — | #31 | — | `CONFLICT` (занят), `FORBIDDEN` (опубликована) |
 | `reviewNotes(translationId)` | — | заметки ревьюера к блокам с состоянием (#36) | автор версии | нет | — |
