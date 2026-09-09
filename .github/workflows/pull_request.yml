@@ -87,3 +87,32 @@ jobs:
       # проверку красной. Скрипт smoke.sh ошибки не глушит и печатает вывод сервера.
       - name: Smoke check server start
         run: cd server && pnpm run smoke
+
+  # Защита ветки app требует обязательную проверку с контекстом `test`
+  # (repos/Egoka/Altera/branches/app/protection → required_status_checks.contexts).
+  # Контекст равен отображаемому имени джоба, а имена двух джобов выше — русские,
+  # поэтому нужен отдельный джоб именно с именем `test`. Он же развязывает защиту
+  # ветки от переименования джобов в будущем.
+  #
+  # `if: always()` обязателен: без него джоб был бы пропущен при падении зависимостей,
+  # а пропущенный обязательный контекст GitHub засчитывает как успешный — проверка
+  # стала бы зелёной на красном CI. Поэтому результат зависимостей проверяется явно.
+  test:
+    name: test
+    needs: [checks, server-smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Свести результаты проверок
+        run: |
+          echo "Формат, линт и тесты: ${{ needs.checks.result }}"
+          echo "Сборка и дымовая проверка: ${{ needs['server-smoke'].result }}"
+          if [ "${{ needs.checks.result }}" != "success" ]; then
+            echo "::error::джоб «Формат, линт и тесты» завершился как ${{ needs.checks.result }}"
+            exit 1
+          fi
+          if [ "${{ needs['server-smoke'].result }}" != "success" ]; then
+            echo "::error::джоб «Сборка сервера и дымовая проверка старта» завершился как ${{ needs['server-smoke'].result }}"
+            exit 1
+          fi
+          echo "Обе проверки успешны."
