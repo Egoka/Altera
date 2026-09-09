@@ -83,13 +83,13 @@
 | 57 | `/admin/media`, `/admin/media/{id}` | admin | — | — | — | — | 4 | отменено: медиа привязано к статье (журнал #28) |
 | 58 | `/admin/legal` | admin | owner; admin — чтение | З, П, О, Д | noindex | `40-admin/legal-texts.md` | 4 | утверждён |
 | 59 | `/admin/newsletter`, `/admin/newsletter/{id}` | admin | — | — | — | `40-admin/newsletter.md` | 4 | отложено: правила рассылок — отдельный разбор |
-| 60 | `/admin/settings` | admin | owner | З, О, Д | noindex | `40-admin/system-settings.md` | 4 | утверждён (настройки провайдеров — этап 4, журнал #36) |
+| 60 | `/admin/settings` | admin | owner; admin — чтение без секретов (журнал §28.11) | З, О, Д | noindex | `40-admin/system-settings.md` | 4 | утверждён (настройки провайдеров — этап 4, журнал #36); Г8b |
 | 70 | `/admin/mail`, `/admin/mail/{id}` | admin | analyst, admin, owner (адрес, тема, содержание, статус — журнал §27.6); editor, moderator — письма по своим статьям | З, П, О, Д, Н | noindex | `40-admin/mail.md` | 1 | утверждён (новый — журнал #34); Г8a |
 | 71 | `/auth/appeal?token=`, `/en/auth/appeal?token=` | public | пользователь архивированного аккаунта по токену входа | З, О, Н (токен), лимит, конфликт (оспаривание уже подано) | noindex | `20-public/blocked-appeal.md` | 1 | утверждён (новый — Г2, журнал #48) |
 | 72 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (новый — Г3, журнал §20.19) |
 | 73 | `/me/archived` | account | пользователь самостоятельно архивированного аккаунта (ограниченная сессия); остальным — редирект в `/me` | З, О, Д | noindex | `30-account/reader/archived-state.md` | 1 | утверждён (новый — Г3, журнал §5.2) |
 | 74 | `/me/stats` | account | автор; бывший автор — чтение | З, П, О, Д, Пл | noindex | `30-account/author/stats-overview.md` | 2 | черновик (новый — Г6, журнал §25.5) |
-| 75 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение и рабочие статусы), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | на утверждении (8b; раздел — Г3, журнал §20.19; статусы — §27.7) |
+| 75 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение и рабочие статусы), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (Г8b; раздел — Г3, журнал §20.19; статусы — §27.7) |
 
 ## Инфраструктура и API
 

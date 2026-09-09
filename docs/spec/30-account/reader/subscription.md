@@ -43,7 +43,8 @@
 
 | Запрос / мутация | Аргументы | Поля | Права | Кеш | Ошибки (коды ADR-0032) |
 |---|---|---|---|---|---|
-| `me.subscription` | — | `active { tier, interval, startsAt, periodEnd, source: payment \| grant, cancelAtPeriodEnd }`, `queue[] { id, tier, interval, source, expectedStartsAt, paymentId }` по приоритету (§8.22), `renewal { nextChargeAt, attemptsToday, lastAttemptStatus }` (§8.15), `expired { tier, endedAt }` | #58 свои | нет | `UNAUTHENTICATED` |
+| `me.subscription` | — | `active { tier, interval, startsAt, periodEnd, source: payment \| grant, cancelAtPeriodEnd }`, `queue[] { id, tier, interval, source, expectedStartsAt, paymentId }` по приоритету (§8.22), `renewal { nextChargeAt, attemptsToday, lastAttemptStatus }` (§8.15), `expired { tier, endedAt }`, `priceChange { newPriceMinor, effectiveFrom, status: pending \| confirmed \| declined }` (§28.10) | #58 свои | нет | `UNAUTHENTICATED` |
+| `confirmPriceChange(decision: confirm \| decline)` | решение | `priceChange.status`; при `confirm` — автопродление по новой цене; при `decline` — `cancelAtPeriodEnd = true` | матрица #122 свои | — | `CONFLICT` (нет ожидающей смены цены) |
 | `me.payments(cursor)` | курсор | `id`, `createdAt`, `amountMinor`, `currency`, `tier`, `interval`, `status` (succeeded / refunded / failed / erroneous — понятный статус и дата, журнал §25.11), `receiptUrl` (только `succeeded` / `refunded`), `refundRequest { status, createdAt }` | #58 | нет | — |
 | `cancelSubscription` | — | `cancelAtPeriodEnd: true` | #59 свои | — | `CONFLICT` (нет активного платного периода) |
 | `resumeSubscription` | — | `cancelAtPeriodEnd: false` | #59 | — | `CONFLICT` |
@@ -58,6 +59,9 @@
 ## 5. Структура экрана по зонам
 
 1. **Шапка сайта** и меню кабинета.
+2а. **Смена цены** (когда ожидает решения — журнал §28.10): «цена плана меняется на … с …»,
+   три кнопки — подтвердить новую цену, перейти на другой план (→ `/pricing`), отказаться; до
+   решения автопродление выключено, оплаченный период действует до конца.
 2. **Активный период** (`SubscriptionStatus`): план с бейджем, интервал, «действует до», источник
    («оплачен» / «выдан»); при `cancelAtPeriodEnd` — «автопродление отключено, доступ до …»;
    предупреждение серии списаний в дату окончания: «сегодня попытки списания 10:00–23:00, N из
@@ -93,6 +97,7 @@
 | Действие | Роль | Предусловие | Результат | Мутация | Событие / лог (код из `00-registries/events-and-logs.md`) | Подтверждение |
 |---|---|---|---|---|---|---|
 | Купить период | `author`, `reader` (этап платности) | не служебная запись (§8.17); провайдер доступен | `/me/subscription/checkout?plan=&interval=`; период встанет в очередь или активируется, если приоритетнее (§8.22, §24.4) | — (на checkout `checkout.start` #56) | `checkout.started` (#59) | нет |
+| Подтвердить новую цену / отказаться | `author` | ожидающая смена цены (§28.10) | подтверждение — автопродление по новой цене; отказ — `cancelAtPeriodEnd = true`, доступ до конца оплаченного периода; смена плана — `/pricing` | `confirmPriceChange` | `subscription.price.confirmed` / `.declined` (#90) | да — диалог с новой ценой |
 | Отменить автопродление | `author` | активный платный период | `cancelAtPeriodEnd = true`; письмо | `cancelSubscription` | лог `subscription.canceled` — в составе #50 `[ДОПУЩЕНИЕ: код]` | да — диалог «доступ до {дата}» |
 | Возобновить | `author` | `cancelAtPeriodEnd` и период не истёк | флаг снят | `resumeSubscription` | лог `subscription.resumed` — в составе #50 `[ДОПУЩЕНИЕ: код]` | нет |
 | Запросить возврат за неактивный период очереди | `author` | период в очереди, нет открытого обращения | обращение без причины; план не меняется до решения (§8.18, §24.4) | `requestRefund(paymentId)` | `refund.requested` (#21) | да — диалог |
@@ -147,5 +152,7 @@
   (промокоды) применение кодов — на checkout.
 - Закрыто Г5–Г5b (§8.15, §8.18, §8.22, §24.4): серия списаний; «Запросить возврат» с
   неизменным планом до решения; очередь по приоритету; возврат неактивного периода без причины.
+- Закрыто Г8b (§28.10): смена цены — письмо и выбор в кабинете; без подтверждения автопродление
+  выключено, оплаченный период действует до конца.
 - Закрыто Г6 (§25.11): ошибочные и неуспешные платежи остаются в истории с понятным статусом и
   датой, но не считаются оплатой и не входят в финансовую аналитику.
