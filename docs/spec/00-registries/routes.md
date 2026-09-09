@@ -84,7 +84,7 @@
 | 58 | `/admin/legal` | admin | owner; admin — чтение | З, П, О, Д | noindex | `40-admin/legal-texts.md` | 4 | утверждён |
 | 59 | `/admin/newsletter`, `/admin/newsletter/{id}` | admin | — | — | — | `40-admin/newsletter.md` | 4 | отложено: правила рассылок — отдельный разбор |
 | 60 | `/admin/settings` | admin | owner | З, О, Д | noindex | `40-admin/system-settings.md` | 4 | утверждён (настройки провайдеров — этап 4, журнал #36) |
-| 70 | `/admin/mail`, `/admin/mail/{id}` | admin | admin (чтение), owner; editor, moderator — письма по своим статьям | З, П, О, Д, Н | noindex | `40-admin/mail.md` | 1 | утверждён (новый — журнал #34) |
+| 70 | `/admin/mail`, `/admin/mail/{id}` | admin | analyst, admin, owner (адрес, тема, содержание, статус — журнал §27.6); editor, moderator — письма по своим статьям | З, П, О, Д, Н | noindex | `40-admin/mail.md` | 1 | утверждён (новый — журнал #34); Г8a |
 | 71 | `/auth/appeal?token=`, `/en/auth/appeal?token=` | public | пользователь архивированного аккаунта по токену входа | З, О, Н (токен), лимит, конфликт (оспаривание уже подано) | noindex | `20-public/blocked-appeal.md` | 1 | утверждён (новый — Г2, журнал #48) |
 | 72 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (новый — Г3, журнал §20.19) |
 | 73 | `/me/archived` | account | пользователь самостоятельно архивированного аккаунта (ограниченная сессия); остальным — редирект в `/me` | З, О, Д | noindex | `30-account/reader/archived-state.md` | 1 | утверждён (новый — Г3, журнал §5.2) |
