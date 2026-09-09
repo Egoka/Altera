@@ -10,6 +10,7 @@
       "Bash(pnpm -r exec prettier:*)",
       "Bash(pnpm install --frozen-lockfile)",
       "Bash(node -e:*)",
+      "Bash(git push:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -29,13 +30,7 @@
       "Bash(git checkout:*)",
       "Bash(git switch:*)"
     ],
-    "deny": [
-      "Bash(git push:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(git clean -fd:*)",
-      "Read(./server/.env)",
-      "Read(./web/.env)"
-    ]
+    "deny": ["Bash(git reset --hard:*)", "Bash(git clean -fd:*)", "Read(./server/.env)", "Read(./web/.env)"]
   },
   "hooks": {
     "Stop": [
