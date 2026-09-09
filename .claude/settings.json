@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint)",
+      "Bash(pnpm format)",
+      "Bash(pnpm format:fix)",
+      "Bash(pnpm test)",
+      "Bash(pnpm -r exec eslint:*)",
+      "Bash(pnpm -r exec prettier:*)",
+      "Bash(pnpm install --frozen-lockfile)",
+      "Bash(node -e:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git worktree list)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma validate)",
+      "Bash(npx prisma format)"
+    ],
+    "ask": [
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git switch:*)"
+    ],
+    "deny": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)",
+      "Read(./server/.env)",
+      "Read(./web/.env)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/ritual-check.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "### Проект",
+      "**Проект**: Altera — культурная publishing-платформа, монорепозиторий pnpm (web: Nuxt 4 / Vue 3; server: GraphQL Yoga + Prisma + PostgreSQL + Redis)",
+      "**Репозиторий**: /Users/egorbondarenko/WebstormProjects/Altera; считать приватным, пока обратное не подтверждено проверкой видимости",
+      "**Ветка по умолчанию / защищённая**: app — прямые коммиты и push запрещены (CLAUDE.md «Правила работы»); работа ведётся в ветках server/*, web/*, docs/* через pull request",
+      "**Управление секретами**: server/.env локально; переменные CI — в настройках GitHub Actions; секреты не попадают в репозиторий и в вывод (CLAUDE.md)",
+      "**Расположение чувствительных данных**: server/.env, server/.env.* — строки подключения Neon (DATABASE_URL, DATABASE_URL_UNPOOLED), REDIS_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET; не пересказывать и не выводить их значения",
+      "**CI/CD**: GitHub Actions, .github/workflows/pull_request.yml на pull request в app; выкладки в прод нет",
+      "**Чувствительные удалённые цели**: продовая база Neon и продовый Redis; необратимые операции с данными — только решением владельца (docs/multica/operating-model.md §7, журнал #1, #49)",
+      "**Порядок работ**: docs/multica/operating-model.md (стадии, evidence, единственный writer продуктового кода), docs/backlog/ (задачи), docs/plans + docs/reports (обязательный ритуал)",
+      "**Продуктовые решения**: принимает только владелец; журнал docs/decisions/role-review-working-log-2026-09-08.md главнее ADR и спецификаций"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Прямой коммит, push или слияние в ветку app — защищённая ветка, изменения идут через pull request (CLAUDE.md)",
+      "Правка docs/decisions/role-review-working-log-2026-09-08.md и текста ADR — только по прямому поручению владельца (operating-model.md §7)",
+      "Перевод задачи docs/backlog/tasks/*.md в статус «готова» и включение автопилотов — решение владельца (operating-model.md §4, §7)",
+      "Запуск второй цепочки, меняющей продуктовый код в server/, web/ или packages/, пока активна первая (operating-model.md §5)",
+      "Bash(npx prisma migrate:*) — миграции создаются осознанно и с именем, в базе есть данные (CLAUDE.md)"
+    ]
+  }
+}
