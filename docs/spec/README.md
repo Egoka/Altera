@@ -38,6 +38,8 @@
 
 ```
 _templates/            шаблоны: page, admin-section, flow, role, ranking, policy
+OPEN-QUESTIONS.md      свод открытых вопросов владельцу и отложенных проходов (фаза 2 завершена
+                       2026-09-09 — журнал §29; заходы 1–9, гейты Г1–Г9)
 00-registries/         реестры: routes, pages, admin-sections, access-matrix,
                        events-and-logs, plans, flows, roles
 10-flows/              пользовательские маршруты (register-and-login, become-author,

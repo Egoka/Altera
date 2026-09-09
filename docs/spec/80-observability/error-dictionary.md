@@ -35,7 +35,7 @@
 | `DUPLICATE` (#8) | уникальность (слаг, хэндл, тег) | `requestId`, `entity`, `field` | 200 | «уже существует» |
 | `INTERNAL_ERROR` (#9) | всё немаскированное; стек в логе | `requestId` | 500 | `error.md` с `requestId` |
 | `PLAN_LIMIT` (#10) | действие требует плана или превышает лимит плана (журнал #5, #55) | `requestId`, `requiredTier`, `limit`, `current` | 200 | уведомление о плане, `/pricing`; лог `plan.action.rejected` (#78) |
-| `PROVIDER_UNAVAILABLE` (#11) | внешний провайдер недоступен | `requestId`, `provider` (psp / ai / mail) | 200 / 503 | «попробуйте позже» |
+| `PROVIDER_UNAVAILABLE` (#11) | внешний провайдер недоступен | `requestId`, `provider` (psp / ai / mail / storage — журнал §29.3) | 200 / 503 | «попробуйте позже» |
 
 3. **Маскирование**: Yoga маскирует всё вне словаря в `INTERNAL_ERROR` (ADR-0032 п. 2); в
    production включён `blockFieldSuggestions` (CLAUDE.md).
