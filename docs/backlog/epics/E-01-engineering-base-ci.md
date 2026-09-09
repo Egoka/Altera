@@ -9,11 +9,11 @@
 ## Задачи
 | ID | Название | Статус | Зависит от |
 |---|---|---|---|
-| [T-001](../tasks/T-001-pin-node-pnpm-honest-ci.md) | Пин версий Node и pnpm, честный CI | кандидат | — |
+| [T-001](../tasks/T-001-pin-node-pnpm-honest-ci.md) | Пин версий Node и pnpm, честный CI | готова | — |
 | [T-002](../tasks/T-002-test-infrastructure.md) | Тестовая инфраструктура: Vitest в server и web, Playwright smoke | зависит: T-001 | T-001 |
-| [T-003](../tasks/T-003-docker-compose-local.md) | Локальное окружение: docker-compose с PostgreSQL, Redis и почтовой заглушкой | кандидат | — |
+| [T-003](../tasks/T-003-docker-compose-local.md) | Локальное окружение: docker-compose с PostgreSQL, Redis и почтовой заглушкой | готова | — |
 | [T-004](../tasks/T-004-fix-web-prod-build.md) | Прод-сборка веба под пиновой версией Node | зависит: T-001 | T-001 |
-| [T-005](../tasks/T-005-lint-rules-hygiene.md) | Линт-правила и гигиена: запрет `console.log`, `.output` вне линта, удаление мёртвого кода | кандидат | — |
+| [T-005](../tasks/T-005-lint-rules-hygiene.md) | Линт-правила и гигиена: запрет `console.log`, `.output` вне линта, удаление мёртвого кода | зависит: T-004 | — |
 | [T-006](../tasks/T-006-cache-wrapper-noop.md) | Кеш-обёртка Redis/`noop`, инвалидация без `KEYS`, ключи со всеми аргументами | кандидат | — |
 | [T-007](../tasks/T-007-deterministic-seed.md) | Детерминированный сид: роли, первый `owner`, рубрики, форматы, теги, материалы во всех статусах | зависит: T-015, T-017 | T-015, T-017 |
 | [T-112](../tasks/T-112-launch-e2e-scenarios.md) | Подготовка e2e-сценариев запуска по flow-спецификациям | зависит: T-002 | T-002 |
