@@ -63,7 +63,8 @@ _templates/            шаблоны: page, admin-section, flow, role, ranking,
 70-plans-and-billing/  планы и биллинг (plan-free, plan-standard, plan-pro,
                        subscription-lifecycle, role-derivation, payment-provider,
                        receipts-54fz, refunds, grants-and-promo)
-80-observability/      логирование, ошибки, трассировка, здоровье, ретенция
+80-observability/      logging-policy, error-dictionary, log-event-registry, request-tracing,
+                       health-and-alerts, error-collector, audit-vs-logs, retention-and-pd
 85-media-and-binary/   хранение бинарных данных: раскладка, загрузка, варианты, аватары,
                        обложки, экспорт, чеки и документы, сироты, бэкапы, подписанные ссылки
 90-business-model/     бизнес-модель: обзор, юнит-экономика, ценовые гипотезы, воронка,

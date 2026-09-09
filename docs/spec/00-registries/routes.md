@@ -89,6 +89,7 @@
 | 72 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (новый — Г3, журнал §20.19) |
 | 73 | `/me/archived` | account | пользователь самостоятельно архивированного аккаунта (ограниченная сессия); остальным — редирект в `/me` | З, О, Д | noindex | `30-account/reader/archived-state.md` | 1 | утверждён (новый — Г3, журнал §5.2) |
 | 74 | `/me/stats` | account | автор; бывший автор — чтение | З, П, О, Д, Пл | noindex | `30-account/author/stats-overview.md` | 2 | черновик (новый — Г6, журнал §25.5) |
+| 75 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение и рабочие статусы), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | на утверждении (8b; раздел — Г3, журнал §20.19; статусы — §27.7) |
 
 ## Инфраструктура и API
 

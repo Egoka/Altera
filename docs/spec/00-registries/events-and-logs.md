@@ -18,6 +18,10 @@
   (журнал #39).
 - Ретенция: аудит — бессрочно; логи — 30 дней у хостинга; события прочтений — 8 дней, агрегаты
   — бессрочно; ошибочные записи не удаляются, а помечаются (журнал #26).
+- **Закрытие реестра (заход 8b, 2026-09-09)**: правила ведения — `80-observability/log-event-registry.md`;
+  все строки «утверждён» / «на утверждении» имеют файл; новые строки после 8b — только
+  отдельными проходами (почта §25.13, жалобы, каталог блоков, медиа — заход 9) с пометкой прохода.
+  Строки «на утверждении (8b)» — #81, #85–88 — ждут гейта Г8b.
 
 ## Ошибки API (словарь ADR-0032)
 
@@ -123,13 +127,14 @@
 | 78 | `plan.action.rejected` | log | info | api | система | `userId`, `operation`, `planTier`, `planUntil` — отказ `PLAN_LIMIT` при сохранённой сессии (журнал #55) | 30 дней | логи | `50-access/session-lifecycle.md` | утверждён (Г2) |
 | 79 | `user.restore.self` | audit | — | api | сам пользователь | `targetId`, `archivedAt`, `planUntil` (журнал #50, §5.2) | бессрочно | `/admin/audit` | `30-account/reader/archived-state.md` | утверждён (Г3) |
 | 80 | `support.request.created` | log | info | api | любой | `topic` (`broken_link`, `general`, `restore`), `route` (шаблон), `requestId` — без ПДн отправителя в логе | 30 дней; сами обращения — бессрочно в очереди | админка | `20-public/contact.md` | утверждён (Г3, журнал §20.15) |
-| 81 | `backend.error` (журнал ошибок бэкенда) | log | error | api, web, worker | система | `requestId`, `code`, `route`, `service`, стек (без ПДн), время — источник раздела «Ошибки и состояние» (журнал §20.19); рабочий статус записи «новая / в работе / решена» ведётся отдельно поверх неизменяемой истории (§27.7) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/errors` | `40-admin/errors-and-health.md` | черновик (заход 8b) |
+| 81 | `backend.error` (журнал ошибок бэкенда) | log | error | api, web, worker | система | `requestId`, `code`, `route`, `service`, стек (без ПДн), время — источник раздела «Ошибки и состояние» (журнал §20.19); рабочий статус записи «новая / в работе / решена» ведётся отдельно поверх неизменяемой истории (§27.7) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/errors` | `40-admin/errors-and-health.md` | на утверждении (8b; `80-observability/error-collector.md`) |
 | 82 | `engagement.anomaly` | log | warn | обработчик событий | система | объект (статья / автор), `day`, `signals[]`, значения — без ПДн и текстов (`60-ranking/engagement-tracking.md` §8) | по политике ретенции; `EngagementAnomaly` до разбора | `/admin/ranking`, `/admin/errors` | `60-ranking/anti-fraud.md` | утверждён; Г4 (пороги — отложено) |
 | 83 | `article.open` / `article.read.qualified` / `article.read.repeat` / `article.share.create` / `article.share.open` / `author.profile.open` / `author.share.open` | metric | — | api (`POST /api/engagement`), SSR-резерв | посетитель по `visitorId` | `visitorId`, объект, `day`, `source` (internal / external / shared / direct), диагностический IP только для защиты (`engagement-tracking.md` §3, §5, §12) | сырые — короткий операционный период; дневные агрегаты — бессрочно | рейтинг; личная аналитика; статистика | `60-ranking/engagement-tracking.md` | утверждён; Г4 |
 | 84 | `engagement.exclusion` | audit | — | обработчик событий | система | объект, `day`, основание (сработавшие правила), время; ручного возврата нет (журнал §23.6; `engagement-tracking.md` §15) | бессрочно | `/admin/audit`, `/admin/ranking` | `60-ranking/anti-fraud.md` | утверждён; Г4 |
-| 85 | `profile.check` | audit | — | api worker / `moderator`, `owner` | система (автоматическая проверка), сотрудник (решение) | `userId`, `field` (`name` / `avatar`), `verdict` (ok / needs_review / rejected), `byRole` (журнал §25.4) | бессрочно | `/admin/review`, `/admin/audit` | `30-account/reader/profile-edit.md` | черновик (новая — Г6) |
-| 86 | `review.reply` | log | info | api | автор | `translationId`, `decisionId`, `byRole: author` — текст не логируется (журнал §25.6) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/review` (сама переписка — в решении) | `30-account/author/review-history.md` | черновик (новая — Г6) |
-| 87 | `author.enabled` | audit | — | api | система при первом «Создать статью» (журнал §25.1) | `userId`, `grantId`, время | бессрочно | `/admin/users/{id}`, `/admin/audit` | `70-plans-and-billing/plan-free.md` п. 6а | черновик (новая — Г6) |
+| 85 | `profile.check` | audit | — | api worker / `moderator`, `owner` | система (автоматическая проверка), сотрудник (решение) | `userId`, `field` (`name` / `avatar`), `verdict` (ok / needs_review / rejected), `byRole` (журнал §25.4) | бессрочно | `/admin/review`, `/admin/audit` | `30-account/reader/profile-edit.md` | на утверждении (8b; новая — Г6) |
+| 86 | `review.reply` | log | info | api | автор | `translationId`, `decisionId`, `byRole: author` — текст не логируется (журнал §25.6) | 90 дней `[ДОПУЩЕНИЕ]` | `/admin/review` (сама переписка — в решении) | `30-account/author/review-history.md` | на утверждении (8b; новая — Г6) |
+| 87 | `author.enabled` | audit | — | api | система при первом «Создать статью» (журнал §25.1) | `userId`, `grantId`, время | бессрочно | `/admin/users/{id}`, `/admin/audit` | `70-plans-and-billing/plan-free.md` п. 6а | на утверждении (8b; новая — Г6) |
+| 88 | `admin.enter` | log | info | api | служебная роль | `role`, `section` (первый раздел), `requestId` — без идентификатора сотрудника в логе `[ДОПУЩЕНИЕ]` (матрица #87) | 30 дней | логи | `40-admin/dashboard.md` | на утверждении (8b) |
 
 ## Правила
 
