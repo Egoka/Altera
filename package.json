@@ -5,6 +5,7 @@
   "author": "Egor Bondarenko",
   "private": false,
   "scripts": {
+    "prepare": "husky",
     "test": "pnpm -r test",
     "lint": "pnpm -r exec eslint .",
     "format": "pnpm -r exec prettier --check .",
