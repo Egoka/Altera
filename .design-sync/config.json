@@ -1,0 +1,11 @@
+{
+  "projectId": "261e939d-1435-4fae-98f3-16a10f885a4f",
+  "pkg": "altera",
+  "globalName": "Altera",
+  "shape": "package",
+  "entry": ".design-sync/entry.mjs",
+  "buildCmd": "node .design-sync/compile-tokens.mjs",
+  "cssEntry": ".design-sync/.cache/tokens/altera-theme.css",
+  "guidelinesGlob": ["docs/vision/06-design-system.md"],
+  "readmeHeader": ".design-sync/conventions.md"
+}

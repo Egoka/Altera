@@ -5,6 +5,7 @@ lib/pnpm-lock.yaml
 node_modules
 .DS_Store
 .vercel
+.data
 dist
 dist_types
 dist-ssr
@@ -91,3 +92,30 @@ docs/.vitepress/cache
 
 # Cursor AI settings (optional - you can commit these for team consistency)
 # .cursor/
+
+# Слой исполнения агентов. Версионируется конфигурация ролей, команд и хуков:
+# она такой же артефакт правил, как операционная модель. Локальные переопределения
+# и рантайм-каталоги не версионируются.
+.claude/*
+!.claude/settings.json
+!.claude/agents/
+!.claude/commands/
+!.claude/hooks/
+.claude/settings.local.json
+AGENTS.md
+.multica/
+.trace-mcp/
+
+# Playwright runtime artifacts
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+.playwright-mcp/
+
+# design-sync (claude.ai/design) — staged converter, build output, machine state
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

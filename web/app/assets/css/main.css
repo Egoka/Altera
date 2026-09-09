@@ -1,30 +1,216 @@
 @import "tailwindcss";
 
-@theme {
-  /* Primary */
-  --color-primary: #e2e4fd;
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+/* Bergamasco Thin */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Thin.ttf") format("truetype");
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
 
-  /* Secondary */
-  --color-secondary-50: #f8fafc;
-  --color-secondary-100: #f1f5f9;
-  --color-secondary-200: #e2e8f0;
-  --color-secondary-300: #cbd5e1;
-  --color-secondary-400: #94a3b8;
-  --color-secondary-500: #64748b;
-  --color-secondary-600: #475569;
-  --color-secondary-700: #334155;
-  --color-secondary-800: #1e293b;
-  --color-secondary-900: #0f172a;
+/* Bergamasco Light */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/BergamascoLight.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Regular */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Medium */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Semibold */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Semibold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Bold */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bergamasco Thin Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Thin Italic.ttf") format("truetype");
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Light Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Light Italic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Regular Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Medium Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Regular Italic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Semibold Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Semibold Italic.ttf") format("truetype");
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Bergamasco Bold Italic */
+@font-face {
+  font-family: "Bergamasco";
+  src: url("../fonts/Bergamasco/Bergamasco Bold Italic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Cormorant SC Light */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC Regular */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC Medium */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC SemiBold */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Cormorant SC Bold */
+@font-face {
+  font-family: "Cormorant SC";
+  src: url("../fonts/Cormorant SC/CormorantSC-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Waterway Display Font */
+@font-face {
+  font-family: "Waterway";
+  src: url("../fonts/Waterway Display Font/Waterway Display Font.ttf") format("truetype");
+}
+
+/* Garamond Libre Regular */
+@font-face {
+  font-family: "Garamond Libre";
+  src: url("../fonts/Garamond Libre Font Family/GaramondLibre-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Garamond Libre Bold */
+@font-face {
+  font-family: "Garamond Libre";
+  src: url("../fonts/Garamond Libre Font Family/GaramondLibre-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Garamond Libre Italic */
+@font-face {
+  font-family: "Garamond Libre";
+  src: url("../fonts/Garamond Libre Font Family/GaramondLibre-Italic.otf") format("opentype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@theme {
+  /* Primary - Оригинальная палитра Altera */
+  --color-primary: #ff5a1f;
+  --color-primary-50: #fff8f1;
+  --color-primary-100: #feecdc;
+  --color-primary-200: #fcd9bd;
+  --color-primary-300: #fdba8c;
+  --color-primary-400: #ff8a4c;
+  --color-primary-500: #ff5a1f;
+  --color-primary-600: #d03801;
+  --color-primary-700: #b43403;
+  --color-primary-800: #8a2c0d;
+  --color-primary-900: #771d1d;
+
+  /* Secondary - Акцентная палитра */
+  --color-secondary-50: #fff8f1;
+  --color-secondary-100: #feecdc;
+  --color-secondary-200: #fcd9bd;
+  --color-secondary-300: #fdba8c;
+  --color-secondary-400: #ff8a4c;
+  --color-secondary-500: #ff5a1f;
+  --color-secondary-600: #d03801;
+  --color-secondary-700: #b43403;
+  --color-secondary-800: #8a2c0d;
+  --color-secondary-900: #771d1d;
 
   /* Accent */
   --color-accent-50: #fff7ed;
@@ -85,14 +271,120 @@
   --color-neutral-700: #374151;
   --color-neutral-800: #1f2937;
   --color-neutral-900: #111827;
+
+  /* Fonts */
+  --font-bergamasco: "Bergamasco", serif;
+  --font-waterway: "Waterway", serif;
+  --font-garamond-libre: "Garamond Libre", serif;
+  --font-cormorant: "Cormorant SC", serif;
+  --font-inter: "Inter", system-ui, sans-serif;
+  --font-poppins: "Poppins", system-ui, sans-serif;
+  --font-roboto: "Roboto", system-ui, sans-serif;
+  --font-open-sans: "Open Sans", system-ui, sans-serif;
 }
 
-/* Пример настройки dark mode */
+/* Типографика - вдохновлена The Atlantic */
+/*@layer base {*/
+/*  !* Основные шрифты *!*/
+/*  html {*/
+/*    !*font-family: var(--font-inter);*!*/
+/*    line-height: 1.6;*/
+/*    color: var(--color-primary-900);*/
+/*  }*/
+
+/*  !* Заголовки *!*/
+/*  h1,*/
+/*  h2,*/
+/*  h3,*/
+/*  h4,*/
+/*  h5,*/
+/*  h6 {*/
+/*    !*font-family: var(--font-bergamasco);*!*/
+/*    font-weight: 700;*/
+/*    line-height: 1.2;*/
+/*    color: var(--color-primary-900);*/
+/*  }*/
+
+/*  h1 {*/
+/*    font-size: 2.5rem;*/
+/*    margin-bottom: 1rem;*/
+/*  }*/
+
+/*  h2 {*/
+/*    font-size: 2rem;*/
+/*    margin-bottom: 0.875rem;*/
+/*  }*/
+
+/*  h3 {*/
+/*    font-size: 1.5rem;*/
+/*    margin-bottom: 0.75rem;*/
+/*  }*/
+
+/*  !* Параграфы *!*/
+/*  p {*/
+/*    font-size: 1.125rem;*/
+/*    line-height: 1.7;*/
+/*    !*margin-bottom: 1.5rem;*!*/
+/*    color: var(--color-primary-700);*/
+/*  }*/
+
+/*  !* Ссылки *!*/
+/*  a {*/
+/*    color: var(--color-secondary-600);*/
+/*    text-decoration: none;*/
+/*    transition: color 0.2s ease;*/
+/*  }*/
+
+/*  a:hover {*/
+/*    color: var(--color-secondary-800);*/
+/*  }*/
+
+/*  !* Кнопки *!*/
+/*  button {*/
+/*    !*font-family: var(--font-inter);*!*/
+/*    font-weight: 600;*/
+/*  }*/
+
+/*  !* Навигация *!*/
+/*  nav a {*/
+/*    font-weight: 500;*/
+/*    font-size: 1rem;*/
+/*  }*/
+
+/*  !* Анимации для header *!*/
+/*  header {*/
+/*    will-change: transform;*/
+/*    transform: translateZ(0);*/
+/*  }*/
+/*}*/
+
+/* Dark mode настройки */
 @custom-variant dark (&:where(.dark, .dark *));
 @layer base {
   body.dark {
-    --color-primary: #0f172a;
-    --color-secondary: #334155;
-    --color-accent: #fbbf24;
+    --color-primary: #f8f9fa;
+    --color-primary-50: #1a1a1a;
+    --color-primary-100: #212529;
+    --color-primary-200: #343a40;
+    --color-primary-300: #495057;
+    --color-primary-400: #6c757d;
+    --color-primary-500: #adb5bd;
+    --color-primary-600: #ced4da;
+    --color-primary-700: #dee2e6;
+    --color-primary-800: #e9ecef;
+    --color-primary-900: #f8f9fa;
   }
+
+  /*body.dark h1,*/
+  /*body.dark h2,*/
+  /*body.dark h3,*/
+  /*body.dark h4,*/
+  /*body.dark h5,*/
+  /*body.dark h6 {*/
+  /*  color: var(--color-primary-50);*/
+  /*}*/
+
+  /*body.dark p {*/
+  /*  color: var(--color-primary-200);*/
+  /*}*/
 }

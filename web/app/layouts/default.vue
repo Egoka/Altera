@@ -1,13 +1,11 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div>
-    <AppHeader />
-    <main class="size-56 bg-primary">
-      <slot />
-    </main>
-    <AppFooter />
-  </div>
+  <AppHeader />
+  <AppMain>
+    <slot />
+  </AppMain>
+  <AppFooter />
 </template>
 
 <style scoped></style>

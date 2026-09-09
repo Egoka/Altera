@@ -5,6 +5,7 @@
   "author": "Egor Bondarenko",
   "private": false,
   "scripts": {
+    "prepare": "husky",
     "test": "pnpm -r test",
     "lint": "pnpm -r exec eslint .",
     "format": "pnpm -r exec prettier --check .",
@@ -32,7 +33,7 @@
     "editorial platform"
   ],
   "license": "ISC",
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.18.3",
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",

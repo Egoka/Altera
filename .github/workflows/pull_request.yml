@@ -1,79 +1,118 @@
-name: Run Tests
+name: Checks
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened]
     branches:
       - app
+
 jobs:
-  test:
+  checks:
+    name: Формат, линт и тесты
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      # Версия pnpm берётся из поля packageManager в корневом package.json.
+      # Дублировать её здесь нельзя: action-setup падает с «Multiple versions of pnpm specified».
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.13.1
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Lint library
+      - name: Format
+        run: pnpm format
+      - name: Lint
         run: pnpm lint
-      - name: Test library
+      - name: Tests
         run: pnpm test
 
-  test-server:
+  server-smoke:
+    name: Сборка сервера и дымовая проверка старта
     runs-on: ubuntu-latest
+
+    # Redis нужен, потому что server/src/redis.ts создаёт подключение на импорте и бросает
+    # исключение без REDIS_URL. Оговорка: дымовая проверка подтверждает запуск и ответ
+    # GraphQL, но не связность с Redis — запрос `{__typename}` кеша не касается, а ioredis
+    # с maxRetriesPerRequest: null переподключается в фоне. Проверено локально 2026-09-09.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PORT: 4000
+      NODE_ENV: test
+      FRONTEND_URL: http://localhost:3000
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+      DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost:5432/test"
+      REDIS_URL: "redis://localhost:6379"
+      CACHE_TTL: 21600
+      JWT_ACCESS_SECRET: "test-access-secret"
+      JWT_REFRESH_SECRET: "test-refresh-secret"
+      MAGIC_LINK_EXPIRY_MINUTES: 15
+      MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
+      JWT_ACCESS_TOKEN_EXPIRY: "15m"
+      JWT_REFRESH_TOKEN_EXPIRY: "7d"
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+      # Версия pnpm берётся из поля packageManager в корневом package.json.
+      # Дублировать её здесь нельзя: action-setup падает с «Multiple versions of pnpm specified».
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.13.1
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: "pnpm"
       - name: Install server dependencies
         run: cd server && pnpm install --frozen-lockfile
-      - name: Build server (CI)
+      - name: Build server
         run: cd server && pnpm run build:ci
-        env:
-          PORT: 4000
-          NODE_ENV: test
-          FRONTEND_URL: http://localhost:3000
-          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
-          DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost:5432/test"
-          REDIS_URL: "redis://localhost:6379"
-          CACHE_TTL: 21600
-          JWT_ACCESS_SECRET: "test-access-secret"
-          JWT_REFRESH_SECRET: "test-refresh-secret"
-          MAGIC_LINK_EXPIRY_MINUTES: 15
-          MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
-          JWT_ACCESS_TOKEN_EXPIRY: "15m"
-          JWT_REFRESH_TOKEN_EXPIRY: "7d"
       - name: Check build output
-        run: cd server && ls -la dist/
-      - name: Test server start (quick)
-        run: cd server && timeout 2s pnpm start || true
-        env:
-          PORT: 4000
-          NODE_ENV: test
-          FRONTEND_URL: http://localhost:3000
-          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
-          DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost:5432/test"
-          REDIS_URL: "redis://localhost:6379"
-          CACHE_TTL: 21600
-          JWT_ACCESS_SECRET: "test-access-secret"
-          JWT_REFRESH_SECRET: "test-refresh-secret"
-          MAGIC_LINK_EXPIRY_MINUTES: 15
-          MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
-          JWT_ACCESS_TOKEN_EXPIRY: "15m"
-          JWT_REFRESH_TOKEN_EXPIRY: "7d"
+        run: test -f server/dist/server.js
+      # Раньше здесь стояло `timeout 2s pnpm start || true`: падение старта не делало
+      # проверку красной. Скрипт smoke.sh ошибки не глушит и печатает вывод сервера.
+      - name: Smoke check server start
+        run: cd server && pnpm run smoke
+
+  # Защита ветки app требует обязательную проверку с контекстом `test`
+  # (repos/Egoka/Altera/branches/app/protection → required_status_checks.contexts).
+  # Контекст равен отображаемому имени джоба, а имена двух джобов выше — русские,
+  # поэтому нужен отдельный джоб именно с именем `test`. Он же развязывает защиту
+  # ветки от переименования джобов в будущем.
+  #
+  # `if: always()` обязателен: без него джоб был бы пропущен при падении зависимостей,
+  # а пропущенный обязательный контекст GitHub засчитывает как успешный — проверка
+  # стала бы зелёной на красном CI. Поэтому результат зависимостей проверяется явно.
+  test:
+    name: test
+    needs: [checks, server-smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Свести результаты проверок
+        run: |
+          echo "Формат, линт и тесты: ${{ needs.checks.result }}"
+          echo "Сборка и дымовая проверка: ${{ needs['server-smoke'].result }}"
+          if [ "${{ needs.checks.result }}" != "success" ]; then
+            echo "::error::джоб «Формат, линт и тесты» завершился как ${{ needs.checks.result }}"
+            exit 1
+          fi
+          if [ "${{ needs['server-smoke'].result }}" != "success" ]; then
+            echo "::error::джоб «Сборка сервера и дымовая проверка старта» завершился как ${{ needs['server-smoke'].result }}"
+            exit 1
+          fi
+          echo "Обе проверки успешны."

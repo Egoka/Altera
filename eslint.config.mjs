@@ -11,7 +11,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default [
   {
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/coverage/**", "server/src/generated/*"]
+    // .output и .data — сборочный вывод Nuxt: минифицированные чанки не являются исходным
+    // кодом и линтуются только как шум. .prettierignore их уже исключает.
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.nuxt/**",
+      "**/.output/**",
+      "**/.data/**",
+      "**/coverage/**",
+      "server/src/generated/*"
+    ]
   },
 
   // === Для TypeScript и JavaScript файлов ===

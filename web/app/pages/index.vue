@@ -1,5 +1,7 @@
 <script setup lang="ts"></script>
 
-<template><div>start</div></template>
-
-<style scoped></style>
+<template>
+  <PagesStartFeatured />
+  <PagesStartLatest />
+  <PagesStartPopular class="mb-12" />
+</template>

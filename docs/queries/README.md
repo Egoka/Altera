@@ -1,3 +1,5 @@
+> **Исторический документ.** Утверждение «все запросы протестированы и работают» не соответствует коду: по проверке от 2026-09-05 невалидны 29 из 85 операций (регистр значений enum, поля `status`/`search` в `BaseFiltersInput`). Подробности — [docs/vision/00-reality-check.md](../vision/00-reality-check.md) §5.2 и отчёт `docs/reports/2026-09-05-platform-reality-check-and-proposal-report.md`.
+
 # GraphQL Query Documentation
 
 Эта папка содержит тестовые GraphQL запросы, организованные по категориям для удобства разработки и тестирования.

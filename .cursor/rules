@@ -30,6 +30,11 @@
 - Prefer `type` for unions and intersections
 - Export types from dedicated type files
 
+### Date Handling
+- **ВСЯ работа с датами - только через `date-fns`** (установлен в web/ и server/)
+- Запрещено использовать нативные методы `Date` (getDate, getMonth, etc.)
+- Примеры: `format()`, `parseISO()`, `addDays()`, `isAfter()`
+
 ### Styling
 - Use Tailwind CSS for styling
 - Follow utility-first approach
