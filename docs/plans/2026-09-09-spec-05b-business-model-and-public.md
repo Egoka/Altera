@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: 14ae4be
 - **Отчёт**: docs/reports/2026-09-09-spec-05b-business-model-and-public-report.md
-- **Статус**: завершён, ожидает решение владельца по §0 и гейт Г5b (отчёт — docs/reports/2026-09-09-spec-05b-business-model-and-public-report.md)
+- **Статус**: завершён; гейт Г5b закрыт 2026-09-09 (отчёт — docs/reports/2026-09-09-spec-05b-business-model-and-public-report.md)
 
 ## 0. Стратегический вопрос, с которого начинается заход
 
