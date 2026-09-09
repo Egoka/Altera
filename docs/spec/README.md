@@ -65,9 +65,11 @@ _templates/            шаблоны: page, admin-section, flow, role, ranking,
                        receipts-54fz, refunds, grants-and-promo)
 80-observability/      logging-policy, error-dictionary, log-event-registry, request-tracing,
                        health-and-alerts, error-collector, audit-vs-logs, retention-and-pd
-85-media-and-binary/   хранение бинарных данных: раскладка, загрузка, варианты, аватары,
-                       обложки, экспорт, чеки и документы, сироты, бэкапы, подписанные ссылки
-90-business-model/     бизнес-модель: обзор, юнит-экономика, ценовые гипотезы, воронка,
+85-media-and-binary/   storage-layout, upload-pipeline, image-variants, avatars, article-covers,
+                       exports, receipts-and-documents, retention-and-orphans, backups,
+                       access-and-signed-urls
+90-business-model/     overview, unit-economics, pricing-hypotheses, funnel, revenue-streams,
+                       costs, metrics, risks, legal-152-54 — бизнес-модель: обзор, юнит-экономика, ценовые гипотезы, воронка,
                        потоки выручки, расходы, метрики, риски, 152-ФЗ и 54-ФЗ
 95-blocks/             зарезервировано: каталог блоков конструктора — отдельный проход
 ```
