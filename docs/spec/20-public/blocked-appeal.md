@@ -43,7 +43,7 @@
 
 | Запрос / мутация | Аргументы | Поля | Права | Кеш | Ошибки (коды ADR-0032) |
 |---|---|---|---|---|---|
-| `accountAppeal(token)` | `appealToken` | `archivedAt`, `reasonCategory` (справочник категорий — `admin-sections.md` #6: `rules_violation`, `project_harm`, `legal_request`, `other` `[ДОПУЩЕНИЕ: состав]`; журнал §20.12), `plan { tier, until }` (если есть), `appeal { status: none \| submitted \| restored \| confirmed, submittedAt, decidedAt }`, `canSubmit` | по токену | нет | `NOT_FOUND` (токен), `RATE_LIMITED` |
+| `accountAppeal(token)` | `appealToken` | `archivedAt`, `reasonCategory` (одна из четырёх базовых категорий — названия отложены владельцем, журнал §26.9; §20.12), `explanation` (короткое понятное объяснение категории), `staffMessage` (сообщение сотрудника для конкретного случая, если добавлено — §26.9), `plan { tier, until }` (если есть), `appeal { status: none \| submitted \| restored \| confirmed, submittedAt, decidedAt }`, `canSubmit` | по токену | нет | `NOT_FOUND` (токен), `RATE_LIMITED` |
 | `submitAccountAppeal(token, message)` | токен, текст 20–2000 знаков `[ДОПУЩЕНИЕ]` | `appeal { status: submitted, submittedAt }` | по токену | нет | `NOT_FOUND`, `VALIDATION_ERROR` (длина), `CONFLICT` (уже подано — журнал #48: одно оспаривание), `RATE_LIMITED` |
 
 Ответ не содержит имени сотрудника, внутренних заметок и списка архивированных статей; решение

@@ -42,7 +42,7 @@
 
 | Запрос / мутация | Аргументы | Поля | Права | Кеш | Ошибки (коды ADR-0032) |
 |---|---|---|---|---|---|
-| `translation.aiCheck(id)` | версия | `decision: publish \| reject \| pending \| none`, `checkedAt`, `reasons[] { category, anchor, text }` (текст формирует проверка — §24.3), `attempt` (первая / после «перередактировать») | #8 свои | нет | `UNAUTHENTICATED`, `NOT_FOUND` |
+| `translation.aiCheck(id)` | версия | `decision: publish \| reject \| pending \| none`, `checkedAt`, `reasons[] { category, anchor, text }` (текст формирует проверка — §24.3), `attempt` (первая / после «перередактировать»), `reviewState: queued \| in_review \| rework` (§26.5; без имени рецензента) | #8 свои | нет | `UNAUTHENTICATED`, `NOT_FOUND` |
 | `translation.reviewHistory(id)` | версия | `items[] { id, kind: rework_request \| unpublish \| manual_publish \| final_reject \| message \| ai_decision \| submitted \| withdrawn \| published_auto, text, recommendations, byRole, createdAt, readAt, thread[] { byRole \| author, text, createdAt } }` — переписка внутри решения (§25.6) | #8, #102 свои | нет | — |
 | `markReviewRead(translationId)` | версия | `readAt` | свои | — | — |
 | `replyToDecision(decisionId, text)` | решение из истории, текст | запись `author_reply` в ветке решения (§25.6) | #121 `[черновик]` свои | — | `VALIDATION_ERROR`, `CONFLICT` (решение закрыто окончательным отказом `[ДОПУЩЕНИЕ]`), `RATE_LIMITED` (общий лимит мутаций кабинета) |
