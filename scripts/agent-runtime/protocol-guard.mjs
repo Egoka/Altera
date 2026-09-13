@@ -5,18 +5,34 @@ import { pathToFileURL } from "node:url"
 
 export function validate(bytes, root, family = "codex") {
   const value = JSON.parse(bytes.toString("utf8"))
+  // Config writes/import меняют будущие defaults; checker не принимает эти RPC.
+  if (
+    family === "codex" &&
+    ["config/value/write", "config/batchWrite", "externalAgentConfig/import"].includes(value?.method)
+  )
+    throw new Error("preserved_model_settings_changed")
   function visit(item) {
     if (item === null || typeof item !== "object") return
     for (const [key, child] of Object.entries(item)) {
       const model = family === "codex" ? "gpt-5.6-terra" : "claude-opus-4-6"
       if (
         (key === "model" && child !== null && child !== model) ||
-        (["effort", "reasoningEffort", "model_reasoning_effort"].includes(key) &&
+        (["effort", "reasoningEffort", "reasoning_effort", "model_reasoning_effort"].includes(key) &&
           child !== null &&
           child !== "medium") ||
-        (key === "serviceTier" && child !== null)
+        (["serviceTier", "service_tier", "modelProvider", "model_provider"].includes(key) && child !== null) ||
+        (key === "serviceTierForTurn" && child !== null && child !== "default")
       )
         throw new Error("preserved_model_settings_changed")
+      // Thread config — произвольный TOML override; разрешены только закреплённые knobs.
+      if (family === "codex" && key === "config" && child !== null) {
+        if (
+          typeof child !== "object" ||
+          Array.isArray(child) ||
+          Object.keys(child).some((name) => !["model", "model_reasoning_effort", "service_tier"].includes(name))
+        )
+          throw new Error("preserved_model_settings_changed")
+      }
       if (
         key === "cwd" &&
         (typeof child !== "string" ||

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import signal
+import stat
 import subprocess
 import sys
 import uuid
@@ -68,7 +69,17 @@ def fingerprint(source, dirty_paths):
         safe_symlink(path, source)
         if not path.is_file() or not path.resolve().is_relative_to(source):
             raise ValueError('unsafe_dirty_path')
-        entries[name] = digest(os.readlink(path).encode() if path.is_symlink() else path.read_bytes())
+        mode = path.lstat().st_mode
+        # Git различает symlink и regular file, у regular — только owner execute bit.
+        if stat.S_ISLNK(mode):
+            kind, git_mode, content = 'symlink', '120000', os.fsencode(os.readlink(path))
+        elif stat.S_ISREG(mode):
+            kind = 'file'
+            git_mode = '100755' if mode & stat.S_IXUSR else '100644'
+            content = path.read_bytes()
+        else:
+            raise ValueError('unsafe_dirty_path')
+        entries[name] = {'kind': kind, 'mode': git_mode, 'sha256': digest(content)}
     return {'head': git(source, 'rev-parse', 'HEAD').decode().strip(),
             'tree': git(source, 'rev-parse', 'HEAD^{tree}').decode().strip(),
             'dirty_sha256': digest(git(source, 'diff', '--binary', 'HEAD', '--')),

@@ -77,6 +77,58 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'untracked_input_mismatch'):
             self.runtime.snapshot(self.source, self.base / 'incomplete-snapshot', [])
 
+    def test_untracked_mode_changes_in_source_and_snapshot_fail_closed(self):
+        path = self.source / 'new-input'
+        path.write_text('code.txt')
+        path.chmod(0o644)
+        dest = self.base / 'mode-snapshot'
+        state = self.runtime.snapshot(self.source, dest, ['new-input'])
+        self.manifest.update(snapshot=str(dest), state=state, dirty_paths=['new-input'])
+        for root, error in [(self.source, 'source_changed'), (dest, 'snapshot_changed')]:
+            with self.subTest(root=root.name):
+                (root / 'new-input').chmod(0o755)
+                try:
+                    with self.assertRaisesRegex(ValueError, error):
+                        self.runtime.command(self.manifest, [], {})
+                finally:
+                    (root / 'new-input').chmod(0o644)
+
+    def test_untracked_kind_changes_with_identical_digest_fail_closed(self):
+        path = self.source / 'new-input'
+        path.write_text('code.txt')
+        dest = self.base / 'kind-snapshot'
+        state = self.runtime.snapshot(self.source, dest, ['new-input'])
+        self.manifest.update(snapshot=str(dest), state=state, dirty_paths=['new-input'])
+        for root, error in [(self.source, 'source_changed'), (dest, 'snapshot_changed')]:
+            with self.subTest(root=root.name):
+                changed = root / 'new-input'
+                changed.unlink()
+                changed.symlink_to('code.txt')
+                try:
+                    with self.assertRaisesRegex(ValueError, error):
+                        self.runtime.command(self.manifest, [], {})
+                finally:
+                    changed.unlink()
+                    changed.write_text('code.txt')
+
+    def test_untracked_fingerprint_normalizes_permissions_to_git_mode(self):
+        path = self.source / 'new-input'
+        path.write_text('code.txt')
+        path.chmod(0o600)
+        initial = self.runtime.fingerprint(self.source, ['new-input'])
+        path.chmod(0o644)
+        self.assertEqual(initial, self.runtime.fingerprint(self.source, ['new-input']))
+        self.assertEqual(initial['untracked']['new-input'], {
+            'kind': 'file', 'mode': '100644',
+            'sha256': hashlib.sha256(b'code.txt').hexdigest()})
+        path.chmod(0o755)
+        executable = self.runtime.fingerprint(self.source, ['new-input'])['untracked']['new-input']
+        self.assertEqual(executable['mode'], '100755')
+        path.unlink()
+        path.symlink_to('code.txt')
+        link = self.runtime.fingerprint(self.source, ['new-input'])['untracked']['new-input']
+        self.assertEqual(link, {'kind': 'symlink', 'mode': '120000', 'sha256': executable['sha256']})
+
     def test_readonly_mounts_and_token_free_env(self):
         args = self.runtime.command(self.manifest,
             ['--model', 'claude-opus-4-6', '--effort', 'medium', '--mcp-config', '/managed/task/mcp.json'], {})
