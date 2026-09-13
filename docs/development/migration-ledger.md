@@ -148,3 +148,18 @@ e9ef9971543b0848b399cb0563cac1e5a4d06497b33fe567529a05b65de54803  .claude/comman
   operating model и artifact contracts; исторический source не является единственным местом.
 - Состав/модели/расписания Multica и resource `in_place` этим этапом не меняются.
 - M4 enforcement, включение автопилотов и исправление внешней конфигурации не заявляются.
+
+## Дополнение C0/C1 при исполнении
+
+Старый `docs/multica/autopilot-checklists.md` сохранён дословно в
+`sources/2026-09-13-autopilot-checklists-original.md`. Активная редакция отделяет доказанные
+условия от исторических утверждений, основанных только на инструкциях. Назначение обновления
+repo overview сохранено за хранителем документации (§8 operating-model); контекстный автопилот
+получает одну область записи — Project description. Это выбранный вариант C1 по поручению
+исполнить миграцию, не изменение продуктовых правил.
+
+Native C0: `docs/multica/snapshots/2026-09-13-before/manifest.json` и локальный полный backup
+`/private/tmp/altera-multica-before-full`. Все 19 изменяемых полей имеют точный before/hash и
+after в `docs/multica/proposed/changes.json`; исправленный diff принят независимым ревью.
+Применение, readback и runtime-проверки пока не заявляются. Все остальные роли, модели,
+ресурсы, расписания, права вызова и paused-состояния остаются вне адресных изменений.

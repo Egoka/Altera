@@ -1,0 +1,159 @@
+{
+  "mode": "read-only-preflight",
+  "captured_at": "2026-09-13T16:12:22.344019+00:00",
+  "source_sha": "SOURCE_SHA",
+  "rows": [
+    {
+      "kind": "agent",
+      "id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+      "field": "instructions",
+      "before_sha256": "a66307d87806e44f414f03a356889e5198766fc2057980d7f9d3323c7840c30f",
+      "desired_sha256": "651812b46ad6505898717c5f57accc6c9ed3e9632754df4cc222853a7a171a39",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+      "field": "instructions",
+      "before_sha256": "5a591eeb0e65fc2c9db0e9d90cebaa82d19aec7e1b918a37f45b6583245b8dc8",
+      "desired_sha256": "7beeeac03fd644fd7eeac5da0dcd44aaccf4ba691d3886132422978cd34cf2ad",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+      "field": "instructions",
+      "before_sha256": "7c3047a26e2c17baf43c10c28cd9d49c7f5a505657bce1c4a4fc34b4f1688d0f",
+      "desired_sha256": "213e76010d393a5ff8bd8d70dc82900e49b808b2fdaa4af90f87e727cab76457",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+      "field": "instructions",
+      "before_sha256": "3d86500df43f0f2ee5d7b0af89e8780847acf15e127312e8a3ec289c5e2eec8a",
+      "desired_sha256": "7274e2c195899da70f42d13e0b530c9c7da79c0a6754307c9759d10f0da752f2",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+      "field": "instructions",
+      "before_sha256": "f0a922b28d18960fcb1d9f580257fde88abc90f143035c6dc04ddf8e5e8f2c95",
+      "desired_sha256": "ff1a9fd80467929b9522e23e98ced4a0e77823fcb511de808458d08ebde1f6e9",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+      "field": "instructions",
+      "before_sha256": "c045dffe9b077f66f4578bad04bb6629b4f65f9046521b6f18461de6843bd8ad",
+      "desired_sha256": "ca7e3914d80636067e1c7df4afc1c769dd2d6f631084a9b1cd37fbd94c6e6fe6",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+      "field": "instructions",
+      "before_sha256": "44a5b8250b438eab47c6a96a7641e91fe895fa454dfdbd0de5e13cec2e016a45",
+      "desired_sha256": "1bd90935004e8d8bba610f84927f8c30dc9d475a5dcff2203ab7bc9f543c9e51",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+      "field": "instructions",
+      "before_sha256": "73e28f77d30759e3d9082f9a9f957f7c23c1cf3bcdc60f4bb727b9dc1aeb8333",
+      "desired_sha256": "54d7cfc1e48c3389f719ef25d934a2fb97548654f53e8affa2e240b446399cc7",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "b7f90cba-518a-4130-993a-f047a4355f96",
+      "field": "instructions",
+      "before_sha256": "246f95252560356264c3e560b0a7fd305a04e1cabdd33e872a80e0317f4e579c",
+      "desired_sha256": "50e8833b5817953fa0a3f178aa1cd1cff9a92b0be3c19871ef8041b74703f325",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "agent",
+      "id": "41f9ec44-b58b-48d3-bd24-30d3774d2b5e",
+      "field": "instructions",
+      "before_sha256": "30c046d48b545ece28b9a3caa841dbb09894745cb33042d8c6f3baa9248d5ea7",
+      "desired_sha256": "bdd93c6e01f1b6f243cb0a1edb2887d8782d4ff20efcf77d8a771eb180258935",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "skill",
+      "id": "a65ce5c7-674b-44fe-b418-81c7f55b4116",
+      "field": "SKILL.md",
+      "before_sha256": "ac9ca8e9f0fc85ec04e534866fb6ac8c0641fbc640cedccce6b85097e371290c",
+      "desired_sha256": "5fa4c1d92095e580922b3ce48334912dda6e514ba3e94bdd2470392b41fb6351",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "skill",
+      "id": "c4fda471-648b-4aee-90f8-b800627cf1f1",
+      "field": "SKILL.md",
+      "before_sha256": "21e7b47f5bf7418bc928a888d83fb643760447aad467368c7577cbebfefa4aed",
+      "desired_sha256": "edf88571190775b5c25d7608f82371a5e5ce16a20428ac2c74ddecb88ee97b6b",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "skill",
+      "id": "5532f34d-ab86-454a-84d4-638c83154cd0",
+      "field": "SKILL.md",
+      "before_sha256": "3f641a5d292824639cefdd83f95e765467b4a2215cfd03afa9a65d029a541366",
+      "desired_sha256": "6c73d16f1b32745685f86645800ffab42b8223c67f65988d239f98a5ab8da5a7",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "squad",
+      "id": "c6dd97bf-75c1-45cd-8d4a-3d00d26dd2f0",
+      "field": "instructions",
+      "before_sha256": "9c26d353d255faf36fe6451bc65d18c58e984a52daac319c9ae7783859a9b3be",
+      "desired_sha256": "4fda6cac734da9f821c2e6444b42a0362539b958e38401e32e8a77f6a36fc02a",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "autopilot",
+      "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "field": "description",
+      "before_sha256": "c4564dfca48c7d3415adacee12d41e32229d4144dd6f3ff96bada937983efe58",
+      "desired_sha256": "510e3b1925044669bdae110d3eeb7aabdfa4db527691e636162793c1211574c2",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "autopilot",
+      "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+      "field": "description",
+      "before_sha256": "4a0a561f28581f5b8441c2300ebbd87aa7a0c6d2fcea40746a6f72f82a3f3c77",
+      "desired_sha256": "9883931cd5ecdef18358847f8daa75d6a9a66d448d58ec6569b2fc91f93b3120",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "autopilot",
+      "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+      "field": "description",
+      "before_sha256": "16e1a253ded85addbd90b9f905bb7e0427b25251dbc8b49dc8a583e95c1da5ad",
+      "desired_sha256": "f08f7e08f9bd777a1fceec4f603372ee3b18ab2167d24e53ffc237a4911b524d",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "member",
+      "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+      "field": "role",
+      "before_sha256": "f6aa40e1f7aa1d49d918ae24e98c1b2b627b26a2e17fe91466471bd1400b0efe",
+      "desired_sha256": "6d30c84bc5a5dbd354f5a85c64270cccd1c2c38a97309b5f5beb70ca2d007489",
+      "status": "matches-reviewed-before"
+    },
+    {
+      "kind": "project",
+      "id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+      "field": "description",
+      "before_sha256": "69924c02bd86f560c22c3b15cb647265360df2fd8e1519aa2ef45150f123c4a2",
+      "desired_sha256": "3213d1366ad267c096f9d42700afb1b8c0a74585a9910ca244036f4a9660548c",
+      "status": "matches-reviewed-before"
+    }
+  ]
+}

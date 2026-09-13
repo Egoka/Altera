@@ -1,0 +1,18 @@
+{
+  "created_at": "2026-09-05T15:04:07Z",
+  "description": "Altera — культурная publishing-платформа: журнал о живописи, музыке, фотографии, спорте и путешествиях. Монорепозиторий pnpm: web (Nuxt 4, Vue 3, Tailwind 4, FishtVue, i18n ru/en) и server (GraphQL Yoga поверх node:http, Prisma 6, PostgreSQL Neon, Redis) — не Express.  \n  \nСрез на 2026-09-09, ветка docs/platform-design. Проверки честные: pnpm lint и pnpm format проходят без ошибок, pnpm test выполняет 24 теста (19 server, 5 web) на Vitest 5, CI не маскирует падение старта, pre-commit запускает format, lint и test.  \n  \nГлавное правило: истина — код, а не документация. Значительная часть docs описывает намерения, а не состояние. Проверяй утверждения по коду, прежде чем на них опираться.  \n  \nЧего в проекте нет — не принимай за работающее: веб и API не соединены (нет GraphQL-клиента, страницы на фикстурах); редактора нет, MDC не установлен, Article.body — строка; роли расходятся (web user|admin, server reader|author|editor|admin); article(slug) отдаёт черновики и архив любому, user.email в публичном типе, middleware auth.global.ts и admin.ts закомментированы, rate limit отсутствует; почты нет, magic link печатается в лог; сессии без обновления, отзыва и выхода; в модели данных нет комментариев, медиа, версий, подборок, SEO-полей, локалей, подписок, платежей, аудита и просмотров, счётчики всегда нули; прод-сборка веба под Node 24 отвечает 500 на SSR-маршрутах.  \n  \nПорядок работ: CLAUDE.md, операционная модель docs/multica/operating-model.md, бэклог docs/backlog/README.md. Старшинство источников: рабочий журнал решений владельца docs/decisions/role-review-working-log-2026-09-08.md, затем docs/spec/, затем ADR docs/decisions/, затем docs/vision/. Продуктовые решения принимает только владелец.  \n  \nРитуал: перед работой план docs/plans/ГГГГ-ММ-ДД-имя.md с базовым коммитом, после — отчёт docs/reports/ с тем же слагом и разделом «Как проверено», где записаны выполненные команды и их фактический вывод. Утверждение «работает» без выполненной проверки в отчёт не попадает.",
+  "done_count": 2,
+  "due_date": null,
+  "icon": "📰",
+  "id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+  "issue_count": 9,
+  "lead_id": null,
+  "lead_type": null,
+  "priority": "none",
+  "resource_count": 2,
+  "start_date": null,
+  "status": "planned",
+  "title": "Altera",
+  "updated_at": "2026-09-09T18:13:19Z",
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+}

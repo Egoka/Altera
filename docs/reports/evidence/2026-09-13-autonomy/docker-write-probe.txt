@@ -1,0 +1,16 @@
+const fs = require('node:fs')
+const attempts = [
+ ['overwrite', () => fs.writeFileSync('/product/source.txt', 'changed')],
+ ['create', () => fs.writeFileSync('/product/new.txt', 'created')],
+ ['delete', () => fs.unlinkSync('/product/delete.txt')],
+ ['rename', () => fs.renameSync('/product/rename.txt', '/product/moved.txt')],
+ ['git-write', () => fs.writeFileSync('/product/.git/config', 'changed')],
+ ['symlink', () => {fs.symlinkSync('/product/source.txt', '/evidence/escape'); fs.writeFileSync('/evidence/escape', 'changed')}]
+]
+const results = attempts.map(([check, action]) => {
+ try {action(); return {check, outcome:'unexpected-write'}}
+ catch (e) {return {check, outcome: ['EROFS','EACCES','EPERM'].includes(e.code) ? 'denied' : 'unexpected-error', errno:e.code}}
+})
+fs.writeFileSync('/evidence/probe.json', JSON.stringify(results, null, 2))
+console.log(JSON.stringify({sourceWritesDenied:results.every(x=>x.outcome==='denied'),evidenceWritable:true,checks:results}))
+process.exitCode=results.every(x=>x.outcome==='denied') ? 0 : 1

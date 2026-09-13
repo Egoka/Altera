@@ -1,0 +1,32 @@
+[
+  {
+    "check": "overwrite",
+    "outcome": "denied",
+    "errno": "EROFS"
+  },
+  {
+    "check": "create",
+    "outcome": "denied",
+    "errno": "EROFS"
+  },
+  {
+    "check": "delete",
+    "outcome": "denied",
+    "errno": "EROFS"
+  },
+  {
+    "check": "rename",
+    "outcome": "denied",
+    "errno": "EROFS"
+  },
+  {
+    "check": "git-write",
+    "outcome": "denied",
+    "errno": "EROFS"
+  },
+  {
+    "check": "symlink",
+    "outcome": "denied",
+    "errno": "EROFS"
+  }
+]

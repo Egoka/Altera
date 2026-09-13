@@ -1,0 +1,107 @@
+[
+  {
+    "created_at": "2026-09-05T15:02:20Z",
+    "custom_name": null,
+    "daemon_id": "019f94d8-3dd7-7cf8-bdfc-0f8e52e01687",
+    "device_info": "MacBook-Air-Egor.local · 2.1.263 (Claude Code)",
+    "id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "last_seen_at": "2026-09-13T15:31:48Z",
+    "launch_header": "claude (stream-json)",
+    "metadata": {
+      "capabilities": [
+        "skill-bundles-v1",
+        "coalesced-comments-v1",
+        "execution-manifest-v1",
+        "agent-skill-v1",
+        "remote-mcp-v1",
+        "local-worktree-v1",
+        "source_context_quick_create_v1",
+        "rpc-v1",
+        "platform-skill-v1",
+        "checkout-keeps-work-v1"
+      ],
+      "cli_version": "v0.4.43",
+      "launched_by": "desktop",
+      "version": "2.1.263 (Claude Code)"
+    },
+    "name": "Claude (MacBook-Air-Egor.local)",
+    "owner_id": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "profile_id": null,
+    "provider": "claude",
+    "runtime_mode": "local",
+    "status": "online",
+    "updated_at": "2026-09-12T22:43:37Z",
+    "visibility": "private",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "created_at": "2026-09-05T15:02:20Z",
+    "custom_name": null,
+    "daemon_id": "019f94d8-3dd7-7cf8-bdfc-0f8e52e01687",
+    "device_info": "MacBook-Air-Egor.local · codex-cli 0.154.0-alpha.6.2",
+    "id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+    "last_seen_at": "2026-09-13T15:31:48Z",
+    "launch_header": "codex app-server",
+    "metadata": {
+      "capabilities": [
+        "skill-bundles-v1",
+        "coalesced-comments-v1",
+        "execution-manifest-v1",
+        "agent-skill-v1",
+        "remote-mcp-v1",
+        "local-worktree-v1",
+        "source_context_quick_create_v1",
+        "rpc-v1",
+        "platform-skill-v1",
+        "checkout-keeps-work-v1"
+      ],
+      "cli_version": "v0.4.43",
+      "launched_by": "desktop",
+      "version": "codex-cli 0.154.0-alpha.6.2"
+    },
+    "name": "Codex (MacBook-Air-Egor.local)",
+    "owner_id": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "profile_id": null,
+    "provider": "codex",
+    "runtime_mode": "local",
+    "status": "online",
+    "updated_at": "2026-09-12T22:43:37Z",
+    "visibility": "private",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "created_at": "2026-09-05T15:02:20Z",
+    "custom_name": null,
+    "daemon_id": "019f94d8-3dd7-7cf8-bdfc-0f8e52e01687",
+    "device_info": "MacBook-Air-Egor.local · 2025.09.17-25b418f",
+    "id": "aad0c3d2-cfe4-47b4-8330-c94108f41f7a",
+    "last_seen_at": "2026-09-13T15:31:48Z",
+    "launch_header": "cursor-agent (stream-json)",
+    "metadata": {
+      "capabilities": [
+        "skill-bundles-v1",
+        "coalesced-comments-v1",
+        "execution-manifest-v1",
+        "agent-skill-v1",
+        "remote-mcp-v1",
+        "local-worktree-v1",
+        "source_context_quick_create_v1",
+        "rpc-v1",
+        "platform-skill-v1",
+        "checkout-keeps-work-v1"
+      ],
+      "cli_version": "v0.4.43",
+      "launched_by": "desktop",
+      "version": "2025.09.17-25b418f"
+    },
+    "name": "Cursor (MacBook-Air-Egor.local)",
+    "owner_id": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "profile_id": null,
+    "provider": "cursor",
+    "runtime_mode": "local",
+    "status": "online",
+    "updated_at": "2026-09-12T22:43:37Z",
+    "visibility": "private",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  }
+]

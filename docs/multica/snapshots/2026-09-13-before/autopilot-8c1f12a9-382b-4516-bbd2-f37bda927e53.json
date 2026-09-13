@@ -1,0 +1,71 @@
+{
+  "autopilot": {
+    "assignee_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "assignee_type": "agent",
+    "can_manage_access": true,
+    "can_write": true,
+    "created_at": "2026-09-05T16:34:35Z",
+    "created_by_id": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "created_by_type": "member",
+    "description": "Прочитай описание проекта Altera в Multica — оно раздаётся как контекст каждому запуску — и новые фактически завершённые результаты с их ревизиями, ссылками и доказательствами. Твоя задача: держать это описание соответствующим состоянию репозитория.  \n  \nСверяй новые завершённые результаты с уже отражёнными фактами и ревизиями и обновляй только подтверждённые изменения. Факт попадает в описание лишь со ссылкой на коммит или отчёт docs/reports/; состояние из планов не выводится, чистый управляемый чекаут доказательством состояния рабочей копии не является. Разделяй проверенные факты, открытые вопросы и ограничения проверки; самоотчёт исполнителя выпуском не считается.  \n  \nНе создавай продуктовые инициативы и задачи бэклога, не правь репозиторий самовольно, не копируй переписку и не переходи в чужой workspace. Неизменившийся контекст — тихий no-op без уведомления. Если фактический API не позволяет обновление, сохрани точный блокер и не заводи новых документов взамен.  \n  \nДля реального обновления укажи кратко: какой факт изменился, какая ревизия или артефакт это подтверждает, где смотреть. Источники правды — навык altera-project-rules, docs/multica/operating-model.md, docs/backlog/README.md и рабочий журнал решений владельца; журнал главнее спецификаций, спецификации главнее ADR.  \n  \nРаботай только в проекте Altera, идентификатор 1ff3917d-4c10-4303-a671-406c1fda9613, workspace Altera. Это native Multica run\\_only: текущий запуск не имеет своей issue. Используй существующие issue, run и артефакты и проверенные native команды; продуктовую parent-задачу ради расписания не создавай. Роли, модели и расписания не меняй. Порядок выпуска описан в operating-model §7 и остаётся работой релиз-инженера. Не запускай цикл ожидания или polling внутри текущего run. Неизменившееся состояние означает короткий тихий no-op в истории запуска, без комментариев и уведомлений ради самого отчёта.",
+    "execution_mode": "run_only",
+    "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+    "issue_title_template": null,
+    "last_run_at": null,
+    "pause_reason": null,
+    "project_id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+    "status": "paused",
+    "subscribers": [],
+    "title": "Altera — актуальность контекста",
+    "updated_at": "2026-09-09T20:11:47Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  "collaborators": [],
+  "triggers": [
+    {
+      "autopilot_id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "created_at": "2026-09-05T16:34:37Z",
+      "cron_expression": "0 9 * * *",
+      "enabled": true,
+      "has_signing_secret": {
+        "redacted": true,
+        "present": true,
+        "keys": null
+      },
+      "has_webhook_token": {
+        "redacted": true,
+        "present": true,
+        "keys": null
+      },
+      "id": "83a5e8b3-e403-4431-a221-02caa783fab4",
+      "kind": "schedule",
+      "label": "Ежедневно в 09:00",
+      "last_fired_at": null,
+      "next_run_at": "2026-09-06T06:00:00Z",
+      "provider": null,
+      "signing_secret_hint": {
+        "redacted": true,
+        "present": false,
+        "keys": null
+      },
+      "timezone": "Europe/Moscow",
+      "updated_at": "2026-09-09T20:11:47Z",
+      "webhook_path": null,
+      "webhook_token": {
+        "redacted": true,
+        "present": false,
+        "keys": null
+      },
+      "webhook_token_hint": {
+        "redacted": true,
+        "present": false,
+        "keys": null
+      },
+      "webhook_url": {
+        "redacted": true,
+        "present": false,
+        "keys": null
+      }
+    }
+  ]
+}

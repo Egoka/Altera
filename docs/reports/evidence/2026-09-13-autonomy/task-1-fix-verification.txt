@@ -1,0 +1,18 @@
+AC-T1-01 active_rules=preserved destinations=2 ledger_rows=2
+AC-T1-02 command=multica-start.md canonical_fields=19/19
+AC-T1-02 command=multica-stage.md canonical_fields=19/19
+AC-T1-02 command=multica-status.md canonical_fields=19/19
+AC-T1-02 command=multica-handback.md canonical_fields=19/19
+AC-T1-03 old_claude_sha256=b949b87ba4d8f183b3fab783abd4207cdd0fb09f40f70571b7122880682cf71c trace_block=exact
+AC-T1-04 source_diff_2e542a0..HEAD=empty baseline_tests=19+5
+result=passed
+Checking formatting...
+All matched files use Prettier code style!
+diff_check=passed
+staged_files=6
+staged_diff_sha256=a4c1f9a3dba63536150c7e97aef209cc050db65a0a0e052ba57e3e875bde4600
+staged_index_manifest_sha256=0d3a4f7100d27b018b408fbefb243889bfb759c6851ea458c401adbed38bf101
+AC-T1-04 revision=f3fc646cb6858b3dce78cb561db7704e6ed5d1d6 checked_files=22 local_links=176 missing=0
+AC-T1-01 revision=f3fc646cb6858b3dce78cb561db7704e6ed5d1d6 requirements=45/45
+AC-T1-04 committed_diff_check=passed
+final_files_manifest_sha256=730ca059568f6c83f3ee590151d65b04d5f81b960bef49ed710795d9d03e57cf
