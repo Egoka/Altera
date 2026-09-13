@@ -14,6 +14,11 @@ test("flow #11 archives an account transactionally and resolves one appeal", asy
     await page.getByLabel(/причин|reason/i).fill("Policy fixture")
     await page.getByRole("button", { name: /подтвердить|confirm/i }).click()
     await expect(page.getByText(/archived|архив/i)).toBeVisible()
+    await expect(page.getByText(/все сессии отозваны|all sessions revoked/i)).toBeVisible()
+    await expect(page.getByText(/статьи.*архив|articles.*archived/i)).toBeVisible()
+
+    const articleResponse = await page.request.get("/admin-archive-fixture-article")
+    expect(articleResponse.status()).toBe(410)
   })
 
   await test.step("block login and accept only one appeal", async () => {
@@ -26,12 +31,17 @@ test("flow #11 archives an account transactionally and resolves one appeal", asy
 
   await test.step("record the admin decision and restore articles one by one", async () => {
     await page.goto("/admin/users/archive-fixture")
+    await page.getByRole("tab", { name: /оспариван|appeal/i }).click()
+    await expect(page.getByText(/Please review the fixture block/)).toBeVisible()
+    await page.getByLabel(/причин.*решен|decision reason/i).fill("Appeal accepted after review.")
     await page.getByRole("button", { name: /восстановить аккаунт|restore account/i }).click()
+    await expect(page.getByText(/аккаунт восстановлен|account restored/i)).toBeVisible()
     await expect(page.getByText(/статьи.*архив|articles.*archived/i)).toBeVisible()
     await page.goto("/me/articles?status=archived")
     await page
       .getByRole("button", { name: /восстановить|restore/i })
       .first()
       .click()
+    await expect(page.getByText(/published|опубликован/i)).toBeVisible()
   })
 })
