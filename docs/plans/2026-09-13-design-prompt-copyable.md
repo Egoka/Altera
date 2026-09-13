@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: 134a2c7
 - **Отчёт**: docs/reports/2026-09-13-design-prompt-copyable-report.md
-- **Статус**: выполняется
+- **Статус**: завершён
 
 ## 1. Цель
 
