@@ -1,0 +1,142 @@
+# Task 6 completeness addendum: publication and stopped-stage recovery
+
+2026-09-13. Bounded architecture/contract review before dispatch. No implementation, source edits, test executions, new probes, agents, Git index/HEAD changes, or retry of a stopped check.
+
+Original task-6-design.md remains byte-exact. Its SHA-256 before and after this addendum is 2cc907576a29f696dc786772577f8e280af9bfe0c199d86adc67e93a4519c4ef. This file amends the recommendation, not its historical text, and does not claim implementation acceptance.
+
+## Dispatch conclusion
+
+The original design is incomplete in two material ways:
+
+1. Mandatory post-review backlog/matrix/overview updates require a narrow publication stage with its own frozen write-set and exact docs proof. They cannot be moved to a new maintenance task to close the original task prematurely. Final completion status must follow required release evidence while the same parent remains reserved.
+2. failures >= 2 must block ordinary start/return, but cannot mean permanently unrecoverable. A separate recover transition implements the already documented same-stage resumption after verified removal of the specific stopping cause. It preserves counters/history and creates neither another two-attempt window nor an unconditional third run.
+
+These are proposed CLI contract changes. They do not authorize the presently stopped Task 3 check to run.
+
+## Sources and evidence limits
+
+Called trace get_project_map(summary_only=true). This follow-up inspected contracts only, not source. Re-read operating-model, artifact-contracts, architecture, autopilot-checklists, backlog README, the 2026-09-09 stage-attempt-budget plan/report, and Task 3/Task 6 briefs.
+
+- Operating-model section 3 orders architecture, development, testing, review, documentation, release; each transition requires evidence. Task completion requires every mandatory stage and the keeper's backlog update.
+- Sections 1 and 8 preserve the documentation keeper's role; section 8 requires completion status, matrix and overview updates. Backlog README sections 2/4 authorize the keeper to set completed after evidence. Developer cannot predeclare success or transfer this obligation out of the current acceptance.
+- Section 7 requires current independent source review, established target environment, migration state and verifiable recovery before release.
+- Section 5 and architecture A7 require both the two-failure stop with retained counters and resumption of the actually stopped stage after removal of its named cause and exclusion of a duplicate.
+- Recovery autopilot checklist requires rejection before removal and continuation after observable changed conditions. It prohibits hiding a third attempt as diagnostics or resetting through a new run.
+- The stage-attempt-budget plan/report fixes only two consecutive failures. It explicitly does not establish a total iteration budget; the report separately identifies re-entry as unfinished work.
+
+No new reproduction is claimed. The two design contradictions follow directly from these obligations and the original design's restrictions. The nine baseline TypeScript errors and Task 3's two-failure stop are controller-reported facts; this agent did not inspect or rerun that check in this follow-up.
+
+## 1. Narrow publication type and its proof
+
+### Frozen write-set
+
+Add publication_paths to the initial passport: exact metadata file paths to be updated by the keeper after source review. Examples of the kind of paths are this task's backlog file, its matrix/index entries and relevant overview files; this is a schema example, not authorization to edit those files now.
+
+These paths remain within the overall authorized scope. No docs/**, entire-directory allowances, arbitrary source/config/test/runtime-policy files, or edits to the passport/original plan. Freeze the list at registration. The existing gate artifact set remains separate. Original bind-artifacts stays restricted to this task's actual gate artifacts; it does not gain a docs exemption.
+
+A metadata file may also contain rules, as backlog README does. Its presence in publication_paths permits preparing an inspectable diff, not changing its rules. A separate docs proof must explicitly accept the exact diff against the frozen task: facts/statuses/links are supported, and scope, ACs, authorization, product rules and constraints remain intact. Persist reviewer/run, diff hash, old/new blob hashes and verdict. The gate checks these bindings; it does not become a semantic Markdown parser.
+
+Passport and original plan remain immutable. Original mixed source-document versions remain accessible by their recorded commit/blob and proof. Editing a status line does not rewrite which contract was accepted. A semantic contract/source change must be rejected as publication and handled through its actual authorization requirements. A passing formatter alone is not the necessary docs proof.
+
+### Distinct source and publication assertions
+
+Retain the original source evidence's actual HEAD/dirty snapshot and acceptance at implementation output S. Add docs evidence for the actual publication output D. Record a publication relation proving the protected checked inputs are unchanged, the only other changes are explicitly permitted metadata/artifacts, and the changed metadata has its own passing proof.
+
+This relation does NOT assert that the whole tree is identical or that tests ran at D. It differs from strict artifact-only equivalence. Source review at S is not review of the later docs diff.
+
+Minimal mechanical checks:
+
+1. At the source anchor, retain the ordinary full scoped snapshot plus a protected dirty fingerprint excluding only frozen publication_paths and gate artifacts. The actual revision fields in evidence are not replaced by that derived fingerprint.
+2. Publication owns a slot and may change only its frozen write-set. Validate committed/staged/working/untracked changes, deletions and both sides of renames; ancestry/baseline/product boundary remain enforced. Protected dirty fingerprint must remain identical. Committed changes outside the two explicit sets are rejected. Completeness of the declared checked input scope still requires independent review, as with today's gate.
+3. Record the publication's exact output revision. A documentation verifier checks that exact diff/output. Recheck docs proof freshness and the relation to S at record/finish/Stop. Neither source acceptance nor docs acceptance substitutes for the other.
+4. Release cannot proceed before the independent docs proof. Source/config/test/policy drift requires normal implementation repair and fresh source checks, never publication or bind-artifacts.
+
+The bounded profile becomes contract -> implementation -> source verification -> publication -> verification, with release/finalization steps explicitly declared as needed. A keeper publication stage followed by a docs verification stage reuses ordinary ordered stages; it requires no new scheduler or general dependency engine.
+
+### Concrete complete flow when release is mandatory
+
+1. Freeze task ID, scope, ACs, authorization, checked inputs, publication_paths, release prerequisites and required stages.
+2. Prepare product/config/test and substantive documentation changes before source review. Preserve role ownership: the keeper may prepare owned docs during a coordinated phase with sequential file ownership; developer does not gain permission to edit specifications/journal. Future completion/release success is not asserted as an existing fact.
+3. Tester and independent source reviewer accept exact output S. This opens publication, while task completion remains pending required release.
+4. Keeper publication updates supported facts, links and intermediate statuses. If release is still required, retain status in progress and record source accepted/release pending in the report. Docs verifier accepts the exact diff at D. Store S acceptance, D acceptance and protected-source relation. Commit/bind immutable evidence archives before completing their owning stages.
+5. Release engineer receives S acceptance, D acceptance, their relation, and current release prerequisites. Release evidence may bind a remote commit/tree, actual built/deployed artifact digest, target environment, migration/health/rollback results. It does not permit arbitrary local source changes. An artifact from D is valid only through the checked relation of its source to S; a merge/rebuild that changes source requires new source evidence. Remote/environment facts are observed release proof, not inferred from local SHA.
+6. After actual release success, the keeper finalizes completed status, matrix and overview in the SAME task/parent under section 8. Explicitly declare docs-finalize (publication) and completion-check (verification) substeps in the passport, so the parent remains reserved through their checks and committed artifacts. Working/branch status edits are a proposal for closure until that gate; queue cannot infer acceptance from a bare completed word or acquire an occupied parent.
+7. The last finish releases the parent only after fresh final metadata proof, preserved protected source, required release evidence, and committed immutable archives. The original task is complete, without a deferred mandatory update in another task. Push/merge remains subject to section 7.
+
+If release is not declared, omit step 5 and combine terminal updates with ordinary post-review docs publication. If release fails, do not publish completed; retain partial evidence and the stopped release obligation.
+
+Section 3's docs-before-release and section 8's final update after completion are temporally ambiguous if documentation is treated as one indivisible write. Clarify this in the editable contract as pre-release documentation plus post-release completion bookkeeping of the same task. This preserves the keeper and all evidence gates. It does not justify declaring future release success, ignoring section 8, or inventing a replacement maintenance task.
+
+Moving substantive docs/source edits earlier is useful, but cannot move future facts backward in time. Separate context maintenance can cover genuinely separate later work, such as Project description under its own contract; it cannot satisfy this task's required backlog/matrix/overview closure.
+
+## 2. History-preserving recovery after two failures
+
+### Stop state is not erased failure history
+
+failures is the retained count of consecutive actually unsuccessful executions of this check. stopped is a state that requires verified removal of the named cause before re-entry. Defining recoverability permanently as failures < 2 deletes the documented recovery permission. Resetting failures at resume deletes history and creates another attempt window.
+
+Preserve the ordinary rule: without a valid recovery transition, failures >= 2 rejects start/record/return. Recovery is not ordinary first-defect return and cannot select the next task/stage.
+
+### Proposed command
+
+gate.py recover docs/reports/evidence/SLUG/recovery-EVENT.json --event EVENT --actor CONTROLLER --run NEW_RUN
+
+The sidecar references the original task/stage/check_id, exact stop event and old run, old source/environment snapshot, named cause, declared observable resumption condition, actual remediation diff/change event, confirmation of removal of that cause, new snapshot, exclusion of live run/duplicate branch activity, and the next operation of the SAME stopped check. Previous native/stage outcomes are preserved.
+
+Preconditions checked structurally by the gate and factually by controller/runtime:
+
+- A retained stop/handoff exists for the same contract/stage/check. The old count, including two failures, appears unchanged in the decision.
+- The former process is actually stopped; no live duplicate or foreign active parent exists. An empty JSON slot alone is insufficient evidence. Runtime exclusion is the actual controller's duty, not a new structural-CLI guarantee.
+- The named cause has been removed, supported by a verifiable NEW change in its conditions, not elapsed time, a new role, wording, cosmetic commit or a prediction of success. Scope/authorization are unchanged; Q/conflict is not cleared by assumption.
+- The responsible controller accepts that proof, with independent confirmation appropriate to the cause. A code remedy requires inspection of its exact change and supporting facts; the gate cannot establish code correctness semantically.
+- Current source and prerequisite proofs are valid. Source corrections leave dependent old test/review evidence stale. Without the required new implementation output/prerequisites, recovering a tester stage is not yet valid.
+- This remediation proof has not already been consumed or disproved for the current stop. Hashes, snapshot and duplicate exclusion are rechecked while atomically acquiring the same parent and stage slot.
+
+recover atomically records the decision and acquires a run of exactly the stopped stage, with recovering_check bound to the stop/remediation/snapshot. Counters and history do not change. It is a condition-bound continuation, not a permanent ignore_budget flag.
+
+### Recording the actual resumed result
+
+- While that specific recovery is active and its conditions remain valid, record may accept the actual named check's outcome despite retained failures=2. This is the explicit section 5 re-entry, not a disguised old or unexecuted check.
+- Actual passed with exit 0 resets only that check: 2 -> 0, using the existing success rule. Other stopped checks remain stopped; no stage completion without its mandatory checks.
+- Actual failed/blocked records the real next failure: 2 -> 3, immediately stops again and consumes the recovery decision. There is no fresh allowance until another two failures. Mark the prior remediation claim insufficient/disproved by this outcome.
+- Expected RED, no-op, not_run/not_applicable do not prove recovery or reset the count. Release, process death, repeated event/run or another iteration does not automatically renew the decision. An unknown execution outcome stays stopped/unknown; do not silently execute it again.
+
+There is no recovery_attempts=1/2/... setting or new numerical budget. The contract already permits continuing a stopped operation after its conditions are met. A subsequent actual failure remains the third failure in the original sequence and immediately stops; the configured threshold two is not increased. The distinction is conditional re-entry after remediation versus an unconditionally available third trial.
+
+### Preventing an automatic trial loop
+
+Do not implement recover -> failure -> recover on a timer or an agent's unsupported expectation. After failed recovery the same stop/cause/remediation proof cannot be reused, even under a new ID or cosmetic revision. Another recovery needs genuinely changed, independently confirmed conditions addressing the current cause, followed by another accepted recovery event. Running the stopped check under a diagnostics/precondition label to discover whether it may run is a forbidden hidden attempt.
+
+If cause removal cannot be established without rerunning the stopped check and there is no independent confirmation, this recovery remains blocked. It cannot execute merely to determine whether execution is allowed. This is a limitation of that specific cause, not proof that every stop is permanently unrecoverable.
+
+The existing contract does not define a total numeric limit on all future recoveries following genuinely new external events. Do not invent one or treat resources as infinite. This is event-driven continuation with immediate stop on failure/quota/unremoved cause, not self-renewing trials. A mathematical global bound on all future events cannot be claimed without an additional budget; the proposed transition authorizes no automatic blind trial chain.
+
+### Remedy work is distinct from recovery dispatch
+
+The recovery autopilot resumes the SAME stopped stage AFTER the cause is removed. It does not itself initiate unlimited development to remove it. Needed code repair must already be explicitly authorized within the current task/scope, owned by the single writer and produce fresh required implementation evidence. Otherwise recovery waits. New task identity, scope or check names cannot clear the original count.
+
+A stopped code check is therefore not always immediately autonomously recoverable. A verifiable environment change may satisfy its condition; unknown cause, open Q, out-of-scope repair or an unsupported claimed fix does not.
+
+### Current Task 3 stays stopped
+
+The controller reports nine baseline TypeScript errors and two failed web-typecheck attempts. Task 3 brief restricts work to CI/config/scaffolding and explicitly does not authorize repairing the whole product to make CI green.
+
+- Do not rerun or rename that typecheck here.
+- Installing/finding vue-tsc does not itself remove the now-known TypeScript diagnostics.
+- Recovery is not established without exact permitted remediation scope, actual removal of causes, verification of that remedy and fresh prerequisites.
+- Retain failures=2, logs, baseline classification and stop. Unrelated work may proceed only within its existing authorization.
+- This architecture addendum is neither a recovery event nor permission for the current third execution.
+
+## Focused future acceptance cases
+
+These are proposed cases, not tests run in this review:
+
+1. Source test/review at S -> permitted metadata diff at D -> separate docs proof -> actual release proof -> keeper's final status/matrix/overview -> final docs proof/finish. Same task/parent; truthful old source SHA and exact new metadata snapshot.
+2. Reject undeclared docs paths, source/config/test changes, mutated passport/plan, unaccepted rule changes within a mixed metadata file, stale docs proof and terminal completion with a failed mandatory release.
+3. Commit final metadata/archives before last finish; block another parent until then. A separate maintenance task cannot satisfy unfinished original obligations.
+4. Reject ordinary start/return at two failures, and recover without proven new conditions, with live duplicate/Q/conflict, wrong stage/scope or stale proof. Counters unchanged on rejection.
+5. Genuine remediation -> recover same stage/check with failures=2 -> actual pass resets only it to zero; original stops/failures/native outcomes remain in history.
+6. Resumed failure gives three and immediate stop. Duplicate IDs, cosmetic changes and disproved proof do not renew recovery. Unknown/unexecuted results cannot become pass or silently trigger another run.
+7. Source repair does not reactivate old test/review evidence; the current Task 3 without accepted remediation continues to reject retry.
+
+Before dispatch, incorporate these bounded changes into the Task 6 brief and consistently clarify operating-model, artifact-contracts and gate docs. Preserve historical sources, the original task-6-design.md, the confirmed number two and keeper/release-engineer roles. Runtime enforcement and semantic truthfulness remain separately evidenced responsibilities.

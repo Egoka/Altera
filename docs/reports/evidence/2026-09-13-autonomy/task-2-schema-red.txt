@@ -1,0 +1,19 @@
+test_uncovered_criterion_and_malformed_passport_rejected (test_gate.GateTests) ... FAIL
+
+======================================================================
+FAIL: test_uncovered_criterion_and_malformed_passport_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 335, in test_uncovered_criterion_and_malformed_passport_rejected
+    self.start(ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 59, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "acquired", "slot": {"actor": "tester", "evidence": [], "lease": {"automatic_expiry": false, "owner": "tester", "run": "run-1"}, "passport": "docs/plans/fixture.gate.json", "passport_hash": "ca27b9594234d4620f3d307a9fb05149114064347c75d452314551545a44477d", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmpt1y5u9hd", "run": "run-1", "stage": "test", "task": "T-fixture"}}
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.297s
+
+FAILED (failures=1)

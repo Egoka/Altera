@@ -1,0 +1,40 @@
+{
+  "source": "task-2-review.diff / ea7f142 gate, unchanged supplied review artifact",
+  "probes": [
+    {
+      "name": "evidence-only commit after test completion",
+      "before": {
+        "dirty_fingerprint": "clean",
+        "revision_commit": "742245c1aee86833187794b1ee80730304171272"
+      },
+      "after": {
+        "dirty_fingerprint": "clean",
+        "revision_commit": "4032facff0a3cdb2f071bc20f45c9dc698bcd8c4"
+      },
+      "scoped_tree_diff": "",
+      "stop": {
+        "result": "rejected",
+        "error": "artifact ownership or revision mismatch"
+      },
+      "review_start": {
+        "result": "rejected",
+        "error": "previous stage evidence belongs to an obsolete revision"
+      }
+    },
+    {
+      "name": "planning completion then changed implementation revision",
+      "planning_snapshot": {
+        "dirty_fingerprint": "clean",
+        "revision_commit": "77ca60feeee0e00329456819d5e2208483f2ec7a"
+      },
+      "implementation_snapshot": {
+        "dirty_fingerprint": "sha256:0dd046c820519f4418e45a129ba909bc7f11540eb4d34faf0231c6ffda90d9ec",
+        "revision_commit": "77ca60feeee0e00329456819d5e2208483f2ec7a"
+      },
+      "implementation_start": {
+        "result": "rejected",
+        "error": "previous stage evidence belongs to an obsolete revision"
+      }
+    }
+  ]
+}

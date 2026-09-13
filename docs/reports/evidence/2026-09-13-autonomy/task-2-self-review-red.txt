@@ -1,0 +1,84 @@
+test_concurrent_acquisition_has_exactly_one_owner (test_gate.GateTests) ... ok
+test_docs_only_requires_explicit_baseline_and_rejects_committed_product (test_gate.GateTests) ... ok
+test_duplicate_event_rejected_without_mutation (test_gate.GateTests) ... ok
+test_foreign_evidence_directory_rejected (test_gate.GateTests) ... FAIL
+test_global_slot_and_run_replay_rejected (test_gate.GateTests) ... ok
+test_hook_repeated_stop_does_not_bypass_missing_passport (test_gate.GateTests) ... ok
+test_linked_worktrees_share_slot (test_gate.GateTests) ... ok
+test_lock_and_corrupt_state_fail_closed (test_gate.GateTests) ... ok
+test_malformed_check_result_rejected_without_state_change (test_gate.GateTests) ... FAIL
+test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests) ... ok
+test_paired_human_report_required_and_pinned (test_gate.GateTests) ... FAIL
+test_paths_and_symlink_evidence_rejected (test_gate.GateTests) ... ok
+test_scope_cannot_omit_product_changes (test_gate.GateTests) ... ok
+test_stage_handoff_rejects_stale_prior_revision (test_gate.GateTests) ... FAIL
+test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests) ... ok
+test_success_preserves_other_check_failure_count (test_gate.GateTests) ... ok
+test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests) ... ok
+test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests) ... ok
+test_two_failures_stop_stable_check_across_runs (test_gate.GateTests) ... ok
+test_wrong_stage_actor_and_unknown_check_rejected (test_gate.GateTests) ... ok
+
+======================================================================
+FAIL: test_foreign_evidence_directory_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 293, in test_foreign_evidence_directory_rejected
+    self.record(foreign, ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"failures": 0, "result": "recorded", "stopped": false}
+
+
+======================================================================
+FAIL: test_malformed_check_result_rejected_without_state_change (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 304, in test_malformed_check_result_rejected_without_state_change
+    self.record(path, event=key, ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 1 != 2 : Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/gate.py", line 448, in <module>
+    sys.exit(main())
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/gate.py", line 437, in main
+    result = dispatch(args, root, state)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/gate.py", line 373, in dispatch
+    e, hashes = proof(root, args.evidence)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/gate.py", line 254, in proof
+    require(datetime.fromisoformat(e['started_at'].replace('Z', '+00:00')).tzinfo is not None,
+AttributeError: 'int' object has no attribute 'replace'
+
+
+======================================================================
+FAIL: test_paired_human_report_required_and_pinned (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 282, in test_paired_human_report_required_and_pinned
+    self.cli('stop', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "contract_valid", "task_acceptance": "not_checked"}
+
+
+======================================================================
+FAIL: test_stage_handoff_rejects_stale_prior_revision (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 274, in test_stage_handoff_rejects_stale_prior_revision
+    self.start(run='review-1', actor='reviewer', stage='review', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 59, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "acquired", "slot": {"actor": "reviewer", "evidence": [], "lease": {"automatic_expiry": false, "owner": "reviewer", "run": "review-1"}, "passport": "docs/plans/fixture.gate.json", "passport_hash": "f65d13894e426991a55febbac50e4dab5a6e895f1dd9c2a805b21bd7660dfe31", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp73e2opm4", "run": "review-1", "stage": "review", "task": "T-fixture"}}
+
+
+----------------------------------------------------------------------
+Ran 20 tests in 21.166s
+
+FAILED (failures=4)

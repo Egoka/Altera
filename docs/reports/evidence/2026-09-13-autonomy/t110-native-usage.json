@@ -1,0 +1,15 @@
+{
+  "cost_usd_ticks": 0,
+  "metered_task_count": 1,
+  "task_count": 1,
+  "terminal_task_count": 1,
+  "total_cache_read_tokens": 2954981,
+  "total_cache_write_tokens": 96270,
+  "total_input_tokens": 47,
+  "total_output_tokens": 19409,
+  "uncosted_cache_read_tokens": 2954981,
+  "uncosted_cache_write_tokens": 96270,
+  "uncosted_input_tokens": 47,
+  "uncosted_output_tokens": 19409,
+  "unreported_task_count": 0
+}

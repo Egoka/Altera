@@ -1,0 +1,27 @@
+test_concurrent_acquisition_has_exactly_one_owner (test_gate.GateTests) ... ok
+test_docs_only_requires_explicit_baseline_and_rejects_committed_product (test_gate.GateTests) ... ok
+test_duplicate_event_rejected_without_mutation (test_gate.GateTests) ... ok
+test_foreign_evidence_directory_rejected (test_gate.GateTests) ... ok
+test_global_slot_and_run_replay_rejected (test_gate.GateTests) ... ok
+test_hook_repeated_stop_does_not_bypass_missing_passport (test_gate.GateTests) ... ok
+test_linked_worktrees_share_slot (test_gate.GateTests) ... ok
+test_lock_and_corrupt_state_fail_closed (test_gate.GateTests) ... ok
+test_malformed_check_result_rejected_without_state_change (test_gate.GateTests) ... ok
+test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests) ... ok
+test_paired_human_report_required_and_pinned (test_gate.GateTests) ... ok
+test_paths_and_symlink_evidence_rejected (test_gate.GateTests) ... ok
+test_scope_cannot_omit_product_changes (test_gate.GateTests) ... ok
+test_stage_handoff_rejects_stale_prior_revision (test_gate.GateTests) ... ok
+test_stage_handoff_revalidates_prior_evidence (test_gate.GateTests) ... ok
+test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests) ... ok
+test_success_preserves_other_check_failure_count (test_gate.GateTests) ... ok
+test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests) ... ok
+test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests) ... ok
+test_two_failures_stop_stable_check_across_runs (test_gate.GateTests) ... ok
+test_uncovered_criterion_and_malformed_passport_rejected (test_gate.GateTests) ... ok
+test_wrong_stage_actor_and_unknown_check_rejected (test_gate.GateTests) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 20.707s
+
+OK

@@ -1,0 +1,21 @@
+{
+  "captured_at": "2026-09-13T16:25:05.252512+00:00",
+  "baseline_commit": "f3fc646cb6858b3dce78cb561db7704e6ed5d1d6",
+  "baseline_tree": "bba26873f2728bb4e30d085171e2711c4ea6ceb0",
+  "revision_commit": "ea7f142b729bd88b2b79e247130cd40d2e329992",
+  "revision_tree": "98a6be3e1f3b5bdec5f575ef6f1c323fb1ef4f08",
+  "own_file_sha256": {
+    ".claude/hooks/ritual-check.sh": "77d3953b9234aac7f58a9d28b5a262e97ad08b4ee730b0daa47ff87581267d39",
+    ".claude/settings.json": "e2c2505f8188918f85398d85b0ec2bd05015eb894a29edecfb61aa17a5d57f61",
+    ".claude/agents/multica-tester.md": "6039eea344c052b009a1062d188164818dec15ce216fe7d8ccfdd1383779e61d",
+    ".claude/agents/multica-reviewer.md": "8149226026ac592822ba5a12234aa860fb094359ecca78a21de9c34a5033dc17",
+    "docs/development/testing.md": "f1132144bcc254ab90a41de2dbb6393bd9dc1bc302a03228ffca4569378f8655",
+    "docs/development/agent-loop-gate.md": "e891452303576ba7dbcb06b57debcc084a962f5643d9533c6300a61fca815412",
+    "scripts/agent-loop/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "scripts/agent-loop/gate.py": "cffec84f9486b94adeeda8807e1c89c969e2855202973267bcb3e7059a9ee757",
+    "scripts/agent-loop/test_gate.py": "75f21608cf97b47da00221c1584f166ffc193bab9e03fbe173a859eb35cf7145"
+  },
+  "own_source_digest": "sha256:1e9fe0c88e05fceec087dd1284363fa52e8b4515a88d2ec30ece6a0037e826e5",
+  "own_dirty_fingerprint": "clean",
+  "preserved_other_dirty_scope": "M docs/multica/autopilot-checklists.md\n M docs/multica/operating-model.md\n M docs/plans/2026-09-13-agent-loop-migration.md\n M docs/plans/2026-09-13-autonomy-execution.md\n M docs/reports/2026-09-13-agent-loop-migration-report.md\n M docs/reports/2026-09-13-autonomy-execution-report.md\n M docs/reports/2026-09-13-multica-corrections-report.md\n?? docs/development/sources/2026-09-13-autopilot-checklists-original.md\n?? docs/multica/proposed/\n?? docs/multica/snapshots/\n?? docs/reports/evidence/"
+}

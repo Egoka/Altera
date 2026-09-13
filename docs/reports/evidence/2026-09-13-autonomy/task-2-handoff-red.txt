@@ -1,0 +1,19 @@
+test_stage_handoff_revalidates_prior_evidence (test_gate.GateTests) ... FAIL
+
+======================================================================
+FAIL: test_stage_handoff_revalidates_prior_evidence (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 348, in test_stage_handoff_revalidates_prior_evidence
+    self.start(run='review-1', actor='reviewer', stage='review', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 59, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "acquired", "slot": {"actor": "reviewer", "evidence": [], "lease": {"automatic_expiry": false, "owner": "reviewer", "run": "review-1"}, "passport": "docs/plans/fixture.gate.json", "passport_hash": "35fcde74e75abdb1f4dc1f6f2199ac89b4aeca0b05747657733848c07e988f4e", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmpq40n70zm", "run": "review-1", "stage": "review", "task": "T-fixture"}}
+
+
+----------------------------------------------------------------------
+Ran 1 test in 1.289s
+
+FAILED (failures=1)

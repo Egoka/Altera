@@ -1,0 +1,187 @@
+diff --git a/.claude/agents/multica-reviewer.md b/.claude/agents/multica-reviewer.md
+index 36779ad..66b8e40 100644
+--- a/.claude/agents/multica-reviewer.md
++++ b/.claude/agents/multica-reviewer.md
+@@ -10,8 +10,11 @@ model: inherit
+ Инструменты записи тебе не выданы намеренно: ты не участвуешь в реализации проверяемой задачи
+ (operating-model §1). Вердикт возвращаешь текстом вызывающей стороне.
+ 
+-Однако доступный `Bash` потенциально способен менять файлы. До проверки M4 это ограничение
+-считается prompt-level инструкцией, а не подтверждённым runtime enforcement.
++Однако доступный `Bash` потенциально способен менять файлы. Это prompt-level инструкция,
++а не подтверждённое runtime enforcement. Gate `scripts/agent-loop/gate.py` проверяет поля,
++ревизию и устойчивое состояние; он не запрещает запись через Bash. Штатный Multica запускает
++Claude с `bypassPermissions`, Codex с `danger-full-access`. Реальная изоляция требует отдельной
++runtime canary. Поддержанный flow и ограничения: `docs/development/agent-loop-gate.md`.
+ 
+ ## Что проверяешь
+ 
+diff --git a/.claude/agents/multica-tester.md b/.claude/agents/multica-tester.md
+index 4c592fc..25cfbc3 100644
+--- a/.claude/agents/multica-tester.md
++++ b/.claude/agents/multica-tester.md
+@@ -27,7 +27,12 @@ model: inherit
+ каждый AC-ID требует собственного актуального evidence.
+ 
+ Отсутствие `Edit` в профиле не является техническим запретом записи: выданы `Write` и `Bash`.
+-До проверки M4 запрет менять проверяемую реализацию — инструкция, а не доказанный sandbox.
++Запрет менять проверяемую реализацию — инструкция, а не доказанный sandbox.
++Gate `scripts/agent-loop/gate.py` проверяет контракт и сохраняет счёт неуспехов, но не ограничивает
++запись через Bash/Write. Штатный Multica запускает Claude с `bypassPermissions`, Codex с
++`danger-full-access`; настройки разрешений проекта не создают OS-границу. Реальная изоляция
++проверяется отдельной runtime canary; до неё read-only enforcement не подтверждён.
++Поддержанный flow и ограничения: `docs/development/agent-loop-gate.md`.
+ 
+ ## Чего не делаешь
+ 
+diff --git a/.claude/hooks/ritual-check.sh b/.claude/hooks/ritual-check.sh
+index 6056930..45f6523 100755
+--- a/.claude/hooks/ritual-check.sh
++++ b/.claude/hooks/ritual-check.sh
+@@ -1,74 +1,20 @@
+ #!/usr/bin/env bash
+-# Проверка ритуала «план + отчёт» перед завершением ответа.
+-#
+-# Правило CLAUDE.md: работа по неописанному плану не начинается, а план не считается
+-# выполненным, пока нет парного отчёта. Хук не даёт молча закончить заход, в котором
+-# менялся продуктовый код, но нет ни плана, ни отчёта.
+-#
+-# Коды: 0 — можно завершать; 2 — завершение блокируется один раз, текст уходит модели.
+-
+-set -uo pipefail
+-
+-INPUT="$(cat 2>/dev/null || true)"
+-
+-# Защита от зацикливания: если хук уже блокировал завершение в этом же заходе — пропускаем.
+-if printf '%s' "$INPUT" | grep -q '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
+-  exit 0
+-fi
+-
++# Cooperative Claude Stop adapter; never grants stage/task acceptance.
++# Repeated Stop runs the same check. Codex does not execute this Claude hook.
++set -euo pipefail
++cat >/dev/null
+ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+-cd "$PROJECT_DIR" || exit 0
+-
+-command -v git >/dev/null 2>&1 || exit 0
+-git rev-parse --git-dir >/dev/null 2>&1 || exit 0
+-
+-# Изменения продуктового кода в рабочем дереве относительно HEAD.
+-CHANGED="$(git status --porcelain -- server web packages 2>/dev/null | grep -v '^!!' || true)"
+-[ -z "$CHANGED" ] && exit 0
+-
+-TODAY="$(date +%Y-%m-%d)"
+-
+-# Планы, изменённые или созданные в рабочем дереве, либо созданные сегодня.
+-PLANS="$(git status --porcelain -- docs/plans 2>/dev/null | awk '{print $NF}' | grep '\.md$' || true)"
+-[ -z "$PLANS" ] && PLANS="$(ls docs/plans/${TODAY}-*.md 2>/dev/null || true)"
+-
+-if [ -z "$PLANS" ]; then
+-  cat >&2 <<'MSG'
+-Ритуал проекта не соблюдён: в рабочем дереве изменён продуктовый код (server/, web/ или
+-packages/), но нет плана в docs/plans/ за сегодня и нет изменённого плана.
+-
+-CLAUDE.md: «Работа по неописанному плану не начинается». В шапке плана обязателен базовый
+-коммит (git rev-parse --short HEAD).
+-
+-Сохрани план в docs/plans/ГГГГ-ММ-ДД-имя.md по формату docs/plans/README.md либо, если правки
+-продуктового кода не входили в задачу, откати их.
+-MSG
++GATE_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/scripts/agent-loop/gate.py"
++if ! command -v python3 >/dev/null 2>&1; then
++  echo 'Agent-loop gate requires Python 3; Stop contract remains unverified.' >&2
+   exit 2
+ fi
+-
+-# У каждого затронутого плана должен быть парный отчёт с тем же слагом.
+-MISSING=""
+-while IFS= read -r plan; do
+-  [ -n "$plan" ] || continue
+-  base="$(basename "$plan" .md)"
+-  [ "$base" = "README" ] && continue
+-  if [ ! -f "docs/reports/${base}-report.md" ]; then
+-    MISSING="${MISSING}  docs/reports/${base}-report.md\n"
+-  fi
+-done <<< "$PLANS"
+-
+-if [ -n "$MISSING" ]; then
+-  {
+-    echo "Ритуал проекта не завершён: продуктовый код изменён, план есть, парного отчёта нет."
+-    echo
+-    echo "Отсутствуют файлы:"
+-    printf "$MISSING"
+-    echo
+-    echo "CLAUDE.md: «План не считается выполненным, пока отчёта нет — даже если код уже"
+-    echo "написан и закоммичен». Раздел «Как проверено» содержит выполненные команды и их"
+-    echo "фактический вывод; утверждение «работает» без проверки в отчёт не попадает."
+-  } >&2
++set +e
++RESULT="$(python3 "$GATE_SCRIPT" --root "$PROJECT_DIR" stop 2>&1)"
++STATUS=$?
++set -e
++if [ "$STATUS" -ne 0 ]; then
++  printf '%s\n' "$RESULT" >&2
+   exit 2
+ fi
+-
+ exit 0
+diff --git a/.claude/settings.json b/.claude/settings.json
+index fba9c92..e83d50f 100644
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -4,33 +4,14 @@
+     "allow": [
+       "Bash(pnpm lint)",
+       "Bash(pnpm format)",
+-      "Bash(pnpm format:fix)",
+       "Bash(pnpm test)",
+-      "Bash(pnpm -r exec eslint:*)",
+-      "Bash(pnpm -r exec prettier:*)",
+-      "Bash(pnpm install --frozen-lockfile)",
+-      "Bash(node -e:*)",
+-      "Bash(git push:*)",
+       "Bash(git status:*)",
+       "Bash(git diff:*)",
+       "Bash(git log:*)",
+       "Bash(git show:*)",
+-      "Bash(git branch:*)",
+       "Bash(git rev-parse:*)",
+       "Bash(git check-ignore:*)",
+-      "Bash(git worktree list)",
+-      "Bash(git commit:*)",
+-      "Bash(git checkout:*)",
+-      "Bash(git switch:*)",
+-      "Bash(git merge:*)",
+-      "Bash(git rebase:*)",
+-      "Bash(git stash:*)",
+-      "Bash(git worktree:*)",
+-      "Bash(gh pr:*)",
+-      "Bash(gh run:*)",
+-      "Bash(npx prisma generate)",
+-      "Bash(npx prisma validate)",
+-      "Bash(npx prisma format)"
++      "Bash(git worktree list)"
+     ],
+     "ask": ["Bash(npx prisma migrate:*)", "Bash(npx prisma db push:*)"],
+     "deny": [
+diff --git a/docs/development/testing.md b/docs/development/testing.md
+index d5cb146..530b27b 100644
+--- a/docs/development/testing.md
++++ b/docs/development/testing.md
+@@ -75,3 +75,15 @@ commit, dirty fingerprint, cwd, команду, exit code, число выпол
+ run, а успех сбрасывает только счёт этой проверки. Изменение проверяемого файла делает связанное
+ evidence устаревшим. Это контракт M3; техническое принуждение runner относится к M4 и здесь не
+ заявляется работающим.
++
++## Локальный gate контрактов
++
++```bash
++PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/agent-loop -p 'test_*.py' -v
++```
++
++Это отдельный набор настоящих CLI/Git fixtures; `pnpm test` пока его не включает.
++[Поддержанный flow и ограничения](agent-loop-gate.md) описывают JSON-паспорта, парные отчёты,
++revision fingerprint, устойчивый счёт неуспехов, один slot между worktree и Claude Stop adapter.
++Gate не ограничивает файловые права и не подтверждает семантическую приёмку; штатные
++Multica bypass/danger-full-access требуют отдельной runtime canary.

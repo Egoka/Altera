@@ -1,0 +1,29 @@
+usage: gate.py [-h] [--root ROOT]
+               {snapshot,start,record,finish,release,docs-only,stop,status}
+               ...
+
+Кооперативная проверка контрактов и состояния с отказом при ошибке. Это не
+security boundary.
+
+positional arguments:
+  {snapshot,start,record,finish,release,docs-only,stop,status}
+    snapshot            Print HEAD and scoped staged/working/untracked
+                        fingerprint
+    start               Validate passport and acquire shared cooperative slot
+    record              Record immutable evidence and persistent check failure
+                        count
+    finish              Validate paired report; release slot without granting
+                        acceptance
+    release             Owner releases slot without completing stage; counters
+                        retained
+    docs-only           Attest no product diff from explicit baseline; no
+                        product stage
+    stop                Validate active/finished contract or explicit docs-
+                        only attestation
+    status              Read shared state without changing ownership
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --root ROOT           Git checkout root (not a subdirectory)
+
+See docs/development/agent-loop-gate.md for JSON schemas and supported flow.

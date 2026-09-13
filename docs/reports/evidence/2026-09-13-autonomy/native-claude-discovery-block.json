@@ -1,0 +1,12 @@
+{
+  "captured_utc": "2026-09-13T16:58:54.646562Z",
+  "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+  "identifier": "ALTE-11",
+  "status": "backlog",
+  "assignee": null,
+  "action": "issue assign --to-id db94a617-807c-4eec-981f-51fd4b3217d4 (starts run)",
+  "result": "auto_review_rejected_before_execution",
+  "reason": "Current Multica runtime can write the in_place checkout; a read-only prompt is not a technical filesystem boundary.",
+  "run_started": false,
+  "next": "Prepare constrained launcher and local protocol/OS tests; no retry of the rejected unrestricted launch."
+}

@@ -1,0 +1,18 @@
+{
+  "captured_at": "2026-09-13T16:19:31.089511+00:00",
+  "baseline_commit": "f3fc646cb6858b3dce78cb561db7704e6ed5d1d6",
+  "baseline_tree": "bba26873f2728bb4e30d085171e2711c4ea6ceb0",
+  "head": "f3fc646cb6858b3dce78cb561db7704e6ed5d1d6",
+  "own_file_sha256": {
+    ".claude/hooks/ritual-check.sh": "600ccf7c0ea37b81fcd7fc8404a54aa83144b8aba3705307b37c22cf9c05b9cf",
+    ".claude/settings.json": "e2c2505f8188918f85398d85b0ec2bd05015eb894a29edecfb61aa17a5d57f61",
+    ".claude/agents/multica-tester.md": "6039eea344c052b009a1062d188164818dec15ce216fe7d8ccfdd1383779e61d",
+    ".claude/agents/multica-reviewer.md": "8149226026ac592822ba5a12234aa860fb094359ecca78a21de9c34a5033dc17",
+    "docs/development/testing.md": "f1132144bcc254ab90a41de2dbb6393bd9dc1bc302a03228ffca4569378f8655",
+    "docs/development/agent-loop-gate.md": "e891452303576ba7dbcb06b57debcc084a962f5643d9533c6300a61fca815412",
+    "scripts/agent-loop/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "scripts/agent-loop/gate.py": "93c3927b0ad7668a12e1b65a4b113a50baf5fbb75d96ef6b096f6b7749f31379",
+    "scripts/agent-loop/test_gate.py": "80282e5366cdd1fb91d1fdfec910741cfd85c374447468fec3019b52d13a37e7"
+  },
+  "own_files_fingerprint": "sha256:c8798444378718873a9225fe6168e105c67f73adbd9a0c1049fdaad69a74456f"
+}

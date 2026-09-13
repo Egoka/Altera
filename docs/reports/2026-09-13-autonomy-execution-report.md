@@ -91,3 +91,41 @@ Read-only preflight изоляции: npm registry содержит совмес
 ## Независимая приёмка T-110
 
 [Полное заключение](evidence/2026-09-13-autonomy/t110-review.md): AC1–AC5 приняты, блокирующих дефектов реализации не найдено. Reviewer /root/review_t110_pilot не участвовал в реализации e18aa80; проверена ревизия3db90d6 с неизменными пятью файлами. Исторические summaries тестов не принимались за новый test run. Неблокирующая неточность старого отчёта: шапка ranking корректно ссылается на §23, поэтому утверждение «каждая правка ссылается на §25.1/25.6» слишком широкое. Старый отчёт не переписывался. Статусы в Multica и бэклоге на этой стадии ещё не менялись.
+
+## Минимальный gate принят, полный lifecycle дополняется
+
+На commit `e77c65e0bea357f103b1edbfd30350ac2776b99c` независимый reviewer принял исправления двух Important findings: product parent сохраняется между стадиями, а предыдущие проверки повторно связываются с текущей ревизией при продвижении и Stop. [Вердикт](evidence/2026-09-13-autonomy/task-2-fix1-review.md), [отчёт реализации](evidence/2026-09-13-autonomy/task-2-fix1-report.md), [manifest evidence](evidence/2026-09-13-autonomy/task-2-evidence-manifest.json). Полная suite: 28/28; commit hook: 24 продуктовых теста, format и lint passed. Привязка к проверенным до commit байтам раскрыта в отчёте; повторный запуск после commit не заявляется. Исходный отрицательный review и все RED/GREEN сохранены без переписывания.
+
+Это приёмка минимального кооперативного gate. Отдельный Task 6 устраняет воспроизведённые ограничения обычного возврата на исправление и commit только evidence: [дизайн](evidence/2026-09-13-autonomy/task-6-design.txt), [два probes](evidence/2026-09-13-autonomy/task-6-design-probes.json). Реализация, изоляция runtime и сквозной пилот пока не приняты.
+
+## Доступность native history и авторизации
+
+Штатный CLI вернул 107 записей run-messages пилота T-110; в репозиторий сохранены только [число и структура](evidence/2026-09-13-autonomy/t110-trace-shape.json), содержимое сообщений не экспортировалось. [Usage](evidence/2026-09-13-autonomy/t110-native-usage.json) содержит metered task и токены, но все токены помечены uncosted: денежная стоимость остаётся неизвестной, нулевое поле не означает бесплатный запуск. Статус native issue не изменялся.
+
+[Auth preflight](evidence/2026-09-13-autonomy/auth-preflight.json) подтверждает штатную авторизацию host Codex и Claude при соответствующем доступе к macOS Keychain. Значения credentials не читались. Эти результаты не доказывают авторизацию Linux-процессов будущих ограниченных runtime.
+
+## Открытые препятствия исполнения
+
+Task 3: commit `b8e00f13b53cd73db8571d248e6823165d5f3764`, 19 файлов.
+Сохранены [первичный отчёт](evidence/2026-09-13-autonomy/task-3-initial-report.md),
+[доступный tool transcript](evidence/2026-09-13-autonomy/task-3-exported-tool-transcript.md)
+и [текущий audit manifest](evidence/2026-09-13-autonomy/task-3-current-audit-manifest.json).
+Manifest создан после commit и не заменяет отсутствующий precommit fingerprint.
+Недоступные первоначальные raw outputs перечислены явно. Независимый review выявил
+пропуски в smoke/scenarios и evidence; адресное исправление ещё не принято.
+
+Task 3 подготовил CI и настоящий browser smoke: главная страница passed, девять сценариев
+T-112 явно skipped. Веб-сборка проходит, но воспроизводимый typecheck выявил девять
+существующих ошибок. Две попытки `task3-web-typecheck` дали exit 2: сначала через Nuxt,
+затем напрямую через установленный vue-tsc. Проверка остановлена, критерий T-001 остаётся
+открытым; итоговый отчёт Task 3 сохранит точные команды и вывод. Пять ошибок относятся к
+именованному middleware `auth`: существующий `auth.global.ts` содержит закомментированную
+логику и не обеспечивает авторизацию. Удаление проверки или расширение типов скрыло бы
+неготовый продукт; такие изменения не внесены.
+
+Native-диагностика ALTE-11 создана без assignee в Backlog. Автоматическая проверка разрешений
+отклонила назначение, которое одновременно запускало бы текущий Claude reviewer с правами
+на исходный in_place checkout. Запуск не состоялся. [Событие](evidence/2026-09-13-autonomy/native-claude-discovery-block.json)
+и [проект более безопасной диагностики](evidence/2026-09-13-autonomy/task-5-metadata-discovery-design.txt)
+сохранены. Metadata-only launcher ещё не реализован; его совместимость с регистрацией
+Multica предстоит проверить. Повтор отклонённого host-запуска не выполнялся.

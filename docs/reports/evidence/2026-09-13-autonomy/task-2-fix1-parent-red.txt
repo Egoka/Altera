@@ -1,0 +1,29 @@
+test_parent_reservation_survives_finish_until_all_stages_complete (test_gate.GateTests) ... FAIL
+test_parent_reservation_survives_release_and_resume_preserves_failures (test_gate.GateTests) ... FAIL
+
+======================================================================
+FAIL: test_parent_reservation_survives_finish_until_all_stages_complete (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 373, in test_parent_reservation_survives_finish_until_all_stages_complete
+    self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "acquired", "slot": {"actor": "other", "evidence": [], "lease": {"automatic_expiry": false, "owner": "other", "run": "other-1"}, "passport": "docs/plans/other.gate.json", "passport_hash": "f4cb6bb9f485581f6f88b0b7807f82e63c4cf327a794b3a053d54ba06fefd3aa", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmpzdypkeh3", "run": "other-1", "stage": "test", "task": "T-other"}}
+
+
+======================================================================
+FAIL: test_parent_reservation_survives_release_and_resume_preserves_failures (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 387, in test_parent_reservation_survives_release_and_resume_preserves_failures
+    self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "acquired", "slot": {"actor": "other", "evidence": [], "lease": {"automatic_expiry": false, "owner": "other", "run": "other-1"}, "passport": "docs/plans/other.gate.json", "passport_hash": "ac43e7ac1f858eab12248a439cdd22dc309f5bd7aecfdd33fb4add9f074b07b2", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmpz3r3ra5h", "run": "other-1", "stage": "test", "task": "T-other"}}
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 2.302s
+
+FAILED (failures=2)

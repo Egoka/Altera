@@ -1,0 +1,13 @@
+{
+  "task-3-initial-report.md": "735c923134867914346f4393a85c4fccd33a1392a82acae84c4581fe8cf8b176",
+  "task-3-exported-tool-transcript.md": "9ec42a69ded5011d5633dfdd22f7161c1372adbca6ef71669ca5a9bb75ae265a",
+  "task-3-current-audit-manifest.json": "404a3f0acff4dfc636c293780717decd0e5852fba5f3a561435bf7bb394f9739",
+  "task-3-preflight.md": "202a0fe80c68a15439e63998b5f613c76c13ce4282f95cde6c0310210c82bd1f",
+  "task-3-brief.md": "256cc2be0d1159af9b2b7f0bb5bea0d4b32ce1e03f286a414a5d0350bb99fe5a",
+  "task-3-preflight-logs/web-build-node24.12.log": "076183adb8387225bb2f98a5be4352a7180f1803abf4d680897ec48fd66df34d",
+  "task-3-preflight-logs/server-build-ci-node24.12.log": "a14653724d58a2007994f575930a1df90a84d94b842ada29aeddd2bee1ae7136",
+  "task-3-preflight-logs/web-build.log": "8d9f9dde753eb501d0514f7a56861ce883f41f403072e3f017dde2b33b4ee5dc",
+  "task-3-preflight-logs/web-typecheck.log": "33d3e89375c4c7f7a5013a78a46f4bfd04106b2c83afb15b9d1194a37aeb29ce",
+  "task-3-preflight-logs/git-status-final.log": "99bbeedb46f450e1a25d79a28917761550031084dd7a978c185721b68e24444a",
+  "task-3-preflight-logs/server-build-ci.log": "bd2739993a1ed04beaf35356b8d79bf9655b6765421a0f6ac34b30481dfd9d0e"
+}
