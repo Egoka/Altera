@@ -1,0 +1,8 @@
+{
+  "head": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "files": {
+    "scripts/agent-loop/gate.py": "968d453a0f083bab5c8d860944bb56842a3d2aa4e0d1126e7b8f460cd0861e5e",
+    "scripts/agent-loop/test_gate.py": "db5d64138e7b6068a1a104ed9f7fbca0aa096d832b666567829dc6a5e940584f"
+  },
+  "diff_sha256": "f4946ed6ec7ac972a33b3eda0d0522eda42b3303e69ceddb3a03bcac8b79d492"
+}

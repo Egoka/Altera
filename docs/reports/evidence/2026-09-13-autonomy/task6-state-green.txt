@@ -1,0 +1,6 @@
+test_malformed_v3_counters_and_history_are_rejected_without_reset (test_gate.LifecycleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.707s
+
+OK

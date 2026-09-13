@@ -1,5 +1,47 @@
 # Проверки Altera
 
+## Актуальное состояние инфраструктуры после Task 3
+
+Инфраструктура добавлена в `b8e00f13b53cd73db8571d248e6823165d5f3764`; исправление
+пяти браузерных файлов — `1dad64f9fa0af196e32dd2f9f5676740c8d13797`. Node закреплён
+в `.nvmrc` и engines как `24.12.0`, pnpm — `10.18.3` в корневом `packageManager`.
+Это состояние конфигурации, а не утверждение, что все проверки прошли на этих commit.
+Точные проверенные входы, вывод и ограничения находятся в
+[первичном отчёте](../reports/evidence/2026-09-13-autonomy/task-3-initial-report.md) и
+[отчёте fix1](../reports/evidence/2026-09-13-autonomy/task-3-fix1-report.md).
+
+```bash
+pnpm install --frozen-lockfile
+pnpm format
+pnpm lint
+pnpm test
+pnpm --filter server run build:ci
+pnpm --filter nuxt-app run build
+pnpm --filter nuxt-app run typecheck
+pnpm --filter nuxt-app run test:e2e
+```
+
+`web/typecheck` использует установленный `vue-tsc` через `nuxt prepare && vue-tsc -b --noEmit`.
+Команды перечислены для воспроизводимости: остановленная проверка не получает разрешение
+на новый запуск из этого перечня. `task3-web-typecheck` остановлен после двух неудач.
+
+| Проверка         | Наблюдаемый результат и граница                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| Unit             | 24 passed и 1 todo; todo отражает открытый T-027, не выполненную SDL-проверку безопасности  |
+| Format/lint      | Прошли; fix1 имеет сохранённые raw outputs и входные хэши                                   |
+| Server/web build | Прошли в Task 3; `build:ci` не применяет миграции                                           |
+| Web typecheck    | Exit 2, девять диагностик; T-001 остаётся открыт                                            |
+| Browser smoke    | После исправления проверки title: один failed, девять skipped; HTML title пуст              |
+| T-112            | Девять подготовленных сценариев skipped; flow 16 имеет непринятый дефект последовательности |
+
+Текущий workflow для PR в `app` читает Node из `.nvmrc` и содержит четыре prerequisite jobs:
+`checks`, `server-smoke`, `web-checks`, `web-smoke`. Итоговый `test` с `if: always()` требует
+успеха всех четырёх. Локальные unit/build результаты не означают зелёный aggregate CI.
+Исходный вывод двух typecheck-попыток и некоторые первые RED не сохранились: отчёт явно
+фиксирует этот пробел. Новыми запусками остановленных проверок он не подменяется.
+
+## Исторический срез до инфраструктурных изменений
+
 - **Срез**: 2026-09-13, commit `2e542a0774a2fae7c38e7f19e7255ebf6a673ed3`, чистое
   исходное дерево.
 - **Локальная среда среза**: Node `v24.3.0`, pnpm `10.18.3`.
@@ -10,7 +52,7 @@
 «тестов нет», сохранённое как исторический факт в
 [CLAUDE до переноса](sources/2026-09-13-claude-original.md).
 
-## Текущий тестовый набор
+### Тестовый набор исторического среза
 
 Корневая команда `pnpm test` выполняет `pnpm -r test`. На указанной ревизии она запускает
 Vitest в двух пакетах:
@@ -34,7 +76,7 @@ pnpm --filter nuxt-app test
 Имя веб-пакета — `nuxt-app` из `web/package.json`; фильтр `--filter web` не является его
 каноническим именем.
 
-## Формат, lint и сборка
+### Формат, lint и сборка исторического среза
 
 ```bash
 pnpm format
@@ -51,7 +93,7 @@ cd server && pnpm run build:ci
   настроенной базе. Для CI-сборки без применения миграций используется `build:ci`.
 - Pre-commit hook запускает `npm run format`, `npm run lint`, `npm run test`.
 
-## CI
+### CI исторического среза
 
 Workflow `.github/workflows/pull_request.yml` работает для pull request в `app` на Node 20:
 

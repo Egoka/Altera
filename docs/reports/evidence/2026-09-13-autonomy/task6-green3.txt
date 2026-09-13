@@ -1,0 +1,6 @@
+test_publication_release_finalization_retains_parent_and_separate_source_proof (test_gate.LifecycleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 20.682s
+
+OK

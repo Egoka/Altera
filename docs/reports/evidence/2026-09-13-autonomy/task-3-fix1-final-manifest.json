@@ -1,0 +1,54 @@
+{
+  "snapshot_kind": "task3_fix1_postcommit_byte_identity",
+  "observed_at": "2026-09-13T20:30:50.785636+03:00",
+  "commit": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "parent": "2d17915740cbefcb535c76e0b67e701b918b04fc",
+  "tree": "01fd47ab9632e845eede697a1d1260ee58cc634e",
+  "changed_paths": [
+    "web/tests/e2e/05-manual-moderation.spec.ts",
+    "web/tests/e2e/11-admin-archive-account.spec.ts",
+    "web/tests/e2e/12-self-archive-export.spec.ts",
+    "web/tests/e2e/16-permanent-delete.spec.ts",
+    "web/tests/e2e/homepage.smoke.spec.ts"
+  ],
+  "files": [
+    {
+      "path": "web/tests/e2e/05-manual-moderation.spec.ts",
+      "commit_sha256": "479f4e559ce0aa9284d14ee43294a89a456e6a4afd5691599ce9a366f15c6a41",
+      "worktree_sha256": "479f4e559ce0aa9284d14ee43294a89a456e6a4afd5691599ce9a366f15c6a41",
+      "equal": true,
+      "bytes": 3182
+    },
+    {
+      "path": "web/tests/e2e/11-admin-archive-account.spec.ts",
+      "commit_sha256": "e5554990ec2bb4e6a8cef0e9fb934c7a305fb72d4122b5402ebe2ded59f26195",
+      "worktree_sha256": "e5554990ec2bb4e6a8cef0e9fb934c7a305fb72d4122b5402ebe2ded59f26195",
+      "equal": true,
+      "bytes": 2825
+    },
+    {
+      "path": "web/tests/e2e/12-self-archive-export.spec.ts",
+      "commit_sha256": "90d89833b63e52403346122239745510f005a4aec9fa948f7fbd644b1b2aa304",
+      "worktree_sha256": "90d89833b63e52403346122239745510f005a4aec9fa948f7fbd644b1b2aa304",
+      "equal": true,
+      "bytes": 1954
+    },
+    {
+      "path": "web/tests/e2e/16-permanent-delete.spec.ts",
+      "commit_sha256": "b9138968b8b7f691b3c67383359aef21071bd597ba67477256598fec02cbe720",
+      "worktree_sha256": "b9138968b8b7f691b3c67383359aef21071bd597ba67477256598fec02cbe720",
+      "equal": true,
+      "bytes": 3494
+    },
+    {
+      "path": "web/tests/e2e/homepage.smoke.spec.ts",
+      "commit_sha256": "331e11bf59657378f1629d513c5a1c15b0904c5858034cd1054bc47f7c93c262",
+      "worktree_sha256": "331e11bf59657378f1629d513c5a1c15b0904c5858034cd1054bc47f7c93c262",
+      "equal": true,
+      "bytes": 321
+    }
+  ],
+  "all_commit_equal_worktree": true,
+  "index_clean": true,
+  "own_scope_diff_from_commit_exit": 0
+}

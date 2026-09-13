@@ -1,0 +1,21 @@
+test_frozen_lifecycle_passport_rejects_even_byte_only_rewrite (test_gate.LifecycleTests) ... FAIL
+
+======================================================================
+FAIL: test_frozen_lifecycle_passport_rejects_even_byte_only_rewrite (test_gate.LifecycleTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 807, in test_frozen_lifecycle_passport_rejects_even_byte_only_rewrite
+    self.result(ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 479, in result
+    self.record(path, event=event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"failures": 0, "result": "recorded", "stopped": false}
+
+
+----------------------------------------------------------------------
+Ran 1 test in 1.469s
+
+FAILED (failures=1)

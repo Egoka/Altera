@@ -1,0 +1,11 @@
+{
+  "head": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "files": {
+    "scripts/agent-loop/gate.py": "9c63c1ab4c75c9c915142c3daff1f3557e57ee338cfab7e7c22bae100d35e230",
+    "scripts/agent-loop/test_gate.py": "042fa3115810eab9eee85b5637bce72275ba815b987c762923937503e9d2e862",
+    "docs/development/agent-loop-gate.md": "3d5a4436f24c2303e8d637cb49139c1bac1a02c4e10c9b86602245617c3d4652",
+    "docs/development/artifact-contracts.md": "c58f32089852b5fc304b7ddcc1addca2f49e9877201641adf5010e95f2f36f8b",
+    "docs/multica/operating-model.md": "7d1d50fe1f6114a63307a15ea5d8d90dae50e7ecda4e44eba7c657cf3a8b07b8"
+  },
+  "diff_sha256": "3298423f4e943e397e8938e51f054aed7c64a02a60a1057d76751ffa524a3708"
+}

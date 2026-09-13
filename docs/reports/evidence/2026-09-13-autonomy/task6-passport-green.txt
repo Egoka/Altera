@@ -1,0 +1,6 @@
+test_frozen_lifecycle_passport_rejects_even_byte_only_rewrite (test_gate.LifecycleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.910s
+
+OK

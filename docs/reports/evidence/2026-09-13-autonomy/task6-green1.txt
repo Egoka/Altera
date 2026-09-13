@@ -1,0 +1,6 @@
+test_real_plan_source_change_test_review_and_truthful_artifact_binding (test_gate.LifecycleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 7.887s
+
+OK

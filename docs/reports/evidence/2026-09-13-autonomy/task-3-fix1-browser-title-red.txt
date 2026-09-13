@@ -1,0 +1,78 @@
+2026-09-13T20:26:57+03:00
+19ffb9619c3c6151848ccab02074b760bcddf43a
+v24.12.0
+10.18.3
+COMMAND: PATH=/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin:$PATH pnpm --filter nuxt-app run test:e2e
+
+> nuxt-app@ test:e2e /private/tmp/altera-agent-loop-autonomy/web
+> playwright test
+
+[WebServer] (node:95172) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 
+[WebServer]  ERROR  (node:95183) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use node --trace-warnings ... to show where the warning was created)
+[WebServer] 
+[WebServer] (node:95216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 
+[WebServer]  WARN  Browserslist: browsers data (caniuse-lite) is 15 months old. Please run:
+[WebServer]   npx update-browserslist-db@latest
+[WebServer]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[WebServer] 
+
+Running 10 tests using 5 workers
+
+(node:95221) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:95220) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:95218) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:95217) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:95219) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  -   4 [chromium] › tests/e2e/05-manual-moderation.spec.ts:3:1 › flow #5 claims the oldest review and preserves every manual outcome
+  -   1 [chromium] › tests/e2e/03-write-publish.spec.ts:3:1 › flow #3 moves a draft through AI and the manual review branch
+  -   3 [chromium] › tests/e2e/04-reedit-after-autopublish.spec.ts:3:1 › flow #4 offers one re-edit within an hour and routes resubmission through AI
+  -   2 [chromium] › tests/e2e/01-register-login.spec.ts:3:1 › flow #1 registers or logs in without disclosing whether the account exists
+  -   5 [chromium] › tests/e2e/11-admin-archive-account.spec.ts:3:1 › flow #11 archives an account transactionally and resolves one appeal
+  -   8 [chromium] › tests/e2e/13-email-change-recovery.spec.ts:3:1 › flow #13 changes email without ending sessions and supports audited recovery
+  -   6 [chromium] › tests/e2e/12-self-archive-export.spec.ts:3:1 › flow #12 exports data, self-archives, and restores articles separately
+  -   9 [chromium] › tests/e2e/16-permanent-delete.spec.ts:3:1 › flow #16 permanently deletes only an archived entity after exact confirmation
+  -   7 [chromium] › tests/e2e/15-article-archive-restore.spec.ts:3:1 › flow #15 enforces archive actor hierarchy and restores the correct article state
+  ✘  10 [chromium] › tests/e2e/homepage.smoke.spec.ts:3:1 › homepage exposes the required Altera document title (6.0s)
+
+
+  1) [chromium] › tests/e2e/homepage.smoke.spec.ts:3:1 › homepage exposes the required Altera document title 
+
+    Error: expect(page).toHaveTitle(expected) failed
+
+    Expected: "Altera"
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveTitle" with timeout 5000ms
+        14 × locator resolved to <html class="scroll-pt-16 font-sans antialiased light">…</html>
+           - unexpected value ""
+
+
+       6 |   await expect(page).toHaveURL(/\/$/)
+       7 |   await expect(page.getByRole("link", { name: /^Altera/ }).first()).toBeVisible()
+    >  8 |   await expect(page).toHaveTitle("Altera")
+         |                      ^
+       9 | })
+      10 |
+        at /private/tmp/altera-agent-loop-autonomy/web/tests/e2e/homepage.smoke.spec.ts:8:22
+
+    Error Context: test-results/homepage.smoke-homepage-ex-65c79-uired-Altera-document-title-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/homepage.smoke.spec.ts:3:1 › homepage exposes the required Altera document title 
+  9 skipped
+/private/tmp/altera-agent-loop-autonomy/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  nuxt-app@ test:e2e: `playwright test`
+Exit status 1
+EXIT_CODE: 1

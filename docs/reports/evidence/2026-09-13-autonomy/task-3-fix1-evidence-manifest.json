@@ -1,0 +1,92 @@
+{
+  "kind": "byte-exact archive of Task 3 fix1 and stopped handoff",
+  "implementation_commit": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "review_outcome": "not approved; second negative verdict; no third retry",
+  "files": [
+    {
+      "path": "task-3-fix1-before-edit-snapshot.json",
+      "bytes": 5588,
+      "sha256": "04928d3ab1bcaa71e362ac95c20f77abe075abbc40fc5a78d71b919a4b487d25"
+    },
+    {
+      "path": "task-3-fix1-browser-title-red.txt",
+      "bytes": 4605,
+      "sha256": "5c72d1fc355b51ab73341ae10c2c8747409b6ae2d56dcdf3bb666c1fcee9874c"
+    },
+    {
+      "path": "task-3-fix1-disjoint-head-advance.txt",
+      "bytes": 967,
+      "sha256": "ee111c6d06ef232bad54d6a35fa2b284d2ee7bf3b04a7a0654b737b24854bae7"
+    },
+    {
+      "path": "task-3-fix1-final-manifest.json",
+      "bytes": 2159,
+      "sha256": "2e77c36fae6e8d6e00d53db0e2bf080aa03d2a3c16ce2872ce1c990be880809a"
+    },
+    {
+      "path": "task-3-fix1-format.txt",
+      "bytes": 411,
+      "sha256": "f86460f215b5d6dfe5507ea542ba4e3b092c5aaf7a7fa096d6379eb5000903e7"
+    },
+    {
+      "path": "task-3-fix1-lint.txt",
+      "bytes": 335,
+      "sha256": "1c32ec19ab40fa4101633866bcbe114c71704b0cc37bd59ca6539d622080dd04"
+    },
+    {
+      "path": "task-3-fix1-precheck-snapshot.json",
+      "bytes": 1389,
+      "sha256": "2c9fa950fe9c1aad73041d7c512febdd6e517ae5925d00a924d478260e18434b"
+    },
+    {
+      "path": "task-3-fix1-precheck.patch",
+      "bytes": 10648,
+      "sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692"
+    },
+    {
+      "path": "task-3-fix1-precommit-snapshot.json",
+      "bytes": 1386,
+      "sha256": "627f121c32b688694d9c8f330409e1e159f1111f04f4acd4e631cc19697ba509"
+    },
+    {
+      "path": "task-3-fix1-precommit.patch",
+      "bytes": 10648,
+      "sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692"
+    },
+    {
+      "path": "task-3-fix1-precommit.txt",
+      "bytes": 1518,
+      "sha256": "7bf1ba8744e3a6607bd7c1a4acf24ccd3b797c053ac9607eda6a8b5ae556dd9f"
+    },
+    {
+      "path": "task-3-fix1-report.md",
+      "bytes": 7653,
+      "sha256": "534031bf7a6f636e5d16fe04c84cab2e66a0645ac6c850fb95a65826bfd8cbcd"
+    },
+    {
+      "path": "task-3-fix1-review.md",
+      "bytes": 3941,
+      "sha256": "4c30cab07b2610bc8653ed7cba26b1698ff509d9024c1c66a1f0499f21708772"
+    },
+    {
+      "path": "task-3-fix1-staged-snapshot.json",
+      "bytes": 2273,
+      "sha256": "84623eb52bac9d4bed75b79a8d1d6d7b1b7660b3967a76499575626f3095c28d"
+    },
+    {
+      "path": "task-3-fix1-staged.patch",
+      "bytes": 10648,
+      "sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692"
+    },
+    {
+      "path": "task-3-stopped-handoff.md",
+      "bytes": 2634,
+      "sha256": "f4bce9cb5aa7666efb7de93d327cb6454b8ab6806c7869169b8967597d1420dc"
+    },
+    {
+      "path": "review-2d17915..1dad64f.diff",
+      "bytes": 13543,
+      "sha256": "18092d3d726f62df34254a124e507cf2a18236d2a66a7364c81cad4e96aec349"
+    }
+  ]
+}
