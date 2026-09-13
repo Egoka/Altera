@@ -1,4 +1,4 @@
-"""CLI integration fixtures. Every test exercises real files, git and fresh processes."""
+"""Интеграционные fixtures CLI: настоящие файлы, Git и отдельные процессы."""
 import json
 import os
 from pathlib import Path
@@ -96,7 +96,7 @@ class GateTests(unittest.TestCase):
         self.write(self.report, report)
         return self.cli('finish', self.report, ok=ok)
 
-    # Break caught: missing gate would silently allow product Stop (including repeated Stop).
+    # Ловит обход: отсутствующий gate разрешает продуктовый Stop, включая повторный.
     def test_hook_repeated_stop_does_not_bypass_missing_passport(self):
         self.write('server/code.txt', 'changed')
         for active in [False, True]:
@@ -105,7 +105,7 @@ class GateTests(unittest.TestCase):
                                        'PYTHONDONTWRITEBYTECODE': '1'}, text=True, capture_output=True)
             self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
 
-    # Break caught: no baseline could hide previously committed product changes.
+    # Ловит обход: отсутствие baseline скрывает уже закоммиченные продуктовые изменения.
     def test_docs_only_requires_explicit_baseline_and_rejects_committed_product(self):
         self.cli('stop', ok=False)
         self.cli('docs-only', '--baseline', self.base)
@@ -116,7 +116,7 @@ class GateTests(unittest.TestCase):
         self.cli('docs-only', '--baseline', self.base, ok=False)
         self.cli('stop', ok=False)
 
-    # Break caught: records must stay paired and tied to the actual revision.
+    # Ловит потерю парности артефактов и привязки к фактической ревизии.
     def test_supported_flow_checks_committed_and_dirty_revision(self):
         self.write('server/code.txt', 'committed')
         self.git('add', 'server/code.txt')
@@ -129,7 +129,7 @@ class GateTests(unittest.TestCase):
         self.write('server/new.txt', 'new dirty')
         self.cli('stop', ok=False)
 
-    # Break caught: a caller can omit committed/untracked changes from the permitted scope.
+    # Ловит исключение committed/untracked изменений из разрешённого scope.
     def test_scope_cannot_omit_product_changes(self):
         self.passport['scope'] = ['server/code.txt']
         self.write(self.plan, self.passport)
@@ -141,7 +141,7 @@ class GateTests(unittest.TestCase):
         self.write('web/untracked.txt', 'untracked')
         self.start(ok=False)
 
-    # Break caught: a second process/run/task could own the one shared slot.
+    # Ловит второе владение общим slot другим процессом, run или задачей.
     def test_global_slot_and_run_replay_rejected(self):
         self.start()
         self.start(ok=False)
@@ -151,7 +151,7 @@ class GateTests(unittest.TestCase):
         self.start(ok=False)
         self.start(run='run-2')
 
-    # Break caught: process restart or new run can erase two consecutive actual failures.
+    # Ловит сброс двух реальных неуспехов перезапуском процесса или новым run.
     def test_two_failures_stop_stable_check_across_runs(self):
         self.start()
         self.record(self.evidence('failed'))
@@ -164,7 +164,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(state['tasks']['T-fixture']['checks']['test']['unit']['failures'], 2)
         self.assertEqual(len(state['events']), 2)
 
-    # Break caught: replayed evidence incorrectly increments the failure count twice.
+    # Ловит двойной учёт неуспеха при повторной доставке evidence.
     def test_duplicate_event_rejected_without_mutation(self):
         self.start()
         path = self.evidence('failed')
@@ -173,7 +173,7 @@ class GateTests(unittest.TestCase):
         self.record(path, ok=False)
         self.assertEqual(before, self.cli('status'))
 
-    # Break caught: success clears unrelated counters or RED reproduction is a fix failure.
+    # Ловит сброс чужих счётчиков успехом или учёт ожидаемого RED как неуспеха исправления.
     def test_success_resets_own_counter_and_expected_red_is_success(self):
         self.start()
         self.record(self.evidence('failed'))
@@ -186,11 +186,11 @@ class GateTests(unittest.TestCase):
         self.record(path, event='event-2')
         state = self.cli('status')
         self.assertEqual(state['tasks']['T-fixture']['checks']['test']['unit']['failures'], 1)
-        self.finish(ok=False)  # Expected RED is not final passing implementation evidence.
+        self.finish(ok=False)  # Ожидаемый RED не доказывает успешную итоговую реализацию.
         self.record(self.evidence(event='event-3'), event='event-3')
         self.assertEqual(self.cli('status')['tasks']['T-fixture']['checks']['test']['unit']['failures'], 0)
 
-    # Break caught: stale evidence can advance a stage or be recorded after the code changes.
+    # Ловит переход стадии или запись устаревшего evidence после изменения кода.
     def test_stale_evidence_and_output_tampering_rejected(self):
         self.start()
         path = self.evidence()
@@ -200,7 +200,7 @@ class GateTests(unittest.TestCase):
         self.write('docs/reports/evidence/fixture/event-2.txt', 'tampered')
         self.finish(ok=False)
 
-    # Break caught: current stage/run/actor/check ownership can be spoofed.
+    # Ловит подмену текущих stage/run/actor/check.
     def test_wrong_stage_actor_and_unknown_check_rejected(self):
         self.start(stage='review', ok=False)
         self.start()
@@ -213,7 +213,7 @@ class GateTests(unittest.TestCase):
             self.record(path, event=key, ok=False)
         self.finish(ok=False)
 
-    # Break caught: unrelated same-day plan/report or modified passport can stand in for this task.
+    # Ловит подстановку чужого плана/отчёта или изменённого паспорта.
     def test_missing_foreign_or_modified_plan_report_rejected(self):
         (self.root / 'docs/plans/fixture.md').unlink()
         self.start(ok=False)
@@ -225,7 +225,7 @@ class GateTests(unittest.TestCase):
         self.write(self.plan, self.passport)
         self.finish(ok=False)
 
-    # Break caught: ../, absolute, symlink components can substitute outside evidence.
+    # Ловит подстановку внешнего evidence через ../, абсолютный путь или symlink.
     def test_paths_and_symlink_evidence_rejected(self):
         self.start()
         path = self.evidence()
@@ -243,7 +243,7 @@ class GateTests(unittest.TestCase):
         self.write(path, data)
         self.record(path, ok=False)
 
-    # Break caught: lock contention/corrupt state is silently treated as a fresh stage.
+    # Ловит молчаливое принятие занятого lock или повреждённого state за новую стадию.
     def test_lock_and_corrupt_state_fail_closed(self):
         self.start()
         directory = self.root / '.git/agent-loop'
@@ -254,7 +254,7 @@ class GateTests(unittest.TestCase):
         self.cli('stop', ok=False)
         self.start(run='run-2', ok=False)
 
-    # Break caught: linked worktree gets an independent slot and permits a second writer.
+    # Ловит отдельный slot в связанном worktree, допускающий второго writer.
     def test_linked_worktrees_share_slot(self):
         self.start()
         second = self.root / 'linked'
@@ -265,7 +265,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(json.loads(proc.stdout)['slot']['run'], 'run-1')
 
 
-    # Break caught: a new revision can enter review on obsolete previous-stage checks.
+    # Ловит переход новой ревизии на ревью по устаревшим проверкам предыдущей стадии.
     def test_stage_handoff_rejects_stale_prior_revision(self):
         self.start()
         self.record(self.evidence())
@@ -273,7 +273,7 @@ class GateTests(unittest.TestCase):
         self.write('server/code.txt', 'changed after test')
         self.start(run='review-1', actor='reviewer', stage='review', ok=False)
 
-    # Break caught: a human report disappears after machine metadata passed.
+    # Ловит исчезновение человеческого отчёта после приёмки машинных метаданных.
     def test_paired_human_report_required_and_pinned(self):
         self.start()
         self.record(self.evidence())
@@ -283,7 +283,7 @@ class GateTests(unittest.TestCase):
         self.write('docs/reports/fixture-report.md', '# Substituted report')
         self.cli('stop', ok=False)
 
-    # Break caught: another task's valid evidence path substitutes for the paired evidence area.
+    # Ловит подмену парного каталога evidence допустимым путём от другой задачи.
     def test_foreign_evidence_directory_rejected(self):
         self.start()
         path = self.evidence()
@@ -292,7 +292,7 @@ class GateTests(unittest.TestCase):
         self.write(foreign, data)
         self.record(foreign, ok=False)
 
-    # Break caught: zero tests or internally contradictory success becomes a passing check.
+    # Ловит приёмку нуля тестов или внутренне противоречивого результата.
     def test_malformed_check_result_rejected_without_state_change(self):
         self.start()
         for key, value in [('executed', 0), ('exit_code', 1), ('started_at', 7)]:
@@ -304,7 +304,7 @@ class GateTests(unittest.TestCase):
             self.record(path, event=key, ok=False)
             self.assertEqual(before, self.cli('status'))
 
-    # Break caught: success on check B resets failed check A and permits unlimited retries.
+    # Ловит сброс неуспеха проверки A успехом B, допускающий бесконечные повторы.
     def test_success_preserves_other_check_failure_count(self):
         self.passport['stages'][0]['checks'].append({'check_id': 'other', 'criterion': 'AC-1'})
         self.write(self.plan, self.passport)
@@ -315,7 +315,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(counters['unit']['failures'], 1)
         self.assertEqual(counters['other']['failures'], 0)
 
-    # Break caught: concurrent start operations both observe an empty slot before writing.
+    # Ловит одновременное получение пустого slot двумя конкурентными start.
     def test_concurrent_acquisition_has_exactly_one_owner(self):
         command = [sys.executable, str(GATE), '--root', str(self.root), 'start', self.plan,
                    '--stage', 'test', '--actor', 'tester', '--run']
@@ -328,7 +328,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(state['slot']['run'], state['runs'][0])
 
 
-    # Break caught: an advertised acceptance criterion has no check in any required stage.
+    # Ловит объявленный критерий приёмки без проверки в обязательных стадиях.
     def test_uncovered_criterion_and_malformed_passport_rejected(self):
         self.passport['acceptance']['AC-2'] = 'No check covers this criterion'
         self.write(self.plan, self.passport)
@@ -339,7 +339,7 @@ class GateTests(unittest.TestCase):
         self.start(ok=False)
 
 
-    # Break caught: prior-stage output can be replaced after finish and still authorize review.
+    # Ловит подмену вывода предыдущей стадии после finish перед началом ревью.
     def test_stage_handoff_revalidates_prior_evidence(self):
         self.start()
         self.record(self.evidence())

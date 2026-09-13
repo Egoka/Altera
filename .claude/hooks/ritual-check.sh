@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Cooperative Claude Stop adapter; never grants stage/task acceptance.
-# Repeated Stop runs the same check. Codex does not execute this Claude hook.
+# Кооперативный адаптер Claude Stop; не принимает стадию или задачу.
+# Повторный Stop проверяет тот же контракт. Codex этот Claude hook не запускает.
 set -euo pipefail
 cat >/dev/null
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cooperative, fail-closed artifact/state gate. This is NOT a security boundary."""
+"""Кооперативная проверка контрактов и состояния с отказом при ошибке. Это не security boundary."""
 import argparse
 from contextlib import contextmanager
 from datetime import datetime
@@ -111,7 +111,7 @@ def snapshot_once(root, scope):
     untracked = []
     for name in sorted(names(git(root, 'ls-files', '--others', '--exclude-standard', '-z', '--', *scope))):
         path = root / name
-        # Never follow a symlink when fingerprinting a new product file.
+        # При вычислении fingerprint нового продуктового файла не читаем цель symlink.
         content = os.readlink(path).encode() if path.is_symlink() else safe_file(root, name).read_bytes()
         untracked.append([name, path.lstat().st_mode, digest(content)])
     dirty = 'clean' if not staged and not working and not untracked else 'sha256:' + digest(encoded({
@@ -409,7 +409,7 @@ def dispatch(args, root, state):
                 counter['failures'] += 1
         require(snap == boundary(root, p) and hashes == proof(root, args.evidence, p)[1],
                 'revision or evidence changed during record')
-        # Keep only latest evidence for each check in the current stage report; history is retained globally.
+        # В текущем отчёте остаётся последнее evidence каждой проверки; общая история сохраняется.
         slot['evidence'] = [event for event in slot['evidence']
                             if state['events'][event]['check_id'] != e['check_id']]
         slot['evidence'].append(args.event)
