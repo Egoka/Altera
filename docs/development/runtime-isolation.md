@@ -198,3 +198,11 @@ file-open/network/spawn APIs. `build_metadata_probe.py OUTPUT` встраива�
 неизвестные flags не печатаются. Это не Claude stream-json completion и не runtime acceptance.
 Тест: `python3 -I scripts/agent-runtime/test_metadata_probe.py BINARY`. Native registration,
 quiescence, временная binding, drain/recovery выполняются только внешним coordinator по design.
+
+D2 — отдельный [codex-path-probe.c](../../scripts/agent-runtime/codex-path-probe.c): только один
+`getenv("CODEX_HOME")` и bounded `getcwd`, без чтения config/auth, stdin, child или network.
+Он выдаёт lexical candidate только для закреплённого `ROOT/alte-N-SUFFIX/codex-home` и boolean
+совпадения cwd; source/build SHA входят в одну stderr-строку ≤1800 bytes, diagnostic exit78.
+`--help/--version` статичны и честно называют probe. UID — только build provenance;
+`canonical_identity` и `task_acceptance` всегда `not_checked`. Существование, symlinks, owner/mode
+и актуальность native path проверяет отдельный trusted coordinator; D2 этих свойств не доказывает.
