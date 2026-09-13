@@ -23,13 +23,13 @@
     <div class="text-center">
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors block max-w-4xl mx-auto">
+        class="font-garamond-libre text-title md:text-hero font-bold text-zinc-900 dark:text-zinc-300 transition-colors block max-w-4xl mx-auto">
         {{ article.title }}
       </NuxtLink>
     </div>
 
     <p
-      class="lede-dek mt-1 font-garamond-libre text-card md:text-lede-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-2xl mx-auto line-clamp-3">
+      class="lede-dek mt-1 font-garamond-libre text-card md:text-lede-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-3xl mx-auto line-clamp-2">
       {{ article.dek }}
     </p>
 

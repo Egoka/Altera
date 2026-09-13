@@ -1,15 +1,7 @@
 <script setup lang="ts">
   import type { ArticleResponse } from "~/types/article"
   import type { SlotSpec } from "~/types/layout"
-  import {
-    getLayout,
-    mdColsOf,
-    mdSpanFor,
-    rulesFor,
-    slotOrder,
-    toGridStyle,
-    validateLayout
-  } from "~/utils/articleLayouts"
+  import { getLayout, mdColsOf, mdSpanFor, slotOrder, toGridStyle, validateLayout } from "~/utils/articleLayouts"
 
   const props = defineProps<{
     articles: ArticleResponse[]
@@ -42,8 +34,6 @@
     return resolveComponent("ArticleLarge")
   }
 
-  const needsRule = (index: number) => (layout.value ? rulesFor(layout.value, order.value[index] ?? "").right : false)
-
   const mdCols = computed(() => (layout.value ? mdColsOf(layout.value) : 2))
   const mdSpan = (index: number) => (layout.value ? mdSpanFor(layout.value, order.value[index] ?? "") : 1)
 </script>
@@ -51,12 +41,8 @@
 <template>
   <section v-if="layout" class="py-8" :data-layout="layout.id">
     <!-- Широкие экраны: раскладка целиком выводится из матрицы областей -->
-    <div class="hidden lg:grid lg:gap-x-12 lg:gap-y-12" :style="gridStyles">
-      <div
-        v-for="(article, index) in articles"
-        :key="article.id"
-        :style="{ 'grid-area': order[index] }"
-        :class="['w-full', needsRule(index) ? 'border-r border-zinc-200 pr-6 dark:border-zinc-800' : '']">
+    <div class="hidden lg:grid lg:gap-x-8 lg:gap-y-18" :style="gridStyles">
+      <div v-for="(article, index) in articles" :key="article.id" :style="{ 'grid-area': order[index] }" class="w-full">
         <component :is="componentFor(slots[index])" :article="article" />
       </div>
     </div>

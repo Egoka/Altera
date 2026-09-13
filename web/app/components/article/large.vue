@@ -11,7 +11,7 @@
 
 <template>
   <article v-if="slug && article.title">
-    <div class="flex flex-col sm:flex-row items-start gap-7 sm:gap-8">
+    <div class="flex flex-col items-start gap-7 sm:flex-row sm:gap-6">
       <div class="order-2 flex flex-1 flex-col sm:max-w-1/2">
         <NuxtLink
           :to="slug"

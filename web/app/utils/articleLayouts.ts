@@ -3,6 +3,10 @@ import { GRID_COLUMNS, type GroupLayout, type SlotRules } from "~/types/layout"
 /**
  * Реестр раскладок групп «Нового».
  *
+ * Правило ширины: слот `small` держит миниатюру сбоку, только если он не уже
+ * пяти колонок — в трёх колонках тексту остаётся около 140 px, и заголовок
+ * рвётся на четыре строки. Узкие слоты берут вертикальную карточку.
+ *
  * Разнообразие даёт спан и число рядов, а не смена числа колонок: колонок
  * всегда двенадцать, поэтому вертикальные оси соседних групп совпадают, и
  * страница остаётся геометричной при разных раскладках.
@@ -10,7 +14,7 @@ import { GRID_COLUMNS, type GroupLayout, type SlotRules } from "~/types/layout"
 export const ARTICLE_LAYOUTS: GroupLayout[] = [
   {
     id: "hero-left",
-    cells: ["aaaaaaaabbbb", "aaaaaaaacccc"],
+    cells: ["aaaaaaabbbbb", "aaaaaaaccccc"],
     slots: [
       { key: "a", variant: "large", media: "beside" },
       { key: "b", variant: "small" },
@@ -20,7 +24,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
   },
   {
     id: "hero-right",
-    cells: ["bbbbaaaaaaaa", "ccccaaaaaaaa"],
+    cells: ["bbbbbaaaaaaa", "cccccaaaaaaa"],
     slots: [
       { key: "a", variant: "large", media: "beside" },
       { key: "b", variant: "small" },
@@ -49,18 +53,6 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
       { key: "d", variant: "small" }
     ],
     traits: { anchor: "left", dominant: "tall" }
-  },
-  {
-    id: "band-four",
-    cells: ["aaabbbcccddd"],
-    slots: [
-      { key: "a", variant: "small" },
-      { key: "b", variant: "small" },
-      { key: "c", variant: "small" },
-      { key: "d", variant: "small" }
-    ],
-    md: { cols: 2 },
-    traits: { anchor: "center", dominant: "none" }
   },
   {
     id: "duo-wide",
@@ -99,13 +91,26 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "center", dominant: "tall" }
   },
   {
+    /* Четыре вертикали сеткой два на два: пара сверху, пара снизу. */
+    id: "quad-square",
+    cells: ["aaaaaabbbbbb", "ccccccdddddd"],
+    slots: [
+      { key: "a", variant: "large", media: "above" },
+      { key: "b", variant: "large", media: "above" },
+      { key: "c", variant: "large", media: "above" },
+      { key: "d", variant: "large", media: "above" }
+    ],
+    md: { cols: 2 },
+    traits: { anchor: "center", dominant: "tall" }
+  },
+  {
     /* Три вертикали неравной ширины: геометрия строгая, доли разные. */
     id: "trio-uneven",
     cells: ["aaaaabbbbccc"],
     slots: [
       { key: "a", variant: "large", media: "above" },
       { key: "b", variant: "large", media: "above" },
-      { key: "c", variant: "small" }
+      { key: "c", variant: "large", media: "above" }
     ],
     md: { cols: 2, spans: { a: 2 } },
     traits: { anchor: "left", dominant: "tall" }
@@ -113,7 +118,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
   {
     /* Крупный материал слева и башня из трёх компактных справа. */
     id: "wide-trio-right",
-    cells: ["aaaaaaaabbbb", "aaaaaaaacccc", "aaaaaaaadddd"],
+    cells: ["aaaaaaabbbbb", "aaaaaaaccccc", "aaaaaaaddddd"],
     slots: [
       { key: "a", variant: "large", media: "beside" },
       { key: "b", variant: "small" },
@@ -123,16 +128,67 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "left", dominant: "wide" }
   },
   {
-    /* Единственное намеренное нарушение геометрии на странице: левое поле
-       сдвинуто на две колонки, под крупным материалом остаётся пустота. */
-    id: "break-offset",
-    cells: ["..aaaaaaaaaa", "..bbbb......"],
+    /* Крупный материал слева и башня из трёх компактных справа, зеркально. */
+    id: "mirror-tower",
+    cells: ["bbbbbaaaaaaa", "cccccaaaaaaa", "dddddaaaaaaa"],
+    slots: [
+      { key: "a", variant: "large", media: "beside" },
+      { key: "b", variant: "small" },
+      { key: "c", variant: "small" },
+      { key: "d", variant: "small" }
+    ],
+    traits: { anchor: "right", dominant: "wide" }
+  },
+  {
+    /* Ведущий во всю ширину с изображением сбоку — не сверху: полноширинное
+       изображение в ленте конкурирует с флагманом страницы. Под ним пара. */
+    id: "lead-wide-pair",
+    cells: ["aaaaaaaaaaaa", "bbbbbbcccccc"],
+    slots: [
+      { key: "a", variant: "large", media: "beside" },
+      { key: "b", variant: "large", media: "above" },
+      { key: "c", variant: "large", media: "above" }
+    ],
+    md: { cols: 2, spans: { a: 2 } },
+    traits: { anchor: "center", dominant: "wide" }
+  },
+  {
+    /* Крупный слева на два ряда и четыре компактных справа сеткой два на два. */
+    id: "quartet-lead",
+    cells: ["aaaaaabbbccc", "aaaaaadddeee"],
+    slots: [
+      { key: "a", variant: "large", media: "beside" },
+      { key: "b", variant: "large", media: "above" },
+      { key: "c", variant: "large", media: "above" },
+      { key: "d", variant: "large", media: "above" },
+      { key: "e", variant: "large", media: "above" }
+    ],
+    md: { cols: 2, spans: { a: 2 } },
+    traits: { anchor: "left", dominant: "wide" }
+  },
+  {
+    /* Широкая и узкая рядом: доли резко разные, обе вертикальные. */
+    id: "stripe-wide-narrow",
+    cells: ["aaaaaaaaabbb"],
+    slots: [
+      { key: "a", variant: "large", media: "beside" },
+      { key: "b", variant: "large", media: "above" }
+    ],
+    md: { cols: 2, spans: { a: 2 } },
+    traits: { anchor: "left", dominant: "wide" }
+  },
+  {
+    /* Единственное намеренное нарушение геометрии: группа отступает от левой
+       кромки на две колонки. Нарушает строй сдвигом, а не размером — крупное
+       изображение здесь конкурировало бы с флагманом страницы. */
+    id: "break-inset",
+    cells: ["..aaaabbbbbb"],
     slots: [
       { key: "a", variant: "large", media: "above" },
-      { key: "b", variant: "small" }
+      { key: "b", variant: "large", media: "above" }
     ],
-    md: { cols: 1 },
-    traits: { anchor: "right", dominant: "wide", accent: true }
+    md: { cols: 2 },
+    traits: { anchor: "center", dominant: "tall", accent: true }
   }
 ]
 

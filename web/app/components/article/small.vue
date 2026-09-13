@@ -11,14 +11,14 @@
 
 <template>
   <article v-if="slug && article.title">
-    <div class="flex flex-row items-start gap-5">
+    <div class="flex flex-row items-start gap-6">
       <!-- Изображение (левая сторона) -->
       <figure class="relative flex flex-shrink-0 flex-col items-start">
         <NuxtLink :to="slug" class="block group">
           <NuxtImg
             :src="article.featuredImage"
             :alt="article.title"
-            class="w-28 h-21 max-w-28 rounded-sm object-cover transition-transform duration-300" />
+            class="h-[75px] w-28 max-w-28 rounded-sm object-cover transition-transform duration-300" />
         </NuxtLink>
       </figure>
 
