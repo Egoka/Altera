@@ -127,12 +127,73 @@ class MetadataConfigTests(unittest.TestCase):
                     'headers': {'Authorization': 'D1_SECRET_CANARY', 'CONTEXT7_API_KEY': 'D1_SECRET_CANARY'},
                     'env': {'D1_SECRET_CANARY': 'D1_SECRET_CANARY'}, 'D1_SECRET_CANARY': 'D1_SECRET_CANARY'},
                     'D1_SECRET_CANARY': {'type': 'D1_SECRET_CANARY'}}})
-        result = self.invoke(['-p', 'D1_SECRET_CANARY', '--unknown=D1_SECRET_CANARY', '--mcp-config', str(self.file)])
+        result = self.invoke(['-p', '--append-system-prompt', 'D1_SECRET_CANARY', '--mcp-config', str(self.file)])
         self.assertEqual(result['mapping_candidate'], 'unresolved')
         self.assertEqual(result['unknown_servers'], 1)
         self.assertTrue(result['servers'][0]['headers_present'])
         self.assertTrue(result['servers'][0]['env_present'])
         self.assertEqual(result['servers'][0]['known_secret_fields'], 2)
+
+    def test_option_values_cannot_become_mcp_read_authority(self):
+        needle = '--mcp-config=' + str(self.file)
+        for flag in ['--append-system-prompt', '--system-prompt', '--model', '--effort',
+                     '--input-format', '--output-format', '--permission-mode', '--disallowedTools', '--settings']:
+            for opaque in [[flag, needle], [flag + '=' + needle]]:
+                with self.subTest(flag=flag, equals=len(opaque) == 1):
+                    rejected = self.invoke(opaque)
+                    self.assertEqual(rejected['read_status'], 'argv_rejected')
+                    self.assertNotIn('--mcp-config', rejected['known_flags'])
+                    for genuine in [['--mcp-config', str(self.file)], [needle]]:
+                        accepted = self.invoke(opaque + genuine)
+                        self.assertEqual(accepted['read_status'], 'ok')
+                        self.assertEqual(accepted['known_flags'].count('--mcp-config'), 1)
+        result = self.invoke(['--append-system-prompt', '--mcp-config', str(self.file)])
+        self.assertEqual(result['read_status'], 'argv_rejected')
+
+    def test_unsupported_or_ambiguous_native_argv_is_rejected_before_read(self):
+        genuine = ['--mcp-config', str(self.file)]
+        for extra in [['--unknown=D1_SECRET_CANARY'], ['D1_SECRET_CANARY'], ['--'],
+                      ['--model'], ['--verbose=true'], ['--verbose', '--verbose'],
+                      ['--disallowedTools', 'one', 'two'], ['--mcp-config=' + str(self.file)]]:
+            with self.subTest(extra_count=len(extra)):
+                self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+        native = ['-p', '--output-format', 'stream-json', '--input-format', 'stream-json',
+                  '--verbose', '--permission-mode', 'bypassPermissions', '--disallowedTools', 'Edit,Write',
+                  '--strict-mcp-config', '--model', 'claude-opus-4-6'] + genuine
+        self.assertEqual(self.invoke(native)['read_status'], 'ok')
+
+    def test_unreviewed_counts_cover_root_server_headers_and_env_without_disclosure(self):
+        self.save({'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp',
+            'D1_SECRET_CANARY': 'D1_SECRET_CANARY',
+            'headers': {'Authorization': 'D1_SECRET_CANARY', 'D1_SECRET_CANARY': 'D1_SECRET_CANARY'},
+            'env': {'D1_SECRET_CANARY': 'D1_SECRET_CANARY', 'other-private-key': {}}}},
+            'D1_SECRET_CANARY': 'D1_SECRET_CANARY', 'second-private-key': {}})
+        result = self.invoke()
+        self.assertIs(result.get('unreviewed_fields'), True)
+        self.assertEqual(result.get('unknown_fields'), 2)
+        self.assertEqual(result['mapping_candidate'], 'unresolved')
+        server = result['servers'][0]
+        self.assertIs(server.get('unreviewed_fields'), True)
+        self.assertEqual(server['unknown_fields'], 2)
+        self.assertEqual(server['known_secret_fields'], 1)
+        self.assertEqual(server['unknown_secret_fields'], 1)
+        self.assertIs(server.get('headers_unreviewed_fields'), True)
+        self.assertEqual(server.get('unknown_env_fields'), 2)
+        self.assertIs(server.get('env_unreviewed_fields'), True)
+        self.assertIs(server.get('env_types_match'), False)
+        for key in ['headers', 'env']:
+            self.save({'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp', key: []}}})
+            result = self.invoke()
+            self.assertIs(result.get('unreviewed_fields'), True)
+            self.assertIs(result['servers'][0].get(key + '_unreviewed_fields'), True)
+        self.save({'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp',
+                   'headers': {'Authorization': 'D1_SECRET_CANARY'}}}})
+        result = self.invoke()
+        self.assertIs(result.get('unreviewed_fields'), False)
+        self.assertEqual(result.get('unknown_fields'), 0)
+        self.assertIs(result['servers'][0].get('unreviewed_fields'), False)
+        self.assertIs(result['servers'][0].get('headers_unreviewed_fields'), False)
+        self.assertEqual(result['mapping_candidate'], 'exact')
 
     def test_rejects_unsafe_argument_paths(self):
         for args in [[], ['--mcp-config', '{}'], ['--mcp-config', '/etc/passwd'],

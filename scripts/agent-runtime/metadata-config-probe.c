@@ -187,18 +187,18 @@ static bool arguments(int id, const char *a, const char *b, const char *c) {
 
 struct descriptor {
     const char *name, *transport, *endpoint, *command, *args;
-    int unknown_fields, known_secret_fields, unknown_secret_fields;
-    bool headers_present, env_present, secret_types_match, exact;
+    int unknown_fields, known_secret_fields, unknown_secret_fields, unknown_env_fields;
+    bool headers_present, env_present, secret_types_match, env_types_match, headers_unreviewed_fields, exact;
 };
 static struct descriptor servers[8];
-static int server_count, unknown_servers;
+static int server_count, unknown_servers, root_unknown_fields;
 static bool mapping;
 static void describe(int key, int value) {
     const char *name = equal(key, "context7") ? "context7" : equal(key, "playwright") ? "playwright" : equal(key, "trace") ? "trace" : NULL;
     if (!name) { unknown_servers++; mapping = false; return; }
     struct descriptor *d = &servers[server_count++];
     d->name = name; d->transport = "unknown"; d->endpoint = "unknown";
-    d->command = "unknown"; d->args = "unknown"; d->secret_types_match = true;
+    d->command = "unknown"; d->args = "unknown"; d->secret_types_match = true; d->env_types_match = true;
     bool http = strcmp(name, "context7") == 0;
     if (tokens[value].kind != '{') { mapping = false; return; }
     int type = field(value, "type"), url = field(value, "url"), cmd = field(value, "command"), args = field(value, "args");
@@ -236,9 +236,18 @@ static void describe(int key, int value) {
                 else d->unknown_secret_fields++;
                 if (tokens[h + 1].kind != 's') d->secret_types_match = false;
             }
-        } else if (equal(k, "env")) { d->env_present = true; d->unknown_fields++; }
+        } else if (equal(k, "env")) {
+            d->env_present = true; d->unknown_fields++;
+            if (tokens[k + 1].kind != '{') d->env_types_match = false;
+            else {
+                d->unknown_env_fields = tokens[k + 1].count;
+                for (int e = k + 2; e < tokens[k + 1].next; e = tokens[e + 1].next)
+                    if (tokens[e + 1].kind != 's') d->env_types_match = false;
+            }
+        }
         else if (!(equal(k, "type") || (http ? equal(k, "url") : (equal(k, "command") || equal(k, "args"))))) d->unknown_fields++;
     }
+    d->headers_unreviewed_fields = d->headers_present && (!http || d->unknown_secret_fields || !d->secret_types_match);
     d->exact = d->exact && !d->unknown_fields && !d->unknown_secret_fields && d->secret_types_match;
     mapping = mapping && d->exact;
 }
@@ -247,8 +256,10 @@ static bool json(void) {
     space();
     if (cursor != length || tokens[0].kind != '{') return false;
     int mcp = field(0, "mcpServers");
+    root_unknown_fields = tokens[0].count - (mcp >= 0 ? 1 : 0);
     mapping = mcp >= 0 && tokens[mcp].kind == '{' && tokens[mcp].count > 0 && tokens[mcp].count <= 8 && tokens[0].count == 1;
-    if (mcp >= 0 && tokens[mcp].kind == '{' && tokens[mcp].count <= 8)
+    /* Имена из catalog уникальны: даже при превышении лимита descriptor остаётся bounded. */
+    if (mcp >= 0 && tokens[mcp].kind == '{')
         for (int k = mcp + 1; k < tokens[mcp].next; k = tokens[k + 1].next) describe(k, k + 1);
     return true;
 }
@@ -322,6 +333,44 @@ static const char *read_config(const char *path) {
     if (again >= 0) close(again);
     return status;
 }
+/* Только native формы с известной арностью. Variadic lists — один opaque argv value;
+   дополнительные positional tokens и неизвестные flags не получают read authority. */
+static const struct { const char *name; bool takes_value; } options[] = {
+    {"-p", false}, {"--verbose", false}, {"--strict-mcp-config", false},
+    {"--mcp-config", true}, {"--append-system-prompt", true}, {"--system-prompt", true},
+    {"--model", true}, {"--effort", true}, {"--input-format", true},
+    {"--output-format", true}, {"--permission-mode", true}, {"--disallowedTools", true},
+    {"--settings", true}
+};
+#define OPTIONS (sizeof(options) / sizeof(options[0]))
+static bool seen_options[OPTIONS];
+static bool read_arguments(int argc, char **argv, const char **path) {
+    for (int i = 1; i < argc; i++) {
+        size_t option;
+        const char *value = NULL;
+        bool equals = false;
+        for (option = 0; option < OPTIONS; option++) {
+            size_t n = strlen(options[option].name);
+            if (!strncmp(argv[i], options[option].name, n) && (argv[i][n] == 0 || argv[i][n] == '=')) {
+                equals = argv[i][n] == '=';
+                if (equals) value = argv[i] + n + 1;
+                break;
+            }
+        }
+        if (option == OPTIONS || seen_options[option]) return false;
+        seen_options[option] = true;
+        if (options[option].takes_value) {
+            if (!equals) {
+                if (i + 1 == argc) return false;
+                value = argv[++i];
+            }
+            /* Даже value, похожее на flag, остаётся данными и не сканируется повторно. */
+            if (!strcmp(options[option].name, "--mcp-config")) *path = value;
+        } else if (equals) return false;
+    }
+    return *path != NULL;
+}
+
 static const char *boolean(bool value) { return value ? "true" : "false"; }
 int main(int argc, char **argv) {
     struct rlimit no_core = {0, 0};
@@ -331,21 +380,20 @@ int main(int argc, char **argv) {
         return 0;
     }
     const char *path = NULL;
-    bool duplicate = false;
-    for (int i = 1; i < argc; i++) {
-        const char *candidate = NULL;
-        if (!strcmp(argv[i], "--mcp-config")) {
-            if (i + 1 < argc) candidate = argv[++i]; else duplicate = true;
-        } else if (!strncmp(argv[i], "--mcp-config=", 13)) candidate = argv[i] + 13;
-        if (candidate) { if (path) duplicate = true; path = candidate; }
-    }
-    const char *status = !path || duplicate ? "argv_rejected" : read_config(path);
-    fprintf(stderr, "ALTERA_METADATA_CONFIG_ONLY_V1 {\"schema_version\":1,\"source_sha256\":\"%s\",\"build_sha256\":\"%s\",\"argc\":%d,\"read_status\":\"%s\",\"path_class\":\"%s\",\"mapping_candidate\":\"%s\",\"task_acceptance\":\"not_checked\",\"unknown_servers\":%d,\"servers\":[", D1_SOURCE_SHA, D1_BUILD_SHA, argc, status, !strcmp(status, "ok") ? "daemon_private_temp" : "unresolved", mapping && !strcmp(status, "ok") ? "exact" : "unresolved", unknown_servers);
+    bool valid_arguments = read_arguments(argc, argv, &path);
+    const char *status = valid_arguments ? read_config(path) : "argv_rejected";
+    fprintf(stderr, "ALTERA_METADATA_CONFIG_ONLY_V1 {\"schema_version\":1,\"source_sha256\":\"%s\",\"build_sha256\":\"%s\",\"argc\":%d,\"read_status\":\"%s\",\"path_class\":\"%s\",\"mapping_candidate\":\"%s\",\"task_acceptance\":\"not_checked\",\"unknown_servers\":%d,\"unknown_fields\":%d,\"unreviewed_fields\":%s,\"servers\":[", D1_SOURCE_SHA, D1_BUILD_SHA, argc, status, !strcmp(status, "ok") ? "daemon_private_temp" : "unresolved", mapping && !strcmp(status, "ok") ? "exact" : "unresolved", unknown_servers, root_unknown_fields, boolean(!mapping));
     for (int i = 0; i < server_count; i++) {
         const struct descriptor *d = &servers[i];
-        fprintf(stderr, "%s{\"name\":\"%s\",\"transport\":\"%s\",\"endpoint\":\"%s\",\"command\":\"%s\",\"args\":\"%s\",\"endpoint_match\":%s,\"command_match\":%s,\"args_match\":%s,\"headers_present\":%s,\"env_present\":%s,\"known_secret_fields\":%d,\"unknown_secret_fields\":%d,\"secret_types_match\":%s,\"unknown_fields\":%d}", i ? "," : "", d->name, d->transport, d->endpoint, d->command, d->args, boolean(strcmp(d->endpoint, "unknown") != 0), boolean(strcmp(d->command, "unknown") != 0), boolean(strcmp(d->args, "unknown") != 0), boolean(d->headers_present), boolean(d->env_present), d->known_secret_fields, d->unknown_secret_fields, boolean(d->secret_types_match), d->unknown_fields);
+        fprintf(stderr, "%s{\"name\":\"%s\",\"transport\":\"%s\",\"endpoint\":\"%s\",\"command\":\"%s\",\"args\":\"%s\",\"endpoint_match\":%s,\"command_match\":%s,\"args_match\":%s,\"headers_present\":%s,\"env_present\":%s,\"known_secret_fields\":%d,\"unknown_secret_fields\":%d,\"secret_types_match\":%s,\"unknown_fields\":%d,\"unknown_env_fields\":%d,\"env_types_match\":%s,\"headers_unreviewed_fields\":%s,\"env_unreviewed_fields\":%s,\"unreviewed_fields\":%s}", i ? "," : "", d->name, d->transport, d->endpoint, d->command, d->args, boolean(strcmp(d->endpoint, "unknown") != 0), boolean(strcmp(d->command, "unknown") != 0), boolean(strcmp(d->args, "unknown") != 0), boolean(d->headers_present), boolean(d->env_present), d->known_secret_fields, d->unknown_secret_fields, boolean(d->secret_types_match), d->unknown_fields, d->unknown_env_fields, boolean(d->env_types_match), boolean(d->headers_unreviewed_fields), boolean(d->env_present), boolean(!d->exact));
     }
-    fprintf(stderr, "],\"known_flags\":%s}\n", path ? "[\"--mcp-config\"]" : "[]");
+    fputs("],\"known_flags\":[", stderr);
+    bool comma = false;
+    for (size_t i = 0; i < OPTIONS; i++) if (seen_options[i]) {
+        fprintf(stderr, "%s\"%s\"", comma ? "," : "", options[i].name);
+        comma = true;
+    }
+    fputs("]}\n", stderr);
     /* Буферы могут содержать opaque секреты; не сохранять их после descriptor. */
     for (size_t i = 0; i < sizeof(input); i++) ((volatile unsigned char *)input)[i] = 0;
     for (size_t i = 0; i < sizeof(strings); i++) ((volatile unsigned char *)strings)[i] = 0;
