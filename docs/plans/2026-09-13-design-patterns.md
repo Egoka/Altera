@@ -3,8 +3,8 @@
 - **Дата**: 2026-09-13
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: 5b1d7aa
-- **Отчёт**: docs/reports/2026-09-13-design-patterns-report.md (заполняется по завершении)
-- **Статус**: выполняется
+- **Отчёт**: docs/reports/2026-09-13-design-patterns-report.md
+- **Статус**: завершён
 
 ## 1. Цель
 
