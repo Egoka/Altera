@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: 4f33de5
 - **Отчёт**: docs/reports/2026-09-13-design-minimal-register-report.md
-- **Статус**: выполняется
+- **Статус**: завершён
 
 ## 1. Цель
 
