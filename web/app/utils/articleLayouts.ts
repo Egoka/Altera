@@ -177,13 +177,24 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "left", dominant: "wide" }
   },
   {
-    /* Одна статья с изображением сбоку во всю строку: запасная раскладка под
-       последний материал страницы (`feedGroups.ts`), в ритмы не ставится. */
+    /* Одна статья с изображением сбоку во всю строку: открывает хронику автора
+       (владелец, 2026-09-14) и служит запасной раскладкой под последний материал
+       страницы (`feedGroups.ts`). */
     id: "solo-wide",
     cells: ["aaaaaaaaaaaa"],
     slots: [{ key: "a", variant: "large", media: "beside" }],
     md: { cols: 2 },
     traits: { anchor: "center", dominant: "wide" }
+  },
+  {
+    /* Одна статья с изображением сверху на шесть колонок по центру: вторая
+       запасная раскладка под остаток в один материал, когда предыдущая группа —
+       solo-wide. Две подряд одинаковые одиночные строки читались бы как сбой. */
+    id: "solo-centered",
+    cells: ["...aaaaaa..."],
+    slots: [{ key: "a", variant: "large", media: "above" }],
+    md: { cols: 2, spans: { a: 2 } },
+    traits: { anchor: "center", dominant: "tall" }
   }
 ]
 

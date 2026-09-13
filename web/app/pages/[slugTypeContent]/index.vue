@@ -54,7 +54,7 @@
         :key="group.id"
         :articles="group.articles"
         :layout="group.layout"
-        meta="date" />
+        :meta="['author', 'date']" />
     </section>
   </div>
 </template>

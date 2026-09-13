@@ -1,5 +1,28 @@
 import type { GroupLayout } from "~/types/layout"
 import { capacityOf, getLayout, signatureOf } from "~/utils/articleLayouts"
+import { monthKeyOf } from "~/utils/articleDate"
+
+/** Материалы одного месяца публикации в исходном порядке. */
+export interface FeedMonth<T> {
+  /** `yyyy-MM`; пустая строка — дата не разобрана. */
+  key: string
+  items: T[]
+}
+
+/**
+ * Делит отсортированный по дате список на месяцы публикации, не меняя порядка:
+ * новый месяц начинается там, где меняется ключ. Материалы не теряются.
+ */
+export const groupByMonth = <T>(items: T[], dateOf: (item: T) => string): FeedMonth<T>[] => {
+  const months: FeedMonth<T>[] = []
+  for (const item of items) {
+    const key = monthKeyOf(dateOf(item))
+    const last = months[months.length - 1]
+    if (last && last.key === key) last.items.push(item)
+    else months.push({ key, items: [item] })
+  }
+  return months
+}
 
 /** Группа ленты: раскладка из реестра и материалы ровно под её слоты. */
 export interface FeedGroup<T> {
@@ -12,10 +35,12 @@ export interface FeedGroup<T> {
 /**
  * Запасные раскладки под остаток страницы, по вместимости. Берётся первая,
  * не совпадающая с предыдущей группой ни именем, ни сигнатурой — иначе две
- * одинаковые группы подряд, что валидатор ритма запрещает.
+ * одинаковые группы подряд, что валидатор ритма запрещает. У каждой
+ * вместимости минимум две раскладки с разными сигнатурами (тест это
+ * охраняет), поэтому подходящая находится при любой предыдущей группе.
  */
-const TAIL_LAYOUTS: Record<number, string[]> = {
-  1: ["solo-wide"],
+export const TAIL_LAYOUTS: Record<number, string[]> = {
+  1: ["solo-wide", "solo-centered"],
   2: ["pair-tall", "stripe-wide-narrow"],
   3: ["trio-tall", "hero-right", "hero-left", "trio-uneven"],
   4: ["quad-square", "tower-left", "mirror-tower", "wide-trio-right"],

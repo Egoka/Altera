@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { capacityOf, getLayout, validateRhythm } from "../app/utils/articleLayouts"
-import { buildFeedGroups } from "../app/utils/feedGroups"
+import { capacityOf, getLayout, signatureOf, validateRhythm } from "../app/utils/articleLayouts"
+import { TAIL_LAYOUTS, buildFeedGroups } from "../app/utils/feedGroups"
 import { SECTION_RHYTHM } from "../app/utils/feedRhythm"
 
 // Лента рубрики получает произвольное число материалов: полную страницу, хвост
@@ -46,6 +46,21 @@ describe("сборка групп ленты", () => {
   it("запасная раскладка не повторяет предыдущую группу", () => {
     const groups = buildFeedGroups(items(8), ["quad-square", "feature-stack"])
     expect(groups.map((g) => g.layout)).toEqual(["quad-square", "tower-left"])
+  })
+
+  it("остаток в один материал после одиночной во всю строку берёт одиночную по центру", () => {
+    const groups = buildFeedGroups(items(2), ["solo-wide", "trio-tall"])
+    expect(groups.map((g) => g.layout)).toEqual(["solo-wide", "solo-centered"])
+  })
+
+  it("у каждого остатка минимум две запасные раскладки с разными сигнатурами", () => {
+    for (const remainder of [1, 2, 3, 4, 5]) {
+      const candidates = TAIL_LAYOUTS[remainder] ?? []
+      expect(candidates.length, `остаток ${remainder}`).toBeGreaterThanOrEqual(2)
+      const signatures = new Set(candidates.map((id) => signatureOf(getLayout(id)!)))
+      expect(signatures.size, `остаток ${remainder}`).toBeGreaterThanOrEqual(2)
+      candidates.forEach((id) => expect(capacityOf(getLayout(id)!), id).toBe(remainder))
+    }
   })
 
   it("материалы не теряются, не дублируются и идут по порядку", () => {

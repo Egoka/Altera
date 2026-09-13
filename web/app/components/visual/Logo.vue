@@ -23,11 +23,13 @@
 <template>
   <!-- Текстовая часть сворачивается через max-width, а не через фиксированную ширину:
        в развёрнутом виде она занимает ровно свою ширину, и знак целиком стоит по центру
-       (жёсткие 100 px оставляли пустоту справа на телефоне и вылезали на широком экране). -->
+       (жёсткие 100 px оставляли пустоту справа на телефоне и вылезали на широком экране).
+       Без overflow-hidden: выносные элементы Bergamasco выходят за строку в 24 px, и обрезка
+       их срезала; при сворачивании текст, как и раньше, просто гаснет по прозрачности. -->
   <div class="flex items-baseline">
     <IconLogo class="h-6 lg:h-8 w-auto fill-black dark:fill-zinc-200" />
     <span
-      class="text-black dark:text-zinc-200 font-bergamasco font-light text-[2.2rem] lg:text-[2.8rem] pl-0.5 leading-6 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out"
+      class="text-black dark:text-zinc-200 font-bergamasco font-light text-[2.2rem] lg:text-[2.8rem] pl-0.5 leading-6 whitespace-nowrap transition-all duration-300 ease-in-out"
       :style="{
         opacity: textOpacity,
         transform: `translateX(${isScrolled ? '-10px' : '0px'})`,

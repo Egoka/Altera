@@ -4,12 +4,10 @@
 
   const props = defineProps<{
     article: ArticleResponse
-    /** Служебная строка после автора: рубрика (по умолчанию) или дата. */
+    /** Служебная строка: части по порядку, по умолчанию автор · рубрика. */
     meta?: CardMeta
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
-  const contentType = computed(() => `/${props.article.contentType.slug}`)
-  const author = computed(() => `/authors/${props.article.author.slug}`)
 </script>
 
 <template>
@@ -32,10 +30,7 @@
           {{ article.title }}
         </NuxtLink>
         <div class="mt-1 flex flex-row flex-wrap items-baseline gap-x-2 gap-y-1">
-          <ShowAuthor :link="author" :name="article.author.name" />
-          <span class="font-cormorant text-meta text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
-          <ShowDate v-if="meta === 'date'" :time="article.publishedAt" />
-          <ShowType v-else :link="contentType" :name="article.contentType.name" />
+          <ArticleMeta :article="article" :parts="meta" />
         </div>
       </div>
     </div>
