@@ -47,7 +47,7 @@
 <template>
   <div>
     <HeaderType :contentType="contentType" />
-    <section class="px-8 sm:px-10 py-12">
+    <section class="py-12">
       <div class="grid gap-8 max-w-3xl m-auto">
         <div
           v-for="(article, index) in articles"

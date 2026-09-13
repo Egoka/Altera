@@ -41,7 +41,7 @@
 <template>
   <div>
     <HeaderTag :tag="tag" />
-    <section class="px-8 sm:px-10 py-12">
+    <section class="py-12">
       <GridTags :items="articles">
         <template #default="{ item: article }">
           <ArticleSmall :article="article" />

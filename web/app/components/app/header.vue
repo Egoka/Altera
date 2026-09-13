@@ -34,7 +34,7 @@
       '!bg-white dark:!bg-zinc-950': isMegaMenuOpen,
       '-translate-y-full': !isHeaderVisible
     }">
-    <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between h-14 px-3 lg:px-10">
+    <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between h-14 px-4 sm:px-6 lg:px-8">
       <div class="hidden lg:flex lg:flex-1 lg:gap-x-12">
         <button
           :class="{

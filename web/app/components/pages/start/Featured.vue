@@ -104,7 +104,7 @@
 
 <template>
   <section class="featured-articles py-8 border-b border-zinc-200 dark:border-zinc-800">
-    <div class="mx-auto px-8 max-w-7xl">
+    <div>
       <div
         class="grid grid-cols-1 sm:grid-cols-12 gap-x-4 lg:gap-x-6 divide-y space-y-8 divide-zinc-200 dark:divide-zinc-800 sm:divide-y-0 sm:space-y-0">
         <div class="hidden lg:block lg:col-span-3">

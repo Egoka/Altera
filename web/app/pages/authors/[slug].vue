@@ -112,7 +112,7 @@
   <div>
     <HeaderUser v-if="user" :user="user" />
 
-    <section class="px-8 sm:px-10 py-12">
+    <section class="py-12">
       <div class="grid gap-8 max-w-3xl m-auto divide-y divide-zinc-200 dark:divide-zinc-800">
         <div
           v-for="(article, index) in articles"
