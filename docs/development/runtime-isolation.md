@@ -158,8 +158,9 @@ Missing/stale evidence и сбой collector/record/finish оставляют с
 `docker image inspect --format '{{.Id}}' altera-agent-runtime:task5` и использовать только этот ID.
 Dockerfile фиксирует Node 24.12.0, Codex 0.154.0-alpha.6.2, Claude 2.1.263 и trace 3.25.0.
 Обновление любой версии требует новой приёмки; переносимый runtime не выводится из host login.
-Изменённый `protocol-guard.mjs` также требует пересборки image и нового immutable ID перед
-запуском: прежнее Docker/model evidence относится к прежнему image, а не к fix round 1.
+`protocol-guard.mjs` монтируется RO из policy и не входит в Docker build context. Его изменение
+требует нового trusted policy hash и runtime-source/canary evidence; прежний immutable image ID
+сохраняется, если содержимое image не меняется. Старое evidence не подтверждает новую policy.
 
 Unit: `python3 -I scripts/agent-runtime/test_runtime.py`, `node --test scripts/agent-runtime/test_proxy.mjs scripts/agent-runtime/test_protocol_guard.mjs`.
 Docker: `python3 -I scripts/agent-runtime/test_docker.py IMAGE_ID NEW_EVIDENCE_DIR`; каждый
