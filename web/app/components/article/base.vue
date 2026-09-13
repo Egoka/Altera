@@ -1,34 +1,51 @@
 <script setup lang="ts">
   import type { ArticleResponse } from "~/types/article"
+  import type { CardMeta } from "~/types/layout"
 
   const props = defineProps<{
     article: ArticleResponse
+    /**
+     * Ступень заголовка.
+     * `lead` — ведущий слот группы, заголовок на ступень крупнее.
+     * `index` — карточка ровного каталога: снимок занимает всю колонку, и под ним
+     * заголовок в 20 px читается как подпись к фотографии, а не как заголовок.
+     * Ступень 25/30 даёт около тридцати знаков в строке — середину заголовочной
+     * меры, тогда как 20 px дают тридцать восемь, а 31 px — двадцать четыре и
+     * возвращают частые переносы (владелец, 2026-09-14).
+     */
+    scale?: "lead" | "index"
+    /** Служебная строка: части по порядку, по умолчанию автор · рубрика. */
+    meta?: CardMeta
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
-  const contentType = computed(() => `/${props.article.contentType.slug}`)
-  const author = computed(() => `/authors/${props.article.author.slug}`)
+  const titleScale = computed(() => {
+    if (props.scale === "lead") return "text-card md:text-title"
+    // Обрезка третьей строкой — страховка от единичного длинного заголовка:
+    // в ровном каталоге он один ломал бы высоту всего ряда.
+    if (props.scale === "index") return "text-title-compact line-clamp-3"
+    return "text-card"
+  })
 </script>
 
 <template>
   <article>
-    <figure class="mb-2">
+    <figure class="mb-4">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
-          class="w-full h-52 object-cover rounded-sm transition-transform duration-300" />
+          class="w-full aspect-3/2 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
     </figure>
 
     <div>
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-lg sm:text-xl font-medium text-zinc-900 dark:text-zinc-300 leading-1">
+        :class="['font-garamond-libre font-bold text-zinc-900 transition-colors dark:text-zinc-300', titleScale]">
         {{ article.title }}
       </NuxtLink>
-      <div ref="bottomRef" class="mt-3 flex justify-between flex-wrap gap-x-3 flex-row items-start">
-        <ShowAuthor :link="author" :name="article.author.name" class="block" />
-        <ShowType :link="contentType" :name="article.contentType.name" class="block" />
+      <div :class="['flex flex-row flex-wrap items-baseline gap-x-2 gap-y-1', scale === 'index' ? 'mt-2' : 'mt-1']">
+        <ArticleMeta :article="article" :parts="meta" />
       </div>
     </div>
   </article>

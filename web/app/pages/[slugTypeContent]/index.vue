@@ -1,6 +1,9 @@
 <script setup lang="ts">
   import type ContentType from "~/types/contentType"
   import type { ArticleResponse } from "~/types/article"
+  import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
+  import { buildFeedGroups } from "~/utils/feedGroups"
+  import { SECTION_RHYTHM } from "~/utils/feedRhythm"
 
   definePageMeta({
     layout: "default"
@@ -23,44 +26,35 @@
     updatedAt: "2025-01-01T00:00:00Z"
   }
 
-  // Моковые данные для 30 статей
-  const articles: ArticleResponse[] = Array.from({ length: 30 }, (_, index) => ({
-    id: `article-${index + 1}`,
-    title: `Article Title ${index + 1} - National Security Analysis`,
-    slug: `article-${index + 1}-national-security-analysis`,
-    dek: `This is a compelling dek for article ${index + 1} that provides context about national security implications.`,
-    excerpt: `This article explores the complex dynamics of national security in the modern world, examining various threats and strategic responses that shape our global security landscape.`,
-    featuredImage: `https://picsum.photos/400/300?random=${index + 1}`,
-    publishedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    author: {
-      name: `Анна Петрова`,
-      slug: `author-${index + 1}`,
-      photoUrl: `https://picsum.photos/100/100?random=${index + 100}`
-    },
-    contentType: {
-      name: contentType.name,
-      slug: contentType.slug
-    }
+  /**
+   * Демо-лента: одна страница из 24 материалов (`section-feed.md` §5), взятых из
+   * материалов главной с подстановкой рубрики. Даты детерминированы — по дню назад
+   * от фиксированной точки, чтобы лента по новизне выглядела одинаково при каждом
+   * запуске. Группы собирает `buildFeedGroups` по ритму рубрики.
+   */
+  const PAGE_SIZE = 24
+  const firstDay = Date.UTC(2026, 8, 13, 12)
+  const articles: ArticleResponse[] = [...DEMO_LATEST, ...DEMO_DEMANDED].slice(0, PAGE_SIZE).map((article, index) => ({
+    ...article,
+    id: `section-${index + 1}`,
+    publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
+    contentType: { name: contentType.name, slug: contentType.slug }
   }))
+  const groups = buildFeedGroups(articles, SECTION_RHYTHM)
 </script>
 
 <template>
   <div>
     <HeaderType :contentType="contentType" />
-    <section class="px-8 sm:px-10 py-12">
-      <div class="grid gap-8 max-w-3xl m-auto">
-        <div
-          v-for="(article, index) in articles"
-          :key="`featured-${index + 1}`"
-          :class="[
-            'pb-8 border-b',
-            'border-zinc-200 dark:border-zinc-800',
-            'hover:border-zinc-400 dark:hover:border-zinc-400',
-            'transition-colors duration-500'
-          ]">
-          <ArticleType :article="article" />
-        </div>
-      </div>
+    <!-- Список рубрики — группы реестра раскладок во всю ширину контейнера, служебная
+         строка карточек показывает дату: рубрика и так в шапке. -->
+    <section class="pt-4 pb-16">
+      <ArticleGroup
+        v-for="group in groups"
+        :key="group.id"
+        :articles="group.articles"
+        :layout="group.layout"
+        :meta="['author', 'date']" />
     </section>
   </div>
 </template>

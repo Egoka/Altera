@@ -1,134 +1,89 @@
 <script setup lang="ts">
   import type { ArticleResponse } from "~/types/article"
+  import type { CardMeta, SlotMedia, SlotSpec } from "~/types/layout"
+  import {
+    getLayout,
+    mdColsOf,
+    mdMediaFor,
+    mdSpanFor,
+    rowSpanFor,
+    slotOrder,
+    toGridStyle,
+    validateLayout
+  } from "~/utils/articleLayouts"
 
   const props = defineProps<{
     articles: ArticleResponse[]
-    position?: "left" | "center" | "right"
+    /** Идентификатор раскладки из реестра `articleLayouts`. */
+    layout: string
+    /** Служебная строка карточек: рубрика (по умолчанию) или дата — для лент внутри рубрики. */
+    meta?: CardMeta
   }>()
-  const MAX_COUNT = 5
-  const articles = computed(() => props.articles.slice(0, MAX_COUNT) || [])
-  const position = computed(() => props.position ?? "left")
 
-  // Определяем, нужен ли разделитель для блока
-  const needsBorder = (index: number) => {
-    const area = getItemArea(index)
-    const count = articles.value.length
+  const layout = computed(() => getLayout(props.layout))
 
-    if (position.value === "right") {
-      // При position right: разделитель нужен элементам в левой части (не в области 'a')
-      if (count === 5 || count === 4) return area !== "a"
-      if (count === 3) return area !== "a"
-      if (count === 2) return area !== "a"
-      return false
-    } else if (position.value === "center") {
-      // При position center: разделитель нужен элементам, которые не находятся в последней колонке
-      if (count === 5 || count === 4) return area !== "d" && area !== "e"
-      if (count === 3) return area !== "b" && area !== "c"
-      if (count === 2) return area !== "b"
-      return false
-    } else {
-      // При position left: разделитель нужен элементам, которые не находятся в последней колонке
-      if (count === 5 || count === 4) return area !== "d" && area !== "e"
-      if (count === 3) return area === "a"
-      if (count === 2) return area === "a"
-      return false
-    }
+  // Кривая матрица ломает сетку молча: браузер отбрасывает grid-template-areas
+  // целиком и без ошибки. В разработке падаем громко.
+  if (import.meta.dev) {
+    const found = getLayout(props.layout)
+    const errors = found ? validateLayout(found) : [`раскладка «${props.layout}» не найдена в реестре`]
+    if (errors.length) console.error("[ArticleGroup]", errors.join("; "))
   }
 
-  // Вычисляем стили сетки в зависимости от количества статей
-  const gridStyles = computed(() => {
-    const count = articles.value.length
-    const layouts = {
-      5: {
-        left: { cols: 4, areas: `"a a b d"\n"a a c e"` },
-        center: { cols: 4, areas: `"b a a d"\n"c a a e"` },
-        right: { cols: 4, areas: `"b d a a"\n"c e a a"` }
-      },
-      4: {
-        left: { cols: 4, areas: `"a a b d"\n"a a c d"` },
-        center: { cols: 4, areas: `"b a a d"\n"c a a d"` },
-        right: { cols: 4, areas: `"b d a a"\n"c d a a"` }
-      },
-      3: {
-        left: { cols: 3, areas: `"a a b"\n"a a c"` },
-        center: { cols: 3, areas: `"a a b"\n"a a c"` },
-        right: { cols: 3, areas: `"b a a"\n"c a a"` }
-      },
-      2: {
-        left: { cols: 3, areas: `"a a b"\n"a a b"` },
-        center: { cols: 3, areas: `"a a b"\n"a a b"` },
-        right: { cols: 3, areas: `"b a a"\n"b a a"` }
-      }
-    }
+  /** Материалов ровно столько, сколько слотов у раскладки: тихого усечения нет. */
+  const articles = computed(() => (layout.value ? props.articles.slice(0, layout.value.slots.length) : []))
+  const slots = computed<SlotSpec[]>(() => layout.value?.slots ?? [])
+  const gridStyles = computed(() => (layout.value ? toGridStyle(layout.value) : {}))
+  const order = computed(() => (layout.value ? slotOrder(layout.value) : []))
 
-    const layout = layouts[count as keyof typeof layouts]
-    if (!layout) {
-      return {
-        "grid-template-columns": "1fr",
-        "grid-template-rows": "1fr",
-        "grid-template-areas": '"a"'
-      }
-    }
-
-    const currentLayout = layout[position.value as keyof typeof layout] || layout.left
-
-    return {
-      "grid-template-columns": `repeat(${currentLayout.cols}, 1fr)`,
-      "grid-template-rows": "repeat(2, 1fr)",
-      "grid-template-areas": currentLayout.areas
-    }
-  })
-
-  // Вычисляем grid-area для каждого блока
-  const getItemArea = (index: number) => {
-    const count = articles.value.length
-    const areaMappings = {
-      5: ["a", "b", "c", "d", "e"],
-      4: ["a", "b", "c", "d"],
-      3: ["a", "b", "c"],
-      2: ["a", "b"]
-    }
-
-    return areaMappings[count as keyof typeof areaMappings]?.[index] ?? "a"
+  // resolveComponent, а не строка: строковое имя в <component :is> Nuxt не
+  // резолвит — обёртки отрисовываются пустыми и без ошибки.
+  const componentFor = (slot?: SlotSpec, media: SlotMedia | undefined = slot?.media) => {
+    if (!slot) return resolveComponent("ArticleSmall")
+    if (slot.variant === "small") return resolveComponent("ArticleSmall")
+    if (slot.variant === "large" && media === "above") return resolveComponent("ArticleBase")
+    return resolveComponent("ArticleLarge")
   }
+
+  const mdCols = computed(() => (layout.value ? mdColsOf(layout.value) : 2))
+  const mdSpan = (index: number) => (layout.value ? mdSpanFor(layout.value, order.value[index] ?? "") : 1)
+  /** Композиция слота на средних экранах может отличаться от широких (`md.media`). */
+  const mdMedia = (index: number) => (layout.value ? mdMediaFor(layout.value, order.value[index] ?? "") : undefined)
+  /** Слот на несколько рядов встаёт по центру своей области, а не прижимается к верху. */
+  const centered = (index: number) => (layout.value ? rowSpanFor(layout.value, order.value[index] ?? "") > 1 : false)
 </script>
 
 <template>
-  <section class="py-12 border-b border-zinc-200 dark:border-zinc-700">
-    <div class="hidden lg:grid lg:gap-x-6" :style="gridStyles">
+  <section v-if="layout" class="py-8" :data-layout="layout.id">
+    <!-- Широкие экраны: раскладка целиком выводится из матрицы областей -->
+    <div class="hidden lg:grid lg:gap-x-8 lg:gap-y-18" :style="gridStyles">
       <div
         v-for="(article, index) in articles"
         :key="article.id"
-        :style="{ 'grid-area': getItemArea(index) }"
-        :class="`w-full ${needsBorder(index) ? 'border-r border-zinc-200 dark:border-zinc-700 pr-6' : ''}`">
-        <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-3xl" />
-        <ArticleSmall
-          v-else
-          :article
-          :class="!(index % 2) ? 'pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700' : ''" />
+        :style="{ 'grid-area': order[index] }"
+        class="w-full"
+        :class="{ 'self-center': centered(index) }">
+        <component :is="componentFor(slots[index])" :article="article" :scale="slots[index]?.scale" :meta="meta" />
       </div>
     </div>
 
-    <div class="hidden sm:grid lg:hidden grid-cols-2 gap-x-4">
+    <!-- Средние экраны: спаны из раскладки, порядок слотов тот же -->
+    <div
+      class="hidden gap-x-8 gap-y-10 sm:grid lg:hidden"
+      :style="{ 'grid-template-columns': `repeat(${mdCols}, minmax(0, 1fr))` }">
       <div
         v-for="(article, index) in articles"
-        :key="`tablet-${article.id}`"
-        :class="`w-full ${index === 0 ? 'col-span-2 ' : ''}${index !== 0 && index % 2 ? 'pr-4 border-r border-zinc-200 dark:border-zinc-700' : ''}`">
-        <ArticleLarge
-          v-if="index === 0"
-          :article
-          class="m-auto max-w-3xl pb-6 mb-6 border-b border-zinc-200 dark:border-zinc-700" />
-        <ArticleSmall
-          v-else
-          :article
-          :class="`${4 === index || 3 === index ? 'pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700' : ''}`" />
+        :key="`md-${article.id}`"
+        class="w-full"
+        :style="{ 'grid-column': `span ${Math.min(mdSpan(index), mdCols)}` }">
+        <component :is="componentFor(slots[index], mdMedia(index))" :article="article" :meta="meta" />
       </div>
     </div>
 
-    <div class="grid sm:hidden grid-cols-1">
-      <div v-for="(article, index) in articles" :key="`mobile-${article.id}`" class="w-full">
-        <ArticleLarge v-if="index === 0" :article="article" class="m-auto max-w-md" />
-        <ArticleSmall v-else :article="article" class="pt-4 mt-2 border-t border-zinc-200 dark:border-zinc-700" />
+    <!-- Узкие экраны: одна колонка, сложные раскладки схлопываются -->
+    <div class="grid grid-cols-1 gap-y-10 sm:hidden">
+      <div v-for="(article, index) in articles" :key="`sm-${article.id}`" class="w-full">
+        <component :is="componentFor(slots[index])" :article="article" :meta="meta" />
       </div>
     </div>
   </section>

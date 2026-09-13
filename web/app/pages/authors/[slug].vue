@@ -1,13 +1,14 @@
 <script setup lang="ts">
-  import type { ArticleListItem } from "~/query/types"
+  import type { ArticleResponse } from "~/types/article"
   import type User from "~/types/user"
+  import { formatArticleMonth } from "~/utils/articleDate"
+  import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
+  import { buildFeedGroups, groupByMonth } from "~/utils/feedGroups"
+  import { AUTHOR_RHYTHM } from "~/utils/feedRhythm"
 
   definePageMeta({
     layout: "default"
   })
-
-  const route = useRoute()
-  const slug = route.params.slug as string
 
   // Моковые данные пользователя для тестирования
   const mockUser: User = {
@@ -27,105 +28,59 @@
     updatedAt: "2024-01-01T00:00:00Z"
   }
 
-  // Моковые данные статей
-  const mockArticles: ArticleListItem[] = [
-    {
-      id: "1",
-      title: "The Way of the Strangers: Encounters With the Islamic State",
-      slug: "way-of-strangers-islamic-state",
-      dek: "A deep dive into the psychology and motivations of ISIS members ",
-      excerpt:
-        "An exploration of what drives individuals to join extremist organizations and how they justify their actions.",
-      featuredImage: "https://picsum.photos/400/225?random=21",
-      publishedAt: "2024-01-15T00:00:00Z",
-      updatedAt: "2024-01-15T00:00:00Z",
-      author: {
-        name: "Graeme Wood",
-        slug: "graeme-wood",
-        photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face"
-      },
-      contentType: {
-        name: "Article",
-        slug: "article"
-      },
-      sectionTags: [
-        { name: "Foreign Policy", slug: "foreign-policy" },
-        { name: "Middle East", slug: "middle-east" }
-      ]
-    },
-    {
-      id: "2",
-      title: "The Psychology of Extremism: Understanding Radicalization",
-      slug: "psychology-extremism-radicalization",
-      dek: "Examining the social and psychological factors that lead to radicalization",
-      excerpt: "A comprehensive analysis of how ordinary people become radicalized and what can be done to prevent it.",
-      featuredImage: "https://picsum.photos/400/225?random=22",
-      publishedAt: "2024-01-10T00:00:00Z",
-      updatedAt: "2024-01-10T00:00:00Z",
-      author: {
-        name: "Graeme Wood",
-        slug: "graeme-wood",
-        photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face"
-      },
-      contentType: {
-        name: "Analysis",
-        slug: "analysis"
-      },
-      sectionTags: [
-        { name: "Psychology", slug: "psychology" },
-        { name: "Security", slug: "security" }
-      ]
-    },
-    {
-      id: "3",
-      title: "Reporting from Conflict Zones: Lessons Learned",
-      slug: "reporting-conflict-zones-lessons",
-      dek: "Personal experiences and insights from years of war reporting",
-      excerpt: "Reflections on the challenges and rewards of reporting from some of the world's most dangerous places.",
-      featuredImage: "https://picsum.photos/400/225?random=23",
-      publishedAt: "2024-01-05T00:00:00Z",
-      updatedAt: "2024-01-05T00:00:00Z",
-      author: {
-        name: "Graeme Wood",
-        slug: "graeme-wood",
-        photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face"
-      },
-      contentType: {
-        name: "Memoir",
-        slug: "memoir"
-      },
-      sectionTags: [
-        { name: "Journalism", slug: "journalism" },
-        { name: "War", slug: "war" }
-      ]
-    }
-  ]
-
-  console.log("slug", slug)
-
   // Используем моковые данные вместо API запроса
   const user = computed<User>(() => mockUser)
-  const articles = computed<ArticleListItem[]>(() => mockArticles)
+
+  /**
+   * Демо-лента автора: одна страница из 24 материалов главной с подстановкой автора
+   * из мока; даты детерминированы — по дню назад от фиксированной точки, так что
+   * хроника делится на два месяца. Каждый месяц собирается своим кругом ритма
+   * автора из однорядных раскладок (`author.md` §5).
+   */
+  const PAGE_SIZE = 24
+  const firstDay = Date.UTC(2026, 8, 13, 12)
+  const articles: ArticleResponse[] = [...DEMO_LATEST, ...DEMO_DEMANDED].slice(0, PAGE_SIZE).map((article, index) => ({
+    ...article,
+    id: `author-${index + 1}`,
+    publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
+    author: { name: mockUser.name, slug: mockUser.slug, photoUrl: mockUser.photoUrl }
+  }))
+
+  const { locale } = useI18n()
+  const months = computed(() =>
+    groupByMonth(articles, (article) => article.publishedAt).map((month) => ({
+      key: month.key,
+      label: formatArticleMonth(month.key, locale.value),
+      groups: buildFeedGroups(month.items, AUTHOR_RHYTHM)
+    }))
+  )
 </script>
 
 <template>
   <div>
     <HeaderUser v-if="user" :user="user" />
 
-    <section class="px-8 sm:px-10 py-12">
-      <div class="grid gap-8 max-w-3xl m-auto divide-y divide-zinc-200 dark:divide-zinc-800">
-        <div
-          v-for="(article, index) in articles"
-          :key="`featured-${index + 1}`"
-          :class="[
-            'pb-8 border-b',
-            'border-zinc-200 dark:border-zinc-800',
-            'hover:border-zinc-400 dark:hover:border-zinc-400',
-            'transition-colors duration-500'
-          ]">
-          <ArticleAuthor :article="article" />
-        </div>
-      </div>
+    <!-- Хроника автора: месяцы публикации с подписью и линейкой, внутри — однорядные
+         группы, порядок чтения совпадает с порядком по дате; в служебной строке
+         рубрика и дата, автор — в шапке. -->
+    <section class="pt-4 pb-16">
+      <!-- Первый месяц без верхней линейки: его уже отделяет линейка шапки автора -->
+      <section
+        v-for="month in months"
+        :key="month.key"
+        class="mt-10 border-t border-zinc-200 pt-4 first:mt-0 first:border-0 first:pt-0 dark:border-zinc-800">
+        <h2
+          v-if="month.label"
+          class="font-sans text-xs/6 font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-500">
+          {{ month.label }}
+        </h2>
+        <ArticleGroup
+          v-for="group in month.groups"
+          :key="group.id"
+          :articles="group.articles"
+          :layout="group.layout"
+          :meta="['type', 'date']" />
+      </section>
     </section>
   </div>
 </template>

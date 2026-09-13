@@ -98,47 +98,25 @@
   ]
 
   const mainArticle = features[0]
-  const leftArticles = features.slice(1, 3)
-  const rightArticles = features.slice(3, 5)
+  // Флагман идёт во всю ширину отдельным открывающим событием,
+  // остальные четыре — рядом под ним (решение владельца).
+  const secondaryArticles = features.slice(1, 5)
 </script>
 
 <template>
-  <section class="featured-articles py-8 border-b border-zinc-200 dark:border-zinc-800">
-    <div class="mx-auto px-8 max-w-7xl">
-      <div
-        class="grid grid-cols-1 sm:grid-cols-12 gap-x-4 lg:gap-x-6 divide-y space-y-8 divide-zinc-200 dark:divide-zinc-800 sm:divide-y-0 sm:space-y-0">
-        <div class="hidden lg:block lg:col-span-3">
-          <ul class="space-y-8 divide-y divide-zinc-200 dark:divide-zinc-800">
-            <li v-for="article in leftArticles" :key="article.id" class="pb-8 last:pb-0">
-              <ArticleBase :article="article" />
-            </li>
-          </ul>
-        </div>
-
-        <div
-          class="col-span-12 sm:col-span-8 lg:col-span-6 sm:border-r lg:border-x sm:border-zinc-200 dark:sm:border-zinc-800 sm:pr-4 lg:px-6 pb-8 last:pb-0">
-          <div class="lede" v-if="mainArticle">
-            <ArticleLede :article="mainArticle" class="mt-14" />
-          </div>
-        </div>
-
-        <div class="col-span-12 sm:col-span-4 lg:col-span-3 pb-8 last:pb-0 sm:pb-0">
-          <ul class="space-y-8 divide-y divide-zinc-200 dark:divide-zinc-800">
-            <li v-for="article in rightArticles" :key="article.id" class="pb-8 last:pb-0">
-              <ArticleBase :article="article" />
-            </li>
-          </ul>
-        </div>
-
-        <div class="lg:hidden col-span-12 sm:pt-5 sm:mt-5 border-t border-zinc-200 dark:border-zinc-800">
-          <ul
-            class="divide-y space-y-8 sm:divide-y-0 sm:space-y-0 sm:flex sm:flex-row sm:space-x-8 sm:divide-x divide-zinc-200 dark:divide-zinc-800">
-            <li v-for="article in leftArticles" :key="article.id" class="pb-8 last:pb-0 sm:pb-0 sm:pr-8 last:sm:pr-0">
-              <ArticleBase :article="article" />
-            </li>
-          </ul>
-        </div>
-      </div>
+  <section class="featured-articles pt-10 pb-24 border-b border-zinc-200 dark:border-zinc-800">
+    <!-- Флагман: изображение во всю ширину контейнера, под ним по центральной оси
+         заголовок, дек и мета. Ось рифмуется с логотипом по центру в шапке. -->
+    <div v-if="mainArticle">
+      <ArticleLede :article="mainArticle" />
     </div>
+
+    <!-- Флагман от остальной ленты отделяет только воздух: линейку владелец
+         снял при живом ревью 2026-09-13 -->
+    <ul class="mt-16 grid grid-cols-1 gap-y-10 pt-16 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4 lg:gap-x-12">
+      <li v-for="article in secondaryArticles" :key="article.id">
+        <ArticleBase :article="article" />
+      </li>
+    </ul>
   </section>
 </template>

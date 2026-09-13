@@ -1,7 +1,7 @@
 <template>
   <main
     :class="[
-      'pt-14 mx-auto max-w-7xl',
+      'pt-14 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8',
       'min-h-[calc(100vh-854px)]',
       'sm:min-h-[calc(100vh-902px)]',
       'md:min-h-[calc(100vh-709px)]',

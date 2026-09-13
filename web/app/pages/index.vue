@@ -3,5 +3,6 @@
 <template>
   <PagesStartFeatured />
   <PagesStartLatest />
-  <PagesStartPopular class="mb-12" />
+  <PagesStartPopular />
+  <PagesStartDemanded class="mb-12" />
 </template>
