@@ -22,7 +22,8 @@ service tier: trace project map/outline, отказ shell-записи `Read-onl
 — успешный `claude-opus-4-6`, medium и marker при отключённых tools. macOS Keychain не
 экспортировался. Это не native приёмка: context/MCP, фактическое отключение hooks, refresh
 и managed stream-json canary остаются непроверенными. D0 также не устанавливает эти факты.
-Actual managed MCP input остаётся неразрешённым; production mapping отказывает до его проверки.
+D1 metadata diagnostic установил reviewer roster: Context7 HTTP `/mcp` без headers/env и
+trace с argv `["serve"]` без env. Это descriptor evidence; native production mapping пока не реализован.
 Готовность всей Task 5, M4/M7 и автопилотов этим документом не объявляется.
 
 ## Источник и mounts
@@ -75,8 +76,12 @@ argv отвергаются. Для Claude
 сохраняются известные stream-json flags, модель, effort и disallowedTools; неизвестные флаги
 не пропускаются вслепую. `[mcp_servers.trace]` в RO `codex-config.toml` запускает Linux
 `/usr/local/bin/trace-mcp serve --preset review`. Его проверенный index находится в отдельном
-`HOME/.trace/index` внутри cache. Назначенные роли context7/playwright и native managed inputs
-требуют собственного mapping/canary; успешный локальный trace не доказывает их наличие.
+`HOME/.trace/index` внутри cache. Для Claude JSON разрешены только имена `trace` и `context7`:
+trace — stdio с `/usr/local/bin/trace-mcp` и точными argv `["serve"]` либо ранее поддержанными
+`["serve", "--preset", "review"]`; Context7 — ровно `{"type":"http","url":"https://mcp.context7.com/mcp"}`.
+Policy bytes не переписываются. Unknown names/fields, headers/env даже пустые, duplicate JSON keys,
+malformed JSON и варианты URL отклоняются. Пустой `mcpServers` сохранён для существующих fixtures,
+но не доказывает наличие полного roster. Native adapter и tester Playwright требуют отдельной приёмки.
 
 `protocol-guard.mjs` работает внутри границы и проверяет каждый JSONL input: вложенный `cwd`
 может указывать только на declared source или его подкаталог без `..`. Валидные bytes
@@ -109,7 +114,7 @@ null/omitted. Thread `config` ограничен `model`, `model_reasoning_effor
 [официальной документации Docker](https://docs.docker.com/engine/network/port-publishing/#gateway-modes).
 Модель подключена только к isolated сети. Отдельный proxy имеет исходящий bridge, но не
 получает checkout, credentials, cache или Docker socket. Он поддерживает только HTTPS CONNECT
-на точные provider domains: OpenAI/ChatGPT и Anthropic/Claude; HTTP endpoints и прочие домены
+на точные provider domains: OpenAI/ChatGPT, Anthropic/Claude и `mcp.context7.com`; HTTP endpoints и прочие домены
 отклоняются. Все DNS answers должны быть публичными IPv4, connect использует уже проверенный IP.
 У proxy нет опубликованных host ports. Его image/policy hash, network и container inspect сохраняются
 в trusted run root. Сеть и proxy удаляются после процесса; daemon не перезапускается.
@@ -118,6 +123,15 @@ null/omitted. Thread `config` ограничен `model`, `model_reasoning_effor
 и model call. Пять запрещённых CONNECT получили 403; direct public и host endpoints были
 недоступны. Эти ответы подтверждают транспорт, не авторизацию модели. Proxy не расшифровывает
 TLS и не является HTTP authorization firewall для разрешённых сервисов.
+
+[reviewer MCP canary](../../scripts/agent-runtime/test_mcp_canary.py) запускается с
+`--canary /absolute/new/evidence-directory`: он создаёт synthetic Git snapshot и RO policy,
+использует закреплённый image и этот proxy, без auth mount и model CLI. Context7 получает только
+public React query через initialize → tools/list → resolve-library-id; trace запускается с `["serve"]`
+и проверяется через index, get_project_map и get_outline. HTTP redirects запрещены клиентом;
+opaque MCP session header остаётся только в памяти. Bounded protocol evidence, шесть forbidden
+CONNECT statuses и before/after source/snapshot/policy hashes сохраняются отдельно. Этот опыт
+проверяет MCP transport/tools; он не подтверждает native model/context/hooks/refresh или collector.
 
 `auth_file` разрешает ровно один существующий regular file, RO в выделенный runtime home:
 Codex `auth.json` или Claude `.credentials.json`. Весь HOME не монтируется. UID совпадает с

@@ -33,3 +33,22 @@ test("proxy refuses host endpoints, ambiguous authorities and non-public DNS ans
   }
   assert.equal(publicAddress("1.1.1.1"), true)
 })
+
+test("proxy permits only the exact observed Context7 CONNECT authority", async () => {
+  const { authority } = await import("./provider-proxy.mjs")
+  assert.equal(authority("mcp.context7.com:443"), "mcp.context7.com")
+  for (const value of [
+    "mcp.context7.com:80",
+    "mcp.context7.com.:443",
+    "MCP.context7.com:443",
+    "mcp.context7.com.evil.invalid:443",
+    "evil-mcp.context7.com:443",
+    "mcp.context7.com@evil.invalid:443",
+    "https://mcp.context7.com:443",
+    "mcp.context7.com:443/mcp",
+    "mcp.context7.com%00:443",
+    "[::1]:443"
+  ]) {
+    assert.throws(() => authority(value), /destination_denied/)
+  }
+})

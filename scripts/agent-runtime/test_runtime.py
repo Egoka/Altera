@@ -164,6 +164,53 @@ class RuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'overlap'):
             self.runtime.command(self.manifest, [], {})
 
+    def test_verified_reviewer_mcp_policy_preserves_both_trace_argv_forms_and_context7(self):
+        for trace_args in [['serve'], ['serve', '--preset', 'review']]:
+            config = {'mcpServers': {
+                'trace': {'type': 'stdio', 'command': '/usr/local/bin/trace-mcp', 'args': trace_args},
+                'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}}}
+            path = self.policy / 'mcp.json'
+            raw = json.dumps(config, indent=2)
+            path.write_text(raw)
+            self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
+            args = self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+            self.assertIn('/runtime/policy/mcp.json', args)
+            self.assertEqual(path.read_text(), raw)
+
+    def test_mcp_policy_rejects_unknown_servers_transports_and_fields(self):
+        trace = {'command': '/usr/local/bin/trace-mcp', 'args': ['serve', '--preset', 'review']}
+        context7 = {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}
+        invalid = [
+            {'other': trace}, {'context7': trace}, {'trace': context7},
+            {'trace': {**trace, 'args': []}}, {'trace': {**trace, 'args': ['serve', '--preset', 'full']}},
+            {'trace': {**trace, 'args': 'serve'}}, {'trace': {**trace, 'args': ['serve', 'D1_SECRET_CANARY']}},
+            {'trace': {**trace, 'command': '/host/trace'}}, {'trace': {**trace, 'type': 'http'}},
+            {'trace': {**trace, 'env': {}}}, {'trace': {**trace, 'headers': {}}},
+            {'context7': {**context7, 'headers': {}}}, {'context7': {**context7, 'env': {}}},
+            {'context7': {**context7, 'type': 'sse'}}, {'context7': {'url': context7['url']}},
+            {'context7': {**context7, 'command': '/bin/sh'}}, {'trace': None}]
+        for url in ['https://mcp.context7.com/mcp/oauth', 'https://mcp.context7.com/mcp?secret',
+                    'https://mcp.context7.com/mcp#fragment', 'https://user@mcp.context7.com/mcp',
+                    'https://mcp.context7.com:443/mcp', 'http://mcp.context7.com/mcp',
+                    'https://mcp.context7.com.evil.invalid/mcp']:
+            invalid.append({'context7': {**context7, 'url': url}})
+        for servers in invalid:
+            with self.subTest(servers=list(servers)):
+                (self.policy / 'mcp.json').write_text(json.dumps({'mcpServers': servers}))
+                self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
+                with self.assertRaises(ValueError):
+                    self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+
+    def test_mcp_policy_rejects_duplicate_or_malformed_json_without_echoing_values(self):
+        for raw in ['{"mcpServers":{},"mcpServers":{}}',
+                    '{"mcpServers":{"trace":{"command":"D1_SECRET_CANARY","command":"/usr/local/bin/trace-mcp","args":["serve","--preset","review"]}}}',
+                    '{"mcpServers":{},"extra":NaN}', 'D1_SECRET_CANARY', '[]']:
+            (self.policy / 'mcp.json').write_text(raw)
+            self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
+            with self.assertRaises(ValueError) as raised:
+                self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+            self.assertNotIn('D1_SECRET_CANARY', str(raised.exception))
+
     def test_unresolved_managed_home_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'managed_env_unresolved'):
             self.runtime.command(self.manifest, [], {'CODEX_HOME': '/managed/unknown'})

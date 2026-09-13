@@ -12,7 +12,8 @@ const allowed = new Set([
   "api.anthropic.com",
   "claude.ai",
   "console.anthropic.com",
-  "platform.claude.com"
+  "platform.claude.com",
+  "mcp.context7.com"
 ])
 
 export function authority(value) {

@@ -194,14 +194,36 @@ def effective_args(manifest, incoming):
             mapped = Path(manifest['policy']) / value.removeprefix('/runtime/policy/')
             if not mapped.is_file():
                 raise ValueError('mapped_mcp_file_missing')
-            config = json.loads(mapped.read_text())
+            def unique_object(pairs):
+                result = {}
+                for key, item in pairs:
+                    if key in result:
+                        raise ValueError('unsupported_mcp_config')
+                    result[key] = item
+                return result
+
+            def reject_constant(_value):
+                raise ValueError('unsupported_mcp_config')
+
+            try:
+                config = json.loads(mapped.read_text(), object_pairs_hook=unique_object,
+                                    parse_constant=reject_constant)
+            except (ValueError, UnicodeError):
+                raise ValueError('unsupported_mcp_config') from None
             if not isinstance(config, dict) or set(config) != {'mcpServers'} or not isinstance(config['mcpServers'], dict):
                 raise ValueError('unsupported_mcp_config')
-            for server in config['mcpServers'].values():
-                if (not isinstance(server, dict) or set(server) - {'command', 'args', 'type'} or
-                    server.get('type', 'stdio') != 'stdio' or
-                    server.get('command') != '/usr/local/bin/trace-mcp' or
-                    server.get('args') != ['serve', '--preset', 'review']):
+            for name, server in config['mcpServers'].items():
+                if name == 'trace':
+                    valid = (isinstance(server, dict) and not set(server) - {'command', 'args', 'type'} and
+                             server.get('type', 'stdio') == 'stdio' and
+                             server.get('command') == '/usr/local/bin/trace-mcp' and
+                             server.get('args') in (['serve'], ['serve', '--preset', 'review']))
+                elif name == 'context7':
+                    valid = (isinstance(server, dict) and set(server) == {'type', 'url'} and
+                             server['type'] == 'http' and server['url'] == 'https://mcp.context7.com/mcp')
+                else:
+                    valid = False
+                if not valid:
                     raise ValueError('unverified_mcp_server')
         result.extend([flag, value]); i += 2
     for flag in ('--model', '--effort'):
