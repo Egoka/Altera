@@ -1,10 +1,13 @@
 <script setup lang="ts">
   import type { ArticleResponse } from "~/types/article"
+  import type { CardMeta } from "~/types/layout"
 
   const props = defineProps<{
     article: ArticleResponse
     /** Ведущий слот группы — заголовок на ступень крупнее. */
     scale?: "lead"
+    /** Служебная строка после автора: рубрика (по умолчанию) или дата. */
+    meta?: CardMeta
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
   const contentType = computed(() => `/${props.article.contentType.slug}`)
@@ -34,7 +37,8 @@
       <div class="mt-1 flex flex-row flex-wrap items-baseline gap-x-2 gap-y-1">
         <ShowAuthor :link="author" :name="article.author.name" />
         <span class="font-cormorant text-meta text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
-        <ShowType :link="contentType" :name="article.contentType.name" />
+        <ShowDate v-if="meta === 'date'" :time="article.publishedAt" />
+        <ShowType v-else :link="contentType" :name="article.contentType.name" />
       </div>
     </div>
   </article>

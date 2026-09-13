@@ -69,9 +69,11 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
   },
   {
     /* Описание под изображением, а сбоку — четыре компактных материала.
-       Ломает привычку «крупный блок плюс стопка из двух». */
+       Ломает привычку «крупный блок плюс стопка из двух». Группа уже
+       контейнера и стоит по центру: по пустой колонке с каждой стороны
+       (владелец, 2026-09-13), стопка компактных не растягивается на семь. */
     id: "feature-stack",
-    cells: ["aaaaabbbbbbb", "aaaaaccccccc", "aaaaaddddddd", "aaaaaeeeeeee"],
+    cells: [".aaaaabbbbb.", ".aaaaaccccc.", ".aaaaaddddd.", ".aaaaaeeeee."],
     slots: [
       { key: "a", variant: "large", media: "above" },
       { key: "b", variant: "small" },
@@ -80,7 +82,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
       { key: "e", variant: "small" }
     ],
     md: { cols: 2, spans: { a: 2 } },
-    traits: { anchor: "left", dominant: "tall" }
+    traits: { anchor: "center", dominant: "tall" }
   },
   {
     /* Две вертикальные статьи во всю ширину — пауза между тяжёлыми группами. */
@@ -94,9 +96,12 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "center", dominant: "tall" }
   },
   {
-    /* Четыре вертикали сеткой два на два: пара сверху, пара снизу. */
+    /* Четыре вертикали сеткой два на два: пара сверху, пара снизу. Карточки по
+       пять колонок и по пустой колонке с каждой стороны — те же размеры и
+       центр, что у feature-stack (владелец, 2026-09-13): шесть колонок давали
+       слишком крупные снимки. */
     id: "quad-square",
-    cells: ["aaaaaabbbbbb", "ccccccdddddd"],
+    cells: [".aaaaabbbbb.", ".cccccddddd."],
     slots: [
       { key: "a", variant: "large", media: "above", scale: "lead" },
       { key: "b", variant: "large", media: "above", scale: "lead" },
@@ -170,6 +175,15 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     ],
     md: { cols: 2, media: { b: "beside" } },
     traits: { anchor: "left", dominant: "wide" }
+  },
+  {
+    /* Одна статья с изображением сбоку во всю строку: запасная раскладка под
+       последний материал страницы (`feedGroups.ts`), в ритмы не ставится. */
+    id: "solo-wide",
+    cells: ["aaaaaaaaaaaa"],
+    slots: [{ key: "a", variant: "large", media: "beside" }],
+    md: { cols: 2 },
+    traits: { anchor: "center", dominant: "wide" }
   }
 ]
 
@@ -270,6 +284,10 @@ export const validateLayout = (layout: GroupLayout): string[] => {
   return errors
 }
 
+/** Как группа читается издалека: где масса, сколько рядов, какой формы главная ячейка. */
+export const signatureOf = (layout: GroupLayout): string =>
+  `${layout.traits.anchor}/${layout.cells.length}/${layout.traits.dominant}`
+
 /**
  * Ритм ленты отвергает монотонность: соседние группы обязаны различаться, а
  * нарушение геометрии допускается ровно одно и не с краю.
@@ -283,10 +301,7 @@ export const validateRhythm = (rhythm: string[], articleCount: number): string[]
   })
   if (errors.length) return errors
 
-  const signature = (i: number) => {
-    const t = layouts[i]!.traits
-    return `${t.anchor}/${layouts[i]!.cells.length}/${t.dominant}`
-  }
+  const signature = (i: number) => signatureOf(layouts[i]!)
   for (let i = 1; i < rhythm.length; i++) {
     if (rhythm[i] === rhythm[i - 1])
       errors.push(`две одинаковые раскладки подряд: «${rhythm[i]}» на позициях ${i - 1} и ${i}`)

@@ -13,6 +13,12 @@ export type CardVariant = "lede" | "large" | "small" | "rank"
 /** Композиция внутри варианта: изображение сбоку или над текстом. */
 export type SlotMedia = "beside" | "above"
 
+/**
+ * Служебная строка карточки после автора: рубрика (ленты главной) или дата
+ * (лента рубрики, где рубрика известна из шапки, а порядок задаёт новизна).
+ */
+export type CardMeta = "type" | "date"
+
 export interface SlotSpec {
   /** Буква слота в матрице `cells`. */
   key: string

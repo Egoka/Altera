@@ -17,3 +17,19 @@ export const LATEST_RHYTHM = ["hero-left", "quad-square", "trio-uneven", "stripe
  * между двумя башнями — пауза между тяжёлыми группами.
  */
 export const DEMANDED_RHYTHM = ["wide-trio-right", "pair-tall", "mirror-tower", "lead-pair-right", "trio-tall"]
+
+/**
+ * Лента рубрики: один круг ритма — страница в 24 материала (`section-feed.md` §5).
+ * Открывается `lead-pair-right` (решение владельца 2026-09-13), дальше масса группы
+ * ходит справа налево; порядок не повторяет ленты главной. Хвост неполной страницы
+ * собирает `buildFeedGroups` запасной раскладкой под остаток.
+ */
+export const SECTION_RHYTHM = [
+  "lead-pair-right",
+  "hero-right",
+  "trio-uneven",
+  "quad-square",
+  "mirror-tower",
+  "stripe-wide-narrow",
+  "feature-stack"
+]

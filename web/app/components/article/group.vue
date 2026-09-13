@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import type { ArticleResponse } from "~/types/article"
-  import type { SlotMedia, SlotSpec } from "~/types/layout"
+  import type { CardMeta, SlotMedia, SlotSpec } from "~/types/layout"
   import {
     getLayout,
     mdColsOf,
@@ -16,6 +16,8 @@
     articles: ArticleResponse[]
     /** Идентификатор раскладки из реестра `articleLayouts`. */
     layout: string
+    /** Служебная строка карточек: рубрика (по умолчанию) или дата — для лент внутри рубрики. */
+    meta?: CardMeta
   }>()
 
   const layout = computed(() => getLayout(props.layout))
@@ -61,7 +63,7 @@
         :style="{ 'grid-area': order[index] }"
         class="w-full"
         :class="{ 'self-center': centered(index) }">
-        <component :is="componentFor(slots[index])" :article="article" :scale="slots[index]?.scale" />
+        <component :is="componentFor(slots[index])" :article="article" :scale="slots[index]?.scale" :meta="meta" />
       </div>
     </div>
 
@@ -74,14 +76,14 @@
         :key="`md-${article.id}`"
         class="w-full"
         :style="{ 'grid-column': `span ${Math.min(mdSpan(index), mdCols)}` }">
-        <component :is="componentFor(slots[index], mdMedia(index))" :article="article" />
+        <component :is="componentFor(slots[index], mdMedia(index))" :article="article" :meta="meta" />
       </div>
     </div>
 
     <!-- Узкие экраны: одна колонка, сложные раскладки схлопываются -->
     <div class="grid grid-cols-1 gap-y-10 sm:hidden">
       <div v-for="(article, index) in articles" :key="`sm-${article.id}`" class="w-full">
-        <component :is="componentFor(slots[index])" :article="article" />
+        <component :is="componentFor(slots[index])" :article="article" :meta="meta" />
       </div>
     </div>
   </section>
