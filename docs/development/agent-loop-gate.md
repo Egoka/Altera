@@ -45,8 +45,9 @@ dirty дерева указывается fingerprint, который `start` п
 dirty дерево после смены HEAD восстановить этим CLI нельзя: такой первый `start` отклоняется.
 
 Снимок снимается дважды; перед записью состояния повторно проверяется ревизия и evidence.
-Изменение HEAD или scoped dirty fingerprint делает старое evidence непригодным, в том числе
-при переходе на следующую стадию. Prerequisites сверяются при start, record, finish и Stop,
+В прежнем verification-only профиле изменение HEAD или scoped dirty fingerprint делает
+старое evidence непригодным. Типизированный lifecycle ниже различает выход реализации,
+контракт и явно доказанную публикацию; произвольное source изменение остаётся недопустимым. Prerequisites сверяются при start, record, finish и Stop,
 включая сохранённые ревизии и хэши evidence/output/trace всех предыдущих обязательных стадий.
 Обновление текущего парного отчёта следующей стадией допустимо: прежние proof-артефакты
 и события сохраняются отдельно. Это обнаружение обычных гонок, а не транзакционная блокировка
@@ -107,7 +108,7 @@ Actor/run/stage/check/event IDs используют ASCII буквы, цифр�
 отклоняется. Все перечисленные стадии обязательны в указанном порядке; стадии, не нужные
 задаче, не включаются. Завершённая стадия не переоткрывается автоматически. Если ревизия после
 неё поменялась, handoff блокируется; восстановление требует решения контроллера с сохранением
-истории, этот CLI не предоставляет команду сброса состояния или счёта.
+истории. Для явно типизированного профиля используются return/recover ниже; reset-команды нет.
 
 ## Evidence и парный отчёт
 
@@ -188,14 +189,16 @@ python3 scripts/agent-loop/gate.py start docs/plans/demo.gate.json --stage revie
 ```
 
 Независимый reviewer сверяет источники, реальный diff и все AC. Значение `task_acceptance` CLI
-принимает только `not_checked`: его успешный exit не подменяет вердикт reviewer. Для новой
+обычного finish принимает только `not_checked`: его успешный exit не подменяет вердикт reviewer.
+Явный return принимает переданный вердикт `return` с уже записанными дефектами. Для новой
 стадии отчёт актуализируется, а исходные evidence/trace и история событий сохраняются.
 
 ## Неуспех, ownership и атомарность
 
 State — `<git-common-dir>/agent-loop/state.json`, общий для всех worktree одного репозитория.
-Формат state — version 2: отдельные `parent` и run/stage `slot`. Прежний формат version 1
-отклоняется без перезаписи или сброса failures; автоматической миграции или reset-команды нет.
+Формат state — version 3: отдельные `parent` и run/stage `slot`, lifecycle history и relations.
+Прежние форматы version 1/2 отклоняются без перезаписи или сброса failures: утраченные
+архивы нельзя синтезировать. Автоматической миграции или reset-команды нет.
 Операции сериализуются атомарным `mkdir lock`, запись JSON — temporary file + fsync + atomic
 rename + fsync каталога. В lock записывается PID. CLI не ожидает освобождения занятого lock,
 не считает неизвестного владельца умершим и не делает force-unlock после сбоя. Повреждённый
@@ -238,3 +241,154 @@ committed/dirty scope, повтор Stop, docs-only/no-op, stale revision/output
 Она не доказывает запуск Multica/модели, безопасность против намеренной записи, смысл AC или
 продуктовые браузерные сценарии. Команда набора отдельно от `pnpm test`; подключение в CI —
 следующий этап инфраструктуры.
+
+## Типизированный жизненный цикл
+
+Новый профиль задаётся явными `kind`: ведущие `contract`, один `implementation`, затем
+`verification`; после source verification допустимы пары `publication` → `verification`.
+Порядок фиксируется паспортом. Пример полного порядка: plan → develop → test → review →
+docs → docs-check → release → docs-finalize → completion-check. Все стадии обязательны;
+release остаётся обычной verification с объявленными проверками реальной среды/артефакта,
+health/migrations/rollback, а не выведенным из локального SHA успехом. Если релиз не нужен,
+не включай его и второй metadata-проход. Имена сами по себе не дают разрешений.
+
+Contract проверяет уже подготовленный замороженный техплан. Implementation владеет source
+записью в scope и сохраняет input/output. Verification закреплена за текущим выходом;
+record/finish/Stop повторно сверяют все prerequisite hashes. Source mutation во время неё
+отклоняется, даже если текущая проверка предоставила новый passed. Отсутствие kind сохраняет
+прежний verification-only профиль; без implementation return недоступен.
+
+Состояние lifecycle содержит iteration, append-only history, current_stages,
+verification_target и relations. Счёт остаётся `tasks[T].checks[STAGE][CHECK].failures`.
+Новая итерация или актор не создаёт новую проверку. До finish/return координатор готовит
+точные копии канонической пары:
+
+```text
+docs/reports/evidence/SLUG/stages/STAGE/RUN-report.md
+docs/reports/evidence/SLUG/stages/STAGE/RUN-report.gate.json
+```
+
+Каждый архив и все старые proof/output/trace повторно проверяются по SHA-256. Каноническая
+пара может стать отчётом следующей стадии, история остаётся читаемой. Перед последним
+finish все зарегистрированные proof, архивы и последняя пара должны быть закоммичены;
+до этого другой parent не получает очередь. Stage archive не создаётся скрыто после finish.
+
+### Первый возврат
+
+В source verification объяви `return_to: develop`. Пока неуспешный reviewer/tester ещё владеет
+slot, запиши реальный failed/blocked под прежним check_id, подготовь парный report и архив
+со `stage_outcome: returned`, `task_acceptance: return`, отдельным native_outcome. Сохрани
+ту же JSON-копию в собственном evidence-каталоге; она дополнительно содержит:
+
+```json
+{
+  "iteration": 0,
+  "return_to": "develop",
+  "failed_events": ["recorded-defect-event"],
+  "defects": [{ "criterion": "AC-1", "location": "server/file.ts", "detail": "Наблюдаемый дефект" }],
+  "repair_direction": "Разрешённое исправление в scope",
+  "preserved_contract": "Точное значение из паспорта",
+  "failure_counts": { "review": 1 }
+}
+```
+
+Это дополнительные поля к обычному отчёту, не самостоятельный полный sidecar.
+
+```bash
+python3 scripts/agent-loop/gate.py return docs/reports/evidence/SLUG/return-RUN.json --event RETURN_EVENT --actor REVIEWER --run REVIEW_RUN
+```
+
+Gate сверяет фактический записанный дефект этого actor/run/stage, объявленный target и
+текущие counters. Он освобождает slot, сохраняет parent и историю, увеличивает iteration,
+оставляет эффективными только contract stages. Новый develop затем публикует новый выход,
+все downstream source checks выполняются заново. При любом остановленном check return
+отказывает. Release сохраняет свой смысл окончания run без завершения стадии; return
+после release не выполняется. Нет reset, смены scope/AC или скрытого scheduler.
+
+### Commit собственных артефактов
+
+После фактической проверки и подготовки её отчёта/архивов commit только собственные gate
+артефакты, затем явно свяжи ревизии до finish:
+
+```bash
+python3 scripts/agent-loop/gate.py bind-artifacts docs/plans/SLUG.gate.json --event BIND_EVENT --actor ACTOR --run RUN
+```
+
+Gate берёт from из собственного anchor, доказывает ancestry, точный diff только canonical
+plan/passport/report и `docs/reports/evidence/SLUG/`, равный scoped dirty fingerprint и
+неизменность frozen contract/старых hashes. Source/config/tests, другие docs, перенос пути
+через границу, symlink и изменённый dirty input отклоняются. История хранит полные from/to
+SHA, paths, contract hash, actor/run и references к proof. Исходные SHA в evidence остаются
+реальными: binding не заявляет исполнение команды на будущем commit.
+
+Binding разрешён только owning actor/run активного slot либо последнему owning run того же
+зарезервированного parent между стадиями. После final finish он недоступен. После return
+binding сохраняет артефакты, но не возвращает superseded source verification. Commit ранее
+dirty source после тестов не является artifact binding; источник надо зафиксировать в
+implementation до verification.
+
+### Metadata publication и независимая приёмка
+
+До первого start задай `publication_paths`: уникальные точные Markdown-пути внутри scope,
+например `docs/backlog/tasks/T-NNN.md`. Каталоги, wildcard, gate plan/report и source/config
+не подходят. Наличие смешанного документа в списке не разрешает менять его правила.
+Substantive source/contract изменения готовятся до source review. В publication разрешены
+только frozen metadata paths и собственные gate artifacts; committed/staged/working/untracked
+изменения вне write-set и защищённый source drift отклоняются. Metadata нужно commit до
+записи evidence. Gate сохраняет publication relation отдельно от строгого artifact equivalence:
+source input S, metadata output D, protected dirty fingerprint, diff hash, old/new Git blobs.
+
+Следующая verification выполняется другим actor/run и передаёт в evidence дополнительное
+`publication_review`: `relation` равную `status.tasks[T].pending_publication`,
+`verdict: supported_metadata`, `preserved_contract: true`. Это независимая содержательная
+приёмка фактов/статусов/ссылок по точному diff, не результат formatter. Отсутствующий или
+иной verdict отклоняется. Истинность утверждений проверяет reviewer; CLI не понимает смысл
+Markdown и не доказывает независимость личности по строке actor.
+
+До release keeper пишет подтверждённое source accepted/release pending. Только после
+успешного обязательного release он делает docs-finalize и completion-check под тем же
+parent. Старое source evidence остаётся на S; source acceptance и docs acceptance хранятся
+раздельно. Правки completed до последнего gate — предложение закрытия. Иная maintenance
+задача не закрывает пропущенные обязательства исходной задачи.
+
+### Recover после доказанного устранения причины
+
+Обычные start/return/record блокируются при failures ≥ 2. Для recover неуспешное evidence
+должно сохранять `cause: {name, condition, observation}`: именованную причину, наблюдаемое
+условие продолжения и путь непустого наблюдения внутри evidence-каталога. Gate сохраняет
+его bytes hash вместе со stop_event. После окончания прежнего процесса/slot контроллер
+готовит `recovery-EVENT.json`:
+
+```json
+{
+  "task": "T-NNN", "stage": "review", "check_id": "review",
+  "stop_event": "CURRENT_STOP", "old_run": "STOPPED_RUN",
+  "actor": "controller", "run": "NEW_RUN", "failures": 2,
+  "baseline_commit": "FULL_BASELINE_SHA", "revision_commit": "ACTUAL_HEAD",
+  "dirty_fingerprint": "clean", "cause": "Наблюдавшаяся причина",
+  "condition": "Ранее объявленное условие",
+  "remediation": "docs/reports/evidence/SLUG/new-conditions.txt",
+  "confirmer": "independent-operator", "condition_removed": true,
+  "old_run_stopped": true, "no_live_duplicate": true,
+  "q_resolved": true, "conflict_free": true, "next_operation": "review"
+}
+```
+
+```bash
+python3 scripts/agent-loop/gate.py recover docs/reports/evidence/SLUG/recovery-EVENT.json --event EVENT --actor controller --run NEW_RUN
+```
+
+Gate требует текущий stop того же task/stage/check, прежний счёт, свежий source/prerequisites,
+новые непустые conditions bytes, отдельного confirmer и все явные подтверждения условий.
+Он атомарно приобретает именно остановленную стадию, сохраняя failures=2. Первый фактический
+результат этого check потребляет recovery: pass сбрасывает только свой счёт, failed/blocked
+увеличивает его до трёх и немедленно снова останавливает. RED/not_run/unknown не дают второй
+попытки; прежние native outcomes сохраняются. Повтор event/run, stale proof, использованный
+или опровергнутый remedy не возобновляются. Новая строка actor или косметический commit
+с прежним remedy не являются новыми условиями. Семантическая проверка изменений условий и
+отсутствия живого процесса — ответственность контроллера/runtime, а не обещание CLI.
+
+Source repair вне предусмотренной реализации не оживляет старые test/review prerequisites.
+Поэтому некоторые остановы требуют отдельно авторизованного remediation workflow; этот
+профиль не обещает автоматически исправить любую причину. Текущий Task 3 typecheck остаётся
+остановленным после двух неуспехов, его третий запуск этим lifecycle не разрешён.
