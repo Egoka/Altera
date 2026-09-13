@@ -22,7 +22,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.12.4",
   "dependencies": {
     "@escape.tech/graphql-armor-block-field-suggestions": "^3.0.1",
     "@graphql-tools/load-files": "^7.0.1",

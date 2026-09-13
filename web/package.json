@@ -9,7 +9,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "nuxt prepare && vue-tsc -b --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@nuxt/eslint": "1.6.0",
@@ -31,10 +33,12 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
     "eslint-plugin-vue": "^10.3.0",
     "vitest": "^5.0.0",
-    "vue-eslint-parser": "^10.2.0"
+    "vue-eslint-parser": "^10.2.0",
+    "vue-tsc": "3.3.11"
   }
 }

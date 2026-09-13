@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -30,6 +30,46 @@ jobs:
         run: pnpm lint
       - name: Tests
         run: pnpm test
+
+  web-checks:
+    name: Сборка и типизация веба
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build web
+        run: pnpm --filter nuxt-app run build
+      - name: Typecheck web
+        run: pnpm --filter nuxt-app run typecheck
+
+  web-smoke:
+    name: Браузерная проверка веба
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm --filter nuxt-app exec playwright install --with-deps chromium
+      - name: Smoke check homepage
+        run: pnpm --filter nuxt-app run test:e2e
 
   server-smoke:
     name: Сборка сервера и дымовая проверка старта
@@ -75,7 +115,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
       - name: Install server dependencies
         run: cd server && pnpm install --frozen-lockfile
@@ -99,20 +139,30 @@ jobs:
   # стала бы зелёной на красном CI. Поэтому результат зависимостей проверяется явно.
   test:
     name: test
-    needs: [checks, server-smoke]
+    needs: [checks, web-checks, web-smoke, server-smoke]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Свести результаты проверок
         run: |
           echo "Формат, линт и тесты: ${{ needs.checks.result }}"
+          echo "Сборка и типизация веба: ${{ needs['web-checks'].result }}"
+          echo "Браузерная проверка веба: ${{ needs['web-smoke'].result }}"
           echo "Сборка и дымовая проверка: ${{ needs['server-smoke'].result }}"
           if [ "${{ needs.checks.result }}" != "success" ]; then
             echo "::error::джоб «Формат, линт и тесты» завершился как ${{ needs.checks.result }}"
+            exit 1
+          fi
+          if [ "${{ needs['web-checks'].result }}" != "success" ]; then
+            echo "::error::джоб «Сборка и типизация веба» завершился как ${{ needs['web-checks'].result }}"
+            exit 1
+          fi
+          if [ "${{ needs['web-smoke'].result }}" != "success" ]; then
+            echo "::error::джоб «Браузерная проверка веба» завершился как ${{ needs['web-smoke'].result }}"
             exit 1
           fi
           if [ "${{ needs['server-smoke'].result }}" != "success" ]; then
             echo "::error::джоб «Сборка сервера и дымовая проверка старта» завершился как ${{ needs['server-smoke'].result }}"
             exit 1
           fi
-          echo "Обе проверки успешны."
+          echo "Все проверки успешны."
