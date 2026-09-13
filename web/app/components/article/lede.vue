@@ -16,14 +16,14 @@
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
-          class="w-full aspect-3/2 object-cover rounded-sm transition-transform duration-300" />
+          class="w-full aspect-2/1 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
     </figure>
 
     <div class="text-center">
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors">
+        class="font-garamond-libre text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors block max-w-4xl mx-auto">
         {{ article.title }}
       </NuxtLink>
     </div>

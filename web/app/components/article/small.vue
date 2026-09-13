@@ -12,6 +12,16 @@
 <template>
   <article v-if="slug && article.title">
     <div class="flex flex-row items-start gap-5">
+      <!-- Изображение (левая сторона) -->
+      <figure class="relative flex flex-shrink-0 flex-col items-start">
+        <NuxtLink :to="slug" class="block group">
+          <NuxtImg
+            :src="article.featuredImage"
+            :alt="article.title"
+            class="w-28 h-21 max-w-28 rounded-sm object-cover transition-transform duration-300" />
+        </NuxtLink>
+      </figure>
+
       <div class="flex flex-1 flex-col min-w-0">
         <NuxtLink
           :to="slug"
@@ -24,16 +34,6 @@
           <ShowType :link="contentType" :name="article.contentType.name" />
         </div>
       </div>
-
-      <!-- Изображение (правая сторона) -->
-      <figure class="relative flex flex-col flex-shrink-0 items-end">
-        <NuxtLink :to="slug" class="block group">
-          <NuxtImg
-            :src="article.featuredImage"
-            :alt="article.title"
-            class="w-28 h-21 max-w-28 rounded-sm object-cover transition-transform duration-300" />
-        </NuxtLink>
-      </figure>
     </div>
   </article>
 </template>

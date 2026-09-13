@@ -12,7 +12,7 @@
 <template>
   <article v-if="slug && article.title">
     <div class="flex flex-col sm:flex-row items-start gap-7 sm:gap-8">
-      <div class="flex flex-1 flex-col sm:max-w-1/2 order-2 sm:order-1">
+      <div class="order-2 flex flex-1 flex-col sm:max-w-1/2">
         <NuxtLink
           :to="slug"
           class="font-garamond-libre text-card md:text-title font-bold text-zinc-900 dark:text-zinc-300 transition-colors">
@@ -30,8 +30,8 @@
         </div>
       </div>
 
-      <!-- Изображение (справа на sm+, сверху на минимальном экране) -->
-      <div class="w-full flex-1 sm:max-w-1/2 order-1 sm:order-2">
+      <!-- Изображение (слева на sm+, сверху на минимальном экране) -->
+      <div class="order-1 w-full flex-1 sm:max-w-1/2">
         <figure class="relative">
           <NuxtLink :to="slug" class="block group">
             <NuxtImg
