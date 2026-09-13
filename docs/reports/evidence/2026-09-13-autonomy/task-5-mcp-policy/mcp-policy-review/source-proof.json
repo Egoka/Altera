@@ -1,0 +1,21 @@
+{
+  "base": "d4bf8b898217196b0450d174d0a2a90550a4e66c",
+  "owned": {
+    "scripts/agent-runtime/runtime.py": "435abda70f7ca56dce248ee5087f1a5dfea6bdb492bb53d6c7fa423a21ae3f99",
+    "scripts/agent-runtime/provider-proxy.mjs": "3fbda41d58bf5028ab926c589ef439fbdf784a351853ca7dbaf9523d4fb6f97c",
+    "scripts/agent-runtime/test_runtime.py": "b2b9aac4c1c2d8309962454791df986f70c6ce8f488e0da7976a6377b2763a1d",
+    "scripts/agent-runtime/test_proxy.mjs": "0ce1fd9aba15d6170b065224c120e4e14452947c796d3d4621714badbec9a398",
+    "scripts/agent-runtime/reviewer-mcp-canary.mjs": "3a472fd7ed360d2802c0acfc64c9d416713e24113be40d0f78a2d38b06e00c80",
+    "scripts/agent-runtime/test_mcp_canary.py": "11c7a93430dff346be537e47b90f4f25090082f73cf5508944186fa4647dc229",
+    "docs/development/runtime-isolation.md": "10c288c47a733da3f3b21d0d3844d1effb99889a171072d8dafeae977dc92703"
+  },
+  "scoped_diff_sha256": "09269fc9c171c7b68c60b09fdf3707240fb1282f144e8156f2371d472c306090",
+  "root_report_diff_sha256": "26a651b06ec00964dd114a12479741be344894a0e0d4d008d6acfa14f3d96c7c",
+  "failure_counters": {
+    "declared_expected_red_checks": 4,
+    "real_canary_failures_total": 1,
+    "real_canary_consecutive_failures": 0,
+    "stop_threshold": 2,
+    "historical_task5_d1_counters_unchanged": true
+  }
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "command": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "3f3f9347a36d27bd96b7b2eae8603e12a4bff48ae662b01f3d84069ecb6dcb58"
+    ],
+    "exit": 1,
+    "stdout": "[]\n",
+    "stderr": "Error response from daemon: network 3f3f9347a36d27bd96b7b2eae8603e12a4bff48ae662b01f3d84069ecb6dcb58 not found\n"
+  },
+  {
+    "command": [
+      "/usr/local/bin/docker",
+      "container",
+      "inspect",
+      "f7a1d0998274e7848727cabdce7e78315b788e2057699cb1a48b9cd5747e830d"
+    ],
+    "exit": 1,
+    "stdout": "[]\n",
+    "stderr": "Error response from daemon: No such container: f7a1d0998274e7848727cabdce7e78315b788e2057699cb1a48b9cd5747e830d\n"
+  },
+  {
+    "command": [
+      "/usr/local/bin/docker",
+      "image",
+      "inspect",
+      "--format",
+      "{{.Id}}",
+      "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a"
+    ],
+    "exit": 0,
+    "stdout": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a\n",
+    "stderr": ""
+  }
+]

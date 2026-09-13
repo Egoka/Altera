@@ -1,0 +1,332 @@
+{
+  "base": "d4bf8b898217196b0450d174d0a2a90550a4e66c",
+  "head": "563844e6461b76c97065842efb1cb0f5b9b5099f",
+  "scope": "explicit synthetic/no-model evidence only; no credentials/cache homes",
+  "files": [
+    {
+      "path": "mcp-policy-canary-1/before.json",
+      "bytes": 492,
+      "sha256": "621f9c9d11ecb2e3bcae6abce402c1f5fd614a724810f5b70d9f141126ebc702"
+    },
+    {
+      "path": "mcp-policy-canary-1/exit.json",
+      "bytes": 1018,
+      "sha256": "559be1dff7bdbe907f1ecf40f9148d30bc357579a79e21dab51bf27c6384a414"
+    },
+    {
+      "path": "mcp-policy-canary-1/manifest.json",
+      "bytes": 1240,
+      "sha256": "0762c218a8d93f350759daf632c8ad69befbf76def105f897f285577f93d2c6c"
+    },
+    {
+      "path": "mcp-policy-canary-1/policy/claude-settings.json",
+      "bytes": 24,
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "path": "mcp-policy-canary-1/policy/fixture.mjs",
+      "bytes": 10541,
+      "sha256": "742fd071f70c19e5d295a0d78abeba297df28fdfc6d31c9bb12194e815cf026f"
+    },
+    {
+      "path": "mcp-policy-canary-1/policy/mcp.json",
+      "bytes": 245,
+      "sha256": "daec64dd38c046b03ce36c277c45b1b97fb2f7ccec4e9bdbcfb3e6ed22e71863"
+    },
+    {
+      "path": "mcp-policy-canary-1/policy/provider-proxy.mjs",
+      "bytes": 2651,
+      "sha256": "3fbda41d58bf5028ab926c589ef439fbdf784a351853ca7dbaf9523d4fb6f97c"
+    },
+    {
+      "path": "mcp-policy-canary-1/prepared-command.json",
+      "bytes": 1984,
+      "sha256": "f58acdc2f7ec881d61e4018f78c5fd3004a44aa3e852176783d71c59be2c839d"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/context7-protocol.json",
+      "bytes": 10162,
+      "sha256": "9933d64bc1c25a4f0b7a4c0e65eaf4ac478835afa493648a69110d98e63f9c53"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/forbidden-connect.json",
+      "bytes": 278,
+      "sha256": "25572ed2729028c564aba008ae9cfd4f43a302df7075191c53c2e3d6169519ad"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/reviewer-mcp-result.json",
+      "bytes": 968,
+      "sha256": "04399287f454baa8216b4fdf34e12f0d6c2c41044914ff05953885a3954c0ce8"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/trace-index-exit.json",
+      "bytes": 34,
+      "sha256": "239c4c5b16fbf67afdef618fae0a2e1c5c7c427c085dc2616a3101c227c00a06"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/trace-index.log",
+      "bytes": 1528,
+      "sha256": "e5beef4dd28ac0f1ed999e901cc60285f5a59265f74e80d7da4d857ce24a7e5f"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/trace-protocol.json",
+      "bytes": 67628,
+      "sha256": "fb60cc5ad12e6c10e72d924b22a6135d3943fae4a1d2f972f49ee06418061f67"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/evidence/trace-stderr.log",
+      "bytes": 4035,
+      "sha256": "c39246214ca59bb739f01d4bad851fb3f7b5db5351b5e42858e6087a353c1db2"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/network-inspect.json",
+      "bytes": 1252,
+      "sha256": "cd9a3b091c68ff25e16c6e69a49496335f5c4a72753a400978132627d4fa2b43"
+    },
+    {
+      "path": "mcp-policy-canary-1/run/proxy-inspect.json",
+      "bytes": 8792,
+      "sha256": "aede5139cebe6f705fc2893c3f8634b86549cacf59aad91f18f77660a2649b07"
+    },
+    {
+      "path": "mcp-policy-canary-1/snapshot/sample.js",
+      "bytes": 40,
+      "sha256": "6512b1c1a66da9d5ad54aeb8ccb1bffd221abd101cabe5cc9ab7f80f32c3b3bb"
+    },
+    {
+      "path": "mcp-policy-canary-1/source/sample.js",
+      "bytes": 40,
+      "sha256": "6512b1c1a66da9d5ad54aeb8ccb1bffd221abd101cabe5cc9ab7f80f32c3b3bb"
+    },
+    {
+      "path": "mcp-policy-canary-1/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mcp-policy-canary-1/stdout.log",
+      "bytes": 593,
+      "sha256": "357a683496ee70ef327ee9efa62c0c8161520a536b187ba690553e274b319be5"
+    },
+    {
+      "path": "mcp-policy-canary-2/before.json",
+      "bytes": 492,
+      "sha256": "645b576de9b36abea0ae2b05dca4b1042c8d3b6c1cb08301a9f5061dc09bc941"
+    },
+    {
+      "path": "mcp-policy-canary-2/cleanup-image-proof.json",
+      "bytes": 1014,
+      "sha256": "99e00f97f8872348b407b65c7bca3caa21b6e3a62f9ec8e85505fc77c0119653"
+    },
+    {
+      "path": "mcp-policy-canary-2/exit.json",
+      "bytes": 1018,
+      "sha256": "606bb97df480baeae4c8c40ae4e662f315989f23e2123d6b2358e8f5107d1994"
+    },
+    {
+      "path": "mcp-policy-canary-2/manifest.json",
+      "bytes": 1240,
+      "sha256": "4db2a6979d950ed13a86038875e9a42d27cac7d8e79d8e4592938a9e507aaa69"
+    },
+    {
+      "path": "mcp-policy-canary-2/policy/claude-settings.json",
+      "bytes": 24,
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "path": "mcp-policy-canary-2/policy/fixture.mjs",
+      "bytes": 11662,
+      "sha256": "3a472fd7ed360d2802c0acfc64c9d416713e24113be40d0f78a2d38b06e00c80"
+    },
+    {
+      "path": "mcp-policy-canary-2/policy/mcp.json",
+      "bytes": 245,
+      "sha256": "daec64dd38c046b03ce36c277c45b1b97fb2f7ccec4e9bdbcfb3e6ed22e71863"
+    },
+    {
+      "path": "mcp-policy-canary-2/policy/provider-proxy.mjs",
+      "bytes": 2651,
+      "sha256": "3fbda41d58bf5028ab926c589ef439fbdf784a351853ca7dbaf9523d4fb6f97c"
+    },
+    {
+      "path": "mcp-policy-canary-2/prepared-command.json",
+      "bytes": 1984,
+      "sha256": "5ada0e15e333f1d9bba0e7fc4e92caa6ed991a344b03a95b19458dc256bae464"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/context7-protocol.json",
+      "bytes": 10107,
+      "sha256": "48f71ade0294fcce871f91065451f5c61b57b204e26ed3afd3c4abead4d93b40"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/forbidden-connect.json",
+      "bytes": 278,
+      "sha256": "25572ed2729028c564aba008ae9cfd4f43a302df7075191c53c2e3d6169519ad"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/reviewer-mcp-result.json",
+      "bytes": 1196,
+      "sha256": "bd77e6f373308fbbe5ff2330c8c95016f5ee162c8484bfc32386a7f367512d7b"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/trace-index-exit.json",
+      "bytes": 34,
+      "sha256": "239c4c5b16fbf67afdef618fae0a2e1c5c7c427c085dc2616a3101c227c00a06"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/trace-index.log",
+      "bytes": 1526,
+      "sha256": "7d6f16f55a2c1d8431e8895c382ab439e11751c7430361741ea2d837d7f99cc1"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/trace-protocol.json",
+      "bytes": 67628,
+      "sha256": "fb60cc5ad12e6c10e72d924b22a6135d3943fae4a1d2f972f49ee06418061f67"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/evidence/trace-stderr.log",
+      "bytes": 3906,
+      "sha256": "f2792eff791290915c628cb1dd71b508434a3c36d801e72d0a712d5a85c57322"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/network-inspect.json",
+      "bytes": 1252,
+      "sha256": "cb11791afb2c7d10d151adbb4511f82ee39df5b96adc915a57b3fa4c9c55eb67"
+    },
+    {
+      "path": "mcp-policy-canary-2/run/proxy-inspect.json",
+      "bytes": 8791,
+      "sha256": "7248ec0948dda86651ad42c69e81e3a77b33dd5a8d2edb135b6291d2d06ab3a0"
+    },
+    {
+      "path": "mcp-policy-canary-2/snapshot/sample.js",
+      "bytes": 40,
+      "sha256": "6512b1c1a66da9d5ad54aeb8ccb1bffd221abd101cabe5cc9ab7f80f32c3b3bb"
+    },
+    {
+      "path": "mcp-policy-canary-2/source/sample.js",
+      "bytes": 40,
+      "sha256": "6512b1c1a66da9d5ad54aeb8ccb1bffd221abd101cabe5cc9ab7f80f32c3b3bb"
+    },
+    {
+      "path": "mcp-policy-canary-2/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "mcp-policy-canary-2/stdout.log",
+      "bytes": 703,
+      "sha256": "5c360fab918277bc4e755c6ff21e8ae529eedfbaf79cfb784e4f8e63fda20fe6"
+    },
+    {
+      "path": "task-5-mcp-policy-canary-covering.log",
+      "bytes": 452,
+      "sha256": "2853d93b9b8e2fb398788cfad196a7ef5675c0d48a1b117f2a6f91cfd3af0f78"
+    },
+    {
+      "path": "task-5-mcp-policy-canary-final.log",
+      "bytes": 452,
+      "sha256": "79f45060ba03b81bab1adf8e63d32bc8769dfcdfe6b037587e59d46fcfea7eac"
+    },
+    {
+      "path": "task-5-mcp-policy-canary-green.log",
+      "bytes": 361,
+      "sha256": "20d01a0f93f3e3768cf0d8519288b3aaaeace66d0430c6b08155cf698ee91bf6"
+    },
+    {
+      "path": "task-5-mcp-policy-canary-red.log",
+      "bytes": 5731,
+      "sha256": "fd2371a05380da1486d0bf225948fed67f476f6e0bfa3eaa3f8f8d4e5fd6e887"
+    },
+    {
+      "path": "task-5-mcp-policy-doc-format.log",
+      "bytes": 55,
+      "sha256": "35c1469ffb20989f94e98e4762d5c6b1a9cdb4cf3502ae804fca7bc32e1f909d"
+    },
+    {
+      "path": "task-5-mcp-policy-format.log",
+      "bytes": 150,
+      "sha256": "e17c43eaafaaebbac79896d4a4403a725a4589a46ed1cbdb3416a13321df109e"
+    },
+    {
+      "path": "task-5-mcp-policy-proxy-final.log",
+      "bytes": 294,
+      "sha256": "fa6f6519e7f4284bf24304b629aaf965702f44c539b6889f66e5abe96b475028"
+    },
+    {
+      "path": "task-5-mcp-policy-proxy-green.log",
+      "bytes": 289,
+      "sha256": "091ab7f3b317d67d4dd9bb21c7c8a59122ad45d4c42b094d0e8a4f903419e921"
+    },
+    {
+      "path": "task-5-mcp-policy-proxy-red.log",
+      "bytes": 860,
+      "sha256": "d2d687c329cc4eeacb2ac716b1275d211847022345c7a939ca1a29f91264cf32"
+    },
+    {
+      "path": "task-5-mcp-policy-python-green.log",
+      "bytes": 1837,
+      "sha256": "2bec177dcdaf1ee6257f760667c016c89a18bf6808ad1ff83ab9b7fbbd2d874b"
+    },
+    {
+      "path": "task-5-mcp-policy-python-red.log",
+      "bytes": 3087,
+      "sha256": "eee0d953a23c2b7efa47a3638a1bb604f5c82fb65b8ae4757b5f05ea406721e3"
+    },
+    {
+      "path": "task-5-mcp-policy-real-1.log",
+      "bytes": 153,
+      "sha256": "b33d1dd31f121a24e4e992533c5961900b9813077bb84d63f977fd50eacc911e"
+    },
+    {
+      "path": "task-5-mcp-policy-real-2.log",
+      "bytes": 153,
+      "sha256": "9a65664fe5231b41b81d00b253f514fea900dd2508b295de318d3bf3d433d77c"
+    },
+    {
+      "path": "task-5-mcp-policy-trace-shape-red.log",
+      "bytes": 1240,
+      "sha256": "e8e8ba7437ee569c8c378ddf5516a1f7823665e510413cbb4cfd1393e1dfc074"
+    },
+    {
+      "path": "task-5-mcp-policy-brief.md",
+      "bytes": 6423,
+      "sha256": "b32b88b2cf3468595322358f8cb290a80915b3ff1ccdb7f12df95cf514ba3bb8"
+    },
+    {
+      "path": "task-5-mcp-policy-report.md",
+      "bytes": 10186,
+      "sha256": "17ea8130517d89d15b4881b540cd71f1736d8d4861d801a5348fb49af95f74de"
+    },
+    {
+      "path": "task-5-mcp-policy-commit.log",
+      "bytes": 1200,
+      "sha256": "aad4feac8115c9beebe22fc2b5b6c866b39939532917423a4fb2a3cabdbb30c1"
+    },
+    {
+      "path": "task-5-mcp-policy-commit-proof.json",
+      "bytes": 623,
+      "sha256": "01076259ac108e4abf68dde62c74bb98b054e7bee92a11b5ded983d79b6839f8"
+    },
+    {
+      "path": "mcp-policy-review/scoped.diff",
+      "bytes": 34414,
+      "sha256": "09269fc9c171c7b68c60b09fdf3707240fb1282f144e8156f2371d472c306090"
+    },
+    {
+      "path": "mcp-policy-review/source-proof.json",
+      "bytes": 1286,
+      "sha256": "5e28affe5427ef30ee6834963d5e01e86961a2dd1ed6583566169b75cec8cdf2"
+    },
+    {
+      "path": "mcp-policy-review/raw-evidence-sha256.json",
+      "bytes": 6496,
+      "sha256": "a5a48bcb17afe75c493cc1a6658c1e9de048b3838da15b1e63e2a522dc060c21"
+    },
+    {
+      "path": "task-5-mcp-policy-independent-review.md",
+      "bytes": 7348,
+      "sha256": "6b77f2c8c5d5909f237b394ebc99def8d06e0de3ef9748bb905cd24101d2baa5"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Task5 Codex protocol compatibility — local implementation
+
+Base `c11f9da82bb0aa0a05350dfc47c219913ba7bc2d`. Requirements read from exact task-5-codex-protocol-brief.md and corrected parent-scratch task-5-codex-bridge-preflight.md. Pinned upstream Multica commit 2ae2dbbb8f9ed9ffe1739ecf5abfe31a940ee50c supplied by root; no external source/config/native discovery repeated. Sole writer, five owned paths only. D1 and its accepted frozen binary remain untouched.
+
+## Changes
+
+- `effective_args` preserves existing app-server/config behavior and additionally accepts one optional exact `--listen stdio://` pair, preserving position and bytes. Rejects duplicates, missing value, equals spelling, TCP/Unix/HTTP or other listener strings, unknown trailing arguments and model/effort/config drift. Existing no-listener invocation remains valid; forced pinned model/medium pairs remain appended unchanged.
+- Guard accepts `serviceTier: "default"` only on the direct object `params` of a root Codex `thread/start`, `thread/resume` or `turn/start` request. Object identity limits the exception; root arrays, params arrays, nested objects/config, nested request envelopes, thread/fork/arbitrary methods and Claude-family messages retain rejection. No tier coercion. Null/omitted behavior, serviceTierForTurn, model/provider/effort/cwd/config write/import defenses are unchanged. The original input buffer is not rewritten.
+- Runtime-isolation protocol paragraph documents these two shapes and remaining per-task CODEX_HOME discovery, strict managed TOML materialization, exact AGENTS.md context and native canary blockers. New guard policy capture/hash is needed before future canary; no image rebuild for unchanged image contents.
+
+## Expected RED then GREEN
+
+1. Python focused RED command: `/usr/bin/python3 -I scripts/agent-runtime/test_runtime.py RuntimeTests.test_native_codex_stdio_listener_is_forwarded_exactly RuntimeTests.test_native_codex_listener_does_not_allow_alternate_transports_or_overrides` (tool0094e7/88bb95), exit1. Two tests: positive test's three native argv cases each raised the existing `unsupported_codex_argument`; negative transport/override test passed. These are expected missing-compatibility exceptions, not a fixture/setup failure. Raw task-5-codex-protocol-python-red.log.
+2. JS focused RED: `/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node --test --test-name-pattern='native Codex|native default' scripts/agent-runtime/test_protocol_guard.mjs` (toolcb6886), exit1. Positive native start/resume/turn acceptance test hit existing `preserved_model_settings_changed`; direct-scope negative test passed. Raw task-5-codex-protocol-js-red.log.
+3. After the minimal fixes and formatting, covering Python: `/usr/bin/python3 -I scripts/agent-runtime/test_runtime.py` (toolb25527/4396dc), exit0,16/16 passed. It uses only synthetic Git/policy/manifest fixtures and checks constructed command argv, without invoking Docker or a model. Raw task-5-codex-protocol-python-green.log.
+4. Covering JS: `/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node --test scripts/agent-runtime/test_protocol_guard.mjs` (toolaa7b2e), exit0,7/7 passed. Pinned-shaped messages include live model/cwd, nil developerInstructions, config medium, resume thread ID and turn effort/input; tests preserve original formatted JSON bytes and cover null/omitted plus targeted invalid variants. Raw task-5-codex-protocol-js-green.log.
+5. Prettier for the two owned JS files/doc and git diff --check pass. No extra broad tests, Docker/model/MCP/auth/native/config operations or stopped product suites. Normal repository hooks remain the separately authorized commit check.
+
+Expected RED is regression proof, not a real failure counter. New real check failures0; no existing review/build/check history reset. D1 independent acceptance is separate from this new protocol milestone. Full Task5/native integration remains unaccepted.
+
+## Self-review and immutable identity
+
+Five owned file hashes/modes, full baseline and dirty scope: task-5-codex-protocol-precommit.json. Scope SHA256 `d6473c42b4ef12d662abf0bafa8e990588c01562ed403ec3fa77f8b6e69c3f3d`. Scoped diff task-5-codex-protocol-review.diff SHA256 `b274096ebecf4a9203f9e170f36213c8fe4a03f995bf6fbd81c8c2f9759d696a`. Self-review confirmed only the listener branch and method/params identity exception broaden accepted input, with tests retaining all restricted boundaries. No managed-home read or profile binding was added. Root-owned reports/evidence excluded from staging. Commit result follows below.
+
+Committed `d4bf8b898217196b0450d174d0a2a90550a4e66c`, tree `69af98894c30d114bae33a40fce3b77078b51da7`, exactly five owned files. Normal Node24.12 hooks exit0: format/lint, web5 passed, server19 passed/1todo and one skipped test file. Raw task-5-codex-protocol-commit.log; result JSON confirms source hashes match verification and index empty. No root evidence/report or D1 staged. Independent scoped review pending; native/config mapping remains unaccepted.

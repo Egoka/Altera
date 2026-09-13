@@ -409,3 +409,76 @@ MCP-блок в per-task `CODEX_HOME/config.toml`. Их поддержка ещ�
 canonical/alias и sandbox. D1 принят для следующей контролируемой диагностики;
 успех нативного запуска и полная автономия этим не подтверждаются.
 [Повторное ревью](evidence/2026-09-13-autonomy/task-5-d1-fix1/task-5-d1-fix1-independent-review.md).
+
+## Подтверждённый результат D1 и совместимость Codex
+
+Нативная диагностика D1 завершилась 2026-09-13 21:54:14 UTC (14 сентября,
+00:54:14 Москвы). Run `01a09cc3-7d1f-7c25-92c0-08a4b812e6ed` дал ожидаемый exit 78:
+`read_status: ok`, `mapping_candidate: exact`. Это диагностический успех без
+вызова модели, хотя Multica показывает native status `failed`.
+Получены Context7 HTTP `https://mcp.context7.com/mcp` и inherited trace с аргументом
+`serve`; дополнительные headers/env и неизвестные поля отсутствуют. Фактическая
+работа MCP внутри контейнера этим ещё не проверена.
+[Очищенное доказательство](evidence/2026-09-13-autonomy/d1-native/native-descriptor-proof.json).
+
+Временный профиль и runtime удалены, исходный runtime ревьюера и сохранённые поля
+восстановлены; диагностическая задача явно оставлена без назначения. Исправлена
+ошибка ранней проверки: реальное поле назначения — `assignee_id`, поэтому прежнее
+утверждение о состоянии назначения непосредственно до диагностики не доказано.
+История двух ошибок cleanup сохранена; исправленный штатный маршрут удаления
+профиля завершился успешно. Последний readback подтверждает отсутствие активных
+и отложенных запусков, все три автопилота paused.
+[Cleanup](evidence/2026-09-13-autonomy/d1-native/cleanup-proof.json).
+
+Исходный HEAD `9534a378680b5fc16d3cec4319202bcaa6daa8fd`, status и все 733
+tracked/nonignored пути совпали до и после диагностики. Ignored файлы, credentials
+и cache не входят в это доказательство и не архивировались.
+[Сохранность](evidence/2026-09-13-autonomy/d1-native/source-after-proof.json).
+
+Коммит `d4bf8b898217196b0450d174d0a2a90550a4e66c` устранил два протокольных
+блокера Codex: точную пару `--listen stdio://` и `serviceTier: default` в прямом
+params разрешённых native RPC. Python 16/16 и JavaScript 7/7 прошли; независимое
+ревью приняло соответствие и качество без замечаний.
+[Ревью](evidence/2026-09-13-autonomy/task-5-codex-protocol/task-5-codex-protocol-independent-review.md),
+[manifest](evidence/2026-09-13-autonomy/task-5-codex-protocol/manifest.json).
+
+Следующий ограниченный этап — сохранение этих MCP descriptors в Linux policy и
+реальные вызовы Context7/trace без модели. Native adapter, per-task Codex config,
+Playwright тестировщика, context/hooks, refresh, collector и сквозной пилот
+остаются открытыми. 19 предложенных полей Multica ещё не применены; исходные
+продуктовые проверки и финальная интеграция не объявлены пройденными.
+
+## Реальные Context7 и trace внутри контейнера
+
+Коммит `563844e6461b76c97065842efb1cb0f5b9b5099f` добавил строгое отображение
+проверенного набора MCP ревьюера. Context7 разрешён только с фактическим публичным
+HTTP endpoint; trace сохраняет аргумент `serve`. Неизвестные серверы, поля,
+headers/env, подменённые URL и неоднозначный JSON отклоняются до модели.
+
+Второй реальный опыт без модели завершился exit0: Context7 initialize/tools/list
+и resolve-library-id вернули пять публичных React IDs, trace 3.25.0 выполнил index,
+project map и outline. Все шесть запрещённых CONNECT получили 403. Исходник,
+snapshot и policy совпали до и после; временная сеть и proxy удалены.
+Первый опыт exit1 сохранён: проверка ошибочно ожидала имя файла в summary-only map.
+Причина исправлена с регрессионным RED/GREEN; оба опыта входят в архив.
+[Результат](evidence/2026-09-13-autonomy/task-5-mcp-policy/mcp-policy-canary-2/run/evidence/reviewer-mcp-result.json),
+[сохранность](evidence/2026-09-13-autonomy/task-5-mcp-policy/mcp-policy-canary-2/exit.json).
+
+Проверки: runtime 19/19, proxy 2/2, canary contracts 4/4, штатные commit hooks.
+Независимое ревью этого diff выполняется. Реальные credentials, host HOME,
+Multica token и модель в этих опытах отсутствовали. Native adapter, actual managed
+context и полная Task5 по-прежнему не приняты.
+[Отчёт исполнителя](evidence/2026-09-13-autonomy/task-5-mcp-policy/task-5-mcp-policy-report.md).
+
+Независимое ревью завершено: соответствие и качество приняты, замечаний нет.
+[Вердикт](evidence/2026-09-13-autonomy/task-5-mcp-policy/task-5-mcp-policy-independent-review.md).
+Отдельно установлена точная схема refresh из закреплённого CLI artifact; реальные
+credentials для исследования не читались. Реализация refresh и D2 path discovery
+подготовлены к следующему dispatch, но ещё не выполнены.
+[Подготовка](evidence/2026-09-13-autonomy/closure-preparation/manifest.json).
+
+## Codex D2: локальная диагностика пути
+
+Реализация `422d5852bd9725ac75b9f0fb846138c6441b0672`: локальная серия 10/10, затем 4/4 проверки сборки с рабочими привязками; обычные commit hooks прошли. Два прежних сбоя сохранены, конкретная причина sandbox подтверждена и устранена одной разрешённой попыткой. Диагностика читает только CODEX_HOME и cwd; конфигурация и авторизация не читаются. Локальный результат не доказывает native запуск или полную автономию. Независимое ревью выполняется.
+
+[Полный отчёт D2](evidence/2026-09-13-autonomy/task-5-d2/task-5-codex-path-probe-report.md), [архив доказательств](evidence/2026-09-13-autonomy/task-5-d2/archive-manifest.json).

@@ -1,0 +1,45 @@
+{
+  "modelLaunched": false,
+  "tokenAbsent": true,
+  "phases": {
+    "forbidden": {
+      "ok": true,
+      "result": {
+        "destinations": [
+          "host.docker.internal:443",
+          "127.0.0.1:443",
+          "169.254.169.254:443",
+          "mcp.context7.com:80",
+          "mcp.context7.com.:443",
+          "mcp.context7.com.evil.invalid:443"
+        ],
+        "statuses": [
+          403,
+          403,
+          403,
+          403,
+          403,
+          403
+        ]
+      }
+    },
+    "trace": {
+      "ok": false,
+      "error": "trace_content_unaccepted"
+    },
+    "context7": {
+      "ok": true,
+      "result": {
+        "endpoint": "https://mcp.context7.com/mcp",
+        "tool": "resolve-library-id",
+        "libraryIds": [
+          "/reactjs/react.dev",
+          "/react/react",
+          "/websites/react_dev",
+          "/websites/react_dev_reference",
+          "/websites/react_dev_reference_react"
+        ]
+      }
+    }
+  }
+}

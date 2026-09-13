@@ -1,0 +1,11 @@
+{
+  "before_head": "9534a378680b5fc16d3cec4319202bcaa6daa8fd",
+  "after_head": "9534a378680b5fc16d3cec4319202bcaa6daa8fd",
+  "head_unchanged": true,
+  "status_unchanged": true,
+  "changed_paths": [],
+  "added_paths": [],
+  "scope": "tracked and nonignored untracked paths only; ignored/auth/cache paths excluded",
+  "restored_files": false,
+  "concurrent_owner_attribution": "not inferred"
+}

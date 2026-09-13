@@ -1,0 +1,11 @@
+___stack_chk_fail
+___stack_chk_guard
+___stderrp
+___stdoutp
+_fputs
+_fwrite
+_getcwd
+_getenv
+_memcmp
+_snprintf
+_strncmp

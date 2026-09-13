@@ -1,0 +1,61 @@
+{
+  "base": "c11f9da82bb0aa0a05350dfc47c219913ba7bc2d",
+  "head": "d4bf8b898217196b0450d174d0a2a90550a4e66c",
+  "files": [
+    {
+      "path": "task-5-codex-protocol-brief.md",
+      "bytes": 3251,
+      "sha256": "c07274b8e63745490e23e26088576f3351ed9cb58328b93e969b12181863454c"
+    },
+    {
+      "path": "task-5-codex-protocol-report.md",
+      "bytes": 5019,
+      "sha256": "86f546b43d278f961304c89182f32667a8c89069a3757972b8a2ca60dc3354e2"
+    },
+    {
+      "path": "task-5-codex-protocol-independent-review.md",
+      "bytes": 5312,
+      "sha256": "af95305e705033d4c34a84dceca872002d33a57ff7c7d4983234d94aa889ec85"
+    },
+    {
+      "path": "task-5-codex-protocol-review.diff",
+      "bytes": 12287,
+      "sha256": "b274096ebecf4a9203f9e170f36213c8fe4a03f995bf6fbd81c8c2f9759d696a"
+    },
+    {
+      "path": "task-5-codex-protocol-precommit.json",
+      "bytes": 1834,
+      "sha256": "f7dcbed6848ace770ea4bbc10f03e017baa4fc624f00995e9461cd6012aac1cd"
+    },
+    {
+      "path": "task-5-codex-protocol-result.json",
+      "bytes": 595,
+      "sha256": "7f123248ed62d7ee751c0636755b365b5778cfb4ebe409fb43354704a3664d25"
+    },
+    {
+      "path": "task-5-codex-protocol-python-red.log",
+      "bytes": 3023,
+      "sha256": "88cb218a117fe6105e5f68d9a4ff9acae5c0666c32c83d75a634466c62571f72"
+    },
+    {
+      "path": "task-5-codex-protocol-js-red.log",
+      "bytes": 1153,
+      "sha256": "e25a2b2a72c827b980adc7d07812063a86a19f8a5690c7dec9d18742160fa9a6"
+    },
+    {
+      "path": "task-5-codex-protocol-python-green.log",
+      "bytes": 1528,
+      "sha256": "eb87ddc2b85500f9a160026c67a22b97a6a85ae977c0158ab95098e45db596b5"
+    },
+    {
+      "path": "task-5-codex-protocol-js-green.log",
+      "bytes": 791,
+      "sha256": "58179d72e517e747861c573402c8f56bfee00370e619699dab98fce66555e7e5"
+    },
+    {
+      "path": "task-5-codex-protocol-commit.log",
+      "bytes": 1072,
+      "sha256": "a158cdc22854b7cf32a6d8c61a98d7411c5f1bdcee24dd25a73bab3af7edb0e7"
+    }
+  ]
+}

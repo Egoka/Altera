@@ -1,0 +1,11 @@
+{
+  "at_utc": "2026-09-13T21:54:11.692069+00:00",
+  "expected_exit": 78,
+  "expected_marker": "ALTERA_METADATA_CONFIG_ONLY_V1",
+  "task_acceptance": "not_checked",
+  "model_call_authorized": false,
+  "existing_run_ids": [
+    "01a09c79-1610-73a0-a665-a2fbd6687eeb",
+    "01a09c2f-1cd9-7266-8595-e99adebef720"
+  ]
+}

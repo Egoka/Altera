@@ -1,0 +1,9 @@
+{
+  "exit": 0,
+  "stdout": "{\"write\":0,\"read\":0,\"fork\":0,\"connect\":0}\n",
+  "stderr": "",
+  "control_binary_unchanged": true,
+  "only_policy_ancestor_read_changed": true,
+  "covering_count_still": 2,
+  "cause_proven": true
+}

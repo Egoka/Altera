@@ -1,0 +1,11 @@
+{
+  "head": "563844e6461b76c97065842efb1cb0f5b9b5099f",
+  "base": "d4bf8b898217196b0450d174d0a2a90550a4e66c",
+  "owned_paths_exact": true,
+  "tested_source_matches_commit": true,
+  "root_report_diff_unchanged": true,
+  "index_empty": true,
+  "status": " M docs/reports/2026-09-13-autonomy-execution-report.md\n?? docs/reports/evidence/2026-09-13-autonomy/d1-native/\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-codex-protocol/\n",
+  "commit_log_sha256": "aad4feac8115c9beebe22fc2b5b6c866b39939532917423a4fb2a3cabdbb30c1",
+  "scoped_diff_sha256": "09269fc9c171c7b68c60b09fdf3707240fb1282f144e8156f2371d472c306090"
+}

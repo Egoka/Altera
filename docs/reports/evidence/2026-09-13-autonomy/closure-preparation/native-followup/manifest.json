@@ -1,0 +1,26 @@
+{
+  "at_utc": "2026-09-13T23:27:34.864466+00:00",
+  "scope": "preparation only; no native or implementation acceptance",
+  "items": [
+    {
+      "path": "task-5-codex-toml-mapping-brief.md",
+      "sha256": "64867c9250077d406c679a5462298424cde7fdc4b6e6177ceb0c2953dead87e2",
+      "bytes": 20037
+    },
+    {
+      "path": "task-5-claude-native-adapter-brief.md",
+      "sha256": "33bebe897b378e5bfe69a2d7b923802c20304845aea0ed2c44d1854be03612ad",
+      "bytes": 7116
+    },
+    {
+      "path": "task-5-d2-native-runbook.md",
+      "sha256": "8f94c36ac5394d8acd1866615e693e3e121ab35f02bf60422f88aeda23d05c23",
+      "bytes": 5027
+    },
+    {
+      "path": "task-5-d2-preliminary-state.json",
+      "sha256": "4853205f78d8f88ac78fcfa3a2d0ea11606ee9c36d3bbc3b4b5812c83e64e438",
+      "bytes": 989
+    }
+  ]
+}

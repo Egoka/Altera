@@ -1,0 +1,56 @@
+{
+  "base": "c11f9da82bb0aa0a05350dfc47c219913ba7bc2d",
+  "files": [
+    {
+      "path": "scripts/agent-runtime/runtime.py",
+      "sha256": "d1c16e5f22ee50128cbc805341a2b2f263409e6a85b55dbfbf428ee376088481",
+      "mode": "0o755"
+    },
+    {
+      "path": "scripts/agent-runtime/protocol-guard.mjs",
+      "sha256": "dbf3e9399c12e29fe71cc1cf2057e06f79694a9b77c60d94eabbafd644183fc2",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/agent-runtime/test_runtime.py",
+      "sha256": "e79e782ee1655e8779fd5b42d9d35089f77db393af46723a2a26abf82da12786",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/agent-runtime/test_protocol_guard.mjs",
+      "sha256": "b491bd745c5f9a2e1178f8227a28105fd05ae1322c85c7dcb7f733eaebee196c",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/development/runtime-isolation.md",
+      "sha256": "a807c2576828d78f88b045c097588084af83d3d2f9c34f3421e2a8e60857bf2b",
+      "mode": "0o644"
+    }
+  ],
+  "scope_sha256": "d6473c42b4ef12d662abf0bafa8e990588c01562ed403ec3fa77f8b6e69c3f3d",
+  "diff_sha256": "b274096ebecf4a9203f9e170f36213c8fe4a03f995bf6fbd81c8c2f9759d696a",
+  "dirty_scope": " M docs/development/runtime-isolation.md\n M scripts/agent-runtime/protocol-guard.mjs\n M scripts/agent-runtime/runtime.py\n M scripts/agent-runtime/test_protocol_guard.mjs\n M scripts/agent-runtime/test_runtime.py\n",
+  "checks": {
+    "python_red": {
+      "exit": 1,
+      "tests": 2,
+      "expected_unsupported_listener_errors": 3
+    },
+    "js_red": {
+      "exit": 1,
+      "tests": 2,
+      "expected_tier_rejection_failures": 1
+    },
+    "python_covering": {
+      "exit": 0,
+      "passed": 16
+    },
+    "js_covering": {
+      "exit": 0,
+      "passed": 7
+    }
+  },
+  "new_real_check_failures": 0,
+  "historical_counters_reset": false,
+  "native_model_docker_mcp_auth_actions": 0
+}

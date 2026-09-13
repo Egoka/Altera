@@ -1,0 +1,48 @@
+{
+  "private_dir": "/private/tmp/altera-d2-native-kiueailk",
+  "checked_at": "2026-09-13T23:25:35.470463+00:00",
+  "agent": {
+    "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+    "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+    "model": "gpt-5.6-terra",
+    "thinking_level": "medium",
+    "max_concurrent_tasks": 1,
+    "status": "idle"
+  },
+  "tasks": {
+    "type": "list",
+    "keys": null,
+    "count": 3
+  },
+  "issue": {
+    "id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+    "identifier": "ALTE-11",
+    "status": "backlog",
+    "assignee_id": null,
+    "assignee_type": null
+  },
+  "runs": {
+    "type": "list",
+    "keys": null,
+    "count": 3
+  },
+  "profiles": {
+    "type": "list",
+    "keys": null,
+    "count": 0
+  },
+  "runtimes": {
+    "type": "list",
+    "keys": null,
+    "count": 3
+  },
+  "autopilots": {
+    "type": "dict",
+    "keys": [
+      "autopilots",
+      "total"
+    ],
+    "count": 2
+  }
+}
