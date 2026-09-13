@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { getLayout, validateRhythm } from "~/utils/articleLayouts"
   // Статичные тестовые данные для Latest Articles (Последние статьи)
   const latestArticles = [
     {
@@ -334,52 +335,39 @@
     }
   ]
 
-  // Конфигурация групп статей: количество статей и позиция для каждой группы
-  const groupConfig = [
-    { count: 3, position: "left" as const },
-    { count: 3, position: "right" as const },
-    { count: 3, position: "left" as const },
-    { count: 3, position: "right" as const },
-    { count: 3, position: "left" as const },
-    { count: 2, position: "right" as const }
-  ]
+  /**
+   * Ритм ленты: явный список раскладок из реестра `articleLayouts`.
+   * Явное перечисление честнее генератора — ритм ленты это редакционное
+   * решение, оно должно читаться в одном месте и видеться в диффе.
+   * Сумма вместимостей обязана совпасть с числом материалов, иначе
+   * `validateRhythm` скажет об этом вслух (раньше хвост молча не рендерился).
+   */
+  const rhythm = ["hero-left", "pair-tall", "break-offset", "feature-stack", "trio-uneven"]
 
-  // Функция для распределения статей по группам согласно конфигурации
-  const distributeArticles = (
-    articles: any[],
-    config: Array<{ count: number; position: "center" | "left" | "right" }>
-  ) => {
-    const groups = []
-    let currentIndex = 0
-
-    for (const group of config) {
-      if (currentIndex >= articles.length) break
-
-      const groupArticles = articles.slice(currentIndex, currentIndex + group.count)
-      groups.push({
-        articles: groupArticles,
-        position: group.position
+  const groups = computed(() => {
+    let cursor = 0
+    return rhythm
+      .map((id) => {
+        const layout = getLayout(id)
+        if (!layout) return null
+        const slice = latestArticles.slice(cursor, cursor + layout.slots.length)
+        cursor += layout.slots.length
+        return slice.length ? { id, layout: id, articles: slice } : null
       })
+      .filter((g): g is { id: string; layout: string; articles: typeof latestArticles } => g !== null)
+  })
 
-      currentIndex += group.count
-    }
-
-    return groups
+  if (import.meta.dev) {
+    const errors = validateRhythm(rhythm, latestArticles.length)
+    if (errors.length) console.error("[Latest]", errors.join("; "))
   }
-
-  // Распределяем статьи по группам
-  const articleGroups = distributeArticles(latestArticles, groupConfig)
 </script>
 
 <template>
   <section class="latest-articles pt-16">
     <div>
       <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">Новое</h2>
-      <ArticleGroup
-        v-for="(group, index) in articleGroups"
-        :key="index"
-        :articles="group.articles"
-        :position="group.position" />
+      <ArticleGroup v-for="group in groups" :key="group.id" :articles="group.articles" :layout="group.layout" />
     </div>
   </section>
 </template>
