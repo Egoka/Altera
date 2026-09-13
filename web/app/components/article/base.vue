@@ -11,24 +11,25 @@
 
 <template>
   <article>
-    <figure class="mb-2">
+    <figure class="mb-4">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
-          class="w-full h-52 object-cover rounded-sm transition-transform duration-300" />
+          class="w-full aspect-3/2 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
     </figure>
 
     <div>
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-lg sm:text-xl font-medium text-zinc-900 dark:text-zinc-300 leading-1">
+        class="font-garamond-libre text-card font-bold text-zinc-900 dark:text-zinc-300 transition-colors">
         {{ article.title }}
       </NuxtLink>
-      <div ref="bottomRef" class="mt-3 flex justify-between flex-wrap gap-x-3 flex-row items-start">
-        <ShowAuthor :link="author" :name="article.author.name" class="block" />
-        <ShowType :link="contentType" :name="article.contentType.name" class="block" />
+      <div class="mt-1 flex flex-row flex-wrap items-baseline gap-x-2 gap-y-1">
+        <ShowAuthor :link="author" :name="article.author.name" />
+        <span class="font-cormorant text-meta text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
+        <ShowType :link="contentType" :name="article.contentType.name" />
       </div>
     </div>
   </article>

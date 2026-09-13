@@ -153,12 +153,10 @@
 </script>
 
 <template>
-  <section class="latest-articles pt-12">
+  <section class="popular-articles pt-24 border-t border-zinc-200 dark:border-zinc-800">
     <div>
-      <h2 class="font-waterway text-3xl font-bold tracking-widest sm:mb-8 text-zinc-900 dark:text-zinc-300">
-        Популярное
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-700">
+      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">Популярное</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-800">
         <div
           v-for="(article, index) in articles"
           :key="article.id"
@@ -169,7 +167,7 @@
       </div>
 
       <div v-if="articles.length === 0" class="animate-pulse mt-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-700">
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-800">
           <div
             v-for="n in 10"
             :key="n"

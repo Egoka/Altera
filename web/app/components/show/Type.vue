@@ -9,8 +9,8 @@
   <NuxtLink
     :to="link"
     :class="[
-      'font-sans font-bold text-xs/6 uppercase tracking-wider',
-      'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300',
+      'font-cormorant font-semibold text-meta tracking-meta',
+      'text-zinc-600 dark:text-zinc-400 hover:text-red-700 dark:hover:text-red-400',
       'transition-colors duration-500'
     ]">
     {{ name }}

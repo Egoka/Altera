@@ -281,6 +281,31 @@
   --font-poppins: "Poppins", system-ui, sans-serif;
   --font-roboto: "Roboto", system-ui, sans-serif;
   --font-open-sans: "Open Sans", system-ui, sans-serif;
+
+  /* Типографическая шкала карточек: модульная 1,25 от базовых 20.
+     Ступени объявлены токенами намеренно — в шкале Tailwind этих кеглей нет,
+     и несуществующий класс там не даёт ошибку, он не даёт ничего (так молча
+     умер text-md в карточках).
+     Интерлиньяж не опускается ниже 1,14 кегля: кириллические Й и Ё
+     поднимаются на 0,904 em и при меньшем значении сталкиваются с
+     выносными строки выше. */
+  --text-meta: 1rem; /* 16 — байлайн, рубрика */
+  --text-meta--line-height: 1.25rem; /* 20 */
+  --text-card: 1.25rem; /* 20 — заголовок small и base, дек large */
+  --text-card--line-height: 1.5rem; /* 24 */
+  --text-card-dek: 1.25rem; /* 20 — тот же кегль, но дек дышит шире заголовка */
+  --text-card-dek--line-height: 1.75rem; /* 28 */
+  --text-title: 1.9375rem; /* 31 — заголовок large */
+  --text-title--line-height: 2.25rem; /* 36 */
+  --text-lede: 3.0625rem; /* 49 — заголовок героя */
+  --text-lede--line-height: 3.75rem; /* 60 */
+  --text-lede-dek: 1.5625rem; /* 25 — дек героя */
+  --text-lede-dek--line-height: 2.25rem; /* 36 */
+
+  /* Разрядка служебной строки. Капитель Cormorant SC даёт 65 % плотности
+     штриха строчных Garamond, поэтому набирается насыщенностью 600 и
+     разряжается — иначе в приглушённом тоне строка распадается. */
+  --tracking-meta: 0.06em;
 }
 
 /* Типографика - вдохновлена The Atlantic */

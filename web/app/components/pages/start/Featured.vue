@@ -103,7 +103,7 @@
 </script>
 
 <template>
-  <section class="featured-articles py-8 border-b border-zinc-200 dark:border-zinc-800">
+  <section class="featured-articles pt-10 pb-24 border-b border-zinc-200 dark:border-zinc-800">
     <div>
       <div
         class="grid grid-cols-1 sm:grid-cols-12 gap-x-4 lg:gap-x-6 divide-y space-y-8 divide-zinc-200 dark:divide-zinc-800 sm:divide-y-0 sm:space-y-0">

@@ -10,32 +10,33 @@
 </script>
 
 <template>
-  <article class="lede-article flex flex-col gap-6">
-    <figure class="">
+  <article class="lede-article flex flex-col">
+    <figure class="mb-10">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
-          class="w-full h-64 sm:h-80 md:h-96 lg:h-[350px] object-cover rounded-sm transition-transform duration-300" />
+          class="w-full aspect-3/2 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
     </figure>
 
     <div class="text-center">
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-zinc-300 transition-colors leading-tight">
+        class="font-garamond-libre text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors">
         {{ article.title }}
       </NuxtLink>
     </div>
 
     <p
-      class="lede-dek font-garamond-libre text-lg sm:text-xl text-zinc-700 dark:text-zinc-300 text-center leading-normal max-w-3xl mx-auto">
+      class="lede-dek mt-1 font-garamond-libre text-card md:text-lede-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-2xl mx-auto line-clamp-3">
       {{ article.dek }}
     </p>
 
-    <div class="text-center">
-      <ShowAuthor :link="author" :name="article.author.name" class="block" />
-      <ShowType :link="contentType" :name="article.contentType.name" class="block mt-1" />
+    <div class="mt-5 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
+      <ShowAuthor :link="author" :name="article.author.name" />
+      <span class="font-cormorant text-meta text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
+      <ShowType :link="contentType" :name="article.contentType.name" />
     </div>
   </article>
 </template>

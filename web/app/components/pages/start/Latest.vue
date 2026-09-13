@@ -372,9 +372,9 @@
 </script>
 
 <template>
-  <section class="latest-articles pt-12">
+  <section class="latest-articles pt-16">
     <div>
-      <h2 class="font-waterway text-3xl font-bold tracking-widest sm:mb-8 text-zinc-900 dark:text-zinc-300">Новое</h2>
+      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">Новое</h2>
       <ArticleGroup
         v-for="(group, index) in articleGroups"
         :key="index"

@@ -11,28 +11,27 @@
 
 <template>
   <article v-if="slug && article.title">
-    <div class="flex flex-row gap-6 items-start">
-      <div class="h-20 max-h-24 flex flex-col flex-1 min-w-0">
-        <div class="mb-2 leading-4">
-          <NuxtLink
-            :to="slug"
-            class="font-garamond-libre text-md font-semibold text-zinc-900 dark:text-zinc-300 transition-colors mb-5">
-            {{ article.title }}
-          </NuxtLink>
-        </div>
-        <div ref="bottomRef" class="mt-auto flex justify-start flex-wrap gap-x-5 flex-row items-start">
-          <ShowAuthor :link="author" :name="article.author.name" class="block text-sm leading-6" />
-          <ShowType :link="contentType" :name="article.contentType.name" class="block" />
+    <div class="flex flex-row items-start gap-5">
+      <div class="flex flex-1 flex-col min-w-0">
+        <NuxtLink
+          :to="slug"
+          class="font-garamond-libre text-card font-bold text-zinc-900 dark:text-zinc-300 transition-colors">
+          {{ article.title }}
+        </NuxtLink>
+        <div class="mt-1 flex flex-row flex-wrap items-baseline gap-x-2 gap-y-1">
+          <ShowAuthor :link="author" :name="article.author.name" />
+          <span class="font-cormorant text-meta text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
+          <ShowType :link="contentType" :name="article.contentType.name" />
         </div>
       </div>
 
       <!-- Изображение (правая сторона) -->
-      <figure class="relative flex-shrink-0 flex flex-col items-end">
+      <figure class="relative flex flex-col flex-shrink-0 items-end">
         <NuxtLink :to="slug" class="block group">
           <NuxtImg
             :src="article.featuredImage"
             :alt="article.title"
-            class="max-w-28 w-28 h-20 rounded-sm object-cover transition-transform duration-300" />
+            class="w-28 h-21 max-w-28 rounded-sm object-cover transition-transform duration-300" />
         </NuxtLink>
       </figure>
     </div>
