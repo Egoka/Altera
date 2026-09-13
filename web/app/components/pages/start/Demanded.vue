@@ -1,16 +1,12 @@
 <script setup lang="ts">
   import { getLayout, validateRhythm } from "~/utils/articleLayouts"
   import { DEMO_DEMANDED } from "~/utils/demoFeed"
+  import { DEMANDED_RHYTHM } from "~/utils/feedRhythm"
 
   const demandedArticles = DEMO_DEMANDED
 
-  /**
-   * Ритм «Востребованного» намеренно не повторяет ритм «Нового»: раскладки
-   * другие и в другом порядке, иначе две ленты подряд читаются как одна.
-   * Нарушение геометрии сюда не ставится — оно на странице одно и живёт в
-   * «Новом».
-   */
-  const rhythm = ["wide-trio-right", "lead-wide-pair", "mirror-tower", "duo-wide", "trio-tall"]
+  /** Ритм ленты живёт в `feedRhythm` рядом с ритмом «Нового» и проверяется тестом. */
+  const rhythm = DEMANDED_RHYTHM
 
   const groups = computed(() => {
     let cursor = 0

@@ -1,17 +1,12 @@
 <script setup lang="ts">
   import { getLayout, validateRhythm } from "~/utils/articleLayouts"
   import { DEMO_LATEST } from "~/utils/demoFeed"
+  import { LATEST_RHYTHM } from "~/utils/feedRhythm"
 
   const latestArticles = DEMO_LATEST
 
-  /**
-   * Ритм ленты: явный список раскладок из реестра `articleLayouts`.
-   * Явное перечисление честнее генератора — ритм ленты это редакционное
-   * решение, оно должно читаться в одном месте и видеться в диффе.
-   * Сумма вместимостей обязана совпасть с числом материалов, иначе
-   * `validateRhythm` скажет об этом вслух (раньше хвост молча не рендерился).
-   */
-  const rhythm = ["hero-left", "quad-square", "break-inset", "trio-uneven", "trio-tall"]
+  /** Ритм ленты живёт в `feedRhythm` рядом с ритмом «Востребованного» и проверяется тестом. */
+  const rhythm = LATEST_RHYTHM
 
   const groups = computed(() => {
     let cursor = 0

@@ -27,7 +27,7 @@
         :to="slug"
         :class="[
           'font-garamond-libre font-bold text-zinc-900 transition-colors dark:text-zinc-300',
-          scale === 'lead' ? 'text-card md:text-lead' : 'text-card'
+          scale === 'lead' ? 'text-card md:text-title' : 'text-card'
         ]">
         {{ article.title }}
       </NuxtLink>

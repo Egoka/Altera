@@ -111,9 +111,9 @@
       <ArticleLede :article="mainArticle" />
     </div>
 
-    <!-- Линейка отделяет флагман от остальной ленты -->
-    <ul
-      class="mt-16 grid grid-cols-1 gap-y-10 border-t border-zinc-200 pt-16 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4 lg:gap-x-12 dark:border-zinc-800">
+    <!-- Флагман от остальной ленты отделяет только воздух: линейку владелец
+         снял при живом ревью 2026-09-13 -->
+    <ul class="mt-16 grid grid-cols-1 gap-y-10 pt-16 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-4 lg:gap-x-12">
       <li v-for="article in secondaryArticles" :key="article.id">
         <ArticleBase :article="article" />
       </li>

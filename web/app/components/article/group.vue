@@ -1,7 +1,16 @@
 <script setup lang="ts">
   import type { ArticleResponse } from "~/types/article"
-  import type { SlotSpec } from "~/types/layout"
-  import { getLayout, mdColsOf, mdSpanFor, slotOrder, toGridStyle, validateLayout } from "~/utils/articleLayouts"
+  import type { SlotMedia, SlotSpec } from "~/types/layout"
+  import {
+    getLayout,
+    mdColsOf,
+    mdMediaFor,
+    mdSpanFor,
+    rowSpanFor,
+    slotOrder,
+    toGridStyle,
+    validateLayout
+  } from "~/utils/articleLayouts"
 
   const props = defineProps<{
     articles: ArticleResponse[]
@@ -27,22 +36,31 @@
 
   // resolveComponent, а не строка: строковое имя в <component :is> Nuxt не
   // резолвит — обёртки отрисовываются пустыми и без ошибки.
-  const componentFor = (slot?: SlotSpec) => {
+  const componentFor = (slot?: SlotSpec, media: SlotMedia | undefined = slot?.media) => {
     if (!slot) return resolveComponent("ArticleSmall")
     if (slot.variant === "small") return resolveComponent("ArticleSmall")
-    if (slot.variant === "large" && slot.media === "above") return resolveComponent("ArticleBase")
+    if (slot.variant === "large" && media === "above") return resolveComponent("ArticleBase")
     return resolveComponent("ArticleLarge")
   }
 
   const mdCols = computed(() => (layout.value ? mdColsOf(layout.value) : 2))
   const mdSpan = (index: number) => (layout.value ? mdSpanFor(layout.value, order.value[index] ?? "") : 1)
+  /** Композиция слота на средних экранах может отличаться от широких (`md.media`). */
+  const mdMedia = (index: number) => (layout.value ? mdMediaFor(layout.value, order.value[index] ?? "") : undefined)
+  /** Слот на несколько рядов встаёт по центру своей области, а не прижимается к верху. */
+  const centered = (index: number) => (layout.value ? rowSpanFor(layout.value, order.value[index] ?? "") > 1 : false)
 </script>
 
 <template>
   <section v-if="layout" class="py-8" :data-layout="layout.id">
     <!-- Широкие экраны: раскладка целиком выводится из матрицы областей -->
     <div class="hidden lg:grid lg:gap-x-8 lg:gap-y-18" :style="gridStyles">
-      <div v-for="(article, index) in articles" :key="article.id" :style="{ 'grid-area': order[index] }" class="w-full">
+      <div
+        v-for="(article, index) in articles"
+        :key="article.id"
+        :style="{ 'grid-area': order[index] }"
+        class="w-full"
+        :class="{ 'self-center': centered(index) }">
         <component :is="componentFor(slots[index])" :article="article" :scale="slots[index]?.scale" />
       </div>
     </div>
@@ -56,7 +74,7 @@
         :key="`md-${article.id}`"
         class="w-full"
         :style="{ 'grid-column': `span ${Math.min(mdSpan(index), mdCols)}` }">
-        <component :is="componentFor(slots[index])" :article="article" />
+        <component :is="componentFor(slots[index], mdMedia(index))" :article="article" />
       </div>
     </div>
 

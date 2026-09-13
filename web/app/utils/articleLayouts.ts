@@ -1,4 +1,4 @@
-import { GRID_COLUMNS, type GroupLayout, type SlotRules } from "~/types/layout"
+import { GRID_COLUMNS, type GroupLayout, type SlotMedia, type SlotRules } from "~/types/layout"
 
 /**
  * Реестр раскладок групп «Нового».
@@ -55,14 +55,17 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "left", dominant: "tall" }
   },
   {
-    id: "duo-wide",
-    cells: ["aaaaaabbbbbb"],
+    /* Высокий ведущий слева на два ряда, справа — два материала с изображением
+       сбоку один под другим. Один сосед справа оставлял под собой пустоту. */
+    id: "lead-pair-right",
+    cells: ["aaaaaabbbbbb", "aaaaaacccccc"],
     slots: [
       { key: "a", variant: "large", media: "above", scale: "lead" },
-      { key: "b", variant: "large", media: "beside" }
+      { key: "b", variant: "large", media: "beside" },
+      { key: "c", variant: "large", media: "beside" }
     ],
-    md: { cols: 2 },
-    traits: { anchor: "center", dominant: "wide" }
+    md: { cols: 2, spans: { a: 2 } },
+    traits: { anchor: "left", dominant: "tall" }
   },
   {
     /* Описание под изображением, а сбоку — четыре компактных материала.
@@ -116,11 +119,13 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "left", dominant: "tall" }
   },
   {
-    /* Крупный материал слева и башня из трёх компактных справа. */
+    /* Крупный материал слева и башня из трёх компактных справа. Без ступени
+       lead: в семи колонках под текст остаётся половина слота (≈340 px), и
+       заголовок 39 px ломался на три-четыре строки. */
     id: "wide-trio-right",
     cells: ["aaaaaaabbbbb", "aaaaaaaccccc", "aaaaaaaddddd"],
     slots: [
-      { key: "a", variant: "large", media: "beside", scale: "lead" },
+      { key: "a", variant: "large", media: "beside" },
       { key: "b", variant: "small" },
       { key: "c", variant: "small" },
       { key: "d", variant: "small" }
@@ -140,19 +145,6 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "right", dominant: "wide" }
   },
   {
-    /* Ведущий во всю ширину с изображением сбоку — не сверху: полноширинное
-       изображение в ленте конкурирует с флагманом страницы. Под ним пара. */
-    id: "lead-wide-pair",
-    cells: ["aaaaaaaaaaaa", "bbbbbbcccccc"],
-    slots: [
-      { key: "a", variant: "large", media: "beside", scale: "lead" },
-      { key: "b", variant: "large", media: "above", scale: "lead" },
-      { key: "c", variant: "large", media: "above", scale: "lead" }
-    ],
-    md: { cols: 2, spans: { a: 2 } },
-    traits: { anchor: "center", dominant: "wide" }
-  },
-  {
     /* Крупный слева на два ряда и четыре компактных справа сеткой два на два. */
     id: "quartet-lead",
     cells: ["aaaaaabbbccc", "aaaaaadddeee"],
@@ -167,28 +159,17 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     traits: { anchor: "left", dominant: "wide" }
   },
   {
-    /* Широкая и узкая рядом: доли резко разные, обе вертикальные. */
+    /* Широкая и узкая рядом: доли резко разные, обе вертикальные. На средних
+       экранах обе ложатся во всю строку изображением сбоку: узкая с
+       изображением сверху на половине ширины читалась как обрывок. */
     id: "stripe-wide-narrow",
     cells: ["aaaaaaaaabbb"],
     slots: [
       { key: "a", variant: "large", media: "beside", scale: "lead" },
       { key: "b", variant: "large", media: "above" }
     ],
-    md: { cols: 2, spans: { a: 2 } },
+    md: { cols: 2, media: { b: "beside" } },
     traits: { anchor: "left", dominant: "wide" }
-  },
-  {
-    /* Единственное намеренное нарушение геометрии: группа отступает от левой
-       кромки на две колонки. Нарушает строй сдвигом, а не размером — крупное
-       изображение здесь конкурировало бы с флагманом страницы. */
-    id: "break-inset",
-    cells: ["..aaaabbbbbb"],
-    slots: [
-      { key: "a", variant: "large", media: "above" },
-      { key: "b", variant: "large", media: "above", scale: "lead" }
-    ],
-    md: { cols: 2 },
-    traits: { anchor: "center", dominant: "tall", accent: true }
   }
 ]
 
@@ -227,10 +208,32 @@ export const rulesFor = (layout: GroupLayout, key: string): SlotRules => {
   return { right }
 }
 
-/** Спан слота на средних экранах: из `md`, иначе один столбец. */
-export const mdSpanFor = (layout: GroupLayout, key: string): number => layout.md?.spans?.[key] ?? 1
+/** Текст слота стоит рядом с изображением: крупная карточка с изображением сбоку или компактная с миниатюрой. */
+const textBesideImage = (layout: GroupLayout, key: string): boolean =>
+  layout.slots.find((s) => s.key === key)?.variant === "small" || mdMediaFor(layout, key) === "beside"
+
+/**
+ * Спан слота на средних экранах: из `md.spans`; иначе слот, где текст стоит
+ * рядом с изображением, занимает всю строку — на половине ширины ему не
+ * хватает места под текст, заголовок дробится на строки, — а карточки с
+ * изображением сверху идут по одному столбцу.
+ */
+export const mdSpanFor = (layout: GroupLayout, key: string): number =>
+  layout.md?.spans?.[key] ?? (textBesideImage(layout, key) ? mdColsOf(layout) : 1)
 
 export const mdColsOf = (layout: GroupLayout): number => layout.md?.cols ?? 2
+
+/** Композиция слота на средних экранах: из `md.media`, иначе как на широких. */
+export const mdMediaFor = (layout: GroupLayout, key: string): SlotMedia | undefined =>
+  layout.md?.media?.[key] ?? layout.slots.find((s) => s.key === key)?.media
+
+/**
+ * Сколько рядов занимает слот. Слот на несколько рядов выравнивается по центру
+ * своей области: башня компактных карточек рядом почти всегда выше него, и
+ * прижатый к верху крупный материал оставлял под собой пустоту.
+ */
+export const rowSpanFor = (layout: GroupLayout, key: string): number =>
+  layout.cells.filter((row) => row.includes(key)).length
 
 /**
  * Проверки, без которых модель ломается молча: непрямоугольный слот заставляет
