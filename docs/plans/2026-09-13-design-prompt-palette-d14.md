@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: a042d6a
 - **Отчёт**: docs/reports/2026-09-13-design-prompt-palette-d14-report.md
-- **Статус**: выполняется
+- **Статус**: завершён
 
 ## 1. Цель
 
