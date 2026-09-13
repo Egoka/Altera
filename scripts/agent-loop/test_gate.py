@@ -829,5 +829,32 @@ class LifecycleTests(unittest.TestCase):
         self.cli('finish', self.report, ok=False)
 
 
+    def test_retained_stop_rejects_missing_or_inconsistent_counters_before_reentry(self):
+        stop, _ = self.stopped()
+        state_path = self.root / '.git/agent-loop/state.json'
+        original = json.loads(state_path.read_text())
+        self.assertEqual(original['events'][stop]['failures'], 2)
+        for corruption in ('missing_check', 'missing_stage', 'lower_count', 'wrong_stop'):
+            for action in ('status', 'start'):
+                with self.subTest(corruption=corruption, action=action):
+                    damaged = json.loads(json.dumps(original))
+                    checks = damaged['tasks']['T-fixture']['checks']
+                    if corruption == 'missing_check':
+                        del checks['review']['review']
+                    elif corruption == 'missing_stage':
+                        del checks['review']
+                    elif corruption == 'lower_count':
+                        checks['review']['review']['failures'] = 0
+                    else:
+                        checks['review']['review']['stop_event'] = 'unrelated-stop'
+                    state_path.write_text(json.dumps(damaged))
+                    raw = state_path.read_bytes()
+                    if action == 'status':
+                        self.cli('status', ok=False)
+                    else:
+                        self.start(stage='review', actor='review', run='forbidden-third', ok=False)
+                    self.assertEqual(raw, state_path.read_bytes())
+
+
 if __name__ == '__main__':
     unittest.main()

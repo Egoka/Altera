@@ -209,6 +209,38 @@ def locked(directory):
         lock.rmdir()
 
 
+def validate_retained_counters(state, task_id, task):
+    retained = {}
+    for event_id, event in state['events'].items():
+        require(isinstance(event, dict), 'corrupt retained event')
+        if event.get('task') != task_id or 'check_id' not in event:
+            continue
+        stage, check = event.get('stage'), event['check_id']
+        require(isinstance(stage, str) and isinstance(check, str) and
+                check in task['checks'].get(stage, {}), 'retained check lost its persistent counter')
+        require(type(event.get('failures')) is int and event['failures'] >= 0,
+                'corrupt retained check failure count')
+        retained[event_id] = event
+    if task.get('lifecycle'):
+        require(set(retained).issubset(task['history']), 'retained check missing from lifecycle history')
+        latest = {}
+        for event_id in task['history']:
+            if event_id in retained:
+                event = retained[event_id]
+                latest[(event['stage'], event['check_id'])] = (event_id, event)
+        for (stage, check), (event_id, event) in latest.items():
+            counter = task['checks'][stage][check]
+            require(counter['failures'] == event['failures'],
+                    'persistent counter disagrees with latest retained check')
+            require(counter.get('stop_event') == (event_id if event['failures'] >= 2 else None),
+                    'persistent stop disagrees with latest retained check')
+        for stage, checks in task['checks'].items():
+            for check, counter in checks.items():
+                require((stage, check) in latest or
+                        (counter['failures'] == 0 and counter.get('stop_event') is None),
+                        'persistent counter has no retained execution')
+
+
 def read_state(directory):
     path = directory / 'state.json'
     require(not path.is_symlink(), 'state symlink rejected')
@@ -241,6 +273,7 @@ def read_state(directory):
         else:
             require(all(k in task for k in ('completed_stages', 'stage_revisions', 'stage_evidence')),
                     'corrupt legacy-profile task')
+        validate_retained_counters(state, task_id, task)
     for owner in (state['parent'], state['slot']):
         require(owner is None or (isinstance(owner, dict) and owner.get('task') in state['tasks'] and
                 all(isinstance(owner.get(k), str) for k in ('root', 'passport', 'passport_hash'))),
