@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: db02c47
 - **Отчёт**: docs/reports/2026-09-13-design-refs-visual-register-report.md
-- **Статус**: выполняется
+- **Статус**: завершён
 
 ## 1. Цель
 
