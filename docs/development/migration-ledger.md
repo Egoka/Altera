@@ -68,37 +68,39 @@
 Хэши относятся к содержимому до правок этой миграции. Строки перечисляют каждый обязательный
 источник M0; подробные тексты ролей остаются на месте, а не заменяются общим пересказом.
 
-| Старый источник и SHA-256            | Уникальное правило                                             | Новое место / статус                                                                  |
-| ------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `CLAUDE.md` `b949…71c`               | иерархия журнала/spec/ADR/vision                               | `project-rules.md`; перенесено                                                        |
-| `CLAUDE.md` `b949…71c`               | operating model, ready, автопилоты                             | `operating-model.md`, `backlog/README.md`; ссылки из адаптера                         |
-| `CLAUDE.md` `b949…71c`               | структура server/web, env names, серверные и веб-соглашения    | `project-rules.md`; перенесено, facts требуют свежей сверки                           |
-| `CLAUDE.md` `b949…71c`               | команды, Prettier, build side effect, pre-commit               | `project-rules.md`, `testing.md`; перенесено и датировано                             |
-| `CLAUDE.md` `b949…71c`               | планы/отчёты, Git, язык, spec rules, секреты                   | `project-rules.md`, plan/report contracts; перенесено                                 |
-| `CLAUDE.md` `b949…71c`               | старые пробелы реализации, включая «нет тестов»                | неизменённый source; историческое, актуальный test fact в `testing.md`                |
-| `operating-model.md` `d241…a39`      | десять ролей и их границы                                      | §1 сохранён без переписывания                                                         |
-| `operating-model.md` `d241…a39`      | источники, стадии/evidence, ready                              | §§2–4 сохранены и дополнены authorization/revision/AC-ID                              |
-| `operating-model.md` `d241…a39`      | один writer, duplicate stop, два неуспеха, recovery/conflict   | §5 сохранён; persistent `check_id` и handoff добавлены                                |
-| `operating-model.md` `d241…a39`      | три paused autopilot, их read/write/never                      | §6 сохранён; конфликт области контекста остаётся открытым C1                          |
-| `operating-model.md` `d241…a39`      | §7 решения владельца и автономия push/merge/deploy с условиями | §7 сохранён; release role исправлен по источнику                                      |
-| `operating-model.md` `d241…a39`      | датированная актуализация контекста                            | §8 сохранён; M4 caveat добавлен                                                       |
-| `backlog/README.md` `2128…5de`       | T/E/Q/F, статусы, ready owner, источники, regen, 112 задач     | сохранено; test fact датирован без смены статусов                                     |
-| `multica-architect.md` `1d4e…3ec`    | техплан, named migrations, не реализует и не придумывает числа | роль сохранена целиком                                                                |
-| `multica-designer.md` `c9ea…9e1`     | все UI-состояния, ru/en length, одна палитра, не меняет access | роль сохранена целиком                                                                |
-| `multica-developer.md` `55e5…200`    | единственный product writer, plan/report, named migration      | сохранено; только test fact заменён ссылкой на срез                                   |
-| `multica-docs-keeper.md` `a9bf…a1d`  | статус/matrix/current state, ADR status-only, не ставит ready  | роль сохранена целиком                                                                |
-| `multica-editor.md` `6d10…eb1`       | обе локали, no AI thresholds/legal copy/prices                 | роль сохранена целиком                                                                |
-| `multica-orchestrator.md` `f22e…0a5` | пять ready checks, one writer, no scope/task creation          | роль сохранена целиком; direct mandate живёт в operating model                        |
-| `multica-release.md` `8129…f83`      | CI/migrations/backups/health, review before deploy, secrets    | сохранено; stale CI/test и §7 wording исправлены                                      |
-| `multica-reviewer.md` `df4a…d94`     | source/scope/evidence review, verdict, no implementation       | сохранено; Bash write gap назван до M4                                                |
-| `multica-seo.md` `8af6…231`          | technical SEO, no ranking/external analytics                   | роль сохранена целиком                                                                |
-| `multica-tester.md` `38c1…1cf`       | per-criterion evidence, no fixing/softening checks             | сохранено; test fact и Write/Bash gap уточнены                                        |
-| `multica-start.md` `e3f2…426`        | readiness/one-writer gate, no implementation                   | дополнено authorization/baseline/AC-ID/trace                                          |
-| `multica-stage.md` `c99d…1bb`        | previous evidence, role mapping, independent review            | дополнено revision/check_id/run-stage-task                                            |
-| `multica-status.md` `e9ef…803`       | ready/work/chain/ritual/blocker status, read-only              | дополнено current test source, outcomes, failure/handoff                              |
-| `multica-handback.md` `63cc…1bb`     | owner question, stop and recovery state                        | дополнено полным handoff и persistent failures                                        |
-| user `trace-block.md` `6576…878`     | trace-mcp routing и `get_project_map(summary_only=true)`       | дословно встроено в `AGENTS.md`; сохранено                                            |
-| Multica audit                        | IDs, 10 agents, 32 skills, squad, 3 schedules, `in_place`      | `docs/multica/2026-09-13-configuration-audit.md`; factual snapshot, не правит runtime |
+| Старый источник и SHA-256            | Уникальное правило                                               | Новое место / статус                                                                   |
+| ------------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `CLAUDE.md` `b949…71c`               | иерархия журнала/spec/ADR/vision                                 | `project-rules.md`; перенесено                                                         |
+| `CLAUDE.md` `b949…71c`               | operating model, ready, автопилоты                               | `operating-model.md`, `backlog/README.md`; ссылки из адаптера                          |
+| `CLAUDE.md` `b949…71c`               | структура server/web, env names, серверные и веб-соглашения      | `project-rules.md`; перенесено, facts требуют свежей сверки                            |
+| `CLAUDE.md` `b949…71c`               | команды, Prettier, build side effect, pre-commit                 | `project-rules.md`, `testing.md`; перенесено и датировано                              |
+| `CLAUDE.md` `b949…71c`               | планы/отчёты, Git, язык, spec rules, секреты                     | `project-rules.md`, plan/report contracts; перенесено                                  |
+| `CLAUDE.md:46` `b949…71c`            | `.claude/settings.local.json` — личный неверсионируемый override | `project-rules.md` § «Источники требований»; активно сохранено, файл не версионируется |
+| `CLAUDE.md:142` `b949…71c`           | repo `docs/plans/` и `docs/reports/` перекрывают defaults skills | `project-rules.md` § «План, отчёт и evidence»; сохранено с явным приоритетом           |
+| `CLAUDE.md` `b949…71c`               | старые пробелы реализации, включая «нет тестов»                  | неизменённый source; историческое, актуальный test fact в `testing.md`                 |
+| `operating-model.md` `d241…a39`      | десять ролей и их границы                                        | §1 сохранён без переписывания                                                          |
+| `operating-model.md` `d241…a39`      | источники, стадии/evidence, ready                                | §§2–4 сохранены и дополнены authorization/revision/AC-ID                               |
+| `operating-model.md` `d241…a39`      | один writer, duplicate stop, два неуспеха, recovery/conflict     | §5 сохранён; persistent `check_id` и handoff добавлены                                 |
+| `operating-model.md` `d241…a39`      | три paused autopilot, их read/write/never                        | §6 сохранён; конфликт области контекста остаётся открытым C1                           |
+| `operating-model.md` `d241…a39`      | §7 решения владельца и автономия push/merge/deploy с условиями   | §7 сохранён; release role исправлен по источнику                                       |
+| `operating-model.md` `d241…a39`      | датированная актуализация контекста                              | §8 сохранён; M4 caveat добавлен                                                        |
+| `backlog/README.md` `2128…5de`       | T/E/Q/F, статусы, ready owner, источники, regen, 112 задач       | сохранено; test fact датирован без смены статусов                                      |
+| `multica-architect.md` `1d4e…3ec`    | техплан, named migrations, не реализует и не придумывает числа   | роль сохранена целиком                                                                 |
+| `multica-designer.md` `c9ea…9e1`     | все UI-состояния, ru/en length, одна палитра, не меняет access   | роль сохранена целиком                                                                 |
+| `multica-developer.md` `55e5…200`    | единственный product writer, plan/report, named migration        | сохранено; только test fact заменён ссылкой на срез                                    |
+| `multica-docs-keeper.md` `a9bf…a1d`  | статус/matrix/current state, ADR status-only, не ставит ready    | роль сохранена целиком                                                                 |
+| `multica-editor.md` `6d10…eb1`       | обе локали, no AI thresholds/legal copy/prices                   | роль сохранена целиком                                                                 |
+| `multica-orchestrator.md` `f22e…0a5` | пять ready checks, one writer, no scope/task creation            | роль сохранена целиком; direct mandate живёт в operating model                         |
+| `multica-release.md` `8129…f83`      | CI/migrations/backups/health, review before deploy, secrets      | сохранено; stale CI/test и §7 wording исправлены                                       |
+| `multica-reviewer.md` `df4a…d94`     | source/scope/evidence review, verdict, no implementation         | сохранено; Bash write gap назван до M4                                                 |
+| `multica-seo.md` `8af6…231`          | technical SEO, no ranking/external analytics                     | роль сохранена целиком                                                                 |
+| `multica-tester.md` `38c1…1cf`       | per-criterion evidence, no fixing/softening checks               | сохранено; test fact и Write/Bash gap уточнены                                         |
+| `multica-start.md` `e3f2…426`        | readiness/one-writer gate, no implementation                     | требует artifact contracts §1–§4 целиком; отсутствующее явно `not_yet_applicable`      |
+| `multica-stage.md` `c99d…1bb`        | previous evidence, role mapping, independent review              | требует artifact contracts §1–§4 целиком; failures и handoff не теряются               |
+| `multica-status.md` `e9ef…803`       | ready/work/chain/ritual/blocker status, read-only                | требует artifact contracts §1–§4 целиком; показывает prior state/resume                |
+| `multica-handback.md` `63cc…1bb`     | owner question, stop and recovery state                          | требует artifact contracts §1–§4 целиком; полный handoff и persistent failures         |
+| user `trace-block.md` `6576…878`     | trace-mcp routing и `get_project_map(summary_only=true)`         | дословно встроено в `AGENTS.md`; сохранено                                             |
+| Multica audit                        | IDs, 10 agents, 32 skills, squad, 3 schedules, `in_place`        | `docs/multica/2026-09-13-configuration-audit.md`; factual snapshot, не правит runtime  |
 
 ## Зафиксированные противоречия и решения M0–M3
 

@@ -27,3 +27,13 @@ argument-hint: T-NNN <причина>
    означает завершение стадии или принятие задачи.
 
 Не переходи к следующей задаче. Восстановление остановленной работы — отдельное решение.
+
+## Обязательный контракт артефакта
+
+Применяй полностью разделы 1–4 `docs/development/artifact-contracts.md`; command не может
+отбрасывать поля канонического контракта. Зафиксируй: task/источник поручения, authorization,
+scope, полный baseline SHA, проверяемую revision, dirty fingerprint, стадию, AC-ID, стабильные
+`check_id`, actor/run, `trace_ref`, предыдущий счёт неуспехов по каждому `check_id`, handoff
+и наблюдаемое условие resume, а также раздельные run outcome, stage outcome и task acceptance.
+Если revision, проверка или handoff ещё не существуют на этом шаге, пиши
+`not_yet_applicable: <причина>`; не придумывай значение и не опускай поле молча.
