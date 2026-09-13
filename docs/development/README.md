@@ -18,6 +18,8 @@
 8. [Правила проекта](project-rules.md) и [проверки](testing.md) — активные подробности коротких
    адаптеров `AGENTS.md`/`CLAUDE.md` и датированный test/CI срез.
 9. [Контракты артефактов](artifact-contracts.md) — паспорт задачи, evidence, handoff и приёмка.
+10. [Изоляция проверяющих runtimes](runtime-isolation.md) — Docker boundary, manifests,
+    проверенные canaries и отдельные условия native/Claude приёмки.
 
 Это архитектура **процесса разработки**, а продуктовая архитектура остаётся в `docs/spec/`,
 `docs/vision/` и ADR. Действующие полномочия и стадии определяет

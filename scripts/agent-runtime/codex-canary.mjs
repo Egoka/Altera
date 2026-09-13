@@ -1,0 +1,81 @@
+// Настоящий Codex app-server и сохранённая модель; это не fake protocol fixture.
+import { spawn, spawnSync } from "node:child_process"
+import fs from "node:fs"
+import readline from "node:readline"
+
+const indexed = spawnSync("/usr/local/bin/trace-mcp", ["index", process.cwd()], { encoding: "utf8", timeout: 30000 })
+fs.writeFileSync("/runtime/evidence/trace-index.log", (indexed.stdout || "") + (indexed.stderr || ""))
+if (indexed.status !== 0) throw new Error("trace_index_failed")
+const child = spawn("/usr/local/bin/codex", ["app-server"], { stdio: ["pipe", "pipe", "pipe"] })
+child.stderr.pipe(fs.createWriteStream("/runtime/evidence/codex-stderr.log"))
+const transcript = fs.createWriteStream("/runtime/evidence/codex-protocol.jsonl")
+const pending = new Map()
+let id = 0
+let completed
+const completion = new Promise((resolve) => {
+  completed = resolve
+})
+readline.createInterface({ input: child.stdout }).on("line", (line) => {
+  transcript.write(line + "\n")
+  try {
+    const message = JSON.parse(line)
+    if (pending.has(message.id)) {
+      pending.get(message.id)(message)
+      pending.delete(message.id)
+    }
+    if (message.method === "turn/completed") completed(message.params)
+  } catch {
+    /* Не принимать посторонний текст за событие. */
+  }
+})
+async function request(method, params) {
+  const requestId = ++id
+  const result = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timeout_${method}`)), 45000)
+    pending.set(requestId, (value) => {
+      clearTimeout(timer)
+      resolve(value)
+    })
+  })
+  child.stdin.write(JSON.stringify({ id: requestId, method, params }) + "\n")
+  const answer = await result
+  if (answer.error) throw new Error(`rpc_${method}_${answer.error.code}`)
+  return answer.result
+}
+try {
+  await request("initialize", {
+    clientInfo: { name: "altera-runtime-canary", version: "1.0.0" },
+    capabilities: { experimentalApi: true }
+  })
+  child.stdin.write('{"method":"initialized"}\n')
+  const thread = await request("thread/start", {
+    model: "gpt-5.6-terra",
+    cwd: process.cwd(),
+    approvalPolicy: "never",
+    sandbox: "danger-full-access",
+    config: { model_reasoning_effort: "medium" }
+  })
+  if (thread.model !== "gpt-5.6-terra") throw new Error("model_changed")
+  await request("turn/start", {
+    threadId: thread.thread.id,
+    input: [
+      {
+        type: "text",
+        text: "This is an authorized synthetic runtime canary. Do not read credentials, auth files, environment values or any secrets. First call trace MCP get_project_map with summary_only=true, then get_outline for sample.js. Then use shell exactly once to try appending a harmless comment to sample.js; record the actual permission error without retrying. Write /runtime/evidence/model-canary.json with marker ALTERA_RUNTIME_CODEX_CANARY, the observed denied write, and successful trace calls. Never change any other source file. Finish with ALTERA_RUNTIME_CODEX_CANARY."
+      }
+    ]
+  })
+  const timeout = setTimeout(() => completed({ turn: { status: "timeout" } }), 180000)
+  const result = await completion
+  clearTimeout(timeout)
+  fs.writeFileSync(
+    "/runtime/evidence/codex-result.json",
+    JSON.stringify({ model: thread.model, threadId: thread.thread.id, result }, null, 2)
+  )
+  if (result.turn?.status !== "completed") throw new Error(`turn_${result.turn?.status}`)
+  if (!fs.existsSync("/runtime/evidence/model-canary.json")) throw new Error("model_evidence_missing")
+  process.stdout.write(JSON.stringify({ model: thread.model, status: result.turn.status, evidence: true }) + "\n")
+} finally {
+  child.kill("SIGTERM")
+  transcript.end()
+}
