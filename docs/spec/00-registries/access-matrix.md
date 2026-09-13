@@ -66,7 +66,7 @@
 | 33 | `translation.translate.manual` (3) | вторая языковая версия вручную | — | — | акт., свои (standard и pro — журнал #33) | свои | — | — | — | ✓ | act, own | — | `FORBIDDEN` | `10-flows/second-language-version.md` | утверждён |
 | 34 | `revision.list` / `revision.read` | снимки версий; сравнение двух версий в интерфейсе (журнал #15) | — | — | свои (и после истечения, и для отклонённой) | свои | ✓ | ✓ (карточка автора, аудит) | ✓ | ✓ | own или role | `admin.read.personal` для служебных | `FORBIDDEN` | `50-access/permission-checks.md` | утверждён |
 | 35 | `revision.restore` (4) | новая ревизия из старой | — | — | акт., свои | свои | — | — | — | ✓ | act, own | `revision.restore` (не автором) | `FORBIDDEN` | `50-access/permission-checks.md` | утверждён |
-| 36 | `reviewNote.create` / `reviewNote.resolve` (4) | замечание к блоку | — | — | resolve свои | — | ✓ | — | — | ✓ | perm(review) / own | — | `FORBIDDEN` | `50-access/permission-checks.md` | утверждён |
+| 36 | `reviewNote.create` / `reviewNote.resolve` (4) | замечание к блоку статьи, привязанное к версии; рецензент оставляет в ручной ветке ревью, автор отмечает как решённое (журнал §25.6) | — | — | resolve свои | — | ✓ | — | — | ✓ | perm(review) / own | — | `FORBIDDEN` | `50-access/permission-checks.md` | утверждён; Г6 |
 | 37 | `article.export` (3) | Markdown/HTML своих, включая отклонённые (чтение и копирование — журнал #12) и после истечения плана | — | — | ✓ свои | свои | — | — | — | ✓ | own | — | `FORBIDDEN` | `50-access/permission-checks.md` | утверждён |
 | 38 | `article.bulk.status` | массовые операции над версиями | — | — | — | — | — | — | — | — | — | — | — | — | отменено: массовые операции определяются при проектировании каждого раздела админки (журнал #17) |
 
