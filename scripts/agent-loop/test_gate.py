@@ -83,16 +83,16 @@ class GateTests(unittest.TestCase):
     def record(self, path, event='event-1', ok=True):
         return self.cli('record', path, '--event', event, ok=ok)
 
-    def finish(self, run='run-1', ok=True):
+    def finish(self, run='run-1', ok=True, stage='test'):
         state = self.cli('status')
         report = {
-            'task': 'T-fixture', 'stage': 'test', 'actor': 'tester', 'run': run,
+            'task': 'T-fixture', 'stage': stage, 'actor': 'tester', 'run': run,
             'baseline_commit': self.base, **self.snapshot(),
             'plan': self.plan, 'evidence': state['slot']['evidence'],
             'native_outcome': 'success', 'stage_outcome': 'completed',
             'task_acceptance': 'not_checked',
         }
-        self.write('docs/reports/fixture-report.md', '# Fixture report\n')
+        self.write('docs/reports/fixture-report.md', '# Fixture report: ' + stage + '\n')
         self.write(self.report, report)
         return self.cli('finish', self.report, ok=ok)
 
@@ -346,6 +346,86 @@ class GateTests(unittest.TestCase):
         self.finish()
         self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted output')
         self.start(run='review-1', actor='reviewer', stage='review', ok=False)
+
+
+    def other_passport(self):
+        other = json.loads(json.dumps(self.passport))
+        other.update({'task': 'T-other', 'plan': 'docs/plans/other.md',
+                      'report': 'docs/reports/other-report.gate.json'})
+        self.write('docs/plans/other.md', '# Other plan')
+        self.write('docs/plans/other.gate.json', other)
+        return 'docs/plans/other.gate.json'
+
+    def review_start(self):
+        self.start()
+        self.record(self.evidence())
+        self.finish()
+        self.start(run='review-1', stage='review')
+
+    # Ловит передачу product parent другой задаче между обязательными стадиями.
+    def test_parent_reservation_survives_finish_until_all_stages_complete(self):
+        self.write('server/code.txt', 'product change')
+        self.start()
+        self.record(self.evidence())
+        self.finish()
+        other = self.other_passport()
+        before = self.cli('status')
+        self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1', ok=False)
+        self.assertEqual(before, self.cli('status'))
+        self.start(run='review-1', stage='review')
+        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+                    event='review-1')
+        self.finish(run='review-1', stage='review')
+        self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1')
+
+    # Ловит сброс parent при release и стирание failures при возобновлении той же цепочки.
+    def test_parent_reservation_survives_release_and_resume_preserves_failures(self):
+        self.start()
+        self.record(self.evidence('failed'))
+        self.cli('release', '--actor', 'tester', '--run', 'run-1')
+        other = self.other_passport()
+        self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1', ok=False)
+        self.cli('docs-only', '--baseline', self.base, ok=False)
+        self.start(run='run-2')
+        self.assertEqual(self.cli('status')['tasks']['T-fixture']['checks']['test']['unit']['failures'], 1)
+        self.record(self.evidence('failed', run='run-2', event='event-2'), event='event-2')
+        self.cli('release', '--actor', 'tester', '--run', 'run-2')
+        self.start(run='run-3', ok=False)
+
+    # Ловит запись новой ревизии review после start при устаревшей тестовой стадии.
+    def test_prerequisites_rechecked_at_record_after_review_start(self):
+        self.review_start()
+        self.write('server/code.txt', 'changed after review start')
+        before = self.cli('status')
+        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+                    event='review-1', ok=False)
+        self.assertEqual(before, self.cli('status'))
+
+    # Ловит подмену предыдущего evidence после start даже при той же ревизии.
+    def test_prerequisite_output_rechecked_at_record(self):
+        self.review_start()
+        self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted prior output')
+        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+                    event='review-1', ok=False)
+
+    # Ловит finish и активный Stop при подменённом выводе предыдущей стадии.
+    def test_prerequisites_rechecked_at_finish_and_active_stop(self):
+        self.review_start()
+        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+                    event='review-1')
+        self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted prior output')
+        self.finish(run='review-1', stage='review', ok=False)
+        self.cli('stop', ok=False)
+
+    # Ловит принятие Stop после завершения цепочки с изменённым prior-stage evidence.
+    def test_prerequisites_rechecked_at_completed_stop(self):
+        self.review_start()
+        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+                    event='review-1')
+        self.finish(run='review-1', stage='review')
+        self.cli('stop')
+        self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted prior output')
+        self.cli('stop', ok=False)
 
 
 if __name__ == '__main__':

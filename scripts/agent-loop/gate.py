@@ -212,11 +212,11 @@ def read_state(directory):
     path = directory / 'state.json'
     require(not path.is_symlink(), 'state symlink rejected')
     if not path.exists():
-        return {'version': 1, 'tasks': {}, 'slot': None, 'events': {}, 'runs': [], 'completed': {}, 'docs_only': {}}
+        return {'version': 2, 'tasks': {}, 'parent': None, 'slot': None, 'events': {}, 'runs': [], 'completed': {}, 'docs_only': {}}
     state = json.loads(path.read_text())
-    require(isinstance(state, dict) and state.get('version') == 1 and
-            all(k in state for k in ('tasks', 'slot', 'events', 'runs', 'completed', 'docs_only')),
-            'invalid state schema; refusing reset')
+    require(isinstance(state, dict) and state.get('version') == 2 and
+            all(k in state for k in ('tasks', 'parent', 'slot', 'events', 'runs', 'completed', 'docs_only')),
+            'invalid or unsupported state schema; refusing reset')
     return state
 
 
@@ -286,6 +286,19 @@ def proof(root, path, passport):
     return e, hashes
 
 
+def validate_prerequisites(root, p, stage_name, task, snap, state):
+    stage_names = [stage['name'] for stage in p['stages']]
+    previous = stage_names[:stage_names.index(stage_name)]
+    require(all(name in task['completed_stages'] for name in previous), 'previous stage incomplete')
+    require(all(task['stage_revisions'][name] == snap for name in previous),
+            'previous stage evidence belongs to an obsolete revision')
+    for name in previous:
+        for event in task['stage_evidence'][name]:
+            entry = state['events'][event]
+            require(proof(root, entry['path'], p)[1] == entry['hashes'],
+                    'previous stage evidence/output/trace changed')
+
+
 def validate_finish(root, slot, p, report_path, state):
     require(report_path == p['report'], 'report is not paired with active plan')
     report = json_file(root, report_path, 'docs/reports')
@@ -295,6 +308,7 @@ def validate_finish(root, slot, p, report_path, state):
         require(slot['report_hashes'] == {name: digest(safe_file(root, name).read_bytes())
                                          for name in (report_path, human_report)}, 'completed report changed')
     snap = boundary(root, p)
+    validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
     check_binding(report, slot, p, snap)
     require(report.get('plan') == slot['passport'] and report.get('evidence') == slot['evidence'],
             'report plan/evidence mismatch')
@@ -314,6 +328,7 @@ def validate_finish(root, slot, p, report_path, state):
         require(found and found['result'] == 'passed' and found.get('purpose') != 'tdd_red',
                 'stage lacks current passing implementation evidence: ' + check['check_id'])
     require(snap == boundary(root, p), 'revision changed while validating report')
+    validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
     return snap
 
 
@@ -323,7 +338,7 @@ def dispatch(args, root, state):
     if action == 'status':
         return state
     if action == 'docs-only':
-        require(not state['slot'], 'global slot is occupied')
+        require(not state['parent'] and not state['slot'], 'product parent is still reserved')
         validate_baseline(root, args.baseline)
         require(not changed_product(root, args.baseline), 'docs-only has product changes')
         state['docs_only'][root_key] = {'baseline': args.baseline, **snapshot(root, list(PRODUCT))}
@@ -336,6 +351,8 @@ def dispatch(args, root, state):
         p = load_passport(root, args.passport)
         snap = boundary(root, p)
         phash = passport_hash(root, args.passport, p)
+        parent = {'task': p['task'], 'root': root_key, 'passport': args.passport, 'passport_hash': phash}
+        require(state['parent'] is None or state['parent'] == parent, 'another product parent is still reserved')
         task = state['tasks'].get(p['task'])
         if task:
             require(task['passport_hash'] == phash, 'existing task passport changed')
@@ -347,15 +364,8 @@ def dispatch(args, root, state):
         stage_names = [s['name'] for s in p['stages']]
         require(args.stage in stage_names, 'unknown stage')
         position = stage_names.index(args.stage)
-        require(all(s in task['completed_stages'] for s in stage_names[:position]), 'previous stage incomplete')
         require(args.stage not in task['completed_stages'], 'stage already completed')
-        require(all(task['stage_revisions'][name] == snap for name in stage_names[:position]),
-                'previous stage evidence belongs to an obsolete revision')
-        for name in stage_names[:position]:
-            for event in task['stage_evidence'][name]:
-                entry = state['events'][event]
-                require(proof(root, entry['path'], p)[1] == entry['hashes'],
-                        'previous stage evidence/output/trace changed')
+        validate_prerequisites(root, p, args.stage, task, snap, state)
         checks = task['checks'].setdefault(args.stage, {})
         for check in p['stages'][position]['checks']:
             entry = checks.setdefault(check['check_id'], {'failures': 0})
@@ -364,6 +374,8 @@ def dispatch(args, root, state):
                 'run': args.run, 'passport': args.passport, 'passport_hash': phash, 'evidence': [],
                 'lease': {'owner': args.actor, 'run': args.run, 'automatic_expiry': False}}
         require(snap == boundary(root, p), 'revision changed while acquiring slot')
+        validate_prerequisites(root, p, args.stage, task, snap, state)
+        state['parent'] = parent
         state['tasks'][p['task']] = task
         state['slot'] = slot
         state['runs'].append(args.run)
@@ -395,6 +407,7 @@ def dispatch(args, root, state):
     if action == 'record':
         require(IDENTIFIER.fullmatch(args.event) and args.event not in state['events'], 'invalid or duplicate event ID')
         snap = boundary(root, p)
+        validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
         e, hashes = proof(root, args.evidence, p)
         check_binding(e, slot, p, snap)
         stage = next(s for s in p['stages'] if s['name'] == slot['stage'])
@@ -409,6 +422,7 @@ def dispatch(args, root, state):
                 counter['failures'] += 1
         require(snap == boundary(root, p) and hashes == proof(root, args.evidence, p)[1],
                 'revision or evidence changed during record')
+        validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
         # В текущем отчёте остаётся последнее evidence каждой проверки; общая история сохраняется.
         slot['evidence'] = [event for event in slot['evidence']
                             if state['events'][event]['check_id'] != e['check_id']]
@@ -429,7 +443,10 @@ def dispatch(args, root, state):
         state['tasks'][p['task']]['stage_evidence'][slot['stage']] = list(slot['evidence'])
         state['completed'][root_key] = {'slot': slot}
         state['slot'] = None
-        return {'result': 'contract_valid', 'task_acceptance': 'not_checked'}
+        if all(stage['name'] in state['tasks'][p['task']]['completed_stages'] for stage in p['stages']):
+            state['parent'] = None
+        return {'result': 'contract_valid', 'task_acceptance': 'not_checked',
+                'parent_retained': state['parent'] is not None}
     raise Rejected('unsupported action')
 
 
@@ -446,9 +463,9 @@ def main():
     record = subs.add_parser('record', help='Record immutable evidence and persistent check failure count')
     record.add_argument('evidence')
     record.add_argument('--event', required=True)
-    finish = subs.add_parser('finish', help='Validate paired report; release slot without granting acceptance')
+    finish = subs.add_parser('finish', help='Validate report; release stage slot, retain parent until every stage finishes')
     finish.add_argument('report')
-    release = subs.add_parser('release', help='Owner releases slot without completing stage; counters retained')
+    release = subs.add_parser('release', help='Owner releases stage slot; parent reservation and counters retained')
     release.add_argument('--actor', required=True)
     release.add_argument('--run', required=True)
     docs = subs.add_parser('docs-only', help='Attest no product diff from explicit baseline; no product stage')
