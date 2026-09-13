@@ -145,7 +145,14 @@ def effective_args(manifest, incoming):
             raise ValueError('unsupported_codex_protocol')
         result.append('app-server')
         i = 1
+        seen_listener = False
         while i < len(incoming):
+            if incoming[i] == '--listen':
+                if seen_listener or i + 1 == len(incoming) or incoming[i + 1] != 'stdio://':
+                    raise ValueError('unsupported_codex_listener')
+                seen_listener = True
+                result.extend(incoming[i:i + 2]); i += 2
+                continue
             if incoming[i] not in ('-c', '--config') or i + 1 == len(incoming):
                 raise ValueError('unsupported_codex_argument')
             setting = incoming[i + 1]

@@ -69,7 +69,9 @@ credentials не читается launcher и не входит в manifest/hash
 ```
 
 Для Codex поддерживается app-server и узкие overrides исходной модели/medium; launcher
-явно задаёт их даже при отсутствии native flags. Для Claude
+явно задаёт их даже при отсутствии native flags. Разрешена одна необязательная native пара
+`--listen stdio://`, которая передаётся без изменений; equals-форма, другой transport, duplicates и неизвестные
+argv отвергаются. Для Claude
 сохраняются известные stream-json flags, модель, effort и disallowedTools; неизвестные флаги
 не пропускаются вслепую. `[mcp_servers.trace]` в RO `codex-config.toml` запускает Linux
 `/usr/local/bin/trace-mcp serve --preset review`. Его проверенный index находится в отдельном
@@ -82,8 +84,11 @@ credentials не читается launcher и не входит в manifest/hash
 CLI и stderr остаются раздельными, сигналы передаются дочернему процессу. Изменение модели,
 reasoning или default service tier через RPC также отвергается. В pinned schema
 `serviceTierForTurn` принимает только omitted/null (наследует закреплённый tier) либо `"default"`
-(standard speed); `fast`, `flex` и неизвестные значения запрещены. `serviceTier`/`service_tier`
-допускают только null/omitted. Thread `config` ограничен `model`, `model_reasoning_effort`,
+(standard speed); `fast`, `flex` и неизвестные значения запрещены. `serviceTier: "default"`
+разрешён только в прямом `params` Codex RPC `thread/start`, `thread/resume`, `turn/start`.
+В другом RPC, вложенном объекте/config или массиве это исключение не действует; остальные
+ненулевые tiers не исправляются и отвергаются. `service_tier` по-прежнему допускает только
+null/omitted. Thread `config` ограничен `model`, `model_reasoning_effort`,
 `service_tier` с исходными значениями; произвольные nested/dotted profiles и provider overrides
 не принимаются. `config/value/write`, `config/batchWrite` и `externalAgentConfig/import`
 отвергаются целиком: checker не меняет defaults через keyPath/value, batch или файлы импорта.
@@ -91,6 +96,10 @@ reasoning или default service tier через RPC также отвергае
 ограничений внутри CLI не отменяет Docker mounts. Diagnostic flag `fixture: true` выбирает
 явный coordinator-owned `/runtime/policy/fixture.mjs` вместо CLI; сам по себе он не означает
 ни запуск модели, ни fake-успех. Тип конкретного опыта и фактический executable фиксирует отчёт.
+Совместимость argv/RPC не доказывает native приёмку: обнаружение per-task CODEX_HOME,
+проверка и materialization managed TOML, перенос фактического AGENTS.md context и native canary
+остаются отдельными blockers. Guard поставляется в hashed RO policy; перед будущей canary
+нужен её новый capture/hash, без пересборки неизменённого image.
 
 ## Сеть и авторизация
 

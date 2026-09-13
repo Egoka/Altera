@@ -194,6 +194,30 @@ class RuntimeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.runtime.command(self.manifest, bad, {})
 
+    def test_native_codex_stdio_listener_is_forwarded_exactly(self):
+        self.manifest.update(family='codex', model='gpt-5.6-terra')
+        for incoming in [['app-server', '--listen', 'stdio://'],
+                         ['app-server', '--listen', 'stdio://', '-c', 'model="gpt-5.6-terra"'],
+                         ['app-server', '--config', 'model_reasoning_effort="medium"', '--listen', 'stdio://']]:
+            with self.subTest(incoming=incoming):
+                args = self.runtime.command(self.manifest, incoming, {})
+                self.assertEqual(args[args.index('app-server'):], incoming + [
+                    '-c', 'model="gpt-5.6-terra"', '-c', 'model_reasoning_effort="medium"'])
+
+    def test_native_codex_listener_does_not_allow_alternate_transports_or_overrides(self):
+        self.manifest.update(family='codex', model='gpt-5.6-terra')
+        for tail in [['--listen'], ['--listen=stdio://'],
+                     ['--listen', 'stdio://', '--listen', 'stdio://'],
+                     ['--listen', 'tcp://127.0.0.1:9000'], ['--listen', 'unix:///tmp/socket'],
+                     ['--listen', 'https://example.invalid'], ['--listen', 'stdio:/'],
+                     ['--listen', 'stdio://', '--unknown'],
+                     ['--listen', 'stdio://', '-c', 'model="other"'],
+                     ['--listen', 'stdio://', '-c', 'model_reasoning_effort="low"'],
+                     ['--listen', 'stdio://', '-c', 'service_tier="fast"']]:
+            with self.subTest(tail=tail):
+                with self.assertRaises(ValueError):
+                    self.runtime.command(self.manifest, ['app-server'] + tail, {})
+
     def test_omitted_native_flags_keep_explicit_model_and_effort(self):
         args = self.runtime.command(self.manifest, [], {})
         self.assertIn('--model', args)

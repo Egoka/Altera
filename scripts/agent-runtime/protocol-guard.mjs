@@ -11,6 +11,18 @@ export function validate(bytes, root, family = "codex") {
     ["config/value/write", "config/batchWrite", "externalAgentConfig/import"].includes(value?.method)
   )
     throw new Error("preserved_model_settings_changed")
+  // Исключение только для прямого params в трёх native RPC; вложенные tiers не расширяются.
+  const nativeParams =
+    family === "codex" &&
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    ["thread/start", "thread/resume", "turn/start"].includes(value.method) &&
+    value.params !== null &&
+    typeof value.params === "object" &&
+    !Array.isArray(value.params)
+      ? value.params
+      : null
   function visit(item) {
     if (item === null || typeof item !== "object") return
     for (const [key, child] of Object.entries(item)) {
@@ -20,7 +32,8 @@ export function validate(bytes, root, family = "codex") {
         (["effort", "reasoningEffort", "reasoning_effort", "model_reasoning_effort"].includes(key) &&
           child !== null &&
           child !== "medium") ||
-        (["serviceTier", "service_tier", "modelProvider", "model_provider"].includes(key) && child !== null) ||
+        (key === "serviceTier" && child !== null && !(item === nativeParams && child === "default")) ||
+        (["service_tier", "modelProvider", "model_provider"].includes(key) && child !== null) ||
         (key === "serviceTierForTurn" && child !== null && child !== "default")
       )
         throw new Error("preserved_model_settings_changed")

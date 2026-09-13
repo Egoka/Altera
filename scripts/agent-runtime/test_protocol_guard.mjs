@@ -86,3 +86,60 @@ test("config mutation RPCs cannot hide overrides in keyPath values or imported f
   }
   validate(Buffer.from('{"method":"config/read","params":{}}'), "/source/project")
 })
+
+test("native Codex start resume and turn default tier is accepted without rewriting bytes", async () => {
+  const { validate } = await import("./protocol-guard.mjs")
+  const base = { model: "gpt-5.6-terra", cwd: "/source/project", developerInstructions: null, serviceTier: "default" }
+  for (const [method, params] of [
+    ["thread/start", { ...base, config: { model_reasoning_effort: "medium" } }],
+    ["thread/resume", { ...base, threadId: "synthetic", config: { model_reasoning_effort: "medium" } }],
+    ["turn/start", { ...base, threadId: "synthetic", effort: "medium", input: [] }]
+  ]) {
+    const bytes = Buffer.from(JSON.stringify({ id: 1, method, params }, null, 2) + "\n")
+    const original = Buffer.from(bytes)
+    validate(bytes, "/source/project")
+    assert.deepEqual(bytes, original)
+    for (const serviceTier of [null, undefined]) {
+      validate(Buffer.from(JSON.stringify({ method, params: { ...params, serviceTier } })), "/source/project")
+    }
+  }
+})
+
+test("native default tier allowance is confined to direct params of three Codex methods", async () => {
+  const { validate } = await import("./protocol-guard.mjs")
+  const valid = { method: "thread/start", params: { serviceTier: "default" } }
+  for (const request of [
+    { method: "thread/fork", params: { serviceTier: "default" } },
+    { method: "arbitrary/rpc", params: { serviceTier: "default" } },
+    { params: { serviceTier: "default" } },
+    { method: "thread/start", serviceTier: "default", params: {} },
+    { method: "thread/start", params: [{ serviceTier: "default" }] },
+    { method: "thread/start", params: { nested: { serviceTier: "default" } } },
+    { method: "thread/start", params: { config: { serviceTier: "default" } } },
+    { method: "thread/start", params: { config: { service_tier: "default" } } },
+    [valid],
+    { nested: valid }
+  ]) {
+    assert.throws(() => validate(Buffer.from(JSON.stringify(request)), "/source/project"))
+  }
+  assert.throws(() => validate(Buffer.from(JSON.stringify(valid)), "/source/project", "claude"))
+  for (const method of ["thread/start", "thread/resume", "turn/start"]) {
+    for (const serviceTier of ["priority", "fast", "flex", "unknown", false, [], {}]) {
+      assert.throws(() => validate(Buffer.from(JSON.stringify({ method, params: { serviceTier } })), "/source/project"))
+    }
+    for (const drift of [
+      { model: "other" },
+      { effort: "low" },
+      { modelProvider: "other" },
+      { cwd: "/tmp" },
+      { config: { model_reasoning_effort: "high" } }
+    ]) {
+      assert.throws(() =>
+        validate(
+          Buffer.from(JSON.stringify({ method, params: { serviceTier: "default", ...drift } })),
+          "/source/project"
+        )
+      )
+    }
+  }
+})
