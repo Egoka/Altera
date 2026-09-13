@@ -1,0 +1,810 @@
+diff --git a/docs/development/runtime-isolation.md b/docs/development/runtime-isolation.md
+index 3ae0f6a..8cea8c1 100644
+--- a/docs/development/runtime-isolation.md
++++ b/docs/development/runtime-isolation.md
+@@ -158,8 +158,9 @@ Missing/stale evidence и сбой collector/record/finish оставляют с
+ `docker image inspect --format '{{.Id}}' altera-agent-runtime:task5` и использовать только этот ID.
+ Dockerfile фиксирует Node 24.12.0, Codex 0.154.0-alpha.6.2, Claude 2.1.263 и trace 3.25.0.
+ Обновление любой версии требует новой приёмки; переносимый runtime не выводится из host login.
+-Изменённый `protocol-guard.mjs` также требует пересборки image и нового immutable ID перед
+-запуском: прежнее Docker/model evidence относится к прежнему image, а не к fix round 1.
++`protocol-guard.mjs` монтируется RO из policy и не входит в Docker build context. Его изменение
++требует нового trusted policy hash и runtime-source/canary evidence; прежний immutable image ID
++сохраняется, если содержимое image не меняется. Старое evidence не подтверждает новую policy.
+ 
+ Unit: `python3 -I scripts/agent-runtime/test_runtime.py`, `node --test scripts/agent-runtime/test_proxy.mjs scripts/agent-runtime/test_protocol_guard.mjs`.
+ Docker: `python3 -I scripts/agent-runtime/test_docker.py IMAGE_ID NEW_EVIDENCE_DIR`; каждый
+diff --git a/scripts/agent-runtime/build_metadata_config_probe.py b/scripts/agent-runtime/build_metadata_config_probe.py
+new file mode 100644
+index 0000000..fc7973b
+--- /dev/null
++++ b/scripts/agent-runtime/build_metadata_config_probe.py
+@@ -0,0 +1,53 @@
++#!/usr/bin/python3 -I
++"""Сборка D1: trusted canonical root/UID задаёт coordinator, не native env."""
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++import subprocess
++import tempfile
++
++COMPILER = '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
++
++SDK = '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk'
++
++
++def build(output, root, uid, alias=''):
++    root = root.rstrip('/')
++    if not root.startswith('/') or len(root) > 3000 or any(c not in '/abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_' for c in root):
++        raise ValueError('invalid_root_pin')
++    if not root or '//' in root or any(p in ('.', '..') for p in root.split('/')):
++        raise ValueError('invalid_root_pin')
++    if alias and (not root.startswith('/private/var/') or alias != root.removeprefix('/private')):
++        raise ValueError('unverified_alias_spelling')
++    if uid < 0:
++        raise ValueError('invalid_uid_pin')
++    source = Path(__file__).with_name('metadata-config-probe.c')
++    source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
++    pins = {'root': root, 'uid': uid, 'alias': alias, 'source_sha256': source_hash,
++            'builder_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
++            'compiler': COMPILER, 'sdk': SDK}
++    build_hash = hashlib.sha256(json.dumps(pins, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
++    with tempfile.TemporaryDirectory(prefix='altera-d1-build-', dir='/private/tmp') as work:
++        header = Path(work) / 'd1-build.h'
++        header.write_text('\n'.join([
++            '#define D1_ROOT ' + json.dumps(root), '#define D1_ALIAS ' + json.dumps(alias),
++            '#define D1_UID ' + str(uid), '#define D1_SOURCE_SHA ' + json.dumps(source_hash),
++            '#define D1_BUILD_SHA ' + json.dumps(build_hash)]) + '\n')
++        subprocess.run([COMPILER, '-isysroot', SDK, '-std=c11', '-Wall', '-Wextra', '-Werror', '-O2',
++                        '-I', work, str(source), '-o', str(output)], check=True,
++                       env={'PATH': '/usr/bin:/bin', 'HOME': '/var/empty', 'TMPDIR': work})
++    output.chmod(0o755)
++    print(json.dumps({**pins, 'build_sha256': build_hash,
++                      'binary': str(output.resolve()), 'binary_sha256': hashlib.sha256(output.read_bytes()).hexdigest()}, sort_keys=True))
++
++
++if __name__ == '__main__':
++    parser = argparse.ArgumentParser()
++    parser.add_argument('output', type=Path)
++    parser.add_argument('--root', required=True)
++    parser.add_argument('--uid', required=True, type=int)
++    parser.add_argument('--alias', default='')
++    args = parser.parse_args()
++    build(args.output, args.root, args.uid, args.alias)
+diff --git a/scripts/agent-runtime/metadata-config-probe.c b/scripts/agent-runtime/metadata-config-probe.c
+new file mode 100644
+index 0000000..515b010
+--- /dev/null
++++ b/scripts/agent-runtime/metadata-config-probe.c
+@@ -0,0 +1,353 @@
++/* D1 читает только pinned daemon temp JSON; не исполняет CLI, stdin или команды. */
++#include <fcntl.h>
++#include <limits.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <string.h>
++#include <sys/resource.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <unistd.h>
++#include "d1-build.h"
++
++#define LIMIT 65536
++#define TOKENS 4096
++#define DEPTH 16
++static unsigned char input[LIMIT + 1], strings[LIMIT + 1];
++static size_t length, cursor, used;
++struct token { char kind; int next, count; size_t start, size; };
++static struct token tokens[TOKENS];
++static int count;
++
++static bool ws(unsigned char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }
++static void space(void) { while (cursor < length && ws(input[cursor])) cursor++; }
++static int hex(unsigned char c) {
++    if (c >= '0' && c <= '9') return c - '0';
++    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
++    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
++    return -1;
++}
++static bool unit(uint32_t *value) {
++    *value = 0;
++    if (length - cursor < 4) return false;
++    for (int i = 0; i < 4; i++) {
++        int digit = hex(input[cursor++]);
++        if (digit < 0) return false;
++        *value = (*value << 4) | (uint32_t)digit;
++    }
++    return true;
++}
++static void encode(uint32_t code) {
++    if (code < 0x80) strings[used++] = (unsigned char)code;
++    else if (code < 0x800) {
++        strings[used++] = 0xc0 | (code >> 6); strings[used++] = 0x80 | (code & 63);
++    } else if (code < 0x10000) {
++        strings[used++] = 0xe0 | (code >> 12); strings[used++] = 0x80 | ((code >> 6) & 63);
++        strings[used++] = 0x80 | (code & 63);
++    } else {
++        strings[used++] = 0xf0 | (code >> 18); strings[used++] = 0x80 | ((code >> 12) & 63);
++        strings[used++] = 0x80 | ((code >> 6) & 63); strings[used++] = 0x80 | (code & 63);
++    }
++}
++static bool utf8(void) {
++    for (size_t i = 0; i < length;) {
++        uint32_t c = input[i++], minimum;
++        unsigned more;
++        if (c < 0x80) continue;
++        if (c >= 0xc2 && c <= 0xdf) { more = 1; minimum = 0x80; c &= 31; }
++        else if (c >= 0xe0 && c <= 0xef) { more = 2; minimum = 0x800; c &= 15; }
++        else if (c >= 0xf0 && c <= 0xf4) { more = 3; minimum = 0x10000; c &= 7; }
++        else return false;
++        if (length - i < more) return false;
++        while (more--) {
++            if ((input[i] & 0xc0) != 0x80) return false;
++            c = (c << 6) | (input[i++] & 63);
++        }
++        if (c < minimum || c > 0x10ffff || (c >= 0xd800 && c <= 0xdfff)) return false;
++    }
++    return true;
++}
++static bool string(int id) {
++    tokens[id].kind = 's'; tokens[id].start = used;
++    cursor++;
++    while (cursor < length) {
++        unsigned char c = input[cursor++];
++        if (c == '"') { tokens[id].size = used - tokens[id].start; return true; }
++        if (c < 0x20) return false;
++        if (c != '\\') { strings[used++] = c; continue; }
++        if (cursor == length) return false;
++        c = input[cursor++];
++        if (c == 'u') {
++            uint32_t code, low;
++            if (!unit(&code)) return false;
++            if (code >= 0xd800 && code <= 0xdbff) {
++                if (length - cursor < 6 || input[cursor++] != '\\' || input[cursor++] != 'u' ||
++                    !unit(&low) || low < 0xdc00 || low > 0xdfff) return false;
++                code = 0x10000 + ((code - 0xd800) << 10) + low - 0xdc00;
++            } else if (code >= 0xdc00 && code <= 0xdfff) return false;
++            encode(code);
++        } else {
++            switch (c) {
++                case '"': case '\\': case '/': strings[used++] = c; break;
++                case 'b': strings[used++] = '\b'; break;
++                case 'f': strings[used++] = '\f'; break;
++                case 'n': strings[used++] = '\n'; break;
++                case 'r': strings[used++] = '\r'; break;
++                case 't': strings[used++] = '\t'; break;
++                default: return false;
++            }
++        }
++    }
++    return false;
++}
++static bool equal(int id, const char *value) {
++    return id >= 0 && tokens[id].kind == 's' && tokens[id].size == strlen(value) &&
++           memcmp(strings + tokens[id].start, value, tokens[id].size) == 0;
++}
++static bool same(int a, int b) {
++    return tokens[a].size == tokens[b].size &&
++           memcmp(strings + tokens[a].start, strings + tokens[b].start, tokens[a].size) == 0;
++}
++static bool digit(unsigned char c) { return c >= '0' && c <= '9'; }
++static bool number(void) {
++    if (input[cursor] == '-') cursor++;
++    if (cursor == length) return false;
++    if (input[cursor] == '0') cursor++;
++    else {
++        if (input[cursor] < '1' || input[cursor] > '9') return false;
++        while (cursor < length && digit(input[cursor])) cursor++;
++    }
++    if (cursor < length && input[cursor] == '.') {
++        cursor++;
++        if (cursor == length || !digit(input[cursor])) return false;
++        while (cursor < length && digit(input[cursor])) cursor++;
++    }
++    if (cursor < length && (input[cursor] == 'e' || input[cursor] == 'E')) {
++        cursor++;
++        if (cursor < length && (input[cursor] == '+' || input[cursor] == '-')) cursor++;
++        if (cursor == length || !digit(input[cursor])) return false;
++        while (cursor < length && digit(input[cursor])) cursor++;
++    }
++    return true;
++}
++static int parse(int depth) {
++    space();
++    if (cursor == length || count == TOKENS || depth > DEPTH) return -1;
++    int id = count++;
++    unsigned char c = input[cursor];
++    if (c == '"') { if (!string(id)) return -1; }
++    else if (c == '{' || c == '[') {
++        tokens[id].kind = (char)c; cursor++; space();
++        unsigned char end = c == '{' ? '}' : ']';
++        if (cursor < length && input[cursor] == end) cursor++;
++        else for (;;) {
++            if (c == '{') {
++                if (cursor == length || input[cursor] != '"') return -1;
++                int key = parse(depth + 1);
++                if (key < 0) return -1;
++                for (int old = id + 1; old < key; old = tokens[old + 1].next)
++                    if (same(old, key)) return -1;
++                space(); if (cursor == length || input[cursor++] != ':') return -1;
++            }
++            if (parse(depth + 1) < 0) return -1;
++            tokens[id].count++; space();
++            if (cursor == length) return -1;
++            if (input[cursor] == end) { cursor++; break; }
++            if (input[cursor++] != ',') return -1;
++            space();
++        }
++    } else {
++        tokens[id].kind = 'v';
++        const char *literal = c == 't' ? "true" : c == 'f' ? "false" : c == 'n' ? "null" : NULL;
++        if (literal) {
++            size_t n = strlen(literal);
++            if (length - cursor < n || memcmp(input + cursor, literal, n)) return -1;
++            cursor += n;
++        } else if (!number()) return -1;
++    }
++    tokens[id].next = count;
++    return id;
++}
++static int field(int id, const char *name) {
++    if (id < 0 || tokens[id].kind != '{') return -1;
++    for (int key = id + 1; key < tokens[id].next; key = tokens[key + 1].next)
++        if (equal(key, name)) return key + 1;
++    return -1;
++}
++static bool arguments(int id, const char *a, const char *b, const char *c) {
++    if (id < 0 || tokens[id].kind != '[' || tokens[id].count != (c ? 3 : b ? 2 : 1)) return false;
++    int p = id + 1;
++    if (!equal(p, a)) return false;
++    p = tokens[p].next;
++    if (b && !equal(p, b)) return false;
++    if (b) p = tokens[p].next;
++    return !c || equal(p, c);
++}
++
++struct descriptor {
++    const char *name, *transport, *endpoint, *command, *args;
++    int unknown_fields, known_secret_fields, unknown_secret_fields;
++    bool headers_present, env_present, secret_types_match, exact;
++};
++static struct descriptor servers[8];
++static int server_count, unknown_servers;
++static bool mapping;
++static void describe(int key, int value) {
++    const char *name = equal(key, "context7") ? "context7" : equal(key, "playwright") ? "playwright" : equal(key, "trace") ? "trace" : NULL;
++    if (!name) { unknown_servers++; mapping = false; return; }
++    struct descriptor *d = &servers[server_count++];
++    d->name = name; d->transport = "unknown"; d->endpoint = "unknown";
++    d->command = "unknown"; d->args = "unknown"; d->secret_types_match = true;
++    bool http = strcmp(name, "context7") == 0;
++    if (tokens[value].kind != '{') { mapping = false; return; }
++    int type = field(value, "type"), url = field(value, "url"), cmd = field(value, "command"), args = field(value, "args");
++    if (equal(type, "http")) d->transport = "http";
++    if (equal(type, "stdio") || (type < 0 && cmd >= 0)) d->transport = "stdio";
++    if (http) {
++        if (equal(url, "https://mcp.context7.com/mcp")) d->endpoint = "context7_public_mcp";
++        if (equal(url, "https://mcp.context7.com/mcp/oauth")) d->endpoint = "context7_public_oauth";
++        d->exact = strcmp(d->transport, "http") == 0 && strcmp(d->endpoint, "unknown") != 0;
++    } else {
++        if (!strcmp(name, "playwright")) {
++            if (equal(cmd, "npx")) d->command = "npx_name";
++            if (equal(cmd, "/usr/local/bin/npx")) d->command = "npx_usr_local";
++            if (equal(cmd, "/opt/homebrew/bin/npx")) d->command = "npx_homebrew";
++            if (equal(cmd, "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/npx")) d->command = "npx_pinned_node";
++            if (arguments(args, "-y", "@playwright/mcp", NULL)) d->args = "playwright_unversioned";
++            if (arguments(args, "-y", "@playwright/mcp@latest", NULL)) d->args = "playwright_latest";
++            if (arguments(args, "-y", "@playwright/mcp", "--headless")) d->args = "playwright_unversioned_headless";
++            if (arguments(args, "-y", "@playwright/mcp@latest", "--headless")) d->args = "playwright_latest_headless";
++        } else {
++            if (equal(cmd, "/Users/egorbondarenko/.trace/bin/trace")) d->command = "trace_host_name";
++            if (equal(cmd, "/Users/egorbondarenko/.trace/bin/trace-mcp")) d->command = "trace_host_mcp_name";
++            if (arguments(args, "serve", NULL, NULL)) d->args = "trace_serve";
++            if (arguments(args, "serve", "--preset", "review")) d->args = "trace_review";
++        }
++        d->exact = !strcmp(d->transport, "stdio") && strcmp(d->command, "unknown") && strcmp(d->args, "unknown");
++    }
++    for (int k = value + 1; k < tokens[value].next; k = tokens[k + 1].next) {
++        if (equal(k, "headers")) {
++            d->headers_present = true;
++            if (!http) d->unknown_fields++;
++            if (tokens[k + 1].kind != '{') d->secret_types_match = false;
++            else for (int h = k + 2; h < tokens[k + 1].next; h = tokens[h + 1].next) {
++                if (equal(h, "Authorization") || equal(h, "CONTEXT7_API_KEY")) d->known_secret_fields++;
++                else d->unknown_secret_fields++;
++                if (tokens[h + 1].kind != 's') d->secret_types_match = false;
++            }
++        } else if (equal(k, "env")) { d->env_present = true; d->unknown_fields++; }
++        else if (!(equal(k, "type") || (http ? equal(k, "url") : (equal(k, "command") || equal(k, "args"))))) d->unknown_fields++;
++    }
++    d->exact = d->exact && !d->unknown_fields && !d->unknown_secret_fields && d->secret_types_match;
++    mapping = mapping && d->exact;
++}
++static bool json(void) {
++    if (!utf8() || parse(0) != 0) return false;
++    space();
++    if (cursor != length || tokens[0].kind != '{') return false;
++    int mcp = field(0, "mcpServers");
++    mapping = mcp >= 0 && tokens[mcp].kind == '{' && tokens[mcp].count > 0 && tokens[mcp].count <= 8 && tokens[0].count == 1;
++    if (mcp >= 0 && tokens[mcp].kind == '{' && tokens[mcp].count <= 8)
++        for (int k = mcp + 1; k < tokens[mcp].next; k = tokens[k + 1].next) describe(k, k + 1);
++    return true;
++}
++
++static bool private_dir(const struct stat *s) {
++    return S_ISDIR(s->st_mode) && s->st_uid == D1_UID && (s->st_mode & 07777) == 0700;
++}
++static bool unchanged(const struct stat *a, const struct stat *b) {
++    return a->st_dev == b->st_dev && a->st_ino == b->st_ino && a->st_size == b->st_size &&
++           a->st_mode == b->st_mode && a->st_uid == b->st_uid && a->st_nlink == b->st_nlink &&
++           a->st_mtimespec.tv_sec == b->st_mtimespec.tv_sec && a->st_mtimespec.tv_nsec == b->st_mtimespec.tv_nsec &&
++           a->st_ctimespec.tv_sec == b->st_ctimespec.tv_sec && a->st_ctimespec.tv_nsec == b->st_ctimespec.tv_nsec;
++}
++static int root_fd(void) {
++    char path[PATH_MAX];
++    if (strlen(D1_ROOT) >= sizeof(path)) return -1;
++    strcpy(path, D1_ROOT);
++    int fd = open("/", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
++    if (fd < 0) return -1;
++    char *part = path + 1;
++    while (*part) {
++        char *end = strchr(part, '/');
++        if (end) *end = 0;
++        int next = openat(fd, part, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
++        close(fd); if (next < 0) return -1; fd = next;
++        if (!end) break;
++        part = end + 1;
++    }
++    return fd;
++}
++static const char *read_config(const char *path) {
++    if (getuid() != D1_UID || geteuid() != D1_UID) return "owner_mismatch";
++    size_t n = strlen(D1_ROOT);
++    if (strncmp(path, D1_ROOT, n) || path[n] != '/') {
++        n = strlen(D1_ALIAS);
++        if (!n || strncmp(path, D1_ALIAS, n) || path[n] != '/') return "path_rejected";
++    }
++    const char *child = path + n + 1;
++    const char *end = strchr(child, '/');
++    if (!end || strcmp(end, "/mcp-config.json") || end - child <= 12 || end - child > 128 || strncmp(child, "multica-mcp-", 12)) return "path_rejected";
++    for (const char *p = child + 12; p < end; p++)
++        if (!((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || digit((unsigned char)*p))) return "path_rejected";
++    char name[129]; memcpy(name, child, (size_t)(end - child)); name[end - child] = 0;
++    int root = root_fd(), dir = -1, file = -1, again = -1;
++    struct stat rs, ds, before, after, check;
++    const char *status = "file_rejected";
++    if (root < 0) goto done;
++    if (fstat(root, &rs) || !private_dir(&rs)) goto done;
++    dir = openat(root, name, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
++    if (dir < 0 || fstat(dir, &ds) || !private_dir(&ds) || ds.st_dev != rs.st_dev) goto done;
++    file = openat(dir, "mcp-config.json", O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC);
++    if (file < 0 || fstat(file, &before) || !S_ISREG(before.st_mode) || before.st_uid != D1_UID ||
++        (before.st_mode & 07777) != 0600 || before.st_nlink != 1 || before.st_size < 1 ||
++        before.st_size > LIMIT || before.st_dev != ds.st_dev) goto done;
++    while (length <= LIMIT) {
++        ssize_t got = read(file, input + length, LIMIT + 1 - length);
++        if (got < 0) goto done;
++        if (!got) break;
++        length += (size_t)got;
++    }
++    if (length > LIMIT || length != (size_t)before.st_size || fstat(file, &after) || !unchanged(&before, &after)) { status = "file_changed"; goto done; }
++    if (fstatat(dir, "mcp-config.json", &check, AT_SYMLINK_NOFOLLOW) || !unchanged(&before, &check) ||
++        fstatat(root, name, &check, AT_SYMLINK_NOFOLLOW) || !unchanged(&ds, &check)) { status = "file_changed"; goto done; }
++    again = root_fd();
++    if (again < 0 || fstat(again, &check) || !unchanged(&rs, &check)) { status = "file_changed"; goto done; }
++    status = json() ? "ok" : "invalid_json";
++ done:
++    if (file >= 0) close(file);
++    if (dir >= 0) close(dir);
++    if (root >= 0) close(root);
++    if (again >= 0) close(again);
++    return status;
++}
++static const char *boolean(bool value) { return value ? "true" : "false"; }
++int main(int argc, char **argv) {
++    struct rlimit no_core = {0, 0};
++    if (setrlimit(RLIMIT_CORE, &no_core)) return 78;
++    if (argc == 2 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "--help"))) {
++        fputs("altera-metadata-config-probe 1.0.0 (metadata only; not Claude)\n", stderr);
++        return 0;
++    }
++    const char *path = NULL;
++    bool duplicate = false;
++    for (int i = 1; i < argc; i++) {
++        const char *candidate = NULL;
++        if (!strcmp(argv[i], "--mcp-config")) {
++            if (i + 1 < argc) candidate = argv[++i]; else duplicate = true;
++        } else if (!strncmp(argv[i], "--mcp-config=", 13)) candidate = argv[i] + 13;
++        if (candidate) { if (path) duplicate = true; path = candidate; }
++    }
++    const char *status = !path || duplicate ? "argv_rejected" : read_config(path);
++    fprintf(stderr, "ALTERA_METADATA_CONFIG_ONLY_V1 {\"schema_version\":1,\"source_sha256\":\"%s\",\"build_sha256\":\"%s\",\"argc\":%d,\"read_status\":\"%s\",\"path_class\":\"%s\",\"mapping_candidate\":\"%s\",\"task_acceptance\":\"not_checked\",\"unknown_servers\":%d,\"servers\":[", D1_SOURCE_SHA, D1_BUILD_SHA, argc, status, !strcmp(status, "ok") ? "daemon_private_temp" : "unresolved", mapping && !strcmp(status, "ok") ? "exact" : "unresolved", unknown_servers);
++    for (int i = 0; i < server_count; i++) {
++        const struct descriptor *d = &servers[i];
++        fprintf(stderr, "%s{\"name\":\"%s\",\"transport\":\"%s\",\"endpoint\":\"%s\",\"command\":\"%s\",\"args\":\"%s\",\"endpoint_match\":%s,\"command_match\":%s,\"args_match\":%s,\"headers_present\":%s,\"env_present\":%s,\"known_secret_fields\":%d,\"unknown_secret_fields\":%d,\"secret_types_match\":%s,\"unknown_fields\":%d}", i ? "," : "", d->name, d->transport, d->endpoint, d->command, d->args, boolean(strcmp(d->endpoint, "unknown") != 0), boolean(strcmp(d->command, "unknown") != 0), boolean(strcmp(d->args, "unknown") != 0), boolean(d->headers_present), boolean(d->env_present), d->known_secret_fields, d->unknown_secret_fields, boolean(d->secret_types_match), d->unknown_fields);
++    }
++    fprintf(stderr, "],\"known_flags\":%s}\n", path ? "[\"--mcp-config\"]" : "[]");
++    /* Буферы могут содержать opaque секреты; не сохранять их после descriptor. */
++    for (size_t i = 0; i < sizeof(input); i++) ((volatile unsigned char *)input)[i] = 0;
++    for (size_t i = 0; i < sizeof(strings); i++) ((volatile unsigned char *)strings)[i] = 0;
++    return 78;
++}
+diff --git a/scripts/agent-runtime/test_metadata_config_probe.py b/scripts/agent-runtime/test_metadata_config_probe.py
+new file mode 100644
+index 0000000..b87810b
+--- /dev/null
++++ b/scripts/agent-runtime/test_metadata_config_probe.py
+@@ -0,0 +1,370 @@
++"""D1: настоящие private files и subprocess; только synthetic config values."""
++import hashlib
++import json
++import os
++from pathlib import Path
++import socket
++import signal
++import time
++import subprocess
++import tempfile
++import unittest
++import uuid
++
++HERE = Path(__file__).resolve().parent
++
++
++class MetadataConfigTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.temp = tempfile.TemporaryDirectory(dir='/private/tmp')
++        cls.base = Path(cls.temp.name).resolve()
++        cls.root = cls.base / 'private-root'
++        cls.root.mkdir(mode=0o700)
++        cls.binary = cls.base / 'd1'
++        helper = HERE / 'build_metadata_config_probe.py'
++        if helper.exists():
++            result = subprocess.run(['/usr/bin/python3', '-I', str(helper), str(cls.binary),
++                            '--root', str(cls.root), '--uid', str(os.getuid())], capture_output=True)
++            if result.returncode:
++                raise AssertionError('D1 build failed: ' + result.stderr.decode())
++
++    @classmethod
++    def tearDownClass(cls):
++        cls.temp.cleanup()
++
++    def setUp(self):
++        self.directory = self.root / ('multica-mcp-' + uuid.uuid4().hex)
++        self.directory.mkdir(mode=0o700)
++        self.file = self.directory / 'mcp-config.json'
++        self.save({'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}}})
++
++    def save(self, value):
++        self.file.write_bytes(value if isinstance(value, bytes) else json.dumps(value).encode())
++        self.file.chmod(0o600)
++
++    def invoke(self, args=None, prefix=None):
++        self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
++        run = subprocess.Popen((prefix or []) + [str(self.binary)] + (args if args is not None else ['--mcp-config', str(self.file)]),
++                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++                               env={'PATH': '/usr/bin:/bin', 'TMPDIR': '/wrong/env/root', 'MULTICA_TOKEN': 'D1_SECRET_CANARY'})
++        try:
++            run.wait(timeout=3)
++            stdout, stderr = run.communicate()
++        finally:
++            if run.poll() is None:
++                run.kill()
++                run.communicate()
++        self.assertEqual(run.returncode, 78)
++        self.assertEqual(stdout, b'')
++        self.assertLessEqual(len(stderr), 8192)
++        self.assertNotIn(b'D1_SECRET_CANARY', stderr)
++        self.assertNotIn(hashlib.sha256(b'D1_SECRET_CANARY').hexdigest().encode(), stderr)
++        self.assertTrue(stderr.startswith(b'ALTERA_METADATA_CONFIG_ONLY_V1 '), stderr)
++        return json.loads(stderr.split(b' ', 1)[1])
++
++    def test_reads_exact_private_json_without_waiting_for_stdin(self):
++        result = self.invoke()
++        self.assertEqual(result['read_status'], 'ok')
++        self.assertEqual(result['mapping_candidate'], 'exact')
++        self.assertEqual(result['servers'][0]['endpoint'], 'context7_public_mcp')
++        self.assertEqual(result['task_acceptance'], 'not_checked')
++        self.assertEqual(self.invoke(['--mcp-config=' + str(self.file)])['read_status'], 'ok')
++
++    def test_uid_pin_rejects_other_process_owner_and_alias_pin_is_not_generic(self):
++        self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
++        other = self.base / 'other-uid-probe'
++        helper = HERE / 'build_metadata_config_probe.py'
++        built = subprocess.run(['/usr/bin/python3', '-I', str(helper), str(other),
++            '--root', str(self.root), '--uid', str(os.getuid() + 1)], capture_output=True)
++        self.assertEqual(built.returncode, 0, built.stderr.decode())
++        run = subprocess.run([str(other), '--mcp-config', str(self.file)], capture_output=True, timeout=3)
++        self.assertEqual(run.returncode, 78)
++        self.assertEqual(run.stdout, b'')
++        self.assertEqual(json.loads(run.stderr.split(b' ', 1)[1])['read_status'], 'owner_mismatch')
++        rejected = subprocess.run(['/usr/bin/python3', '-I', str(helper), str(self.base / 'bad-alias'),
++            '--root', str(self.root), '--uid', str(os.getuid()), '--alias', '/arbitrary/alias'], capture_output=True)
++        self.assertNotEqual(rejected.returncode, 0)
++        self.assertFalse((self.base / 'bad-alias').exists())
++
++    def test_version_is_truthful_without_config_access(self):
++        self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
++        self.file.unlink()
++        for flag in ['--help', '--version']:
++            result = subprocess.run([str(self.binary), flag], capture_output=True, timeout=3)
++            self.assertEqual(result.returncode, 0)
++            self.assertEqual(result.stdout, b'')
++            self.assertIn(b'altera-metadata-config-probe', result.stderr)
++            self.assertNotIn(b'Claude Code', result.stderr)
++
++    def test_only_exact_public_endpoints_match(self):
++        for url, match in [('https://mcp.context7.com/mcp/oauth', 'context7_public_oauth'),
++                           ('https://mcp.context7.com/mcp?D1_SECRET_CANARY', 'unknown'),
++                           ('https://D1_SECRET_CANARY@mcp.context7.com/mcp', 'unknown'),
++                           ('https://mcp.context7.com:443/mcp', 'unknown'),
++                           ('http://mcp.context7.com/mcp', 'unknown')]:
++            with self.subTest(match=match):
++                self.save({'mcpServers': {'context7': {'type': 'http', 'url': url}}})
++                result = self.invoke()
++                self.assertEqual(result['servers'][0]['endpoint'], match)
++                self.assertEqual(result['mapping_candidate'], 'exact' if match != 'unknown' else 'unresolved')
++
++    def test_literal_playwright_and_trace_candidates(self):
++        for command in ['npx', '/usr/local/bin/npx', '/opt/homebrew/bin/npx', '/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/npx']:
++            for args in [['-y', '@playwright/mcp'], ['-y', '@playwright/mcp@latest', '--headless']]:
++                self.save({'mcpServers': {'playwright': {'command': command, 'args': args}}})
++                self.assertEqual(self.invoke()['mapping_candidate'], 'exact')
++        for command in ['/Users/egorbondarenko/.trace/bin/trace', '/Users/egorbondarenko/.trace/bin/trace-mcp']:
++            for args in [['serve'], ['serve', '--preset', 'review']]:
++                self.save({'mcpServers': {'trace': {'type': 'stdio', 'command': command, 'args': args}}})
++                self.assertEqual(self.invoke()['mapping_candidate'], 'exact')
++        for args in [['-y', '@playwright/mcp', '--cdp-endpoint', 'D1_SECRET_CANARY'], ['-y', '@playwright/mcp@0.1'], ['--yes', '@playwright/mcp']]:
++            self.save({'mcpServers': {'playwright': {'command': 'npx', 'args': args}}})
++            self.assertEqual(self.invoke()['mapping_candidate'], 'unresolved')
++
++    def test_secrets_and_unknown_fields_are_presence_only(self):
++        self.save({'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp',
++                    'headers': {'Authorization': 'D1_SECRET_CANARY', 'CONTEXT7_API_KEY': 'D1_SECRET_CANARY'},
++                    'env': {'D1_SECRET_CANARY': 'D1_SECRET_CANARY'}, 'D1_SECRET_CANARY': 'D1_SECRET_CANARY'},
++                    'D1_SECRET_CANARY': {'type': 'D1_SECRET_CANARY'}}})
++        result = self.invoke(['-p', 'D1_SECRET_CANARY', '--unknown=D1_SECRET_CANARY', '--mcp-config', str(self.file)])
++        self.assertEqual(result['mapping_candidate'], 'unresolved')
++        self.assertEqual(result['unknown_servers'], 1)
++        self.assertTrue(result['servers'][0]['headers_present'])
++        self.assertTrue(result['servers'][0]['env_present'])
++        self.assertEqual(result['servers'][0]['known_secret_fields'], 2)
++
++    def test_rejects_unsafe_argument_paths(self):
++        for args in [[], ['--mcp-config', '{}'], ['--mcp-config', '/etc/passwd'],
++                     ['--mcp-config', str(self.file), '--mcp-config', str(self.file)],
++                     ['--mcp-config'], ['--mcp-config', str(self.root / '../private-root' / self.directory.name / self.file.name)],
++                     ['--mcp-config', str(self.file) + '\n'], ['--mcp-config', str(self.file.relative_to(self.base))]]:
++            with self.subTest(args_count=len(args)):
++                self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
++
++    def test_private_modes_and_hardlinks_are_required(self):
++        for path, bad_mode, restored in [(self.root, 0o755, 0o700), (self.directory, 0o750, 0o700), (self.file, 0o640, 0o600)]:
++            path.chmod(bad_mode)
++            try:
++                self.assertNotEqual(self.invoke()['read_status'], 'ok')
++            finally:
++                path.chmod(restored)
++        link = self.directory / 'hardlink'
++        os.link(self.file, link)
++        self.assertNotEqual(self.invoke()['read_status'], 'ok')
++        link.unlink()
++
++    def test_rejects_symlink_file_and_directory(self):
++        target = self.directory / 'target'
++        self.file.rename(target)
++        self.file.symlink_to(target.name)
++        self.assertNotEqual(self.invoke()['read_status'], 'ok')
++        self.file.unlink()
++        target.rename(self.file)
++        alias = self.root / 'multica-mcp-alias'
++        alias.symlink_to(self.directory, target_is_directory=True)
++        self.assertNotEqual(self.invoke(['--mcp-config', str(alias / self.file.name)])['read_status'], 'ok')
++        alias.unlink()
++
++    def test_root_symlink_is_not_followed(self):
++        moved = self.root.with_name('saved-root')
++        self.root.rename(moved)
++        self.root.symlink_to(moved, target_is_directory=True)
++        try:
++            self.assertNotEqual(self.invoke()['read_status'], 'ok')
++        finally:
++            self.root.unlink()
++            moved.rename(self.root)
++
++    def test_invalid_temp_names_and_extra_levels_are_rejected(self):
++        for name in ['multica-mcp-', 'multica-mcp-a_b', 'multica-mcp-a.b', 'multica-mcp-a/extra', 'other-a']:
++            self.assertEqual(self.invoke(['--mcp-config', str(self.root / name / 'mcp-config.json')])['read_status'], 'path_rejected')
++
++    def test_fifo_and_socket_do_not_block(self):
++        self.file.unlink()
++        os.mkfifo(self.file, 0o600)
++        self.assertNotEqual(self.invoke()['read_status'], 'ok')
++        self.file.unlink()
++        with socket.socket(socket.AF_UNIX) as sock:
++            sock.bind(str(self.file))
++            self.file.chmod(0o600)
++            self.assertNotEqual(self.invoke()['read_status'], 'ok')
++
++    def test_strict_json_rejects_malformed_duplicate_and_non_utf8(self):
++        for raw in [b'{} trailing', b'{"mcpServers":{},"mcpServers":{}}',
++                    b'{"mcpServers":{},"mcp\\u0053ervers":{}}', b'{"mcpServers":{"x":{"a":1,"a":2}}}',
++                    b'{"mcpServers":{},}', b'[]', b'{"mcpServers":NaN}', b'{"mcpServers":01}',
++                    b'{"mcpServers":"\xff"}', b'{"mcpServers":"\\ud800"}', b'{"mcpServers":"a\x00b"}',
++                    b'{"mcpServers":"\\x00"}', b'{"mcpServers":"\xc0\x80"}']:
++            with self.subTest(raw_length=len(raw)):
++                self.save(raw)
++                self.assertEqual(self.invoke()['read_status'], 'invalid_json')
++
++    def test_limits_fail_closed(self):
++        for raw in [b' ' * 65537, b'{"a":' * 18 + b'0' + b'}' * 18,
++                    json.dumps({'mcpServers': {}, 'extra': [0] * 4096}).encode()]:
++            self.save(raw)
++            self.assertNotEqual(self.invoke()['read_status'], 'ok')
++        self.save({'mcpServers': {str(n): {} for n in range(9)}})
++        self.assertEqual(self.invoke()['mapping_candidate'], 'unresolved')
++
++    def test_unknown_shapes_never_become_mapping_authority(self):
++        for value in [{}, {'mcpServers': []}, {'mcpServers': {}},
++                      {'mcpServers': {'context7': {'type': 'stdio', 'url': 'https://mcp.context7.com/mcp'}}},
++                      {'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp', 'headers': {'Authorization': {}}}}},
++                      {'mcpServers': {'playwright': {'command': '/bin/sh', 'args': ['-y', '@playwright/mcp']}}}]:
++            self.save(value)
++            self.assertEqual(self.invoke()['mapping_candidate'], 'unresolved')
++
++    def test_file_replacement_and_truncation_during_read_are_rejected(self):
++        self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
++        # Test-only interposer останавливает процесс сразу после read; production не содержит test hooks.
++        source = self.base / 'pause-read.c'
++        library = self.base / 'pause-read.dylib'
++        source.write_text(r'''#include <unistd.h>
++#include <signal.h>
++#include <string.h>
++#include <sys/stat.h>
++static ssize_t pause_read(int fd, void *buf, size_t n) {
++    ssize_t got = read(fd, buf, n);
++    struct stat s;
++    static int paused;
++    if (got >= 14 && !memcmp(buf, "{\"mcpServers\":", 14) && !paused && !fstat(fd, &s) && S_ISREG(s.st_mode)) {
++        paused = 1;
++        raise(SIGSTOP);
++    }
++    return got;
++}
++__attribute__((used)) static struct { const void *replacement; const void *original; }
++interpose __attribute__((section("__DATA,__interpose"))) = { (const void *)pause_read, (const void *)read };
++''')
++        build = subprocess.run(['/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang',
++                                '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk',
++                                '-Wall', '-Wextra', '-Werror', '-dynamiclib', str(source), '-o', str(library)],
++                               env={'PATH': '/usr/bin:/bin', 'TMPDIR': str(self.base)}, capture_output=True)
++        self.assertEqual(build.returncode, 0, build.stderr.decode())
++        for action in ['replace', 'truncate']:
++            with self.subTest(action=action):
++                self.save({'mcpServers': {'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}}})
++                run = subprocess.Popen([str(self.binary), '--mcp-config', str(self.file)],
++                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++                    env={'PATH': '/usr/bin:/bin', 'DYLD_INSERT_LIBRARIES': str(library)})
++                try:
++                    deadline = time.monotonic() + 3
++                    stopped = False
++                    while time.monotonic() < deadline:
++                        pid, status = os.waitpid(run.pid, os.WNOHANG | os.WUNTRACED)
++                        if pid:
++                            stopped = os.WIFSTOPPED(status)
++                            break
++                        time.sleep(0.01)
++                    self.assertTrue(stopped, 'instrumented read did not reach synchronization point')
++                    if action == 'replace':
++                        replacement = self.directory / 'replacement'
++                        replacement.write_bytes(self.file.read_bytes())
++                        replacement.chmod(0o600)
++                        replacement.replace(self.file)
++                    else:
++                        self.file.write_bytes(b'{')
++                    os.kill(run.pid, signal.SIGCONT)
++                    stdout, stderr = run.communicate(timeout=3)
++                    self.assertEqual(run.returncode, 78)
++                    self.assertEqual(stdout, b'')
++                    self.assertEqual(json.loads(stderr.split(b' ', 1)[1])['read_status'], 'file_changed')
++                finally:
++                    if run.poll() is None:
++                        run.kill()
++                        run.communicate()
++
++    def test_os_sandbox_denies_child_network_write_and_unrelated_reads(self):
++        self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
++        control = self.base / 'control'
++        control_source = self.base / 'control.c'
++        control_source.write_text(r'''#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <sys/socket.h>
++#include <sys/wait.h>
++#include <netinet/in.h>
++int main(int argc, char **argv) {
++    if (argc != 4) return 2;
++    int fd = open(argv[1], O_WRONLY | O_CREAT | O_EXCL, 0600);
++    int wrote = fd >= 0 && write(fd, "synthetic", 9) == 9;
++    if (fd >= 0) close(fd);
++    pid_t child = fork();
++    if (!child) _exit(0);
++    if (child > 0) waitpid(child, NULL, 0);
++    fd = socket(AF_INET, SOCK_STREAM, 0);
++    struct sockaddr_in address = {0};
++    address.sin_family = AF_INET;
++    address.sin_port = htons((unsigned short)atoi(argv[3]));
++    address.sin_addr.s_addr = htonl(0x7f000001);
++    int network = fd >= 0 && connect(fd, (struct sockaddr *)&address, sizeof(address)) == 0;
++    if (fd >= 0) close(fd);
++    fd = open(argv[2], O_RDONLY);
++    int outside = fd >= 0;
++    if (fd >= 0) close(fd);
++    printf("{\"write\":%d,\"child\":%d,\"network\":%d,\"outside_read\":%d}\n", wrote, child > 0, network, outside);
++    return 0;
++}
++''')
++        built = subprocess.run(['/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang',
++            '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk',
++            '-Wall', '-Wextra', '-Werror', str(control_source), '-o', str(control)],
++            env={'PATH': '/usr/bin:/bin', 'TMPDIR': str(self.base)}, capture_output=True)
++        self.assertEqual(built.returncode, 0, built.stderr.decode())
++        attempted = self.base / 'attempted-write'
++        outside = self.base / 'unrelated-input'
++        outside.write_text('SYNTHETIC_OUTSIDE_READ')
++        literals = {str(self.binary), str(control), str(self.file), str(self.directory), str(self.root)}
++        literals.update(str(p) for p in self.root.parents)
++        profile = self.base / 'd1.sb'
++        profile.write_text('(version 1)\n(deny default)\n(allow sysctl-read)\n'
++            '(allow file-read-metadata)\n'
++            '(allow file-read-data (subpath "/usr/lib") (subpath "/System/Library") '
++            + ' '.join('(literal ' + json.dumps(p) + ')' for p in sorted(literals)) + ')\n'
++            '(allow process-exec (literal ' + json.dumps(str(self.binary)) + ') (literal ' + json.dumps(str(control)) + '))\n')
++        with socket.socket() as listener:
++            listener.bind(('127.0.0.1', 0))
++            listener.listen(2)
++            args = [str(control), str(attempted), str(outside), str(listener.getsockname()[1])]
++            positive = subprocess.run(args, capture_output=True, timeout=3)
++            self.assertEqual(positive.returncode, 0, positive.stderr.decode())
++            self.assertEqual(json.loads(positive.stdout), {'write': 1, 'child': 1, 'network': 1, 'outside_read': 1})
++            connection, _ = listener.accept()
++            connection.close()
++            attempted.unlink()
++            negative = subprocess.run(['/usr/bin/sandbox-exec', '-f', str(profile)] + args, capture_output=True, timeout=3)
++            self.assertEqual(negative.returncode, 0, negative.stderr.decode())
++            self.assertEqual(json.loads(negative.stdout), {'write': 0, 'child': 0, 'network': 0, 'outside_read': 0})
++            self.assertFalse(attempted.exists())
++        before = hashlib.sha256(self.file.read_bytes()).hexdigest()
++        result = self.invoke(prefix=['/usr/bin/sandbox-exec', '-f', str(profile)])
++        self.assertEqual(result['read_status'], 'ok')
++        self.assertEqual(result['mapping_candidate'], 'exact')
++        self.assertEqual(hashlib.sha256(self.file.read_bytes()).hexdigest(), before)
++        evidence = os.environ.get('D1_EVIDENCE_DIR')
++        if evidence:
++            target = Path(evidence)
++            target.mkdir(mode=0o700)
++            (target / 'sandbox.sb').write_bytes(profile.read_bytes())
++            (target / 'control.c').write_bytes(control_source.read_bytes())
++            (target / 'control').write_bytes(control.read_bytes())
++            (target / 'positive.stdout').write_bytes(positive.stdout)
++            (target / 'positive.stderr').write_bytes(positive.stderr)
++            (target / 'negative.stdout').write_bytes(negative.stdout)
++            (target / 'negative.stderr').write_bytes(negative.stderr)
++            (target / 'd1-descriptor.json').write_text(json.dumps(result, indent=2) + '\n')
++            (target / 'proof.json').write_text(json.dumps({'positive_exit': positive.returncode,
++                'negative_exit': negative.returncode, 'd1_exit': 78, 'd1_stdout_empty': True,
++                'source_config_unchanged': True, 'binary_sha256': hashlib.sha256(self.binary.read_bytes()).hexdigest(),
++                'synthetic_only': True, 'network_target': 'own ephemeral loopback listener'}, indent=2) + '\n')
++
++    def test_escaped_public_values_match_without_unknown_disclosure(self):
++        self.save(b'{"mcpServers":{"context\\u0037":{"type":"http","url":"https:\\/\\/mcp.context7.com/mcp"}}}')
++        self.assertEqual(self.invoke()['mapping_candidate'], 'exact')
++
++
++if __name__ == '__main__':
++    unittest.main(verbosity=2)

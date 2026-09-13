@@ -1,0 +1,39 @@
+--- scripts/agent-runtime/build_metadata_config_probe.py:before
++++ scripts/agent-runtime/build_metadata_config_probe.py:after
+@@ -9,6 +9,8 @@
+ import tempfile
+ 
+ COMPILER = '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
++
++SDK = '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk'
+ 
+ 
+ def build(output, root, uid, alias=''):
+@@ -25,7 +27,7 @@
+     source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+     pins = {'root': root, 'uid': uid, 'alias': alias, 'source_sha256': source_hash,
+             'builder_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+-            'compiler': COMPILER}
++            'compiler': COMPILER, 'sdk': SDK}
+     build_hash = hashlib.sha256(json.dumps(pins, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+     with tempfile.TemporaryDirectory(prefix='altera-d1-build-', dir='/private/tmp') as work:
+         header = Path(work) / 'd1-build.h'
+@@ -33,7 +35,7 @@
+             '#define D1_ROOT ' + json.dumps(root), '#define D1_ALIAS ' + json.dumps(alias),
+             '#define D1_UID ' + str(uid), '#define D1_SOURCE_SHA ' + json.dumps(source_hash),
+             '#define D1_BUILD_SHA ' + json.dumps(build_hash)]) + '\n')
+-        subprocess.run([COMPILER, '-std=c11', '-Wall', '-Wextra', '-Werror', '-O2',
++        subprocess.run([COMPILER, '-isysroot', SDK, '-std=c11', '-Wall', '-Wextra', '-Werror', '-O2',
+                         '-I', work, str(source), '-o', str(output)], check=True,
+                        env={'PATH': '/usr/bin:/bin', 'HOME': '/var/empty', 'TMPDIR': work})
+     output.chmod(0o755)
+--- scripts/agent-runtime/test_metadata_config_probe.py:before
++++ scripts/agent-runtime/test_metadata_config_probe.py:after
+@@ -222,6 +222,7 @@
+ interpose __attribute__((section("__DATA,__interpose"))) = { (const void *)pause_read, (const void *)read };
+ ''')
+         build = subprocess.run(['/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang',
++                                '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk',
+                                 '-Wall', '-Wextra', '-Werror', '-dynamiclib', str(source), '-o', str(library)],
+                                env={'PATH': '/usr/bin:/bin', 'TMPDIR': str(self.base)}, capture_output=True)
+         self.assertEqual(build.returncode, 0, build.stderr.decode())

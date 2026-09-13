@@ -1,0 +1,39 @@
+{
+  "check": "prompt_value_is_not_config_flag",
+  "synthetic_only": true,
+  "actual_mcp_flag_present": false,
+  "exit": 78,
+  "stdout_empty": true,
+  "descriptor": {
+    "schema_version": 1,
+    "source_sha256": "bbde1f7bd2bec71451f4800b3e99c24207ef6428422b649e7fae2b0c3680547f",
+    "build_sha256": "e442f963ff1dbd24abd8a9b89cf2c57f43f3485626f01e3abc920c507e270218",
+    "argc": 3,
+    "read_status": "ok",
+    "path_class": "daemon_private_temp",
+    "mapping_candidate": "unresolved",
+    "task_acceptance": "not_checked",
+    "unknown_servers": 0,
+    "servers": [
+      {
+        "name": "context7",
+        "transport": "http",
+        "endpoint": "context7_public_mcp",
+        "command": "unknown",
+        "args": "unknown",
+        "endpoint_match": true,
+        "command_match": false,
+        "args_match": false,
+        "headers_present": false,
+        "env_present": false,
+        "known_secret_fields": 0,
+        "unknown_secret_fields": 0,
+        "secret_types_match": true,
+        "unknown_fields": 0
+      }
+    ],
+    "known_flags": [
+      "--mcp-config"
+    ]
+  }
+}

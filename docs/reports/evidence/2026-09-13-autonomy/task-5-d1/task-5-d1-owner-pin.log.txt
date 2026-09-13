@@ -1,0 +1,6 @@
+test_uid_pin_rejects_other_process_owner_and_alias_pin_is_not_generic (__main__.MetadataConfigTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.210s
+
+OK

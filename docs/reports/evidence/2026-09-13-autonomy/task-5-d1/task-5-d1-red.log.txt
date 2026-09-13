@@ -1,0 +1,373 @@
+test_escaped_public_values_match_without_unknown_disclosure (__main__.MetadataConfigTests) ... FAIL
+test_fifo_and_socket_do_not_block (__main__.MetadataConfigTests) ... FAIL
+test_limits_fail_closed (__main__.MetadataConfigTests) ... FAIL
+test_literal_playwright_and_trace_candidates (__main__.MetadataConfigTests) ... FAIL
+test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) ... test_private_modes_and_hardlinks_are_required (__main__.MetadataConfigTests) ... FAIL
+test_reads_exact_private_json_without_waiting_for_stdin (__main__.MetadataConfigTests) ... FAIL
+test_rejects_symlink_file_and_directory (__main__.MetadataConfigTests) ... FAIL
+test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) ... test_secrets_and_unknown_fields_are_presence_only (__main__.MetadataConfigTests) ... FAIL
+test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) ... test_unknown_shapes_never_become_mapping_authority (__main__.MetadataConfigTests) ... FAIL
+test_version_is_truthful_without_config_access (__main__.MetadataConfigTests) ... FAIL
+
+======================================================================
+FAIL: test_escaped_public_values_match_without_unknown_disclosure (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 186, in test_escaped_public_values_match_without_unknown_disclosure
+    self.assertEqual(self.invoke()['mapping_candidate'], 'exact')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_fifo_and_socket_do_not_block (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 151, in test_fifo_and_socket_do_not_block
+    self.assertNotEqual(self.invoke()['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_limits_fail_closed (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 172, in test_limits_fail_closed
+    self.assertNotEqual(self.invoke()['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_literal_playwright_and_trace_candidates (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 95, in test_literal_playwright_and_trace_candidates
+    self.assertEqual(self.invoke()['mapping_candidate'], 'exact')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) (match='context7_public_oauth')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 87, in test_only_exact_public_endpoints_match
+    result = self.invoke()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) (match='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 87, in test_only_exact_public_endpoints_match
+    result = self.invoke()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) (match='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 87, in test_only_exact_public_endpoints_match
+    result = self.invoke()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) (match='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 87, in test_only_exact_public_endpoints_match
+    result = self.invoke()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) (match='unknown')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 87, in test_only_exact_public_endpoints_match
+    result = self.invoke()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_private_modes_and_hardlinks_are_required (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 128, in test_private_modes_and_hardlinks_are_required
+    self.assertNotEqual(self.invoke()['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_reads_exact_private_json_without_waiting_for_stdin (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 62, in test_reads_exact_private_json_without_waiting_for_stdin
+    result = self.invoke()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_symlink_file_and_directory (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 140, in test_rejects_symlink_file_and_directory
+    self.assertNotEqual(self.invoke()['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) (args_count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 122, in test_rejects_unsafe_argument_paths
+    self.assertNotEqual(self.invoke(args)['read_status'], 'ok')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_secrets_and_unknown_fields_are_presence_only (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 109, in test_secrets_and_unknown_fields_are_presence_only
+    result = self.invoke(['-p', 'D1_SECRET_CANARY', '--unknown=D1_SECRET_CANARY', '--mcp-config', str(self.file)])
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=11)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=33)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=38)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=34)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=18)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=18)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=17)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=18)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=23)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=20)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=21)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) (raw_length=19)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 166, in test_strict_json_rejects_malformed_duplicate_and_non_utf8
+    self.assertEqual(self.invoke()['read_status'], 'invalid_json')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_unknown_shapes_never_become_mapping_authority (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 182, in test_unknown_shapes_never_become_mapping_authority
+    self.assertEqual(self.invoke()['mapping_candidate'], 'unresolved')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 42, in invoke
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+======================================================================
+FAIL: test_version_is_truthful_without_config_access (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 70, in test_version_is_truthful_without_config_access
+    self.assertTrue(self.binary.exists(), 'D1 executable has not been implemented')
+AssertionError: False is not true : D1 executable has not been implemented
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.007s
+
+FAILED (failures=36)

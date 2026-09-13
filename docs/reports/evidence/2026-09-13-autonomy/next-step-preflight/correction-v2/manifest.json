@@ -1,0 +1,17 @@
+{
+  "status": "documentation_correction_only",
+  "files": [
+    {
+      "source": "task-5-codex-bridge-preflight.md",
+      "sha256": "2c460af7dddbda4e10ca5c9bb021e93c8d69ff3031e2d805089fff85c2dabdf5"
+    },
+    {
+      "source": "scratch/task-5-codex-bridge-preflight.md",
+      "sha256": "2f24adf6289b4cb34efcbe1e4aa0fb96ea8cecdae942fac41ce85c8c83388c27"
+    },
+    {
+      "source": "scratch/task-5-native-bridge-brief.md",
+      "sha256": "46630e3a0a7224c7a958ae646e4d7fd8ecf013e4d29b6bc855f35a040ad8f453"
+    }
+  ]
+}

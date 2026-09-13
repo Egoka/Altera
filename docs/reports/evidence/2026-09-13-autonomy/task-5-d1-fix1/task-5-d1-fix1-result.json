@@ -1,0 +1,14 @@
+{
+  "commit": "89290c074b895edbe163ebbb626e80d9db4cbcff",
+  "tree": "216f705091e4ba8572b354a7b7e406dae5f521e5",
+  "base": "bbe668c59b3f3dbfe3c2a8bb0157f9e4e6e0fcff",
+  "files": [
+    "scripts/agent-runtime/metadata-config-probe.c",
+    "scripts/agent-runtime/test_metadata_config_probe.py"
+  ],
+  "owned_scope_matches_verified": true,
+  "hooks_exit": 0,
+  "hooks_log_sha256": "965f66b8c7a881dba72335095a6d5a70cc15ce238222cf3d5cd4d109f68b706c",
+  "independent_review_consecutive_failures": 1,
+  "remaining_dirty_scope": " M docs/reports/2026-09-13-autonomy-execution-report.md\n?? docs/reports/evidence/2026-09-13-autonomy/next-step-preflight/\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.txt\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-d1/\n"
+}

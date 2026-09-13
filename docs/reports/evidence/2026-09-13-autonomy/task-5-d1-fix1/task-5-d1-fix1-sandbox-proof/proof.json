@@ -1,0 +1,10 @@
+{
+  "positive_exit": 0,
+  "negative_exit": 0,
+  "d1_exit": 78,
+  "d1_stdout_empty": true,
+  "source_config_unchanged": true,
+  "binary_sha256": "d86a6dd9ef0c2a9835dddbab27758ce5edc9cf360a52421cbfbf17c72c45d0db",
+  "synthetic_only": true,
+  "network_target": "own ephemeral loopback listener"
+}

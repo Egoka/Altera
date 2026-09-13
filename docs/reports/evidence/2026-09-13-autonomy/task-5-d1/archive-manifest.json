@@ -1,0 +1,282 @@
+{
+  "commit": "bbe668c59b3f3dbfe3c2a8bb0157f9e4e6e0fcff",
+  "scope": "D1 synthetic implementation proof, no live daemon config/auth inputs",
+  "files": [
+    {
+      "source": "task-5-d1-build-diagnostic.log",
+      "sha256": "0445351f867ecf8742b66e069dd5c499af9ae8c2ba09e0c9c881b1871ceb9181",
+      "bytes": 1080,
+      "archive": "task-5-d1-build-diagnostic.log.txt"
+    },
+    {
+      "source": "task-5-d1-build-recovery-proof.json",
+      "sha256": "b9433f17d21e55837f573d87aec82e00569eb2f3b10785003c379e9612948b23",
+      "bytes": 561,
+      "archive": "task-5-d1-build-recovery-proof.json"
+    },
+    {
+      "source": "task-5-d1-build-recovery-result.json",
+      "sha256": "b819e12db5dd7ab0a2e7ea9a430492fd00a98db426ab82256d9729305a072206",
+      "bytes": 554,
+      "archive": "task-5-d1-build-recovery-result.json"
+    },
+    {
+      "source": "task-5-d1-build-recovery.log",
+      "sha256": "26359a8fd3168f74a598ce12207580560e8b59be7ed6ea354355e1094157dba9",
+      "bytes": 1288,
+      "archive": "task-5-d1-build-recovery.log.txt"
+    },
+    {
+      "source": "task-5-d1-commit.log",
+      "sha256": "4d9441b09cf413baaba5027cec56e1ef3cb2789f99e091365b65680f2c01adab",
+      "bytes": 1280,
+      "archive": "task-5-d1-commit.log.txt"
+    },
+    {
+      "source": "task-5-d1-draft-source.json",
+      "sha256": "8f1a01112df20a936b313376f392c276a6e45de34ecf4fa92dc61bee1c6fa205",
+      "bytes": 898,
+      "archive": "task-5-d1-draft-source.json"
+    },
+    {
+      "source": "task-5-d1-final-tests.log",
+      "sha256": "c6aaa7fb32107c31d7af91b376dadd7cdf67b913ef83e6e99353aa1075a8c4a8",
+      "bytes": 1543,
+      "archive": "task-5-d1-final-tests.log.txt"
+    },
+    {
+      "source": "task-5-d1-fixture-correction.log",
+      "sha256": "3fa5571e8af66c260b37fb90cfd3aa8128e4cd519a9e3eff1df4611abd1e1ad9",
+      "bytes": 270,
+      "archive": "task-5-d1-fixture-correction.log.txt"
+    },
+    {
+      "source": "task-5-d1-green1.log",
+      "sha256": "fef7be815ee6a1b5697935c4a0ec49c4d47a4608c9f8c6ee4de90407ed125dfd",
+      "bytes": 1042,
+      "archive": "task-5-d1-green1.log.txt"
+    },
+    {
+      "source": "task-5-d1-imports.txt",
+      "sha256": "cbdca20da8db934de0e68507581f0e0a736a7f05ea0e7f42dc21e7d540a9d877",
+      "bytes": 190,
+      "archive": "task-5-d1-imports.txt"
+    },
+    {
+      "source": "task-5-d1-libraries.txt",
+      "sha256": "65a55b2ef683263cce2802bf3ee4c0f9b9b13390b0d47a35a034afb1366101da",
+      "bytes": 148,
+      "archive": "task-5-d1-libraries.txt"
+    },
+    {
+      "source": "task-5-d1-native-runbook.md",
+      "sha256": "2f05c86c7c94d998084befee6e6d45bc4284f9c06c919739e97bdf12f04a2769",
+      "bytes": 2977,
+      "archive": "task-5-d1-native-runbook.md"
+    },
+    {
+      "source": "task-5-d1-owner-pin.log",
+      "sha256": "fc82392cf09e16e63c851d1764aad908f23b0252c8c353977e95a2978829587b",
+      "bytes": 205,
+      "archive": "task-5-d1-owner-pin.log.txt"
+    },
+    {
+      "source": "task-5-d1-pinned-canonical.stderr",
+      "sha256": "589352d0766f6767d7a3704b2925af2b508c0b8b2774d3f6519994b85ad49543",
+      "bytes": 714,
+      "archive": "task-5-d1-pinned-canonical.stderr.txt"
+    },
+    {
+      "source": "task-5-d1-pinned-canonical.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "task-5-d1-pinned-canonical.stdout.txt"
+    },
+    {
+      "source": "task-5-d1-pinned-proof.json",
+      "sha256": "48fbf3e20ab96daacdcee0bbb29f446fed3c137e54388c5dd38856caa9a21738",
+      "bytes": 675,
+      "archive": "task-5-d1-pinned-proof.json"
+    },
+    {
+      "source": "task-5-d1-pinned-proof.log",
+      "sha256": "48fbf3e20ab96daacdcee0bbb29f446fed3c137e54388c5dd38856caa9a21738",
+      "bytes": 675,
+      "archive": "task-5-d1-pinned-proof.log.txt"
+    },
+    {
+      "source": "task-5-d1-pinned-proof.py",
+      "sha256": "f7d93c6f2265ddd425f3477539d8564b64745ff7b483699340737a09739b14e8",
+      "bytes": 2496,
+      "archive": "task-5-d1-pinned-proof.py.txt"
+    },
+    {
+      "source": "task-5-d1-pinned-verified_alias.stderr",
+      "sha256": "589352d0766f6767d7a3704b2925af2b508c0b8b2774d3f6519994b85ad49543",
+      "bytes": 714,
+      "archive": "task-5-d1-pinned-verified_alias.stderr.txt"
+    },
+    {
+      "source": "task-5-d1-pinned-verified_alias.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "task-5-d1-pinned-verified_alias.stdout.txt"
+    },
+    {
+      "source": "task-5-d1-pinned.sb",
+      "sha256": "e0e6277ef377e0fd1374fcbd6fe29f425c6b5bf513df34e11a6fc89e8817fef7",
+      "bytes": 928,
+      "archive": "task-5-d1-pinned.sb.txt"
+    },
+    {
+      "source": "task-5-d1-precommit.json",
+      "sha256": "18d2e4d116fa6a9c1fb019b9d1dc4bf9854776730309021b50ad43d0c05e77f1",
+      "bytes": 2956,
+      "archive": "task-5-d1-precommit.json"
+    },
+    {
+      "source": "task-5-d1-preliminary-state.json",
+      "sha256": "2ec76ead6ab978a3e123d672f73440c1b3ad1b030e61a2c0c1c0975a05c85d81",
+      "bytes": 832,
+      "archive": "task-5-d1-preliminary-state.json"
+    },
+    {
+      "source": "task-5-d1-probe",
+      "sha256": "a30501e42d66c6d33f7929d0d8f2900c96e03d1213d36eefc3cd746751f07785",
+      "bytes": 34752,
+      "archive": "metadata_only_binary"
+    },
+    {
+      "source": "task-5-d1-red.log",
+      "sha256": "3678419f8bfa1584544271d1db142f0a0bd33bc46cfb9396cb6ec475b46b8096",
+      "bytes": 28936,
+      "archive": "task-5-d1-red.log.txt"
+    },
+    {
+      "source": "task-5-d1-report.md",
+      "sha256": "cc3025b7d1f8811d8ac6e0f3ba1cc1b7b631a2a8963d73c6099ddd72898d4903",
+      "bytes": 11285,
+      "archive": "task-5-d1-report.md"
+    },
+    {
+      "source": "task-5-d1-result.json",
+      "sha256": "bbb96afaa19f1cee0b0bf3cbfe694d00f1e9b7a9eb6d60023777055a9caf4370",
+      "bytes": 749,
+      "archive": "task-5-d1-result.json"
+    },
+    {
+      "source": "task-5-d1-review.diff",
+      "sha256": "d1f79c9becbbc8d8a9bed121c2efe45e2d57c6318194062f82c936b6a854bc44",
+      "bytes": 44911,
+      "archive": "task-5-d1-review.diff"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/control",
+      "sha256": "564c9aa3bf4377a4eb7d90ee2b25385ec6d22ac1b8ec40c39b91de324f6a145e",
+      "bytes": 33960,
+      "archive": "metadata_only_binary"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/control.c",
+      "sha256": "64b94780bb204d3c731cacb2a94b812a23b74b46da0e4a237f2eb063588a89fd",
+      "bytes": 1023,
+      "archive": "task-5-d1-sandbox-proof/control.c.txt"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/d1-descriptor.json",
+      "sha256": "09550ee99bab1e5e1a12522383ac7f06eb56d658e13e0fab7577de0bba56435c",
+      "bytes": 861,
+      "archive": "task-5-d1-sandbox-proof/d1-descriptor.json"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/negative.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "task-5-d1-sandbox-proof/negative.stderr.txt"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/negative.stdout",
+      "sha256": "a95de54fb3be2c47b7b5c739415cc9eb65db59c96e9772674e4c02993917f62e",
+      "bytes": 51,
+      "archive": "task-5-d1-sandbox-proof/negative.stdout.txt"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/positive.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "archive": "task-5-d1-sandbox-proof/positive.stderr.txt"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/positive.stdout",
+      "sha256": "3da58495338e70d38ff002a053a1634a216f11cff96dc4fd096f05c596ea4996",
+      "bytes": 51,
+      "archive": "task-5-d1-sandbox-proof/positive.stdout.txt"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/proof.json",
+      "sha256": "5d2b89ea700e7ef7e2410fdb8567197ff101d8f52743813a9fa1b92a2fceb204",
+      "bytes": 294,
+      "archive": "task-5-d1-sandbox-proof/proof.json"
+    },
+    {
+      "source": "task-5-d1-sandbox-proof/sandbox.sb",
+      "sha256": "b7878a5c5654e57ef0e50cdc63c40e09e3c35d46c9da06dc7dd5682f8c699c2d",
+      "bytes": 690,
+      "archive": "task-5-d1-sandbox-proof/sandbox.sb.txt"
+    },
+    {
+      "source": "task-5-d1-sandbox1.log",
+      "sha256": "b516c8fe61c78af6f65605112e2c22a38e83318531ac713c500bded27e858736",
+      "bytes": 198,
+      "archive": "task-5-d1-sandbox1.log.txt"
+    },
+    {
+      "source": "task-5-d1-sdk-cause-proof.json",
+      "sha256": "59ef7ff4a50e67ad07da8899ac724c85e610fa6028954e19f89e83755e11796f",
+      "bytes": 614,
+      "archive": "task-5-d1-sdk-cause-proof.json"
+    },
+    {
+      "source": "task-5-d1-sdk-correction.diff",
+      "sha256": "ebd2d53a71cdd9b0dcb6b9c43a9330f994e9e5b51c32b3c3bceebd0f6641b004",
+      "bytes": 2510,
+      "archive": "task-5-d1-sdk-correction.diff"
+    },
+    {
+      "source": "task-5-d1-sdk-correction.json",
+      "sha256": "b1a6c92038d8a2b0ad9f1eb6212fee0e307b532fc62d2f911a07d208e97fd7aa",
+      "bytes": 666,
+      "archive": "task-5-d1-sdk-correction.json"
+    },
+    {
+      "source": "task-5-d1-sdk-recovery.log",
+      "sha256": "4067fa515f076452884d5ac3937fc37cf416105c2cc14a14ec40162331882f74",
+      "bytes": 815,
+      "archive": "task-5-d1-sdk-recovery.log.txt"
+    },
+    {
+      "source": "task-5-d1-synthetic1.log",
+      "sha256": "ac747440edeeb627147b7165447222f3ed7df377bf4ffbc4f3629179f1fdc1e2",
+      "bytes": 3216,
+      "archive": "task-5-d1-synthetic1.log.txt"
+    },
+    {
+      "source": "d1-review/manifest.json",
+      "sha256": "1181bf6a06eefaf686eb15c2096006bd6f64fbe496b572739c74c50c646e7d34",
+      "bytes": 1320,
+      "archive": "d1-review/manifest.json"
+    },
+    {
+      "source": "task-5-d1-independent-review.md",
+      "archive": "task-5-d1-independent-review.md",
+      "bytes": 9236,
+      "sha256": "88efb541c4db5265dd323cbec4807d8f5828da08bf55ddc19616ab656ef5dd11"
+    },
+    {
+      "source": "task-5-d1-review-argv-proof.json",
+      "archive": "task-5-d1-review-argv-proof.json",
+      "bytes": 1094,
+      "sha256": "12fe391851d1156be13496fa5098ab63fd644e1334c13af59a0ae13a968f7264"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+test_os_sandbox_denies_child_network_write_and_unrelated_reads (__main__.MetadataConfigTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.293s
+
+OK

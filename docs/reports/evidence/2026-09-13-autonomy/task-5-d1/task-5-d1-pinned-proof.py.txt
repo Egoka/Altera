@@ -1,0 +1,38 @@
+import hashlib,json,os,shutil,subprocess,uuid
+from pathlib import Path
+out=Path('/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution')
+binary=out/'task-5-d1-probe'
+root=Path('/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T')
+directory=root/('multica-mcp-D1Synthetic'+uuid.uuid4().hex)
+directory.mkdir(mode=0o700)
+config=directory/'mcp-config.json'
+config.write_text('{"mcpServers":{"context7":{"type":"http","url":"https://mcp.context7.com/mcp"}}}')
+config.chmod(0o600)
+profile=out/'task-5-d1-pinned.sb'
+literals={str(binary),str(config),str(directory),str(root)}|{str(p) for p in root.parents}
+profile.write_text('(version 1)\n(deny default)\n(allow sysctl-read)\n(allow file-read-metadata)\n'
+    '(allow file-read-data (subpath "/usr/lib") (subpath "/System/Library") '
+    +' '.join('(literal '+json.dumps(p)+')' for p in sorted(literals))+')\n'
+    '(allow process-exec (literal '+json.dumps(str(binary))+'))\n')
+results=[]
+try:
+    for label,path in [('canonical',str(config)),('verified_alias',str(config).removeprefix('/private'))]:
+        run=subprocess.Popen(['/usr/bin/sandbox-exec','-f',str(profile),str(binary),'--mcp-config',path],
+            stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+            env={'PATH':'/usr/bin:/bin','TMPDIR':'/UNTRUSTED_ENV_IGNORED'})
+        run.wait(timeout=3)
+        stdout,stderr=run.communicate()
+        (out/f'task-5-d1-pinned-{label}.stdout').write_bytes(stdout)
+        (out/f'task-5-d1-pinned-{label}.stderr').write_bytes(stderr)
+        assert run.returncode==78 and stdout==b''
+        descriptor=json.loads(stderr.split(b' ',1)[1])
+        assert descriptor['read_status']=='ok' and descriptor['mapping_candidate']=='exact'
+        results.append({'case':label,'exit':run.returncode,'stdout_empty':True,'read_status':descriptor['read_status']})
+    result={'synthetic_only':True,'native_daemon_config_read':False,'binary_sha256':hashlib.sha256(binary.read_bytes()).hexdigest(),
+        'source_sha256':descriptor['source_sha256'],'sandbox_sha256':hashlib.sha256(profile.read_bytes()).hexdigest(),
+        'directory_owner':directory.stat().st_uid,'directory_mode':oct(directory.stat().st_mode&0o7777),
+        'file_owner':config.stat().st_uid,'file_mode':oct(config.stat().st_mode&0o7777),'cases':results}
+    (out/'task-5-d1-pinned-proof.json').write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps(result,indent=2))
+finally:
+    shutil.rmtree(directory)

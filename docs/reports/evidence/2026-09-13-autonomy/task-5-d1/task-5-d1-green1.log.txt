@@ -1,0 +1,16 @@
+ERROR
+
+======================================================================
+ERROR: setUpClass (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 24, in setUpClass
+    subprocess.run(['/usr/bin/python3', '-I', str(helper), str(cls.binary),
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/usr/bin/python3', '-I', '/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_metadata_config_probe.py', '/private/tmp/tmpywd9q1wa/d1', '--root', '/private/tmp/tmpywd9q1wa/private-root', '--uid', '501']' returned non-zero exit status 1.
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.219s
+
+FAILED (errors=1)

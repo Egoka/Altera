@@ -1,0 +1,41 @@
+{
+  "base": "bbe668c59b3f3dbfe3c2a8bb0157f9e4e6e0fcff",
+  "files": [
+    {
+      "name": "build_metadata_config_probe.py",
+      "sha256": "3467dd9486fb9a5a8c3635dafa6c73c89092976e279f33fbe477046b55fa21fe"
+    },
+    {
+      "name": "metadata-config-probe",
+      "sha256": "d0aa8b38065d2dfa0ed0fd6953be4554b2ceb8c884f416ddd60c17d0d5fe9464"
+    },
+    {
+      "name": "metadata-config-probe.c",
+      "sha256": "fc08cd669760e584511e9bf44629d6eee082ffb6128f7a1aeeb59e1b3cb5e0c7"
+    },
+    {
+      "name": "task-5-d1-fix1-build.log",
+      "sha256": "397c5c163f787b43d0dd462493f9166acccbee0da95ded9e2b4fd2f05aaf45d9"
+    },
+    {
+      "name": "task-5-d1-fix1-imports.txt",
+      "sha256": "cbdca20da8db934de0e68507581f0e0a736a7f05ea0e7f42dc21e7d540a9d877"
+    },
+    {
+      "name": "task-5-d1-fix1-libraries.txt",
+      "sha256": "34b97ac45df810fae5ecd42e3d874e5edaef0e3c45c7269590e6ca57d85a310e"
+    },
+    {
+      "name": "task-5-d1-fix1-pinned-proof.json",
+      "sha256": "692dc9e99297736ad40948d691854a5cd9d54167bed685ae1af9c88f09ccde20"
+    },
+    {
+      "name": "task-5-d1-fix1-review.diff",
+      "sha256": "4e1ef2d0dce755f139ca96b2eb92466d9abee73deffe8aea46f3e84c89063428"
+    },
+    {
+      "name": "test_metadata_config_probe.py",
+      "sha256": "fa795837e941fcf280276aeaedce52efbbc51b360e36e4978f0c7ac07c033838"
+    }
+  ]
+}

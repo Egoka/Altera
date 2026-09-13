@@ -1,0 +1,202 @@
+test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) ... FAIL
+test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) ... test_unreviewed_counts_cover_root_server_headers_and_env_without_disclosure (__main__.MetadataConfigTests) ... FAIL
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--append-system-prompt', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--system-prompt', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--model', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--effort', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--input-format', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--output-format', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--permission-mode', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--disallowedTools', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) (flag='--settings', equals=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 144, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(rejected['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 151, in test_option_values_cannot_become_mcp_read_authority
+    self.assertEqual(result['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) (extra_count=3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 159, in test_unsupported_or_ambiguous_native_argv_is_rejected_before_read
+    self.assertEqual(self.invoke(genuine + extra)['read_status'], 'argv_rejected')
+AssertionError: 'ok' != 'argv_rejected'
+- ok
++ argv_rejected
+
+
+======================================================================
+FAIL: test_unreviewed_counts_cover_root_server_headers_and_env_without_disclosure (__main__.MetadataConfigTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_config_probe.py", line 172, in test_unreviewed_counts_cover_root_server_headers_and_env_without_disclosure
+    self.assertIs(result.get('unreviewed_fields'), True)
+AssertionError: None is not True
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.429s
+
+FAILED (failures=18)

@@ -1,0 +1,6 @@
+(version 1)
+(deny default)
+(allow sysctl-read)
+(allow file-read-metadata)
+(allow file-read-data (subpath "/usr/lib") (subpath "/System/Library") (literal "/") (literal "/private") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-d1-fix1-probe") (literal "/private/var") (literal "/private/var/folders") (literal "/private/var/folders/xz") (literal "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn") (literal "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T") (literal "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/multica-mcp-D1Synthetic09f0ac7dc3594cc09ffe0d0081bd3177") (literal "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/multica-mcp-D1Synthetic09f0ac7dc3594cc09ffe0d0081bd3177/mcp-config.json"))
+(allow process-exec (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-d1-fix1-probe"))

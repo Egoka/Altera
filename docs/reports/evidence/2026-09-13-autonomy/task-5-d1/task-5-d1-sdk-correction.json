@@ -1,0 +1,24 @@
+{
+  "check_id": "task-5-d1-build",
+  "prior_consecutive_failures": 3,
+  "source_correction_sha256": "ebd2d53a71cdd9b0dcb6b9c43a9330f994e9e5b51c32b3c3bceebd0f6641b004",
+  "builder_sha256": "3467dd9486fb9a5a8c3635dafa6c73c89092976e279f33fbe477046b55fa21fe",
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+  "compiler_argument_order": [
+    "COMPILER",
+    "-isysroot",
+    "SDK",
+    "-std=c11",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-O2",
+    "-I",
+    "private build dir",
+    "source",
+    "-o",
+    "output"
+  ],
+  "private_tmpdir_retained": true,
+  "native_probe_changed_for_sdk": false
+}

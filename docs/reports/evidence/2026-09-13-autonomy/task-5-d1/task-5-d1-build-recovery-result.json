@@ -1,0 +1,15 @@
+{
+  "check_id": "task-5-d1-build",
+  "prior_consecutive_failures": 2,
+  "recovery_authorized_by": "task-5-d1-build-recovery-proof.json and progress.md ruling",
+  "recovery_consumed": true,
+  "recovery_exit": 1,
+  "consecutive_failures": 3,
+  "stopped": true,
+  "error": "metadata-config-probe.c: fatal error: 'fcntl.h' file not found",
+  "raw_log": "task-5-d1-build-recovery.log",
+  "raw_log_sha256": "26359a8fd3168f74a598ce12207580560e8b59be7ed6ea354355e1094157dba9",
+  "tool": "85de98",
+  "binary_produced": false,
+  "native_or_model_started": false
+}

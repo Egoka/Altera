@@ -1,0 +1,22 @@
+test_escaped_public_values_match_without_unknown_disclosure (__main__.MetadataConfigTests) ... ok
+test_fifo_and_socket_do_not_block (__main__.MetadataConfigTests) ... ok
+test_file_replacement_and_truncation_during_read_are_rejected (__main__.MetadataConfigTests) ... ok
+test_invalid_temp_names_and_extra_levels_are_rejected (__main__.MetadataConfigTests) ... ok
+test_limits_fail_closed (__main__.MetadataConfigTests) ... ok
+test_literal_playwright_and_trace_candidates (__main__.MetadataConfigTests) ... ok
+test_only_exact_public_endpoints_match (__main__.MetadataConfigTests) ... ok
+test_os_sandbox_denies_child_network_write_and_unrelated_reads (__main__.MetadataConfigTests) ... ok
+test_private_modes_and_hardlinks_are_required (__main__.MetadataConfigTests) ... ok
+test_reads_exact_private_json_without_waiting_for_stdin (__main__.MetadataConfigTests) ... ok
+test_rejects_symlink_file_and_directory (__main__.MetadataConfigTests) ... ok
+test_rejects_unsafe_argument_paths (__main__.MetadataConfigTests) ... ok
+test_root_symlink_is_not_followed (__main__.MetadataConfigTests) ... ok
+test_secrets_and_unknown_fields_are_presence_only (__main__.MetadataConfigTests) ... ok
+test_strict_json_rejects_malformed_duplicate_and_non_utf8 (__main__.MetadataConfigTests) ... ok
+test_unknown_shapes_never_become_mapping_authority (__main__.MetadataConfigTests) ... ok
+test_version_is_truthful_without_config_access (__main__.MetadataConfigTests) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 1.947s
+
+OK
