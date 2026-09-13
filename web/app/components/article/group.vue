@@ -43,7 +43,7 @@
     <!-- Широкие экраны: раскладка целиком выводится из матрицы областей -->
     <div class="hidden lg:grid lg:gap-x-8 lg:gap-y-18" :style="gridStyles">
       <div v-for="(article, index) in articles" :key="article.id" :style="{ 'grid-area': order[index] }" class="w-full">
-        <component :is="componentFor(slots[index])" :article="article" />
+        <component :is="componentFor(slots[index])" :article="article" :scale="slots[index]?.scale" />
       </div>
     </div>
 

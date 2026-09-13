@@ -3,6 +3,8 @@
 
   const props = defineProps<{
     article: ArticleResponse
+    /** Ведущий слот группы — заголовок на ступень крупнее. */
+    scale?: "lead"
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
   const contentType = computed(() => `/${props.article.contentType.slug}`)
@@ -15,7 +17,10 @@
       <div class="order-2 flex flex-1 flex-col sm:max-w-1/2">
         <NuxtLink
           :to="slug"
-          class="font-garamond-libre text-card md:text-title font-bold text-zinc-900 dark:text-zinc-300 transition-colors">
+          :class="[
+            'font-garamond-libre font-bold text-zinc-900 transition-colors dark:text-zinc-300',
+            scale === 'lead' ? 'text-card md:text-lead' : 'text-card md:text-title'
+          ]">
           {{ article.title }}
         </NuxtLink>
         <p

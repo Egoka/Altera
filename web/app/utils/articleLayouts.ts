@@ -47,7 +47,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "tower-left",
     cells: ["aaaaaaabbbbb", "aaaaaaaccccc", "aaaaaaaddddd"],
     slots: [
-      { key: "a", variant: "large", media: "above" },
+      { key: "a", variant: "large", media: "above", scale: "lead" },
       { key: "b", variant: "small" },
       { key: "c", variant: "small" },
       { key: "d", variant: "small" }
@@ -58,7 +58,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "duo-wide",
     cells: ["aaaaaabbbbbb"],
     slots: [
-      { key: "a", variant: "large", media: "above" },
+      { key: "a", variant: "large", media: "above", scale: "lead" },
       { key: "b", variant: "large", media: "beside" }
     ],
     md: { cols: 2 },
@@ -84,8 +84,8 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "pair-tall",
     cells: ["aaaaaabbbbbb"],
     slots: [
-      { key: "a", variant: "large", media: "above" },
-      { key: "b", variant: "large", media: "above" }
+      { key: "a", variant: "large", media: "above", scale: "lead" },
+      { key: "b", variant: "large", media: "above", scale: "lead" }
     ],
     md: { cols: 2 },
     traits: { anchor: "center", dominant: "tall" }
@@ -95,10 +95,10 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "quad-square",
     cells: ["aaaaaabbbbbb", "ccccccdddddd"],
     slots: [
-      { key: "a", variant: "large", media: "above" },
-      { key: "b", variant: "large", media: "above" },
-      { key: "c", variant: "large", media: "above" },
-      { key: "d", variant: "large", media: "above" }
+      { key: "a", variant: "large", media: "above", scale: "lead" },
+      { key: "b", variant: "large", media: "above", scale: "lead" },
+      { key: "c", variant: "large", media: "above", scale: "lead" },
+      { key: "d", variant: "large", media: "above", scale: "lead" }
     ],
     md: { cols: 2 },
     traits: { anchor: "center", dominant: "tall" }
@@ -120,7 +120,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "wide-trio-right",
     cells: ["aaaaaaabbbbb", "aaaaaaaccccc", "aaaaaaaddddd"],
     slots: [
-      { key: "a", variant: "large", media: "beside" },
+      { key: "a", variant: "large", media: "beside", scale: "lead" },
       { key: "b", variant: "small" },
       { key: "c", variant: "small" },
       { key: "d", variant: "small" }
@@ -145,9 +145,9 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "lead-wide-pair",
     cells: ["aaaaaaaaaaaa", "bbbbbbcccccc"],
     slots: [
-      { key: "a", variant: "large", media: "beside" },
-      { key: "b", variant: "large", media: "above" },
-      { key: "c", variant: "large", media: "above" }
+      { key: "a", variant: "large", media: "beside", scale: "lead" },
+      { key: "b", variant: "large", media: "above", scale: "lead" },
+      { key: "c", variant: "large", media: "above", scale: "lead" }
     ],
     md: { cols: 2, spans: { a: 2 } },
     traits: { anchor: "center", dominant: "wide" }
@@ -171,7 +171,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     id: "stripe-wide-narrow",
     cells: ["aaaaaaaaabbb"],
     slots: [
-      { key: "a", variant: "large", media: "beside" },
+      { key: "a", variant: "large", media: "beside", scale: "lead" },
       { key: "b", variant: "large", media: "above" }
     ],
     md: { cols: 2, spans: { a: 2 } },
@@ -185,7 +185,7 @@ export const ARTICLE_LAYOUTS: GroupLayout[] = [
     cells: ["..aaaabbbbbb"],
     slots: [
       { key: "a", variant: "large", media: "above" },
-      { key: "b", variant: "large", media: "above" }
+      { key: "b", variant: "large", media: "above", scale: "lead" }
     ],
     md: { cols: 2 },
     traits: { anchor: "center", dominant: "tall", accent: true }
