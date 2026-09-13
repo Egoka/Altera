@@ -21,14 +21,17 @@
 </script>
 
 <template>
+  <!-- Текстовая часть сворачивается через max-width, а не через фиксированную ширину:
+       в развёрнутом виде она занимает ровно свою ширину, и знак целиком стоит по центру
+       (жёсткие 100 px оставляли пустоту справа на телефоне и вылезали на широком экране). -->
   <div class="flex items-baseline">
     <IconLogo class="h-6 lg:h-8 w-auto fill-black dark:fill-zinc-200" />
     <span
-      class="text-black dark:text-zinc-200 font-bergamasco font-light text-[2.2rem] lg:text-[2.8rem] pl-0.5 leading-6 transition-all duration-300 ease-in-out"
+      class="text-black dark:text-zinc-200 font-bergamasco font-light text-[2.2rem] lg:text-[2.8rem] pl-0.5 leading-6 overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out"
       :style="{
         opacity: textOpacity,
         transform: `translateX(${isScrolled ? '-10px' : '0px'})`,
-        width: isScrolled ? '0px' : '100px'
+        maxWidth: isScrolled ? '0px' : '8rem'
       }">
       ltera
     </span>

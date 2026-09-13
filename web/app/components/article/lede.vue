@@ -12,26 +12,27 @@
 <template>
   <article class="lede-article flex flex-col">
     <!-- Высота изображения ограничена долей экрана, пропорция — пределом; дальше
-         сужается ширина и снимок встаёт по центру (токены lede-media в main.css). -->
+         сужается ширина и снимок встаёт по центру (токены lede-media в main.css).
+         На узких экранах снимок квадратный: горизонталь 2:1 на телефоне мельчает. -->
     <figure class="mb-10">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
           :src="article.featuredImage"
           :alt="article.title"
-          class="block mx-auto w-full max-w-[calc(var(--lede-media-max-height)*var(--lede-media-max-ratio))] max-h-(--lede-media-max-height) aspect-2/1 object-cover rounded-sm transition-transform duration-300" />
+          class="block mx-auto w-full max-w-[calc(var(--lede-media-max-height)*var(--lede-media-max-ratio))] max-h-(--lede-media-max-height) aspect-square sm:aspect-2/1 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
     </figure>
 
     <div class="text-center">
       <NuxtLink
         :to="slug"
-        class="font-garamond-libre text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors block max-w-4xl mx-auto">
+        class="font-garamond-libre text-title-compact xs:text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors block max-w-4xl mx-auto">
         {{ article.title }}
       </NuxtLink>
     </div>
 
     <p
-      class="lede-dek mt-1 font-garamond-libre text-card md:text-card-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-3xl mx-auto line-clamp-2">
+      class="lede-dek mt-1 font-garamond-libre text-dek-compact xs:text-card md:text-card-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-3xl mx-auto line-clamp-2">
       {{ article.dek }}
     </p>
 

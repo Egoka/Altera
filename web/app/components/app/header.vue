@@ -68,7 +68,9 @@
           Latest
         </NuxtLink>
       </div>
-      <div class="flex lg:hidden">
+      <!-- Боковые группы растягиваются поровну (flex-1) на всех экранах, поэтому логотип
+           стоит точно по центру и остаётся там, когда текстовая часть сворачивается -->
+      <div class="flex flex-1 lg:hidden">
         <button
           type="button"
           class="w-10 ml-0 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -84,7 +86,7 @@
         </NuxtLink>
       </div>
 
-      <div class="lg:flex lg:flex-1 lg:justify-end">
+      <div class="flex flex-1 justify-end">
         <NuxtLink to="/" class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Log in</NuxtLink>
       </div>
     </nav>
