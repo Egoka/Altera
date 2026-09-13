@@ -1,0 +1,18 @@
+{
+  "commit": "2c33e85fe025e014fd1185619e89159ccecd534b",
+  "tree": "c062bb669e2d19d59d569584397f6bd07450b8b2",
+  "parent": "5bbd693267f4d591391413e77578f5cd434a713b",
+  "files": {
+    "scripts/agent-loop/gate.py": "3d6d7953de8b64a47770b04809ab4b770057ff0b041721c64e518b486c57c8f9",
+    "scripts/agent-loop/test_gate.py": "39ed49eee8465519c18ec4667eb8981c2f5e05b884fe1f28d86adb0d16e9cce7"
+  },
+  "paths": [
+    "scripts/agent-loop/gate.py",
+    "scripts/agent-loop/test_gate.py"
+  ],
+  "owned_scope_clean": true,
+  "index_empty": true,
+  "commit_command_exit": 0,
+  "node": "v24.12.0",
+  "initial_scratch_report_prefix_sha256": "ed113b7c921a5cb8598aae4893cbd19950f5b28bd0a796ed273c33faaae5875e"
+}

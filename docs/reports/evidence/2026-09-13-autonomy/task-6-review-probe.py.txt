@@ -1,0 +1,17 @@
+import importlib.util,json,pathlib
+p=pathlib.Path('scripts/agent-loop/test_gate.py').resolve()
+s=importlib.util.spec_from_file_location('gate_review_probe',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+t=m.LifecycleTests(); t.setUp()
+try:
+ stop, old=t.stopped()
+ statepath=t.root/'.git/agent-loop/state.json'
+ data=json.loads(statepath.read_text())
+ print(json.dumps({'before_failures':data['tasks']['T-fixture']['checks']['review']['review']['failures'],'stop_event':stop,'history_count':len(data['tasks']['T-fixture']['history'])}))
+ del data['tasks']['T-fixture']['checks']['review']['review']
+ statepath.write_text(json.dumps(data))
+ accepted=t.cli('status')
+ result=t.cli('start',t.plan,'--stage','review','--actor','review','--run','corruption-third')
+ after=t.cli('status')
+ print(json.dumps({'status_accepted_corrupt_counter':True,'start_result':result['result'],'after_failures':after['tasks']['T-fixture']['checks']['review']['review']['failures'],'retained_stop_failures':after['events'][stop]['failures'],'history_count':len(after['tasks']['T-fixture']['history'])}))
+finally:
+ t.doCleanups()

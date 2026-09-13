@@ -1,0 +1,2 @@
+{"before_failures": 2, "stop_event": "check-13", "history_count": 13}
+{"status_accepted_corrupt_counter": true, "start_result": "acquired", "after_failures": 0, "retained_stop_failures": 2, "history_count": 13}

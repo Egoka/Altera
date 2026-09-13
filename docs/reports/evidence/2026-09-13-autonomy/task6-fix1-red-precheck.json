@@ -1,0 +1,9 @@
+{
+  "head": "5bbd693267f4d591391413e77578f5cd434a713b",
+  "files": {
+    "scripts/agent-loop/gate.py": "9c63c1ab4c75c9c915142c3daff1f3557e57ee338cfab7e7c22bae100d35e230",
+    "scripts/agent-loop/test_gate.py": "39ed49eee8465519c18ec4667eb8981c2f5e05b884fe1f28d86adb0d16e9cce7"
+  },
+  "scope_diff_sha256": "99f97002ef491e85e749f63aab04b32b9b7856a5d31c614ebe17c7903615b786",
+  "phase": "before expected review-fix RED"
+}

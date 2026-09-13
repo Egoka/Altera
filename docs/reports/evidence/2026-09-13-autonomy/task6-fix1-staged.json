@@ -1,0 +1,17 @@
+{
+  "head": "5bbd693267f4d591391413e77578f5cd434a713b",
+  "files": {
+    "scripts/agent-loop/gate.py": "3d6d7953de8b64a47770b04809ab4b770057ff0b041721c64e518b486c57c8f9",
+    "scripts/agent-loop/test_gate.py": "39ed49eee8465519c18ec4667eb8981c2f5e05b884fe1f28d86adb0d16e9cce7"
+  },
+  "paths": [
+    "scripts/agent-loop/gate.py",
+    "scripts/agent-loop/test_gate.py"
+  ],
+  "snapshot": {
+    "dirty_fingerprint": "sha256:0c884dac5c00b174c83de2e1a4dede513ed38a7e8d3c77a93c1c24e4a90551b2",
+    "revision_commit": "5bbd693267f4d591391413e77578f5cd434a713b"
+  },
+  "staged_patch_sha256": "9d0c487bb19e637d7302f3f9c340fd357c85837a34b7fc1790f5a1c04df08be2",
+  "index": "100755 eb9481f94282333794cc175be3478f9dadf6938e 0\tscripts/agent-loop/gate.py\n100644 e348fe6a7b5e83dce1421baa45d5e7e76b785b6c 0\tscripts/agent-loop/test_gate.py\n"
+}
