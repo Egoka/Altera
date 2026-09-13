@@ -1,0 +1,14 @@
+test_omitted_native_flags_keep_explicit_model_and_effort (__main__.RuntimeTests) ... FAIL
+
+======================================================================
+FAIL: test_omitted_native_flags_keep_explicit_model_and_effort (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 147, in test_omitted_native_flags_keep_explicit_model_and_effort
+    self.assertIn('--model', args)
+AssertionError: '--model' not found in ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '--user=501:20', '--workdir=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/source', '--mount=type=bind,src=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/snapshot,dst=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/source,readonly', '--mount=type=bind,src=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/run/cache,dst=/runtime/cache', '--mount=type=bind,src=/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmp7gjq3hyk/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/node', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '/runtime/policy/fixture.mjs', '--settings', '/runtime/policy/claude-settings.json', '--strict-mcp-config']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.275s
+
+FAILED (failures=1)

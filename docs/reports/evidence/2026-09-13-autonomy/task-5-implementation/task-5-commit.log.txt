@@ -1,0 +1,53 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  22:33:47
+web test:    Duration  160ms (transform 62%, import 19%, worker 12%, tests 6%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  22:33:47
+server test:    Duration  342ms (import 76%, transform 20%, worker 2%, tests 2%)
+server test: Done
+[docs/agent-loop-autonomy 6256786] feat(agent-runtime): isolate checking processes in Docker
+ 21 files changed, 1657 insertions(+)
+ create mode 100644 docs/development/runtime-isolation.md
+ create mode 100644 scripts/agent-runtime/.dockerignore
+ create mode 100644 scripts/agent-runtime/Dockerfile
+ create mode 100644 scripts/agent-runtime/build_metadata_probe.py
+ create mode 100644 scripts/agent-runtime/cli-preflight.mjs
+ create mode 100644 scripts/agent-runtime/codex-canary.mjs
+ create mode 100644 scripts/agent-runtime/egress-fixture.mjs
+ create mode 100644 scripts/agent-runtime/fixture.mjs
+ create mode 100644 scripts/agent-runtime/manifest.example.json
+ create mode 100644 scripts/agent-runtime/metadata-probe.c
+ create mode 100644 scripts/agent-runtime/protocol-guard.mjs
+ create mode 100644 scripts/agent-runtime/provider-proxy.mjs
+ create mode 100755 scripts/agent-runtime/runtime.py
+ create mode 100644 scripts/agent-runtime/test_docker.py
+ create mode 100644 scripts/agent-runtime/test_egress.py
+ create mode 100644 scripts/agent-runtime/test_metadata_probe.py
+ create mode 100644 scripts/agent-runtime/test_protocol_guard.mjs
+ create mode 100644 scripts/agent-runtime/test_proxy.mjs
+ create mode 100644 scripts/agent-runtime/test_runtime.py
+ create mode 100644 scripts/agent-runtime/trace-canary.mjs

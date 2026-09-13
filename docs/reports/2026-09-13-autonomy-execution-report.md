@@ -6,7 +6,30 @@
 - Изоляция: /private/tmp/altera-agent-loop-autonomy, ветка docs/agent-loop-autonomy.
 - Исходная рабочая папка и её незакоммиченные документы сохранены; подготовленный пакет скопирован в worktree.
 
-## Сводка прогресса на 2026-09-13, 21:25 МСК
+## Текущий срез: 2026-09-13, 23:50 МСК
+
+Полный lifecycle принят независимым ревью: 46 проверок прошли. Runtime реализован
+в `6256786`; первый независимый разбор нашёл два дефекта — обход сохранения режима
+обслуживания через `serviceTierForTurn` и отсутствие типа/исполняемого режима новых
+файлов в fingerprint. Выполняется первый раунд исправлений; вся Task 5 не принята.
+
+Первичный вход Claude больше не блокирует работу: постоянный каталог находится вне
+проекта и `/tmp`, вход распознан новым контейнером, ещё один контейнер получил ответ
+Opus 4.6. Обновление сессии и полный Claude canary остаются открытыми. Ручной запуск
+владельца в Multica завершился успешно на исходном runtime macOS; он не доказывает
+подключение Docker. Состав MCP подтверждён: Context7 у reviewer, Context7 и Playwright
+у tester; trace наблюдался в нативном запуске отдельно от workspace assignments.
+
+Task 3: причины четырёх ошибок типов, пустого title и неверного перехода flow 16
+локализованы. Пять остальных ошибок связаны с отсутствующим реализованным интерфейсом
+авторизации; утверждённая политика сессий существует. Остановленные проверки не
+перезапускались. Узкие исправления типов/title/flow входят в повторное поручение
+владельца; подмена отсутствующей защиты пустым middleware не допускается.
+
+19 изменений Multica не применены, автопилоты не включены, интеграция и сквозной
+пилот не завершены. Исторические результаты ниже сохранены с исходными датами.
+
+## Историческая сводка на 2026-09-13, 21:25 МСК
 
 | Часть переезда                   | Статус                                                               | Что остаётся                                                                |
 | -------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -262,3 +285,79 @@ Commit `2c33e85fe025e014fd1185619e89159ccecd534b`, tree
 46/46 passed, прежние 45 fixtures сохранены; обычные hooks прошли. Это не приёмка Task 3:
 продуктовые todo/skipped остаются явно раскрытыми. Scoped re-review исправления выполняется;
 окончательная приёмка Task 6 ещё не заявляется.
+
+## Task 6 принят; начат Task 5
+
+[Scoped re-review](evidence/2026-09-13-autonomy/task-6-fix1-review.md) принял исправление:
+Important finding закрыт, новых Critical/Important в fix diff нет. Reviewer сверил восемь
+вариантов RED/GREEN, результат 46/46 за 188.019 s, исходные/итоговые хэши, сохранение
+прежних fixtures и обычные hooks; повторно suite не запускал. Task 6 принят в пределах
+структурного кооперативного lifecycle. Исходное отрицательное заключение сохранено,
+два Minor наблюдения остаются для финального review.
+
+Task 5 передан отдельному исполнителю от commit
+`9e1f8be8192df23626efd1ac305269ef00666d22`: ограниченные runtime, metadata-only диагностика,
+реальные Docker/protocol probes и последующие модельные canary. Применение профилей и
+native назначения остаются отдельными действиями контроллера после конкретных проверок.
+Реализация Task 6 не доказывает готовность этого этапа, запуск пилота или право включить
+автопилоты. Исходный ресурс `web/home-grid` не переключается; продуктовый Task 3 остаётся
+остановленным.
+
+## Persistent Claude login: two fresh containers verified
+
+Owner completed claude auth login: Login successful, exit 0. Persistent storage:
+`/Users/egorbondarenko/Library/Application Support/Altera/agent-auth/claude`.
+Root and auth home mode 0700, credentials mode 0600, current owner, no symlinks.
+Controller inspected metadata only, never credential contents or credential hashes.
+
+First fresh isolated container: claude auth status exit 0, loggedIn true,
+authMethod claude.ai. Second fresh container: actual Claude Opus 4.6 / medium
+returned exact ALTERA_CLAUDE_AUTH_OK, exit 0, is_error false. Both used the same
+single read-only credential file; no new browser login. The model probe explicitly
+disabled tools and MCP. It does not accept trace/context/hooks/write-denial or native
+Multica behavior. Synthetic source remained read-only; pinned image and provider
+proxy unchanged.
+
+CLI total_cost_usd 0.066226 has costBasis list, not confirmed account billing.
+modelUsage also reports an auxiliary Haiku call; primary model remains Opus.
+
+[Auth proof](evidence/2026-09-13-autonomy/claude-persistent-auth/auth-status-proof.json),
+[model proof](evidence/2026-09-13-autonomy/claude-persistent-auth/model-auth-proof.json),
+[hash manifest](evidence/2026-09-13-autonomy/claude-persistent-auth/manifest.json).
+
+Initial login blocker resolved. Automatic credential refresh/rotation, expiration
+and revocation behavior, full Claude MCP/context/hook canary, independent review,
+and native Multica acceptance remain open. No external profiles, bindings or
+autopilots changed. Full Task 5/autonomy is not accepted.
+
+Report write attempt 1 failed at Python parse time with a source encoding error;
+no files were created or changed by that attempt. Corrected report encoding;
+model/auth checks were not rerun.
+
+## Owner-triggered native Claude discovery
+
+Readback confirms ALTE-11 run `01a09c79-1610-73a0-a665-a2fbd6687eeb` completed
+at 2026-09-13T20:34:27Z, error null, on original native macOS Claude runtime
+`fd14b334-b79c-47ae-aad9-a98340bbb7d4`. Reviewer remains Opus 4.6 / medium, idle.
+The owner triggered this run; coordinator did not retry or rebind it. The selected
+report records successful trace project-map/outline calls and task_acceptance
+not_checked. This confirms native execution success; it does not establish
+Docker adoption, complete MCP mapping, OS write denial or autonomous-loop acceptance.
+The report attributes a staging change in CLAUDE.md to concurrent owner activity;
+that attribution and byte-level preservation are not independently established.
+The prior D0 exit78 was expected metadata-probe behavior, not a provider failure.
+
+[Allowlisted readback](evidence/2026-09-13-autonomy/owner-native-discovery-readback.json).
+
+## Runtime fix1 independently accepted
+
+Commit c03838840dc0aeb5003221ae10fec75ebb16a59b closes both Important findings.
+Python14/14 and JS6/6 covering tests passed; normal hooks passed.
+[Scoped review](evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-review.md)
+accepts the fix, retaining full native acceptance as pending. Minor documentation
+correction queued: guard is RO policy-mounted; policy hash and canary refresh are
+required, not necessarily a new image ID.
+
+[Recovery analysis](evidence/2026-09-13-autonomy/task-3-recovery-cause-analysis.md)
+distinguishes approved auth policy from missing implementation. No stopped product
+check was rerun.

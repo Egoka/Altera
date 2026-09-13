@@ -1,0 +1,6 @@
+test_auth_is_one_readonly_file_and_never_a_home_mount (__main__.RuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.247s
+
+OK

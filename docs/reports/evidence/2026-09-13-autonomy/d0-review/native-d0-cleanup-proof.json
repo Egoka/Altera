@@ -1,0 +1,104 @@
+{
+  "run": {
+    "id": "01a09c2f-1cd9-7266-8595-e99adebef720",
+    "status": "failed",
+    "started_at": "2026-09-13T19:12:10Z",
+    "completed_at": "2026-09-13T19:12:11Z",
+    "attempt": 1,
+    "max_attempts": 2
+  },
+  "expected_exit": 78,
+  "interpretation": "Expected metadata-only diagnostic; no model called; no native acceptance",
+  "probe_manifest": {
+    "marker": "ALTERA_METADATA_ONLY_V1",
+    "schema_version": 1,
+    "probe_source_sha256": "a5843cc10aa495bb6cf48e89f80bd121bf66fa582e85a6fb2584cc8691d67107",
+    "cwd": "/Users/egorbondarenko/WebstormProjects/Altera",
+    "argc": 16,
+    "argv": [
+      {
+        "position": 1,
+        "flag": "-p",
+        "value_type": "absent"
+      },
+      {
+        "position": 2,
+        "flag": "--output-format",
+        "value_type": "redacted"
+      },
+      {
+        "position": 4,
+        "flag": "--input-format",
+        "value_type": "redacted"
+      },
+      {
+        "position": 6,
+        "flag": "--verbose",
+        "value_type": "absent"
+      },
+      {
+        "position": 7,
+        "flag": "--permission-mode",
+        "value_type": "redacted"
+      },
+      {
+        "position": 9,
+        "flag": "--disallowedTools",
+        "value_type": "redacted"
+      },
+      {
+        "position": 11,
+        "flag": "--strict-mcp-config",
+        "value_type": "absent"
+      },
+      {
+        "position": 12,
+        "flag": "--model",
+        "value_type": "redacted"
+      },
+      {
+        "position": 14,
+        "flag": "--mcp-config",
+        "value_type": "redacted",
+        "unresolved_path_input": true
+      }
+    ],
+    "truncated": false,
+    "env_presence": {
+      "MULTICA_TOKEN": true,
+      "MULTICA_TASK_ID": true,
+      "MULTICA_AGENT_ID": true,
+      "MULTICA_WORKSPACE_ID": true,
+      "MULTICA_SERVER_URL": true,
+      "CODEX_HOME": false,
+      "CLAUDE_CONFIG_DIR": false,
+      "TMPDIR": true
+    },
+    "env_path_unresolved": true
+  },
+  "restored_agent": {
+    "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "model": "claude-opus-4-6",
+    "thinking_level": "medium",
+    "status": "idle",
+    "custom_args": [],
+    "max_concurrent_tasks": 1
+  },
+  "cleanup": {
+    "profile_ids": [],
+    "runtime_ids": [
+      "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "10b7bf57-0972-4439-aa71-2a2c30af4484",
+      "aad0c3d2-cfe4-47b4-8330-c94108f41f7a"
+    ],
+    "deleted_profile_id": "6f8c487b-1b24-429b-9ca9-8b001a7cb270",
+    "deleted_runtime_id": "39ffc89f-dd13-4596-864f-dcc1c63b71f7",
+    "cascade": false
+  },
+  "sources": {
+    "task-5-d0-native-runs-after-trigger.json": "3cd08ce67477204900e5fb825ae809e55c8efb1f7c9d27fa751857d77f5a208b",
+    "task-5-d0-cleanup-readback.json": "81a4f0da7efd68062de2ee2e857e7c7a0eb01f99024c93757ec26082bac37700"
+  },
+  "private_agent_snapshot_not_archived": true
+}

@@ -1,0 +1,241 @@
+[
+    {
+        "Id": "8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1",
+        "Created": "2026-09-13T19:09:49.752243625Z",
+        "Path": "/usr/local/bin/node",
+        "Args": [
+            "/proxy.mjs"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 20572,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-13T19:09:49.835989166Z",
+            "FinishedAt": "0001-01-01T00:00:00Z"
+        },
+        "Image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+        "ResolvConfPath": "/var/lib/docker/containers/8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1/hostname",
+        "HostsPath": "/var/lib/docker/containers/8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1/hosts",
+        "LogPath": "/var/lib/docker/containers/8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1/8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1-json.log",
+        "Name": "/altera-check-2b50e00d852040449d378e23647541b2-proxy",
+        "RestartCount": 0,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "bridge",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": [
+                "ALL"
+            ],
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": true,
+            "SecurityOpt": [
+                "no-new-privileges"
+            ],
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 134217728,
+            "NanoCpus": 1000000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 268435456,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": 32,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "Mounts": [
+                {
+                    "Type": "bind",
+                    "Source": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-codex-1/policy/provider-proxy.mjs",
+                    "Target": "/proxy.mjs",
+                    "ReadOnly": true
+                }
+            ],
+            "MaskedPaths": [
+                "/proc/acpi",
+                "/proc/asound",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/sys/devices/virtual/powercap",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "Storage": {
+            "RootFS": {
+                "Snapshot": {
+                    "Name": "overlayfs"
+                }
+            }
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-codex-1/policy/provider-proxy.mjs",
+                "Destination": "/proxy.mjs",
+                "Mode": "",
+                "RW": false,
+                "Propagation": "rprivate"
+            }
+        ],
+        "Config": {
+            "Hostname": "8d909fcb7439",
+            "Domainname": "",
+            "User": "1000:1000",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=24.12.0",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Cmd": [
+                "/proxy.mjs"
+            ],
+            "Image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+            "Volumes": null,
+            "WorkingDir": "/runtime",
+            "Entrypoint": [
+                "/usr/local/bin/node"
+            ],
+            "Labels": {},
+            "StopTimeout": 1
+        },
+        "NetworkSettings": {
+            "SandboxID": "cfa913a9eceefb7eaef8b9cf6d9fff87f529a2654b229f8d2bea8b7573659614",
+            "SandboxKey": "/var/run/docker/netns/cfa913a9ecee",
+            "Ports": {},
+            "Networks": {
+                "altera-check-2b50e00d852040449d378e23647541b2": {
+                    "IPAMConfig": {},
+                    "Links": null,
+                    "Aliases": [
+                        "egress-proxy"
+                    ],
+                    "DriverOpts": {},
+                    "GwPriority": 0,
+                    "NetworkID": "39097f8f997bb95406a6152d3c56a5244dcf4d622807a0ba1d42dd56a80dcef0",
+                    "EndpointID": "4c613800b6c0453f0380b85b3e16e04ce6ed28b51e57c4c6c0f23d8e82371526",
+                    "Gateway": "",
+                    "IPAddress": "172.20.0.1",
+                    "MacAddress": "ca:df:41:59:ae:23",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "altera-check-2b50e00d852040449d378e23647541b2-proxy",
+                        "egress-proxy",
+                        "8d909fcb7439"
+                    ]
+                },
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "07df1f2f1014b11f1bab1edac629f6b0d2e779a1ce5506d24ae4a2f077b016f0",
+                    "EndpointID": "64b21a5fd5802e11ee3f64021f77688a84a9d778772598f7708fb79c07573d3f",
+                    "Gateway": "172.17.0.1",
+                    "IPAddress": "172.17.0.2",
+                    "MacAddress": "7e:4a:9c:4b:1e:dc",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:0a12c77fb157c42a17e04720302be2d698d6903d12217ea540dfead4c715b2bc",
+            "size": 1626,
+            "platform": {
+                "architecture": "arm64",
+                "os": "linux"
+            }
+        }
+    }
+]

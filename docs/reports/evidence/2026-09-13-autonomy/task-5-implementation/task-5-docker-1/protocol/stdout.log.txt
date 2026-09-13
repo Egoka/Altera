@@ -1,0 +1,2 @@
+{"id":1,"method":"initialize","params":{}}
+{"payload":"unicode-\u0424"}

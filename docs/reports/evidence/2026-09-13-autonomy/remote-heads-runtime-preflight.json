@@ -1,0 +1,14 @@
+{
+  "observed_at_utc": "2026-09-13T18:46:48.131208+00:00",
+  "command": "git ls-remote --heads origin app docs/platform-design web/home-grid",
+  "exit_code": 0,
+  "tool_output": "92390f",
+  "refs": {
+    "refs/heads/app": "804d84dd66a0f1acbff728127cd21ef2a8b0fccd",
+    "refs/heads/docs/platform-design": "60b2226b699c3333034787addfb9842a59778d5e"
+  },
+  "not_returned": [
+    "refs/heads/web/home-grid"
+  ],
+  "mutations": "none; no push/fetch/checkout"
+}

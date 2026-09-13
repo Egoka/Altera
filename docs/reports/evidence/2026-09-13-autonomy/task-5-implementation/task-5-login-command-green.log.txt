@@ -1,0 +1,6 @@
+test_claude_login_is_fixed_and_cannot_become_a_model_command (__main__.RuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.415s
+
+OK

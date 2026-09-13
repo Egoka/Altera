@@ -1,0 +1,19 @@
+{
+  "marker": "ALTERA_RUNTIME_CODEX_CANARY",
+  "trace_calls": {
+    "get_project_map": {
+      "summary_only": true,
+      "status": "success"
+    },
+    "get_outline": {
+      "path": "sample.js",
+      "status": "success"
+    }
+  },
+  "denied_write": {
+    "command": "printf '\\n// ALTERA_RUNTIME_CODEX_CANARY harmless append attempt\\n' >> sample.js",
+    "exit_code": 1,
+    "stderr": "/usr/bin/bash: line 1: sample.js: Read-only file system",
+    "retried": false
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "initialize": {
+    "result": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {
+        "tools": {
+          "listChanged": true
+        },
+        "resources": {
+          "listChanged": true
+        },
+        "prompts": {
+          "listChanged": true
+        }
+      },
+      "serverInfo": {
+        "name": "trace",
+        "title": "Trace — Code Intelligence",
+        "description": "Precomputed code graph for AI agents: symbol search, file outlines, call graphs, and change-impact analysis, served instead of raw file reads. Not a distributed-tracing or logging server.",
+        "websiteUrl": "https://trace-mcp.com",
+        "version": "3.25.0"
+      },
+      "instructions": "trace-mcp is a framework-aware code intelligence server for this project. Detected frameworks: none.\n\nTHE RULE (host tool names vary — `read`, `content-match`/grep, `glob` mean whatever yours are called):\n- Full-file `read` for discovery: not the move. Take `get_outline`, then pull the one symbol with `get_symbol`. Read the file directly only when you already have the outline and the span you want is a few lines — or the file is not code (.md/.json/.yaml/config), or you are about to edit it.\n- `content-match` or `glob` over source: not the move. `search` and `find_usages` resolve symbol kinds, imports, and call sites; a text scan cannot rank its hits and misses re-exports, aliases, and dynamic dispatch.\n\nIf you catch yourself thinking one of these, that is the signal to switch:\n- \"I already know the path, so one read is cheaper than a lookup.\" — knowing the path does not shrink the file. The lookup returns the symbol; the read returns everything around it.\n- \"The read tool's description says to use it when I know the file.\" — it was written for hosts without a symbol index. This project has one.\n- \"Three of these calls versus one built-in call.\" — what costs is tokens returned into context, not calls issued. `batch` sends up to 10 as one request.\n- \"This is a quick check, not exploration.\" — a quick check on a 500-line file still costs 500 lines; `get_symbol` costs the symbol.\n- \"I read this file already, re-reading is free.\" — it is not; call `get_outline` for a structure reminder instead.\n\nWHEN TO USE trace-mcp tools (tool descriptions carry the details):\n\nNavigation & search:\n- Find a function/class/method → `search` (add `fusion=true` for best ranking; `implements`/`extends` filter by interface)\n- Understand a file before editing → `get_outline`\n- Read one symbol's source → `get_symbol`\n- A symbol plus its imports → `get_context_bundle`\n- Starting a task → `get_task_context`\n\nRelationships & impact:\n- What breaks if I change X → `get_change_impact`\n- Who calls this / what it calls → `get_call_graph`\n- All usages of a symbol → `find_usages`\n- Tests for a symbol/file → `get_tests_for`\n\nArchitecture & meta-analysis:\n- Untested symbols → `get_untested_symbols`\n- Dead code → `get_dead_code` (`mode: \"exports_only\"` for exports)\n\nToken optimization:\n- 2+ independent queries → `batch` ({ calls: [{ tool, args }, ...] }), up to 10 per request\n- `get_task_context` replaces spawning a subagent to explore — same context, one call, inside a token budget\n- Check waste → `get_optimization_report`; track savings → `get_session_stats`, `get_real_savings`\n\nEditing:\n- After every Edit/Write → `register_edit` { file_path } (reindexes just that file). If the reply carries `_duplication_warnings`, review them before continuing.\n\nAnything not listed above is deferred, not missing: `load_tools` registers a tool for direct calls, `batch` dispatches one by name without registering it.\nStart with `get_project_map` (summary_only=true) to orient yourself."
+    },
+    "jsonrpc": "2.0",
+    "id": 1
+  },
+  "map": {
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"frameworks\":[],\"fileCount\":3,\"symbolCount\":3,\"languages\":[\"markdown\",\"javascript\"],\"_hints\":[{\"tool\":\"suggest_queries\",\"why\":\"Get example queries tailored to this project\"},{\"tool\":\"get_project_health\",\"why\":\"Check code quality metrics and hotspots\"}]}"
+        }
+      ]
+    },
+    "jsonrpc": "2.0",
+    "id": 2
+  },
+  "outline": {
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\"path\":\"sample.js\",\"language\":\"javascript\",\"symbols\":[{\"symbolId\":\"sample.js::answer#function\",\"name\":\"answer\",\"kind\":\"function\",\"signature\":\"export function answer()\",\"lineStart\":1,\"lineEnd\":1}],\"_freshness\":\"fresh\",\"_meta\":{\"freshness\":{\"fresh\":1,\"edited_uncommitted\":0,\"stale_index\":0,\"repo_is_stale\":false},\"confidence\":0.8,\"confidence_signals\":{\"top1_strength\":1,\"top_gap\":1,\"identity_match\":0,\"freshness\":1}}}"
+        }
+      ]
+    },
+    "jsonrpc": "2.0",
+    "id": 3
+  }
+}

@@ -1,0 +1,110 @@
+[
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source",
+    "operation": "create",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source",
+    "operation": "overwrite",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source",
+    "operation": "delete",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source",
+    "operation": "rename",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source",
+    "operation": "symlink",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source",
+    "operation": "alternate-path",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source/.git",
+    "operation": "create",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source/.git",
+    "operation": "overwrite",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source/.git",
+    "operation": "delete",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source/.git",
+    "operation": "rename",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source/.git",
+    "operation": "symlink",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-1/readonly-boundary/source/.git",
+    "operation": "alternate-path",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/runtime/policy",
+    "operation": "create",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/runtime/policy",
+    "operation": "overwrite",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/runtime/policy",
+    "operation": "delete",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/runtime/policy",
+    "operation": "rename",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/runtime/policy",
+    "operation": "symlink",
+    "denied": true,
+    "errno": "EROFS"
+  },
+  {
+    "base": "/runtime/policy",
+    "operation": "alternate-path",
+    "denied": true,
+    "errno": "EROFS"
+  }
+]

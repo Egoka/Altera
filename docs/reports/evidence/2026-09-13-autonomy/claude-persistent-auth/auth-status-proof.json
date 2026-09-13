@@ -1,0 +1,8 @@
+{
+  "check": "claude_auth_fresh_container",
+  "exit": 0,
+  "loggedIn": true,
+  "authMethod": "claude.ai",
+  "provenance": "exec 53896d stdout; process exit0 aa9ffb",
+  "credentials_contents_read_by_controller": false
+}

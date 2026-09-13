@@ -1,0 +1,80 @@
+Usage: trace [options] [command]
+
+Framework-Aware Code Intelligence for Laravel/Vue/Inertia/Nuxt
+
+Options:
+  -v, --version                      output the version number
+  -h, --help                         display help for command
+
+Commands:
+  serve [options]                    Start MCP server (stdio transport)
+  serve-http [options]               Start MCP server (HTTP/SSE transport) —
+                                     daemon mode, indexes all registered
+                                     projects
+  index [options] [dir]              Index a project directory
+  index-file <file>                  Incrementally reindex a single file (called
+                                     by the PostToolUse auto-reindex hook)
+  setup-hooks [options]              Install Claude Code PreToolUse guard +
+                                     lifecycle hooks (alias: use `trace-mcp
+                                     init` instead)
+  list [options]                     List all registered projects
+  init [options]                     One-time global setup: configure MCP
+                                     clients, install hooks, set up CLAUDE.md
+  upgrade [options] [dir]            Upgrade trace-mcp: run DB migrations,
+                                     reindex with latest plugins, update hooks
+                                     and CLAUDE.md
+  add [options] [dir]                Register a project for indexing: detect
+                                     root, create DB, add to registry
+  remove [options] [dir]             Unregister a project and delete its index
+  prune [options]                    Audit ~/.trace-mcp/index for orphan/expired
+                                     DBs (dry-run by default; use --apply to
+                                     delete)
+  doctor [options]                   Check trace-mcp health: registry/DB
+                                     integrity and competing tools
+  savings [options]                  Show the input tokens trace-mcp gave back
+                                     to this install (measured calls, chars/4
+                                     local estimate).
+  detect-llm [options]               Probe localhost for Ollama, LM Studio, and
+                                     llama.cpp. Prints the first reachable
+                                     provider and a config snippet to enable it.
+  consent                            Manage consent for outbound LLM provider
+                                     traffic.
+  ci-report [options]                Generate a change impact report for a
+                                     PR/branch
+  check [options]                    Run quality gate checks against the indexed
+                                     project (exit code 0 = pass, 1 = fail)
+  scan-security [options]            Run the OWASP Top-10 security scan against
+                                     the indexed project
+  clients                            Inspect MCP client configurations
+  bundles                            Manage pre-indexed bundles for dependency
+                                     libraries
+  subproject|sub                     Manage subprojects — link repositories in
+                                     your project ecosystem (microservices,
+                                     frontends, backends, shared libs, etc.)
+  memory|mem                         Decision memory — mine, search, and manage
+                                     architectural decisions
+  analytics                          AI agent session analytics: sync logs, view
+                                     reports, find optimizations
+  benchmark [options] [path]         Show where this project recomputes work —
+                                     synthetic token-waste estimator across
+                                     structured tasks
+  eval                               Run code-intelligence benchmarks against
+                                     the local trace-mcp index (P04 slice)
+  status [options]                   Show indexing progress for the current
+                                     project
+  visualize|viz [options] [scope]    Generate an interactive dependency graph
+                                     and open it in the browser
+  daemon                             Manage the trace-mcp background daemon
+  install-app [options]              Download and install (or update) the
+                                     trace-mcp menu bar app (macOS / Windows)
+  ask [options] [question...]        Ask questions about your codebase using AI
+  search [options] <query>           Search the indexed codebase with
+                                     memoir-style retrieval modes
+  blast|impact [options] [target]    Analyze blast radius and change impact for
+                                     a file, symbol, or git diff
+  export-security-context [options]  Export security context for MCP server
+                                     analysis (enrichment JSON for skill-scan)
+  classify-env <file>                Classify a .env-shaped file (template /
+                                     managed / user-secret). Used by the
+                                     PreToolUse guard.
+  help [command]                     display help for command

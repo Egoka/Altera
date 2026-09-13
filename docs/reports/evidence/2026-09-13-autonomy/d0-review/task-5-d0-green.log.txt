@@ -1,0 +1,9 @@
+test_bounded_output_for_large_invocation (__main__.MetadataProbeTests) ... ok
+test_paths_are_lexical_and_bounded_not_followed (__main__.MetadataProbeTests) ... ok
+test_redacts_values_and_unknown_names_without_executing (__main__.MetadataProbeTests) ... ok
+test_static_registration_probes (__main__.MetadataProbeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.693s
+
+OK

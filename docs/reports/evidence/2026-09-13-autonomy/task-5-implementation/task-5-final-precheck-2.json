@@ -1,0 +1,91 @@
+{
+  "started_at": "2026-09-13T19:29:16.710756+00:00",
+  "head": "9e1f8be8192df23626efd1ac305269ef00666d22",
+  "owned_inputs": {
+    "scripts/agent-runtime/.dockerignore": {
+      "sha256": "08bb7a70af4ae5a9c15226f499f2e76055ebd521550f87eb102a1316cdb9df38",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/Dockerfile": {
+      "sha256": "56f2ecb1d7ae11a85424599dd11d28c40106e617d9a8d552b04821f43e86e0b1",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/build_metadata_probe.py": {
+      "sha256": "4277499fee57774315d1204d0c548c3d2199cb53d0c0934bac83edb4df7038cd",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/cli-preflight.mjs": {
+      "sha256": "9b20b549f11ac330b1d98b3c21f3208970eff1d6d2eb87cb3a337967e23f3801",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/codex-canary.mjs": {
+      "sha256": "eea1d0eb8dad59733d5fa0c80818a1b2f02b5c00128bb02698cb45b77a40ed6c",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/egress-fixture.mjs": {
+      "sha256": "36d8d659e2aa17c50d17831c831b48b2a6c98f8cdd21c33c10b734807d47c250",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/fixture.mjs": {
+      "sha256": "a8481defdb19c7f445e975ebcb5aaefa8a35997175075bbb18243d680a59ec57",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/manifest.example.json": {
+      "sha256": "974662c61970da5fb885d23a916e396238900058ecdfe7d9ae02f2965cf67fdd",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/metadata-probe.c": {
+      "sha256": "d5851e14c8832796811f1155a970f5b7b88b80e59611c0ae990921497d2cd9d3",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/protocol-guard.mjs": {
+      "sha256": "79e8aa49a546f4fc9061ff3c1d48ac1e08adff681ee51266c2c1c848b4cd51b4",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/provider-proxy.mjs": {
+      "sha256": "c6ed81ee03c72d21d6350e6f6aab4b5cf33d6b274aec21b510c12168da8f8a8c",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/runtime.py": {
+      "sha256": "c1c85c0b4d07a611173aa5ed1c32c2ad782a02581600b1eb6976295b99786292",
+      "mode": "0o755"
+    },
+    "scripts/agent-runtime/test_docker.py": {
+      "sha256": "e5a8f02f39315c0e6243e270ce8d97608e1322e99fe6527757a94c012019148c",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/test_egress.py": {
+      "sha256": "40b5a19c8f65e255598475a0791a649c9d54051901a17993f53f43cac8536bb6",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/test_metadata_probe.py": {
+      "sha256": "a41f00bd80e6b451946de84003153621621dee452443742cedbb7f5c8c555fa5",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/test_protocol_guard.mjs": {
+      "sha256": "4582d60165453b52b6bec3cea117e403b24c842d6cfac14665ec411ae5a016a4",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/test_proxy.mjs": {
+      "sha256": "347373d3fb15af0a108d4381fc1e46fc1f35f02bd4d998998717a1eb234ba720",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/test_runtime.py": {
+      "sha256": "e154946e2ef0142688300a2858ab34413f1db4a547a62d584ca98f3325bf12bf",
+      "mode": "0o644"
+    },
+    "scripts/agent-runtime/trace-canary.mjs": {
+      "sha256": "313ab53aacefe23b0225a1560680952548e9b556279bee741cf7f3008f4ba6fe",
+      "mode": "0o644"
+    },
+    "docs/development/runtime-isolation.md": {
+      "sha256": "8321ba4e092abe24332427e92acd19281e6a7bd9895ab675c36c0462b5ba501c",
+      "mode": "0o644"
+    },
+    "docs/development/README.md": {
+      "sha256": "9522ed0a1517698b5e1b07dcc561a25a25c07e33ffd4e3264e109068eb23bcbe",
+      "mode": "0o644"
+    }
+  },
+  "scope_fingerprint_with_modes": "0a2fa7ea953cc2bdc0ced31411eb55e5a526da20e662b880445979fc25adeaf4"
+}

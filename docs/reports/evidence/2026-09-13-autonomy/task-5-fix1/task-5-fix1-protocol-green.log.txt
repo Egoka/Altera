@@ -1,0 +1,14 @@
+✔ protocol accepts the declared cwd and refuses alternate cwd in nested RPC parameters (1.291959ms)
+✔ protocol rejects changes to preserved model, reasoning and service tier (0.144917ms)
+✔ pinned turn tier override permits only inherited or explicit standard speed (0.241291ms)
+✔ thread config and provider overrides cannot replace the pinned runtime settings (0.387458ms)
+✔ config mutation RPCs cannot hide overrides in keyPath values or imported files (0.096292ms)
+✔ proxy refuses host endpoints, ambiguous authorities and non-public DNS answers (12.781417ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 51.513

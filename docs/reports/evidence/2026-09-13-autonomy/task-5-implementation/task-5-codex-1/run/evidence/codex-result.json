@@ -1,0 +1,27 @@
+{
+  "model": "gpt-5.6-terra",
+  "threadId": "01a09c2d-05c4-7971-958f-7e72f5ddac33",
+  "result": {
+    "threadId": "01a09c2d-05c4-7971-958f-7e72f5ddac33",
+    "turn": {
+      "id": "01a09c2d-05f7-74f1-9135-a2c756d8583f",
+      "items": [
+        {
+          "type": "agentMessage",
+          "id": "msg_03ef6814adc960ce016aa6f51fc97c87d29e77661ffc5b4b46",
+          "text": "Evidence written to `/runtime/evidence/model-canary.json`. The single append attempt was denied: `Read-only file system`.\n\nALTERA_RUNTIME_CODEX_CANARY",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        }
+      ],
+      "itemsView": "summary",
+      "status": "completed",
+      "error": null,
+      "startedAt": 1789326591,
+      "completedAt": 1789326624,
+      "durationMs": 33060
+    }
+  }
+}

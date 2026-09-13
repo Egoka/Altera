@@ -1,0 +1,26 @@
+// Проверка настоящих Linux CLI; credential values никогда не выводятся.
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+
+function call(executable, args) {
+  return spawnSync(`/usr/local/bin/${executable}`, args, { encoding: 'utf8', timeout: 20000 });
+}
+const codexVersion = call('codex', ['--version']);
+const claudeVersion = call('claude', ['--version']);
+const codexAuth = call('codex', ['login', 'status']);
+const claudeAuth = call('claude', ['auth', 'status', '--json']);
+const traceHelp = call('trace-mcp', ['--help']);
+fs.writeFileSync('/runtime/evidence/trace-help.txt', traceHelp.stdout || traceHelp.stderr || '');
+let claudeStatus = {};
+try { claudeStatus = JSON.parse(claudeAuth.stdout); } catch { /* Статус неизвестен. */ }
+const report = {
+  codex: { versionExit: codexVersion.status,
+    expectedVersion: /0\.154\.0-alpha\.6\.2/.test(codexVersion.stdout),
+    authExit: codexAuth.status, loggedInWithChatGPT: /Logged in using ChatGPT/.test(codexAuth.stdout + codexAuth.stderr) },
+  claude: { versionExit: claudeVersion.status, expectedVersion: /2\.1\.263/.test(claudeVersion.stdout),
+    authExit: claudeAuth.status, loggedIn: claudeStatus.loggedIn === true,
+    authMethod: ['claude.ai', 'none'].includes(claudeStatus.authMethod) ? claudeStatus.authMethod : 'unreported' },
+  traceHelpExit: traceHelp.status,
+};
+process.stdout.write(JSON.stringify(report) + '\n');
+process.exit(report.codex.expectedVersion && report.claude.expectedVersion && traceHelp.status === 0 ? 0 : 41);

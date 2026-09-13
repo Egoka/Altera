@@ -1,0 +1,10 @@
+___stack_chk_fail
+___stack_chk_guard
+_getcwd
+_memcpy
+_snprintf
+_strchr
+_strcmp
+_strlen
+_strncmp
+_write

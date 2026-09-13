@@ -1,0 +1,7 @@
+{
+  "source": "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/metadata-probe.c",
+  "source_sha256": "a5843cc10aa495bb6cf48e89f80bd121bf66fa582e85a6fb2584cc8691d67107",
+  "binary": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/metadata-probe",
+  "binary_sha256": "613775a45871082c7bb5981b5f19a77ddc47cf97b0c96372aaac08e764ea6d81",
+  "compiler": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"
+}
