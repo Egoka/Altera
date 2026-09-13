@@ -4,7 +4,7 @@
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: 7fdae9b
 - **Отчёт**: docs/reports/2026-09-13-design-flagship-lede-report.md
-- **Статус**: выполняется
+- **Статус**: завершён
 
 ## 1. Цель
 
