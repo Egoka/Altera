@@ -75,3 +75,15 @@ commit, dirty fingerprint, cwd, команду, exit code, число выпол
 run, а успех сбрасывает только счёт этой проверки. Изменение проверяемого файла делает связанное
 evidence устаревшим. Это контракт M3; техническое принуждение runner относится к M4 и здесь не
 заявляется работающим.
+
+## Локальный gate контрактов
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/agent-loop -p 'test_*.py' -v
+```
+
+Это отдельный набор настоящих CLI/Git fixtures; `pnpm test` пока его не включает.
+[Поддержанный flow и ограничения](agent-loop-gate.md) описывают JSON-паспорта, парные отчёты,
+revision fingerprint, устойчивый счёт неуспехов, один slot между worktree и Claude Stop adapter.
+Gate не ограничивает файловые права и не подтверждает семантическую приёмку; штатные
+Multica bypass/danger-full-access требуют отдельной runtime canary.
