@@ -7,63 +7,45 @@ import {
   buildBaseWhereClause,
   buildOrderBy,
   calculatePagination,
-  getCacheKey,
-  getCachedOrFetch,
   handleAdminError,
   validateDateRange,
   validateSearchInput,
   validateBulkOperation,
   logAdminOperation,
-  ADMIN_CACHE_PREFIX,
   PaginationInput,
   SortInput,
   BaseFilters,
   SearchInput
 } from "../../utils/admin"
-
-// Константы для кэширования
-const FEATURED_ARTICLES_CACHE_KEY = "featured_articles"
-const LATEST_ARTICLES_CACHE_PREFIX = "latest_articles:"
-const POPULAR_ARTICLES_CACHE_PREFIX = "popular_articles:"
-
-const ARTICLE_DETAIL_CACHE_PREFIX = "article_detail:"
-const RECOMMENDED_ARTICLES_CACHE_PREFIX = "recommended_articles:"
-const RELATED_ARTICLES_CACHE_PREFIX = "related_articles:"
-const ARTICLE_STATS_CACHE_PREFIX = "article_stats:"
-
-const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
+import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
+import { readThroughPublicCache } from "../../cache/read-through"
 
 export default {
   Query: {
     article: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `article:${args.slug}`
-      const cachedArticle = await ctx.redis.get(cacheKey)
-
-      if (cachedArticle) {
-        console.info("CACHE: Returning article from cache")
-        return JSON.parse(cachedArticle)
-      }
-
-      console.info("DATABASE: Article not in cache, fetching from database")
-      const article = await ctx.prisma.article.findUnique({
-        where: { slug: args.slug },
-        include: { author: true, contentType: true, sectionTags: true }
-      })
-
-      if (article) {
-        await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(article))
-      }
-
-      return article
+      return readThroughPublicCache(
+        {
+          cache: ctx.cache,
+          key: buildCacheKey("query.article", args),
+          tags: [`article:${args.slug}`],
+          ttlSeconds: CACHE_TTL_SECONDS.article,
+          cacheWhen: (article) => article?.status === "published"
+        },
+        () =>
+          ctx.prisma.article.findUnique({
+            where: { slug: args.slug },
+            include: { author: true, contentType: true, sectionTags: true }
+          })
+      )
     },
 
     articleDetail: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${ARTICLE_DETAIL_CACHE_PREFIX}${args.slug}`
-      const cachedDetail = await ctx.redis.get(cacheKey)
+      const cacheKey = buildCacheKey("query.articleDetail", args)
+      const cachedDetail = await ctx.cache.get(cacheKey)
 
       if (cachedDetail) {
         console.info("CACHE: Returning article detail from cache")
-        return JSON.parse(cachedDetail)
+        return cachedDetail
       }
 
       console.info("DATABASE: Article detail not in cache, fetching from database")
@@ -123,7 +105,10 @@ export default {
         articleStats
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(detail))
+      await ctx.cache.set(cacheKey, detail, {
+        ttlSeconds: CACHE_TTL_SECONDS.article,
+        tags: ["home", `article:${args.slug}`]
+      })
       return detail
     },
 
@@ -132,12 +117,13 @@ export default {
       { articleSlug, limit = 5 }: { articleSlug: string; limit: number },
       ctx: GraphQLContext
     ) => {
-      const cacheKey = `${RECOMMENDED_ARTICLES_CACHE_PREFIX}${articleSlug}:${limit}`
-      const cachedArticles = await ctx.redis.get(cacheKey)
+      const effectiveArgs = { articleSlug, limit }
+      const cacheKey = buildCacheKey("query.recommendedArticles", effectiveArgs)
+      const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
         console.info("CACHE: Returning recommended articles from cache")
-        return JSON.parse(cachedArticles)
+        return cachedArticles
       }
 
       console.info("DATABASE: Recommended articles not in cache, fetching from database")
@@ -166,7 +152,10 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(articles))
+      await ctx.cache.set(cacheKey, articles, {
+        ttlSeconds: CACHE_TTL_SECONDS.publicList,
+        tags: ["home", `article:${articleSlug}`]
+      })
       return articles
     },
 
@@ -175,12 +164,13 @@ export default {
       { articleSlug, limit = 10 }: { articleSlug: string; limit: number },
       ctx: GraphQLContext
     ) => {
-      const cacheKey = `${RELATED_ARTICLES_CACHE_PREFIX}${articleSlug}:${limit}`
-      const cachedArticles = await ctx.redis.get(cacheKey)
+      const effectiveArgs = { articleSlug, limit }
+      const cacheKey = buildCacheKey("query.relatedArticles", effectiveArgs)
+      const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
         console.info("CACHE: Returning related articles from cache")
-        return JSON.parse(cachedArticles)
+        return cachedArticles
       }
 
       console.info("DATABASE: Related articles not in cache, fetching from database")
@@ -205,17 +195,20 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(articles))
+      await ctx.cache.set(cacheKey, articles, {
+        ttlSeconds: CACHE_TTL_SECONDS.publicList,
+        tags: ["home", `article:${articleSlug}`]
+      })
       return articles
     },
 
     articleStats: async (_parent: any, { slug }: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${ARTICLE_STATS_CACHE_PREFIX}${slug}`
-      const cachedStats = await ctx.redis.get(cacheKey)
+      const cacheKey = buildCacheKey("query.articleStats", { slug })
+      const cachedStats = await ctx.cache.get(cacheKey)
 
       if (cachedStats) {
         console.info("CACHE: Returning article stats from cache")
-        return JSON.parse(cachedStats)
+        return cachedStats
       }
 
       console.info("DATABASE: Article stats not in cache, calculating from database")
@@ -239,18 +232,22 @@ export default {
         shareCount: 0 // В будущем можно добавить аналитику
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(stats))
+      await ctx.cache.set(cacheKey, stats, {
+        ttlSeconds: CACHE_TTL_SECONDS.article,
+        tags: [`article:${slug}`]
+      })
       return stats
     },
 
     featuredArticles: async (_parent: any, args: { limit?: number }, ctx: GraphQLContext) => {
       const limit = args.limit || 5
-      const cacheKey = `${FEATURED_ARTICLES_CACHE_KEY}:${limit}`
-      const cachedArticles = await ctx.redis.get(cacheKey)
+      const effectiveArgs = { ...args, limit }
+      const cacheKey = buildCacheKey("query.featuredArticles", effectiveArgs)
+      const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
         console.info("CACHE: Returning featured articles from cache")
-        return JSON.parse(cachedArticles)
+        return cachedArticles
       }
 
       console.info("DATABASE: Featured articles not in cache, fetching from database")
@@ -263,19 +260,20 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(articles))
+      await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] })
       return articles
     },
 
     latestArticles: async (_parent: any, args: { limit?: number; excludeFeatured?: boolean }, ctx: GraphQLContext) => {
-      const limit = args.limit || 20
-      const excludeFeatured = args.excludeFeatured || false
-      const cacheKey = `${LATEST_ARTICLES_CACHE_PREFIX}${limit}:${excludeFeatured}`
-      const cachedArticles = await ctx.redis.get(cacheKey)
+      const limit = args.limit ?? 20
+      const excludeFeatured = args.excludeFeatured ?? false
+      const effectiveArgs = { ...args, limit, excludeFeatured }
+      const cacheKey = buildCacheKey("query.latestArticles", effectiveArgs)
+      const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
         console.info("CACHE: Returning latest articles from cache")
-        return JSON.parse(cachedArticles)
+        return cachedArticles
       }
 
       console.info("DATABASE: Latest articles not in cache, fetching from database")
@@ -303,19 +301,20 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(articles))
+      await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] })
       return articles
     },
 
     popularArticles: async (_parent: any, args: { timeRange?: string; limit?: number }, ctx: GraphQLContext) => {
-      const timeRange = args.timeRange || "week"
-      const limit = args.limit || 10
-      const cacheKey = `${POPULAR_ARTICLES_CACHE_PREFIX}${timeRange}:${limit}`
-      const cachedArticles = await ctx.redis.get(cacheKey)
+      const timeRange = args.timeRange ?? "week"
+      const limit = args.limit ?? 10
+      const effectiveArgs = { ...args, timeRange, limit }
+      const cacheKey = buildCacheKey("query.popularArticles", effectiveArgs)
+      const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
         console.info("CACHE: Returning popular articles from cache")
-        return JSON.parse(cachedArticles)
+        return cachedArticles
       }
 
       console.info("DATABASE: Popular articles not in cache, fetching from database")
@@ -352,7 +351,7 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(articles))
+      await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.popular, tags: ["home"] })
       return articles
     },
 
@@ -441,56 +440,49 @@ export default {
         }
       }
 
-      // Создаем ключ кеша
-      const cacheKey = getCacheKey("admin_articles", { pagination, sort, filters })
+      const total = await ctx.prisma.article.count({ where })
 
-      // Получаем данные с кешированием
-      const result = await getCachedOrFetch(ctx, cacheKey, async () => {
-        // Получаем общее количество
-        const total = await ctx.prisma.article.count({ where })
+      // Рассчитываем пагинацию
+      const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
 
-        // Рассчитываем пагинацию
-        const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
-
-        // Получаем данные
-        const articles = await ctx.prisma.article.findMany({
-          where,
-          skip,
-          take,
-          orderBy: buildOrderBy(sort),
-          include: {
-            author: true,
-            contentType: true,
-            sectionTags: true
-          }
-        })
-
-        return {
-          articles,
-          pagination: paginationInfo,
-          filters: {
-            base: {
-              createdAt: filters.base.createdAt,
-              updatedAt: filters.base.updatedAt
-            },
-            status: filters.status,
-            authorId: filters.authorId,
-            typeId: filters.typeId,
-            tagIds: filters.tagIds,
-            publishedAt: filters.publishedAt
-          },
-          sort: {
-            field: sort.field,
-            direction: sort.direction
-          },
-          search: search
-            ? {
-                query: search.query,
-                fields: search.fields
-              }
-            : null
+      // Получаем данные
+      const articles = await ctx.prisma.article.findMany({
+        where,
+        skip,
+        take,
+        orderBy: buildOrderBy(sort),
+        include: {
+          author: true,
+          contentType: true,
+          sectionTags: true
         }
       })
+
+      const result = {
+        articles,
+        pagination: paginationInfo,
+        filters: {
+          base: {
+            createdAt: filters.base.createdAt,
+            updatedAt: filters.base.updatedAt
+          },
+          status: filters.status,
+          authorId: filters.authorId,
+          typeId: filters.typeId,
+          tagIds: filters.tagIds,
+          publishedAt: filters.publishedAt
+        },
+        sort: {
+          field: sort.field,
+          direction: sort.direction
+        },
+        search: search
+          ? {
+              query: search.query,
+              fields: search.fields
+            }
+          : null
+      }
 
       // Логируем операцию
       logAdminOperation("admin_articles", ctx.currentUser?.id || "unknown", {

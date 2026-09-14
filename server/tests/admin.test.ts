@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { validatePagination, validateSort, calculatePagination, getCacheKey } from "../src/utils/admin"
+import { validatePagination, validateSort, calculatePagination } from "../src/utils/admin"
 
 // Хелперы админских запросов (docs/guides/admin_query_standards.md).
 // Из `../prisma` здесь импортируется только тип, поэтому подключения к Redis не происходит.
@@ -54,19 +54,5 @@ describe("calculatePagination", () => {
 
   it("срезает лимит до сотни", () => {
     expect(calculatePagination(1, 500, 1000).take).toBe(100)
-  })
-})
-
-describe("getCacheKey", () => {
-  it("устойчив: одинаковые параметры дают один ключ", () => {
-    expect(getCacheKey("users", { page: 1 })).toBe(getCacheKey("users", { page: 1 }))
-  })
-
-  it("различает разные параметры", () => {
-    expect(getCacheKey("users", { search: "иван" })).not.toBe(getCacheKey("users", { search: "пётр" }))
-  })
-
-  it("различает разные операции", () => {
-    expect(getCacheKey("users", { page: 1 })).not.toBe(getCacheKey("articles", { page: 1 }))
   })
 })

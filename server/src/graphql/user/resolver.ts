@@ -6,8 +6,6 @@ import {
   buildBaseWhereClause,
   buildOrderBy,
   calculatePagination,
-  getCacheKey,
-  getCachedOrFetch,
   validateDateRange,
   validateSearchInput,
   logAdminOperation,
@@ -16,55 +14,21 @@ import {
   BaseFilters,
   SearchInput
 } from "../../utils/admin"
-
-const USER_CACHE_PREFIX = "user:"
-const USER_STATS_CACHE_PREFIX = "user_stats:"
-const AUTHOR_ARTICLES_CACHE_PREFIX = "author_articles:"
-const AUTHOR_STATS_CACHE_PREFIX = "author_stats:"
-const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
+import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
+import { readThroughPublicCache } from "../../cache/read-through"
 
 export default {
   Query: {
     user: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${USER_CACHE_PREFIX}slug:${args.slug}`
-      const cachedUser = await ctx.redis.get(cacheKey)
-
-      if (cachedUser) {
-        console.info("CACHE: Returning user by slug from cache")
-        return JSON.parse(cachedUser)
-      }
-
-      console.info("DATABASE: User by slug not in cache, fetching from database")
-      const user = await ctx.prisma.user.findUnique({
+      return ctx.prisma.user.findUnique({
         where: { slug: args.slug }
       })
-
-      if (user) {
-        await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(user))
-      }
-
-      return user
     },
 
     author: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${USER_CACHE_PREFIX}slug:${args.slug}`
-      const cachedUser = await ctx.redis.get(cacheKey)
-
-      if (cachedUser) {
-        console.info("CACHE: Returning author by slug from cache")
-        return JSON.parse(cachedUser)
-      }
-
-      console.info("DATABASE: Author by slug not in cache, fetching from database")
-      const author = await ctx.prisma.user.findUnique({
+      return ctx.prisma.user.findUnique({
         where: { slug: args.slug, role: "author" }
       })
-
-      if (author) {
-        await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(author))
-      }
-
-      return author
     },
 
     articlesByAuthor: async (
@@ -72,130 +36,109 @@ export default {
       { authorSlug, page = 1, limit = 10 }: { authorSlug: string; page: number; limit: number },
       ctx: GraphQLContext
     ) => {
-      const cacheKey = `${AUTHOR_ARTICLES_CACHE_PREFIX}${authorSlug}:${page}:${limit}`
-      const cachedData = await ctx.redis.get(cacheKey)
+      const effectiveArgs = { authorSlug, page, limit }
+      const cacheKey = buildCacheKey("query.articlesByAuthor", effectiveArgs)
 
-      if (cachedData) {
-        console.info("CACHE: Returning articles by author from cache")
-        return JSON.parse(cachedData)
-      }
+      return readThroughPublicCache(
+        {
+          cache: ctx.cache,
+          key: cacheKey,
+          tags: [`author:${authorSlug}`],
+          ttlSeconds: CACHE_TTL_SECONDS.publicList
+        },
+        async () => {
+          const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
+          if (!author) {
+            throw new Error("Author not found")
+          }
 
-      console.info("DATABASE: Articles by author not in cache, fetching from database")
+          const totalCount = await ctx.prisma.article.count({ where: { authorId: author.id, status: "published" } })
+          const articles = await ctx.prisma.article.findMany({
+            where: { authorId: author.id, status: "published" },
+            skip: (page - 1) * limit,
+            take: limit,
+            orderBy: { publishedAt: "desc" },
+            include: { contentType: true }
+          })
 
-      const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
-      if (!author) {
-        throw new Error("Author not found")
-      }
+          const response = {
+            articles,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            currentPage: page
+          }
 
-      const totalCount = await ctx.prisma.article.count({ where: { authorId: author.id, status: "published" } })
-      const articles = await ctx.prisma.article.findMany({
-        where: { authorId: author.id, status: "published" },
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { publishedAt: "desc" },
-        include: { contentType: true }
-      })
-
-      const response = {
-        articles,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        currentPage: page
-      }
-
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(response))
-      return response
+          return response
+        }
+      )
     },
 
     authorStats: async (_parent: any, { authorSlug }: { authorSlug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${AUTHOR_STATS_CACHE_PREFIX}${authorSlug}`
-      const cachedStats = await ctx.redis.get(cacheKey)
-
-      if (cachedStats) {
-        console.info("CACHE: Returning author stats from cache")
-        return JSON.parse(cachedStats)
-      }
-
-      console.info("DATABASE: Author stats not in cache, calculating from database")
-
-      const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
-      if (!author) {
-        throw new Error("Author not found")
-      }
-
-      const totalArticles = await ctx.prisma.article.count({
-        where: { authorId: author.id, status: "published" }
-      })
-
-      const oneMonthAgo = new Date()
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
-
-      const articlesThisMonth = await ctx.prisma.article.count({
-        where: {
-          authorId: author.id,
-          status: "published",
-          publishedAt: { gte: oneMonthAgo }
-        }
-      })
-
-      const articlesWithTags = await ctx.prisma.article.findMany({
-        where: { authorId: author.id, status: "published" },
-        select: { sectionTags: { select: { name: true, slug: true } } }
-      })
-
-      const tagCounts: { [slug: string]: { name: string; slug: string; count: number } } = {}
-      articlesWithTags
-        .flatMap((a) => a.sectionTags)
-        .forEach((tag) => {
-          if (!tagCounts[tag.slug]) {
-            tagCounts[tag.slug] = { ...tag, count: 0 }
+      const cacheKey = buildCacheKey("query.authorStats", { authorSlug })
+      return readThroughPublicCache(
+        {
+          cache: ctx.cache,
+          key: cacheKey,
+          tags: [`author:${authorSlug}`],
+          ttlSeconds: CACHE_TTL_SECONDS.publicList
+        },
+        async () => {
+          const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
+          if (!author) {
+            throw new Error("Author not found")
           }
-          tagCounts[tag.slug].count++
-        })
 
-      const popularTags = Object.values(tagCounts)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5) // Top 5 tags
+          const totalArticles = await ctx.prisma.article.count({
+            where: { authorId: author.id, status: "published" }
+          })
 
-      const stats = {
-        totalArticles,
-        articlesThisMonth,
-        popularTags
-      }
+          const oneMonthAgo = new Date()
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(stats))
-      return stats
+          const articlesThisMonth = await ctx.prisma.article.count({
+            where: {
+              authorId: author.id,
+              status: "published",
+              publishedAt: { gte: oneMonthAgo }
+            }
+          })
+
+          const articlesWithTags = await ctx.prisma.article.findMany({
+            where: { authorId: author.id, status: "published" },
+            select: { sectionTags: { select: { name: true, slug: true } } }
+          })
+
+          const tagCounts: { [slug: string]: { name: string; slug: string; count: number } } = {}
+          articlesWithTags
+            .flatMap((a) => a.sectionTags)
+            .forEach((tag) => {
+              if (!tagCounts[tag.slug]) {
+                tagCounts[tag.slug] = { ...tag, count: 0 }
+              }
+              tagCounts[tag.slug].count++
+            })
+
+          const popularTags = Object.values(tagCounts)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5) // Top 5 tags
+
+          const stats = {
+            totalArticles,
+            articlesThisMonth,
+            popularTags
+          }
+
+          return stats
+        }
+      )
     },
 
     me: async (_parent: any, _args: any, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser)
-
-      const cacheKey = `${USER_CACHE_PREFIX}${user.id}`
-      const cachedUser = await ctx.redis.get(cacheKey)
-
-      if (cachedUser) {
-        console.info("CACHE: Returning user from cache")
-        return JSON.parse(cachedUser)
-      }
-
-      console.info("DATABASE: User not in cache, fetching from context and setting cache")
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(user))
-
-      return user
+      return ensureAuthenticated(ctx.currentUser)
     },
 
     myArticlesStats: async (_parent: any, _args: any, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser)
-
-      const cacheKey = `${USER_STATS_CACHE_PREFIX}${user.id}`
-      const cachedStats = await ctx.redis.get(cacheKey)
-
-      if (cachedStats) {
-        console.info("CACHE: Returning user stats from cache")
-        return JSON.parse(cachedStats)
-      }
-
-      console.info("DATABASE: User stats not in cache, calculating from database")
 
       // Получаем статистику по статьям пользователя
       const [total, published, draft, review, archived] = await Promise.all([
@@ -224,7 +167,6 @@ export default {
         archived
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(stats))
       return stats
     },
 
@@ -280,54 +222,47 @@ export default {
         }
       }
 
-      // Создаем ключ кеша
-      const cacheKey = getCacheKey("admin_users", { pagination, sort, filters })
+      const total = await ctx.prisma.user.count({ where })
 
-      // Получаем данные с кешированием
-      const result = await getCachedOrFetch(ctx, cacheKey, async () => {
-        // Получаем общее количество
-        const total = await ctx.prisma.user.count({ where })
+      // Рассчитываем пагинацию
+      const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
 
-        // Рассчитываем пагинацию
-        const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
-
-        // Получаем данные
-        const users = await ctx.prisma.user.findMany({
-          where,
-          skip,
-          take,
-          orderBy: buildOrderBy(sort),
-          include: {
-            _count: {
-              select: { articles: true }
-            }
+      // Получаем данные
+      const users = await ctx.prisma.user.findMany({
+        where,
+        skip,
+        take,
+        orderBy: buildOrderBy(sort),
+        include: {
+          _count: {
+            select: { articles: true }
           }
-        })
-
-        return {
-          users,
-          pagination: paginationInfo,
-          filters: {
-            base: {
-              status: filters.base.status,
-              createdAt: filters.base.createdAt,
-              updatedAt: filters.base.updatedAt
-            },
-            role: filters.role,
-            hasArticles: filters.hasArticles
-          },
-          sort: {
-            field: sort.field,
-            direction: sort.direction
-          },
-          search: search
-            ? {
-                query: search.query,
-                fields: search.fields
-              }
-            : null
         }
       })
+
+      const result = {
+        users,
+        pagination: paginationInfo,
+        filters: {
+          base: {
+            status: filters.base.status,
+            createdAt: filters.base.createdAt,
+            updatedAt: filters.base.updatedAt
+          },
+          role: filters.role,
+          hasArticles: filters.hasArticles
+        },
+        sort: {
+          field: sort.field,
+          direction: sort.direction
+        },
+        search: search
+          ? {
+              query: search.query,
+              fields: search.fields
+            }
+          : null
+      }
 
       // Логируем операцию
       logAdminOperation("admin_users", ctx.currentUser?.id || "unknown", {
