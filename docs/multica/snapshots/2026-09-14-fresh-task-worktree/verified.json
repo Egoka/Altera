@@ -1,0 +1,126 @@
+{
+  "agent-db94a617-807c-4eec-981f-51fd4b3217d4": {
+    "kind": "agent",
+    "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "af70d248f21e97a6c31b86b83e57554594d9974721075a2c1b9d1f182ec13a18",
+    "after_sha256": "c69445eb4cb511945bf7454152b9a71527829763d5604bf3048b3d09eb7084c7"
+  },
+  "agent-4d98c007-0a6b-4254-85b1-1f57c99cb9ea": {
+    "kind": "agent",
+    "id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "6b645a200fa18b2b9989165076046a736e25c83a96706b311e43bcba84cde0a5",
+    "after_sha256": "0698ac90d87281253d03145040b662affaf1f897d154f0e66a5ca89d75852ce8"
+  },
+  "agent-49314ca0-8c53-44a9-a9de-15c3f297818a": {
+    "kind": "agent",
+    "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "70ac6394fa6481e3881a0ea0588d4a1c5f5c5620043ea6218a3a7c4af9618eeb",
+    "after_sha256": "28c6d511bc026e285c9b9eef7bdb64d5913cd9cfa86a34fa3c77649aac1ce91a"
+  },
+  "squad": {
+    "kind": "squad",
+    "id": "c6dd97bf-75c1-45cd-8d4a-3d00d26dd2f0",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "7b46cb34d0e5cedc25018b4cf32dfca8051dd05cbb403c90c62b8a52487cdcce",
+    "after_sha256": "1a8bfc3e221ff9178a8b8340ebb1c3cccd4d35cc0a854d607da0374871a5a767"
+  },
+  "agent-e682f2d5-7541-475e-a0b4-ef0b8ae885f4": {
+    "kind": "agent",
+    "id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "857d7f905b404ae411b919110c02561396e3299d237e0fe5e5ed7666c22321b4",
+    "after_sha256": "271a84881b7b1d8ee3274239e0d2fd9b6f13792e64d706007983cc075f55db2e"
+  },
+  "agent-41f9ec44-b58b-48d3-bd24-30d3774d2b5e": {
+    "kind": "agent",
+    "id": "41f9ec44-b58b-48d3-bd24-30d3774d2b5e",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "7dcc1e44c68028dc33211932b89ab2171cd8b973dbddfdba11916bf01e64d07a",
+    "after_sha256": "f46418c1f15c80f9698e85c225f47e6292eda3d3b82966205b85896263d74e4a"
+  },
+  "orchestrator": {
+    "kind": "agent",
+    "id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "144c133e8434ba652465b7bee9e4a13f01803c63487886166c62b5983de6b33e",
+    "after_sha256": "454ba0030c465db2bd3b416918721a3738d9faaae21d997e2df8a31521d27a44"
+  },
+  "agent-5f18f628-67ca-491c-80ae-85ffed2c6687": {
+    "kind": "agent",
+    "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "bfd465050f9e96daaec75dedd5a4cadb867be4a02e3b302acc5a39a59973aea9",
+    "after_sha256": "4cb6d460529a63c2b6ffa38af4222684242f822ae1837d1c75d86ea9eaf3ab34"
+  },
+  "agent-8c80740a-ba6c-4ea2-8011-17a229e214e3": {
+    "kind": "agent",
+    "id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "06dac3aa8b602aff325c21c1030af2ef74183b3ba36a533c3d3ced7a65ca0e21",
+    "after_sha256": "9afec380a26853313515f1bf6290bf03f125e08c3dd36426e90c8981f376bdab"
+  },
+  "agent-b0f3bc32-dd95-471e-b40e-517aaf83edf0": {
+    "kind": "agent",
+    "id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "1f626a66cd75f9b13ee447c66bde6164296558d916f6bfec4282ce59d4e89ba1",
+    "after_sha256": "f54b844eb738c62061f662bcfe27c10c490db8e8a08bd53f258af6f036a0a45d"
+  },
+  "agent-b7f90cba-518a-4130-993a-f047a4355f96": {
+    "kind": "agent",
+    "id": "b7f90cba-518a-4130-993a-f047a4355f96",
+    "field": "instructions",
+    "matches": true,
+    "before_sha256": "e3827053134749252087cb0b55c2866481137cab2ecd6d74c59326ca667ebba0",
+    "after_sha256": "c340cae79ea0cd7152d0f4349d5def6087302aaeff505f506c0928a31e9091bd"
+  },
+  "recovery": {
+    "kind": "autopilot",
+    "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+    "field": "description",
+    "matches": true,
+    "before_sha256": "62c809e6fec5ca882ba2e336da54cfa82747f17382c6f37b28ba214d871d4476",
+    "after_sha256": "e07ed73c18518673362fdda713d0c3f1def0f80acb42a4d1992b299f02aa2105",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ee760de4-5d9d-469b-8895-bd21bee1663e",
+        "enabled": true,
+        "cron_expression": "15 */4 * * *",
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "queue": {
+    "kind": "autopilot",
+    "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+    "field": "description",
+    "matches": true,
+    "before_sha256": "f83e38a903b6960c5fa3ee5e4c00cf155ed75c239073601e95c5986250a9cac0",
+    "after_sha256": "51f27323b3d78161d16f64e8b3ddf5bebb28937715a98b97e7bdfd2f09287fcf",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ea042b57-0793-444d-b7a1-740579482431",
+        "enabled": true,
+        "cron_expression": "0 * * * *",
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "checked_at": "2026-09-14T20:03:18.747154+00:00",
+  "policy_sha256": "2d6cb82676a54b63490dff62019b1d74b7f61e478bd05c0d0dd899bc978f3888"
+}
