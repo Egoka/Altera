@@ -18,6 +18,7 @@ import {
   SearchInput
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
+import { buildArticleCacheTags } from "../../cache/key"
 import { readThroughPublicCache } from "../../cache/read-through"
 
 export default {
@@ -523,7 +524,10 @@ export default {
     updateArticle: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser)
 
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
+      const article = await ctx.prisma.article.findUnique({
+        where: { id },
+        include: { author: true, contentType: true, sectionTags: true }
+      })
       if (!article) {
         throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
       }
@@ -546,9 +550,7 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      const cacheKey = `article:${updatedArticle.slug}`
-      console.info(`CACHE: Invalidating article cache for ${cacheKey}`)
-      await ctx.redis.del(cacheKey)
+      await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
 
       return updatedArticle
     },
@@ -556,7 +558,10 @@ export default {
     archiveArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser)
 
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
+      const article = await ctx.prisma.article.findUnique({
+        where: { id },
+        include: { author: true, contentType: true, sectionTags: true }
+      })
       if (!article) throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
       if (article.authorId !== user.id) {
         throw new GraphQLError("You are not authorized to archive this article.", { extensions: { code: "FORBIDDEN" } })
@@ -568,15 +573,7 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      const articleCacheKey = `article:${updatedArticle.slug}`
-      console.info(`CACHE: Invalidating caches for archived article`)
-      const keysToDelete = await ctx.redis.keys(`${FEATURED_ARTICLES_CACHE_KEY}:*`)
-      keysToDelete.push(...(await ctx.redis.keys(`${LATEST_ARTICLES_CACHE_PREFIX}*`)))
-      keysToDelete.push(...(await ctx.redis.keys(`${POPULAR_ARTICLES_CACHE_PREFIX}*`)))
-      keysToDelete.push(articleCacheKey)
-      if (keysToDelete.length > 0) {
-        await ctx.redis.del(keysToDelete)
-      }
+      await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
 
       return updatedArticle
     },
@@ -584,7 +581,10 @@ export default {
     requestReview: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser)
 
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
+      const article = await ctx.prisma.article.findUnique({
+        where: { id },
+        include: { author: true, contentType: true, sectionTags: true }
+      })
       if (!article) throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
       if (article.authorId !== user.id) {
         throw new GraphQLError("You are not authorized to manage this article.", { extensions: { code: "FORBIDDEN" } })
@@ -636,15 +636,7 @@ export default {
         include: { author: true, contentType: true, sectionTags: true }
       })
 
-      const articleCacheKey = `article:${updatedArticle.slug}`
-      console.info(`CACHE: Invalidating all public caches for status change`)
-      const keysToDelete = await ctx.redis.keys(`${FEATURED_ARTICLES_CACHE_KEY}:*`)
-      keysToDelete.push(...(await ctx.redis.keys(`${LATEST_ARTICLES_CACHE_PREFIX}*`)))
-      keysToDelete.push(...(await ctx.redis.keys(`${POPULAR_ARTICLES_CACHE_PREFIX}*`)))
-      keysToDelete.push(articleCacheKey)
-      if (keysToDelete.length > 0) {
-        await ctx.redis.del(keysToDelete)
-      }
+      await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
 
       return updatedArticle
     },
@@ -673,14 +665,7 @@ export default {
           where: { id: { in: ids } }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${FEATURED_ARTICLES_CACHE_KEY}:*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${LATEST_ARTICLES_CACHE_PREFIX}*`)))
-        keysToDelete.push(...(await ctx.redis.keys(`${POPULAR_ARTICLES_CACHE_PREFIX}*`)))
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(buildArticleCacheTags(...articlesToDelete))
 
         // Логируем операцию
         logAdminOperation("bulk_delete_articles", ctx.currentUser?.id || "unknown", {
@@ -737,14 +722,7 @@ export default {
           include: { author: true, contentType: true, sectionTags: true }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${FEATURED_ARTICLES_CACHE_KEY}:*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${LATEST_ARTICLES_CACHE_PREFIX}*`)))
-        keysToDelete.push(...(await ctx.redis.keys(`${POPULAR_ARTICLES_CACHE_PREFIX}*`)))
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(buildArticleCacheTags(...articlesToUpdate, ...updatedArticles))
 
         // Логируем операцию
         logAdminOperation("bulk_update_article_status", ctx.currentUser?.id || "unknown", {

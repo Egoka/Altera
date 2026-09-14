@@ -266,12 +266,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `section-tag:${newTag.slug}`])
 
         // Логируем операцию
         logAdminOperation("create_tag", ctx.currentUser?.id || "unknown", {
@@ -290,6 +285,7 @@ export default {
       ensureHasRole(ctx.currentUser, "admin")
 
       try {
+        const previousTag = await ctx.prisma.sectionTag.findUnique({ where: { id }, select: { slug: true } })
         const updatedTag = await ctx.prisma.sectionTag.update({
           where: { id },
           data: input,
@@ -300,12 +296,11 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          `section-tag:${previousTag?.slug ?? updatedTag.slug}`,
+          `section-tag:${updatedTag.slug}`
+        ])
 
         // Логируем операцию
         logAdminOperation("update_tag", ctx.currentUser?.id || "unknown", {
@@ -355,12 +350,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `section-tag:${deletedTag.slug}`])
 
         // Логируем операцию
         logAdminOperation("delete_tag", ctx.currentUser?.id || "unknown", {
@@ -453,12 +443,11 @@ export default {
           })
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          ...sourceTags.map((tag) => `section-tag:${tag.slug}`),
+          `section-tag:${targetTag.slug}`
+        ])
 
         // Логируем операцию
         logAdminOperation("merge_tags", ctx.currentUser?.id || "unknown", {

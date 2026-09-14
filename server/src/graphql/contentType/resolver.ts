@@ -299,12 +299,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `content-type:${newContentType.slug}`])
 
         // Логируем операцию
         logAdminOperation("create_content_type", ctx.currentUser?.id || "unknown", {
@@ -323,6 +318,7 @@ export default {
       ensureHasRole(ctx.currentUser, "admin")
 
       try {
+        const previousContentType = await ctx.prisma.contentType.findUnique({ where: { id }, select: { slug: true } })
         const updatedContentType = await ctx.prisma.contentType.update({
           where: { id },
           data: input,
@@ -333,12 +329,11 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          `content-type:${previousContentType?.slug ?? updatedContentType.slug}`,
+          `content-type:${updatedContentType.slug}`
+        ])
 
         // Логируем операцию
         logAdminOperation("update_content_type", ctx.currentUser?.id || "unknown", {
@@ -388,12 +383,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `content-type:${deletedContentType.slug}`])
 
         // Логируем операцию
         logAdminOperation("delete_content_type", ctx.currentUser?.id || "unknown", {
@@ -445,12 +435,10 @@ export default {
           return await Promise.all(updates)
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          ...updatedContentTypes.map((contentType) => `content-type:${contentType.slug}`)
+        ])
 
         // Логируем операцию
         logAdminOperation("reorder_content_types", ctx.currentUser?.id || "unknown", {
@@ -479,12 +467,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `content-type:${archivedContentType.slug}`])
 
         // Логируем операцию
         logAdminOperation("archive_content_type", ctx.currentUser?.id || "unknown", {

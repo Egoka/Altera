@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest"
 import type { Cache, CacheSetOptions } from "../src/cache"
 import { buildCacheKey } from "../src/cache"
+import { buildArticleCacheTags } from "../src/cache/key"
 import { readThroughPublicCache } from "../src/cache/read-through"
 import userResolver from "../src/graphql/user/resolver"
+import articleResolver from "../src/graphql/article/resolver"
 
 class MemoryCache implements Cache {
   readonly mode = "noop" as const
   readonly values = new Map<string, unknown>()
   writes = 0
+  invalidations: readonly string[][] = []
 
   async get<T>(key: string): Promise<T | null> {
     return (this.values.get(key) as T | undefined) ?? null
@@ -23,7 +26,7 @@ class MemoryCache implements Cache {
     void key
   }
   async delByTags(tags: readonly string[]): Promise<void> {
-    void tags
+    this.invalidations = [...this.invalidations, [...tags]]
   }
   async close(): Promise<void> {}
 }
@@ -85,5 +88,79 @@ describe("private resolver cache policy", () => {
     const result = await userResolver.Query.me({}, {}, { currentUser, cache } as never)
 
     expect(result).toBe(currentUser)
+  })
+})
+
+describe("domain cache tags", () => {
+  it("объединяет старое и новое состояние статьи без дублей", () => {
+    const tags = buildArticleCacheTags(
+      {
+        slug: "old-slug",
+        author: { slug: "old-author" },
+        contentType: { slug: "essay" },
+        sectionTags: [{ slug: "art" }, { slug: "music" }]
+      },
+      {
+        slug: "new-slug",
+        author: { slug: "new-author" },
+        contentType: { slug: "essay" },
+        sectionTags: [{ slug: "music" }, { slug: "travel" }]
+      }
+    )
+
+    expect(tags).toEqual([
+      "article:new-slug",
+      "article:old-slug",
+      "author:new-author",
+      "author:old-author",
+      "content-type:essay",
+      "home",
+      "section-tag:art",
+      "section-tag:music",
+      "section-tag:travel"
+    ])
+  })
+
+  it("updateArticle инвалидирует теги старого и нового состояния одним вызовом", async () => {
+    const cache = new MemoryCache()
+    const previous = {
+      id: "a1",
+      slug: "old-slug",
+      authorId: "u1",
+      author: { slug: "old-author" },
+      contentType: { slug: "essay" },
+      sectionTags: [{ slug: "art" }]
+    }
+    const updated = {
+      ...previous,
+      slug: "new-slug",
+      author: { slug: "new-author" },
+      sectionTags: [{ slug: "travel" }]
+    }
+    const prisma = {
+      article: {
+        findUnique: async () => previous,
+        update: async () => updated
+      }
+    }
+
+    await articleResolver.Mutation.updateArticle({}, { id: "a1", input: { slug: "new-slug" } }, {
+      currentUser: { id: "u1", role: "author" },
+      prisma,
+      cache
+    } as never)
+
+    expect(cache.invalidations).toEqual([
+      [
+        "article:new-slug",
+        "article:old-slug",
+        "author:new-author",
+        "author:old-author",
+        "content-type:essay",
+        "home",
+        "section-tag:art",
+        "section-tag:travel"
+      ]
+    ])
   })
 })
