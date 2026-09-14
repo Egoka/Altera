@@ -10,7 +10,7 @@
 - **Run outcome**: success для аудита и настройки; восстановление runtime pending
 - **Stage outcome**: документация и live instructions подготовлены
 - **Task acceptance**: docs/config принято независимым reviewer; восстановление deployment не проверено
-- **Результат**: выполнено частично; новый successful deployment не подтверждён
+- **Результат**: аудит и docs/config выполнены; новый deploy Live, Neon восстановлен; Redis blocked
 
 ## Сделано
 
@@ -69,9 +69,13 @@ Actor для строк таблицы — Codex/local thread выше; стад
 
 ## Что осталось и почему
 
-1. Исправление двух credentials выполняет владелец в Render UI (требование браузерного инструмента
-   передавать ввод изменяемых credentials пользователю). Добавление timeout не заменяет исправление пароля.
-2. Принять новый deploy: ID/SHA, успешные migration/build/start, live и smoke. Предыдущий live SHA не считается новым результатом.
+1. Владелец исправил две переменные в Render UI. Новый deploy
+   `dep-dak5rnad0e5s73b458a0`, SHA `1a6ebdb99600bfd1c65f2d76a55563129cbfe43e`, Live с 23:51:40 MSK.
+   Миграционное подключение development успешно: четыре миграции найдены, pending нет;
+   build successful и server listening4000. P1001 в новой попытке устранён.
+2. После Live `curl --max-time 90` с тем же \_\_typename запросом завершился exit0, HTTP200,
+   0.413 секунды. Runtime log выявил новый blocker: повторный `ioredis ENOTFOUND`
+   для старого Redis Cloud host. Полная release acceptance остаётся blocked до Redis проверки.
 3. Подключить постоянную авторизацию Render/Neon в разрешённом runtime; затем canary именно из Multica.
 4. Реализовать согласованный CI на app и post-deploy workflow; текущий scope содержит план и agent instructions.
 5. DB-aware readiness и Redis verification остаются отдельной реализацией; \_\_typename не подменяет их.
@@ -90,7 +94,8 @@ Schema, данные, тарифы, домены и credentials этим commit 
 
 ## Handoff
 
-Рабочее дерево: .worktrees/render-neon-operations. Runtime blocker: исправленные credentials и
-новый deploy evidence; auth blocker: render whoami unauthorized. Проверка infra-live-http имеет
-один неуспех; infra-cli-auth один неуспех. Не запускать бесконечный retry. После исправления среды
-читать новый deploy, не создавать дубликат. Состояние документации и live infrastructure раздельны.
+Рабочее дерево: .worktrees/render-neon-operations. Runtime blocker теперь Redis ENOTFOUND;
+нужен адрес действующего сервиса, запрошен у владельца без пароля. Auth blocker:
+render whoami unauthorized. Проверка infra-live-http после изменения среды прошла,
+предыдущий timeout сохранён как история; infra-cli-auth один неуспех. Не запускать новый
+deploy без исправления Redis. Состояние документации и полной runtime acceptance раздельны.

@@ -114,6 +114,25 @@ Render показывал предыдущий successful commit `308206d5d14d44
 Пароли, уже попавшие в переписку, следует заменить согласованно во всех потребителях.
 Ротация отличается от исправления перепутанных строк; она не выполнена этим документом.
 
+### Проверенное восстановление Neon и новый Redis blocker
+
+Владелец исправил обе переменные и запустил
+[deploy dep-dak5rnad0e5s73b458a0](https://dashboard.render.com/web/srv-d1uk6b6mcj7s73ek25h0/deploys/dep-dak5rnad0e5s73b458a0)
+для `1a6ebdb99600bfd1c65f2d76a55563129cbfe43e` в 23:49:34 MSK.
+В 23:50:04 Prisma подключилась к direct development, нашла четыре миграции и сообщила
+`No pending migrations to apply`; build successful, сервер запущен на порту 4000.
+В 23:51:40 Render подтвердил `Deploy succeeded | Live`.
+После Live проверка `/` вернула HTTP200 за 0.413 секунды; проверяется безопасный GraphQL ответ.
+Это подтверждает восстановление миграционного подключения и запуск API, а не всех зависимостей.
+
+В runtime log этого же deploy повторяется `ioredis ENOTFOUND` для
+`redis-16002.c44.us-east-1-2.ec2.redns.redis-cloud.com`. **Redis остаётся неисправным**.
+Не считать live статус полной release acceptance. Уточнить действующий Redis сервис,
+сверить host/port/TLS в `REDIS_URL`, затем выполнить ограниченный Redis PING из runtime
+и smoke зависящего от Redis сценария. Не создавать новый платный сервис и не менять данные
+по одному DNS-сбою. Исправление credentials Neon выполнено владельцем; ротация и наличие
+timeout после изменения отдельно не проверялись.
+
 ## CI, preview и deploy: разные проверки
 
 `.github/workflows/pull_request.yml` запускается на PR в `app`, а не на push в `app`.
