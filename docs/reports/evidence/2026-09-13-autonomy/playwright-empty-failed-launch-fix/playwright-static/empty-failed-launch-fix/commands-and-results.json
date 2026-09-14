@@ -1,0 +1,34 @@
+{
+  "red": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "scripts/agent-runtime/test_playwright_mcp.py",
+      "PlaywrightStaticTests.test_only_new_empty_failed_launch_profiles_are_nonreusable"
+    ],
+    "exit": 1,
+    "log": "red.log",
+    "sha256": "5a3a8d75e8ffb33f4939d8e297b6b23aa31982d865d686f7f4c140073b0d8291"
+  },
+  "green": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "scripts/agent-runtime/test_playwright_mcp.py",
+      "PlaywrightStaticTests.test_only_new_empty_failed_launch_profiles_are_nonreusable"
+    ],
+    "exit": 0,
+    "log": "green.log",
+    "sha256": "b9aa554545c72b0f090c5a6663dc126560149a94e7203358f700378aeac7cbd2"
+  },
+  "covering": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "scripts/agent-runtime/test_playwright_mcp.py"
+    ],
+    "exit": 0,
+    "log": "covering.log",
+    "sha256": "70e0b1d80c962f88da2b778dfae4a824ad431f992a87d546de7106a442359e86"
+  }
+}

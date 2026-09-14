@@ -1,0 +1,33 @@
+{
+  "profile_ids": [],
+  "runtime_ids": [
+    "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "10b7bf57-0972-4439-aa71-2a2c30af4484",
+    "aad0c3d2-cfe4-47b4-8330-c94108f41f7a"
+  ],
+  "deleted_profile_id": "d7fa958c-cf4d-4d7b-a2ea-bf3fc6c8eb86",
+  "deleted_runtime_id": "4dd40f82-24f3-44da-a950-52aff703669e",
+  "deletion_route": "disabled unbound profile deletion removes its runtime",
+  "cascade_flag": false,
+  "agent": {
+    "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "status": "idle",
+    "model": "claude-opus-4-6",
+    "thinking_level": "medium",
+    "max_concurrent_tasks": 1
+  },
+  "saved_agent_fields_preserved": true,
+  "issue": {
+    "id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+    "status": "backlog",
+    "assignee_id": null,
+    "assignee_type": null
+  },
+  "issue_cleanup": "explicit_unassignment; prior assignee not captured in correct field",
+  "nonterminal_count": 0,
+  "all_autopilots_paused": true,
+  "historical_cleanup_failures": 2,
+  "recovery": "one supported-route recovery successful",
+  "consecutive_cleanup_failures": 0
+}

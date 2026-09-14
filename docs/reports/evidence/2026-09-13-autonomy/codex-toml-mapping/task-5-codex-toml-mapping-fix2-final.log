@@ -1,0 +1,23 @@
+test_atomic_publication_removes_a_link_after_directory_fsync_failure (__main__.CodexTomlMappingTests) ... ok
+test_auth_and_agents_are_never_opened_or_changed (__main__.CodexTomlMappingTests) ... ok
+test_base_digest_existing_output_and_base_mcp_fail_without_overwrite (__main__.CodexTomlMappingTests) ... ok
+test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) ... ok
+test_context7_and_trace_materialize_exact_redacted_outputs (__main__.CodexTomlMappingTests) ... ok
+test_context7_variants_are_rejected_without_secret_disclosure (__main__.CodexTomlMappingTests) ... ok
+test_descriptor_and_file_replacement_races_are_detected (__main__.CodexTomlMappingTests) ... ok
+test_descriptor_walk_accepts_0755_but_rejects_symlink_and_metadata (__main__.CodexTomlMappingTests) ... ok
+test_explicit_empty_is_distinct_from_absent_and_required_roster (__main__.CodexTomlMappingTests) ... ok
+test_final_reopen_refuses_fifo_nonblocking_before_any_read (__main__.CodexTomlMappingTests) ... ok
+test_final_reopen_rejects_foreign_regular_file_before_any_read (__main__.CodexTomlMappingTests) ... ok
+test_lexical_guard_and_marker_state_fail_closed (__main__.CodexTomlMappingTests) ... ok
+test_playwright_forms_are_classified_but_never_ready (__main__.CodexTomlMappingTests) ... ok
+test_public_errors_suppress_causes_and_validate_semantic_types (__main__.CodexTomlMappingTests) ... ok
+test_publication_rejects_replaced_temp_inode_and_preserves_foreign_entry (__main__.CodexTomlMappingTests) ... ok
+test_trace_accepts_only_two_absolute_identities_and_serve (__main__.CodexTomlMappingTests) ... ok
+test_unknown_server_and_fields_are_presence_only_and_bounded (__main__.CodexTomlMappingTests) ... ok
+test_value_parser_rejects_forbidden_syntax_and_bounds (__main__.CodexTomlMappingTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.047s
+
+OK

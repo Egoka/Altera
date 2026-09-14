@@ -1,0 +1,21 @@
+{
+  "commit": "139954950e91c530772216975d1c85bce4bbd155",
+  "scope": "historical root evidence-only commit raw hook and actual Git blob audit, not current source acceptance",
+  "files": [
+    {
+      "path": "root-mapper-refresh-evidence-commit.log",
+      "bytes": 11073,
+      "sha256": "8249eff6916fbdfce67f1b0b1b8dc4354e1ef120c02b55bbccfc9376b666e369"
+    },
+    {
+      "path": "root-mapper-refresh-evidence-staged.json",
+      "bytes": 9261,
+      "sha256": "593cad172c3e39dbbde21e883969547b6f0e42ca0d9d377e642b63b15086c229"
+    },
+    {
+      "path": "root-mapper-refresh-evidence-committed-integrity.json",
+      "bytes": 227,
+      "sha256": "1a21b9274ca3adce0469bba259b13a19657948939ffca6f5145193c850f53352"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "probe_exit": 78,
+  "control_allowed": 4,
+  "control_denied": 4,
+  "unrelated_file_unchanged": true,
+  "stdout_empty": true,
+  "canonical_identity": "not_checked"
+}

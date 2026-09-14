@@ -1,0 +1,18 @@
+---
+name: coding-standards
+description: Use when implementing, refactoring, or reviewing TypeScript, Vue/Nuxt, or GraphQL code in Altera.
+---
+
+# Coding Standards
+
+Use the repository's actual conventions, dependency versions and accepted task scope. Altera uses a pnpm workspace with Nuxt/Vue in web and GraphQL Yoga on node:http with Prisma in server (an Express dependency is declared; inspect actual use). Check current manifests before choosing commands or APIs; examples from other frameworks are not a reason to change the stack.
+
+- Prefer clear names, small cohesive changes and existing abstractions. Add a shared abstraction when the real callers justify it. Follow the repository formatter and lint configuration.
+- Preserve types across boundaries. Validate untrusted input at the boundary using installed facilities. Do not hide mismatches with `any` or assertions; narrow unknown values and handle nullable data explicitly.
+- Vue state owned by a component/composable can use `ref` and `reactive` updates, including `count.value++` or `form.name = name`. Preserve reactivity. Do not mutate props or caller-owned shared data; use emitted events, the owner's API, or copies as the actual ownership contract requires. Use `computed` for derived state and clean up side effects.
+- Keep Nuxt server/client boundaries explicit: browser APIs need a client context and server secrets stay server-side. Follow existing composable and data-fetching patterns instead of introducing React hooks or Next route conventions.
+- GraphQL changes span schema/nullability, resolver authorization and validation, Prisma projections, and consumer operations/types. Keep these consistent. A transport HTTP 200 is not proof of GraphQL success; inspect `data` and `errors`. Select required fields rather than broadening every query to all columns.
+- Preserve useful error causes internally while returning the project's intended safe error representation. Check behavior under failed requests and overlapping state updates; rollback must respect newer updates.
+- Parallelize independent work only. Keep dependent writes and operations on the same mutable resource ordered.
+
+Verify the changed behavior with the available relevant tests and checks. Read scripts before executing them: a build name does not prove absence of migrations. Report missing test infrastructure as a verification gap. New feature acceptance tests are valid even when no historical bug exists. Report the exact revision/artifact and real check evidence for review.

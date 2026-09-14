@@ -1,0 +1,7 @@
+test_unconfirmed_cleanup_recovery_removes_only_reserved_worker (__main__.DockerRefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.110s
+
+OK
+{"exactFilterSeesLiveWorker": true, "sameFilterProvesAbsenceAfterRemoval": true, "unknownCleanupBlockedPublication": true, "exchangeCount": 1, "syntheticOnly": true}

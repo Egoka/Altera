@@ -1,0 +1,1 @@
+process.on('SIGTERM',()=>{process.stderr.write('TERM\n');process.exit(143)});process.stdout.write('READY\n');setInterval(()=>{},1000);

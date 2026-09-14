@@ -1,0 +1,14 @@
+test_auth_is_one_readonly_file_and_never_a_home_mount (__main__.RuntimeTests) ... ok
+test_claude_login_is_fixed_and_cannot_become_a_model_command (__main__.RuntimeTests) ... ok
+test_codex_protocol_preserves_args_and_restricts_overrides (__main__.RuntimeTests) ... ok
+test_external_symlink_and_ignored_explicit_input_are_rejected (__main__.RuntimeTests) ... ok
+test_readonly_mounts_and_token_free_env (__main__.RuntimeTests) ... ok
+test_rejects_unknown_paths_settings_and_model_changes (__main__.RuntimeTests) ... ok
+test_snapshot_preserves_revision_and_dirty_without_ignored_secrets (__main__.RuntimeTests) ... ok
+test_stale_source_policy_and_mutable_aliases_fail_closed (__main__.RuntimeTests) ... ok
+test_unresolved_managed_home_is_rejected (__main__.RuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 3.713s
+
+OK

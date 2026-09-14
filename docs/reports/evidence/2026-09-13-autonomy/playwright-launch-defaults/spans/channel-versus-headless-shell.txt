@@ -1,0 +1,6 @@
+      getExecutableName(options) {
+        if (options.channel && registry.isChromiumAlias(options.channel))
+          return "chromium";
+        if (options.channel)
+          return options.channel;
+        return options.headless ? "chromium-headless-shell" : "chromium";

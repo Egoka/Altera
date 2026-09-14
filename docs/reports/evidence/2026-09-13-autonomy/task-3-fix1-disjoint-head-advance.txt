@@ -1,0 +1,13 @@
+2026-09-13T20:29:25+03:00
+COMMAND: git diff --name-only 19ffb9619c3c6151848ccab02074b760bcddf43a..2d17915740cbefcb535c76e0b67e701b918b04fc
+docs/reports/evidence/2026-09-13-autonomy/root-evidence-commit-19ffb96.txt
+docs/reports/evidence/2026-09-13-autonomy/task-3-preflight-logs/git-status-final.log
+docs/reports/evidence/2026-09-13-autonomy/task-3-preflight-logs/server-build-ci-node24.12.log
+docs/reports/evidence/2026-09-13-autonomy/task-3-preflight-logs/server-build-ci.log
+docs/reports/evidence/2026-09-13-autonomy/task-3-preflight-logs/web-build-node24.12.log
+docs/reports/evidence/2026-09-13-autonomy/task-3-preflight-logs/web-build.log
+docs/reports/evidence/2026-09-13-autonomy/task-3-preflight-logs/web-typecheck.log
+docs/reports/evidence/2026-09-13-autonomy/task-5-checker-hook-design.txt
+COMMAND: git diff --name-only 19ffb9..2d1791 -- web server package.json pnpm-lock.yaml .nvmrc .github/workflows/pull_request.yml
+CHECKED_INPUTS_EQUAL: true
+EXIT_CODE: 0

@@ -1,0 +1,36 @@
+{
+  "started_at": "2026-09-13T19:19:03.574950+00:00",
+  "head": "9e1f8be8192df23626efd1ac305269ef00666d22",
+  "tree": "42327560baacfb7d8c323d5c49ef457a7c849f11",
+  "scope": [
+    "scripts/agent-runtime",
+    "docs/development/runtime-isolation.md",
+    "docs/development/README.md"
+  ],
+  "scoped_tracked_diff_sha256": "91bc85593050b722dfc4895f001c2287fa9d2262c8c55fa6a4253c5f9dd6bd52",
+  "owned_file_sha256": {
+    "scripts/agent-runtime/.dockerignore": "08bb7a70af4ae5a9c15226f499f2e76055ebd521550f87eb102a1316cdb9df38",
+    "scripts/agent-runtime/Dockerfile": "56f2ecb1d7ae11a85424599dd11d28c40106e617d9a8d552b04821f43e86e0b1",
+    "scripts/agent-runtime/build_metadata_probe.py": "4277499fee57774315d1204d0c548c3d2199cb53d0c0934bac83edb4df7038cd",
+    "scripts/agent-runtime/cli-preflight.mjs": "9b20b549f11ac330b1d98b3c21f3208970eff1d6d2eb87cb3a337967e23f3801",
+    "scripts/agent-runtime/codex-canary.mjs": "eea1d0eb8dad59733d5fa0c80818a1b2f02b5c00128bb02698cb45b77a40ed6c",
+    "scripts/agent-runtime/egress-fixture.mjs": "36d8d659e2aa17c50d17831c831b48b2a6c98f8cdd21c33c10b734807d47c250",
+    "scripts/agent-runtime/fixture.mjs": "a8481defdb19c7f445e975ebcb5aaefa8a35997175075bbb18243d680a59ec57",
+    "scripts/agent-runtime/manifest.example.json": "974662c61970da5fb885d23a916e396238900058ecdfe7d9ae02f2965cf67fdd",
+    "scripts/agent-runtime/metadata-probe.c": "d5851e14c8832796811f1155a970f5b7b88b80e59611c0ae990921497d2cd9d3",
+    "scripts/agent-runtime/protocol-guard.mjs": "107d3d74099d90eddf74b4f762b1b8049e854578fd432ae57c24e7f079cce87d",
+    "scripts/agent-runtime/provider-proxy.mjs": "c6ed81ee03c72d21d6350e6f6aab4b5cf33d6b274aec21b510c12168da8f8a8c",
+    "scripts/agent-runtime/runtime.py": "ba51deaf7ab2d8ac2cab21b53e75b390da685e358b7448aba7f8e549f9d5301e",
+    "scripts/agent-runtime/test_docker.py": "e5a8f02f39315c0e6243e270ce8d97608e1322e99fe6527757a94c012019148c",
+    "scripts/agent-runtime/test_egress.py": "40b5a19c8f65e255598475a0791a649c9d54051901a17993f53f43cac8536bb6",
+    "scripts/agent-runtime/test_metadata_probe.py": "a41f00bd80e6b451946de84003153621621dee452443742cedbb7f5c8c555fa5",
+    "scripts/agent-runtime/test_protocol_guard.mjs": "c23cb2f93e6c34b94d92435e669043cf5aab1bc5ffe7c326390bad2524105758",
+    "scripts/agent-runtime/test_proxy.mjs": "347373d3fb15af0a108d4381fc1e46fc1f35f02bd4d998998717a1eb234ba720",
+    "scripts/agent-runtime/test_runtime.py": "eb25ac25b222299ebc5f99524536f66f220dac124d8ee1f41903224f7fd57bbc",
+    "scripts/agent-runtime/trace-canary.mjs": "313ab53aacefe23b0225a1560680952548e9b556279bee741cf7f3008f4ba6fe",
+    "docs/development/runtime-isolation.md": "f91f9701bceb33653df53ff1e0803690933aa137c7f8bb4d1185c52b618318c5",
+    "docs/development/README.md": "9522ed0a1517698b5e1b07dcc561a25a25c07e33ffd4e3264e109068eb23bcbe"
+  },
+  "owned_fingerprint": "906ea44cd1a598482585eab78db649dde98dddec4f4348b3b0d7209dbdcbb4dd",
+  "status": " M docs/development/README.md\n M docs/reports/2026-09-13-autonomy-execution-report.md\n?? docs/development/runtime-isolation.md\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/archive-manifest.json\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/build_metadata_probe.py.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/metadata-probe.c.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/provenance.json\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-build-test-review.diff\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-build.json\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-controller-review.md\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-green.log.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-imports.log.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-red.log.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-source-review.diff\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/test_metadata_probe.py.txt\n?? docs/reports/evidence/2026-09-13-autonomy/remote-heads-runtime-preflight.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-commit-9e1f8be.txt\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-precommit-9e1f8be.json\n?? docs/reports/evidence/2026-09-13-autonomy/task-6-fix1-review.md\n?? scripts/agent-runtime/.dockerignore\n?? scripts/agent-runtime/Dockerfile\n?? scripts/agent-runtime/build_metadata_probe.py\n?? scripts/agent-runtime/cli-preflight.mjs\n?? scripts/agent-runtime/codex-canary.mjs\n?? scripts/agent-runtime/egress-fixture.mjs\n?? scripts/agent-runtime/fixture.mjs\n?? scripts/agent-runtime/manifest.example.json\n?? scripts/agent-runtime/metadata-probe.c\n?? scripts/agent-runtime/protocol-guard.mjs\n?? scripts/agent-runtime/provider-proxy.mjs\n?? scripts/agent-runtime/runtime.py\n?? scripts/agent-runtime/test_docker.py\n?? scripts/agent-runtime/test_egress.py\n?? scripts/agent-runtime/test_metadata_probe.py\n?? scripts/agent-runtime/test_protocol_guard.mjs\n?? scripts/agent-runtime/test_proxy.mjs\n?? scripts/agent-runtime/test_runtime.py\n?? scripts/agent-runtime/trace-canary.mjs\n"
+}

@@ -1,0 +1,45 @@
+{
+  "base": "123d1e6f9c6c5199c8a4fe6bf16b451bfe11a084",
+  "head": "ccadb408e22936ad00779778a7bbc5799cb87afa",
+  "commit_subject": "fix(runtime): harden Codex TOML mapping",
+  "committed_scope": [
+    {
+      "blob": "6866ec6bd0af07b80f2b718709c6da4666a6c4fc",
+      "mode": "100644",
+      "path": "docs/development/runtime-isolation.md",
+      "sha256": "fce1aa71dea724b0f5359a54f071ceec754b11af38260b5ce6ea4b49b73f8fd2"
+    },
+    {
+      "blob": "9985aba80206f12fd3d96d163f3f269675a92e9f",
+      "mode": "100644",
+      "path": "scripts/agent-runtime/codex_toml_map.py",
+      "sha256": "60b9c909076efcad8223a5584442ab357f5a255b4a07df9fc89bd4e4a1ba0ae1"
+    },
+    {
+      "blob": "0590dea54dfa9c738e52c3392c5c2f86dc09438d",
+      "mode": "100644",
+      "path": "scripts/agent-runtime/test_codex_toml_map.py",
+      "sha256": "350d65bacc0eb6da3f7900edc6c42cd3bc3874b3a58dfab9086db3eef8896813"
+    }
+  ],
+  "diff_matches_precommit": true,
+  "owned_paths_clean": true,
+  "scoped_diff": {
+    "path": "task-5-codex-toml-mapping-review/fix1-scoped.diff",
+    "sha256": "2fd5ef665405080f9cbdedca6dcd1364dbe4c558f5fa07e7bd219fb33a9110e6"
+  },
+  "normal_hook": {
+    "command_environment": "login:false; PATH=/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin:$PATH",
+    "exit": 0,
+    "path": "task-5-codex-toml-mapping-fix1-hook.log",
+    "sha256": "cdd58007deb8554f9154c02780a04b4f9830d7a77dbcfb24021741da287068c7",
+    "summary": {
+      "eslint": "passed",
+      "prettier": "passed",
+      "server_tests": "19 passed, 1 todo",
+      "web_tests": "5 passed"
+    }
+  },
+  "previous_hook_raw_artifact": "missing; original Node24.3 warning retained as secondary evidence",
+  "real_runtime_operations": false
+}

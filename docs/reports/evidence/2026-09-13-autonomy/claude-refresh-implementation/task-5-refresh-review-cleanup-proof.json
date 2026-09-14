@@ -1,0 +1,18 @@
+{
+  "scope": "focused synthetic mock; no Docker/provider/model/real credential",
+  "frozen_source_sha256": "4c76cbd339e58f7a69b1306dde4ce13d09ade9c2ee435a515d007e5a68bdf0c8",
+  "first_status": "candidate_recovery_required",
+  "second_status": "published",
+  "pointer_changed": true,
+  "simulated_worker_still_live": true,
+  "calls": [
+    "exchange",
+    "status",
+    "model"
+  ],
+  "events": [
+    "worker-rm-failed",
+    "client-killed",
+    "proxy-cleanup-while-worker-live"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "status": "preparation-not-implementation",
+  "files": [
+    {
+      "path": "task-closure-critical-path.md",
+      "bytes": 23285,
+      "sha256": "45b46cb20f0a417f0e70c5cd1c206344f6bec5162f60ff12696c314a6f08a169"
+    },
+    {
+      "path": "task-5-codex-path-probe-brief.md",
+      "bytes": 5618,
+      "sha256": "b9e64b25e6df6f4de8bc31993fe6a7d2dee40c0826ea0ef43bc78f9d2481b4d2"
+    },
+    {
+      "path": "task-5-auth-refresh-preflight.md",
+      "bytes": 3127,
+      "sha256": "a345ecd5d67c6240ef6869eee9135ed183309a4ef81ba578c3641005a630f82b"
+    },
+    {
+      "path": "task-5-refresh-implementation-brief.md",
+      "bytes": 13445,
+      "sha256": "b7ec06925a03af85cc8c3a096064e1c4bd8e4bc13380f29438ee4f7070282a10"
+    },
+    {
+      "path": "task-5-refresh-schema-proof.md",
+      "bytes": 7818,
+      "sha256": "ca14d4be03d8f027924505e502d374cf44547a9d282f5319a713d07ad3f5c4cc"
+    },
+    {
+      "path": "task-5-refresh-root-rulings.md",
+      "bytes": 4833,
+      "sha256": "f71c0504b2d442d6a3f1c9b292706ae77653458b606f7f1ad2fd1dbb341f1936"
+    },
+    {
+      "path": "task-5-claude-env-gap.md",
+      "bytes": 3027,
+      "sha256": "4e9dea09eb9fbc7c7bea01d3b18486122549570f0c3c9a7a599add4bd9f77e19"
+    },
+    {
+      "path": "root-closure-metadata-readback.json",
+      "bytes": 1252,
+      "sha256": "ab6124cc78f35e86a6ee8ae7de9b8c57663922feb637d4445da81e9baf938ba3"
+    },
+    {
+      "path": "root-product-source-readback.json",
+      "bytes": 972,
+      "sha256": "ee7be89c7d43ab1ea9cb0a1736fc4096e22262eb0319e2d3bf748ed36b7c71e7"
+    },
+    {
+      "path": "task-8-codegen-brief.md",
+      "bytes": 9464,
+      "sha256": "438befd62f56892ee0de8e32d36b2b957990f5a5cf011ddb783104bf4134429d"
+    }
+  ]
+}

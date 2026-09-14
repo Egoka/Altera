@@ -1,0 +1,45 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.00kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:24.12.0-bookworm-slim
+#2 DONE 0.9s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/6] FROM docker.io/library/node:24.12.0-bookworm-slim@sha256:7326fb2dbdce998edd72140946851be64ef4a643e8715e138ca467e8e9d92c99
+#4 resolve docker.io/library/node:24.12.0-bookworm-slim@sha256:7326fb2dbdce998edd72140946851be64ef4a643e8715e138ca467e8e9d92c99 done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 135B done
+#5 DONE 0.0s
+
+#6 [2/6] RUN apt-get update     && apt-get install -y --no-install-recommends git ca-certificates     && rm -rf /var/lib/apt/lists/*     && npm install -g @openai/codex@0.154.0-alpha.6.2 @anthropic-ai/claude-code@2.1.263 trace-mcp@3.25.0     && npm cache clean --force
+#6 CACHED
+
+#7 [3/6] COPY playwright-mcp/package.json playwright-mcp/package-lock.json /opt/playwright-mcp/
+#7 CACHED
+
+#8 [4/6] RUN cd /opt/playwright-mcp     && npm ci --omit=dev --ignore-scripts     && /usr/local/bin/node /opt/playwright-mcp/node_modules/playwright-core/cli.js install-deps chromium     && PLAYWRIGHT_BROWSERS_PATH=/ms-playwright /usr/local/bin/node /opt/playwright-mcp/node_modules/playwright-core/cli.js install chromium --only-shell     && rm -rf /var/lib/apt/lists/*     && npm cache clean --force
+#8 CACHED
+
+#9 [5/6] RUN chmod -R a+rX /ms-playwright
+#9 DONE 3.1s
+
+#10 [6/6] WORKDIR /runtime
+#10 DONE 0.0s
+
+#11 exporting to image
+#11 exporting layers 0.1s done
+#11 exporting manifest sha256:53d55e6c9611b721b98e7549981ce353f9d1f88e10e675ee44d27ec33c43f58b done
+#11 exporting config sha256:a2927031ee64bf86dc3ba857efdad438c43641e6ea8c3c5e814c8072d99d253f done
+#11 exporting attestation manifest sha256:0617de7a3641e5fe58232c0bbba08291624246e35917aa895d447afc88eb84c7 done
+#11 exporting manifest list sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426 done
+#11 naming to moby-dangling@sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426 done
+#11 unpacking to moby-dangling@sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426 0.0s done
+#11 DONE 0.1s

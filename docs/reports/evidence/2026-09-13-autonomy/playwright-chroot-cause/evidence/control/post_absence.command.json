@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/usr/local/bin/docker",
+    "container",
+    "ls",
+    "--all",
+    "--filter",
+    "name=^/altera-chroot-control-e75c64002d22$",
+    "--format",
+    "{{.Names}}"
+  ],
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty",
+    "DOCKER_HOST": "unix:///Users/egorbondarenko/.docker/run/docker.sock"
+  }
+}

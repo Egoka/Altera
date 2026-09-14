@@ -1,0 +1,29 @@
+test_refresh_policy_hardlink_is_rejected_before_read_or_digest (__main__.RuntimeTests) ... FAIL
+test_refresh_policy_replacement_during_read_is_rejected_before_digest (__main__.RuntimeTests) ... FAIL
+
+======================================================================
+FAIL: test_refresh_policy_hardlink_is_rejected_before_read_or_digest (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 140, in test_refresh_policy_hardlink_is_rejected_before_read_or_digest
+    self.assertEqual(observed, {'read': False, 'digest': False})
+AssertionError: {'read': True, 'digest': True} != {'read': False, 'digest': False}
+- {'digest': True, 'read': True}
+?            ^^^           ^^^
+
++ {'digest': False, 'read': False}
+?            ^^^^           ^^^^
+
+
+======================================================================
+FAIL: test_refresh_policy_replacement_during_read_is_rejected_before_digest (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 160, in test_refresh_policy_replacement_during_read_is_rejected_before_digest
+    with self.assertRaises(ValueError): self.runtime.refresh_command(manifest, 'exchange', credential, pending)
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.437s
+
+FAILED (failures=2)

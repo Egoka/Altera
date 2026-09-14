@@ -1,0 +1,34 @@
+{
+  "red": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "scripts/agent-runtime/test_playwright_mcp.py",
+      "PlaywrightStaticTests.test_rewritten_titles_require_kernel_executable_identity"
+    ],
+    "exit": 1,
+    "log": "red.log",
+    "sha256": "614e8018e64484578c3ad2d42cf4f853cd4eab1f5e1cf9098540c8c263f545e2"
+  },
+  "green": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "scripts/agent-runtime/test_playwright_mcp.py",
+      "PlaywrightStaticTests.test_rewritten_titles_require_kernel_executable_identity"
+    ],
+    "exit": 0,
+    "log": "green.log",
+    "sha256": "9152bd257679336b40c628719f593ad31d6a57b4b0f6b839cb7ee8dbb189fcb2"
+  },
+  "covering": {
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "scripts/agent-runtime/test_playwright_mcp.py"
+    ],
+    "exit": 0,
+    "log": "covering.log",
+    "sha256": "83aa2dcdecea9390f300c28b51a0cb55757dcf7f0719f471af949c8fc58d108a"
+  }
+}

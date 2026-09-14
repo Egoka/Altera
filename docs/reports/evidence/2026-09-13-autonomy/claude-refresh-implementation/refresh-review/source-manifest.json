@@ -1,0 +1,48 @@
+{
+  "base": "945397d47481d20c928b6779f98d5b5ab2c7cbbf",
+  "owned": {
+    "scripts/agent-runtime/credential_refresh.py": {
+      "sha256": "4c76cbd339e58f7a69b1306dde4ce13d09ade9c2ee435a515d007e5a68bdf0c8",
+      "bytes": 22975
+    },
+    "scripts/agent-runtime/claude-refresh.mjs": {
+      "sha256": "1f746aef4f1be49c08e3046a7f4d25752781413d9acb94f887051e643eaa587f",
+      "bytes": 11791
+    },
+    "scripts/agent-runtime/test_credential_refresh.py": {
+      "sha256": "276251c8336ec6d30fbaf2e17fc61326ede040968d3e230d4ad340fa94cca0b9",
+      "bytes": 17262
+    },
+    "scripts/agent-runtime/test_claude_refresh.mjs": {
+      "sha256": "2d18d21af402103d777c4bf3995bfcee114decfce7dbbb2097f4be507b524eae",
+      "bytes": 7083
+    },
+    "scripts/agent-runtime/test_refresh_docker.py": {
+      "sha256": "8c318b68a3c8b3732656624a5167a432a542b743b9475f28cef66210af656c2f",
+      "bytes": 14001
+    },
+    "scripts/agent-runtime/refresh-manifest.example.json": {
+      "sha256": "1eff40e3776b409b83e1373b8e407afddc53cd641b1a307050b214aed8cc811f",
+      "bytes": 444
+    },
+    "scripts/agent-runtime/runtime.py": {
+      "sha256": "0c0a6d3572c1fdca20c624a5d034f0ed5b36d1a86e9d1602696cde187ddd4ae7",
+      "bytes": 26489
+    },
+    "scripts/agent-runtime/test_runtime.py": {
+      "sha256": "45a5764b0f36fc8bfe21a821283227972c15a6ee1d2306a3505657742b11d259",
+      "bytes": 22780
+    },
+    "docs/development/runtime-isolation.md": {
+      "sha256": "a4df46a0360c9ced40ac56f27134d43621d841950e1969da50db79a8b7a60ea0",
+      "bytes": 27350
+    }
+  },
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "live_credentials_used": false,
+  "live_model_called": false,
+  "diff_sha256": "16e5cecad6fcbc54d02f3fc24c6770a0839f19bea4cfae4ef0460f271bbb2a3d",
+  "nonsecret_dependency": {
+    "scripts/agent-runtime/provider-proxy.mjs": "3fbda41d58bf5028ab926c589ef439fbdf784a351853ca7dbaf9523d4fb6f97c"
+  }
+}

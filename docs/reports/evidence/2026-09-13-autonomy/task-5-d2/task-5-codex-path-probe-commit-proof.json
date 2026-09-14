@@ -1,0 +1,13 @@
+{
+  "head": "422d5852bd9725ac75b9f0fb846138c6441b0672",
+  "base": "563844e6461b76c97065842efb1cb0f5b9b5099f",
+  "owned_files_exact": true,
+  "tested_source_matches_commit": true,
+  "frozen_binary_unchanged": true,
+  "index_empty": true,
+  "root_report_diff_unchanged": true,
+  "status": " M docs/reports/2026-09-13-autonomy-execution-report.md\n?? docs/reports/evidence/2026-09-13-autonomy/closure-preparation/\n?? docs/reports/evidence/2026-09-13-autonomy/d1-native/\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-codex-protocol/\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-mcp-policy/\n",
+  "commit_log_sha256": "59211dfd3abc4b4669a8e6e94ed6e6bf28a11b5c80e1985f1eec918d91b8b81a",
+  "binary_sha256": "0e3f16bb910154660d5bc8c22b4e3de16f0a20504d8b79487a70c589f28eb5e3",
+  "scoped_diff_sha256": "da82d75d31ea6a87df8963692f39221c7bbb8b196e2dd00db996dd290da0b9c0"
+}

@@ -1,0 +1,34 @@
+{
+  "attempt_id": "410601918bb743a780236d78e35824f8",
+  "check_id": "playwright canary",
+  "claimed_at": "2026-09-14T08:43:30.453448+00:00",
+  "authorization_sha256": "4dcac3a4ad07e153fc4e330b7f1785198d51ba41408e3063e8ccdde9843043a2",
+  "allowed_invocations_claimed": 1,
+  "sources_before": {
+    "scripts/agent-runtime/Dockerfile": "f1e05c7a862717d3fb240ddc579f9e3e73aabad52ed9621f036bc09f91e28215",
+    "scripts/agent-runtime/playwright-seccomp.json": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+    "scripts/agent-runtime/playwright-mcp/package.json": "bc5f332d770e02e928bba6c83e50c9980aad60e71c3a4d574d2bd9a6663a70e3",
+    "scripts/agent-runtime/playwright-mcp/package-lock.json": "0e823db84be42dcd8b82bad7ba34f8072d08ba47d35ad7d5f7a3e8f30358e6ff",
+    "scripts/agent-runtime/codex_toml_map.py": "80daff5a550d08a12dc830ba896f71c46500463103513690ecafd999603c4bc4",
+    "scripts/agent-runtime/test_codex_toml_map.py": "3bc139cc131000c0e7337ef6c509aafea752de97c52a2ad86f2c998ef3c69558",
+    "scripts/agent-runtime/runtime.py": "86856ef487d5eaab2048e624a69678160ef8dd11a8d098884cf2e32e6e19c285",
+    "scripts/agent-runtime/test_runtime.py": "4344cb784e93ed2ba10155e74626cefcf495016371808d3961f240b376e5769b",
+    "scripts/agent-runtime/playwright-mcp-canary.mjs": "507040e0b6f3eb4b24632e2f90a7c32ecf40147d77a40a1eb411f915fe7302c2",
+    "scripts/agent-runtime/test_playwright_mcp.py": "2edb0379aecd453f2a31c90c7a13eaf50acc24dbd0e1a692d6ec729125ba12b7"
+  },
+  "reviews_verified": true,
+  "command": [
+    "/usr/bin/python3",
+    "-I",
+    "scripts/agent-runtime/test_playwright_mcp.py",
+    "--docker",
+    "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+    "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-3"
+  ],
+  "environment": {
+    "PATH": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin:/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty"
+  },
+  "cwd": "/private/tmp/altera-agent-loop-autonomy",
+  "count_before": 2
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "5061c139-42c4-4481-81b8-2bddc57afa0d",
+    "name": "context7",
+    "transport": "http",
+    "enabled": true
+  },
+  {
+    "id": "c78f7c37-8623-455e-946a-b21d0199cf10",
+    "name": "playwright",
+    "transport": "stdio",
+    "enabled": true
+  }
+]

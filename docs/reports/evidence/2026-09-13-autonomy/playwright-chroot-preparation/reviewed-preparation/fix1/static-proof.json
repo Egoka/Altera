@@ -1,0 +1,9 @@
+{
+  "executed_docker": false,
+  "sole_manifest_section_changed": "runtime_identity_preflight",
+  "original_runtime_security_node_argv_preserved": true,
+  "candidate_probe_arms_unchanged": true,
+  "outputs_cover_every_stage": true,
+  "diff_sha256": "2a96038dbe37d2083850aa738794fa4dacdaecdf82663b23bbe33f90aa1590c7",
+  "commands_sha256": "3e61e70d2e0d5d5cac9caa14eb23acc4082087608bfbb14d1232493776740b79"
+}

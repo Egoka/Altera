@@ -1,0 +1,14 @@
+test_undeclared_untracked_source_cannot_disappear_from_snapshot (__main__.RuntimeTests) ... FAIL
+
+======================================================================
+FAIL: test_undeclared_untracked_source_cannot_disappear_from_snapshot (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 78, in test_undeclared_untracked_source_cannot_disappear_from_snapshot
+    self.runtime.snapshot(self.source, self.base / 'incomplete-snapshot', [])
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.411s
+
+FAILED (failures=1)

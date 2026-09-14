@@ -1,0 +1,117 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  05:03:55
+web test:    Duration  97ms (transform 64%, import 20%, tests 8%, worker 7%, environment 1%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  05:03:55
+server test:    Duration  255ms (import 77%, transform 19%, tests 2%, worker 2%)
+server test: Done
+[docs/agent-loop-autonomy 1399549] docs: record Claude refresh and Codex mapper acceptance
+ 86 files changed, 5588 insertions(+), 14 deletions(-)
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-evidence-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-explicit-authorization.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-postflight-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-result.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/historical/report-initial.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/historical/report-through-fix1.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix1-postcommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix1-precommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix1-reopen-probe.py
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix1-reopen-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix1-scoped.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix2-postcommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix2-precommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/fix2-scoped.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/named-risk-probe.py
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/named-risk-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/postcommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/precommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/review/scoped.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-mapper-dispatch-readiness.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-atomic-red.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-brief.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-final.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix1-final.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix1-green.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix1-hook.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix1-independent-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix1-red.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix2-final.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix2-green.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix2-hook.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix2-independent-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix2-red.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-format.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-green-2.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-green-3.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-green.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-independent-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-line-ending-red.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-postcommit.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-red.log
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-report.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-review-recovery-authorization.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-review-stop.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/committed-integrity/final-audit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/native-adapter-preparation/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/native-adapter-preparation/task-5-claude-native-adapter-brief.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/native-adapter-preparation/task-5-native-adapter-root-rulings.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/native-adapter-preparation/task-5-native-generation-selection-readiness.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/preflight-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/registry-provenance.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/source-hashes.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/source-spans.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/branded-chrome-path.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/browser-option-and-launch-options.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/browser-registry-root.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/browser-sandbox-defaults.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/channel-versus-headless-shell.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/chromium-sandbox-argv.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/commander-boolean-value.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/commander-paired-flag-default.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/debug-headless-override.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/default-config.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/executable-option.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/explicit-executable-precedence.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/explicit-path-existence.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/headless-shell-platform-path.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/isolated-launch.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/mcp-config-precedence.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/mcp-delegation.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/mcp-env-inputs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/mcp-env-sandbox-proxy.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/registry-directory-name.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/sandbox-option.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/spans/selenium-env-override.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/task-5-playwright-child-env-readiness.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/task-5-playwright-child-env-source-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/task-5-playwright-launch-defaults-preflight.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/playwright-launch-defaults/task-5-playwright-launch-root-rulings.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/post-refresh-multica/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/post-refresh-multica/task-5-post-refresh-multica-readback.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/post-refresh-multica/task-5-post-refresh-native-idle-readback.json

@@ -1,0 +1,48 @@
+{
+  "at_utc": "2026-09-13T23:38:36.739731+00:00",
+  "scope": "lstat exact named components only; no open/read/hash/config/auth bytes",
+  "not_canonical_validation": true,
+  "native_run_id": "01a09d1e-ab73-7dfe-8fbb-50862a0326df",
+  "components": [
+    {
+      "component": "workspace",
+      "exists": true,
+      "symlink": false,
+      "uid": 501,
+      "mode": "0o755",
+      "kind": "directory",
+      "nlink": 20,
+      "bounded_size": null
+    },
+    {
+      "component": "task",
+      "exists": true,
+      "symlink": false,
+      "uid": 501,
+      "mode": "0o755",
+      "kind": "directory",
+      "nlink": 9,
+      "bounded_size": null
+    },
+    {
+      "component": "codex-home",
+      "exists": true,
+      "symlink": false,
+      "uid": 501,
+      "mode": "0o755",
+      "kind": "directory",
+      "nlink": 9,
+      "bounded_size": null
+    },
+    {
+      "component": "config.toml",
+      "exists": true,
+      "symlink": false,
+      "uid": 501,
+      "mode": "0o600",
+      "kind": "regular",
+      "nlink": 1,
+      "bounded_size": true
+    }
+  ]
+}

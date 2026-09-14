@@ -1,0 +1,88 @@
+✖ exact pinned schema rejects aliases, empty scopes, normalization and bounds (0.799334ms)
+✖ only fixed exchange child receives refresh fields, later children are clean (0.121333ms)
+✖ captured output and timeout produce only fixed enums and kill the child group (0.103959ms)
+✖ status and fixed model acceptance expose only safe approved metadata (0.105083ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 41.311916
+
+✖ failing tests:
+
+test at scripts/agent-runtime/test_claude_refresh.mjs:15:1
+✖ exact pinned schema rejects aliases, empty scopes, normalization and bounds (0.799334ms)
+  AssertionError [ERR_ASSERTION]: refresh wrapper missing
+      at implementation (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:9:10)
+      at TestContext.<anonymous> (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:16:45)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts/agent-runtime/test_claude_refresh.mjs:34:1
+✖ only fixed exchange child receives refresh fields, later children are clean (0.121333ms)
+  AssertionError [ERR_ASSERTION]: refresh wrapper missing
+      at implementation (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:9:10)
+      at TestContext.<anonymous> (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:35:52)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts/agent-runtime/test_claude_refresh.mjs:55:1
+✖ captured output and timeout produce only fixed enums and kill the child group (0.103959ms)
+  AssertionError [ERR_ASSERTION]: refresh wrapper missing
+      at implementation (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:9:10)
+      at TestContext.<anonymous> (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:56:30)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts/agent-runtime/test_claude_refresh.mjs:82:1
+✖ status and fixed model acceptance expose only safe approved metadata (0.105083ms)
+  AssertionError [ERR_ASSERTION]: refresh wrapper missing
+      at implementation (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:9:10)
+      at TestContext.<anonymous> (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:83:30)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

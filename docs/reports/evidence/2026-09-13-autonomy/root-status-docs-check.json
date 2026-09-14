@@ -1,0 +1,9 @@
+{
+  "checked_after_root_status_updates": true,
+  "relative_links_checked": 39,
+  "missing_links": [],
+  "scope": [
+    "docs/development/testing.md",
+    "docs/reports/2026-09-13-autonomy-execution-report.md"
+  ]
+}

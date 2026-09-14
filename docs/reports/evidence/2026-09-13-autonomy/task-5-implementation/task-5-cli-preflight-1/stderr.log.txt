@@ -1,0 +1,3 @@
+docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: error mounting "/host_mnt/Users/egorbondarenko/.codex/auth.json" to rootfs at "/runtime/cache/codex/auth.json": create mountpoint for /runtime/cache/codex/auth.json mount: mountpoint "/run/host_virtiofs/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-cli-preflight-1/run/cache/codex/auth.json" is outside of rootfs "/var/lib/docker/rootfs/overlayfs/83659db98167ea20ca080ff35e1ff562bb43ce7fa1515a5a0adcd3c8ebd7b9cd"
+
+Run 'docker run --help' for more information

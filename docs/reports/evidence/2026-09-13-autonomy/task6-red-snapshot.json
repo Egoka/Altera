@@ -1,0 +1,12 @@
+{
+  "head": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "files": {
+    "scripts/agent-loop/gate.py": "b1a30569006dc4159175c30d6d735c2a0c26d19045a6122ab9bed15617165dbb",
+    "scripts/agent-loop/test_gate.py": "4b1cc70786f87a12609770d9c481fa46d369cc2706706e98518e44d523c0e510",
+    "docs/development/agent-loop-gate.md": "134ef6e8299541bd2cbfbf20967b4f74680ba724ea7fdbf4ae5cdcaaa3476cbc",
+    "docs/development/artifact-contracts.md": "c0cd4dd5af09904e5c7382dcadfafd2c5f90b24074c4810199d6fff247fdd971",
+    "docs/multica/operating-model.md": "d4b9178b70ff335f0e119dcc2d7e02f1ffd8d09ff30fcdff3fe7ddacdef99b3c"
+  },
+  "scope_diff_sha256": "f61c46c850d091a0eded28d5ef7a316a7fbc35a236cd4dfa60f3586448d67aa4",
+  "capture": "during RED execution; source implementation unchanged"
+}

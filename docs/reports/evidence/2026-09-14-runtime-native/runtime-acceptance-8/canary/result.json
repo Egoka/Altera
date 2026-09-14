@@ -1,0 +1,11 @@
+{
+  "image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+  "accepted": true,
+  "modes": [
+    "control",
+    "acceptance"
+  ],
+  "host_listener_positive": true,
+  "seccomp_sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+  "cleanup": true
+}

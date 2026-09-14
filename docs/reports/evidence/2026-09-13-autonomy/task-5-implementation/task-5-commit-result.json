@@ -1,0 +1,41 @@
+{
+  "commit": "62567862027b3a0ba056a916f9f1466214fcc55e",
+  "tree": "fe7182f66962ae789b1c2200a01b4488da2dc598",
+  "subject": "feat(agent-runtime): isolate checking processes in Docker",
+  "owned_byte_or_mode_changes": [],
+  "staged_paths": [],
+  "committed_paths": [
+    "docs/development/README.md",
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/.dockerignore",
+    "scripts/agent-runtime/Dockerfile",
+    "scripts/agent-runtime/build_metadata_probe.py",
+    "scripts/agent-runtime/cli-preflight.mjs",
+    "scripts/agent-runtime/codex-canary.mjs",
+    "scripts/agent-runtime/egress-fixture.mjs",
+    "scripts/agent-runtime/fixture.mjs",
+    "scripts/agent-runtime/manifest.example.json",
+    "scripts/agent-runtime/metadata-probe.c",
+    "scripts/agent-runtime/protocol-guard.mjs",
+    "scripts/agent-runtime/provider-proxy.mjs",
+    "scripts/agent-runtime/runtime.py",
+    "scripts/agent-runtime/test_docker.py",
+    "scripts/agent-runtime/test_egress.py",
+    "scripts/agent-runtime/test_metadata_probe.py",
+    "scripts/agent-runtime/test_protocol_guard.mjs",
+    "scripts/agent-runtime/test_proxy.mjs",
+    "scripts/agent-runtime/test_runtime.py",
+    "scripts/agent-runtime/trace-canary.mjs"
+  ],
+  "status": " M docs/reports/2026-09-13-autonomy-execution-report.md\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/archive-manifest.json\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/build_metadata_probe.py.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/metadata-probe.c.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/provenance.json\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-build-test-review.diff\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-build.json\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-controller-review.md\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-green.log.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-imports.log.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-red.log.txt\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-source-review.diff\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/test_metadata_probe.py.txt\n?? docs/reports/evidence/2026-09-13-autonomy/remote-heads-runtime-preflight.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-commit-9e1f8be.txt\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-precommit-9e1f8be.json\n?? docs/reports/evidence/2026-09-13-autonomy/task-6-fix1-review.md\n",
+  "hooks": {
+    "exit": 0,
+    "node": "24.12.0",
+    "web_passed": 5,
+    "server_passed": 19,
+    "server_todo": 1,
+    "server_skipped_files": 1
+  },
+  "checked_source_commit": "9e1f8be8192df23626efd1ac305269ef00666d22",
+  "checked_scope_fingerprint": "0a2fa7ea953cc2bdc0ced31411eb55e5a526da20e662b880445979fc25adeaf4"
+}

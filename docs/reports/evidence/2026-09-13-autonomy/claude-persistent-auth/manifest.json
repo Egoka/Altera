@@ -1,0 +1,15 @@
+{
+  "captured_at": "2026-09-13T20:26:02.253253+00:00",
+  "source_commit": "62567862027b3a0ba056a916f9f1466214fcc55e",
+  "scope": "Standalone persistent-login acceptance; not native Multica acceptance",
+  "files": [
+    {
+      "path": "model-auth-proof.json",
+      "sha256": "fa63dac3a40a13fe9a3c1ac8c9c02277f6468a5fe597232d85a2deddf64b84aa"
+    },
+    {
+      "path": "auth-status-proof.json",
+      "sha256": "8574f1e78546f4efa736dcda2eade62187943e655e4c63df17f741d1102e19e0"
+    }
+  ]
+}

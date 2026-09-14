@@ -1,0 +1,133 @@
+{
+  "observed_at_utc": "2026-09-13T18:21:56.927130+00:00",
+  "current_head": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "scope": "498 paths from preserved baseline manifest; worktree includes uncommitted Task6 and controller documentation",
+  "baseline_commit": "60b2226b699c3333034787addfb9842a59778d5e",
+  "total": 498,
+  "unchanged": 474,
+  "changed": [
+    {
+      "path": ".claude/agents/multica-developer.md",
+      "baseline_sha256": "55e571374477059269c69346ad4a5cccd8f32d477c79845e831909e86e432200",
+      "current_sha256": "2c6ad59cd9707bac6e44ac063c10f3d8f4ded1f4a96a83d2625c5ee26685dee8"
+    },
+    {
+      "path": ".claude/agents/multica-release.md",
+      "baseline_sha256": "81294a62a41165163212b1ce6f310bbc883139b00d88445cb8656420fef4ad83",
+      "current_sha256": "928e8e565e1089a724d9fb89f3ffed82e673091ba66cf028d37262a58ce27e7c"
+    },
+    {
+      "path": ".claude/agents/multica-reviewer.md",
+      "baseline_sha256": "df4a56ddf2665384802f70ec26b56dc57cfab5f211901b0d64a970ae61c59d94",
+      "current_sha256": "8149226026ac592822ba5a12234aa860fb094359ecca78a21de9c34a5033dc17"
+    },
+    {
+      "path": ".claude/agents/multica-tester.md",
+      "baseline_sha256": "38c1a8cc0f81961ae969c35568326d9295acfa37eb992336aad2d4ae6e4e51cf",
+      "current_sha256": "6039eea344c052b009a1062d188164818dec15ce216fe7d8ccfdd1383779e61d"
+    },
+    {
+      "path": ".claude/commands/multica-handback.md",
+      "baseline_sha256": "63cc92c69af54423cb1ede9acf2892485bc24edf7604c134198cb6341935d1be",
+      "current_sha256": "87406af14fe15a254b9a4371b4d0a8ebbaa98d7981177e1ec6ad51a89f1b5c0b"
+    },
+    {
+      "path": ".claude/commands/multica-stage.md",
+      "baseline_sha256": "c99deac6c3f111a8fb6776f0c17b25129589cbda63af8a6a0a7dca2bcb30f1bb",
+      "current_sha256": "d5a4b082b6d6bf6418ee860005110c31c21dfb704d54e60bc269b099334f1e03"
+    },
+    {
+      "path": ".claude/commands/multica-start.md",
+      "baseline_sha256": "e3f2ddc72d338432261788c81151b68aebe5d6ebcbf905729c7d21eca0e61426",
+      "current_sha256": "8dfa12726b682900d196fcd5205f251469f02d6bf991b5ff66c4f4c4884b7bf9"
+    },
+    {
+      "path": ".claude/commands/multica-status.md",
+      "baseline_sha256": "e9ef9971543b0848b399cb0563cac1e5a4d06497b33fe567529a05b65de54803",
+      "current_sha256": "b1223e72e9c8008dcea0d71c3d607d2de8436b08757a528e82dfc08c8b22e3ed"
+    },
+    {
+      "path": ".claude/hooks/ritual-check.sh",
+      "baseline_sha256": "b3162e21ab4904af29f3b9b12308abfdf0a76335da51629b9d6604aa0ae91c6a",
+      "current_sha256": "77d3953b9234aac7f58a9d28b5a262e97ad08b4ee730b0daa47ff87581267d39"
+    },
+    {
+      "path": ".claude/settings.json",
+      "baseline_sha256": "0025f184a4696118131348abc3077393096e24d1ff19b9fa6b9af021db15e6fc",
+      "current_sha256": "e2c2505f8188918f85398d85b0ec2bd05015eb894a29edecfb61aa17a5d57f61"
+    },
+    {
+      "path": ".github/workflows/pull_request.yml",
+      "baseline_sha256": "4f032b88e1da0ed2769a6fd2cdb793d06cd1287f0ecd43bb16a85fde579908f3",
+      "current_sha256": "4c7203ed6ff095a573f874e6218f180b9ac341feebdd4016b839c908f7a0158c"
+    },
+    {
+      "path": "CLAUDE.md",
+      "baseline_sha256": "b949b87ba4d8f183b3fab783abd4207cdd0fb09f40f70571b7122880682cf71c",
+      "current_sha256": "f4da90b15bab3053215e509ef98241d72381ae18d4741c22fbd3020d7da4570a"
+    },
+    {
+      "path": "docs/README.md",
+      "baseline_sha256": "fdf4a95f5651eaf11e03cf5a46b56ad1a5329600ac6202e0836a382fdb4db7cb",
+      "current_sha256": "2804e3dd0f154843d16af5d0aaee1e8a31892433cb9dcca49d871d9dee62286a"
+    },
+    {
+      "path": "docs/architecture/README.md",
+      "baseline_sha256": "9d68a8d08dfd372c9df2b205b333aa66979a91cc2c91292743194d5dc3599b83",
+      "current_sha256": "c77ed04e0534c48036edbf75a79bd90f3dfbf689f112ca1c6e92dd06d24658fb"
+    },
+    {
+      "path": "docs/backlog/README.md",
+      "baseline_sha256": "2128a9b441ce926dde6e3d39bde27260afef52c22449df3ff4f891186b5956de",
+      "current_sha256": "521ecb03e54215854bec6f0ccc59c7d83ae7e628be19e16a0ef4f5bcaeeffd7d"
+    },
+    {
+      "path": "docs/backlog/_templates/task.md",
+      "baseline_sha256": "0134c5509373562a497193b18552302b974643826e4aec09a2472e468b8f0a5f",
+      "current_sha256": "c92856100048d8770898477cc5f4801f364819e86cf58827e13ef69855cbe2dc"
+    },
+    {
+      "path": "docs/multica/autopilot-checklists.md",
+      "baseline_sha256": "1bba335a8fc57fa286c012e1af9b7a6b9eb7b4991a6a94c9f098841cc1d32bcd",
+      "current_sha256": "35ab5a8c180cb48e4b7844388ba80bcbb69bb6553344493dbe447541954e4742"
+    },
+    {
+      "path": "docs/multica/operating-model.md",
+      "baseline_sha256": "d2417609a5ae1dac133b06cf6342d720ec5daee05619948d8c8db60d57b64a39",
+      "current_sha256": "7d1d50fe1f6114a63307a15ea5d8d90dae50e7ecda4e44eba7c657cf3a8b07b8"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "baseline_sha256": "f54de1d8a2e77f2ba745e2321cc4aed3410bf56517927c8aa29aa923902ac643",
+      "current_sha256": "fee47e5adc8a1956b7cd9f465caf8aad0c2766195a84931d4f94100818d6ff6d"
+    },
+    {
+      "path": "docs/prompts/altera-design-references.md",
+      "baseline_sha256": "186708b79d869344e1e195d4c51e95f6ac477c38807ec330e540bac1549416ef",
+      "current_sha256": "d6ca019ff8faa3a982851c33e7092f727fbe104877b26390552779cb9c29dc59"
+    },
+    {
+      "path": "docs/reports/README.md",
+      "baseline_sha256": "7fd763967ca4d24331e5fb269d229da213e98a3d62a9ebf9acd7d476ea818c65",
+      "current_sha256": "1a65231d026cd658329b9fa7221f93fc73d954f8aa822a55e273f21e8503802f"
+    },
+    {
+      "path": "package.json",
+      "baseline_sha256": "9755a12f100093dc6a8f3a7c76a019c82d24c73ddeebcc51fb60074197260043",
+      "current_sha256": "f564b953b3ab475316a1de0559471374ea3c891df9a8647a8ba4828decc00214"
+    },
+    {
+      "path": "server/package.json",
+      "baseline_sha256": "e8c0cd6100e0f72e4505a70e89599a314d3bf4cc002cac8853058c75263b96c2",
+      "current_sha256": "e4584197c28e83a58e837bef1fb9d50c2e76bb36f65d6860f9289887e1aafb07"
+    },
+    {
+      "path": "web/package.json",
+      "baseline_sha256": "5f9b5377437a0267fc7aace02548476f9d14c96b372ef357f1a9ede937201879",
+      "current_sha256": "fe31c0de888b68b7ac5b30b6a618cefc4f064e4bb5e3f514f7349b684bd8a145"
+    }
+  ],
+  "missing": [],
+  "original_attachment_exact": true,
+  "limit": "Existence and byte comparison preserve source visibility, not semantic acceptance of each changed file. Historic baseline remains in Git and original sources."
+}

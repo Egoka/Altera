@@ -1,0 +1,7 @@
+{
+  "scope": "focused synthetic metadata ordering; no Docker/provider/model/real credential",
+  "frozen_source_sha256": "0c0a6d3572c1fdca20c624a5d034f0ed5b36d1a86e9d1602696cde187ddd4ae7",
+  "policy_file_hardlinks": 2,
+  "result": "unsafe_refresh_policy",
+  "private_fixture_bytes_hashed_before_rejection": true
+}

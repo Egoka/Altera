@@ -1,0 +1,23 @@
+test_required_catalog_and_durable_cwd_allow_embedded_dots_only (__main__.BuildPinTests) ... ok
+test_build_pins_are_explicit_and_uid_is_only_provenance (__main__.CodexPathTests) ... ok
+test_exact_lexical_candidates_and_cwd_boolean (__main__.CodexPathTests) ... ok
+test_help_and_version_are_static_and_truthful (__main__.CodexPathTests) ... ok
+test_imports_have_no_file_process_or_network_capability (__main__.CodexPathTests) ... ok
+test_maximum_candidate_is_not_truncated (__main__.CodexPathTests) ... ok
+test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) ... ok
+test_real_sandbox_denies_control_operations_and_allows_only_metadata_probe (__main__.CodexPathTests) ... FAIL
+test_static_probes_skip_the_actual_getenv_call (__main__.CodexPathTests) ... ok
+test_unrelated_env_and_argv_never_appear_or_change_capability (__main__.CodexPathTests) ... ok
+
+======================================================================
+FAIL: test_real_sandbox_denies_control_operations_and_allows_only_metadata_probe (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 281, in test_real_sandbox_denies_control_operations_and_allows_only_metadata_probe
+    self.assertEqual(result.returncode, 0, result.stderr.decode())
+AssertionError: -6 != 0 : 
+
+----------------------------------------------------------------------
+Ran 10 tests in 2.349s
+
+FAILED (failures=1)

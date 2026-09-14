@@ -1,0 +1,37 @@
+{
+  "snapshot_kind": "task3_fix1_precommit_scope",
+  "observed_at": "2026-09-13T20:28:25.381321+03:00",
+  "review_baseline_commit": "b8e00f13b53cd73db8571d248e6823165d5f3764",
+  "observed_head": "2d17915740cbefcb535c76e0b67e701b918b04fc",
+  "index_clean": true,
+  "scope_files": [
+    {
+      "path": "web/tests/e2e/homepage.smoke.spec.ts",
+      "sha256": "331e11bf59657378f1629d513c5a1c15b0904c5858034cd1054bc47f7c93c262",
+      "bytes": 321
+    },
+    {
+      "path": "web/tests/e2e/05-manual-moderation.spec.ts",
+      "sha256": "479f4e559ce0aa9284d14ee43294a89a456e6a4afd5691599ce9a366f15c6a41",
+      "bytes": 3182
+    },
+    {
+      "path": "web/tests/e2e/11-admin-archive-account.spec.ts",
+      "sha256": "e5554990ec2bb4e6a8cef0e9fb934c7a305fb72d4122b5402ebe2ded59f26195",
+      "bytes": 2825
+    },
+    {
+      "path": "web/tests/e2e/12-self-archive-export.spec.ts",
+      "sha256": "90d89833b63e52403346122239745510f005a4aec9fa948f7fbd644b1b2aa304",
+      "bytes": 1954
+    },
+    {
+      "path": "web/tests/e2e/16-permanent-delete.spec.ts",
+      "sha256": "b9138968b8b7f691b3c67383359aef21071bd597ba67477256598fec02cbe720",
+      "bytes": 3494
+    }
+  ],
+  "scope_patch": ".superpowers/sdd/2026-09-13-autonomy-execution/task-3-fix1-precommit.patch",
+  "scope_patch_sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692",
+  "scope_patch_bytes": 10648
+}

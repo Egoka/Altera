@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "family": "claude",
+  "source": "/absolute/original-checkout",
+  "snapshot": "/absolute/controller-run/snapshot",
+  "state": {
+    "head": "FULL_SOURCE_COMMIT",
+    "tree": "FULL_SOURCE_TREE",
+    "dirty_sha256": "SHA256_OF_GIT_DIFF_BINARY_HEAD",
+    "untracked": {}
+  },
+  "dirty_paths": [],
+  "policy": "/absolute/controller-run/policy",
+  "policy_sha256": "SHA256_FROM_TREE_HASH",
+  "run_root": "/absolute/controller-run/output",
+  "image": "sha256:REPLACE_WITH_VERIFIED_IMAGE_ID",
+  "model": "claude-opus-4-6",
+  "effort": "medium",
+  "env_paths": {},
+  "path_map": {},
+  "managed_mapping_verified": false,
+  "network": "provider-proxy"
+}

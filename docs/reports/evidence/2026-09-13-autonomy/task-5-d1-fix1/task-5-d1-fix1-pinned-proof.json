@@ -1,0 +1,25 @@
+{
+  "synthetic_only": true,
+  "native_daemon_config_read": false,
+  "binary_sha256": "d0aa8b38065d2dfa0ed0fd6953be4554b2ceb8c884f416ddd60c17d0d5fe9464",
+  "source_sha256": "fc08cd669760e584511e9bf44629d6eee082ffb6128f7a1aeeb59e1b3cb5e0c7",
+  "sandbox_sha256": "142136bdf384519a4e81492ebc2223bf11aa2a0828515829ad0367ad7001b5d1",
+  "directory_owner": 501,
+  "directory_mode": "0o700",
+  "file_owner": 501,
+  "file_mode": "0o600",
+  "cases": [
+    {
+      "case": "canonical",
+      "exit": 78,
+      "stdout_empty": true,
+      "read_status": "ok"
+    },
+    {
+      "case": "verified_alias",
+      "exit": 78,
+      "stdout_empty": true,
+      "read_status": "ok"
+    }
+  ]
+}

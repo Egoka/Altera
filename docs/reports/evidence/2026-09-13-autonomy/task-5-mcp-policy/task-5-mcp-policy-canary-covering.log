@@ -1,0 +1,9 @@
+test_json_and_sse_require_matching_successful_rpc (__main__.CanaryContracts) ... ok
+test_library_result_requires_actual_public_library_id (__main__.CanaryContracts) ... ok
+test_stream_body_is_bounded_and_stops_after_matching_sse (__main__.CanaryContracts) ... ok
+test_trace_summary_counts_and_exact_outline_are_accepted (__main__.CanaryContracts) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.142s
+
+OK

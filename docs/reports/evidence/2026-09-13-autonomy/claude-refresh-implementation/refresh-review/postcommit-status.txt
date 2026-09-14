@@ -1,0 +1,5 @@
+ M docs/reports/2026-09-13-autonomy-execution-report.md
+ M docs/reports/evidence/2026-09-13-autonomy/task-5-d2/archive-manifest.json
+?? docs/reports/evidence/2026-09-13-autonomy/d2-native/
+?? docs/reports/evidence/2026-09-13-autonomy/playwright-userns/
+?? docs/reports/evidence/2026-09-13-autonomy/task-5-d2/task-5-codex-path-probe-independent-review.md

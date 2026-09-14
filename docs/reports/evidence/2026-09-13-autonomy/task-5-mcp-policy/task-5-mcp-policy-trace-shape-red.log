@@ -1,0 +1,25 @@
+test_trace_summary_counts_and_exact_outline_are_accepted (__main__.CanaryContracts) ... FAIL
+
+======================================================================
+FAIL: test_trace_summary_counts_and_exact_outline_are_accepted (__main__.CanaryContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 51, in test_trace_summary_counts_and_exact_outline_are_accepted
+    self.node('''
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 21, in node
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs:85
+    throw new Error("trace_content_unaccepted")
+          ^
+
+Error: trace_content_unaccepted
+    at traceAccepted (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs:85:11)
+    at file:///private/tmp/altera-agent-loop-autonomy/[eval1]:7:1
+
+Node.js v24.12.0
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.042s
+
+FAILED (failures=1)

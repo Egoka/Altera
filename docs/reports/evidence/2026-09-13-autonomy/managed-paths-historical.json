@@ -1,0 +1,177 @@
+{
+  "scope": "historical managed Codex homes; no credential contents; actual new launch still unverified",
+  "entries": [
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-2-0669d1923f9b/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.playwright]",
+          "command": "\"npx\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-2-2ae15f362140/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-2-6719c9ebc8e1/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.playwright]",
+          "command": "\"npx\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-2-a9ee1463f800/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.playwright]",
+          "command": "\"npx\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-3-0ccba36b2582/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.trace]",
+          "command": "\"/Users/egorbondarenko/.trace/bin/trace\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-3-1cdc939aca55/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-3-491bf6ec55f7/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    },
+    {
+      "config_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-3-5e2306e23f28/codex-home/config.toml",
+      "mcp_commands": [
+        {
+          "section": "[mcp_servers.computer-use]",
+          "command": "\"./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient\""
+        },
+        {
+          "section": "[mcp_servers.node_repl]",
+          "command": "\"/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl\""
+        },
+        {
+          "section": "[mcp_servers.trace-mcp]",
+          "command": "\"/Users/egorbondarenko/.trace-mcp/bin/trace-mcp\""
+        }
+      ],
+      "auth_file_present": true,
+      "skills_present": true,
+      "contains_inherited_desktop_plugins": true
+    }
+  ]
+}

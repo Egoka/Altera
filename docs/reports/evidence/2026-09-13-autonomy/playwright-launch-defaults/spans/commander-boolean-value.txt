@@ -1,0 +1,10 @@
+      if (val == null) {
+        if (option.negate) {
+          val = false;
+        } else if (option.isBoolean() || option.optional) {
+          val = true;
+        } else {
+          val = "";
+        }
+      }
+      this.setOptionValueWithSource(name, val, valueSource);

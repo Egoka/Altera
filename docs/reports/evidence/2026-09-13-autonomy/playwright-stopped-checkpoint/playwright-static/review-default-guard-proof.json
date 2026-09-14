@@ -1,0 +1,10 @@
+{
+  "synthetic_only": true,
+  "frozen_diff_sha256": "59ba79a448762f85ee25bc50e36bbb201c87691660f9f69cf40f4c5127174997",
+  "no_receipt_supplied": true,
+  "no_literal_playwright_bytes": true,
+  "decoded_server_is_playwright": true,
+  "decoded_vector_matches_fixed_vector": true,
+  "guard_returned_no_playwright": true,
+  "docker_or_model_launched": false
+}

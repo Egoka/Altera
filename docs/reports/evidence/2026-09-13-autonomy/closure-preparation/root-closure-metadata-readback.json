@@ -1,0 +1,41 @@
+{
+  "checked_at": "2026-09-13T22:50:59.750291+00:00",
+  "agents": [
+    {
+      "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+      "name": "Altera \u2014 \u043d\u0435\u0437\u0430\u0432\u0438\u0441\u0438\u043c\u044b\u0439 \u0440\u0435\u0432\u044c\u044e\u0435\u0440",
+      "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "status": "idle",
+      "model": "claude-opus-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+      "name": "Altera \u2014 \u0442\u0435\u0441\u0442\u0438\u0440\u043e\u0432\u0449\u0438\u043a",
+      "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+      "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+      "status": "idle",
+      "model": "gpt-5.6-terra",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    }
+  ],
+  "historical_read_errors": [
+    {
+      "cause": "stderr_not_retained",
+      "exit": 2
+    },
+    {
+      "cause": "restricted_network_resolution",
+      "exit": 2
+    },
+    {
+      "cause": "explicit_workspace_omitted",
+      "exit": 4
+    }
+  ],
+  "consecutive_read_failures": 0,
+  "scope": "agent_metadata_only"
+}

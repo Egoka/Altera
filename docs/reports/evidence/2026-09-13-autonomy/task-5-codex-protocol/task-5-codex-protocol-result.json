@@ -1,0 +1,16 @@
+{
+  "commit": "d4bf8b898217196b0450d174d0a2a90550a4e66c",
+  "tree": "69af98894c30d114bae33a40fce3b77078b51da7",
+  "base": "c11f9da82bb0aa0a05350dfc47c219913ba7bc2d",
+  "files": [
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/protocol-guard.mjs",
+    "scripts/agent-runtime/runtime.py",
+    "scripts/agent-runtime/test_protocol_guard.mjs",
+    "scripts/agent-runtime/test_runtime.py"
+  ],
+  "owned_scope_matches_verified": true,
+  "hooks_exit": 0,
+  "hooks_log_sha256": "a158cdc22854b7cf32a6d8c61a98d7411c5f1bdcee24dd25a73bab3af7edb0e7",
+  "remaining_dirty_scope": ""
+}

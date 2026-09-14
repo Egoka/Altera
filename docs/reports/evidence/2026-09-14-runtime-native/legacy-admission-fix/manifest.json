@@ -1,0 +1,21 @@
+{
+  "status": "local_fix_review_pass_native_not_started",
+  "artifacts": [
+    {
+      "path": "task-9-legacy-green.log",
+      "sha256": "a34689ac8877544fb177c52e07310002323133af2219001949fc6eb76d4731bc"
+    },
+    {
+      "path": "task-9-legacy-review.md",
+      "sha256": "2f5bc19efe640ebd6a22324e74c4eecd71b6e2762e3b67be678d666dcea239bf"
+    },
+    {
+      "path": "native-codex-admission.json",
+      "sha256": "c8dd0742b1b3a0c65fa8e7242e59c23ad85d125bd1be527522dc88ba453f7cf7"
+    },
+    {
+      "path": "native-codex-unused-lease-release.json",
+      "sha256": "cd859837af934ed121df4817e381b81c29c248b274e2892316b7987c913f0e45"
+    }
+  ]
+}

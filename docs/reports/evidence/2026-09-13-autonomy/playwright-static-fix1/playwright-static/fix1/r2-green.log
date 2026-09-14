@@ -1,0 +1,6 @@
+test_no_receipt_rejects_semantic_playwright_and_ambiguous_mcp_authority (__main__.RuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.244s
+
+OK

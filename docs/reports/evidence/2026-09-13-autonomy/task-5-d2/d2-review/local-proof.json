@@ -1,0 +1,54 @@
+{
+  "binary_sha256": "0e3f16bb910154660d5bc8c22b4e3de16f0a20504d8b79487a70c589f28eb5e3",
+  "native_run": false,
+  "candidate_is_synthetic": true,
+  "records": [
+    {
+      "case": "candidate",
+      "exit": 78,
+      "stdout_bytes": 0,
+      "stderr_bytes": 466,
+      "stdin_left_open_until_exit": true,
+      "diagnostic": {
+        "source_sha256": "30f0d4363e4ddafca0d2cb8a49e4807d7ee56da8374a9025add70cf1147dc2d8",
+        "build_sha256": "4316863681f5378a5846cdb48ff49ccb49daeff353f5cdbeeab0740f0e4e8bbc",
+        "read_status": "lexical_candidate",
+        "cwd_matches_expected": false,
+        "argc": 4,
+        "canonical_identity": "not_checked",
+        "task_acceptance": "not_checked",
+        "candidate_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-1-012345abcdef/codex-home"
+      }
+    },
+    {
+      "case": "unresolved",
+      "exit": 78,
+      "stdout_bytes": 0,
+      "stderr_bytes": 339,
+      "stdin_left_open_until_exit": true,
+      "diagnostic": {
+        "source_sha256": "30f0d4363e4ddafca0d2cb8a49e4807d7ee56da8374a9025add70cf1147dc2d8",
+        "build_sha256": "4316863681f5378a5846cdb48ff49ccb49daeff353f5cdbeeab0740f0e4e8bbc",
+        "read_status": "managed_paths_unresolved",
+        "cwd_matches_expected": false,
+        "argc": 3,
+        "canonical_identity": "not_checked",
+        "task_acceptance": "not_checked"
+      }
+    },
+    {
+      "case": "version",
+      "exit": 0,
+      "stdout_bytes": 77,
+      "stderr_bytes": 0,
+      "stdin_left_open_until_exit": true
+    },
+    {
+      "case": "help",
+      "exit": 0,
+      "stdout_bytes": 77,
+      "stderr_bytes": 0,
+      "stdin_left_open_until_exit": true
+    }
+  ]
+}

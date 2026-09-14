@@ -1,0 +1,30 @@
+Reviewer probe transcript: extracted observed outputs, not a new execution.
+Source head: ea7f142b729bd88b2b79e247130cd40d2e329992
+Tool command chunk: 25a6f7; Python script exit 0; elapsed 4.799s.
+Invocation: PYTHONDONTWRITEBYTECODE=1 python3 inline script importing scripts/agent-loop/test_gate.py with importlib.util, using GateTests fixture helpers and direct subprocess calls to gate.py.
+Each probe used a fresh temporary Git repository; cleanup ran in finally. Product checkout unmodified.
+
+Probe 1:
+start(A,test), record(A/unit pass), finish(A,test); create paired B passport with stages test/review; start(B,test).
+pending_review_new_task: exit 0, result acquired, slot task T-second, stage test, actor second, run second-1.
+A still has mandatory review pending.
+
+Probe 2:
+start(A,test), record(A/unit pass), finish(A,test); start(A,review,reviewer,review-1).
+review_start: exit 0, acquired.
+Change server/code.txt to 'Changed after review acquired'.
+Create current-snapshot review evidence with check_id review, actor reviewer, run review-1 and event review-event.
+new_revision_review_record: exit 0, result recorded, failures 0, stopped false.
+Create current-snapshot paired JSON report listing slot evidence, native_outcome success, stage_outcome completed, task_acceptance not_checked.
+new_revision_review_finish: exit 0, contract_valid, task_acceptance not_checked.
+new_revision_review_stop: exit 0, contract_valid, task_acceptance not_checked.
+Stored test revision: b278e5569c34787e17121aca7a7d194b9b077c97, dirty_fingerprint clean.
+Stored review revision: b278e5569c34787e17121aca7a7d194b9b077c97, dirty_fingerprint sha256:e5455bf563d63a7c6c8d1d63ae8389d702a88b2ba8a996333eb4062d89e582e0.
+
+Probe 3:
+start(A,test), record(A/unit pass), finish(A,test); change server/code.txt to 'Fix after tests completed'.
+start(A,test,tester,retest-1): exit 2, rejected, stage already completed.
+start(A,review,reviewer,review-1): exit 2, rejected, previous stage evidence belongs to an obsolete revision.
+Classification: documented full-autonomy limitation, not a request to invent a Task2 reset API.
+
+All probes were expected negative reproductions for review; no failed-fix counter is consumed. Existing 22-test suite and product suites were not rerun.

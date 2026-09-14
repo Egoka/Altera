@@ -1,0 +1,50 @@
+{
+  "state": "offline_action_mechanics_tests6_pass_review_needs_current_action_url_preservation",
+  "files": [
+    {
+      "path": "task-5-playwright-action-observation-fix-report.md",
+      "bytes": 4686,
+      "sha256": "8c89eb733ff17db6940b0f7b32ebdada41304f22e89021f62c55fbae415207f6"
+    },
+    {
+      "path": "playwright-static/action-observation-fix/action-observation-only.diff",
+      "bytes": 9641,
+      "sha256": "33a97e69da1b7fc50197b8d015835069ba577c053b685aa2f8d0f0b92daf61c8"
+    },
+    {
+      "path": "playwright-static/action-observation-fix/source-proof.json",
+      "bytes": 3059,
+      "sha256": "9b881613eeae22918d26b06e26694b524a6c9473f1333ec28e265b6947acdda3"
+    },
+    {
+      "path": "playwright-static/action-observation-fix/commands-and-results.json",
+      "bytes": 933,
+      "sha256": "99667d112f7581409c3dd757968c20479465045118a31cd145a7b87e3e90fce3"
+    },
+    {
+      "path": "playwright-static/action-observation-fix/red.log",
+      "bytes": 667,
+      "sha256": "e76d25a8ef113eb971eeb594217960505cdd7ce3339da79fc784282eb733458b"
+    },
+    {
+      "path": "playwright-static/action-observation-fix/green.log",
+      "bytes": 98,
+      "sha256": "c61a7d071bcbbd18c2b81c3641e7cd2e933d0cc2c5112a561ad4fc5bd497790d"
+    },
+    {
+      "path": "playwright-static/action-observation-fix/covering.log",
+      "bytes": 104,
+      "sha256": "067daaad349562947c465e5f08f59e642134e3e603dad67499040b5ca0835354"
+    },
+    {
+      "path": "task-5-playwright-action-observation-fix-independent-review.md",
+      "bytes": 7711,
+      "sha256": "9fdac9bf566bf5394adcc798e74d516938fa43dec4c55dd58c5865b4598ae326"
+    },
+    {
+      "path": "task-5-playwright-current-action-metadata-ruling.md",
+      "bytes": 1190,
+      "sha256": "6c773d3d5b04af15338dc7dbb3c43ddb4686cf328233ae37a9567056382a9986"
+    }
+  ]
+}

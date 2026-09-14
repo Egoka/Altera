@@ -1,0 +1,36 @@
+{
+  "kernel_tag": "v6.18",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/torvalds/linux/v6.18/include/uapi/asm-generic/unistd.h",
+      "facts": {
+        "chroot": 51,
+        "unshare": 97
+      }
+    },
+    {
+      "url": "https://raw.githubusercontent.com/torvalds/linux/v6.18/scripts/syscall.tbl",
+      "facts": {
+        "chroot_common": 51,
+        "unshare_common": 97
+      }
+    },
+    {
+      "url": "https://raw.githubusercontent.com/torvalds/linux/v6.18/arch/arm64/include/uapi/asm/unistd.h",
+      "fact": "includes asm/unistd_64.h"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/torvalds/linux/v6.18/include/uapi/linux/sched.h",
+      "facts": {
+        "CLONE_NEWUSER": "0x10000000"
+      }
+    },
+    {
+      "url": "https://packages.debian.org/bookworm/git",
+      "fact": "git depends on perl, not just recommends"
+    }
+  ],
+  "build_evidence": "../playwright-static/build-2.log cached git install; complete 101-package browser-dependency install does not establish Python",
+  "runtime_identity": "unknown; dependency chain is not executable hash proof",
+  "actual_kernel_release": "not read/not required for static ABI preparation"
+}

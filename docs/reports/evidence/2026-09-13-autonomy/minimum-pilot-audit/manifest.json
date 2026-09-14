@@ -1,0 +1,10 @@
+{
+  "state": "read_only_scope_audit_no_acceptance",
+  "files": [
+    {
+      "path": "task-closure-minimum-pilot-audit.md",
+      "bytes": 8320,
+      "sha256": "84df2251a109be39fe05b960826c9b16e8afc6746b5854639361d6d75cbefbfd"
+    }
+  ]
+}

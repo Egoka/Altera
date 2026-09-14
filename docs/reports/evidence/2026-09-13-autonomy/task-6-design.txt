@@ -1,0 +1,157 @@
+# Task 6 design: revision-aware lifecycle continuation
+
+Date: 2026-09-13. READ-ONLY architecture recommendation; no implementation, source edits, commits, product checks, container/authentication work, or agents dispatched.
+
+## Recommendation
+
+Add a small lifecycle extension after Task 2's ownership and stale-prerequisite fixes: **typed stage revision obligations, an explicit return to the declared implementation stage, append-only iteration history, and an explicit binding of an evidence-only commit to the already checked source**. Keep one task, one frozen contract, one parent reservation, and the existing task/stage/check failure counters. Do not add a scheduler, general reset, selective test-impact engine, inferred budgets, or automatic acceptance.
+
+This is the smallest next extension that supports an actual planning → implementation → test → review → implementation repair → test → review sequence and repository evidence commits. It is not sufficient by itself to claim the complete deployed autonomous system: Task 5 runtime canaries, real actors, the remaining declared documentation/release stages, and Task 4 pilot/activation criteria still apply.
+
+## Evidence and scope of findings
+
+Trace-first: called `get_project_map(summary_only=true)` and `get_outline(scripts/agent-loop/gate.py)`. The new Python file is absent from the index of the original checkout. Inspected only the supplied immutable `task-2-review.diff` for source (ea7f142b729bd88b2b79e247130cd40d2e329992), not concurrent implementation files. Read AGENTS.md, operating-model, artifact-contracts, architecture, agent-loop-gate, Task 2 review, and the execution plan's Global Constraints. The two Task 2 correctness fixes belong to the implementer and are not duplicated here.
+
+| Finding | Evidence | Status |
+| --- | --- | --- |
+| Completed test cannot be rerun after an ordinary review return | `dispatch/start`, gate.py:351; Task 2 reviewer already reproduced `stage already completed` | Reproduced by existing independent review; not rerun here |
+| Every prior stage must have the next stage's exact HEAD/fingerprint | `dispatch/start`, gate.py:350–353; newly isolated planning-completed → changed implementation snapshot probe rejects `previous stage evidence belongs to an obsolete revision` | Reproduced on supplied ea7 diff |
+| Evidence-only commit invalidates evidence despite identical source | `snapshot_once`, gate.py:107–120; `check_binding`, :248–252; `dispatch/start`, :352; new probe finishes test, commits only docs/plans and docs/reports, gets empty `git diff OLD NEW -- server` and `clean` on both sides; Stop rejects `artifact ownership or revision mismatch`, review start rejects obsolete predecessor | Reproduced on supplied ea7 diff |
+| Checking prerequisites only at start previously let mutation during review bypass test freshness | Task 2 review reproduced it; Task 2 implementer is repairing it | Existing independent finding, not rerun or repaired here |
+| Strengthening prerequisite checks alone makes source mutation during an implementation stage impossible after a planning stage | The unconditional same-snapshot predecessor rule combined with the required new validation at record/finish | Direct design consequence; NOT claimed as a probe against the in-progress fix |
+| Original plan cannot be edited once the task starts | `passport_hash`, gate.py:188–189; `active`, :240–245; `dispatch/start`, :341–343 | Source-observed intended contract, not a defect by itself |
+
+New probe output: `task-6-design-probes.json`. Exactly two bounded scenarios used the supplied test helper class and real subprocess/Git operations in disposable repositories, with the gate/helper sources extracted from the review artifact to another temporary directory. No unittest discovery, existing check reruns, or worktree HEAD/index changes. The planning probe demonstrates the present handoff rule; its source edit deliberately models a revised implementation snapshot, not a claim that an unslotted writer is the recommended flow.
+
+The evidence-commit contradiction is narrower than “all docs are harmless.” A change to docs/development, agent instructions, build configuration, test definitions, or another checked input may matter to the task. No blanket docs-only exemption is proposed.
+
+## Passport: only the distinctions needed by this lifecycle
+
+Add an explicit stage `kind` with `contract`, `implementation`, or `verification`. Missing kind retains today's `verification` behavior for old passports; no name-based inference that a stage called `plan` can bypass freshness. New loop-enabled passports declare one implementation stage and a fixed `return_to` pointing to it:
+
+```json
+{
+  "stages": [
+    { "name": "architecture", "kind": "contract", "checks": [{ "check_id": "plan-contract", "criterion": "AC-1" }] },
+    { "name": "develop", "kind": "implementation", "checks": [{ "check_id": "developer-check", "criterion": "AC-1" }] },
+    { "name": "test", "kind": "verification", "checks": [{ "check_id": "unit", "criterion": "AC-1" }] },
+    { "name": "review", "kind": "verification", "return_to": "develop", "checks": [{ "check_id": "review", "criterion": "AC-1" }] }
+  ]
+}
+```
+
+Checks and ACs above are schema illustrations, not actual Altera acceptance criteria. The existing actual passport declares required checks; the gate does not create substitute checks. The test stage may also declare the same return target if tester findings can require developer repairs.
+
+For the narrow first implementation, allow leading contract stages, one implementation stage, then verification stages. Reject backward/unknown/multiple implementation targets. Require ordinary independent test and review obligations for the real task's declared source acceptance. Further stages remain explicit obligations; omitting documentation/release from a fixture does not complete them in production.
+
+Architecture drafting occurs before the frozen passport is first registered. The completed technical plan must already exist at `start(architecture)`; that stage validates the actual completed plan/contract output before implementation, rather than claiming to draft a hash-frozen file. Baseline is selected before work. This fits the current passport-before-implementation rule and needs no mutable contract API. An ordinary correction may append its rationale/technical approach to an immutable return handoff without rewriting the original contract. A change of scope, ACs, or source authorization is not an ordinary defect return and stays fail-closed pending an explicitly authorized contract update.
+
+## Revision obligations by stage
+
+1. **Contract stage:** records the exact observed input HEAD/fingerprint plus passport/plan and output proof hashes. At later stages, validate the immutable contract and its evidence, not equality of that historical product snapshot to the implemented product. Contract checks do not stand in for source verification.
+2. **Implementation stage:** owns the only source-writing slot. Its input snapshot is captured at start. Expected source edits are allowed only while this stage owns that slot and remain within the frozen scope/baseline boundary. At finish, all its required implementation evidence must match its output snapshot. That output becomes the generation's verification target. Input→output is recorded, not disguised as an unchanged revision.
+3. **Verification stage:** starts only at the latest implementation output, or an explicitly proved artifact-only equivalent. Pin its input snapshot. Every record/finish/Stop rechecks that target plus all current mandatory predecessor proofs. A source mutation during test/review is rejected, even if the current reviewer supplies a fresh passing result for the altered tree. Current tests and current review must refer to the same implementation output equivalence class.
+
+Implementation source edits are permitted by stage type, not by disabling prerequisites generally. Contract proofs remain mandatory. Only previously invalidated source verification stages are excluded from the current generation's prerequisites; their history remains intact.
+
+The minimal version deliberately reruns all declared source verification checks after a real implementation correction. It does not attempt selective reuse or infer dependencies between checks and changed files.
+
+## State: history separate from currently effective completions
+
+Keep Task 2's shared parent reservation/slot and its locking/atomic persistence. Add, per task:
+
+- `iteration` (monotone integer used only for identity of the implementation/verification pass);
+- `history` (append-only stage completion, return, artifact-binding, and halt references, including actor/run, input/output revisions, native/stage outcomes, immutable report/evidence hashes);
+- `current_stages` (references to effective completions in the current iteration; leading frozen contract completions may carry forward);
+- `verification_target` (latest implementation output and explicit artifact-only revision links).
+
+Counters remain at `tasks[task].checks[stage][check_id].failures`, **never under iteration, run, event, revision, or report ID**. Existing events/runs remain globally unique. Returning does not delete completed evidence or change counters. A new revision or new iteration is not a successful check. Existing expected TDD RED behavior stays unchanged.
+
+Preserve the canonical paired report as the latest summary, but archive each stage/return report as immutable bytes under the existing allowed `docs/reports/evidence/SLUG/` directory (for example `stages/STAGE/RUN-report.md` and matching JSON). The coordinator prepares those immutable copies before the evidence commit; `finish` verifies they match the paired report bytes and records their paths/hashes, rather than creating another uncommitted archive after final finish. Paths can be derived deterministically from stage/run, so no extra archive command is needed. Store those paths/hashes in history before allowing the next overwrite of the canonical pair. A unique run cannot overwrite its archive. Validate current prerequisites against the correct immutable stage archives, not against the mutable latest report. Final source evidence still points to actual executed commands and outputs.
+
+State versioning must preserve existing counters/events and reject unknown or corrupt layouts. Do not synthesize old report archives if a legacy canonical report has already been overwritten. Either preserve/import verifiable old state with its stated historical limits, or stop that unsupported migration with retained state; deleting state is not migration. No existing live task should be silently upgraded as a fresh task.
+
+## Explicit ordinary return command
+
+Proposed command:
+
+```text
+gate.py return docs/reports/evidence/SLUG/return-RUN.json --event RETURN_EVENT --actor REVIEWER --run REVIEW_RUN
+```
+
+The handoff includes the existing task, iteration, from-stage, declared return target, actor/run, exact observed snapshot, native outcome, `stage_outcome: returned`, `task_acceptance: return`, and references to already recorded failed check events, concrete defect locations, the violated AC, repair direction within scope, preserved constraints, failure counts, and immutable human return report/trace. Acceptance `return` is a supplied reviewer verdict, not a verdict invented by the gate. The ordinary `finish` command can continue reporting `task_acceptance: not_checked` as a structural gate result.
+
+Preconditions:
+
+- Active slot and parent belong to this task/check-out/actor/run; passport/hash and boundaries still validate.
+- Current stage declares that return target. Current target and all current prerequisite evidence are still fresh.
+- Referenced defect evidence belongs to this run and stage and was already recorded as a failed check under the stable declared check ID. Return cannot manufacture a second failure event or rename a check.
+- No stopped counter or unresolved halt permits another implementation pass. At the second consecutive failure, record the stopping handoff through the existing halt path; do not reopen the developer stage.
+
+Atomic successful transition below the stop threshold:
+
+1. Archive this unsuccessful stage report and append a return event referencing its evidence and old effective completions.
+2. End this run, release only its stage slot, preserve the parent reservation.
+3. Increment iteration and set the next allowed stage to the declared implementation stage.
+4. Invalidate the effective implementation output and every downstream verification completion; keep them in immutable history and mark them superseded by the return event.
+5. Preserve all task/stage/check counters, events, used run IDs, contract identity and baseline.
+
+No source may be changed before this transition. Developer start then captures the repair input, owns the source change, and publishes a new output. Tester and reviewer follow in order with new run/event IDs and the original stable check IDs.
+
+`release` keeps its current meaning (run ended without stage completion). The first version can require ordinary return while the failing reviewer/tester run still owns its slot; document this order clearly instead of adding an implicit reset after release. A released failed run may be followed by a new run of the same incomplete stage under today's counter rules, but release itself does not reopen earlier stages or erase history.
+
+A second review failure after a developer/tester repair is still the second consecutive failure of the review check: neither a developer pass nor a tester pass resets it. It stops the chain. A passing review resets only review's counter. No new recovery attempt allowance is defined here. Existing stopped-stage resumption criteria remain a separate explicit recovery decision with original counts preserved; this extension cannot be used as its bypass.
+
+## Exact source evidence without a commit/report self-reference
+
+Do NOT rewrite `revision_commit` in old test output to the later report commit, ignore HEAD globally, or rerun tests just to manufacture a report naming its own future commit. Add a narrow command:
+
+```text
+gate.py bind-artifacts docs/plans/SLUG.gate.json --event BIND_EVENT --actor ACTOR --run RUN
+```
+
+It links a known checked revision `from` to current `to` only after the gate itself establishes all of the following:
+
+- `from` is the task's current recorded target/slot anchor (possibly the end of an existing valid binding chain), not an arbitrary caller-supplied SHA. After a return, retain its last observed source anchor separately from invalidated verification eligibility; binding artifacts to that anchor does not resurrect the invalidated output or its tests.
+- Current HEAD descends from from-HEAD; baseline remains valid. Reject unrelated histories and ambiguous source anchors.
+- `git diff --name-only --no-renames -z FROM_HEAD TO_HEAD` changes **only this task's declared canonical gate plan/passport/report paths and its evidence directory**. The original passport/plan and previously recorded immutable proof bytes still match their frozen hashes. There must be no changed source/configuration/test/policy path, no move between artifact and source paths, and no other arbitrary docs exception.
+- Scoped dirty fingerprint equals the recorded from-fingerprint. The existing boundary check still rejects product changes outside scope. Since all committed differences are confined to the fixed excluded artifact paths, every committed checked input is unchanged; equal scoped dirty state completes the proof for a dirty source target. This uses the existing snapshot scheme, not a new generalized content-hash framework.
+- Validate all recorded current proof hashes and source obligations before writing the link. Collect/recheck snapshots and hashes around validation, under the same cooperative state lock. Refuse symlink artifacts as today.
+
+Append an immutable state event containing from/to full SHA+dirty snapshots, checked changed-path list, task/contract identity, actor/run, and proof references. Keep original evidence/report SHA/fingerprint fields and hashes unchanged. A later gate operation may accept a historical evidence snapshot only through this explicit, validated equality chain; actual current `snapshot` still prints actual HEAD. The command never turns a failed/not-run check into a pass, completes a stage, resets a count, or accepts a task.
+
+Allow binding within the owning slot as well as between that parent's stages, because the final report must be committed **before** final finish releases the parent. It permits only proven artifact movement while checked source remains pinned. When a slot exists, validate actor/run ownership; when between stages, bind only for the same reserved parent and its retained owning run lineage. Do not mutate another active task or use a previously completed task to move another task's anchor.
+
+Concrete normal flow:
+
+```text
+architecture contract frozen and checked
+start develop -> change source -> commit implementation -> record developer output -> finish develop
+start test -> execute tests -> record exact source evidence -> write paired stage report and immutable stage copies
+commit only allowed task evidence/report paths -> bind-artifacts -> finish test
+start review -> record review verdict/evidence -> write paired review report and immutable stage copies
+commit only allowed task evidence/report paths -> bind-artifacts -> finish review
+```
+
+For a return, archive the review defect and return first, commit its artifacts while the parent remains reserved, bind them if needed, then start developer. Stop or final finish can validate the final evidence commit with original source evidence through the link. There is no need to edit the just-committed report to insert that commit's own SHA: the report names the actually checked source revision; current gate state records the exact later artifact commit and proof of source equality. The binding is independently reproducible from Git and the hashed artifacts. It is not a claim that the test process ran at a SHA it never ran at.
+
+This deliberately does not accept committing previously dirty implementation files after tests: that changes a source path and often changes dirty fingerprint, so it requires the normal new implementation output and verification. Commit implementation before verification. It also does not exempt a controller's broad docs/development change just because no product file changed; review/check those declared inputs as appropriate. Latest root docs-only commits are not automatically evidence-only commits.
+
+## Focused acceptance cases for implementation
+
+1. **Real planned change:** finish immutable contract stage at C0; start implementation at C0; edit/commit scoped source to C1 while owning it; record actual implementation checks at C1; finish; tester and reviewer complete on C1. All stages/history retained, planning not falsely treated as a test of C1.
+2. **Ordinary review repair:** developer/test pass; review's stable check fails once; explicit return; same task/baseline/passport and parent survive; developer corrects source; fresh tester pass then reviewer pass; old reports/output/trace remain readable; only review's actual pass resets its one failure.
+3. **Two failures across repairs:** same sequence, second review fails. Counter reaches two across distinct run/iteration/revision IDs. Further return-to-developer, start, or passing-record attempts cannot bypass the stop. Task/event/check renaming cannot replace the frozen contract. Parent halt/release follows the existing explicit mechanism, not state deletion.
+4. **No stale acceptance:** source edits during a pinned test/review are rejected by record, finish and Stop; a newly passing review cannot bless source whose tester evidence is superseded. Developer output change always invalidates all downstream effective completions.
+5. **Evidence-only final commit:** real test evidence/report at C1; commit only allowed task artifact paths to C2; bind; finish/Stop and the next mandatory stage succeed using exact original test SHA plus the explicit C1→C2 link. Repeat for final reviewer evidence commit before final finish. No test rerun and no report SHA rewrite needed.
+6. **Negative artifact bindings:** reject source/config/test changes (including a change outside declared scope), unrelated HEAD, path rename across boundary, modified passport/plan, changed or symlinked prior evidence/output/trace, changed scoped dirty state, arbitrary docs changes, duplicate binding event, stale from-target, or foreign actor/run/task. Rejection leaves state/counters unchanged.
+7. **Parent reservation through repair/publication:** second product task in another worktree cannot acquire after return, between stages, or while final evidence commit/binding awaits finish. Original task remains the parent; existing explicit halt semantics apply.
+8. **Archive and state preservation:** overwriting the canonical latest report does not remove earlier stage or return reports; mutating their archived bytes is detected. Interrupted/invalid transitions do not advance iteration, lose counters or release ownership. Legacy/corrupt state is not silently reset.
+
+These are focused behavioral fixtures for the new transitions, followed by the existing gate regression suite once on the final implementation. Do not rerun product checks for these fixture-only changes. Test results from this design's probes establish contradictions only, not successful implementation of the proposal.
+
+## Required documentation correction and remaining blockers
+
+Update agent-loop-gate.md, artifact-contracts.md and operating-model §3 together when implementing: exact observed revision stays mandatory; a contract output is not source verification; every final source verification must cover the latest implementation output or a recorded, narrowly proved artifact-only equivalent. Replace the currently impossible universal sentence requiring every historical stage's SHA/fingerprint to equal the new implementation with those stage-specific obligations.
+
+The Task 2 implementer reports commit `e77c65e0bea357f103b1edbfd30350ac2776b99c`: parent survives intermediate finish/release, final declared finish clears it, schema is version 2 and version 1 fails closed. This design fits that boundary by committing and binding final report/archives while the final slot and parent are still owned, before final finish; it does not assume a post-finish reservation. This is an implementer-provided fact, not a fresh source review here. Task 2 first needs its independent review to pass. Task 6 needs implementation plus independent review of the ordinary return, stop and artifact-publication cases above. Full-autonomy acceptance remains blocked until those paths are demonstrated and the separately owned runtime/model/pilot requirements pass. This design supplies no new owner budgets, implicit permissions, runtime guarantees, or autonomous acceptance claims.

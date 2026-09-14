@@ -1,0 +1,11 @@
+{
+  "source": {
+    "head": "8f8f2cc1871078dc3c6a3352585315ce87d1b6e1",
+    "tree": "318ad37629325732c480ab104eb8118d299f6490",
+    "dirty_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {}
+  },
+  "snapshot": "5e8001165f5144de45578695a52c9cad979843ea0afa8e49dfe70f5d59899232",
+  "policy": "8282244cbd11fe55bfbe3d321edb30def6aed858185ca50587cae8635a27d9de",
+  "runtime_sha256": "435abda70f7ca56dce248ee5087f1a5dfea6bdb492bb53d6c7fa423a21ae3f99"
+}

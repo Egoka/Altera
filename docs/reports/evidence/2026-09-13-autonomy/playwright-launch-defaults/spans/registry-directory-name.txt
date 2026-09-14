@@ -1,0 +1,22 @@
+function readDescriptors(browsersJSON) {
+  return browsersJSON["browsers"].map((obj) => {
+    const name = obj.name;
+    const revisionOverride = (obj.revisionOverrides || {})[hostPlatform];
+    const revision = revisionOverride || obj.revision;
+    const browserDirectoryPrefix = revisionOverride ? `${name}_${hostPlatform}_special` : `${name}`;
+    const descriptor = {
+      name,
+      revision,
+      hasRevisionOverride: !!revisionOverride,
+      // We only put browser version for the supported operating systems.
+      browserVersion: revisionOverride ? void 0 : obj.browserVersion,
+      title: obj["title"],
+      installByDefault: !!obj.installByDefault,
+      // Method `isBrowserDirectory` determines directory to be browser iff
+      // it starts with some browser name followed by '-'. Some browser names
+      // are prefixes of others, e.g. 'webkit' is a prefix of `webkit-technology-preview`.
+      // To avoid older registries erroneously removing 'webkit-technology-preview', we have to
+      // ensure that browser folders to never include dashes inside.
+      dir: import_path20.default.join(registryDirectory, browserDirectoryPrefix.replace(/-/g, "_") + "-" + revision)
+    };
+    return descriptor;

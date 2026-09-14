@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 343, in <module>
+    run_docker_canary(sys.argv[2], sys.argv[3])
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 320, in run_docker_canary
+    assert state['ExitCode'] == 0 and result.returncode == 0, 'real MCP canary failed; inspect canary-report.json'
+AssertionError: real MCP canary failed; inspect canary-report.json

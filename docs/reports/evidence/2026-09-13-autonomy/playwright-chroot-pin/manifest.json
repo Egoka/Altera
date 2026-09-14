@@ -1,0 +1,90 @@
+{
+  "state": "exact_pin_independently_accepted_recovery_dispatched_not_accepted",
+  "files": [
+    {
+      "path": "task-5-playwright-recovery-readiness.md",
+      "bytes": 7730,
+      "sha256": "3ddd75b8af38e2688352cad0209ba2a8711234a112d545e5d17014539edd2e7d"
+    },
+    {
+      "path": "task-5-playwright-chroot-pin-implementation-report.md",
+      "bytes": 3408,
+      "sha256": "165b56c3b4d73662f8efac322ee329cb3527c3196c227e59ee495ba5ec5e0874"
+    },
+    {
+      "path": "playwright-static/chroot-pin/pin-only.diff",
+      "bytes": 1653,
+      "sha256": "2c32430afe9f476fe253c29212b96a3e14c8f8428c737fcd00010df92a31fde8"
+    },
+    {
+      "path": "playwright-static/chroot-pin/source-proof.json",
+      "bytes": 1825,
+      "sha256": "718ca33e7d99454ed2a0a77bcc630d5f502488960ed28544a65ff04b33ef5e34"
+    },
+    {
+      "path": "playwright-static/chroot-pin/red-command.json",
+      "bytes": 135,
+      "sha256": "c0c7a3a0daa1c3801cd1f553d4d2e3a83d48c1bb96e13fbccf5dfc698a06f8d1"
+    },
+    {
+      "path": "playwright-static/chroot-pin/red-result.json",
+      "bytes": 34,
+      "sha256": "47ee8cd4fcf316aa4a7ed4ab0f52a39753bac942d558287a3d0af70338b388ef"
+    },
+    {
+      "path": "playwright-static/chroot-pin/red.log",
+      "bytes": 875,
+      "sha256": "d8b0a2b7cf19d4cc93169ad6adf810f85d57db22a1f90f296e066c459d305c60"
+    },
+    {
+      "path": "playwright-static/chroot-pin/green-command.json",
+      "bytes": 135,
+      "sha256": "c0c7a3a0daa1c3801cd1f553d4d2e3a83d48c1bb96e13fbccf5dfc698a06f8d1"
+    },
+    {
+      "path": "playwright-static/chroot-pin/green-result.json",
+      "bytes": 12,
+      "sha256": "5bc232b82de377a5655a39a2af9d7ae0fc868de5b9df957e18905cb914606c88"
+    },
+    {
+      "path": "playwright-static/chroot-pin/green.log",
+      "bytes": 98,
+      "sha256": "fb184ea57734512b1f088f9181209901b9cd46df3eb7eaa2500ea9e48dde20b5"
+    },
+    {
+      "path": "playwright-static/chroot-pin/static-covering-command.json",
+      "bytes": 83,
+      "sha256": "0f7aee3ffe026d4f264f3737b2e6dd7952fe1540e526a43c8a025fefefbb0a17"
+    },
+    {
+      "path": "playwright-static/chroot-pin/static-covering-result.json",
+      "bytes": 12,
+      "sha256": "5bc232b82de377a5655a39a2af9d7ae0fc868de5b9df957e18905cb914606c88"
+    },
+    {
+      "path": "playwright-static/chroot-pin/static-covering.log",
+      "bytes": 102,
+      "sha256": "9cdbec613313ffc96bb20a5275ff1c8f76091e6b964a22df1d6ea967dc1358c0"
+    },
+    {
+      "path": "playwright-static/chroot-pin/mapper-covering-command.json",
+      "bytes": 83,
+      "sha256": "c9a4f448278626b88d29162eadd59675702557d6616cd8be6f636758bc3bfc81"
+    },
+    {
+      "path": "playwright-static/chroot-pin/mapper-covering-result.json",
+      "bytes": 12,
+      "sha256": "5bc232b82de377a5655a39a2af9d7ae0fc868de5b9df957e18905cb914606c88"
+    },
+    {
+      "path": "playwright-static/chroot-pin/mapper-covering.log",
+      "bytes": 2013,
+      "sha256": "ee0dbe31fa068bcd2728753bb57b43790fc4ab4a18b79b03c88a0e31392849d5"
+    },
+    {
+      "path": "task-5-playwright-chroot-pin-independent-review.md",
+      "bytes": 3433,
+      "sha256": "6dc4a947b8fb1902d1de1d179bcbf1c6603ca8f7b3f9251fbc7381e238fd3061"
+    }
+  ]
+}

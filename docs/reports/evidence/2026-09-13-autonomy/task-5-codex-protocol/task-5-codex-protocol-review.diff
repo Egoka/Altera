@@ -1,0 +1,192 @@
+diff --git a/docs/development/runtime-isolation.md b/docs/development/runtime-isolation.md
+index 8cea8c1..53965a5 100644
+--- a/docs/development/runtime-isolation.md
++++ b/docs/development/runtime-isolation.md
+@@ -69,7 +69,9 @@ credentials не читается launcher и не входит в manifest/hash
+ ```
+ 
+ Для Codex поддерживается app-server и узкие overrides исходной модели/medium; launcher
+-явно задаёт их даже при отсутствии native flags. Для Claude
++явно задаёт их даже при отсутствии native flags. Разрешена одна необязательная native пара
++`--listen stdio://`, которая передаётся без изменений; equals-форма, другой transport, duplicates и неизвестные
++argv отвергаются. Для Claude
+ сохраняются известные stream-json flags, модель, effort и disallowedTools; неизвестные флаги
+ не пропускаются вслепую. `[mcp_servers.trace]` в RO `codex-config.toml` запускает Linux
+ `/usr/local/bin/trace-mcp serve --preset review`. Его проверенный index находится в отдельном
+@@ -82,8 +84,11 @@ credentials не читается launcher и не входит в manifest/hash
+ CLI и stderr остаются раздельными, сигналы передаются дочернему процессу. Изменение модели,
+ reasoning или default service tier через RPC также отвергается. В pinned schema
+ `serviceTierForTurn` принимает только omitted/null (наследует закреплённый tier) либо `"default"`
+-(standard speed); `fast`, `flex` и неизвестные значения запрещены. `serviceTier`/`service_tier`
+-допускают только null/omitted. Thread `config` ограничен `model`, `model_reasoning_effort`,
++(standard speed); `fast`, `flex` и неизвестные значения запрещены. `serviceTier: "default"`
++разрешён только в прямом `params` Codex RPC `thread/start`, `thread/resume`, `turn/start`.
++В другом RPC, вложенном объекте/config или массиве это исключение не действует; остальные
++ненулевые tiers не исправляются и отвергаются. `service_tier` по-прежнему допускает только
++null/omitted. Thread `config` ограничен `model`, `model_reasoning_effort`,
+ `service_tier` с исходными значениями; произвольные nested/dotted profiles и provider overrides
+ не принимаются. `config/value/write`, `config/batchWrite` и `externalAgentConfig/import`
+ отвергаются целиком: checker не меняет defaults через keyPath/value, batch или файлы импорта.
+@@ -91,6 +96,10 @@ reasoning или default service tier через RPC также отвергае
+ ограничений внутри CLI не отменяет Docker mounts. Diagnostic flag `fixture: true` выбирает
+ явный coordinator-owned `/runtime/policy/fixture.mjs` вместо CLI; сам по себе он не означает
+ ни запуск модели, ни fake-успех. Тип конкретного опыта и фактический executable фиксирует отчёт.
++Совместимость argv/RPC не доказывает native приёмку: обнаружение per-task CODEX_HOME,
++проверка и materialization managed TOML, перенос фактического AGENTS.md context и native canary
++остаются отдельными blockers. Guard поставляется в hashed RO policy; перед будущей canary
++нужен её новый capture/hash, без пересборки неизменённого image.
+ 
+ ## Сеть и авторизация
+ 
+diff --git a/scripts/agent-runtime/protocol-guard.mjs b/scripts/agent-runtime/protocol-guard.mjs
+index ef8721e..fd96792 100644
+--- a/scripts/agent-runtime/protocol-guard.mjs
++++ b/scripts/agent-runtime/protocol-guard.mjs
+@@ -11,6 +11,18 @@ export function validate(bytes, root, family = "codex") {
+     ["config/value/write", "config/batchWrite", "externalAgentConfig/import"].includes(value?.method)
+   )
+     throw new Error("preserved_model_settings_changed")
++  // Исключение только для прямого params в трёх native RPC; вложенные tiers не расширяются.
++  const nativeParams =
++    family === "codex" &&
++    value !== null &&
++    typeof value === "object" &&
++    !Array.isArray(value) &&
++    ["thread/start", "thread/resume", "turn/start"].includes(value.method) &&
++    value.params !== null &&
++    typeof value.params === "object" &&
++    !Array.isArray(value.params)
++      ? value.params
++      : null
+   function visit(item) {
+     if (item === null || typeof item !== "object") return
+     for (const [key, child] of Object.entries(item)) {
+@@ -20,7 +32,8 @@ export function validate(bytes, root, family = "codex") {
+         (["effort", "reasoningEffort", "reasoning_effort", "model_reasoning_effort"].includes(key) &&
+           child !== null &&
+           child !== "medium") ||
+-        (["serviceTier", "service_tier", "modelProvider", "model_provider"].includes(key) && child !== null) ||
++        (key === "serviceTier" && child !== null && !(item === nativeParams && child === "default")) ||
++        (["service_tier", "modelProvider", "model_provider"].includes(key) && child !== null) ||
+         (key === "serviceTierForTurn" && child !== null && child !== "default")
+       )
+         throw new Error("preserved_model_settings_changed")
+diff --git a/scripts/agent-runtime/runtime.py b/scripts/agent-runtime/runtime.py
+index 10bae03..a71d361 100755
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -145,7 +145,14 @@ def effective_args(manifest, incoming):
+             raise ValueError('unsupported_codex_protocol')
+         result.append('app-server')
+         i = 1
++        seen_listener = False
+         while i < len(incoming):
++            if incoming[i] == '--listen':
++                if seen_listener or i + 1 == len(incoming) or incoming[i + 1] != 'stdio://':
++                    raise ValueError('unsupported_codex_listener')
++                seen_listener = True
++                result.extend(incoming[i:i + 2]); i += 2
++                continue
+             if incoming[i] not in ('-c', '--config') or i + 1 == len(incoming):
+                 raise ValueError('unsupported_codex_argument')
+             setting = incoming[i + 1]
+diff --git a/scripts/agent-runtime/test_protocol_guard.mjs b/scripts/agent-runtime/test_protocol_guard.mjs
+index afc108c..2effafe 100644
+--- a/scripts/agent-runtime/test_protocol_guard.mjs
++++ b/scripts/agent-runtime/test_protocol_guard.mjs
+@@ -86,3 +86,60 @@ test("config mutation RPCs cannot hide overrides in keyPath values or imported f
+   }
+   validate(Buffer.from('{"method":"config/read","params":{}}'), "/source/project")
+ })
++
++test("native Codex start resume and turn default tier is accepted without rewriting bytes", async () => {
++  const { validate } = await import("./protocol-guard.mjs")
++  const base = { model: "gpt-5.6-terra", cwd: "/source/project", developerInstructions: null, serviceTier: "default" }
++  for (const [method, params] of [
++    ["thread/start", { ...base, config: { model_reasoning_effort: "medium" } }],
++    ["thread/resume", { ...base, threadId: "synthetic", config: { model_reasoning_effort: "medium" } }],
++    ["turn/start", { ...base, threadId: "synthetic", effort: "medium", input: [] }]
++  ]) {
++    const bytes = Buffer.from(JSON.stringify({ id: 1, method, params }, null, 2) + "\n")
++    const original = Buffer.from(bytes)
++    validate(bytes, "/source/project")
++    assert.deepEqual(bytes, original)
++    for (const serviceTier of [null, undefined]) {
++      validate(Buffer.from(JSON.stringify({ method, params: { ...params, serviceTier } })), "/source/project")
++    }
++  }
++})
++
++test("native default tier allowance is confined to direct params of three Codex methods", async () => {
++  const { validate } = await import("./protocol-guard.mjs")
++  const valid = { method: "thread/start", params: { serviceTier: "default" } }
++  for (const request of [
++    { method: "thread/fork", params: { serviceTier: "default" } },
++    { method: "arbitrary/rpc", params: { serviceTier: "default" } },
++    { params: { serviceTier: "default" } },
++    { method: "thread/start", serviceTier: "default", params: {} },
++    { method: "thread/start", params: [{ serviceTier: "default" }] },
++    { method: "thread/start", params: { nested: { serviceTier: "default" } } },
++    { method: "thread/start", params: { config: { serviceTier: "default" } } },
++    { method: "thread/start", params: { config: { service_tier: "default" } } },
++    [valid],
++    { nested: valid }
++  ]) {
++    assert.throws(() => validate(Buffer.from(JSON.stringify(request)), "/source/project"))
++  }
++  assert.throws(() => validate(Buffer.from(JSON.stringify(valid)), "/source/project", "claude"))
++  for (const method of ["thread/start", "thread/resume", "turn/start"]) {
++    for (const serviceTier of ["priority", "fast", "flex", "unknown", false, [], {}]) {
++      assert.throws(() => validate(Buffer.from(JSON.stringify({ method, params: { serviceTier } })), "/source/project"))
++    }
++    for (const drift of [
++      { model: "other" },
++      { effort: "low" },
++      { modelProvider: "other" },
++      { cwd: "/tmp" },
++      { config: { model_reasoning_effort: "high" } }
++    ]) {
++      assert.throws(() =>
++        validate(
++          Buffer.from(JSON.stringify({ method, params: { serviceTier: "default", ...drift } })),
++          "/source/project"
++        )
++      )
++    }
++  }
++})
+diff --git a/scripts/agent-runtime/test_runtime.py b/scripts/agent-runtime/test_runtime.py
+index ea9e7e3..05889e1 100644
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -194,6 +194,30 @@ class RuntimeTests(unittest.TestCase):
+             with self.assertRaises(ValueError):
+                 self.runtime.command(self.manifest, bad, {})
+ 
++    def test_native_codex_stdio_listener_is_forwarded_exactly(self):
++        self.manifest.update(family='codex', model='gpt-5.6-terra')
++        for incoming in [['app-server', '--listen', 'stdio://'],
++                         ['app-server', '--listen', 'stdio://', '-c', 'model="gpt-5.6-terra"'],
++                         ['app-server', '--config', 'model_reasoning_effort="medium"', '--listen', 'stdio://']]:
++            with self.subTest(incoming=incoming):
++                args = self.runtime.command(self.manifest, incoming, {})
++                self.assertEqual(args[args.index('app-server'):], incoming + [
++                    '-c', 'model="gpt-5.6-terra"', '-c', 'model_reasoning_effort="medium"'])
++
++    def test_native_codex_listener_does_not_allow_alternate_transports_or_overrides(self):
++        self.manifest.update(family='codex', model='gpt-5.6-terra')
++        for tail in [['--listen'], ['--listen=stdio://'],
++                     ['--listen', 'stdio://', '--listen', 'stdio://'],
++                     ['--listen', 'tcp://127.0.0.1:9000'], ['--listen', 'unix:///tmp/socket'],
++                     ['--listen', 'https://example.invalid'], ['--listen', 'stdio:/'],
++                     ['--listen', 'stdio://', '--unknown'],
++                     ['--listen', 'stdio://', '-c', 'model="other"'],
++                     ['--listen', 'stdio://', '-c', 'model_reasoning_effort="low"'],
++                     ['--listen', 'stdio://', '-c', 'service_tier="fast"']]:
++            with self.subTest(tail=tail):
++                with self.assertRaises(ValueError):
++                    self.runtime.command(self.manifest, ['app-server'] + tail, {})
++
+     def test_omitted_native_flags_keep_explicit_model_and_effort(self):
+         args = self.runtime.command(self.manifest, [], {})
+         self.assertIn('--model', args)

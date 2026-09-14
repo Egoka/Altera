@@ -1,0 +1,83 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  21:27:13
+web test:    Duration  114ms (transform 62%, import 18%, tests 12%, worker 8%, environment 1%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  21:27:13
+server test:    Duration  324ms (import 79%, transform 18%, worker 2%, tests 1%)
+server test: Done
+[docs/agent-loop-autonomy 5bbd693] docs(agent-loop): preserve lifecycle evidence and current migration status
+ 52 files changed, 8572 insertions(+), 3 deletions(-)
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/multica-fields-preflight-second.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/preservation-during-task6.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/resource-branch-drift-9435606.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/review-1dad64f..e6f8684.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/review-2d17915..1dad64f.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/root-status-docs-check.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-before-edit-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-browser-title-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-disjoint-head-advance.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-evidence-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-final-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-format.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-lint.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precheck-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precheck.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precommit-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precommit.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precommit.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-report.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-staged-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-staged.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-stopped-handoff.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-6-initial-evidence-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-6-report.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-commit.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-evidence-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-final-precheck.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-final-precheck.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-final2-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-final2-precheck.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-final2-precheck.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-full-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-green1-precheck.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-green1.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-green2.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-green3-precheck.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-green3.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-passport-flow-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-passport-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-passport-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-postcommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-precommit-gate-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-red-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-staged-gate-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-staged-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-staged.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-state-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task6-state-red.txt

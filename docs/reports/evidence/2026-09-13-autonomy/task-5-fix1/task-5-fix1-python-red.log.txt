@@ -1,0 +1,46 @@
+test_untracked_mode_changes_in_source_and_snapshot_fail_closed (__main__.RuntimeTests) ... test_untracked_kind_changes_with_identical_digest_fail_closed (__main__.RuntimeTests) ... test_untracked_fingerprint_normalizes_permissions_to_git_mode (__main__.RuntimeTests) ... FAIL
+
+======================================================================
+FAIL: test_untracked_mode_changes_in_source_and_snapshot_fail_closed (__main__.RuntimeTests) (root='source')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 92, in test_untracked_mode_changes_in_source_and_snapshot_fail_closed
+    self.runtime.command(self.manifest, [], {})
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_untracked_mode_changes_in_source_and_snapshot_fail_closed (__main__.RuntimeTests) (root='mode-snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 92, in test_untracked_mode_changes_in_source_and_snapshot_fail_closed
+    self.runtime.command(self.manifest, [], {})
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_untracked_kind_changes_with_identical_digest_fail_closed (__main__.RuntimeTests) (root='source')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 109, in test_untracked_kind_changes_with_identical_digest_fail_closed
+    self.runtime.command(self.manifest, [], {})
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_untracked_kind_changes_with_identical_digest_fail_closed (__main__.RuntimeTests) (root='kind-snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 109, in test_untracked_kind_changes_with_identical_digest_fail_closed
+    self.runtime.command(self.manifest, [], {})
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_untracked_fingerprint_normalizes_permissions_to_git_mode (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 121, in test_untracked_fingerprint_normalizes_permissions_to_git_mode
+    self.assertEqual(initial['untracked']['new-input'], {
+AssertionError: '676f11f64b47e1927bdc7bcd579281e3b77c661a[20 chars]db39' != {'kind': 'file', 'mode': '100644', 'sha25[66 chars]b39'}
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.380s
+
+FAILED (failures=5)

@@ -1,0 +1,16 @@
+
+> server@1.0.0 build:ci /private/tmp/altera-agent-loop-autonomy/server
+> prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/
+
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.12.0) to ./src/generated/prisma in 45ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+
+> server@1.0.0 copy-graphql /private/tmp/altera-agent-loop-autonomy/server
+> node scripts/copy-graphql.js
+

@@ -1,0 +1,27 @@
+[
+  {
+    "check": "writable-control",
+    "exit": 41,
+    "operations": 18
+  },
+  {
+    "check": "readonly-boundary",
+    "exit": 0,
+    "operations": 18
+  },
+  {
+    "check": "protocol",
+    "exit": 42,
+    "exact_streams": true
+  },
+  {
+    "check": "signal",
+    "exit": 143,
+    "forwarded_SIGTERM": true
+  },
+  {
+    "check": "codex-cwd-guard",
+    "exit": 78,
+    "rejected_alternate_cwd": true
+  }
+]

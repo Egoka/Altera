@@ -1,0 +1,41 @@
+F
+======================================================================
+FAIL: test_namespace_capabilities_require_real_isolation_and_preserve_diagnostics (__main__.PlaywrightStaticTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 234, in test_namespace_capabilities_require_real_isolation_and_preserve_diagnostics
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : node:assert:152
+  throw new AssertionError(obj);
+  ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ '0000000000200000'
+- '0000000000000000'
+             ^
+
+    at [eval]:1:343
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30)
+    at evalTypeScript (node:internal/process/execution:295:3)
+    at node:internal/main/eval_string:71:3 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '0000000000200000',
+  expected: '0000000000000000',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.12.0
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.039s
+
+FAILED (failures=1)

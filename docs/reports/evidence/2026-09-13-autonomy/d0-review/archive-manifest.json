@@ -1,0 +1,60 @@
+{
+  "binary_not_archived": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/metadata-probe",
+  "files": [
+    {
+      "path": "metadata-probe.c.txt",
+      "bytes": 5344,
+      "sha256": "a5843cc10aa495bb6cf48e89f80bd121bf66fa582e85a6fb2584cc8691d67107"
+    },
+    {
+      "path": "task-5-d0-red.log.txt",
+      "bytes": 3457,
+      "sha256": "3d1dc0042cf61250e0b22cd0e52616fa5a72362e9dbbd459632c1def4883f879"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 3421,
+      "sha256": "0f662c5d1458d607fece2ce0926b8aad0f5adea1999f889e7c103f38cc5b422a"
+    },
+    {
+      "path": "test_metadata_probe.py.txt",
+      "bytes": 3708,
+      "sha256": "049f0302760701b1d26e083c2d57c98a696bc5e8b4f41dea5d149e22a6ce913e"
+    },
+    {
+      "path": "task-5-d0-build.json",
+      "bytes": 498,
+      "sha256": "a64b687ef662db0eecc940c1de1212051d4fa85b36215aca049e0ea8437c937e"
+    },
+    {
+      "path": "task-5-d0-green.log.txt",
+      "bytes": 423,
+      "sha256": "b884aaf0054d033c75fb6ad008704b5ffa68c75ffc12d851c414b6c764d9a9cc"
+    },
+    {
+      "path": "build_metadata_probe.py.txt",
+      "bytes": 808,
+      "sha256": "2147f3edcef0b61933a2193303efef26b0e97775807981a06b17d8bc49de24b0"
+    },
+    {
+      "path": "task-5-d0-imports.log.txt",
+      "bytes": 103,
+      "sha256": "7493fe471bf8ee36a57034b1f0ab681efe5c809e2b6f18b42492d4ac6562740f"
+    },
+    {
+      "path": "task-5-d0-controller-review.md",
+      "bytes": 2300,
+      "sha256": "258eabd0a7a7e4f60ea556e35e58a66e552116549d8e9dc933f652a7f900a693"
+    },
+    {
+      "path": "task-5-d0-source-review.diff",
+      "bytes": 5805,
+      "sha256": "c738a035473157725bda142d9d030edae821c264bbe66b59c3615ae9a035b1ca"
+    },
+    {
+      "path": "task-5-d0-build-test-review.diff",
+      "bytes": 5310,
+      "sha256": "bfe01972812d5ea6449543aaccc4d8095469e7baf750ccec6ce93adce0723627"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "state": "unverified-build-stopped",
+  "base": "a51b1116e1e2553605ab704bda2efc1cb463b31b",
+  "files": [
+    {
+      "path": "scripts/agent-runtime/metadata-config-probe.c",
+      "sha256": "bbde1f7bd2bec71451f4800b3e99c24207ef6428422b649e7fae2b0c3680547f"
+    },
+    {
+      "path": "scripts/agent-runtime/build_metadata_config_probe.py",
+      "sha256": "d6747b24fc6cf5e8213ab5ed09339fceb08820f79e81d6500e4089ac976b1c14"
+    },
+    {
+      "path": "scripts/agent-runtime/test_metadata_config_probe.py",
+      "sha256": "247639a9ae296ad2ebf1214c3ea3f1417ff51f5e59be376c7ad6145742eac10d"
+    },
+    {
+      "path": "docs/development/runtime-isolation.md",
+      "sha256": "9e175d0cb628071eb47ca4cac8b4fd4d9648db130e74118d6274184ec9315a31"
+    }
+  ],
+  "new_tests_not_run": [
+    "root symlink",
+    "invalid temp names",
+    "deterministic replacement/truncation via test-only interposer"
+  ]
+}

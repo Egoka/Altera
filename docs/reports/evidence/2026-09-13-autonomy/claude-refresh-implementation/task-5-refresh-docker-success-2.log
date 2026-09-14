@@ -1,0 +1,9 @@
+test_success_concurrent_selection_and_interrupted_publication (__main__.DockerRefreshTests) ... {"syntheticOperation": "exchange", "result": {"status": "exchange_succeeded", "refreshBranchObserved": false, "browserHandoffObserved": false}}
+{"syntheticOperation": "status", "result": {"status": "authenticated"}}
+{"syntheticOperation": "model", "result": {"status": "model_accepted", "usage": {"input_tokens": 3, "output_tokens": 5}, "modelUsage": {"claude-opus-4-6": {"inputTokens": 3, "outputTokens": 5, "costUSD": 0.05, "canonicalModel": "claude-opus-4-6", "provider": "firstParty", "costBasis": "list"}}, "totalCostUsd": 0.05, "billingVerified": false}}
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.076s
+
+OK

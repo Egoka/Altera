@@ -1,0 +1,13 @@
+
+======================================================================
+FAIL: test_rewritten_titles_require_kernel_executable_identity (__main__.PlaywrightStaticTests) (case='all_seven_saved_rows')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 318, in test_rewritten_titles_require_kernel_executable_identity
+    with self.subTest(case=expected['name']): self.assertEqual(actual['ok'], expected['expected'])
+AssertionError: False != True
+
+----------------------------------------------------------------------
+Ran 1 test in 0.047s
+
+FAILED (failures=1)

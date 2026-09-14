@@ -1,0 +1,78 @@
+"""Проверки настоящего executable без AI CLI. Запускать через python3 -I."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parent
+BINARY = Path(sys.argv.pop(1)).resolve() if len(sys.argv) > 1 else ROOT / 'metadata-probe'
+SECRET = 'SYNTHETIC_SECRET_CANARY_718b'
+
+
+class MetadataProbeTests(unittest.TestCase):
+    def invoke(self, args, cwd=None):
+        self.assertTrue(BINARY.is_file(), 'metadata-only executable is not implemented')
+        process = subprocess.Popen([str(BINARY), *args], cwd=cwd,
+            env={'MULTICA_TOKEN': SECRET, 'CODEX_HOME': SECRET, 'HOME': SECRET},
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Открытый непрочитанный stdin не должен задерживать diagnostic exit.
+        process.wait(timeout=2)
+        out, err = process.communicate()
+        self.assertNotIn(SECRET.encode(), out + err)
+        return process.returncode, out, err
+
+    def test_static_registration_probes(self):
+        for flag in ['--version', '--help']:
+            code, out, err = self.invoke([flag])
+            self.assertEqual(code, 0)
+            self.assertIn(b'altera-metadata-probe', out)
+            self.assertNotIn(b'Claude', out)
+            self.assertEqual(err, b'')
+
+    def test_redacts_values_and_unknown_names_without_executing(self):
+        with tempfile.TemporaryDirectory() as root:
+            marker = Path(root) / 'must-not-exist'
+            code, out, err = self.invoke(['--model', SECRET, '--mcp-config',
+                '{"command":"touch ' + str(marker) + '","token":"' + SECRET + '"}',
+                '--' + SECRET + '=value', '--settings=' + SECRET,
+                '$(touch ' + str(marker) + ')', SECRET + '\nsecret'])
+            self.assertEqual(code, 78)
+            self.assertEqual(out, b'')
+            self.assertFalse(marker.exists())
+            self.assertEqual(len(err.splitlines()), 1)
+            manifest = json.loads(err)
+            self.assertEqual(manifest['marker'], 'ALTERA_METADATA_ONLY_V1')
+            self.assertEqual(manifest['schema_version'], 1)
+            self.assertEqual(manifest['probe_source_sha256'], hashlib.sha256((ROOT / 'metadata-probe.c').read_bytes()).hexdigest())
+            self.assertTrue(manifest['env_presence']['MULTICA_TOKEN'])
+            self.assertTrue(manifest['env_path_unresolved'])
+            self.assertTrue(any(x.get('unresolved_path_input') for x in manifest['argv']))
+
+    def test_paths_are_lexical_and_bounded_not_followed(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root).resolve()
+            (root / 'link').symlink_to('/does-not-exist/' + SECRET)
+            code, _, err = self.invoke(['--mcp-config', str(root / 'link'),
+                '--settings', str(root) + '/../outside', '--mcp-config=https://x/' + SECRET,
+                '--mcp-config', str(root) + '/x\n' + SECRET], cwd=root)
+            self.assertEqual(code, 78)
+            entries = json.loads(err)['argv']
+            self.assertEqual(entries[0]['path'], str(root / 'link'))
+            self.assertTrue(entries[1]['unresolved_path_input'])
+            self.assertTrue(entries[2]['unresolved_path_input'])
+            self.assertTrue(entries[3]['unresolved_path_input'])
+
+    def test_bounded_output_for_large_invocation(self):
+        code, out, err = self.invoke(['--unknown=' + SECRET + 'x' * 1000] * 200)
+        self.assertEqual(code, 78)
+        self.assertEqual(out, b'')
+        self.assertLess(len(err), 16384)
+        self.assertTrue(json.loads(err)['truncated'])
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

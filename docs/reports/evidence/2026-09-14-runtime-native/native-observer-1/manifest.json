@@ -1,0 +1,781 @@
+{
+  "schema_version": 1,
+  "family": "claude",
+  "source": "/Users/egorbondarenko/WebstormProjects/Altera",
+  "snapshot": "/private/tmp/altera-native-observer-1vqiiqr0/snapshot",
+  "state": {
+    "head": "bb7f4d98c5b9bdb9b559358cc5e6801aecbf160b",
+    "tree": "7b17b3be2f6e36179b7c3612500b4cd9b3c270e1",
+    "dirty_sha256": "b76399d77d64537e1d44b5f6fb5ee0c29735531261df4438ba22b09e08377a41",
+    "untracked": {
+      "docs/plans/2026-09-14-native-runtime-pilot.md": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "fd21dcd1adb792140888eb5fec60c8883dac67d71c653e8d03b8e08298163bb5"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/manifest.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "4c75b5530965f59ef77be97e1a0ad85dc61360c1957f2bc783f0212473c36531"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-fix-round1.md": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "3c85ed677dc15ff3d37ec71bfa3452766defaf9400ce4aa29ad9c6361e67b4dc"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-fix1-review-notes.md": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "59710a3811e2746a88c5db2ffe6fa834776b88f8b97a36d0e23ce11c6094d5d1"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-report.md": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "0fc1f49cf8c7d03f09b86042cf20ec92d65a1c138afb3aab23dc086a94e69f21"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-review.md": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "8b8cb317912741dbc4d4d57186637d540ccec488c4c2021c3eb644c7d6c813e7"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/container-inspect.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "20d66e3c599845afb741a17d0a107deb8c4992deff270a092b7a92e0b8a0262c"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/browser-processes.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "48ff862048322b09c7c44a165bb75f8ba51706a3c719ad3a7d95cc9424eca1a0"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/canary-report.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "6b6dde45c68d9c45d01e3099b340428cd92c27b6205f1a4da9ec9ac105d0606b"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/main-protocol.jsonl": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "525d024de8ca15c3f73ed7131b018d67c4fa92aab5b3e466b20dde18ec0555cf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/missing-protocol.jsonl": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "92f2745e23991dd8ffabc3ae26156f6078d9cc9df16c3d4c33a283d712ae217f"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-05-449Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "f04e9fd7f885796009058a2db52cc1bb1eda9a2b0952d1c779c7e14b96be91a5"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-06-034Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "d416e11f533bcd98ac148555b4fefe3bea797f7739a8984d3e41469596765f82"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-06-654Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "7f5de691c908c04ee3032c2ab4f4966b139299afa9decb5ac2c363943c6b5f77"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-06-709Z.png": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "24712bf05e31db9fd466156b5b8267bb7eb8f82cb8fdaa0f0d1800a9cc5d2e1d"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/exit.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "d04835de450e89ffcb410752f4df62c02a8aa3849806a1055605004e7d2f4c01"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/network-inspect.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "c474af176ad119c2668c030a920a61d87802c999899b2f86802ba70363ca9457"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/policy/canary.mjs": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "6d90fc348b6be0d7970e4883db1dc1fdad4b45635e9f086a224f494cc298b030"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/policy/poison.cjs": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "0e5d0ca4b92c1b12d5a86381c9e1964e96bad736bd63c85a3cc5087932688194"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/policy/vector.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "214f23b126e0afa3cf15aee9e079d6cb6b04a7d588dfef3d1a72dff725650264"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/readonly-source-policy.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "440cb6c31d1d154a7e79c68b4915fd5ffe9e0105c0ed17aaea45b07a9bbed4da"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/source/input.txt": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "95460896c80fd6a87b824bb081b3743da9abfdf8ccddc9b80ab8309fce9c65cf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/commands.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "db426fcc772074ae667892c93bb831965e0d1174b2a2a7471bd63e05c0c2e3fd"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/container-inspect.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "323d98dc0ed60caa8935b881bb36c7ebf7623cc2656567de51274d12c7a9f7ab"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/browser-processes.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e0fc1973880b0b75fe45b2754fdd200ec4d7966e1006fabada710996c7740884"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/canary-report.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "b016a165a0fbe84a863de20553eed01d18a3cf5c14b1eeba5ee744293987d84c"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/main-protocol.jsonl": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e6b84ec5617f6836dfceab41ffa33e8e52739c47f512395bd9e95274d1ae4c64"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/missing-protocol.jsonl": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "92f2745e23991dd8ffabc3ae26156f6078d9cc9df16c3d4c33a283d712ae217f"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-41-59-200Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "f04e9fd7f885796009058a2db52cc1bb1eda9a2b0952d1c779c7e14b96be91a5"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-41-59-781Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "d416e11f533bcd98ac148555b4fefe3bea797f7739a8984d3e41469596765f82"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-42-00-390Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "7f5de691c908c04ee3032c2ab4f4966b139299afa9decb5ac2c363943c6b5f77"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-42-00-460Z.png": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "24712bf05e31db9fd466156b5b8267bb7eb8f82cb8fdaa0f0d1800a9cc5d2e1d"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-42-00-640Z.yml": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "3467328aeea48bba31fe31af1595ba0b047a416ad5b401700ff28a676ad86983"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/exit.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "ec31229c13f9015e82bef75c3bac0b0b3852496d367951c8902ed37c0cc42e82"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/network-inspect.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e86f141a1f2c2cf3b50a5f25189c06ae4c58d0548a6c27002652de3e2e1d5f0c"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/policy/canary.mjs": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "6d90fc348b6be0d7970e4883db1dc1fdad4b45635e9f086a224f494cc298b030"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/policy/poison.cjs": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "0e5d0ca4b92c1b12d5a86381c9e1964e96bad736bd63c85a3cc5087932688194"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/policy/vector.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "214f23b126e0afa3cf15aee9e079d6cb6b04a7d588dfef3d1a72dff725650264"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/readonly-source-policy.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "440cb6c31d1d154a7e79c68b4915fd5ffe9e0105c0ed17aaea45b07a9bbed4da"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/source/input.txt": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "95460896c80fd6a87b824bb081b3743da9abfdf8ccddc9b80ab8309fce9c65cf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-01.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-01.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "868108eb0ee31bb138cd35dcc664c9b40cd58d7e97c9932186866c664abc4811"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-02.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-02.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "779557e98ae2f7b93c5d2dc896d204ef5480f590cde0c990b2bbbe1c7a2908f4"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-03.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-03.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "b2e55034b49db28d13f0891458040647bb1335688ff6f7a3cfc51aec72a25b53"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-04.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-04.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-05.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-05.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-06.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-06.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "4486d633296025de7b3e45680f47f3748aca0f3cf551b4afe3dd3350a04f9abf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-07.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-07.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "4f92f64e09c59d529db04409e223668e65568522e4143210d95fd0ed79cbce7f"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-08.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-08.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-09.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-09.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "4486d633296025de7b3e45680f47f3748aca0f3cf551b4afe3dd3350a04f9abf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-10.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-10.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "2f4d75285b33ba4257adf0205f08128b3f4063469e704650b4a1c754ca477886"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-11.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-11.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "b1dcff37348b79f982d3986815c4c5ac76dc4097e96008ea623133341a45223f"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-12.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-12.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e86f141a1f2c2cf3b50a5f25189c06ae4c58d0548a6c27002652de3e2e1d5f0c"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-13.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-13.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "ece506617914c9c32978a4108dab849137d6ce82dc53c9ae8129e081e7a36b4f"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-14.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-14.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e86f141a1f2c2cf3b50a5f25189c06ae4c58d0548a6c27002652de3e2e1d5f0c"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-15.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-15.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "f5809a0f90a393c0a84f4e9319c85e825ea9ed61cfbd2fa4fcff02e7599d7f56"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-16.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-16.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "eb80e0cd43fd5074c6831474b3c3c29e6c6bb46bf7a532d917d6cd51cbd9c393"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-17.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-17.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "6cf8dfe2f5fe4100e1dce8c4edfe9c844e3ba7280f87de94f46dc05198313e31"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-18.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-18.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "743a1c8d145f68a3cfb01ba5c053f7ae14d14c7f6e1f4757682b8a4fc7c31a18"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-19.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-19.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "9b94ee202c3e2e513ca36eca75afd6f7dd4dc387770656a2f989d9c3ccb8ec8b"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-20.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-20.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "1721978880b8800c99781d5b86274731912fbbf3b479275611d7469f4fc0290b"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-21.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-21.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "cad1d2107b71d3ef700d2f905d7ed6b2b0385faf7e978c43c8859a6aa8e9bd68"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-22.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-22.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e12fd0b2d8e50c3df95c64257ea3f0ea0702eee5890a653a2a8c770aa4d0d8bf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-23.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-23.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-24.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-24.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "4486d633296025de7b3e45680f47f3748aca0f3cf551b4afe3dd3350a04f9abf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-25.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-25.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "50cb654942ddcc6dcadd31a7c1aeb3dd11015859744fef3ce5a10dc745789884"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-26.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-26.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "3a3f7485060af6fa20ca9e81adc56a7755064041c3f3e6d43bf3e5420ed5fcaf"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-27.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-27.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "c474af176ad119c2668c030a920a61d87802c999899b2f86802ba70363ca9457"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-28.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-28.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "16f310a6df808311cebb473c1ef6a960aee49d34bf4e845a71ee2556ae29ab87"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-29.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-29.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "c474af176ad119c2668c030a920a61d87802c999899b2f86802ba70363ca9457"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-30.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-30.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "db554f7d64f2f1c0c0d62a588988197dddf22adea33244f3366b75f701393eda"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-31.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-31.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "0679fe3421122faeb612bbd13b97a47f7c11eeac98e8a940c858a23089813fd9"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-32.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-32.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "ba7caeaf7a009cc867bf67e1830b6f404303ef36f7492e4270a26281f144f5e6"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-33.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-33.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "1bb73b1360585ec3e96664af17d098681303246f25baa3ab274fcdf7e8e66510"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-34.stderr": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-34.stdout": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "f9d572d8883446529db17b848c65a7b3259aa4eda2e20b04f1b507a742088b6f"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/image-inspect.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "de8af5bdab4baead6c1b25f5c3d53c3a25c0285ee535831c6477b10753c86087"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/result.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "2b321de8985a80a8943424320e2dcc3156c439cda0772a57700c58736a33ba14"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/seccomp.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/claim.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "e054d32312461cdf040944572195c7ac4a79cc4f040ad2d340fefdf8b0a1c465"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/invocation-result.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "35be5ff171cd77ed24ad055c60cabb6aacbd7a6fd2a8a5d84bbb7f5e61137469"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/manifest.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "325ba3f811efa7f9919b2885b9749314684658539425912658631493e6651563"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-review/manifest.json": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "8da336a6949862fbad48ce282c296237105a234f363dff11cb1cb0f32099293a"
+      },
+      "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-review/task-8-runtime-acceptance-review.md": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "f79316094f1fd137318063dfa8281fa093c7b61fd4a3be99dd135f6a5fe78dbc"
+      },
+      "scripts/agent-loop/native_collector.py": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "f14947c736001b7e6b6d8722e4469bc5aa1988ddbd3051a0d7dfb5044bff4670"
+      },
+      "scripts/agent-loop/test_native_collector.py": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "96d9ab164d696d717c0ac3f89be5e3c42045ebdb85d9245f19b838d9b6af56ce"
+      },
+      "scripts/agent-runtime/native_adapter.py": {
+        "kind": "file",
+        "mode": "100755",
+        "sha256": "476adea1c1de99977332d26030c9382d00b4b11ae91ab0a781c0ee2fbb6bfa55"
+      },
+      "scripts/agent-runtime/native_claude_adapter.py": {
+        "kind": "file",
+        "mode": "100755",
+        "sha256": "aec8f6374b7623607b27f019ef07b9036bec172912e39b2c44d5496673fe1f23"
+      },
+      "scripts/agent-runtime/native_codex_adapter.py": {
+        "kind": "file",
+        "mode": "100755",
+        "sha256": "30d9a585af556d9d7fb500aa8cece14534fe9313e3abc5f89c3c80774de5b0b9"
+      },
+      "scripts/agent-runtime/prepare_native.py": {
+        "kind": "file",
+        "mode": "100755",
+        "sha256": "9d51915d9fff2a4749168ffef9a741e3fd6906074937e5235f4c0151299f55a1"
+      },
+      "scripts/agent-runtime/prepare_native_claude.py": {
+        "kind": "file",
+        "mode": "100755",
+        "sha256": "94414669626a57894e79ca06643201b6cd4ac55b45d6c9e9432555bcd07cdc5c"
+      },
+      "scripts/agent-runtime/prepare_native_codex.py": {
+        "kind": "file",
+        "mode": "100755",
+        "sha256": "8e76fbff0cdcec7fb101872346cb814a492221cdb369b0286b52d309f6408913"
+      },
+      "scripts/agent-runtime/runtime-check.test.mjs": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "45214742cf4426559244382b25608fee639c6d615af3387a0ff16c8fd1b162ee"
+      },
+      "scripts/agent-runtime/test_native_adapter.py": {
+        "kind": "file",
+        "mode": "100644",
+        "sha256": "583bce52348ff611dbb5f807ee3879ad1edb4278a8fd28fb596b6f5be1f35064"
+      }
+    }
+  },
+  "dirty_paths": [
+    "docs/plans/2026-09-14-native-runtime-pilot.md",
+    "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/manifest.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-fix-round1.md",
+    "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-fix1-review-notes.md",
+    "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-report.md",
+    "docs/reports/evidence/2026-09-14-runtime-native/adapter-verification/task-8-adapters-review.md",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/container-inspect.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/browser-processes.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/canary-report.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/main-protocol.jsonl",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/missing-protocol.jsonl",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-05-449Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-06-034Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-06-654Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/evidence/playwright/page-2026-09-14T10-42-06-709Z.png",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/exit.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/network-inspect.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/policy/canary.mjs",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/policy/poison.cjs",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/policy/vector.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/readonly-source-policy.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/acceptance/source/input.txt",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/commands.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/container-inspect.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/browser-processes.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/canary-report.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/main-protocol.jsonl",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/missing-protocol.jsonl",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-41-59-200Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-41-59-781Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-42-00-390Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-42-00-460Z.png",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/evidence/playwright/page-2026-09-14T10-42-00-640Z.yml",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/exit.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/network-inspect.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/policy/canary.mjs",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/policy/poison.cjs",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/policy/vector.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/readonly-source-policy.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/control/source/input.txt",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-01.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-01.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-02.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-02.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-03.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-03.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-04.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-04.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-05.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-05.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-06.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-06.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-07.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-07.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-08.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-08.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-09.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-09.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-10.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-10.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-11.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-11.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-12.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-12.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-13.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-13.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-14.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-14.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-15.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-15.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-16.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-16.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-17.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-17.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-18.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-18.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-19.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-19.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-20.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-20.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-21.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-21.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-22.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-22.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-23.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-23.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-24.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-24.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-25.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-25.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-26.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-26.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-27.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-27.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-28.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-28.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-29.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-29.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-30.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-30.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-31.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-31.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-32.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-32.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-33.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-33.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-34.stderr",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/docker-34.stdout",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/image-inspect.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/result.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/canary/seccomp.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/claim.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/invocation-result.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-8/manifest.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-review/manifest.json",
+    "docs/reports/evidence/2026-09-14-runtime-native/runtime-acceptance-review/task-8-runtime-acceptance-review.md",
+    "scripts/agent-loop/native_collector.py",
+    "scripts/agent-loop/test_native_collector.py",
+    "scripts/agent-runtime/native_adapter.py",
+    "scripts/agent-runtime/native_claude_adapter.py",
+    "scripts/agent-runtime/native_codex_adapter.py",
+    "scripts/agent-runtime/prepare_native.py",
+    "scripts/agent-runtime/prepare_native_claude.py",
+    "scripts/agent-runtime/prepare_native_codex.py",
+    "scripts/agent-runtime/runtime-check.test.mjs",
+    "scripts/agent-runtime/test_native_adapter.py"
+  ],
+  "policy": "/private/tmp/altera-native-observer-1vqiiqr0/policy",
+  "policy_sha256": "d0e835013b234796549110d3ad6d8b894149f7fe839d2868d3c55fa0328fc8fd",
+  "run_root": "/private/tmp/altera-native-observer-1vqiiqr0/run",
+  "image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+  "model": "claude-opus-4-6",
+  "effort": "medium",
+  "env_paths": {},
+  "path_map": {},
+  "managed_mapping_verified": true,
+  "network": "none"
+}

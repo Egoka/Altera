@@ -1,0 +1,21 @@
+{
+  "state": "design_interface_preparation_only_not_implemented",
+  "files": [
+    {
+      "file": "task-5-claude-native-adapter-brief.md",
+      "bytes": 7116,
+      "sha256": "33bebe897b378e5bfe69a2d7b923802c20304845aea0ed2c44d1854be03612ad"
+    },
+    {
+      "file": "task-5-native-generation-selection-readiness.md",
+      "bytes": 13036,
+      "sha256": "594bd256355cce2cc4accd597c208626901ad5ec99a9f7964e43822b8f8983ef"
+    },
+    {
+      "file": "task-5-native-adapter-root-rulings.md",
+      "bytes": 3854,
+      "sha256": "820939d88ff9029d6debe8400610b58ac01fa07213c9e3ae3fc6048fff499794"
+    }
+  ],
+  "native_acceptance": false
+}

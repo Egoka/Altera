@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "family": "claude",
+  "source": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/mcp-policy-canary-1/source",
+  "snapshot": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/mcp-policy-canary-1/snapshot",
+  "state": {
+    "head": "8f8f2cc1871078dc3c6a3352585315ce87d1b6e1",
+    "tree": "318ad37629325732c480ab104eb8118d299f6490",
+    "dirty_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {}
+  },
+  "dirty_paths": [],
+  "policy": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/mcp-policy-canary-1/policy",
+  "policy_sha256": "8282244cbd11fe55bfbe3d321edb30def6aed858185ca50587cae8635a27d9de",
+  "run_root": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/mcp-policy-canary-1/run",
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "model": "claude-opus-4-6",
+  "effort": "medium",
+  "env_paths": {},
+  "path_map": {
+    "/synthetic/managed/mcp.json": "/runtime/policy/mcp.json"
+  },
+  "managed_mapping_verified": false,
+  "fixture": true,
+  "network": "provider-proxy"
+}

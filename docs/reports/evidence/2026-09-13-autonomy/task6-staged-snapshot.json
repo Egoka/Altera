@@ -1,0 +1,19 @@
+{
+  "head": "1dad64f9fa0af196e32dd2f9f5676740c8d13797",
+  "paths": [
+    "docs/development/agent-loop-gate.md",
+    "docs/development/artifact-contracts.md",
+    "docs/multica/operating-model.md",
+    "scripts/agent-loop/gate.py",
+    "scripts/agent-loop/test_gate.py"
+  ],
+  "files": {
+    "scripts/agent-loop/gate.py": "9c63c1ab4c75c9c915142c3daff1f3557e57ee338cfab7e7c22bae100d35e230",
+    "scripts/agent-loop/test_gate.py": "042fa3115810eab9eee85b5637bce72275ba815b987c762923937503e9d2e862",
+    "docs/development/agent-loop-gate.md": "3d5a4436f24c2303e8d637cb49139c1bac1a02c4e10c9b86602245617c3d4652",
+    "docs/development/artifact-contracts.md": "c58f32089852b5fc304b7ddcc1addca2f49e9877201641adf5010e95f2f36f8b",
+    "docs/multica/operating-model.md": "7d1d50fe1f6114a63307a15ea5d8d90dae50e7ecda4e44eba7c657cf3a8b07b8"
+  },
+  "staged_sha256": "3298423f4e943e397e8938e51f054aed7c64a02a60a1057d76751ffa524a3708",
+  "index": "100644 21f1c6e603a6758cd023d0a2d79d4a2204e321a4 0\tdocs/development/agent-loop-gate.md\n100644 95b5016546e2ccf74a74183d3d2246356ff63149 0\tdocs/development/artifact-contracts.md\n100644 68634e10f23a33ca3b6f547a7f58170f2bacf0f1 0\tdocs/multica/operating-model.md\n100755 bfde05a0cb7d90a764cb719f3c2954941c668831 0\tscripts/agent-loop/gate.py\n100644 0d8c27adf6b368db5aae7cf56e3017156c8c0a97 0\tscripts/agent-loop/test_gate.py\n"
+}

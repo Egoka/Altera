@@ -1,0 +1,28 @@
+test_generation_root_permissions_and_replacement_are_rechecked_under_lock (__main__.RefreshTests) ... FAIL
+test_candidate_file_and_directory_are_synced_before_written_journal (__main__.RefreshTests) ... FAIL
+test_prepared_recovery_removes_only_proven_empty_pending_directory (__main__.RefreshTests) ... ok
+
+======================================================================
+FAIL: test_generation_root_permissions_and_replacement_are_rechecked_under_lock (__main__.RefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_credential_refresh.py", line 212, in test_generation_root_permissions_and_replacement_are_rechecked_under_lock
+    with store.select_current(): pass
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_candidate_file_and_directory_are_synced_before_written_journal (__main__.RefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_credential_refresh.py", line 233, in test_candidate_file_and_directory_are_synced_before_written_journal
+    self.assertEqual(store.refresh()['status'], 'published')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/credential_refresh.py", line 363, in refresh
+    state = {**state, 'stage': 'candidate_written'}; self.write_state(state)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_credential_refresh.py", line 228, in state
+    self.assertIn((path / '.credentials.json').stat().st_ino, synced)
+AssertionError: 109748514 not found in {109748512, 109748505, 109748506, 109748513}
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.028s
+
+FAILED (failures=2)

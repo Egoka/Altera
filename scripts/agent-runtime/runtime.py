@@ -1,0 +1,873 @@
+#!/usr/bin/python3 -I
+"""Доверенный host launcher: AI, shell и локальные MCP работают только в Docker.
+
+Вызов: runtime.py MANIFEST.json [аргументы native protocol...]
+Manifest создаёт coordinator; проверяемый агент не может его менять.
+"""
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import signal
+import stat
+import subprocess
+import sys
+import uuid
+from contextlib import contextmanager
+import time
+
+DOCKER = '/usr/local/bin/docker'
+GIT = '/usr/bin/git'
+
+
+def child_env():
+    # Docker не нужны model/API/Multica credentials и унаследованные plugin paths.
+    return {'PATH': '/usr/local/bin:/usr/bin:/bin', 'HOME': '/var/empty',
+            'DOCKER_HOST': 'unix:///Users/egorbondarenko/.docker/run/docker.sock'}
+
+
+def git(source, *args, data=None):
+    return subprocess.run([GIT, '-c', 'core.hooksPath=/dev/null', '-C', str(source), *args],
+        input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True,
+        env={'PATH': '/usr/bin:/bin', 'HOME': '/var/empty', 'GIT_CONFIG_NOSYSTEM': '1',
+             'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_TERMINAL_PROMPT': '0'}).stdout
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def safe_relative(value):
+    path = Path(value)
+    if not value or path.is_absolute() or '..' in path.parts or '.git' in path.parts:
+        raise ValueError('unsafe_relative_path')
+    return path
+
+
+def safe_symlink(path, root):
+    if path.is_symlink() and (os.path.isabs(os.readlink(path)) or not path.resolve().is_relative_to(root)):
+        raise ValueError('unsafe_symlink')
+
+
+def fingerprint(source, dirty_paths):
+    source = Path(source).resolve(strict=True)
+    untracked = {name for name in git(source, 'ls-files', '--others', '--exclude-standard', '-z').decode().split('\0') if name}
+    # Неперечисленный новый source не должен молча исчезать из проверяемого snapshot.
+    if len(dirty_paths) != len(set(dirty_paths)) or untracked != set(dirty_paths):
+        if any(subprocess.run([GIT, '-C', str(source), 'check-ignore', '-q', '--', name],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0 for name in dirty_paths):
+            raise ValueError('ignored_input')
+        raise ValueError('untracked_input_mismatch')
+    entries = {}
+    for name in dirty_paths:
+        relative = safe_relative(name)
+        if subprocess.run([GIT, '-C', str(source), 'check-ignore', '-q', '--', name],
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+            raise ValueError('ignored_input')
+        path = source / relative
+        safe_symlink(path, source)
+        if not path.is_file() or not path.resolve().is_relative_to(source):
+            raise ValueError('unsafe_dirty_path')
+        mode = path.lstat().st_mode
+        # Git различает symlink и regular file, у regular — только owner execute bit.
+        if stat.S_ISLNK(mode):
+            kind, git_mode, content = 'symlink', '120000', os.fsencode(os.readlink(path))
+        elif stat.S_ISREG(mode):
+            kind = 'file'
+            git_mode = '100755' if mode & stat.S_IXUSR else '100644'
+            content = path.read_bytes()
+        else:
+            raise ValueError('unsafe_dirty_path')
+        entries[name] = {'kind': kind, 'mode': git_mode, 'sha256': digest(content)}
+    return {'head': git(source, 'rev-parse', 'HEAD').decode().strip(),
+            'tree': git(source, 'rev-parse', 'HEAD^{tree}').decode().strip(),
+            'dirty_sha256': digest(git(source, 'diff', '--binary', 'HEAD', '--')),
+            'untracked': entries}
+
+
+def tree_hash(root):
+    root = Path(root).resolve(strict=True)
+    entries = []
+    for path in sorted(root.rglob('*')):
+        if path.is_symlink():
+            raise ValueError('unsafe_policy_symlink')
+        if path.is_file():
+            entries.append([path.relative_to(root).as_posix(), digest(path.read_bytes())])
+        elif not path.is_dir():
+            raise ValueError('unsafe_special_file')
+    return digest(json.dumps(entries, separators=(',', ':')).encode())
+
+
+def snapshot(source, target, dirty_paths):
+    """Независимый clone без ignored files, hooks и shared objects."""
+    source, target = Path(source).resolve(strict=True), Path(target).resolve()
+    if target.exists() or target.is_relative_to(source) or source.is_relative_to(target):
+        raise ValueError('unsafe_snapshot_target')
+    before = fingerprint(source, dirty_paths)
+    git(source, 'clone', '--no-local', '--no-hardlinks', '--no-checkout', '--', str(source), str(target))
+    git(target, 'checkout', '--detach', before['head'])
+    patch = git(source, 'diff', '--binary', 'HEAD', '--')
+    if patch:
+        git(target, 'apply', '--binary', '-', data=patch)
+    import shutil
+    for name in dirty_paths:
+        path = source / safe_relative(name)
+        destination = target / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination, follow_symlinks=False)
+    # Проверить symlinks, не открывая путь к исходным host inputs.
+    for name in git(target, 'ls-files', '-z').decode().split('\0'):
+        if name:
+            safe_symlink(target / name, target)
+    if fingerprint(source, dirty_paths) != before:
+        raise ValueError('source_changed_during_snapshot')
+    if fingerprint(target, dirty_paths) != before:
+        raise ValueError('snapshot_mismatch')
+    git(target, 'remote', 'remove', 'origin')
+    return before
+
+
+def canonical(value):
+    if not isinstance(value, str) or not value.startswith('/') or re.search(r'[\x00-\x1f,=]', value):
+        raise ValueError('unsafe_mount_path')
+    path = Path(value)
+    if str(path.resolve(strict=True)) != value or not path.is_dir():
+        raise ValueError('mount_must_be_canonical_directory')
+    return path
+
+
+def effective_args(manifest, incoming):
+    family = manifest['family']
+    result = []
+    if family == 'codex':
+        if not incoming or incoming[0] != 'app-server':
+            raise ValueError('unsupported_codex_protocol')
+        result.append('app-server')
+        i = 1
+        seen_listener = False
+        while i < len(incoming):
+            if incoming[i] == '--listen':
+                if seen_listener or i + 1 == len(incoming) or incoming[i + 1] != 'stdio://':
+                    raise ValueError('unsupported_codex_listener')
+                seen_listener = True
+                result.extend(incoming[i:i + 2]); i += 2
+                continue
+            if incoming[i] not in ('-c', '--config') or i + 1 == len(incoming):
+                raise ValueError('unsupported_codex_argument')
+            setting = incoming[i + 1]
+            if setting not in ('model="gpt-5.6-terra"', 'model_reasoning_effort="medium"'):
+                raise ValueError('unmapped_codex_override')
+            result.extend([incoming[i], setting]); i += 2
+        result.extend(['-c', 'model="gpt-5.6-terra"', '-c', 'model_reasoning_effort="medium"'])
+        return result
+    toggles = {'--print', '-p', '--verbose', '--include-partial-messages',
+               '--dangerously-skip-permissions'}
+    values = {'--input-format', '--output-format', '--permission-mode', '--model', '--effort',
+              '--session-id', '--resume', '--mcp-config', '--append-system-prompt', '--system-prompt',
+              '--disallowedTools'}
+    seen = set()
+    i = 0
+    while i < len(incoming):
+        flag = incoming[i]
+        if flag == '--strict-mcp-config':
+            i += 1
+            continue
+        if flag in toggles:
+            result.append(flag); i += 1; continue
+        if flag not in values or i + 1 >= len(incoming) or flag in seen:
+            raise ValueError('unsupported_or_duplicate_claude_argument')
+        seen.add(flag)
+        value = incoming[i + 1]
+        if flag in ('--model', '--effort') and value != manifest[flag[2:]]:
+            raise ValueError('model_or_effort_change')
+        if flag in ('--input-format', '--output-format') and value != 'stream-json':
+            raise ValueError('unsupported_stream_format')
+        if flag == '--mcp-config':
+            if value.lstrip().startswith(('{', '[')):
+                raise ValueError('inline_mcp_config_unresolved')
+            if not Path(value).is_absolute():
+                raise ValueError('managed_path_unresolved')
+            value = manifest['path_map'].get(value)
+            if value is None or not value.startswith('/runtime/policy/') or '..' in Path(value).parts:
+                raise ValueError('managed_path_unresolved')
+            mapped = Path(manifest['policy']) / value.removeprefix('/runtime/policy/')
+            if not mapped.is_file():
+                raise ValueError('mapped_mcp_file_missing')
+            def unique_object(pairs):
+                result = {}
+                for key, item in pairs:
+                    if key in result:
+                        raise ValueError('unsupported_mcp_config')
+                    result[key] = item
+                return result
+
+            def reject_constant(_value):
+                raise ValueError('unsupported_mcp_config')
+
+            try:
+                config = json.loads(mapped.read_text(), object_pairs_hook=unique_object,
+                                    parse_constant=reject_constant)
+            except (ValueError, UnicodeError):
+                raise ValueError('unsupported_mcp_config') from None
+            if not isinstance(config, dict) or set(config) != {'mcpServers'} or not isinstance(config['mcpServers'], dict):
+                raise ValueError('unsupported_mcp_config')
+            for name, server in config['mcpServers'].items():
+                if name == 'trace':
+                    valid = (isinstance(server, dict) and not set(server) - {'command', 'args', 'type'} and
+                             server.get('type', 'stdio') == 'stdio' and
+                             server.get('command') == '/usr/local/bin/trace-mcp' and
+                             server.get('args') in (['serve'], ['serve', '--preset', 'review']))
+                elif name == 'context7':
+                    valid = (isinstance(server, dict) and set(server) == {'type', 'url'} and
+                             server['type'] == 'http' and server['url'] == 'https://mcp.context7.com/mcp')
+                else:
+                    valid = False
+                if not valid:
+                    raise ValueError('unverified_mcp_server')
+        result.extend([flag, value]); i += 2
+    for flag in ('--model', '--effort'):
+        if flag not in seen:
+            result.extend([flag, manifest[flag[2:]]])
+    result.extend(['--settings', '/runtime/policy/claude-settings.json', '--strict-mcp-config'])
+    return result
+
+
+def sandbox_arguments(interactive=True):
+    return [DOCKER, 'run', '--rm', '--init', *(['--interactive'] if interactive else []),
+            '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges',
+            '--pids-limit=128', '--memory=2g', '--cpus=2',
+            '--user=' + str(os.getuid()) + ':' + str(os.getgid())]
+
+
+REFRESH_IMAGE = 'sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a'
+
+
+def private_reference(value, directory=False):
+    path = Path(value)
+    if (not path.is_absolute() or path.is_symlink() or path.resolve(strict=True) != path or
+        re.search(r'[\x00-\x1f,=]', str(path))):
+        raise ValueError('unsafe_private_reference')
+    info = path.stat()
+    kind = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
+    if (not kind or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != (0o700 if directory else 0o600) or
+        (not directory and (info.st_nlink != 1 or not 0 < info.st_size <= 65536))):
+        raise ValueError('unsafe_private_metadata')
+    return path
+
+
+def refresh_policy(policy, expected_hash):
+    """Сначала metadata всех exact entries, затем bounded fd reads и проверка замены до digest."""
+    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
+    directory_fd = os.open(policy, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    opened = {}
+    def identity(info):
+        return (info.st_dev, info.st_ino, info.st_mode, info.st_uid, info.st_gid,
+                info.st_nlink, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+    def file_metadata(info):
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or
+            info.st_mode & 0o022 or not 0 < info.st_size <= 65536):
+            raise ValueError('unsafe_refresh_policy')
+    try:
+        original_directory = os.fstat(directory_fd)
+        if (not stat.S_ISDIR(original_directory.st_mode) or original_directory.st_uid != os.getuid() or
+            stat.S_IMODE(original_directory.st_mode) != 0o700 or set(os.listdir(directory_fd)) != expected):
+            raise ValueError('unsafe_refresh_policy')
+        for name in sorted(expected):
+            fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
+            opened[name] = (fd, os.fstat(fd))
+            file_metadata(opened[name][1])
+        def unchanged():
+            if (identity(os.fstat(directory_fd)) != identity(original_directory) or
+                identity(policy.lstat()) != identity(original_directory) or
+                set(os.listdir(directory_fd)) != expected):
+                raise ValueError('refresh_policy_replaced')
+            for name, (fd, before) in opened.items():
+                held, named = os.fstat(fd), os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+                file_metadata(held); file_metadata(named)
+                if identity(held) != identity(before) or identity(named) != identity(before):
+                    raise ValueError('refresh_policy_replaced')
+        unchanged()
+        content = {}
+        for name, (fd, before) in opened.items():
+            data = bytearray()
+            while len(data) <= 65536:
+                chunk = os.read(fd, 65537 - len(data))
+                if not chunk: break
+                data.extend(chunk)
+            if len(data) != before.st_size: raise ValueError('refresh_policy_replaced')
+            content[name] = bytes(data)
+        unchanged()
+        entries = [[name, digest(content[name])] for name in sorted(expected)]
+        if digest(json.dumps(entries, separators=(',', ':')).encode()) != expected_hash:
+            raise ValueError('refresh_policy_changed')
+        if (json.loads(content['empty-mcp.json']) != {'mcpServers': {}} or
+            json.loads(content['claude-settings.json']) != {'disableAllHooks': True}):
+            raise ValueError('invalid_refresh_policy')
+        unchanged()
+    finally:
+        for fd, _info in opened.values(): os.close(fd)
+        os.close(directory_fd)
+
+
+def refresh_command(manifest, operation, credential, output=None):
+    """Фиксированная операция без source/MCP/stdin и без credential values в argv/env."""
+    required = {'schema_version', 'store', 'policy', 'policy_sha256', 'run_root', 'image',
+                'network', 'check_id', 'attempt_id'}
+    if (set(manifest) != required or manifest['schema_version'] != 1 or manifest['image'] != REFRESH_IMAGE or
+        manifest['network'] != 'provider-proxy' or operation not in ('exchange', 'status', 'model') or
+        not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]{0,95}', manifest['check_id']) or
+        not re.fullmatch(r'[a-f0-9]{32}', manifest['attempt_id']) or os.getuid() == 0):
+        raise ValueError('invalid_refresh_manifest')
+    store, policy, run = [private_reference(manifest[key], directory=True) for key in ('store', 'policy', 'run_root')]
+    for left, right in ((store, policy), (store, run), (policy, run)):
+        if left.is_relative_to(right) or right.is_relative_to(left):
+            raise ValueError('refresh_mount_overlap')
+    if any(run.iterdir()):
+        raise ValueError('refresh_run_not_fresh')
+    refresh_policy(policy, manifest['policy_sha256'])
+    credential = private_reference(credential)
+    generation = private_reference(credential.parent, directory=True)
+    if (credential.name != '.credentials.json' or generation.parent != store / 'generations' or
+        not re.fullmatch(r'[a-f0-9]{32}(?:\.pending)?', generation.name)):
+        raise ValueError('unmapped_credential_generation')
+    private_reference(store / 'generations', directory=True)
+    if operation == 'exchange':
+        output = private_reference(output, directory=True)
+        if (generation.name.endswith('.pending') or output.parent != generation.parent or
+            not re.fullmatch(r'[a-f0-9]{32}\.pending', output.name) or any(output.iterdir())):
+            raise ValueError('invalid_candidate_directory')
+    elif output is not None:
+        raise ValueError('unexpected_candidate_write_mount')
+    args = sandbox_arguments(False) + ['--workdir=/runtime/cache/home',
+        '--mount=type=bind,src=' + str(policy / 'claude-refresh.mjs') + ',dst=/runtime/policy/claude-refresh.mjs,readonly']
+    for name in ('cache', 'tmp'):
+        path = run / name; path.mkdir(mode=0o700)
+        args.append('--mount=type=bind,src=' + str(path) + ',dst=/runtime/' + name)
+    for name in ('home', 'claude', 'xdg'):
+        (run / 'cache' / name).mkdir(mode=0o700)
+    destination = '/runtime/input/.credentials.json' if operation == 'exchange' else '/runtime/cache/claude/.credentials.json'
+    if operation != 'exchange':
+        (run / 'cache/claude/.credentials.json').touch(mode=0o600)
+    args.append('--mount=type=bind,src=' + str(credential) + ',dst=' + destination + ',readonly')
+    if operation == 'exchange':
+        args.append('--mount=type=bind,src=' + str(output) + ',dst=/runtime/output/claude')
+    if operation == 'model':
+        for name in ('empty-mcp.json', 'claude-settings.json'):
+            args.append('--mount=type=bind,src=' + str(policy / name) + ',dst=/runtime/policy/' + name + ',readonly')
+    for entry in ('HOME=/runtime/cache/home', 'TMPDIR=/runtime/tmp', 'TMP=/runtime/tmp', 'TEMP=/runtime/tmp'):
+        args.extend(['--env', entry])
+    return args + ['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/claude-refresh.mjs', operation]
+
+
+def playwright_mapper():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('altera_playwright_policy', Path(__file__).with_name('codex_toml_map.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def no_receipt_mcp_policy(config):
+    """Без receipt допустим только однозначный subset и точные известные MCP формы."""
+    mapper = playwright_mapper()
+    try:
+        with config.open('rb') as stream:
+            data = stream.read(65537)
+        if (len(data) > 65536 or b'\x00' in data or b'\r' in data or
+                data.startswith(b'\xef\xbb\xbf')):
+            raise ValueError()
+        text = data.decode('utf-8')
+        if '"""' in text or "'" * 3 in text:
+            raise ValueError()
+        expected = {
+            'context7': {'experimental_use_rmcp_client': True, 'url': 'https://mcp.context7.com/mcp'},
+            'trace': {'command': '/usr/local/bin/trace-mcp', 'args': ['serve']},
+        }
+        tables, keys, section, servers = set(), set(), (), {}
+        for raw in text.split('\n'):
+            line = mapper._base_line_without_comment(raw).strip()
+            if not line:
+                continue
+            if line.startswith('['):
+                if line.startswith('[[') or not line.endswith(']'):
+                    raise ValueError()
+                section = tuple(mapper._base_key_path(line[1:-1]))
+                if section in tables:
+                    raise ValueError()
+                tables.add(section)
+                if 'mcp_servers' in section:
+                    if len(section) != 2 or section[0] != 'mcp_servers' or section[1] not in expected:
+                        raise ValueError()
+                    servers[section[1]] = {}
+                continue
+            raw_key, separator, value = line.partition('=')
+            key = tuple(mapper._base_key_path(raw_key))
+            if not separator or 'mcp_servers' in key or (section, key) in keys:
+                raise ValueError()
+            keys.add((section, key))
+            value = value.strip()
+            # Inline tables и многострочные значения не входят в этот admission subset.
+            if value.startswith("'") and value.endswith("'") and "'" not in value[1:-1]:
+                parsed = value[1:-1]
+            else:
+                parsed = json.loads(value)
+            def scalar_or_array(item):
+                return (isinstance(item, (str, bool, int, float)) or
+                        isinstance(item, list) and all(scalar_or_array(part) for part in item))
+            if not scalar_or_array(parsed):
+                raise ValueError()
+            if section and section[0] == 'mcp_servers':
+                if len(key) != 1 or key[0] not in expected[section[1]]:
+                    raise ValueError()
+                servers[section[1]][key[0]] = parsed
+        if any(fields != expected[name] for name, fields in servers.items()):
+            raise ValueError()
+    except (OSError, ValueError, RecursionError):
+        raise ValueError('playwright_policy_invalid') from None
+
+
+def playwright_policy(manifest):
+    """Проверить trusted receipt и exact vector до Docker; fixture topology не даёт model acceptance."""
+    item = manifest.get('playwright')
+    if item is None:
+        config = Path(manifest['policy']) / 'codex-config.toml'
+        if manifest.get('network') == 'playwright-fixture':
+            raise ValueError('playwright_policy_invalid')
+        if config.exists():
+            no_receipt_mcp_policy(config)
+        return None
+    try:
+        mapper = playwright_mapper()
+        if (not isinstance(item, dict) or set(item) != {'receipt', 'seccomp', 'origin'} or
+                item['origin'] != 'http://altera-web:3000' or manifest['family'] != 'codex' or
+                manifest.get('network') != 'playwright-fixture' or manifest.get('fixture') is not True or
+                manifest.get('auth_file') or item['receipt']['image'] != manifest['image']):
+            raise ValueError('playwright_policy_invalid')
+        mapper.read_playwright_attestation(item['receipt'])
+        seccomp = private_reference(item['seccomp'])
+        private_reference(str(seccomp.parent), directory=True)
+        for reference in (seccomp, Path(item['receipt']['path'])):
+            for name in ('source', 'snapshot', 'policy', 'run_root'):
+                if reference.is_relative_to(Path(manifest[name])):
+                    raise ValueError('playwright_policy_invalid')
+        before = seccomp.lstat()
+        fd = os.open(seccomp, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            if mapper._identity(os.fstat(fd)) != mapper._identity(before):
+                raise ValueError('playwright_policy_invalid')
+            data = os.read(fd, 65537)
+            if (mapper._identity(os.fstat(fd)) != mapper._identity(before) or
+                    mapper._identity(seccomp.lstat()) != mapper._identity(before) or digest(data) != mapper.PLAYWRIGHT_SECCOMP):
+                raise ValueError('playwright_policy_invalid')
+        finally:
+            os.close(fd)
+        policy = Path(manifest['policy'])
+        tables = mapper._parse_managed((policy / 'codex-config.toml').read_bytes())
+        if (tables is None or tables.get('playwright') != {'command': mapper.PLAYWRIGHT_VECTOR[0], 'args': mapper.PLAYWRIGHT_VECTOR[1:]} or
+                digest((policy / 'playwright-mcp-canary.mjs').read_bytes()) !=
+                digest(Path(__file__).with_name('playwright-mcp-canary.mjs').read_bytes())):
+            raise ValueError('playwright_policy_invalid')
+        return {'path': str(seccomp), 'sha256': digest(data), 'identity': mapper._identity(before)}
+    except (OSError, KeyError, TypeError, ValueError):
+        raise ValueError('playwright_policy_invalid') from None
+
+
+@contextmanager
+def playwright_fixture_network(manifest):
+    """Только no-model fixture: один fixed web server, internal bridge, без host ports."""
+    name = 'altera-playwright-' + uuid.uuid4().hex
+    web = name + '-web'
+    def docker(*args, check=True):
+        return subprocess.run([DOCKER, *args], check=check, env=child_env(),
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+    created = False
+    try:
+        docker('network', 'create', '--internal', '--opt',
+               'com.docker.network.bridge.gateway_mode_ipv4=isolated', name)
+        created = True
+        docker('run', '--detach', '--name', web, '--network=' + name, '--network-alias=altera-web',
+               '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--user=1000:1000',
+               '--pids-limit=32', '--memory=128m', '--cpus=1',
+               '--mount=type=bind,src=' + manifest['policy'] + '/playwright-mcp-canary.mjs,dst=/fixture.mjs,readonly',
+               '--entrypoint=/usr/local/bin/node', manifest['image'], '/fixture.mjs', 'web')
+        inspection = json.loads(docker('network', 'inspect', name))[0]
+        if (not inspection['Internal'] or inspection['EnableIPv6'] or
+                inspection['Options'].get('com.docker.network.bridge.gateway_mode_ipv4') != 'isolated' or
+                len(inspection['Containers']) != 1):
+            raise ValueError('network_boundary_unverified')
+        Path(manifest['run_root'], 'playwright-network.json').write_text(json.dumps(inspection, indent=2))
+        yield name
+    finally:
+        if created:
+            docker('rm', '--force', web, check=False)
+            docker('network', 'rm', name, check=False)
+
+
+def command(manifest, incoming, environment):
+    required = {'schema_version', 'family', 'source', 'snapshot', 'state', 'dirty_paths', 'policy',
+                'policy_sha256', 'run_root', 'image', 'model', 'effort', 'env_paths', 'path_map',
+                'managed_mapping_verified'}
+    optional = {'network', 'fixture', 'auth_file', 'operation', 'playwright'}
+    if set(manifest) - required - optional or not required.issubset(manifest) or manifest['schema_version'] != 1:
+        raise ValueError('invalid_manifest_schema')
+    if manifest['family'] not in ('codex', 'claude') or manifest['effort'] != 'medium':
+        raise ValueError('unsupported_family_or_effort')
+    expected_model = 'gpt-5.6-terra' if manifest['family'] == 'codex' else 'claude-opus-4-6'
+    if manifest['model'] != expected_model or not re.fullmatch(r'sha256:[a-f0-9]{64}', manifest['image']):
+        raise ValueError('unpreserved_model_or_unpinned_image')
+    roots = [canonical(manifest[key]) for key in ('source', 'snapshot', 'policy', 'run_root')]
+    for n, left in enumerate(roots):
+        if left == Path.home() or left == Path('/'):
+            raise ValueError('unsafe_root_mount')
+        for right in roots[n+1:]:
+            if left.is_relative_to(right) or right.is_relative_to(left):
+                raise ValueError('mount_overlap')
+    source, snap, policy, run = roots
+    if os.getuid() == 0:
+        raise ValueError('nonroot_host_user_required')
+    if fingerprint(source, manifest['dirty_paths']) != manifest['state']:
+        raise ValueError('source_changed')
+    if fingerprint(snap, manifest['dirty_paths']) != manifest['state'] or not (snap / '.git').is_dir():
+        raise ValueError('snapshot_changed')
+    if (snap / '.git/objects/info/alternates').exists():
+        raise ValueError('shared_git_objects')
+    if tree_hash(policy) != manifest['policy_sha256']:
+        raise ValueError('policy_changed')
+    if json.loads((policy / 'claude-settings.json').read_text()) != {'disableAllHooks': True}:
+        raise ValueError('invalid_hook_policy')
+    for key in ('CODEX_HOME', 'CLAUDE_CONFIG_DIR'):
+        if key in environment and environment[key] != manifest['env_paths'].get(key):
+            raise ValueError('managed_env_unresolved')
+    operation = manifest.get('operation', 'protocol')
+    if operation == 'claude-login':
+        if manifest['family'] != 'claude' or incoming or manifest.get('auth_file'):
+            raise ValueError('invalid_login_invocation')
+        final = ['auth', 'login']
+    elif operation == 'protocol':
+        final = effective_args(manifest, incoming)
+    else:
+        raise ValueError('unsupported_operation')
+    network = manifest.get('network', 'none')
+    if network not in ('none', 'provider-proxy', 'playwright-fixture'):
+        raise ValueError('unsupported_network')
+    playwright = playwright_policy(manifest)
+    args = sandbox_arguments() + (['--security-opt=seccomp=' + playwright['path']] if playwright else []) + ['--workdir=' + str(source),
+            '--mount=type=bind,src=' + str(snap) + ',dst=' + str(source) + ',readonly',
+            '--mount=type=bind,src=' + str(policy) + ',dst=/runtime/policy,readonly']
+    for name in ('evidence', 'cache', 'tmp'):
+        path = run / name
+        path.mkdir(exist_ok=True, mode=0o777)
+        if path.is_symlink() or path.resolve() != path:
+            raise ValueError('unsafe_run_directory')
+        path.chmod(0o777)
+        args.append('--mount=type=bind,src=' + str(path) + ',dst=/runtime/' + name)
+    for name in ('home', 'codex', 'claude', 'xdg', *(['playwright-home'] if playwright else [])):
+        path = run / 'cache' / name
+        path.mkdir(exist_ok=True, mode=0o700)
+        if path.is_symlink() or path.resolve() != path:
+            raise ValueError('unsafe_runtime_home')
+    if manifest.get('auth_file'):
+        auth = Path(manifest['auth_file'])
+        if (not auth.is_absolute() or auth.is_symlink() or not auth.is_file() or
+            auth.resolve() != auth or re.search(r'[\x00-\x1f,=]', str(auth))):
+            raise ValueError('unsafe_auth_reference')
+        destination = '/runtime/cache/codex/auth.json' if manifest['family'] == 'codex' else '/runtime/cache/claude/.credentials.json'
+        placeholder = run / destination.removeprefix('/runtime/')
+        if placeholder.is_symlink():
+            raise ValueError('unsafe_auth_mountpoint')
+        if not placeholder.exists():
+            placeholder.touch(mode=0o600, exist_ok=False)
+        args.append('--mount=type=bind,src=' + str(auth) + ',dst=' + destination + ',readonly')
+    if manifest['family'] == 'codex' and (policy / 'codex-config.toml').is_file():
+        placeholder = run / 'cache/codex/config.toml'
+        if placeholder.is_symlink():
+            raise ValueError('unsafe_config_mountpoint')
+        if not placeholder.exists():
+            placeholder.touch(mode=0o600, exist_ok=False)
+        args.append('--mount=type=bind,src=' + str(policy / 'codex-config.toml') +
+                    ',dst=/runtime/cache/codex/config.toml,readonly')
+    for entry in ('HOME=/runtime/cache/home', 'CODEX_HOME=/runtime/cache/codex',
+                  'CLAUDE_CONFIG_DIR=/runtime/cache/claude', 'TMPDIR=/runtime/tmp',
+                  'TMP=/runtime/tmp', 'TEMP=/runtime/tmp', 'XDG_CACHE_HOME=/runtime/cache/xdg'):
+        args.extend(['--env', entry])
+    args.extend(['--env', 'TRACE_MCP_TELEMETRY=off'])
+    if operation == 'claude-login':
+        args.extend(['--entrypoint=/usr/local/bin/claude', manifest['image']])
+    elif manifest.get('fixture'):
+        # Явная coordinator policy, те же mounts/OS policy, что у настоящего CLI.
+        args.extend(['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/fixture.mjs'])
+    else:
+        if not manifest['managed_mapping_verified']:
+            raise ValueError('managed_mapping_unverified')
+        if not (policy / 'protocol-guard.mjs').is_file():
+            raise ValueError('protocol_guard_missing')
+        args.extend(['--entrypoint=/usr/local/bin/node', manifest['image'],
+                     '/runtime/policy/protocol-guard.mjs', manifest['family']])
+    return args + final
+
+
+@contextmanager
+def provider_network(manifest, observation=None):
+    """Отдельная internal сеть без адреса host bridge, плюс HTTPS-only proxy."""
+    if manifest.get('network', 'none') == 'none':
+        yield None
+        if observation is not None: observation['provider_cleanup'] = 'proven'
+        return
+    if manifest.get('network') == 'playwright-fixture':
+        with playwright_fixture_network(manifest) as network:
+            yield network
+        return
+    name = 'altera-check-' + uuid.uuid4().hex
+    proxy = name + '-proxy'
+    def docker(*args, check=True):
+        return subprocess.run([DOCKER, *args], check=check, env=child_env(),
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+    created = False
+    try:
+        docker('network', 'create', '--internal', '--opt',
+               'com.docker.network.bridge.gateway_mode_ipv4=isolated', name)
+        created = True
+        docker('run', '--detach', '--name', proxy, '--network=bridge', '--read-only',
+               '--cap-drop=ALL', '--security-opt=no-new-privileges', '--user=1000:1000',
+               '--pids-limit=32', '--memory=128m', '--cpus=1',
+               '--mount=type=bind,src=' + manifest['policy'] + '/provider-proxy.mjs,dst=/proxy.mjs,readonly',
+               '--entrypoint=/usr/local/bin/node', manifest['image'], '/proxy.mjs')
+        docker('network', 'connect', '--alias', 'egress-proxy', name, proxy)
+        inspection = json.loads(docker('network', 'inspect', name))[0]
+        if not inspection['Internal'] or inspection['EnableIPv6'] or inspection['Options'].get(
+                'com.docker.network.bridge.gateway_mode_ipv4') != 'isolated':
+            raise ValueError('network_boundary_unverified')
+        for _ in range(30):
+            if b'PROXY_READY' in docker('logs', proxy):
+                break
+            time.sleep(0.1)
+        else:
+            raise ValueError('proxy_not_ready')
+        Path(manifest['run_root'], 'network-inspect.json').write_text(json.dumps(inspection, indent=2))
+        if observation is None:
+            Path(manifest['run_root'], 'proxy-inspect.json').write_bytes(docker('inspect', proxy))
+        yield name
+    finally:
+        if created:
+            docker('rm', '--force', proxy, check=False)
+            docker('network', 'rm', name, check=False)
+            if observation is not None:
+                try:
+                    if _absent('container', proxy) and _absent('network', name):
+                        observation['provider_cleanup'] = 'proven'
+                except (ValueError, OSError, subprocess.SubprocessError):
+                    pass
+
+
+def _docker_observe(*args):
+    result = subprocess.run([DOCKER, *args], env=child_env(), stdin=subprocess.DEVNULL,
+                            capture_output=True, timeout=15)
+    if len(result.stdout) + len(result.stderr) > 4096:
+        raise ValueError('docker_observation_oversize')
+    return result.returncode, result.stdout.decode(), result.stderr.decode()
+
+
+def _absent(kind, identity):
+    code, output, error = _docker_observe(kind, 'inspect', '--format={{.Id}}', identity)
+    return code == 1 and not output.strip() and ('No such ' + kind in error or 'No such object' in error)
+
+
+def drain_container(observation, cidfile):
+    """Inspect and remove exactly our invocation, retaining uncertainty on any failure."""
+    observation['worker_quiescence'] = 'unknown'
+    observation['container_removed'] = False
+    try:
+        cid = None
+        if cidfile.exists():
+            info = cidfile.lstat()
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 65:
+                return
+            cid = cidfile.read_text().strip()
+            if not re.fullmatch('[a-f0-9]{64}', cid): return
+        target = cid or observation['container_name']
+        projection = '{"Id":{{json .Id}},"Name":{{json .Name}},"Running":{{json .State.Running}},"ExitCode":{{json .State.ExitCode}},"OOMKilled":{{json .State.OOMKilled}}}'
+        code, output, _ = _docker_observe('container', 'inspect', '--format=' + projection, target)
+        if code:
+            if cid is None and _absent('container', target):
+                observation.update(container_created=False, container_removed=True,
+                                   worker_quiescence='proven')
+            return
+        row = json.loads(output)
+        if (set(row) != {'Id', 'Name', 'Running', 'ExitCode', 'OOMKilled'} or
+                row['Name'] != '/' + observation['container_name'] or
+                not re.fullmatch('[a-f0-9]{64}', row['Id']) or (cid and cid != row['Id'])):
+            return
+        observation.update(container_id=row['Id'], container_created=True,
+            container_running=row['Running'], container_exit_code=row['ExitCode'],
+            container_oom_killed=row['OOMKilled'])
+        # A live container is removed to drain it, but cannot yield a successful receipt.
+        code, _, _ = _docker_observe('container', 'rm', '--force', row['Id'])
+        absent = code == 0 and _absent('container', row['Id'])
+        observation['container_removed'] = absent
+        if row['Running'] is False and absent:
+            observation['worker_quiescence'] = 'proven'
+    except (ValueError, KeyError, OSError, subprocess.SubprocessError):
+        pass
+
+
+def execute(args, observation=None, *, capture=None, timeout=None, maximum_output=None):
+    """Raw wait and bounded capture are trusted in-process options, never native argv."""
+    process = subprocess.Popen(args, env=child_env(),
+        stdin=sys.stdin.buffer if capture is None else subprocess.DEVNULL,
+        stdout=sys.stdout.buffer if capture is None else subprocess.PIPE,
+        stderr=sys.stderr.buffer if capture is None else subprocess.STDOUT)
+    if observation is not None:
+        observation.update(child_created=True, client_pid=process.pid, client_executable=args[0],
+                           client_sha256=digest(Path(args[0]).read_bytes()))
+    previous = {}
+    def forward(signum, _frame):
+        if process.poll() is None: process.send_signal(signum)
+    for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        previous[signum] = signal.signal(signum, forward)
+    try:
+        if capture is None:
+            code = process.wait()
+        else:
+            import selectors
+            selector = selectors.DefaultSelector()
+            selector.register(process.stdout, selectors.EVENT_READ)
+            start = time.monotonic(); output = bytearray(); truncated = False; timed_out = False
+            try:
+                while selector.get_map():
+                    if time.monotonic() - start > timeout:
+                        timed_out = True; process.kill(); break
+                    for key, _ in selector.select(0.1):
+                        chunk = os.read(key.fd, 65536)
+                        if not chunk:
+                            selector.unregister(key.fileobj); continue
+                        remaining = maximum_output - len(output)
+                        output.extend(chunk[:remaining])
+                        if len(chunk) > remaining:
+                            truncated = True; process.kill(); break
+                    if truncated: break
+                code = process.wait(timeout=15)
+            finally:
+                selector.close(); process.stdout.close()
+            capture.update(output=bytes(output), truncated=truncated, timed_out=timed_out)
+        if observation is not None:
+            observation.update(raw_wait=code, normalized_exit=128-code if code < 0 else code,
+                               signal=-code if code < 0 else None, child_reaped=True)
+        return 128 - code if code < 0 else code
+    finally:
+        for signum, handler in previous.items(): signal.signal(signum, handler)
+
+
+def observed_execute(args, observation, *, capture=None, timeout=None, maximum_output=None):
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix='altera-observer-') as directory:
+        cidfile = Path(directory) / 'container.cid'
+        name = 'altera-native-' + observation['invocation_id'] + '-' + uuid.uuid4().hex[:12]
+        observation.update(container_name=name, container_id=None, child_created=False,
+            child_reaped=False, raw_wait=None, signal=None, worker_quiescence='unknown')
+        args = [arg for arg in args if arg != '--rm']
+        args[2:2] = ['--name=' + name, '--cidfile=' + str(cidfile)]
+        try:
+            return execute(args, observation, capture=capture, timeout=timeout,
+                           maximum_output=maximum_output)
+        finally:
+            drain_container(observation, cidfile)
+
+
+def launch(manifest, incoming, outcome_sink=None, *, invocation_id=None):
+    evidence = Path(manifest['run_root']) / 'evidence'
+    if evidence.exists() and any(evidence.iterdir()):
+        raise ValueError('evidence_directory_not_fresh')
+    observation = None
+    if outcome_sink is not None:
+        if not isinstance(invocation_id, str) or not re.fullmatch('[A-Za-z0-9_-]{1,64}', invocation_id):
+            raise ValueError('invalid_observer_invocation')
+        observation = {'schema_version': 1, 'invocation_id': invocation_id,
+            'provider_cleanup': 'unknown', 'validation': 'unknown', 'runtime_status': None,
+            'source_before': manifest['state'], 'policy_before': manifest['policy_sha256']}
+    try:
+        args = command(manifest, incoming, os.environ)
+        playwright_before = playwright_policy(manifest)
+        context = provider_network(manifest) if observation is None else provider_network(manifest, observation)
+        with context as network:
+            if network: args[args.index('--network=none')] = '--network=' + network
+            if manifest.get('network') == 'provider-proxy':
+                args[2:2] = ['--env', 'HTTPS_PROXY=http://egress-proxy:8080',
+                              '--env', 'HTTP_PROXY=http://egress-proxy:8080',
+                              '--env', 'ALL_PROXY=http://egress-proxy:8080',
+                              '--env', 'NO_PROXY=', '--env', 'NODE_USE_ENV_PROXY=1']
+            code = execute(args) if observation is None else observed_execute(args, observation)
+        source_after = fingerprint(manifest['source'], manifest['dirty_paths'])
+        policy_after = tree_hash(manifest['policy'])
+        valid = (playwright_policy(manifest) == playwright_before and
+                 source_after == manifest['state'] and policy_after == manifest['policy_sha256'])
+        code = code if valid else 78
+        if observation is not None:
+            observation.update(source_after=source_after, policy_after=policy_after,
+                validation='verified' if valid else 'changed', runtime_status=code)
+        return code
+    finally:
+        if observation is not None: outcome_sink(observation)
+
+
+def check(manifest, spec_path, spec_sha256, *, invocation_id):
+    """Execute one pinned production command in the accepted RO runtime, network disabled."""
+    from datetime import datetime, timezone
+    path = private_reference(spec_path)
+    raw = path.read_bytes()
+    if len(raw) > 65536 or digest(raw) != spec_sha256: raise ValueError('check_spec_changed')
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value: raise ValueError('invalid_check_spec')
+            value[key] = item
+        return value
+    spec = json.loads(raw, object_pairs_hook=unique)
+    if (set(spec) != {'schema_version', 'argv', 'cwd', 'network', 'parser', 'timeout_seconds', 'maximum_output'} or
+            spec['schema_version'] != 1 or spec['network'] != 'none' or spec['parser'] != 'node-tap' or
+            spec['cwd'] != manifest['source'] or not isinstance(spec['argv'], list) or not spec['argv'] or
+            any(not isinstance(a, str) or '\x00' in a for a in spec['argv']) or
+            spec['argv'][0] != '/usr/local/bin/node' or '--test' not in spec['argv'] or
+            '--test-reporter=tap' not in spec['argv'] or
+            type(spec['timeout_seconds']) is not int or not 0 < spec['timeout_seconds'] <= 120 or
+            type(spec['maximum_output']) is not int or not 0 < spec['maximum_output'] <= 1048576):
+        raise ValueError('invalid_check_spec')
+    # command() supplies the existing root, fingerprint, policy and mount validation.
+    safe = {**manifest, 'network': 'none', 'managed_mapping_verified': True}
+    safe.pop('auth_file', None); safe.pop('playwright', None)
+    incoming = [] if safe['family'] == 'claude' else ['app-server', '--listen', 'stdio://']
+    args = command(safe, incoming, {})
+    image_index = args.index(safe['image'])
+    args = args[:image_index + 1] + spec['argv'][1:]
+    args = [arg for arg in args if arg != '--interactive']
+    observation = {'schema_version': 1, 'invocation_id': invocation_id,
+        'started_at': datetime.now(timezone.utc).isoformat(), 'command': spec['argv'],
+        'check_spec_sha256': spec_sha256, 'provider_cleanup': 'proven'}
+    capture = {}
+    code = observed_execute(args, observation, capture=capture,
+        timeout=spec['timeout_seconds'], maximum_output=spec['maximum_output'])
+    text = capture['output'].decode('utf-8', errors='replace')
+    counts = re.findall(r'^# tests ([0-9]+)\s*$', text, re.MULTILINE)
+    skipped = re.findall(r'^# skipped ([0-9]+)\s*$', text, re.MULTILINE)
+    executed = max(0, int(counts[0]) - int(skipped[0])) if len(counts) == len(skipped) == 1 else 0
+    valid = (fingerprint(manifest['source'], manifest['dirty_paths']) == manifest['state'] and
+             tree_hash(manifest['policy']) == manifest['policy_sha256'])
+    observation.update(exit_code=code, executed=executed, output=text,
+        truncated=capture['truncated'], timed_out=capture['timed_out'], validation='verified' if valid else 'changed')
+    observation['complete'] = (executed > 0 and valid and observation['worker_quiescence'] == 'proven' and
+                               not capture['truncated'] and not capture['timed_out'])
+    return observation
+
+
+if __name__ == '__main__':
+    try:
+        if sys.argv[1:] in (['--help'], ['--version']):
+            print('altera-isolated-runtime 1.0.0; explicit manifest required')
+            sys.exit(0)
+        manifest = json.loads(Path(sys.argv[1]).read_text())
+        sys.exit(launch(manifest, sys.argv[2:]))
+    except (ValueError, KeyError, IndexError, OSError, subprocess.CalledProcessError) as error:
+        # Ошибки не раскрывают argv, prompt, env values, config contents или секреты.
+        message = str(error) if isinstance(error, ValueError) and re.fullmatch('[a-z_]+', str(error)) else type(error).__name__
+        print('ALTERA_RUNTIME rejected: ' + message, file=sys.stderr)
+        sys.exit(78)

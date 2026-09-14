@@ -1,0 +1,304 @@
+{
+  "schema": "ALTERA_CHROOT_CAUSE_PREPARATION_V1",
+  "executed": false,
+  "owner_approval_required": true,
+  "image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+  "probe_sha256": "64eaccb7266cb476410799090178a76463bd682f3b596d0aa6b2a281abc57b29",
+  "runtime_identity": "not_verified",
+  "runtime_required": "/usr/bin/perl",
+  "no_substitution": true,
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty",
+    "DOCKER_HOST": "unix:///Users/egorbondarenko/.docker/run/docker.sock"
+  },
+  "arms": {
+    "control": {
+      "profile": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/control.json",
+      "profile_sha256": "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140",
+      "create": [
+        "/usr/local/bin/docker",
+        "create",
+        "--name=altera-chroot-control-e75c64002d22",
+        "--security-opt=seccomp=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/control.json",
+        "--platform=linux/arm64",
+        "--network=none",
+        "--read-only",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--user=1000:1000",
+        "--pids-limit=32",
+        "--memory=128m",
+        "--cpus=1",
+        "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/probe.pl,dst=/probe.pl,readonly",
+        "--entrypoint=/usr/bin/env",
+        "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+        "-i",
+        "/usr/bin/perl",
+        "-T",
+        "/probe.pl"
+      ],
+      "inspect": [
+        "/usr/local/bin/docker",
+        "inspect",
+        "altera-chroot-control-e75c64002d22"
+      ],
+      "start_attach": [
+        "/usr/local/bin/docker",
+        "start",
+        "--attach",
+        "altera-chroot-control-e75c64002d22"
+      ],
+      "remove": [
+        "/usr/local/bin/docker",
+        "rm",
+        "--force",
+        "altera-chroot-control-e75c64002d22"
+      ],
+      "absence": [
+        "/usr/local/bin/docker",
+        "container",
+        "ls",
+        "--all",
+        "--filter",
+        "name=^/altera-chroot-control-e75c64002d22$",
+        "--format",
+        "{{.Names}}"
+      ],
+      "stdout_target": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/control/stdout.json",
+      "stderr_target": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/control/stderr.log",
+      "outer_timeout_seconds": 15
+    },
+    "candidate": {
+      "profile": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/candidate.json",
+      "profile_sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+      "create": [
+        "/usr/local/bin/docker",
+        "create",
+        "--name=altera-chroot-candidate-e75c64002d22",
+        "--security-opt=seccomp=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/candidate.json",
+        "--platform=linux/arm64",
+        "--network=none",
+        "--read-only",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--user=1000:1000",
+        "--pids-limit=32",
+        "--memory=128m",
+        "--cpus=1",
+        "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/probe.pl,dst=/probe.pl,readonly",
+        "--entrypoint=/usr/bin/env",
+        "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+        "-i",
+        "/usr/bin/perl",
+        "-T",
+        "/probe.pl"
+      ],
+      "inspect": [
+        "/usr/local/bin/docker",
+        "inspect",
+        "altera-chroot-candidate-e75c64002d22"
+      ],
+      "start_attach": [
+        "/usr/local/bin/docker",
+        "start",
+        "--attach",
+        "altera-chroot-candidate-e75c64002d22"
+      ],
+      "remove": [
+        "/usr/local/bin/docker",
+        "rm",
+        "--force",
+        "altera-chroot-candidate-e75c64002d22"
+      ],
+      "absence": [
+        "/usr/local/bin/docker",
+        "container",
+        "ls",
+        "--all",
+        "--filter",
+        "name=^/altera-chroot-candidate-e75c64002d22$",
+        "--format",
+        "{{.Names}}"
+      ],
+      "stdout_target": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/candidate/stdout.json",
+      "stderr_target": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/candidate/stderr.log",
+      "outer_timeout_seconds": 15
+    }
+  },
+  "runtime_identity_preflight": {
+    "name": "altera-chroot-identity-97bd451e7177",
+    "pre_absence": [
+      "/usr/local/bin/docker",
+      "container",
+      "ls",
+      "--all",
+      "--filter",
+      "name=^/altera-chroot-identity-97bd451e7177$",
+      "--format",
+      "{{.Names}}"
+    ],
+    "create": [
+      "/usr/local/bin/docker",
+      "create",
+      "--name=altera-chroot-identity-97bd451e7177",
+      "--platform=linux/arm64",
+      "--network=none",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=16",
+      "--memory=64m",
+      "--cpus=1",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "-e",
+      "const fs=require('fs'),c=require('crypto'),p='/usr/bin/perl';const s=fs.statSync(p),b=fs.readFileSync(p);console.log(JSON.stringify({path:p,canonical:fs.realpathSync(p),regular:s.isFile(),executable:!!(s.mode&73),sha256:c.createHash('sha256').update(b).digest('hex'),elf:b.subarray(0,20).toString('hex')}));"
+    ],
+    "inspect": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-chroot-identity-97bd451e7177"
+    ],
+    "start_attach": [
+      "/usr/local/bin/docker",
+      "start",
+      "--attach",
+      "altera-chroot-identity-97bd451e7177"
+    ],
+    "post_inspect": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-chroot-identity-97bd451e7177"
+    ],
+    "remove": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-chroot-identity-97bd451e7177"
+    ],
+    "post_absence": [
+      "/usr/local/bin/docker",
+      "container",
+      "ls",
+      "--all",
+      "--filter",
+      "name=^/altera-chroot-identity-97bd451e7177$",
+      "--format",
+      "{{.Names}}"
+    ],
+    "outer_timeout_seconds": 15,
+    "stdout_target": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/start_attach.stdout.json",
+    "stderr_target": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/start_attach.stderr.log",
+    "evidence_directory": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity",
+    "evidence_directory_mode": "0700",
+    "evidence_file_mode": "0600",
+    "outputs": {
+      "pre_absence": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/pre_absence.stdout.log",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/pre_absence.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/pre_absence.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/pre_absence.exit.json",
+        "stdout_limit_bytes": 4096,
+        "stderr_limit_bytes": 8192
+      },
+      "create": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/create.stdout.log",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/create.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/create.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/create.exit.json",
+        "stdout_limit_bytes": 4096,
+        "stderr_limit_bytes": 8192
+      },
+      "inspect": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/inspect.stdout.json",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/inspect.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/inspect.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/inspect.exit.json",
+        "stdout_limit_bytes": 262144,
+        "stderr_limit_bytes": 8192
+      },
+      "start_attach": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/start_attach.stdout.json",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/start_attach.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/start_attach.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/start_attach.exit.json",
+        "stdout_limit_bytes": 4096,
+        "stderr_limit_bytes": 8192
+      },
+      "post_inspect": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_inspect.stdout.json",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_inspect.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_inspect.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_inspect.exit.json",
+        "stdout_limit_bytes": 262144,
+        "stderr_limit_bytes": 8192
+      },
+      "remove": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/remove.stdout.log",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/remove.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/remove.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/remove.exit.json",
+        "stdout_limit_bytes": 4096,
+        "stderr_limit_bytes": 8192
+      },
+      "post_absence": {
+        "stdout": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_absence.stdout.log",
+        "stderr": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_absence.stderr.log",
+        "command": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_absence.command.json",
+        "exit": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/evidence/runtime-identity/post_absence.exit.json",
+        "stdout_limit_bytes": 4096,
+        "stderr_limit_bytes": 8192
+      }
+    },
+    "gates": {
+      "pre_absence": "exit0 and empty stdout; any existing exact name refuses create and must not be removed",
+      "create": "only after pre_absence; exit0 and exactly one 64lowerhex container id; retain id to bind all inspections",
+      "inspect": {
+        "exit": 0,
+        "Id": "equal saved create id",
+        "Name": "/altera-chroot-identity-97bd451e7177",
+        "Image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+        "Config.Image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+        "Config.User": "1000:1000",
+        "Config.Entrypoint": [
+          "/usr/local/bin/node"
+        ],
+        "Config.Cmd": [
+          "-e",
+          "const fs=require('fs'),c=require('crypto'),p='/usr/bin/perl';const s=fs.statSync(p),b=fs.readFileSync(p);console.log(JSON.stringify({path:p,canonical:fs.realpathSync(p),regular:s.isFile(),executable:!!(s.mode&73),sha256:c.createHash('sha256').update(b).digest('hex'),elf:b.subarray(0,20).toString('hex')}));"
+        ],
+        "Platform": "linux",
+        "State.Status": "created",
+        "State.Running": false,
+        "HostConfig.NetworkMode": "none",
+        "HostConfig.ReadonlyRootfs": true,
+        "HostConfig.CapDrop": [
+          "ALL"
+        ],
+        "HostConfig.CapAdd": null,
+        "HostConfig.Privileged": false,
+        "HostConfig.SecurityOpt": [
+          "no-new-privileges"
+        ],
+        "HostConfig.PidsLimit": 16,
+        "HostConfig.Memory": 67108864,
+        "HostConfig.NanoCpus": 1000000000,
+        "Mounts": [],
+        "HostConfig.Binds": null,
+        "HostConfig.Devices": [],
+        "HostConfig.PortBindings": {},
+        "HostConfig.PublishAllPorts": false,
+        "HostConfig.PidMode": "",
+        "HostConfig.IpcMode": "private"
+      },
+      "start_attach": "only after complete exact inspect; overall 15second watchdog, bounded streams; any limit/timeout/signal/error forbids acceptance and enters finally",
+      "post_inspect": "exit0; same Id/Image/name/config boundary; State.Running=false, State.Status=exited, State.ExitCode=0, OOMKilled=false, State.Error empty; otherwise refuse",
+      "result": "only one bounded JSON object with exact keys path/canonical/regular/executable/sha256/elf; fixed path and canonical /usr/bin/perl, regular=true, executable=true, 64lowerhex digest, ELF64 little-endian AArch64; anything absent/incompatible refuses without substitution",
+      "remove": "trusted coordinator finally on every create-success path, including inspect failure, timeout, signal, malformed output and post-inspect failure; remove only saved exact name/id identity, preserve outcome; no broad cleanup",
+      "post_absence": "must run after finally remove even on failed operation; exit0 and empty stdout mandatory; cleanup error/nonempty/unknown means unconfirmed cleanup and stop",
+      "acceptance": "requires every gate and confirmed final absence; no candidate/syscall/browser acceptance"
+    }
+  }
+}

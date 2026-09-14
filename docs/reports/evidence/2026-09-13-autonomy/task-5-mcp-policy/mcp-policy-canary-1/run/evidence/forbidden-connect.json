@@ -1,0 +1,18 @@
+{
+  "destinations": [
+    "host.docker.internal:443",
+    "127.0.0.1:443",
+    "169.254.169.254:443",
+    "mcp.context7.com:80",
+    "mcp.context7.com.:443",
+    "mcp.context7.com.evil.invalid:443"
+  ],
+  "statuses": [
+    403,
+    403,
+    403,
+    403,
+    403,
+    403
+  ]
+}

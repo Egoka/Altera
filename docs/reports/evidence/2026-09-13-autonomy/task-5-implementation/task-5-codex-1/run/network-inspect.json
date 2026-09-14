@@ -1,0 +1,50 @@
+{
+  "Name": "altera-check-2b50e00d852040449d378e23647541b2",
+  "Id": "39097f8f997bb95406a6152d3c56a5244dcf4d622807a0ba1d42dd56a80dcef0",
+  "Created": "2026-09-13T19:09:49.702873708Z",
+  "Scope": "local",
+  "Driver": "bridge",
+  "EnableIPv4": true,
+  "EnableIPv6": false,
+  "IPAM": {
+    "Driver": "default",
+    "Options": {},
+    "Config": [
+      {
+        "Subnet": "172.20.0.0/16"
+      }
+    ]
+  },
+  "Internal": true,
+  "Attachable": false,
+  "Ingress": false,
+  "ConfigFrom": {
+    "Network": ""
+  },
+  "ConfigOnly": false,
+  "Options": {
+    "com.docker.network.bridge.gateway_mode_ipv4": "isolated",
+    "com.docker.network.enable_ipv4": "true",
+    "com.docker.network.enable_ipv6": "false"
+  },
+  "Labels": {},
+  "Containers": {
+    "8d909fcb74390bb0ebe6488574720ede426aa5a0ca400efc3f30093c43265aa1": {
+      "Name": "altera-check-2b50e00d852040449d378e23647541b2-proxy",
+      "EndpointID": "4c613800b6c0453f0380b85b3e16e04ce6ed28b51e57c4c6c0f23d8e82371526",
+      "MacAddress": "ca:df:41:59:ae:23",
+      "IPv4Address": "172.20.0.1/16",
+      "IPv6Address": ""
+    }
+  },
+  "Status": {
+    "IPAM": {
+      "Subnets": {
+        "172.20.0.0/16": {
+          "IPsInUse": 3,
+          "DynamicIPsAvailable": 65533
+        }
+      }
+    }
+  }
+}

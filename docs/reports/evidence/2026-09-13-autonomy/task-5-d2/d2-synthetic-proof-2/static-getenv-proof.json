@@ -1,0 +1,13 @@
+{
+  "--help": {
+    "exit": 0,
+    "stdout": "altera-codex-path-probe 1.0.0; metadata-only, not Codex; diagnostic exits 78\n",
+    "stderr": ""
+  },
+  "--version": {
+    "exit": 0,
+    "stdout": "altera-codex-path-probe 1.0.0; metadata-only, not Codex; diagnostic exits 78\n",
+    "stderr": ""
+  },
+  "diagnostic_getenv_control_exit": 91
+}

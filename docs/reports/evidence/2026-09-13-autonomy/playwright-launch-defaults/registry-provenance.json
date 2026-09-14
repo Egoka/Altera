@@ -1,0 +1,29 @@
+[
+  {
+    "package": "@playwright/mcp",
+    "version": "0.0.80",
+    "metadata_url": "https://registry.npmjs.org/@playwright%2fmcp/0.0.80",
+    "tarball_url": "https://registry.npmjs.org/@playwright/mcp/-/mcp-0.0.80.tgz",
+    "integrity": "sha512-FOPXHm2SvFhAQylm10jMZ35B/SR2TaMLVkavAlwoG4N2qCb5RqbvhQYcu3zmXNyxR2DW0Ooxe+9XPVt5UjKRCQ==",
+    "sha256": "b81eda3f0a7cc70a9caf7db520cdad58c48a1dd334b4e3fcf096c0512c98af0d",
+    "bytes": 22863,
+    "selected_members": [
+      "package/package.json",
+      "package/cli.js",
+      "package/README.md"
+    ]
+  },
+  {
+    "package": "playwright-core",
+    "version": "1.63.0-alpha-2026-08-31",
+    "metadata_url": "https://registry.npmjs.org/playwright-core/1.63.0-alpha-2026-08-31",
+    "tarball_url": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.63.0-alpha-2026-08-31.tgz",
+    "integrity": "sha512-1ek0Lyr12h6jcs/WTcNoVtzZkQp7D/90PsMuBW/Rm6h3AsWAbzpqj0geMv8+8Tzzr9CSUYvg9kznrVZINQMXXw==",
+    "sha256": "3d4532e810f39a478ed4924d0189eaf5909d3d02c1ee62bc6c2ff575bdf3d360",
+    "bytes": 3118000,
+    "selected_members": [
+      "package/package.json",
+      "package/browsers.json"
+    ]
+  }
+]

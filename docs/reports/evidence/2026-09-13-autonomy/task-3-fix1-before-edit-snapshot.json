@@ -1,0 +1,93 @@
+{
+  "snapshot_kind": "task3_fix1_before_edit",
+  "observed_at": "2026-09-13T20:24:21.049328+03:00",
+  "head": "b8e00f13b53cd73db8571d248e6823165d5f3764",
+  "index_clean": true,
+  "scope_files": [
+    {
+      "path": "web/tests/e2e/homepage.smoke.spec.ts",
+      "sha256": "7ba3ee53214cbf885e4f86f7b6d28602a874d6000a40ef87ec90ec2d6132b1d5",
+      "bytes": 279
+    },
+    {
+      "path": "web/tests/e2e/05-manual-moderation.spec.ts",
+      "sha256": "fb09b7723689aff7cfdae0681660d79dac16346e62a7aaa14462e8d25a4b76ea",
+      "bytes": 2131
+    },
+    {
+      "path": "web/tests/e2e/11-admin-archive-account.spec.ts",
+      "sha256": "79129ba5cef6b7fb60526581213c8e1c6dc5749f2876b6e2505e89cede7d48a0",
+      "bytes": 2025
+    },
+    {
+      "path": "web/tests/e2e/12-self-archive-export.spec.ts",
+      "sha256": "0a94d087a2c9b18994488f67c293bd4968d532391ec519637047f0c6e54100f7",
+      "bytes": 1619
+    },
+    {
+      "path": "web/tests/e2e/16-permanent-delete.spec.ts",
+      "sha256": "7abdc7dd307d3f1c93c758d2159d8e57f004804816aabbe5338e5d1ef2b7f6ea",
+      "bytes": 2062
+    }
+  ],
+  "worktree_status": [
+    " M docs/plans/2026-09-13-agent-loop-migration.md",
+    " M docs/plans/2026-09-13-autonomy-execution.md",
+    " M docs/reports/2026-09-13-autonomy-execution-report.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/auth-preflight.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/native-claude-discovery-block.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/t110-native-usage.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/t110-trace-shape.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-brief.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-comments-precommit.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-evidence-manifest.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-final-fixtures.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-final-head-fixtures.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-final-revision.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-first-commit-revision.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-before-commit-manifest.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-before-commit-snapshot.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-before-commit.patch",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-final-revision.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-full-green.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-help.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-parent-green.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-parent-red.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-precommit.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-prereq-green.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-prereq-red.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-report.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-review-diff.patch",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-review.diff",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-review.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-trace.jsonl",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-green-1.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-green-2.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-handoff-red.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-help.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-own-change.patch",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-own-diff-before-commit.patch",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-own-files-before-commit.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-postcommit-fixtures.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-precommit.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-red.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-report.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-review-probes.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-review.diff",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-review.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-schema-red.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-self-review-green.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-self-review-red.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-2-trace.jsonl",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-3-brief.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-3-current-audit-manifest.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-3-exported-tool-transcript.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-3-initial-evidence-manifest.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-3-initial-report.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-3-preflight.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-5-metadata-discovery-design.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-6-completeness-addendum.txt",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-6-design-probes.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/task-6-design.txt"
+  ]
+}

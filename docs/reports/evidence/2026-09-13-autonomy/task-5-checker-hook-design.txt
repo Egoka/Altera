@@ -1,0 +1,42 @@
+# Task 5 — завершение constrained Claude reviewer без project Stop hook
+
+**Статус: design amendment, не реализация/приёмка M4.** Изучены официальные Claude docs и локальный `claude --help` (exit 0). Исходники приложения, credentials и env values не читались; модель не запускалась; действующие hooks исходного checkout не менялись.
+
+**Решение:** только для Claude reviewer внутри ограниченного контейнера передать session setting:
+
+```json
+{"disableAllHooks": true}
+```
+
+Штатный knob — `--settings <RO-policy-file>` либо `--settings '{"disableAllHooks": true}'`. [Hooks reference](https://code.claude.com/docs/en/hooks#disable-or-remove-hooks) прямо рекомендует его для одного запуска, независимо от project/local настроек. Он отключает все hooks вне managed policy, а не только `Stop`; отдельный hook нельзя временно отключить, сохранив его запись. CLI настройка не отключает managed hooks. Наличие таких hooks — blocker этого варианта; не подделывать успешный hook result.
+
+[Settings precedence](https://code.claude.com/docs/en/settings#settings-precedence) ставит `--settings` выше user/project/local, ниже managed. Неуказанные keys сохраняются. Поэтому не надо удалять `.claude/settings.json`, заменять Stop командой `true` или выдавать reviewer RW-доступ к cooperative state.
+
+## Инструкции и MCP
+
+- Сохранить cwd в RO snapshot проекта, `CLAUDE.md` и импортируемые документы. `disableAllHooks` не выключает загрузку project instructions. Штатный поиск `CLAUDE.md` описан в [memory docs](https://code.claude.com/docs/en/memory); это контекст для модели, не filesystem enforcement.
+- Сохранить explicit mapped `--mcp-config` и добавить `--strict-mcp-config`, если этот режим уже согласован wrapper policy: он ограничивает загрузку конфигурациями из флага. [CLI reference](https://code.claude.com/docs/en/cli-reference) и локальный help подтверждают оба флага. Managed MCP policy может иметь приоритет; доступность trace проверяется реальным canary отдельно.
+- `--setting-sources` выбирает user/project/local **settings**, но для этой проблемы не нужен. Можно явно оставить `project` как единственный загружаемый источник пользовательских settings при отдельном controlled runtime home, сохранив hook override через `--settings`; это шире изменения Stop и требует отдельной проверки всех нужных настроек. Не полагаться на недоказанный empty-string режим.
+- Не использовать `--bare`/`--safe-mode`: локальный help указывает, что они отключают CLAUDE auto-discovery, а bare также меняет auth path. Не использовать `--restricted` как замену hook-knob: он меняет tool/permission semantics и отказывается работать с `bypassPermissions`, который добавляет Multica.
+
+## Effective argv в wrapper
+
+[Multica runtime docs](https://multica.ai/docs/daemon-runtimes#how-your-arguments-are-ordered) задают порядок: profile fixed args → Multica protocol args → agent custom args. Поздние конфликтующие флаги могут изменить ранее заданное значение; протокольные флаги фильтруются Multica. Поэтому запись `--settings` лишь в profile fixed args недостаточна.
+
+Trusted wrapper должен разобрать actual launch manifest, безопасно отобразить пути и сформировать **один** конечный `--settings` с `disableAllHooks: true`. Если вход содержит ещё `--settings`, сохранить разрешённые настройки через контролируемое объединение known JSON без секретного логирования либо остановиться на конфликте. Не рассчитывать на недокументированные merge/order эффекты повторяющихся `--settings`. Финальный policy file создаёт контроллер вне продукта, валидирует как strict JSON и монтирует RO; агент его не меняет. Не переписывать model/effort и stream-json stdin/stdout flags. Локальный help предупреждает, что print-mode может молча игнорировать невалидные settings: JSON/schema validation и behavioral canary обязательны.
+
+## Завершение и приёмка
+
+1. Trusted coordinator заранее регистрирует внешний parent/run/slot в original cooperative state. Этот state и Multica token в контейнер не передаются.
+2. Claude в RO snapshot выполняет проверку и возвращает native stream-json result/evidence. Hooks отключены только в этом checker invocation; native completed/exit 0 означает завершение процесса, не acceptance.
+3. Trusted collector связывает stdout/stderr, фактический exit, native run/actor, source SHA+dirty fingerprint и артефакты. Он проверяет schema, completeness и source freshness; модель не выбирает путь записи в trusted state.
+4. Внешний trusted CLI controller выполняет `record` фактического результата и затем `finish` по действующим правилам gate. Названия здесь концептуальные из Task 5, точный CLI синтаксис сверяет implementer. Native result без evidence либо со stale revision не освобождает slot и не принимает стадию. Если collector/record/finish упал, сохранить recoverable stop, не выдавать done.
+
+## Приёмочные сценарии amendment
+
+- В synthetic fixture project Stop hook блокирует обычный CLI completion; с session override hook не исполняется, а native result доступен collector. Синтетические hook markers писать лишь в scratch. Fake argv тест подтверждает только сборку команды; фактический hook behavior требует отдельного CLI canary.
+- Контекстный canary подтверждает использование безопасного marker из `CLAUDE.md` и работоспособность mapped trace MCP; это отдельно от отсутствия Stop события.
+- Native completion при отсутствующем evidence **не** завершает external gate. Корректное evidence позволяет trusted `record/finish`; stale revision и ошибка collector оставляют стадию непринятой.
+- Проверить отказ конфликтующего settings input, неизменность product/settings hashes, недоступность RW cooperative state и токена. Отсутствие hook не считать доказательством общей изоляции.
+
+Такой flow устраняет циклическую зависимость «Stop ждёт evidence, который появится после Stop» посредством явного разделения native completion и внешней приёмки. Изменение текущего project hook или имитация его успешной проверки не требуется.

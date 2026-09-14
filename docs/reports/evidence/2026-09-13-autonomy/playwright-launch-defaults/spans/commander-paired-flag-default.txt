@@ -1,0 +1,15 @@
+  _prepareForParse() {
+    if (this._savedState === null) {
+      this.options.filter(
+        (option) => option.negate && option.defaultValue === void 0 && this.getOptionValue(option.attributeName()) === void 0
+      ).forEach((option) => {
+        const positiveLongFlag = option.long.replace(/^--no-/, "--");
+        if (!this._findOption(positiveLongFlag)) {
+          this.setOptionValueWithSource(
+            option.attributeName(),
+            true,
+            "default"
+          );
+        }
+      });
+      this.saveStateBeforeParse();

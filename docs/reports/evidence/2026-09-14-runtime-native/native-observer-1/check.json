@@ -1,0 +1,1 @@
+{"argv":["/usr/local/bin/node","--test","--test-reporter=tap","/runtime/policy/runtime-check.test.mjs"],"cwd":"/Users/egorbondarenko/WebstormProjects/Altera","maximum_output":1048576,"network":"none","parser":"node-tap","schema_version":1,"timeout_seconds":120}

@@ -1,0 +1,33 @@
+{
+  "build2_image": "sha256:b0d67b0db2aaff00e3b12e487099fd9c9f0ff1c78c9e355f998d3dc291e5a8f9",
+  "build3_image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+  "lock_integrities_exact": true,
+  "mcp_core_dependencies_exact": true,
+  "chroot_rules": [
+    {
+      "names": [
+        "chroot"
+      ],
+      "action": "SCMP_ACT_ALLOW",
+      "includes": {
+        "caps": [
+          "CAP_SYS_CHROOT"
+        ]
+      }
+    }
+  ],
+  "runtime_security": {
+    "CapDrop": [
+      "ALL"
+    ],
+    "CapAdd": null,
+    "Privileged": false,
+    "ReadonlyRootfs": true,
+    "PidsLimit": 128,
+    "Memory": 2147483648,
+    "NanoCpus": 2000000000
+  },
+  "observed_failure": "sys_chroot(\"/proc/self/fdinfo/\") == 0; zygote SIGTRAP",
+  "errno": "not_observed",
+  "seccomp_cause": "plausible from exact profile/capability context; no syscall-specific control run"
+}

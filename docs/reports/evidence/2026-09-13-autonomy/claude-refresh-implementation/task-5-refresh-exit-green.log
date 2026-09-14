@@ -1,0 +1,6 @@
+test_nonzero_container_exit_cannot_accept_model_result (__main__.RefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.010s
+
+OK

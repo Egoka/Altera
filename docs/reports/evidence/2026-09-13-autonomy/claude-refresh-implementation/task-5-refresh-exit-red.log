@@ -1,0 +1,25 @@
+test_nonzero_container_exit_cannot_accept_model_result (__main__.RefreshTests) ... FAIL
+
+======================================================================
+FAIL: test_nonzero_container_exit_cannot_accept_model_result (__main__.RefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_credential_refresh.py", line 257, in test_nonzero_container_exit_cannot_accept_model_result
+    self.assertEqual(store.container('model', self.source, None), {'status': 'child_failed'})
+AssertionError: {'status': 'model_accepted', 'usage': {'input_tokens'[243 chars]alse} != {'status': 'child_failed'}
++ {'status': 'child_failed'}
+- {'billingVerified': False,
+-  'modelUsage': {'claude-opus-4-6': {'canonicalModel': 'claude-opus-4-6',
+-                                     'costBasis': 'list',
+-                                     'costUSD': 0.05,
+-                                     'inputTokens': 3,
+-                                     'outputTokens': 5,
+-                                     'provider': 'firstParty'}},
+-  'status': 'model_accepted',
+-  'totalCostUsd': 0.05,
+-  'usage': {'input_tokens': 3, 'output_tokens': 5}}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.014s
+
+FAILED (failures=1)

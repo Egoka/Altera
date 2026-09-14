@@ -1,0 +1,10 @@
+{
+  "old_policy_sha256": "23ec2e8ee435b34843dbc3a7b83dfffb4219dd4c5edbd18fec5d9fd07352c123",
+  "corrected_policy_sha256": "662cd59788a4aaabcb8ea00486131b96607629051506285247fbb0dc48b95a4e",
+  "control_sha256": "5a4e77d97f51f7ec6196bc46e5c8974de702b4ac4e6260296849463228877dba",
+  "change": "literal fixture ancestor directory read-data only; no subpath grant/source/config/auth reads; no write/process/network grant",
+  "cause_status": "confirmed policy omission relative to accepted D1; causal startup effect to be tested once",
+  "prior_covering_failures": 2,
+  "does_not_reset_covering_count": true,
+  "unexecuted_preparation_corrected": "Resolve base before listing parents to include /private/tmp, /private and /"
+}

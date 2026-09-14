@@ -1,0 +1,15 @@
+{
+  "commit": "c03838840dc0aeb5003221ae10fec75ebb16a59b",
+  "tree": "5a80f56e63d67a0632f2d258ffccc0e8fa26605a",
+  "files": [
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/protocol-guard.mjs",
+    "scripts/agent-runtime/runtime.py",
+    "scripts/agent-runtime/test_protocol_guard.mjs",
+    "scripts/agent-runtime/test_runtime.py"
+  ],
+  "owned_scope_matches_precommit": true,
+  "hooks_exit": 0,
+  "hooks_log_sha256": "06c7f2a2766cd41712d4704d17c273ccf8c60c42633acc38a831f305aea7c9f2",
+  "remaining_dirty_scope": " M docs/reports/2026-09-13-autonomy-execution-report.md\n?? docs/reports/evidence/2026-09-13-autonomy/claude-persistent-auth/\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/\n?? docs/reports/evidence/2026-09-13-autonomy/native-mcp-roster.json\n?? docs/reports/evidence/2026-09-13-autonomy/owner-native-discovery-readback.json\n?? docs/reports/evidence/2026-09-13-autonomy/remote-heads-runtime-preflight.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-commit-9e1f8be.txt\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-precommit-9e1f8be.json\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-independent-review.md\n?? docs/reports/evidence/2026-09-13-autonomy/task-6-fix1-review.md\n"
+}

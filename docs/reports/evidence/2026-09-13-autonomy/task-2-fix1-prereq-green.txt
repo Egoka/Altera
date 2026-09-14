@@ -1,0 +1,9 @@
+test_prerequisite_output_rechecked_at_record (test_gate.GateTests) ... ok
+test_prerequisites_rechecked_at_completed_stop (test_gate.GateTests) ... ok
+test_prerequisites_rechecked_at_finish_and_active_stop (test_gate.GateTests) ... ok
+test_prerequisites_rechecked_at_record_after_review_start (test_gate.GateTests) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 9.030s
+
+OK

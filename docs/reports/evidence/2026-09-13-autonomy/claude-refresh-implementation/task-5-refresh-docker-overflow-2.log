@@ -1,0 +1,6 @@
+test_output_limit_is_bounded_and_redacted (__main__.DockerRefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.405s
+
+OK

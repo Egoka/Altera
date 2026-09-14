@@ -1,0 +1,11 @@
+# D0 controller safety review before registration
+
+Scope: register an unbound metadata-only diagnostic profile, then separately evaluate its discovery. This is not Task5 acceptance, native routing proof or authorization to retry the rejected unrestricted host-Claude launch.
+
+Reviewed exact source SHA256 a5843cc10aa495bb6cf48e89f80bd121bf66fa582e85a6fb2584cc8691d67107 and binary SHA256 613775a45871082c7bb5981b5f19a77ddc47cf97b0c96372aaac08e764ea6d81, mode0555. All immutable review bundle hashes rechecked. Trace outlines first returned NOT_FOUND in original-checkout index; immutable no-index Git diffs of three new files were then reviewed.
+
+Source main has only static --help/--version response or bounded stderr metadata+exit78. It never reads stdin, launches a model/child/MCP, opens config/credentials or connects to network. Only exact known flag names are emitted; arbitrary values/unknown flag names are redacted. Path values require ASCII absolute conservative lexical spelling within explicitly allowed roots/cwd and are never dereferenced; env comparison returns presence only. Build is exact clang invocation on this source with embedded source hash, no additional linked source/plugin. Static imports and supplied4/4 executable tests support these specific observations; no suite rerun performed.
+
+Limitations: loader/library file reads are not fully traced; the stronger read-deny sandbox aborted134 once and is not accepted. The narrower macOS policy denies network/fork/writes and credential-directory reads and returned diagnostic78. D0 version identifies itself as altera-metadata-probe1.0.0, not Claude; registration/model catalog compatibility is unknown. Bounded manifest intentionally omits env path values and unknown arguments. Daemon itself may prepare managed files before invoking child. No claims of zero framework filesystem writes or actual model protocol compatibility.
+
+Decision: local artifact is concrete for separate unbound custom-profile registration and exact-path pin. No role binding/native issue trigger yet. Fresh profiles list is empty (tool bbf4a4, exit0). Preserve original built-in runtime, agent IDs/models and paused autopilots. If this truthful diagnostic cannot register, retain that blocker; do not impersonate host-Claude or weaken the binary.

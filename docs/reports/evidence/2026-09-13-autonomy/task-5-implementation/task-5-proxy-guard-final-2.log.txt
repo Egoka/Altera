@@ -1,0 +1,11 @@
+✔ protocol accepts the declared cwd and refuses alternate cwd in nested RPC parameters (0.912416ms)
+✔ protocol rejects changes to preserved model, reasoning and service tier (0.441209ms)
+✔ proxy refuses host endpoints, ambiguous authorities and non-public DNS answers (12.764792ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 50.733459

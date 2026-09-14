@@ -1,0 +1,49 @@
+test_concurrent_acquisition_has_exactly_one_owner (test_gate.GateTests) ... ok
+test_docs_only_requires_explicit_baseline_and_rejects_committed_product (test_gate.GateTests) ... ok
+test_duplicate_event_rejected_without_mutation (test_gate.GateTests) ... ok
+test_foreign_evidence_directory_rejected (test_gate.GateTests) ... ok
+test_global_slot_and_run_replay_rejected (test_gate.GateTests) ... ok
+test_hook_repeated_stop_does_not_bypass_missing_passport (test_gate.GateTests) ... ok
+test_linked_worktrees_share_slot (test_gate.GateTests) ... ok
+test_lock_and_corrupt_state_fail_closed (test_gate.GateTests) ... ok
+test_malformed_check_result_rejected_without_state_change (test_gate.GateTests) ... ok
+test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests) ... ok
+test_paired_human_report_required_and_pinned (test_gate.GateTests) ... ok
+test_parent_reservation_survives_finish_until_all_stages_complete (test_gate.GateTests) ... ok
+test_parent_reservation_survives_release_and_resume_preserves_failures (test_gate.GateTests) ... ok
+test_paths_and_symlink_evidence_rejected (test_gate.GateTests) ... ok
+test_prerequisite_output_rechecked_at_record (test_gate.GateTests) ... ok
+test_prerequisites_rechecked_at_completed_stop (test_gate.GateTests) ... ok
+test_prerequisites_rechecked_at_finish_and_active_stop (test_gate.GateTests) ... ok
+test_prerequisites_rechecked_at_record_after_review_start (test_gate.GateTests) ... ok
+test_scope_cannot_omit_product_changes (test_gate.GateTests) ... ok
+test_stage_handoff_rejects_stale_prior_revision (test_gate.GateTests) ... ok
+test_stage_handoff_revalidates_prior_evidence (test_gate.GateTests) ... ok
+test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests) ... ok
+test_success_preserves_other_check_failure_count (test_gate.GateTests) ... ok
+test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests) ... ok
+test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests) ... ok
+test_two_failures_stop_stable_check_across_runs (test_gate.GateTests) ... ok
+test_uncovered_criterion_and_malformed_passport_rejected (test_gate.GateTests) ... ok
+test_wrong_stage_actor_and_unknown_check_rejected (test_gate.GateTests) ... ok
+test_archive_tampering_and_legacy_state_fail_closed (test_gate.LifecycleTests) ... ok
+test_bind_rejects_foreign_owner_duplicate_and_nonartifact_commits (test_gate.LifecycleTests) ... ok
+test_binding_rejects_checked_inputs_dirty_renames_symlinks_and_unrelated_head (test_gate.LifecycleTests) ... ok
+test_failed_recovery_immediately_stops_at_three_and_cannot_reuse_remedy (test_gate.LifecycleTests) ... ok
+test_failed_release_cannot_finalize (test_gate.LifecycleTests) ... ok
+test_malformed_v3_counters_and_history_are_rejected_without_reset (test_gate.LifecycleTests) ... ok
+test_publication_rejects_source_drift_and_unaccepted_rules (test_gate.LifecycleTests) ... ok
+test_publication_release_finalization_retains_parent_and_separate_source_proof (test_gate.LifecycleTests) ... ok
+test_real_plan_source_change_test_review_and_truthful_artifact_binding (test_gate.LifecycleTests) ... ok
+test_recovery_requires_new_confirmed_conditions_and_preserves_counters (test_gate.LifecycleTests) ... ok
+test_return_preserves_history_parent_and_counter_then_fresh_pass_resets_only_review (test_gate.LifecycleTests) ... ok
+test_return_rejects_wrong_owner_foreign_events_and_replay_atomically (test_gate.LifecycleTests) ... ok
+test_source_mutation_during_verification_rejects_record_finish_stop (test_gate.LifecycleTests) ... ok
+test_source_repair_cannot_resurrect_stale_prerequisites_for_recovery (test_gate.LifecycleTests) ... ok
+test_two_review_failures_across_iterations_stop_without_reset (test_gate.LifecycleTests) ... ok
+test_unknown_recovery_result_cannot_grant_second_execution (test_gate.LifecycleTests) ... ok
+
+----------------------------------------------------------------------
+Ran 44 tests in 207.694s
+
+OK

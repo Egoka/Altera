@@ -1,0 +1,44 @@
+{
+  "at_utc": "2026-09-13T23:38:19.692336+00:00",
+  "agent_restored": true,
+  "agent": {
+    "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+    "status": "idle",
+    "model": "gpt-5.6-terra",
+    "thinking_level": "medium",
+    "max_concurrent_tasks": 1
+  },
+  "changed_agent_fields": [
+    "updated_at"
+  ],
+  "issue_assignment_restored": true,
+  "issue_status": "backlog",
+  "profiles": [],
+  "temporary_runtime_absent": true,
+  "nonterminal_runs": 0,
+  "autopilots": [
+    {
+      "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "status": "paused"
+    },
+    {
+      "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+      "status": "paused"
+    },
+    {
+      "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+      "status": "paused"
+    }
+  ],
+  "historical_errors": [
+    {
+      "operation": "issue-restored-readback",
+      "exit": 2,
+      "stderr": "not_retained",
+      "mutation_preceding": "unassign returned success; agent already restored"
+    }
+  ],
+  "consecutive_cleanup_read_failures": 0,
+  "explicit_native_triggers": 1
+}

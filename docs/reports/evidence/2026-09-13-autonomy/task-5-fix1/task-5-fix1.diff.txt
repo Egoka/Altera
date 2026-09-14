@@ -1,0 +1,266 @@
+diff --git a/docs/development/runtime-isolation.md b/docs/development/runtime-isolation.md
+index 0fabe71..3ae0f6a 100644
+--- a/docs/development/runtime-isolation.md
++++ b/docs/development/runtime-isolation.md
+@@ -15,9 +15,13 @@ service tier: trace project map/outline, отказ shell-записи `Read-onl
+ В trace сохранён также один отклонённый вызов outline с неверным аргументом и его исправление.
+ Реальный trace MCP 3.25.0 отдельно индексировал fixture и выполнил оба stdio-вызова.
+ 
+-Claude 2.1.263 внутри Linux сообщает `loggedIn: false`, `authMethod: none`; macOS Keychain
+-не экспортировался. Его модель, context marker, фактическое отключение hooks и native
+-stream-json canary ещё не приняты. Native metadata diagnostic D0 не устанавливает эти факты.
++Первоначальный Linux Claude login gap закрыт отдельной авторизацией владельца:
++[fresh-container auth proof](../reports/evidence/2026-09-13-autonomy/claude-persistent-auth/auth-status-proof.json)
++подтверждает `loggedIn: true`, `authMethod: claude.ai`, а
++[standalone model proof](../reports/evidence/2026-09-13-autonomy/claude-persistent-auth/model-auth-proof.json)
++— успешный `claude-opus-4-6`, medium и marker при отключённых tools. macOS Keychain не
++экспортировался. Это не native приёмка: context/MCP, фактическое отключение hooks, refresh
++и managed stream-json canary остаются непроверенными. D0 также не устанавливает эти факты.
+ Actual managed MCP input остаётся неразрешённым; production mapping отказывает до его проверки.
+ Готовность всей Task 5, M4/M7 и автопилотов этим документом не объявляется.
+ 
+@@ -27,7 +31,12 @@ Trusted coordinator вызывает `snapshot(source, target, dirty_paths)` и
+ `git clone --no-local --no-hardlinks`, checkout полного HEAD, binary dirty diff и только явно
+ перечисленные новые неигнорируемые файлы. Их список обязан совпадать с фактическим untracked
+ набором: пропустить новый исходник нельзя. Hooks и пользовательский/global Git config не
+-загружаются. Source fingerprint проверяется до и после копирования и сравнивается со snapshot.
++загружаются. Для каждого untracked input fingerprint содержит SHA-256 bytes/link text,
++kind (`file`/`symlink`) и нормализованный Git mode (`100644`/`100755`/`120000`). Для regular
++file учитывается owner execute bit; остальные permission bits не входят в Git mode. Замена
++file на symlink с тем же digest и изменение executable bit отклоняются и в source, и в snapshot.
++Source fingerprint проверяется до и после копирования и сравнивается со snapshot. Старые
++manifest с untracked digest без kind/mode нужно пересоздать: они не проходят сравнение.
+ Ignored `.env` не копируется; пути к ним нельзя добавить как новые inputs. Это не аудит
+ секретов в ранее закоммиченном содержимом и Git history. Внешние/абсолютные symlinks отклоняются.
+ 
+@@ -71,7 +80,14 @@ credentials не читается launcher и не входит в manifest/hash
+ может указывать только на declared source или его подкаталог без `..`. Валидные bytes
+ передаются без переформатирования; malformed/oversized input заканчивается exit 78. Stdout
+ CLI и stderr остаются раздельными, сигналы передаются дочернему процессу. Изменение модели,
+-reasoning или default service tier через RPC также отвергается. Отключение prompt
++reasoning или default service tier через RPC также отвергается. В pinned schema
++`serviceTierForTurn` принимает только omitted/null (наследует закреплённый tier) либо `"default"`
++(standard speed); `fast`, `flex` и неизвестные значения запрещены. `serviceTier`/`service_tier`
++допускают только null/omitted. Thread `config` ограничен `model`, `model_reasoning_effort`,
++`service_tier` с исходными значениями; произвольные nested/dotted profiles и provider overrides
++не принимаются. `config/value/write`, `config/batchWrite` и `externalAgentConfig/import`
++отвергаются целиком: checker не меняет defaults через keyPath/value, batch или файлы импорта.
++Отключение prompt
+ ограничений внутри CLI не отменяет Docker mounts. Diagnostic flag `fixture: true` выбирает
+ явный coordinator-owned `/runtime/policy/fixture.mjs` вместо CLI; сам по себе он не означает
+ ни запуск модели, ни fake-успех. Тип конкретного опыта и фактический executable фиксирует отчёт.
+@@ -142,6 +158,8 @@ Missing/stale evidence и сбой collector/record/finish оставляют с
+ `docker image inspect --format '{{.Id}}' altera-agent-runtime:task5` и использовать только этот ID.
+ Dockerfile фиксирует Node 24.12.0, Codex 0.154.0-alpha.6.2, Claude 2.1.263 и trace 3.25.0.
+ Обновление любой версии требует новой приёмки; переносимый runtime не выводится из host login.
++Изменённый `protocol-guard.mjs` также требует пересборки image и нового immutable ID перед
++запуском: прежнее Docker/model evidence относится к прежнему image, а не к fix round 1.
+ 
+ Unit: `python3 -I scripts/agent-runtime/test_runtime.py`, `node --test scripts/agent-runtime/test_proxy.mjs scripts/agent-runtime/test_protocol_guard.mjs`.
+ Docker: `python3 -I scripts/agent-runtime/test_docker.py IMAGE_ID NEW_EVIDENCE_DIR`; каждый
+diff --git a/scripts/agent-runtime/protocol-guard.mjs b/scripts/agent-runtime/protocol-guard.mjs
+index 8647869..ef8721e 100644
+--- a/scripts/agent-runtime/protocol-guard.mjs
++++ b/scripts/agent-runtime/protocol-guard.mjs
+@@ -5,18 +5,34 @@ import { pathToFileURL } from "node:url"
+ 
+ export function validate(bytes, root, family = "codex") {
+   const value = JSON.parse(bytes.toString("utf8"))
++  // Config writes/import меняют будущие defaults; checker не принимает эти RPC.
++  if (
++    family === "codex" &&
++    ["config/value/write", "config/batchWrite", "externalAgentConfig/import"].includes(value?.method)
++  )
++    throw new Error("preserved_model_settings_changed")
+   function visit(item) {
+     if (item === null || typeof item !== "object") return
+     for (const [key, child] of Object.entries(item)) {
+       const model = family === "codex" ? "gpt-5.6-terra" : "claude-opus-4-6"
+       if (
+         (key === "model" && child !== null && child !== model) ||
+-        (["effort", "reasoningEffort", "model_reasoning_effort"].includes(key) &&
++        (["effort", "reasoningEffort", "reasoning_effort", "model_reasoning_effort"].includes(key) &&
+           child !== null &&
+           child !== "medium") ||
+-        (key === "serviceTier" && child !== null)
++        (["serviceTier", "service_tier", "modelProvider", "model_provider"].includes(key) && child !== null) ||
++        (key === "serviceTierForTurn" && child !== null && child !== "default")
+       )
+         throw new Error("preserved_model_settings_changed")
++      // Thread config — произвольный TOML override; разрешены только закреплённые knobs.
++      if (family === "codex" && key === "config" && child !== null) {
++        if (
++          typeof child !== "object" ||
++          Array.isArray(child) ||
++          Object.keys(child).some((name) => !["model", "model_reasoning_effort", "service_tier"].includes(name))
++        )
++          throw new Error("preserved_model_settings_changed")
++      }
+       if (
+         key === "cwd" &&
+         (typeof child !== "string" ||
+diff --git a/scripts/agent-runtime/runtime.py b/scripts/agent-runtime/runtime.py
+index 3545ee1..10bae03 100755
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -10,6 +10,7 @@ import os
+ from pathlib import Path
+ import re
+ import signal
++import stat
+ import subprocess
+ import sys
+ import uuid
+@@ -68,7 +69,17 @@ def fingerprint(source, dirty_paths):
+         safe_symlink(path, source)
+         if not path.is_file() or not path.resolve().is_relative_to(source):
+             raise ValueError('unsafe_dirty_path')
+-        entries[name] = digest(os.readlink(path).encode() if path.is_symlink() else path.read_bytes())
++        mode = path.lstat().st_mode
++        # Git различает symlink и regular file, у regular — только owner execute bit.
++        if stat.S_ISLNK(mode):
++            kind, git_mode, content = 'symlink', '120000', os.fsencode(os.readlink(path))
++        elif stat.S_ISREG(mode):
++            kind = 'file'
++            git_mode = '100755' if mode & stat.S_IXUSR else '100644'
++            content = path.read_bytes()
++        else:
++            raise ValueError('unsafe_dirty_path')
++        entries[name] = {'kind': kind, 'mode': git_mode, 'sha256': digest(content)}
+     return {'head': git(source, 'rev-parse', 'HEAD').decode().strip(),
+             'tree': git(source, 'rev-parse', 'HEAD^{tree}').decode().strip(),
+             'dirty_sha256': digest(git(source, 'diff', '--binary', 'HEAD', '--')),
+diff --git a/scripts/agent-runtime/test_protocol_guard.mjs b/scripts/agent-runtime/test_protocol_guard.mjs
+index 65f849b..afc108c 100644
+--- a/scripts/agent-runtime/test_protocol_guard.mjs
++++ b/scripts/agent-runtime/test_protocol_guard.mjs
+@@ -20,6 +20,8 @@ test("protocol rejects changes to preserved model, reasoning and service tier",
+     { model: "other" },
+     { effort: "low" },
+     { model_reasoning_effort: "high" },
++    { reasoning_effort: "low" },
++    { collaborationMode: { settings: { model: "gpt-5.6-terra", reasoning_effort: "high" } } },
+     { serviceTier: "fast" }
+   ]) {
+     assert.throws(() => validate(Buffer.from(JSON.stringify({ params })), "/source/project", "codex"))
+@@ -30,3 +32,57 @@ test("protocol rejects changes to preserved model, reasoning and service tier",
+     "codex"
+   )
+ })
++
++test("pinned turn tier override permits only inherited or explicit standard speed", async () => {
++  const { validate } = await import("./protocol-guard.mjs")
++  const request = (params) =>
++    Buffer.from(JSON.stringify({ method: "turn/start", params: { threadId: "synthetic", input: [], ...params } }))
++  for (const params of [{}, { serviceTierForTurn: null }, { serviceTierForTurn: "default" }]) {
++    validate(request(params), "/source/project")
++  }
++  for (const serviceTierForTurn of ["fast", "flex", "unknown", false, {}]) {
++    assert.throws(
++      () => validate(request({ serviceTierForTurn }), "/source/project"),
++      /preserved_model_settings_changed/
++    )
++  }
++})
++
++test("thread config and provider overrides cannot replace the pinned runtime settings", async () => {
++  const { validate } = await import("./protocol-guard.mjs")
++  for (const method of ["thread/start", "thread/resume", "thread/fork"]) {
++    const request = (params) => Buffer.from(JSON.stringify({ method, params: { threadId: "synthetic", ...params } }))
++    for (const config of [null, {}, { model: "gpt-5.6-terra", model_reasoning_effort: "medium", service_tier: null }]) {
++      validate(request({ config, modelProvider: null }), "/source/project")
++    }
++    for (const params of [
++      { config: { service_tier: "fast" } },
++      { config: { model_reasoning_effort: "low" } },
++      { config: { "profiles.checker.service_tier": "fast" } },
++      { config: { profiles: { checker: { service_tier: "fast" } } } },
++      { config: { profile: "checker" } },
++      { config: { model_provider: "other" } },
++      { modelProvider: "other" }
++    ]) {
++      assert.throws(() => validate(request(params), "/source/project"), /preserved_model_settings_changed/)
++    }
++  }
++})
++
++test("config mutation RPCs cannot hide overrides in keyPath values or imported files", async () => {
++  const { validate } = await import("./protocol-guard.mjs")
++  for (const request of [
++    { method: "config/value/write", params: { keyPath: "service_tier", value: "fast", mergeStrategy: "replace" } },
++    {
++      method: "config/batchWrite",
++      params: { edits: [{ keyPath: "model_reasoning_effort", value: "low", mergeStrategy: "replace" }] }
++    },
++    { method: "externalAgentConfig/import", params: { items: [] } }
++  ]) {
++    assert.throws(
++      () => validate(Buffer.from(JSON.stringify(request)), "/source/project"),
++      /preserved_model_settings_changed/
++    )
++  }
++  validate(Buffer.from('{"method":"config/read","params":{}}'), "/source/project")
++})
+diff --git a/scripts/agent-runtime/test_runtime.py b/scripts/agent-runtime/test_runtime.py
+index 1d12821..ea9e7e3 100644
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -77,6 +77,58 @@ class RuntimeTests(unittest.TestCase):
+         with self.assertRaisesRegex(ValueError, 'untracked_input_mismatch'):
+             self.runtime.snapshot(self.source, self.base / 'incomplete-snapshot', [])
+ 
++    def test_untracked_mode_changes_in_source_and_snapshot_fail_closed(self):
++        path = self.source / 'new-input'
++        path.write_text('code.txt')
++        path.chmod(0o644)
++        dest = self.base / 'mode-snapshot'
++        state = self.runtime.snapshot(self.source, dest, ['new-input'])
++        self.manifest.update(snapshot=str(dest), state=state, dirty_paths=['new-input'])
++        for root, error in [(self.source, 'source_changed'), (dest, 'snapshot_changed')]:
++            with self.subTest(root=root.name):
++                (root / 'new-input').chmod(0o755)
++                try:
++                    with self.assertRaisesRegex(ValueError, error):
++                        self.runtime.command(self.manifest, [], {})
++                finally:
++                    (root / 'new-input').chmod(0o644)
++
++    def test_untracked_kind_changes_with_identical_digest_fail_closed(self):
++        path = self.source / 'new-input'
++        path.write_text('code.txt')
++        dest = self.base / 'kind-snapshot'
++        state = self.runtime.snapshot(self.source, dest, ['new-input'])
++        self.manifest.update(snapshot=str(dest), state=state, dirty_paths=['new-input'])
++        for root, error in [(self.source, 'source_changed'), (dest, 'snapshot_changed')]:
++            with self.subTest(root=root.name):
++                changed = root / 'new-input'
++                changed.unlink()
++                changed.symlink_to('code.txt')
++                try:
++                    with self.assertRaisesRegex(ValueError, error):
++                        self.runtime.command(self.manifest, [], {})
++                finally:
++                    changed.unlink()
++                    changed.write_text('code.txt')
++
++    def test_untracked_fingerprint_normalizes_permissions_to_git_mode(self):
++        path = self.source / 'new-input'
++        path.write_text('code.txt')
++        path.chmod(0o600)
++        initial = self.runtime.fingerprint(self.source, ['new-input'])
++        path.chmod(0o644)
++        self.assertEqual(initial, self.runtime.fingerprint(self.source, ['new-input']))
++        self.assertEqual(initial['untracked']['new-input'], {
++            'kind': 'file', 'mode': '100644',
++            'sha256': hashlib.sha256(b'code.txt').hexdigest()})
++        path.chmod(0o755)
++        executable = self.runtime.fingerprint(self.source, ['new-input'])['untracked']['new-input']
++        self.assertEqual(executable['mode'], '100755')
++        path.unlink()
++        path.symlink_to('code.txt')
++        link = self.runtime.fingerprint(self.source, ['new-input'])['untracked']['new-input']
++        self.assertEqual(link, {'kind': 'symlink', 'mode': '120000', 'sha256': executable['sha256']})
++
+     def test_readonly_mounts_and_token_free_env(self):
+         args = self.runtime.command(self.manifest,
+             ['--model', 'claude-opus-4-6', '--effort', 'medium', '--mcp-config', '/managed/task/mcp.json'], {})

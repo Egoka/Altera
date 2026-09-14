@@ -1,0 +1,1 @@
+{"command": ["/usr/bin/python3", "-m", "unittest", "discover", "-s", "scripts/agent-loop", "-p", "test_gate.py", "-k", "retained_stop_rejects", "-v"], "exit_code": 1}

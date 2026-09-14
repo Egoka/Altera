@@ -1,0 +1,19 @@
+---
+name: ai-regression-testing
+description: Use when reproducing a defect or verifying that a code change does not reintroduce known failures.
+metadata:
+  origin: ECC
+---
+
+# Regression Testing
+
+Turn a reported failure into a reproducible check of observable behavior. Regression coverage complements new-feature acceptance tests; it does not prohibit them or guarantee that a defect can never recur.
+
+1. Identify the expected behavior, failing input, affected path and revision. Reproduce the failure with the smallest relevant test before the fix when feasible. A setup error is not reproduction; explain if the old failing revision cannot be tested.
+2. Inspect the package manifests, available test runner, fixtures and scripts. Use the repository's package manager and package scope. Record which tests were actually discovered and executed. A missing script, zero tests, skipped suite, absent command or recursive wrapper exiting zero is not a passing test result. If infrastructure is absent, report the gap and the concrete setup work needed; perform useful available checks without claiming equivalence.
+3. Inspect build and pre/post scripts for side effects. In Altera, server `build` includes `prisma migrate deploy`; use the inspected non-migrating `build:ci` for its stated checks. Do not use production migration or unknown-database mutation as a build check. Database tests need a confirmed isolated test target. A successful type/build check does not prove database behavior.
+4. After the fix, rerun the reproduction and the relevant adjacent tests. Cover actual alternate paths and mocks only if present; do not invent sandbox flags, bypass authentication, or replace the framework to use an example.
+
+For a GraphQL contract change, execute an operation selecting the field and inspect `data` and `errors`, not HTTP status alone. Cover a populated value and nullable/empty case; check schema, resolver mapping, Prisma selection, client expectations and applicable authorization/validation failures. For UI defects, assert the intended visible state and error/recovery behavior, including stale responses or rollback when relevant.
+
+Return the tested revision/artifact, cases and commands actually run, results/counts and evidence location, and unverified areas. Distinguish application failures, flaky results and environment blockers. Preserve the original defect and attempt history; after two consecutive failures of the same check within a stage, stop that check and return the accumulated evidence to the orchestrator (Altera operating-model §5). Persist the task/stage/check_id counter across runs and actors; only a successful execution of that same check resets its counter. Independent review uses this evidence and does not replace executed checks.

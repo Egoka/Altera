@@ -1,0 +1,2 @@
+.superpowers/sdd/2026-09-13-autonomy-execution/task-5-d1-fix1-probe:
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)

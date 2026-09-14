@@ -1,0 +1,103 @@
+test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) ... test_publication_rejects_replaced_temp_inode_and_preserves_foreign_entry (__main__.CodexTomlMappingTests) ... FAIL
+test_public_errors_suppress_causes_and_validate_semantic_types (__main__.CodexTomlMappingTests) ... FAIL
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'[ "mcp_servers".unmanaged ]\ncommand = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: MappingError not raised
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'[ mcp_servers . unmanaged ]\ncommand = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: output_exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: "^base_policy_invalid$" does not match "output_exists"
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'["mcp_servers" . "unmanaged"]\ncommand = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: output_exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: "^base_policy_invalid$" does not match "output_exists"
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'[ \'mcp_servers\' . unmanaged ]\ncommand = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: output_exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: "^base_policy_invalid$" does not match "output_exists"
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'[[ "mcp_servers" . unmanaged ]]\ncommand = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: output_exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: "^base_policy_invalid$" does not match "output_exists"
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'mcp_servers.unmanaged.command = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: output_exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: "^base_policy_invalid$" does not match "output_exists"
+
+======================================================================
+FAIL: test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) (base=b'"mcp_servers" . unmanaged . command = "SYNTHETIC_ONLY"\n')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: output_exists
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 383, in test_base_policy_semantic_mcp_forms_refuse_without_publication
+    mapper.materialize(
+AssertionError: "^base_policy_invalid$" does not match "output_exists"
+
+======================================================================
+FAIL: test_publication_rejects_replaced_temp_inode_and_preserves_foreign_entry (__main__.CodexTomlMappingTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 411, in test_publication_rejects_replaced_temp_inode_and_preserves_foreign_entry
+    self.fixture.materialize(managed())
+AssertionError: MappingError not raised
+
+======================================================================
+FAIL: test_public_errors_suppress_causes_and_validate_semantic_types (__main__.CodexTomlMappingTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 427, in test_public_errors_suppress_causes_and_validate_semantic_types
+    self.assertNotIn(missing_home.parent.name, rendered)
+AssertionError: 'alte-9-abcdef012345' unexpectedly found in 'Traceback (most recent call last):\n  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/codex_toml_map.py", line 510, in _read_validated_config\n    fd = os.open(component, directory_flags, dir_fd=fds[-1])\nFileNotFoundError: [Errno 2] No such file or directory: \'alte-9-abcdef012345\'\n\nDuring handling of the above exception, another exception occurred:\n\ncodex_toml_map.MappingError: descriptor_invalid\n'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.008s
+
+FAILED (failures=9)

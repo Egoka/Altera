@@ -1,0 +1,21 @@
+test_atomic_publication_removes_a_link_after_directory_fsync_failure (__main__.CodexTomlMappingTests) ... FAIL
+
+======================================================================
+FAIL: test_atomic_publication_removes_a_link_after_directory_fsync_failure (__main__.CodexTomlMappingTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 384, in test_atomic_publication_removes_a_link_after_directory_fsync_failure
+    self.assertEqual(list(self.fixture.output.iterdir()), [])
+AssertionError: Lists differ: [PosixPath('/private/tmp/altera-codex-map-[40 chars]on')] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+PosixPath('/private/tmp/altera-codex-map-gxn_bi0t/generation/codex-mcp-catalog.json')
+
+- [PosixPath('/private/tmp/altera-codex-map-gxn_bi0t/generation/codex-mcp-catalog.json')]
++ []
+
+----------------------------------------------------------------------
+Ran 1 test in 0.003s
+
+FAILED (failures=1)

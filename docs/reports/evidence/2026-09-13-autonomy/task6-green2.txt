@@ -1,0 +1,33 @@
+test_archive_tampering_and_legacy_state_fail_closed (test_gate.LifecycleTests) ... ok
+test_bind_rejects_foreign_owner_duplicate_and_nonartifact_commits (test_gate.LifecycleTests) ... ok
+test_failed_recovery_immediately_stops_at_three_and_cannot_reuse_remedy (test_gate.LifecycleTests) ... ok
+test_failed_release_cannot_finalize (test_gate.LifecycleTests) ... ok
+test_publication_rejects_source_drift_and_unaccepted_rules (test_gate.LifecycleTests) ... ok
+test_publication_release_finalization_retains_parent_and_separate_source_proof (test_gate.LifecycleTests) ... FAIL
+test_real_plan_source_change_test_review_and_truthful_artifact_binding (test_gate.LifecycleTests) ... ok
+test_recovery_requires_new_confirmed_conditions_and_preserves_counters (test_gate.LifecycleTests) ... ok
+test_return_preserves_history_parent_and_counter_then_fresh_pass_resets_only_review (test_gate.LifecycleTests) ... ok
+test_source_mutation_during_verification_rejects_record_finish_stop (test_gate.LifecycleTests) ... ok
+test_source_repair_cannot_resurrect_stale_prerequisites_for_recovery (test_gate.LifecycleTests) ... ok
+test_two_review_failures_across_iterations_stop_without_reset (test_gate.LifecycleTests) ... ok
+test_unknown_recovery_result_cannot_grant_second_execution (test_gate.LifecycleTests) ... ok
+
+======================================================================
+FAIL: test_publication_release_finalization_retains_parent_and_separate_source_proof (test_gate.LifecycleTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 666, in test_publication_release_finalization_retains_parent_and_separate_source_proof
+    self.finish_stage()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 509, in finish_stage
+    self.bind()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 501, in bind
+    return self.cli('bind-artifacts', self.plan, '--event', event or 'bind-' + str(self.serial),
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "binding requires only own gate artifact changes"}
+
+
+----------------------------------------------------------------------
+Ran 13 tests in 128.370s
+
+FAILED (failures=1)

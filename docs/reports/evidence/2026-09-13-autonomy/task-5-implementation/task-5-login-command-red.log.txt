@@ -1,0 +1,16 @@
+test_claude_login_is_fixed_and_cannot_become_a_model_command (__main__.RuntimeTests) ... ERROR
+
+======================================================================
+ERROR: test_claude_login_is_fixed_and_cannot_become_a_model_command (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 125, in test_claude_login_is_fixed_and_cannot_become_a_model_command
+    args = self.runtime.command(self.manifest, [], {})
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 171, in command
+    raise ValueError('invalid_manifest_schema')
+ValueError: invalid_manifest_schema
+
+----------------------------------------------------------------------
+Ran 1 test in 0.248s
+
+FAILED (errors=1)

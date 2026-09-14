@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.43",
+  "cli_build_commit": "2ae2dbbb8f9ed9ffe1739ecf5abfe31a940ee50c",
+  "workspace": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "reviewer": [
+    {
+      "id": "5061c139-42c4-4481-81b8-2bddc57afa0d",
+      "name": "context7",
+      "transport": "http",
+      "enabled": true
+    }
+  ],
+  "tester": [
+    {
+      "id": "5061c139-42c4-4481-81b8-2bddc57afa0d",
+      "name": "context7",
+      "transport": "http",
+      "enabled": true
+    },
+    {
+      "id": "c78f7c37-8623-455e-946a-b21d0199cf10",
+      "name": "playwright",
+      "transport": "stdio",
+      "enabled": true
+    }
+  ],
+  "configuration_values_read": false,
+  "provenance": "CLI tool7dcec2; pinned public GitHub commit27f369",
+  "claude_temp_config_source": "https://raw.githubusercontent.com/multica-ai/multica/2ae2dbbb8f9ed9ffe1739ecf5abfe31a940ee50c/server/pkg/agent/claude.go",
+  "native_config_semantics": "daemon writes mode0600 multica-mcp-*/mcp-config.json and cleans it after the run; must map during invocation",
+  "trace_note": "Host-integrated trace observed in owner native report; not listed as workspace MCP assignment"
+}

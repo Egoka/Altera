@@ -1,0 +1,322 @@
+diff --git a/docs/development/agent-loop-gate.md b/docs/development/agent-loop-gate.md
+index 9000e9a..d7928f5 100644
+--- a/docs/development/agent-loop-gate.md
++++ b/docs/development/agent-loop-gate.md
+@@ -46,7 +46,10 @@ dirty дерево после смены HEAD восстановить этим
+ 
+ Снимок снимается дважды; перед записью состояния повторно проверяется ревизия и evidence.
+ Изменение HEAD или scoped dirty fingerprint делает старое evidence непригодным, в том числе
+-при переходе на следующую стадию. Это обнаружение обычных гонок, а не транзакционная блокировка
++при переходе на следующую стадию. Prerequisites сверяются при start, record, finish и Stop,
++включая сохранённые ревизии и хэши evidence/output/trace всех предыдущих обязательных стадий.
++Обновление текущего парного отчёта следующей стадией допустимо: прежние proof-артефакты
++и события сохраняются отдельно. Это обнаружение обычных гонок, а не транзакционная блокировка
+ Git или защита от враждебной записи между последней проверкой и действием. Внешняя сторона
+ должна обеспечить одного writer и удерживать дерево неподвижным во время проверки.
+ 
+@@ -63,7 +66,8 @@ python3 scripts/agent-loop/gate.py stop
+ 
+ Это разрешает окончание docs-only run, только если продуктового diff нет. Это не фиктивная
+ продуктовая стадия и не acceptance. После смены HEAD attestation нужно повторить с исходным
+-baseline. `docs-only` не заменяет активную цепочку и отказывает при занятом slot.
++baseline. `docs-only` не заменяет активную цепочку и отказывает, пока её product parent
++зарезервирован, даже между стадиями при свободном slot.
+ 
+ ## Паспорт и старт
+ 
+@@ -173,7 +177,9 @@ python3 scripts/agent-loop/gate.py status
+ `evidence` — точный текущий список event IDs из `status.slot.evidence`. Все обязательные checks
+ должны иметь текущий `passed`, exit `0`. Native outcome передаётся как отдельный факт; gate
+ не выводит из него stage/task acceptance. `finish` подтверждает лишь контракт, освобождает
+-slot, сохраняет хэши обоих отчётов и разрешает следующую объявленную стадию той же ревизии:
++run/stage slot, сохраняет хэши обоих отчётов и разрешает следующую объявленную стадию той же
++ревизии. Product parent остаётся зарезервирован до finish всех объявленных стадий. Только
++последний finish освобождает parent; поле `parent_retained` явно отражает это в ответе:
+ 
+ ```bash
+ python3 scripts/agent-loop/gate.py finish docs/reports/demo-report.gate.json
+@@ -188,6 +194,8 @@ python3 scripts/agent-loop/gate.py start docs/plans/demo.gate.json --stage revie
+ ## Неуспех, ownership и атомарность
+ 
+ State — `<git-common-dir>/agent-loop/state.json`, общий для всех worktree одного репозитория.
++Формат state — version 2: отдельные `parent` и run/stage `slot`. Прежний формат version 1
++отклоняется без перезаписи или сброса failures; автоматической миграции или reset-команды нет.
+ Операции сериализуются атомарным `mkdir lock`, запись JSON — temporary file + fsync + atomic
+ rename + fsync каталога. В lock записывается PID. CLI не ожидает освобождения занятого lock,
+ не считает неизвестного владельца умершим и не делает force-unlock после сбоя. Повреждённый
+@@ -196,16 +204,21 @@ state отклоняется. На реальном checkout нужны прав
+ с разрешением записать state, не получает ради этого запись в `.git`. `snapshot` state не пишет;
+ даже `status`/`stop` берут lock для согласованного чтения.
+ 
+-Единственный slot закреплён за task/stage/actor/run/checkout. Lease не истекает автоматически.
+-Второй владелец, повтор run ID или повтор event ID получают отказ без изменения state. Чтобы
++Единственный product parent закреплён за task/passport/checkout и сохраняется между стадиями.
++Внутри него slot закреплён за stage/actor/run. Lease не истекает автоматически.
++Другая задача не получает parent ни после finish промежуточной стадии, ни после release
++неуспешного run. Повтор run ID или повтор event ID также получает отказ без изменения state. Чтобы
+ завершить неуспешный run без завершения стадии:
+ 
+ ```bash
+ python3 scripts/agent-loop/gate.py release --actor tester --run local-1
+ ```
+ 
+-`release` сохраняет историю и счёт, не принимает стадию. Новый run той же стадии использует
+-новый ID; `check_id` неизменен. `failed` и `blocked` увеличивают счёт этого task/stage/check,
++`release` освобождает только run/stage slot, сохраняет parent, историю и счёт, не принимает
++стадию. Явный `start` с тем же паспортом/parent/checkout возобновляет незавершённую стадию
++либо начинает следующую объявленную стадию. Новый run использует новый ID; `check_id`
++неизменен. Прекращение parent до finish всех стадий отдельной командой не поддержано; удаление
++state ради продолжения не является разрешённым flow. `failed` и `blocked` увеличивают счёт этого task/stage/check,
+ обычный `passed` обнуляет только свой счёт. После второго неуспеха результат `record` содержит
+ `stopped: true`: запись evidence успешна, но ещё одна проверка и новый start стадии запрещены.
+ При таком ответе вызывающая сторона обязана остановиться; gate сам процессы не прерывает.
+diff --git a/scripts/agent-loop/gate.py b/scripts/agent-loop/gate.py
+index f9d8072..e893cd1 100755
+--- a/scripts/agent-loop/gate.py
++++ b/scripts/agent-loop/gate.py
+@@ -212,11 +212,11 @@ def read_state(directory):
+     path = directory / 'state.json'
+     require(not path.is_symlink(), 'state symlink rejected')
+     if not path.exists():
+-        return {'version': 1, 'tasks': {}, 'slot': None, 'events': {}, 'runs': [], 'completed': {}, 'docs_only': {}}
++        return {'version': 2, 'tasks': {}, 'parent': None, 'slot': None, 'events': {}, 'runs': [], 'completed': {}, 'docs_only': {}}
+     state = json.loads(path.read_text())
+-    require(isinstance(state, dict) and state.get('version') == 1 and
+-            all(k in state for k in ('tasks', 'slot', 'events', 'runs', 'completed', 'docs_only')),
+-            'invalid state schema; refusing reset')
++    require(isinstance(state, dict) and state.get('version') == 2 and
++            all(k in state for k in ('tasks', 'parent', 'slot', 'events', 'runs', 'completed', 'docs_only')),
++            'invalid or unsupported state schema; refusing reset')
+     return state
+ 
+ 
+@@ -286,6 +286,19 @@ def proof(root, path, passport):
+     return e, hashes
+ 
+ 
++def validate_prerequisites(root, p, stage_name, task, snap, state):
++    stage_names = [stage['name'] for stage in p['stages']]
++    previous = stage_names[:stage_names.index(stage_name)]
++    require(all(name in task['completed_stages'] for name in previous), 'previous stage incomplete')
++    require(all(task['stage_revisions'][name] == snap for name in previous),
++            'previous stage evidence belongs to an obsolete revision')
++    for name in previous:
++        for event in task['stage_evidence'][name]:
++            entry = state['events'][event]
++            require(proof(root, entry['path'], p)[1] == entry['hashes'],
++                    'previous stage evidence/output/trace changed')
++
++
+ def validate_finish(root, slot, p, report_path, state):
+     require(report_path == p['report'], 'report is not paired with active plan')
+     report = json_file(root, report_path, 'docs/reports')
+@@ -295,6 +308,7 @@ def validate_finish(root, slot, p, report_path, state):
+         require(slot['report_hashes'] == {name: digest(safe_file(root, name).read_bytes())
+                                          for name in (report_path, human_report)}, 'completed report changed')
+     snap = boundary(root, p)
++    validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
+     check_binding(report, slot, p, snap)
+     require(report.get('plan') == slot['passport'] and report.get('evidence') == slot['evidence'],
+             'report plan/evidence mismatch')
+@@ -314,6 +328,7 @@ def validate_finish(root, slot, p, report_path, state):
+         require(found and found['result'] == 'passed' and found.get('purpose') != 'tdd_red',
+                 'stage lacks current passing implementation evidence: ' + check['check_id'])
+     require(snap == boundary(root, p), 'revision changed while validating report')
++    validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
+     return snap
+ 
+ 
+@@ -323,7 +338,7 @@ def dispatch(args, root, state):
+     if action == 'status':
+         return state
+     if action == 'docs-only':
+-        require(not state['slot'], 'global slot is occupied')
++        require(not state['parent'] and not state['slot'], 'product parent is still reserved')
+         validate_baseline(root, args.baseline)
+         require(not changed_product(root, args.baseline), 'docs-only has product changes')
+         state['docs_only'][root_key] = {'baseline': args.baseline, **snapshot(root, list(PRODUCT))}
+@@ -336,6 +351,8 @@ def dispatch(args, root, state):
+         p = load_passport(root, args.passport)
+         snap = boundary(root, p)
+         phash = passport_hash(root, args.passport, p)
++        parent = {'task': p['task'], 'root': root_key, 'passport': args.passport, 'passport_hash': phash}
++        require(state['parent'] is None or state['parent'] == parent, 'another product parent is still reserved')
+         task = state['tasks'].get(p['task'])
+         if task:
+             require(task['passport_hash'] == phash, 'existing task passport changed')
+@@ -347,15 +364,8 @@ def dispatch(args, root, state):
+         stage_names = [s['name'] for s in p['stages']]
+         require(args.stage in stage_names, 'unknown stage')
+         position = stage_names.index(args.stage)
+-        require(all(s in task['completed_stages'] for s in stage_names[:position]), 'previous stage incomplete')
+         require(args.stage not in task['completed_stages'], 'stage already completed')
+-        require(all(task['stage_revisions'][name] == snap for name in stage_names[:position]),
+-                'previous stage evidence belongs to an obsolete revision')
+-        for name in stage_names[:position]:
+-            for event in task['stage_evidence'][name]:
+-                entry = state['events'][event]
+-                require(proof(root, entry['path'], p)[1] == entry['hashes'],
+-                        'previous stage evidence/output/trace changed')
++        validate_prerequisites(root, p, args.stage, task, snap, state)
+         checks = task['checks'].setdefault(args.stage, {})
+         for check in p['stages'][position]['checks']:
+             entry = checks.setdefault(check['check_id'], {'failures': 0})
+@@ -364,6 +374,8 @@ def dispatch(args, root, state):
+                 'run': args.run, 'passport': args.passport, 'passport_hash': phash, 'evidence': [],
+                 'lease': {'owner': args.actor, 'run': args.run, 'automatic_expiry': False}}
+         require(snap == boundary(root, p), 'revision changed while acquiring slot')
++        validate_prerequisites(root, p, args.stage, task, snap, state)
++        state['parent'] = parent
+         state['tasks'][p['task']] = task
+         state['slot'] = slot
+         state['runs'].append(args.run)
+@@ -395,6 +407,7 @@ def dispatch(args, root, state):
+     if action == 'record':
+         require(IDENTIFIER.fullmatch(args.event) and args.event not in state['events'], 'invalid or duplicate event ID')
+         snap = boundary(root, p)
++        validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
+         e, hashes = proof(root, args.evidence, p)
+         check_binding(e, slot, p, snap)
+         stage = next(s for s in p['stages'] if s['name'] == slot['stage'])
+@@ -409,6 +422,7 @@ def dispatch(args, root, state):
+                 counter['failures'] += 1
+         require(snap == boundary(root, p) and hashes == proof(root, args.evidence, p)[1],
+                 'revision or evidence changed during record')
++        validate_prerequisites(root, p, slot['stage'], state['tasks'][p['task']], snap, state)
+         # В текущем отчёте остаётся последнее evidence каждой проверки; общая история сохраняется.
+         slot['evidence'] = [event for event in slot['evidence']
+                             if state['events'][event]['check_id'] != e['check_id']]
+@@ -429,7 +443,10 @@ def dispatch(args, root, state):
+         state['tasks'][p['task']]['stage_evidence'][slot['stage']] = list(slot['evidence'])
+         state['completed'][root_key] = {'slot': slot}
+         state['slot'] = None
+-        return {'result': 'contract_valid', 'task_acceptance': 'not_checked'}
++        if all(stage['name'] in state['tasks'][p['task']]['completed_stages'] for stage in p['stages']):
++            state['parent'] = None
++        return {'result': 'contract_valid', 'task_acceptance': 'not_checked',
++                'parent_retained': state['parent'] is not None}
+     raise Rejected('unsupported action')
+ 
+ 
+@@ -446,9 +463,9 @@ def main():
+     record = subs.add_parser('record', help='Record immutable evidence and persistent check failure count')
+     record.add_argument('evidence')
+     record.add_argument('--event', required=True)
+-    finish = subs.add_parser('finish', help='Validate paired report; release slot without granting acceptance')
++    finish = subs.add_parser('finish', help='Validate report; release stage slot, retain parent until every stage finishes')
+     finish.add_argument('report')
+-    release = subs.add_parser('release', help='Owner releases slot without completing stage; counters retained')
++    release = subs.add_parser('release', help='Owner releases stage slot; parent reservation and counters retained')
+     release.add_argument('--actor', required=True)
+     release.add_argument('--run', required=True)
+     docs = subs.add_parser('docs-only', help='Attest no product diff from explicit baseline; no product stage')
+diff --git a/scripts/agent-loop/test_gate.py b/scripts/agent-loop/test_gate.py
+index a8098c1..59ae822 100644
+--- a/scripts/agent-loop/test_gate.py
++++ b/scripts/agent-loop/test_gate.py
+@@ -83,16 +83,16 @@ class GateTests(unittest.TestCase):
+     def record(self, path, event='event-1', ok=True):
+         return self.cli('record', path, '--event', event, ok=ok)
+ 
+-    def finish(self, run='run-1', ok=True):
++    def finish(self, run='run-1', ok=True, stage='test'):
+         state = self.cli('status')
+         report = {
+-            'task': 'T-fixture', 'stage': 'test', 'actor': 'tester', 'run': run,
++            'task': 'T-fixture', 'stage': stage, 'actor': 'tester', 'run': run,
+             'baseline_commit': self.base, **self.snapshot(),
+             'plan': self.plan, 'evidence': state['slot']['evidence'],
+             'native_outcome': 'success', 'stage_outcome': 'completed',
+             'task_acceptance': 'not_checked',
+         }
+-        self.write('docs/reports/fixture-report.md', '# Fixture report\n')
++        self.write('docs/reports/fixture-report.md', '# Fixture report: ' + stage + '\n')
+         self.write(self.report, report)
+         return self.cli('finish', self.report, ok=ok)
+ 
+@@ -348,5 +348,85 @@ class GateTests(unittest.TestCase):
+         self.start(run='review-1', actor='reviewer', stage='review', ok=False)
+ 
+ 
++    def other_passport(self):
++        other = json.loads(json.dumps(self.passport))
++        other.update({'task': 'T-other', 'plan': 'docs/plans/other.md',
++                      'report': 'docs/reports/other-report.gate.json'})
++        self.write('docs/plans/other.md', '# Other plan')
++        self.write('docs/plans/other.gate.json', other)
++        return 'docs/plans/other.gate.json'
++
++    def review_start(self):
++        self.start()
++        self.record(self.evidence())
++        self.finish()
++        self.start(run='review-1', stage='review')
++
++    # Ловит передачу product parent другой задаче между обязательными стадиями.
++    def test_parent_reservation_survives_finish_until_all_stages_complete(self):
++        self.write('server/code.txt', 'product change')
++        self.start()
++        self.record(self.evidence())
++        self.finish()
++        other = self.other_passport()
++        before = self.cli('status')
++        self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1', ok=False)
++        self.assertEqual(before, self.cli('status'))
++        self.start(run='review-1', stage='review')
++        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
++                    event='review-1')
++        self.finish(run='review-1', stage='review')
++        self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1')
++
++    # Ловит сброс parent при release и стирание failures при возобновлении той же цепочки.
++    def test_parent_reservation_survives_release_and_resume_preserves_failures(self):
++        self.start()
++        self.record(self.evidence('failed'))
++        self.cli('release', '--actor', 'tester', '--run', 'run-1')
++        other = self.other_passport()
++        self.cli('start', other, '--stage', 'test', '--actor', 'other', '--run', 'other-1', ok=False)
++        self.cli('docs-only', '--baseline', self.base, ok=False)
++        self.start(run='run-2')
++        self.assertEqual(self.cli('status')['tasks']['T-fixture']['checks']['test']['unit']['failures'], 1)
++        self.record(self.evidence('failed', run='run-2', event='event-2'), event='event-2')
++        self.cli('release', '--actor', 'tester', '--run', 'run-2')
++        self.start(run='run-3', ok=False)
++
++    # Ловит запись новой ревизии review после start при устаревшей тестовой стадии.
++    def test_prerequisites_rechecked_at_record_after_review_start(self):
++        self.review_start()
++        self.write('server/code.txt', 'changed after review start')
++        before = self.cli('status')
++        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
++                    event='review-1', ok=False)
++        self.assertEqual(before, self.cli('status'))
++
++    # Ловит подмену предыдущего evidence после start даже при той же ревизии.
++    def test_prerequisite_output_rechecked_at_record(self):
++        self.review_start()
++        self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted prior output')
++        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
++                    event='review-1', ok=False)
++
++    # Ловит finish и активный Stop при подменённом выводе предыдущей стадии.
++    def test_prerequisites_rechecked_at_finish_and_active_stop(self):
++        self.review_start()
++        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
++                    event='review-1')
++        self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted prior output')
++        self.finish(run='review-1', stage='review', ok=False)
++        self.cli('stop', ok=False)
++
++    # Ловит принятие Stop после завершения цепочки с изменённым prior-stage evidence.
++    def test_prerequisites_rechecked_at_completed_stop(self):
++        self.review_start()
++        self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
++                    event='review-1')
++        self.finish(run='review-1', stage='review')
++        self.cli('stop')
++        self.write('docs/reports/evidence/fixture/event-1.txt', 'substituted prior output')
++        self.cli('stop', ok=False)
++
++
+ if __name__ == '__main__':
+     unittest.main()

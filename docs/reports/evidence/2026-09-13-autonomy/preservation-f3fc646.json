@@ -1,0 +1,28 @@
+{
+  "base_commit": "60b2226b699c3333034787addfb9842a59778d5e",
+  "checked_commit": "f3fc646cb6858b3dce78cb561db7704e6ed5d1d6",
+  "manifest_count": 498,
+  "base_hash_mismatches": [],
+  "missing_at_checked_commit": [],
+  "unchanged_count": 481,
+  "changed_paths": [
+    ".claude/agents/multica-developer.md",
+    ".claude/agents/multica-release.md",
+    ".claude/agents/multica-reviewer.md",
+    ".claude/agents/multica-tester.md",
+    ".claude/commands/multica-handback.md",
+    ".claude/commands/multica-stage.md",
+    ".claude/commands/multica-start.md",
+    ".claude/commands/multica-status.md",
+    "CLAUDE.md",
+    "docs/README.md",
+    "docs/architecture/README.md",
+    "docs/backlog/README.md",
+    "docs/backlog/_templates/task.md",
+    "docs/multica/operating-model.md",
+    "docs/plans/README.md",
+    "docs/prompts/altera-design-references.md",
+    "docs/reports/README.md"
+  ],
+  "original_attachment_sha256": "603957e9618f58680359d8fe1b87818164d91e1127bc2d886c085d35c9b07f60"
+}

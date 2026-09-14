@@ -1,0 +1,25 @@
+test_container_cleanup_removes_named_worker_before_proxy_cleanup (__main__.RefreshTests) ... FAIL
+
+======================================================================
+FAIL: test_container_cleanup_removes_named_worker_before_proxy_cleanup (__main__.RefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_credential_refresh.py", line 305, in test_container_cleanup_removes_named_worker_before_proxy_cleanup
+    self.assertEqual(events, ['worker_cleanup', 'proxy_cleanup'])
+AssertionError: Lists differ: ['proxy_cleanup'] != ['worker_cleanup', 'proxy_cleanup']
+
+First differing element 0:
+'proxy_cleanup'
+'worker_cleanup'
+
+Second list contains 1 additional elements.
+First extra element 1:
+'proxy_cleanup'
+
+- ['proxy_cleanup']
++ ['worker_cleanup', 'proxy_cleanup']
+
+----------------------------------------------------------------------
+Ran 1 test in 0.012s
+
+FAILED (failures=1)

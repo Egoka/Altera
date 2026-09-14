@@ -1,0 +1,1141 @@
+{
+  "files": [
+    {
+      "source": "task-5-auth-mapping-green.log",
+      "archived": "task-5-auth-mapping-green.log.txt",
+      "sha256": "159d66feba9daf2df78f2f38d08069b478ad6679996e6176a627ed6b3a4cc617"
+    },
+    {
+      "source": "task-5-auth-mapping-red.log",
+      "archived": "task-5-auth-mapping-red.log.txt",
+      "sha256": "62679513f0cbe84998ea05f956e35a802dca64443fba989b2429268af4246007"
+    },
+    {
+      "source": "task-5-cli-preflight-1/manifest.json",
+      "archived": "task-5-cli-preflight-1/manifest.json",
+      "sha256": "dd0df2bb226456e68eda3e596a9b61f993fc55113b3673810c38157f741a884f"
+    },
+    {
+      "source": "task-5-cli-preflight-1/policy/claude-settings.json",
+      "archived": "task-5-cli-preflight-1/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-cli-preflight-1/policy/fixture.mjs",
+      "archived": "task-5-cli-preflight-1/policy/fixture.mjs.txt",
+      "sha256": "742072e5e2b10f2e3f85062f90995d0b5252d564435c0d362d358e362d55e1bd"
+    },
+    {
+      "source": "task-5-cli-preflight-1/policy/provider-proxy.mjs",
+      "archived": "task-5-cli-preflight-1/policy/provider-proxy.mjs.txt",
+      "sha256": "13a93a350a36b271859853a87a6b7ae07df63f1a1e58fcdde9d42d63d7f5da34"
+    },
+    {
+      "source": "task-5-cli-preflight-1/run/evidence/trace-help.txt",
+      "archived": "task-5-cli-preflight-1/run/evidence/trace-help.txt",
+      "sha256": "1bfea2fa3037bdaa866feebf23f51de5c5c23f8b70d18ebefac119369922a8d7"
+    },
+    {
+      "source": "task-5-cli-preflight-1/run/network-inspect.json",
+      "archived": "task-5-cli-preflight-1/run/network-inspect.json",
+      "sha256": "7552861273eca697df2665aa0d1e2fabae7098bf0783b3f73705a077d84731fc"
+    },
+    {
+      "source": "task-5-cli-preflight-1/run/proxy-inspect.json",
+      "archived": "task-5-cli-preflight-1/run/proxy-inspect.json",
+      "sha256": "2db55f06dd43a767ddbc0fe2c640bc2fd92f0dbcb06546979388996df6f4d869"
+    },
+    {
+      "source": "task-5-cli-preflight-1/stderr-2.log",
+      "archived": "task-5-cli-preflight-1/stderr-2.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-cli-preflight-1/stderr.log",
+      "archived": "task-5-cli-preflight-1/stderr.log.txt",
+      "sha256": "59cef9e2fb07d69e3c71062f058ece1c31ff229b42a602dde72b4665c6614965"
+    },
+    {
+      "source": "task-5-cli-preflight-1/stdout-2.log",
+      "archived": "task-5-cli-preflight-1/stdout-2.log.txt",
+      "sha256": "e39a66ba9be8db55366cd8a2dcae8e4913b3a9b2d4b1fadae34daeabeb587698"
+    },
+    {
+      "source": "task-5-cli-preflight-1/stdout.log",
+      "archived": "task-5-cli-preflight-1/stdout.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-codex-1/manifest.json",
+      "archived": "task-5-codex-1/manifest.json",
+      "sha256": "a762ab2ea2d1ced65c6acd864849e2b263915d0d57f8f3e6ff5b95ddc4de075d"
+    },
+    {
+      "source": "task-5-codex-1/policy/claude-settings.json",
+      "archived": "task-5-codex-1/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-codex-1/policy/codex-config.toml",
+      "archived": "task-5-codex-1/policy/codex-config.toml",
+      "sha256": "3f43138d78cdacbe5a471f5d61187d2697c97bc92ddd152828a874e4cbbba9a4"
+    },
+    {
+      "source": "task-5-codex-1/policy/fixture.mjs",
+      "archived": "task-5-codex-1/policy/fixture.mjs.txt",
+      "sha256": "b49f75a4ece01ae30b96efdf5e9cf5d52736e62c1834df1c8bb843ff48cf2423"
+    },
+    {
+      "source": "task-5-codex-1/policy/provider-proxy.mjs",
+      "archived": "task-5-codex-1/policy/provider-proxy.mjs.txt",
+      "sha256": "13a93a350a36b271859853a87a6b7ae07df63f1a1e58fcdde9d42d63d7f5da34"
+    },
+    {
+      "source": "task-5-codex-1/run/evidence/codex-protocol.jsonl",
+      "archived": "task-5-codex-1/run/evidence/codex-protocol.jsonl",
+      "sha256": "0125a227c16d3283a463f00e3039855e3501092b5b73b8e1107ad999dc984aa8"
+    },
+    {
+      "source": "task-5-codex-1/run/evidence/codex-result.json",
+      "archived": "task-5-codex-1/run/evidence/codex-result.json",
+      "sha256": "f710ac4e01f5e7ddd40456f5705f4c1f8b315146af12a69a40c807c6fdcc24ef"
+    },
+    {
+      "source": "task-5-codex-1/run/evidence/codex-stderr.log",
+      "archived": "task-5-codex-1/run/evidence/codex-stderr.log.txt",
+      "sha256": "0085f4c8f309218d6d4dca3de8f1735df2e0e263dde5bf11bd81b3e2109d32ab"
+    },
+    {
+      "source": "task-5-codex-1/run/evidence/model-canary.json",
+      "archived": "task-5-codex-1/run/evidence/model-canary.json",
+      "sha256": "fe4e3a7ebb79476e2aa52afc248e991f3e4a80bc64eb7fe43d1b28c390e98d54"
+    },
+    {
+      "source": "task-5-codex-1/run/evidence/trace-index.log",
+      "archived": "task-5-codex-1/run/evidence/trace-index.log.txt",
+      "sha256": "f87ce6daebeb419451ce23da4de2034f513dae59ba3d17da1cbaea46c5eae9c4"
+    },
+    {
+      "source": "task-5-codex-1/run/network-inspect.json",
+      "archived": "task-5-codex-1/run/network-inspect.json",
+      "sha256": "55189d17fc8894c447ce5bb6fbce670bf8424a3300b896ff77d553f341e7df49"
+    },
+    {
+      "source": "task-5-codex-1/run/proxy-inspect.json",
+      "archived": "task-5-codex-1/run/proxy-inspect.json",
+      "sha256": "4fe26003cc57c68db59ff86c48939ee146cf3ee60fb4486a91c3be3376679d71"
+    },
+    {
+      "source": "task-5-codex-1/run/tmp/trace-mcp-alive-25c92efc33a3",
+      "archived": "task-5-codex-1/run/tmp/trace-mcp-alive-25c92efc33a3",
+      "sha256": "d81cc24c3c2b5ee9c0f516a0a9905385e5802a2e92da5f40e0672591adfc9e1e"
+    },
+    {
+      "source": "task-5-codex-1/run/tmp/trace-mcp-consulted-25c92efc33a3/a869c158efe04c1de5576abca74b8ce848d2656373fe783a661be13ac33a2df2",
+      "archived": "task-5-codex-1/run/tmp/trace-mcp-consulted-25c92efc33a3/a869c158efe04c1de5576abca74b8ce848d2656373fe783a661be13ac33a2df2",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-codex-1/run/tmp/trace-mcp-explored-25c92efc33a3/29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da",
+      "archived": "task-5-codex-1/run/tmp/trace-mcp-explored-25c92efc33a3/29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da",
+      "sha256": "29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da"
+    },
+    {
+      "source": "task-5-codex-1/run/tmp/trace-mcp-status-25c92efc33a3.json",
+      "archived": "task-5-codex-1/run/tmp/trace-mcp-status-25c92efc33a3.json",
+      "sha256": "f95b30fc056a089778fbf11d6ff58766f59e813ee13e0fe83e03d1bda339d2fe"
+    },
+    {
+      "source": "task-5-codex-1/stderr.log",
+      "archived": "task-5-codex-1/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-codex-1/stdout.log",
+      "archived": "task-5-codex-1/stdout.log.txt",
+      "sha256": "a1d804b8347c685dbdfd5bb85488fd51b9ea6ab7fe363c0ed92a1a909ba22974"
+    },
+    {
+      "source": "task-5-d0-build.json",
+      "archived": "task-5-d0-build.json",
+      "sha256": "a64b687ef662db0eecc940c1de1212051d4fa85b36215aca049e0ea8437c937e"
+    },
+    {
+      "source": "task-5-d0-final-build.json",
+      "archived": "task-5-d0-final-build.json",
+      "sha256": "b5648df47002ebb1575cd99aca2ab3b1263e7a1f90c9685a3d938652a2163cc2"
+    },
+    {
+      "source": "task-5-d0-final.log",
+      "archived": "task-5-d0-final.log.txt",
+      "sha256": "1c6aaa396e301ed00720a821050091944dca6e23c9c302a10eaf42e7cba1bf25"
+    },
+    {
+      "source": "task-5-d0-green.log",
+      "archived": "task-5-d0-green.log.txt",
+      "sha256": "b884aaf0054d033c75fb6ad008704b5ffa68c75ffc12d851c414b6c764d9a9cc"
+    },
+    {
+      "source": "task-5-d0-imports.log",
+      "archived": "task-5-d0-imports.log.txt",
+      "sha256": "7493fe471bf8ee36a57034b1f0ab681efe5c809e2b6f18b42492d4ac6562740f"
+    },
+    {
+      "source": "task-5-d0-red.log",
+      "archived": "task-5-d0-red.log.txt",
+      "sha256": "3d1dc0042cf61250e0b22cd0e52616fa5a72362e9dbbd459632c1def4883f879"
+    },
+    {
+      "source": "task-5-docker-1/protocol/manifest.json",
+      "archived": "task-5-docker-1/protocol/manifest.json",
+      "sha256": "ec7480db6fea22955bbf301e5837b6a1207914c7023beb3b2366f4a4c2562860"
+    },
+    {
+      "source": "task-5-docker-1/protocol/policy/alias",
+      "archived": "task-5-docker-1/protocol/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/protocol/policy/canary",
+      "archived": "task-5-docker-1/protocol/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/protocol/policy/claude-settings.json",
+      "archived": "task-5-docker-1/protocol/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-1/protocol/policy/delete-canary",
+      "archived": "task-5-docker-1/protocol/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/protocol/policy/fixture.mjs",
+      "archived": "task-5-docker-1/protocol/policy/fixture.mjs.txt",
+      "sha256": "87671a0ad8e8d4eec5d08d21103dc7dde10aaa5e30e87e392c5d04ed84774c5d"
+    },
+    {
+      "source": "task-5-docker-1/protocol/policy/rename-canary",
+      "archived": "task-5-docker-1/protocol/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/protocol/stderr.log",
+      "archived": "task-5-docker-1/protocol/stderr.log.txt",
+      "sha256": "f921a264caca8ec79f8bd9b36de3b488aefdaf7aef458dcfcbcd02d1817a5557"
+    },
+    {
+      "source": "task-5-docker-1/protocol/stdout.log",
+      "archived": "task-5-docker-1/protocol/stdout.log.txt",
+      "sha256": "a9b148131e80682d782ddc4686207b13f141762ec4541cc52ff7cdd9575999a9"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/command.json",
+      "archived": "task-5-docker-1/readonly-boundary/command.json",
+      "sha256": "ce168964d6e10c2e9cf51616a3284ca948a18d922f9bd59dfdb429fa070dd486"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/manifest.json",
+      "archived": "task-5-docker-1/readonly-boundary/manifest.json",
+      "sha256": "747344b26d8b3c1ee3a0f51ff2ab761cd052ea3d3e228d9b07fb254d94793524"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/policy/alias",
+      "archived": "task-5-docker-1/readonly-boundary/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/policy/canary",
+      "archived": "task-5-docker-1/readonly-boundary/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/policy/claude-settings.json",
+      "archived": "task-5-docker-1/readonly-boundary/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/policy/delete-canary",
+      "archived": "task-5-docker-1/readonly-boundary/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/policy/fixture.mjs",
+      "archived": "task-5-docker-1/readonly-boundary/policy/fixture.mjs.txt",
+      "sha256": "a4f121110d925743699849d65691ecfd78d901d35efb2a56de3f9f934fc90c7b"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/policy/rename-canary",
+      "archived": "task-5-docker-1/readonly-boundary/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/run/evidence/new-evidence.json",
+      "archived": "task-5-docker-1/readonly-boundary/run/evidence/new-evidence.json",
+      "sha256": "a6d8b22ff7746a2e701a97f83541df4cb88dfd44e2437b02e4bd680b9e154a1a"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/stderr.log",
+      "archived": "task-5-docker-1/readonly-boundary/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-1/readonly-boundary/stdout.log",
+      "archived": "task-5-docker-1/readonly-boundary/stdout.log.txt",
+      "sha256": "3e95f67e1cb2792a6b2a8354bb999a335b2f0673f2c6d6db1538853ae9e57ba5"
+    },
+    {
+      "source": "task-5-docker-1/results.json",
+      "archived": "task-5-docker-1/results.json",
+      "sha256": "22b331dde3fd463d0622c9e3c380ec4aaa0f5eb720b348efb092fb5f891b2fc0"
+    },
+    {
+      "source": "task-5-docker-1/signal/manifest.json",
+      "archived": "task-5-docker-1/signal/manifest.json",
+      "sha256": "1c97bf726eded49a53f39644e24ac76cf1f81473401423bda05181e82003d8b2"
+    },
+    {
+      "source": "task-5-docker-1/signal/policy/alias",
+      "archived": "task-5-docker-1/signal/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/signal/policy/canary",
+      "archived": "task-5-docker-1/signal/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/signal/policy/claude-settings.json",
+      "archived": "task-5-docker-1/signal/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-1/signal/policy/delete-canary",
+      "archived": "task-5-docker-1/signal/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/signal/policy/fixture.mjs",
+      "archived": "task-5-docker-1/signal/policy/fixture.mjs.txt",
+      "sha256": "eb0dc7f983af7bf65f5185c3a379f98d993642440a4e9dbfa8757d5407fbf0b5"
+    },
+    {
+      "source": "task-5-docker-1/signal/policy/rename-canary",
+      "archived": "task-5-docker-1/signal/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/signal/stderr.log",
+      "archived": "task-5-docker-1/signal/stderr.log.txt",
+      "sha256": "2c362cd94a17bd0c361a95435052bb657027dc24728c986496f7e7c8b93b2569"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/command.json",
+      "archived": "task-5-docker-1/writable-control/command.json",
+      "sha256": "5e2410fdf9c2e38467c2c103c564d776b568133e32970c3c6f045d08ca18dd5c"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/manifest.json",
+      "archived": "task-5-docker-1/writable-control/manifest.json",
+      "sha256": "ca3d84e4f24bc66b47d49558a46d6ce5e69c333c7c25537e14657d55c5c7e446"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/policy/alias",
+      "archived": "task-5-docker-1/writable-control/policy/alias",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/policy/canary",
+      "archived": "task-5-docker-1/writable-control/policy/canary",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/policy/claude-settings.json",
+      "archived": "task-5-docker-1/writable-control/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/policy/created",
+      "archived": "task-5-docker-1/writable-control/policy/created",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/policy/fixture.mjs",
+      "archived": "task-5-docker-1/writable-control/policy/fixture.mjs.txt",
+      "sha256": "a4f121110d925743699849d65691ecfd78d901d35efb2a56de3f9f934fc90c7b"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/policy/renamed",
+      "archived": "task-5-docker-1/writable-control/policy/renamed",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/run/evidence/new-evidence.json",
+      "archived": "task-5-docker-1/writable-control/run/evidence/new-evidence.json",
+      "sha256": "31ff20483a12487d899fb62d89afa18a77836ba2a9cbce4ecf7a3326e80a65ff"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/stderr.log",
+      "archived": "task-5-docker-1/writable-control/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-1/writable-control/stdout.log",
+      "archived": "task-5-docker-1/writable-control/stdout.log.txt",
+      "sha256": "2f96a0cc86cca5337fdd949ebf509d2abd330fcab248d1f783820746aa7c8ef5"
+    },
+    {
+      "source": "task-5-docker-1.log",
+      "archived": "task-5-docker-1.log.txt",
+      "sha256": "d8d8bcb3fa96104915730ccb76fe49aacc407c5bbe4b4bde5e35eb55d3790246"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/manifest.json",
+      "archived": "task-5-docker-final/codex-cwd-guard/manifest.json",
+      "sha256": "ff2f69d118fa8761d6726eb5f11f2b2fe0c8fba5d342b841e4bff26c16f14145"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/alias",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/canary",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/claude-settings.json",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/delete-canary",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/fixture.mjs",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/fixture.mjs.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/protocol-guard.mjs",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/protocol-guard.mjs.txt",
+      "sha256": "107d3d74099d90eddf74b4f762b1b8049e854578fd432ae57c24e7f079cce87d"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/policy/rename-canary",
+      "archived": "task-5-docker-final/codex-cwd-guard/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/stderr.log",
+      "archived": "task-5-docker-final/codex-cwd-guard/stderr.log.txt",
+      "sha256": "d9a7bd79bc9d3baa77497b3d8711f94925a9e44f1c54a4b781ce1ecea3e314c2"
+    },
+    {
+      "source": "task-5-docker-final/codex-cwd-guard/stdout.log",
+      "archived": "task-5-docker-final/codex-cwd-guard/stdout.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final/protocol/manifest.json",
+      "archived": "task-5-docker-final/protocol/manifest.json",
+      "sha256": "77cd6d90749395a81f31d9b228248bfbdd0eb0a9631f291ad8ec7553d80f1193"
+    },
+    {
+      "source": "task-5-docker-final/protocol/policy/alias",
+      "archived": "task-5-docker-final/protocol/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/protocol/policy/canary",
+      "archived": "task-5-docker-final/protocol/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/protocol/policy/claude-settings.json",
+      "archived": "task-5-docker-final/protocol/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final/protocol/policy/delete-canary",
+      "archived": "task-5-docker-final/protocol/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/protocol/policy/fixture.mjs",
+      "archived": "task-5-docker-final/protocol/policy/fixture.mjs.txt",
+      "sha256": "87671a0ad8e8d4eec5d08d21103dc7dde10aaa5e30e87e392c5d04ed84774c5d"
+    },
+    {
+      "source": "task-5-docker-final/protocol/policy/rename-canary",
+      "archived": "task-5-docker-final/protocol/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/protocol/stderr.log",
+      "archived": "task-5-docker-final/protocol/stderr.log.txt",
+      "sha256": "f921a264caca8ec79f8bd9b36de3b488aefdaf7aef458dcfcbcd02d1817a5557"
+    },
+    {
+      "source": "task-5-docker-final/protocol/stdout.log",
+      "archived": "task-5-docker-final/protocol/stdout.log.txt",
+      "sha256": "a9b148131e80682d782ddc4686207b13f141762ec4541cc52ff7cdd9575999a9"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/command.json",
+      "archived": "task-5-docker-final/readonly-boundary/command.json",
+      "sha256": "0e370a72a681255469edaec333f29618a71ae0a9b5e4bd55c97ff6e8b04019ec"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/manifest.json",
+      "archived": "task-5-docker-final/readonly-boundary/manifest.json",
+      "sha256": "dcae4ac79b906fbabb8c1c63e632f3a474b1212424510d0ce56a8f08d29bcc85"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/policy/alias",
+      "archived": "task-5-docker-final/readonly-boundary/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/policy/canary",
+      "archived": "task-5-docker-final/readonly-boundary/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/policy/claude-settings.json",
+      "archived": "task-5-docker-final/readonly-boundary/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/policy/delete-canary",
+      "archived": "task-5-docker-final/readonly-boundary/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/policy/fixture.mjs",
+      "archived": "task-5-docker-final/readonly-boundary/policy/fixture.mjs.txt",
+      "sha256": "a8481defdb19c7f445e975ebcb5aaefa8a35997175075bbb18243d680a59ec57"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/policy/rename-canary",
+      "archived": "task-5-docker-final/readonly-boundary/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/run/evidence/new-evidence.json",
+      "archived": "task-5-docker-final/readonly-boundary/run/evidence/new-evidence.json",
+      "sha256": "999adf18b4c729a134201a1ee92c82052dc3ea7e77d503e8aceadda21adb8a52"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/stderr.log",
+      "archived": "task-5-docker-final/readonly-boundary/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final/readonly-boundary/stdout.log",
+      "archived": "task-5-docker-final/readonly-boundary/stdout.log.txt",
+      "sha256": "a2b87f1894348768a43d5c64b4f35e6aba088a871c71fe019e2a9a8c3ed99003"
+    },
+    {
+      "source": "task-5-docker-final/results.json",
+      "archived": "task-5-docker-final/results.json",
+      "sha256": "3d2c7a2cfc7c8bf7f7475997a4c8c72309ea35447b685acd9a856e03e879788d"
+    },
+    {
+      "source": "task-5-docker-final/signal/manifest.json",
+      "archived": "task-5-docker-final/signal/manifest.json",
+      "sha256": "0d9b59a68b3d0a3dd97142505fa51ce450fef76f96fe96fe48e3ce078bb08163"
+    },
+    {
+      "source": "task-5-docker-final/signal/policy/alias",
+      "archived": "task-5-docker-final/signal/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/signal/policy/canary",
+      "archived": "task-5-docker-final/signal/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/signal/policy/claude-settings.json",
+      "archived": "task-5-docker-final/signal/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final/signal/policy/delete-canary",
+      "archived": "task-5-docker-final/signal/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/signal/policy/fixture.mjs",
+      "archived": "task-5-docker-final/signal/policy/fixture.mjs.txt",
+      "sha256": "eb0dc7f983af7bf65f5185c3a379f98d993642440a4e9dbfa8757d5407fbf0b5"
+    },
+    {
+      "source": "task-5-docker-final/signal/policy/rename-canary",
+      "archived": "task-5-docker-final/signal/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/signal/stderr.log",
+      "archived": "task-5-docker-final/signal/stderr.log.txt",
+      "sha256": "2c362cd94a17bd0c361a95435052bb657027dc24728c986496f7e7c8b93b2569"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/command.json",
+      "archived": "task-5-docker-final/writable-control/command.json",
+      "sha256": "85618a01c1f4db6ef295038be05b8aecf71c65006cee2a01692fd25fa630ffdd"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/manifest.json",
+      "archived": "task-5-docker-final/writable-control/manifest.json",
+      "sha256": "d005b7cbf47bbf38daa293c2ce7745d68081987d534958e549627e6056557a41"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/alias",
+      "archived": "task-5-docker-final/writable-control/policy/alias",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/canary",
+      "archived": "task-5-docker-final/writable-control/policy/canary",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/claude-settings.json",
+      "archived": "task-5-docker-final/writable-control/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/created",
+      "archived": "task-5-docker-final/writable-control/policy/created",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/fixture.mjs",
+      "archived": "task-5-docker-final/writable-control/policy/fixture.mjs.txt",
+      "sha256": "a8481defdb19c7f445e975ebcb5aaefa8a35997175075bbb18243d680a59ec57"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/renamed",
+      "archived": "task-5-docker-final/writable-control/policy/renamed",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/run/evidence/new-evidence.json",
+      "archived": "task-5-docker-final/writable-control/run/evidence/new-evidence.json",
+      "sha256": "f64b63f3a437195d2b52e0da167754d637e0fd9a5b405e7880551b613bb24098"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/stderr.log",
+      "archived": "task-5-docker-final/writable-control/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final/writable-control/stdout.log",
+      "archived": "task-5-docker-final/writable-control/stdout.log.txt",
+      "sha256": "e5698bc373cb2489b0cf41aa98663f324b578a6d7e3b0c8a2a9f8a220619a801"
+    },
+    {
+      "source": "task-5-docker-final.log",
+      "archived": "task-5-docker-final.log.txt",
+      "sha256": "a2bf20b6f77ab927875b414ccefe24b4cf506d737bf6b529ef09b4255dec84fa"
+    },
+    {
+      "source": "task-5-egress-1/exit.json",
+      "archived": "task-5-egress-1/exit.json",
+      "sha256": "bfdedf06596faa2042b0fedd9653ec1023d2e96ed56dc40b607985bc8438c1d5"
+    },
+    {
+      "source": "task-5-egress-1/manifest.json",
+      "archived": "task-5-egress-1/manifest.json",
+      "sha256": "aff2ba76f6dece8aada34a38381a80e2eec17b96e577fcc9f54e38e10455ff18"
+    },
+    {
+      "source": "task-5-egress-1/policy/claude-settings.json",
+      "archived": "task-5-egress-1/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-egress-1/policy/fixture.mjs",
+      "archived": "task-5-egress-1/policy/fixture.mjs.txt",
+      "sha256": "0ecdc021c220b29f004ac4c4e969143332045ca9495dfdbff90289c614177bdd"
+    },
+    {
+      "source": "task-5-egress-1/policy/provider-proxy.mjs",
+      "archived": "task-5-egress-1/policy/provider-proxy.mjs.txt",
+      "sha256": "13a93a350a36b271859853a87a6b7ae07df63f1a1e58fcdde9d42d63d7f5da34"
+    },
+    {
+      "source": "task-5-egress-1/run/network-inspect.json",
+      "archived": "task-5-egress-1/run/network-inspect.json",
+      "sha256": "90ac9205292665ae3983182ccdda66bcdd4d63fff4c12b71fa8db40d35b6ebfa"
+    },
+    {
+      "source": "task-5-egress-1/run/proxy-inspect.json",
+      "archived": "task-5-egress-1/run/proxy-inspect.json",
+      "sha256": "2fc50e774c7a5b1ac2a1a186512e0748b5d9c9f8a7ceb3fe924c953d32c27589"
+    },
+    {
+      "source": "task-5-egress-1/stderr.log",
+      "archived": "task-5-egress-1/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-egress-1/stdout.log",
+      "archived": "task-5-egress-1/stdout.log.txt",
+      "sha256": "4dbf0911e174d80a1c00392d18d3be7b785471aaf744e41874a8ac55a2ea0603"
+    },
+    {
+      "source": "task-5-egress-1.log",
+      "archived": "task-5-egress-1.log.txt",
+      "sha256": "d091ccf9860e5f73f1970647100911f447a1e315aa35cbe758d79da03f6fd4aa"
+    },
+    {
+      "source": "task-5-final-postcheck.json",
+      "archived": "task-5-final-postcheck.json",
+      "sha256": "da7f0081e6170034cbd629e26e30a084019a1c0e971eedd9ff29462207690dbb"
+    },
+    {
+      "source": "task-5-final-precheck.json",
+      "archived": "task-5-final-precheck.json",
+      "sha256": "798aa3707eec4b9f5a557d24ab5034e5431cd9e1b4c9e19c3ec4fcbf8cdd3068"
+    },
+    {
+      "source": "task-5-guard-green.log",
+      "archived": "task-5-guard-green.log.txt",
+      "sha256": "1769dc7b3a1b71b484d611b9811683bf028b55db5e6ee1b2a88b0cfd86c79612"
+    },
+    {
+      "source": "task-5-guard-red.log",
+      "archived": "task-5-guard-red.log.txt",
+      "sha256": "457db10fb4e8818f1f8bef28377536c458da3cd1b4f8cac22f2a5e4482640a87"
+    },
+    {
+      "source": "task-5-image-build.log",
+      "archived": "task-5-image-build.log.txt",
+      "sha256": "e3d5b1bd0c1bbfb8979dd5f7c8abc0cb338c42193c8ea4b08531e6687ea0ecc3"
+    },
+    {
+      "source": "task-5-login-command-green.log",
+      "archived": "task-5-login-command-green.log.txt",
+      "sha256": "38bff98e106b024f16340d685185771051a8332c481ca92b157870f647d6c3e9"
+    },
+    {
+      "source": "task-5-login-command-red.log",
+      "archived": "task-5-login-command-red.log.txt",
+      "sha256": "5dbc8a06f8eb02aea5206e87afa296c620816312a628fda3e343fdaad60ab35f"
+    },
+    {
+      "source": "task-5-proxy-green.log",
+      "archived": "task-5-proxy-green.log.txt",
+      "sha256": "9227c95a501ee7d621df5e2d5a8f1605ba9958f4a5e1dce8ecd517ce64d0e044"
+    },
+    {
+      "source": "task-5-proxy-guard-final.log",
+      "archived": "task-5-proxy-guard-final.log.txt",
+      "sha256": "f7c559ffe4e91e1abca13f6e52611078314efabd4d5fbb9efbe564ce90bff2f4"
+    },
+    {
+      "source": "task-5-proxy-red.log",
+      "archived": "task-5-proxy-red.log.txt",
+      "sha256": "03a5742bfd8d28467a037c4142b4a393d6854c5a21666211f5fd611661876e21"
+    },
+    {
+      "source": "task-5-runtime-final.log",
+      "archived": "task-5-runtime-final.log.txt",
+      "sha256": "e19212dc769c2798354c03ba4a770978d9f130a9b25ddf3195449f05c96e6130"
+    },
+    {
+      "source": "task-5-runtime-green.log",
+      "archived": "task-5-runtime-green.log.txt",
+      "sha256": "c4b20ad99caafc9b7050fac6441524639c65ba224b1e8225f814ee2a58dadd7d"
+    },
+    {
+      "source": "task-5-runtime-red.log",
+      "archived": "task-5-runtime-red.log.txt",
+      "sha256": "b63e75c8fe3da0215eeef5e4f5b6ebaa4faaf123c0ff2597b86503781856a27a"
+    },
+    {
+      "source": "task-5-trace-1/manifest.json",
+      "archived": "task-5-trace-1/manifest.json",
+      "sha256": "75ee4e79783187637774d1560af47d83a031e18618f835c580f70ab34ce07b4e"
+    },
+    {
+      "source": "task-5-trace-1/policy/claude-settings.json",
+      "archived": "task-5-trace-1/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-trace-1/policy/fixture.mjs",
+      "archived": "task-5-trace-1/policy/fixture.mjs.txt",
+      "sha256": "c920f7070d52e6dbb72eb1e63b9ea472eb0b062c5d68364cd232372c1ea16507"
+    },
+    {
+      "source": "task-5-trace-1/run/evidence/trace-index.log",
+      "archived": "task-5-trace-1/run/evidence/trace-index.log.txt",
+      "sha256": "232c4591d3997dfaba9a79b047741d18a5fde9c7936b993347e301a377088645"
+    },
+    {
+      "source": "task-5-trace-1/run/evidence/trace-results.json",
+      "archived": "task-5-trace-1/run/evidence/trace-results.json",
+      "sha256": "d581bb1380bd057e4e7715e2539b09a7dfb881361aabf1055686533e3946ce95"
+    },
+    {
+      "source": "task-5-trace-1/run/evidence/trace-stderr.log",
+      "archived": "task-5-trace-1/run/evidence/trace-stderr.log.txt",
+      "sha256": "e81ad545d143f2b29b8b5bdce88f5d0c053a1aaec15504300aae32c11b29663a"
+    },
+    {
+      "source": "task-5-trace-1/run/tmp/trace-mcp-consulted-25c92efc33a3/a869c158efe04c1de5576abca74b8ce848d2656373fe783a661be13ac33a2df2",
+      "archived": "task-5-trace-1/run/tmp/trace-mcp-consulted-25c92efc33a3/a869c158efe04c1de5576abca74b8ce848d2656373fe783a661be13ac33a2df2",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-trace-1/run/tmp/trace-mcp-explored-25c92efc33a3/29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da",
+      "archived": "task-5-trace-1/run/tmp/trace-mcp-explored-25c92efc33a3/29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da",
+      "sha256": "29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da"
+    },
+    {
+      "source": "task-5-trace-1/stderr.log",
+      "archived": "task-5-trace-1/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-trace-1/stdout.log",
+      "archived": "task-5-trace-1/stdout.log.txt",
+      "sha256": "cfe8926ac401b428b8ae17270bbdd721277687654a3d57931c2f31cc0fa6a2fc"
+    },
+    {
+      "source": "task-5-guard-model-red.log",
+      "archived": "task-5-guard-model-red.log.txt",
+      "sha256": "2f0ee2e20476dd79cb83a7298e9ad3f8d59d283103d9ae292a1fcaa640530ca4"
+    },
+    {
+      "source": "task-5-runtime-final-3.log",
+      "archived": "task-5-runtime-final-3.log.txt",
+      "sha256": "3a9b352eca53338d2809c60275dc09b3bee691be1301a2c27760a4870527c59b"
+    },
+    {
+      "source": "task-5-runtime-final-2.log",
+      "archived": "task-5-runtime-final-2.log.txt",
+      "sha256": "5260e772578e3ae63988e3f330c6a0ad21bba1395f26b25028c1d311db2943bf"
+    },
+    {
+      "source": "task-5-untracked-red.log",
+      "archived": "task-5-untracked-red.log.txt",
+      "sha256": "2bb21119fac7cd369317a9a6baff22f04e53a9b35299490329ba8d5f3b1b3d22"
+    },
+    {
+      "source": "task-5-docker-final-2.log",
+      "archived": "task-5-docker-final-2.log.txt",
+      "sha256": "a2bf20b6f77ab927875b414ccefe24b4cf506d737bf6b529ef09b4255dec84fa"
+    },
+    {
+      "source": "task-5-model-defaults-red.log",
+      "archived": "task-5-model-defaults-red.log.txt",
+      "sha256": "7f3b7d9d7bb9875442e9a156e1eea571795b173965347f4ac526aea048d77099"
+    },
+    {
+      "source": "task-5-proxy-guard-final-2.log",
+      "archived": "task-5-proxy-guard-final-2.log.txt",
+      "sha256": "b167fdd1ed55a1353655328f5f60550afebe16626711b1ee86ec231741348295"
+    },
+    {
+      "source": "task-5-final-precheck-2.json",
+      "archived": "task-5-final-precheck-2.json",
+      "sha256": "7213d02a470a920222dd6efcc8697f69e59f4d2d409c12c9c7391a229e5d40fb"
+    },
+    {
+      "source": "task-5-final-postcheck-2.json",
+      "archived": "task-5-final-postcheck-2.json",
+      "sha256": "93264234185b6eac5d29d831c685073c9a9cd05d74ed1de962635e6f6fc48ff2"
+    },
+    {
+      "source": "task-5-docker-final-2/results.json",
+      "archived": "task-5-docker-final-2/results.json",
+      "sha256": "3d2c7a2cfc7c8bf7f7475997a4c8c72309ea35447b685acd9a856e03e879788d"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/stderr.log",
+      "archived": "task-5-docker-final-2/readonly-boundary/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/stdout.log",
+      "archived": "task-5-docker-final-2/readonly-boundary/stdout.log.txt",
+      "sha256": "efe2c90d2bc3c84f44e8d79333d498682f5ce33e95a284d2f48a96c5ae675edc"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/command.json",
+      "archived": "task-5-docker-final-2/readonly-boundary/command.json",
+      "sha256": "fe8e3ee66faafd04f49cb9d62e1b86e85b15286954ec2e792a51dec11597c9e4"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/manifest.json",
+      "archived": "task-5-docker-final-2/readonly-boundary/manifest.json",
+      "sha256": "86eda85d2f6ca4c8b063dbf032f9f7e61fe147d92b1fba482202dd70ecb0bc16"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/run/evidence/new-evidence.json",
+      "archived": "task-5-docker-final-2/readonly-boundary/run/evidence/new-evidence.json",
+      "sha256": "fc0577e947b7dcb7372ec3b59d0a86fb70af618268e87ecf694199d093f671ff"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/policy/alias",
+      "archived": "task-5-docker-final-2/readonly-boundary/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/policy/delete-canary",
+      "archived": "task-5-docker-final-2/readonly-boundary/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/policy/canary",
+      "archived": "task-5-docker-final-2/readonly-boundary/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/policy/fixture.mjs",
+      "archived": "task-5-docker-final-2/readonly-boundary/policy/fixture.mjs.txt",
+      "sha256": "a8481defdb19c7f445e975ebcb5aaefa8a35997175075bbb18243d680a59ec57"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/policy/claude-settings.json",
+      "archived": "task-5-docker-final-2/readonly-boundary/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final-2/readonly-boundary/policy/rename-canary",
+      "archived": "task-5-docker-final-2/readonly-boundary/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/stderr.log",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/stderr.log.txt",
+      "sha256": "d9a7bd79bc9d3baa77497b3d8711f94925a9e44f1c54a4b781ce1ecea3e314c2"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/stdout.log",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/stdout.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/manifest.json",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/manifest.json",
+      "sha256": "469c8be3a14b45dfc83dd4d0a5b0aceb45688f99f3b65c437e2fff9a504bd163"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/alias",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/delete-canary",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/canary",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/fixture.mjs",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/fixture.mjs.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/protocol-guard.mjs",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/protocol-guard.mjs.txt",
+      "sha256": "79e8aa49a546f4fc9061ff3c1d48ac1e08adff681ee51266c2c1c848b4cd51b4"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/claude-settings.json",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final-2/codex-cwd-guard/policy/rename-canary",
+      "archived": "task-5-docker-final-2/codex-cwd-guard/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/stderr.log",
+      "archived": "task-5-docker-final-2/protocol/stderr.log.txt",
+      "sha256": "f921a264caca8ec79f8bd9b36de3b488aefdaf7aef458dcfcbcd02d1817a5557"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/stdout.log",
+      "archived": "task-5-docker-final-2/protocol/stdout.log.txt",
+      "sha256": "a9b148131e80682d782ddc4686207b13f141762ec4541cc52ff7cdd9575999a9"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/manifest.json",
+      "archived": "task-5-docker-final-2/protocol/manifest.json",
+      "sha256": "aac989de009f4b3e2c14c90670799050787818cc3340f8fc1284433c09dd02ef"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/policy/alias",
+      "archived": "task-5-docker-final-2/protocol/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/policy/delete-canary",
+      "archived": "task-5-docker-final-2/protocol/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/policy/canary",
+      "archived": "task-5-docker-final-2/protocol/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/policy/fixture.mjs",
+      "archived": "task-5-docker-final-2/protocol/policy/fixture.mjs.txt",
+      "sha256": "87671a0ad8e8d4eec5d08d21103dc7dde10aaa5e30e87e392c5d04ed84774c5d"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/policy/claude-settings.json",
+      "archived": "task-5-docker-final-2/protocol/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final-2/protocol/policy/rename-canary",
+      "archived": "task-5-docker-final-2/protocol/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/stderr.log",
+      "archived": "task-5-docker-final-2/signal/stderr.log.txt",
+      "sha256": "2c362cd94a17bd0c361a95435052bb657027dc24728c986496f7e7c8b93b2569"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/manifest.json",
+      "archived": "task-5-docker-final-2/signal/manifest.json",
+      "sha256": "898b8ce039250f54e5733d2f446ed32c1590ad33519e911da4bb30394e666b13"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/policy/alias",
+      "archived": "task-5-docker-final-2/signal/policy/alias",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/policy/delete-canary",
+      "archived": "task-5-docker-final-2/signal/policy/delete-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/policy/canary",
+      "archived": "task-5-docker-final-2/signal/policy/canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/policy/fixture.mjs",
+      "archived": "task-5-docker-final-2/signal/policy/fixture.mjs.txt",
+      "sha256": "eb0dc7f983af7bf65f5185c3a379f98d993642440a4e9dbfa8757d5407fbf0b5"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/policy/claude-settings.json",
+      "archived": "task-5-docker-final-2/signal/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final-2/signal/policy/rename-canary",
+      "archived": "task-5-docker-final-2/signal/policy/rename-canary",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/stderr.log",
+      "archived": "task-5-docker-final-2/writable-control/stderr.log.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/stdout.log",
+      "archived": "task-5-docker-final-2/writable-control/stdout.log.txt",
+      "sha256": "cd992ce8da95250d2cc6aa71ac4af532d0d461e011447010a1bc8233249e9b53"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/command.json",
+      "archived": "task-5-docker-final-2/writable-control/command.json",
+      "sha256": "40f45d6adcefa9873634d839c8f57bca9be78d8328e8a42f43c7135eff499ce6"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/manifest.json",
+      "archived": "task-5-docker-final-2/writable-control/manifest.json",
+      "sha256": "06606e22396fec1a6c2bdc9230d47033888010efa0043d47114c980b090ae844"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/run/evidence/new-evidence.json",
+      "archived": "task-5-docker-final-2/writable-control/run/evidence/new-evidence.json",
+      "sha256": "4fa16edf76c41fe8347b45bde0a0270f8036f5518c1f40383bae1ed9d5e73da4"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/alias",
+      "archived": "task-5-docker-final-2/writable-control/policy/alias",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/canary",
+      "archived": "task-5-docker-final-2/writable-control/policy/canary",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/fixture.mjs",
+      "archived": "task-5-docker-final-2/writable-control/policy/fixture.mjs.txt",
+      "sha256": "a8481defdb19c7f445e975ebcb5aaefa8a35997175075bbb18243d680a59ec57"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/claude-settings.json",
+      "archived": "task-5-docker-final-2/writable-control/policy/claude-settings.json",
+      "sha256": "8d71786a3a7dec5fcb050c095655e59dd5ddbb229d084c354297686fcb575319"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/created",
+      "archived": "task-5-docker-final-2/writable-control/policy/created",
+      "sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35"
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/renamed",
+      "archived": "task-5-docker-final-2/writable-control/policy/renamed",
+      "sha256": "0682c5f2076f099c34cfdd15a9e063849ed437a49677e6fcc5b4198c76575be5"
+    },
+    {
+      "source": "task-5-commit.log",
+      "archived": "task-5-commit.log.txt",
+      "sha256": "e9b37bbfd3d4c32aff58fd52447eaf21fc611876990240ee031a3fe690de2184"
+    },
+    {
+      "source": "task-5-commit-result.json",
+      "archived": "task-5-commit-result.json",
+      "sha256": "249a5d7772f173baa957152bece7d4a6aa6d041b5c44794f36305d1aa6f4a93e"
+    }
+  ],
+  "symlink_metadata_only": [
+    {
+      "source": "task-5-docker-1/writable-control/policy/new-link",
+      "link_target": "canary",
+      "implementer_reported_referent_sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35",
+      "referent_not_read_by_archiver": true
+    },
+    {
+      "source": "task-5-docker-final/writable-control/policy/new-link",
+      "link_target": "canary",
+      "implementer_reported_referent_sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35",
+      "referent_not_read_by_archiver": true
+    },
+    {
+      "source": "task-5-docker-final-2/writable-control/policy/new-link",
+      "link_target": "canary",
+      "implementer_reported_referent_sha256": "d3336a334a5e8a2e6266703c54eaa332034daa74461ad1271507bb5ec6188d35",
+      "referent_not_read_by_archiver": true
+    }
+  ],
+  "excluded": "All runtime caches, auth files, source snapshots and .git objects excluded. No credential values read.",
+  "first_archive_attempt": "Stopped before writes on fixture symlinks; no credential read. Symlinks now recorded as metadata only."
+}

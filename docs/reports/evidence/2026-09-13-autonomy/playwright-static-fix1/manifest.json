@@ -1,0 +1,55 @@
+{
+  "status": "static_fix1_independently_accepted_browser_stopped2_no_receipt",
+  "files": [
+    {
+      "path": "task-5-playwright-static-implementation-report.md",
+      "bytes": 12589,
+      "sha256": "c2a636a02ac2bcbf538af7e3dd8a0897fd72a5a0dc375be0059813ee9849b172"
+    },
+    {
+      "path": "playwright-static/fix1/fix-only.diff",
+      "bytes": 18628,
+      "sha256": "ce716fbfc00f30fec4a914ed927c3a0780be5a6070b4be16f0d0f7d9eac13670"
+    },
+    {
+      "path": "playwright-static/fix1/source-proof.json",
+      "bytes": 1402,
+      "sha256": "2a1097186dc1bd9ad63342a7c43850e4589cce6ea0921cfb1de2363b3a947509"
+    },
+    {
+      "path": "playwright-static/fix1/r1-red.log",
+      "bytes": 767,
+      "sha256": "0d357af8402c42d17d7118ff13a4204dc4d6e3c39977eb6c066d8a1f276c5aeb"
+    },
+    {
+      "path": "playwright-static/fix1/r1-green.log",
+      "bytes": 98,
+      "sha256": "8f71a68091b29800ed34a8b75bf13a5f917f3ee5d925687f3fd5d24011e2284a"
+    },
+    {
+      "path": "playwright-static/fix1/r2-red.log",
+      "bytes": 760,
+      "sha256": "c3e63184463a3d1a564e36bca4df142b95d3c00c644eafbf984bc4eb97b0ff83"
+    },
+    {
+      "path": "playwright-static/fix1/r2-green.log",
+      "bytes": 200,
+      "sha256": "0d008852d7344aff24b48f1685b10d8e7b86c60be50d2f223cabbc75090840cd"
+    },
+    {
+      "path": "playwright-static/fix1/runtime-covering.log",
+      "bytes": 2423,
+      "sha256": "30a79d60a3ba9574d872a339b5fea7826fb39850e2ce83c289462dfc67a38009"
+    },
+    {
+      "path": "playwright-static/fix1/playwright-covering.log",
+      "bytes": 102,
+      "sha256": "b7fd8b52d99435a4320197979f8ff788cd3eb1449be1f56ecf1b54f8f23cedb6"
+    },
+    {
+      "path": "task-5-playwright-static-fix1-independent-review.md",
+      "bytes": 4659,
+      "sha256": "29a6b9768b8a3490477b9c708ba28ca1ea58e38ba1a8aed7addd17681de5bcf7"
+    }
+  ]
+}

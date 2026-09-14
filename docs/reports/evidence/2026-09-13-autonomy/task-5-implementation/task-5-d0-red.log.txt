@@ -1,0 +1,49 @@
+test_bounded_output_for_large_invocation (__main__.MetadataProbeTests) ... FAIL
+test_paths_are_lexical_and_bounded_not_followed (__main__.MetadataProbeTests) ... FAIL
+test_redacts_values_and_unknown_names_without_executing (__main__.MetadataProbeTests) ... FAIL
+test_static_registration_probes (__main__.MetadataProbeTests) ... FAIL
+
+======================================================================
+FAIL: test_bounded_output_for_large_invocation (__main__.MetadataProbeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 70, in test_bounded_output_for_large_invocation
+    code, out, err = self.invoke(['--unknown=' + SECRET + 'x' * 1000] * 200)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 18, in invoke
+    self.assertTrue(BINARY.is_file(), 'metadata-only executable is not implemented')
+AssertionError: False is not true : metadata-only executable is not implemented
+
+======================================================================
+FAIL: test_paths_are_lexical_and_bounded_not_followed (__main__.MetadataProbeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 59, in test_paths_are_lexical_and_bounded_not_followed
+    code, _, err = self.invoke(['--mcp-config', str(root / 'link'),
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 18, in invoke
+    self.assertTrue(BINARY.is_file(), 'metadata-only executable is not implemented')
+AssertionError: False is not true : metadata-only executable is not implemented
+
+======================================================================
+FAIL: test_redacts_values_and_unknown_names_without_executing (__main__.MetadataProbeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 39, in test_redacts_values_and_unknown_names_without_executing
+    code, out, err = self.invoke(['--model', SECRET, '--mcp-config',
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 18, in invoke
+    self.assertTrue(BINARY.is_file(), 'metadata-only executable is not implemented')
+AssertionError: False is not true : metadata-only executable is not implemented
+
+======================================================================
+FAIL: test_static_registration_probes (__main__.MetadataProbeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 30, in test_static_registration_probes
+    code, out, err = self.invoke([flag])
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_metadata_probe.py", line 18, in invoke
+    self.assertTrue(BINARY.is_file(), 'metadata-only executable is not implemented')
+AssertionError: False is not true : metadata-only executable is not implemented
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+FAILED (failures=4)

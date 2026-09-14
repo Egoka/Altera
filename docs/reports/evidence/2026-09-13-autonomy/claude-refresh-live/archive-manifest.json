@@ -1,0 +1,53 @@
+{
+  "state": "accepted_one_live_exchange_fresh_status_fixed_Opus_and_atomic_publication",
+  "credential_values_or_hashes": false,
+  "files": [
+    {
+      "file": "task-5-refresh-live-reviewed-preparation.json",
+      "bytes": 1243,
+      "sha256": "d7fdbd3dc1eab998e583e6c0f60064bc47bb49987c4094c800621934f3e73235"
+    },
+    {
+      "file": "task-5-refresh-live-path-preflight.json",
+      "bytes": 1383,
+      "sha256": "0eb01fee4f9d242493894da12dab044e5ec66e58532f9c94a5acb7a5baf73df9"
+    },
+    {
+      "file": "task-5-refresh-live-bootstrap-proof.json",
+      "bytes": 372,
+      "sha256": "3285f247a980eaeb4a11472062e16630c8094101ecffa1ff4860068eae14a2b8"
+    },
+    {
+      "file": "task-5-refresh-live-approval-block.json",
+      "bytes": 510,
+      "sha256": "41f4982762ebf8c76e8bd3bec8faaf68c92e8479d53b4452a72c94c739c764b2"
+    },
+    {
+      "file": "task-5-refresh-live-runbook.md",
+      "bytes": 3913,
+      "sha256": "f435cb5d2e9fcbbe57716888f9a7e6756118614d65153044bbf4bfe23bb17f1e"
+    },
+    {
+      "file": "task-5-refresh-live-explicit-authorization.json",
+      "bytes": 489,
+      "sha256": "8d42094501ff0b71eace1dbf2065010803e40245a25d58eb8d918ef261aec80c"
+    },
+    {
+      "file": "task-5-refresh-live-result.json",
+      "bytes": 2289,
+      "sha256": "f7d592a2b417160dd4e504ed85f28659e30aae1f310e4c61c30af803db896091"
+    },
+    {
+      "file": "task-5-refresh-live-postflight-proof.json",
+      "bytes": 1720,
+      "sha256": "33806deaa1191d991e085f7d3e60ec85c11a14d1cb22a879dfbb44543e241e1e"
+    },
+    {
+      "file": "task-5-refresh-live-evidence-review.md",
+      "bytes": 7807,
+      "sha256": "bf5ded45359bd069e9da4abb3de850c5b899672a8a4f8c27335317347ccf0f9b"
+    }
+  ],
+  "prior_approval_block_preserved": true,
+  "independent_evidence_review": "PASS_single_authorized_live_success_path_only"
+}

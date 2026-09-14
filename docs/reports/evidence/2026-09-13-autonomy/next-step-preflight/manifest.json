@@ -1,0 +1,30 @@
+{
+  "status": "preparation_only_not_implementation_or_acceptance",
+  "files": [
+    {
+      "source": "task-5-codex-bridge-preflight.md",
+      "archive": "task-5-codex-bridge-preflight.md",
+      "sha256": "2caa35ba9368d04217bc19ed1742bc032712f1d6eac2fbdf77a517eabedf58f8"
+    },
+    {
+      "source": "task-5-codex-protocol-brief.md",
+      "archive": "task-5-codex-protocol-brief.md",
+      "sha256": "c07274b8e63745490e23e26088576f3351ed9cb58328b93e969b12181863454c"
+    },
+    {
+      "source": "task-5-auth-refresh-preflight.md",
+      "archive": "task-5-auth-refresh-preflight.md",
+      "sha256": "a345ecd5d67c6240ef6869eee9135ed183309a4ef81ba578c3641005a630f82b"
+    },
+    {
+      "source": "task-9-bff-implementation-brief.md",
+      "archive": "task-9-bff-implementation-brief.md",
+      "sha256": "fcc5a8dc5a86d5de71a93b39896fb6a513e1ee036ddfc9a32254af3b5f1bc79e"
+    },
+    {
+      "source": "scratch/task-11-12-session-schema-brief.md",
+      "archive": "scratch/task-11-12-session-schema-brief.md",
+      "sha256": "31a089f4a6c1ddab17793f24a54c21d3f6893aa481b441d46a84c785ec067d1a"
+    }
+  ]
+}

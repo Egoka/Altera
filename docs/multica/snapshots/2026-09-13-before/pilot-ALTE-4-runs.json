@@ -1,0 +1,74 @@
+[
+  {
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "attempt": 1,
+    "attribution": {
+      "evidence": {
+        "kind": "issue_assignment",
+        "ref_id": "01a087f9-4f3b-7ef4-b494-f533cfda6f63"
+      },
+      "initiator": {
+        "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocKQCtF7uXghwlTDaJBr8GLTdbx6Zy_Pb9DAafJ55mzlWPGoaWy70w=s96-c",
+        "email": "eg.bonda2014@gmail.com",
+        "id": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+        "name": "Egor B"
+      },
+      "originator": {
+        "avatar_url": "https://lh3.googleusercontent.com/a/ACg8ocKQCtF7uXghwlTDaJBr8GLTdbx6Zy_Pb9DAafJ55mzlWPGoaWy70w=s96-c",
+        "email": "eg.bonda2014@gmail.com",
+        "id": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+        "name": "Egor B"
+      },
+      "precise": true,
+      "source": "direct_human"
+    },
+    "completed_at": "2026-09-09T22:57:06Z",
+    "created_at": "2026-09-09T22:50:28Z",
+    "delivered_comment_ids": [],
+    "dispatched_at": "2026-09-09T22:50:29Z",
+    "error": null,
+    "id": "01a0885d-90e6-7ed4-9dc8-690c327ee087",
+    "issue_id": "01a087f9-4f3b-7ef4-b494-f533cfda6f63",
+    "kind": "direct",
+    "max_attempts": 2,
+    "priority": 0,
+    "relative_work_dir": "WebstormProjects/Altera",
+    "result": {
+      "output": "Задача T-110 выполнена.\n\n**Итог:**\n\nПять файлов спецификаций синхронизированы с журналом решений §25.1 и §25.6:\n\n1. **home.md §7** — «Писать» для читателя теперь ведёт в `/me/articles/new` (первый запуск), не в `/pricing`\n2. **authors-index.md §5, §7** — «Стать автором» аналогично разделено по ролям: гость → `/pricing`, читатель → `/me/articles/new`\n3. **grants-and-promo.md** — добавлено исключение для бессрочной базовой выдачи (`endsAt = NULL`) согласно plan-free.md п. 6а; пометка `[ДОПУЩЕНИЕ]` сохранена\n4. **access-matrix.md #36** — описание уточнено со ссылкой на §25.6, статус дополнен `; Г6`\n5. **engagement-tracking.md** — шапка приведена к шаблону `_templates/ranking.md` (добавлены поля Реестр, ADR, Этап)\n\nВсе проверки (`format`, `lint`, `test`) пройдены. Коммиты `e18aa80` и `81bbd83` на ветке `docs/platform-design`. Статус задачи — `in_review`, ожидает независимого ревьюера.",
+      "pr_url": "",
+      "session_id": "0f882d3b-0092-4248-9657-c88163cb91e6",
+      "work_dir": "/Users/egorbondarenko/WebstormProjects/Altera"
+    },
+    "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "started_at": "2026-09-09T22:50:31Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": {
+          "redacted": true,
+          "present": true,
+          "keys": null
+        },
+        "cache_write_tokens": {
+          "redacted": true,
+          "present": true,
+          "keys": null
+        },
+        "input_tokens": {
+          "redacted": true,
+          "present": true,
+          "keys": null
+        },
+        "model": "claude-sonnet-4-6",
+        "output_tokens": {
+          "redacted": true,
+          "present": true,
+          "keys": null
+        },
+        "provider": "claude"
+      }
+    ],
+    "work_dir": "/Users/egorbondarenko/WebstormProjects/Altera",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  }
+]

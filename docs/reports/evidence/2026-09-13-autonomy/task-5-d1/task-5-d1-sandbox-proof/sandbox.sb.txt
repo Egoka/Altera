@@ -1,0 +1,6 @@
+(version 1)
+(deny default)
+(allow sysctl-read)
+(allow file-read-metadata)
+(allow file-read-data (subpath "/usr/lib") (subpath "/System/Library") (literal "/") (literal "/private") (literal "/private/tmp") (literal "/private/tmp/tmp1ee_uqf4") (literal "/private/tmp/tmp1ee_uqf4/control") (literal "/private/tmp/tmp1ee_uqf4/d1") (literal "/private/tmp/tmp1ee_uqf4/private-root") (literal "/private/tmp/tmp1ee_uqf4/private-root/multica-mcp-62b34dd9825e47929faba4fe7ff60a09") (literal "/private/tmp/tmp1ee_uqf4/private-root/multica-mcp-62b34dd9825e47929faba4fe7ff60a09/mcp-config.json"))
+(allow process-exec (literal "/private/tmp/tmp1ee_uqf4/d1") (literal "/private/tmp/tmp1ee_uqf4/control"))

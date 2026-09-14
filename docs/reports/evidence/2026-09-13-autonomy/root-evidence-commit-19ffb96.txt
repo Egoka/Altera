@@ -1,0 +1,89 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  20:25:47
+web test:    Duration  101ms (transform 65%, import 20%, worker 7%, tests 7%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  20:25:47
+server test:    Duration  274ms (import 78%, transform 19%, tests 2%, worker 2%)
+server test: Done
+[docs/agent-loop-autonomy 19ffb96] docs(agents): preserve verification and lifecycle evidence
+ 59 files changed, 6218 insertions(+), 14 deletions(-)
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/auth-preflight.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/native-claude-discovery-block.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/t110-native-usage.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/t110-trace-shape.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-brief.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-comments-precommit.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-evidence-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-final-fixtures.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-final-head-fixtures.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-final-revision.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-first-commit-revision.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-before-commit-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-before-commit-snapshot.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-before-commit.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-final-revision.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-full-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-help.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-parent-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-parent-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-precommit.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-prereq-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-prereq-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-report.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-review-diff.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-review.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-fix1-trace.jsonl
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-green-1.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-green-2.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-handoff-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-help.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-own-change.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-own-diff-before-commit.patch
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-own-files-before-commit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-postcommit-fixtures.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-precommit.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-report.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-review-probes.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-review.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-schema-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-self-review-green.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-self-review-red.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-2-trace.jsonl
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-brief.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-current-audit-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-exported-tool-transcript.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-initial-evidence-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-initial-report.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-initial-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-preflight.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-metadata-discovery-design.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-6-completeness-addendum.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-6-design-probes.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-6-design.txt

@@ -1,0 +1,77 @@
+{
+  "head": "9e1f8be8192df23626efd1ac305269ef00666d22",
+  "tree": "42327560baacfb7d8c323d5c49ef457a7c849f11",
+  "binary": {
+    "source": "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/metadata-probe.c",
+    "source_sha256": "a5843cc10aa495bb6cf48e89f80bd121bf66fa582e85a6fb2584cc8691d67107",
+    "binary": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/metadata-probe",
+    "binary_sha256": "613775a45871082c7bb5981b5f19a77ddc47cf97b0c96372aaac08e764ea6d81",
+    "compiler": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"
+  },
+  "files": [
+    {
+      "source_path": "scripts/agent-runtime/metadata-probe.c",
+      "bundle_file": "metadata-probe.c",
+      "sha256": "a5843cc10aa495bb6cf48e89f80bd121bf66fa582e85a6fb2584cc8691d67107"
+    },
+    {
+      "source_path": "scripts/agent-runtime/build_metadata_probe.py",
+      "bundle_file": "build_metadata_probe.py",
+      "sha256": "2147f3edcef0b61933a2193303efef26b0e97775807981a06b17d8bc49de24b0"
+    },
+    {
+      "source_path": "scripts/agent-runtime/test_metadata_probe.py",
+      "bundle_file": "test_metadata_probe.py",
+      "sha256": "049f0302760701b1d26e083c2d57c98a696bc5e8b4f41dea5d149e22a6ce913e"
+    },
+    {
+      "source_path": ".superpowers/sdd/2026-09-13-autonomy-execution/task-5-d0-build.json",
+      "bundle_file": "task-5-d0-build.json",
+      "sha256": "a64b687ef662db0eecc940c1de1212051d4fa85b36215aca049e0ea8437c937e"
+    },
+    {
+      "source_path": ".superpowers/sdd/2026-09-13-autonomy-execution/task-5-d0-red.log",
+      "bundle_file": "task-5-d0-red.log",
+      "sha256": "3d1dc0042cf61250e0b22cd0e52616fa5a72362e9dbbd459632c1def4883f879"
+    },
+    {
+      "source_path": ".superpowers/sdd/2026-09-13-autonomy-execution/task-5-d0-green.log",
+      "bundle_file": "task-5-d0-green.log",
+      "sha256": "b884aaf0054d033c75fb6ad008704b5ffa68c75ffc12d851c414b6c764d9a9cc"
+    },
+    {
+      "source_path": ".superpowers/sdd/2026-09-13-autonomy-execution/task-5-d0-imports.log",
+      "bundle_file": "task-5-d0-imports.log",
+      "sha256": "7493fe471bf8ee36a57034b1f0ab681efe5c809e2b6f18b42492d4ac6562740f"
+    }
+  ],
+  "behavioral_results": {
+    "red_exit": 1,
+    "green_exit": 0,
+    "tests_passed": 4
+  },
+  "os_proof": [
+    {
+      "tool_chunk": "664004",
+      "exit": 71,
+      "result": "sandbox-exec: sandbox_apply: Operation not permitted; nested session sandbox could not initialize"
+    },
+    {
+      "tool_chunk": "90ba4e",
+      "exit": 78,
+      "policy": "(version 1) (allow default) (deny network*) (deny process-fork) (deny file-read-data (subpath \"/Users/egorbondarenko/.codex\") (subpath \"/Users/egorbondarenko/.claude\")) (deny file-write*)",
+      "result": "D0 emitted one redacted JSON stderr manifest, diagnostic exit78; approved sandbox escalation; no model"
+    },
+    {
+      "tool_chunk": "bdf567",
+      "exit": 134,
+      "policy": "deny all file-read-data except exact binary, /System/Library, /usr/lib; deny forks/network/writes",
+      "result": "aborted before output; loader read dependencies unresolved; one attempt; NOT a pass"
+    }
+  ],
+  "limits": [
+    "Not a syscall trace; imported symbols are a static audit.",
+    "Source hash embedded; exact binary hash recorded externally because self hashing would open a file.",
+    "Registration/model protocol/auth/native routing not run."
+  ]
+}

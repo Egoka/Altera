@@ -1,0 +1,13 @@
+async function createIsolatedBrowser(config, clientInfo) {
+  testDebug3("create browser (isolated)");
+  const browserType = playwright[config.browser.browserName];
+  const tracesDir = await computeTracesDir(config, clientInfo);
+  const browser = await browserType.launch({
+    tracesDir,
+    ...config.browser.launchOptions,
+    handleSIGINT: false,
+    handleSIGTERM: false
+  }).catch((error) => {
+    throwIfExecutableMissing(error, config);
+    throw error;
+  });

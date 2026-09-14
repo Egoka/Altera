@@ -1,0 +1,20 @@
+{
+  "run_id": "01a0885d-90e6-7ed4-9dc8-690c327ee087",
+  "command": "multica issue run-messages RUN --output json",
+  "shape": {
+    "list_length": 107,
+    "sample": {
+      "created_at": "str",
+      "input": {
+        "command": "str",
+        "description": "str"
+      },
+      "issue_id": "str",
+      "seq": "int",
+      "task_id": "str",
+      "tool": "str",
+      "type": "str"
+    }
+  },
+  "content_exported": false
+}

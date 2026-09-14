@@ -1,0 +1,57 @@
+{
+  "metadata_fetch": [
+    {
+      "exit": 1,
+      "cause": "sandbox DNS unavailable",
+      "raw": "tool chunk928833"
+    },
+    {
+      "exit": 0,
+      "raw": "tool chunk ec7acd; four saved package metadata JSON files"
+    }
+  ],
+  "lock_generation": [
+    {
+      "exit": 1,
+      "log": "lock-generation.log",
+      "cause": "npm rejects one /dev/null loaded as user and global config"
+    },
+    {
+      "exit": 0,
+      "log": "lock-generation-2.log",
+      "cause_correction": "two separate empty private config files"
+    }
+  ],
+  "build": [
+    {
+      "exit": 125,
+      "log": "build-1.log",
+      "cause": "legacy Docker builder lacks --progress after empty HOME omitted plugin discovery"
+    },
+    {
+      "exit": 0,
+      "log": "build-2.log",
+      "correction": "exact installed Buildx + empty private state"
+    },
+    {
+      "exit": 0,
+      "log": "build-3.log",
+      "reason": "separate chmod a+rX layer after proven root0600 browser metadata, original installer layer CACHED"
+    }
+  ],
+  "canary": [
+    {
+      "exit": 1,
+      "log": "canary-1.log",
+      "cause": "root-owned mode0600 deb.deps denies nonroot tree inventory, before MCP launch"
+    },
+    {
+      "exit": 1,
+      "log": "canary-2.log",
+      "cause": "real sandboxed Chromium zygote sys_chroot failure after MCP initialization"
+    }
+  ],
+  "canary_consecutive_failures": 2,
+  "canary_stopped": true,
+  "accepted_receipt": false
+}

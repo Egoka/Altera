@@ -1,0 +1,33 @@
+{
+  "at_utc": "2026-09-13T21:20:30.003235+00:00",
+  "profiles": [],
+  "autopilots": [
+    {
+      "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "status": "paused",
+      "enabled": null
+    },
+    {
+      "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+      "status": "paused",
+      "enabled": null
+    },
+    {
+      "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+      "status": "paused",
+      "enabled": null
+    }
+  ],
+  "issue": {
+    "id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+    "identifier": "ALTE-11",
+    "status": "backlog",
+    "assignee_agent_id": null
+  },
+  "agent_readback_tool": "6495de",
+  "prior_reader_errors": [
+    "5ac2b6/b2c59a: non-JSON profile default",
+    "b38af9/d87ef1: prefixed global flags exit2"
+  ],
+  "cli_invocation": "subcommands and id first; workspace/output flags explicit after"
+}

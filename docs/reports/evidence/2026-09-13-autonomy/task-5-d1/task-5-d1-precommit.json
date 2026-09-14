@@ -1,0 +1,74 @@
+{
+  "head": "a51b1116e1e2553605ab704bda2efc1cb463b31b",
+  "files": [
+    {
+      "path": "scripts/agent-runtime/metadata-config-probe.c",
+      "sha256": "bbde1f7bd2bec71451f4800b3e99c24207ef6428422b649e7fae2b0c3680547f",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/agent-runtime/build_metadata_config_probe.py",
+      "sha256": "3467dd9486fb9a5a8c3635dafa6c73c89092976e279f33fbe477046b55fa21fe",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/agent-runtime/test_metadata_config_probe.py",
+      "sha256": "35fd5b1e023ab66f9165724b67872b712accc6fcdd434360300b40acad90200b",
+      "mode": "0o644"
+    },
+    {
+      "path": "docs/development/runtime-isolation.md",
+      "sha256": "9e175d0cb628071eb47ca4cac8b4fd4d9648db130e74118d6274184ec9315a31",
+      "mode": "0o644"
+    }
+  ],
+  "owned_scope_sha256": "11056c79789cec9ee7904763fba97bb26163110eb2efe3b8511b74a914456f72",
+  "full_dirty_scope": " M docs/development/runtime-isolation.md\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.txt\n?? scripts/agent-runtime/build_metadata_config_probe.py\n?? scripts/agent-runtime/metadata-config-probe.c\n?? scripts/agent-runtime/test_metadata_config_probe.py\n",
+  "build": {
+    "alias": "/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T",
+    "binary": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-d1-probe",
+    "binary_sha256": "a30501e42d66c6d33f7929d0d8f2900c96e03d1213d36eefc3cd746751f07785",
+    "build_sha256": "e442f963ff1dbd24abd8a9b89cf2c57f43f3485626f01e3abc920c507e270218",
+    "builder_sha256": "3467dd9486fb9a5a8c3635dafa6c73c89092976e279f33fbe477046b55fa21fe",
+    "compiler": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
+    "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T",
+    "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+    "source_sha256": "bbde1f7bd2bec71451f4800b3e99c24207ef6428422b649e7fae2b0c3680547f",
+    "uid": 501
+  },
+  "checks": {
+    "initial_red": {
+      "tests": 13,
+      "failed_assertions": 36,
+      "exit": 1
+    },
+    "final_suite": {
+      "tests": 17,
+      "pass": 17,
+      "exit": 0
+    },
+    "additional_owner_pin": {
+      "tests": 1,
+      "pass": 1,
+      "exit": 0
+    },
+    "sandbox_control": {
+      "allowed": 4,
+      "denied": 4,
+      "exit": 0
+    },
+    "exact_pinned_binary": {
+      "canonical_exit": 78,
+      "alias_exit": 78,
+      "stdout_empty": true
+    }
+  },
+  "failure_history": {
+    "build_failures_before_real_success": 3,
+    "build_current_consecutive_failures": 0,
+    "synthetic_suite_failures_before_fixture_correction": 1,
+    "synthetic_current_consecutive_failures": 0
+  },
+  "native_daemon_configs_read": 0,
+  "models_or_native_profiles_launched": 0
+}

@@ -1,0 +1,415 @@
+"""Collector fixtures use the real gate CLI/Git/private registry; native boundary is synthetic."""
+import importlib.util
+from pathlib import Path
+import unittest
+
+
+class CollectorAvailabilityTests(unittest.TestCase):
+    def test_six_trusted_operations_exist(self):
+        path = Path(__file__).with_name('native_collector.py')
+        self.assertTrue(path.exists(), 'trusted collector missing')
+        spec = importlib.util.spec_from_file_location('native_collector', path)
+        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+        for name in ('admit', 'bind', 'collect', 'check', 'transition', 'reconcile'):
+            self.assertTrue(callable(getattr(module, name, None)), name)
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import tempfile
+from datetime import datetime, timezone
+from unittest.mock import patch
+import test_gate as fixtures
+
+
+class CollectorIntegrationTests(unittest.TestCase):
+    write = fixtures.GateTests.write
+    git = fixtures.GateTests.git
+    cli = fixtures.GateTests.cli
+    start = fixtures.GateTests.start
+    record = fixtures.GateTests.record
+
+    def setUp(self):
+        fixtures.LifecycleTests.setUp(self)
+        path = Path(__file__).with_name('native_collector.py')
+        spec = importlib.util.spec_from_file_location('collector_test', path)
+        self.c = importlib.util.module_from_spec(spec); spec.loader.exec_module(self.c)
+        self.private = tempfile.TemporaryDirectory(prefix='collector-private-'); self.addCleanup(self.private.cleanup)
+        self.private_root = Path(self.private.name).resolve(); self.private_root.chmod(0o700)
+        self.passport['multica_issue'] = 'issue-1'; self.write(self.plan, self.passport)
+        self.git('add', 'docs'); self.git('commit', '-qm', 'native issue binding')
+        self.policy = self.private_root / 'policy'; self.policy.mkdir(mode=0o700)
+        (self.policy / 'claude-settings.json').write_text('{"disableAllHooks":true}')
+        (self.policy / 'protocol-guard.mjs').write_text('export {};')
+        (self.policy / 'check.test.mjs').write_text("import test from 'node:test';test('real assertion',()=>{});")
+        self.checkspec = self.private_root / 'check.json'
+        self.c.publish(self.checkspec, {'schema_version': 1,
+            'argv': ['/usr/local/bin/node', '--test', '--test-reporter=tap', '/runtime/policy/check.test.mjs'],
+            'cwd': str(self.root), 'network': 'none', 'parser': 'node-tap',
+            'timeout_seconds': 120, 'maximum_output': 1048576})
+        registry = self.private_root / 'registry'; registry.mkdir(mode=0o700)
+        for name in ('pending', 'claimed', 'reconciled', 'locks'): (registry / name).mkdir(mode=0o700)
+        self.config = {'schema_version': 1, 'provider': 'claude', 'workspace_id': 'workspace-1',
+            'agent_id': 'agent-1', 'actor': 'agent-1', 'server_url': 'https://example.invalid',
+            'source': str(self.root), 'registry': str(registry), 'modules': {},
+            'multica': {'path': '/usr/bin/true', 'sha256': self.c.sha(Path('/usr/bin/true').read_bytes())},
+            'limits': {'cli_seconds':15, 'cli_bytes':1048576},
+            'checks': {'plan': {'path':str(self.checkspec), 'sha256':self.c.sha(self.checkspec.read_bytes())}},
+            '_reference': {'config_path':'/private/config.json', 'config_sha256':'a'*64, 'module_sha256':'b'*64}}
+        self.env = {'MULTICA_WORKSPACE_ID':'workspace-1','MULTICA_AGENT_ID':'agent-1',
+                    'MULTICA_SERVER_URL':'https://example.invalid','MULTICA_TASK_ID':'native-1'}
+
+    def request(self, invocation='invocation-1'):
+        prepared = self.private_root / invocation; prepared.mkdir(mode=0o700)
+        for name in ('claims','observations','store'): (prepared / name).mkdir(mode=0o700)
+        return {'invocation_id':invocation, 'native_task_id':None, 'issue_id':'issue-1',
+            'passport':self.plan, 'stage':'plan','run':invocation, 'allowed_transitions':['release','finish'],
+            'prepare_request':{'schema_version':1, 'destination':str(prepared / 'prepared'),
+            'snapshot':str(prepared / 'snapshot'), 'run_root':str(prepared / 'run'),
+            'dirty_paths':self.git('ls-files','--others','--exclude-standard').splitlines(), 'policy':str(self.policy), 'image':'sha256:'+'a'*64,
+            'store_manifest':{'schema_version':1,'store':str(prepared / 'store')},
+            'provider_input':{'output_dir':str(prepared / 'policy')},
+            'claim':str(prepared / 'claims/claim.json'), 'observation':str(prepared / 'observations/adapter.json')}}
+
+    def claim(self, invocation='invocation-1'):
+        self.c.admit(self.config, self.request(invocation))
+        return self.c.bind(self.config, self.env)
+
+    def row(self, status='running'):
+        return {'id':'native-1','issue_id':'issue-1','agent_id':'agent-1','workspace_id':'workspace-1',
+            'status':status, 'started_at':'2026-09-14T00:00:00Z',
+            'completed_at':None if status=='running' else '2026-09-14T00:01:00Z'}
+
+    def collect(self, claim):
+        manifest = self.c.read(claim['ticket']['adapter_ticket']['runtime_manifest'])
+        observation = {'invocation_id':claim['ticket']['invocation_id'], 'child_created':True,
+            'child_reaped':True,'raw_wait':0,'worker_quiescence':'proven','container_removed':True,
+            'provider_cleanup':'proven','validation':'verified','source_before':manifest['state'],
+            'source_after':manifest['state'],'policy_before':manifest['policy_sha256'],
+            'policy_after':manifest['policy_sha256'],'runtime_status':0}
+        return self.c.collect(claim, {'invocation_id':claim['ticket']['invocation_id'],
+            'native_task_id':'native-1','refusal':None,'runtime_status':0}, observation,
+            lambda argv:[{'id':'unrelated'},self.row()])
+
+    def command_runner(self, exit_code=0, executed=1):
+        def run(manifest, path, digest, *, invocation_id):
+            command = [shutil.which('node'), '--test', '--test-reporter=tap',str(self.policy / 'check.test.mjs')]
+            result = subprocess.run(command,capture_output=True,text=True,check=False)
+            self.assertEqual(result.returncode,0)
+            actual = re.search(r'^# tests (\d+)',result.stdout,re.MULTILINE)
+            self.assertEqual(int(actual[1]),1)
+            return {'complete':executed>0,'executed':executed,'exit_code':exit_code,'output':result.stdout,
+                'command':command,'started_at':datetime.now(timezone.utc).isoformat(),
+                'truncated':False,'timed_out':False,'worker_quiescence':'proven'}
+        return run
+
+    def test_real_gate_admit_claim_collect_command_record_and_terminal_release(self):
+        claim = self.claim(); process = self.collect(claim)
+        result = self.c.check(claim,'plan',self.command_runner())
+        self.assertFalse(result['response']['stopped'])
+        proof = self.c.read(self.root / result['stored_event']['path'])
+        self.assertEqual(proof['executed'],1); self.assertEqual(proof['native_outcome'],'unknown')
+        self.assertEqual(self.c.check(claim,'plan',lambda *_:self.fail('duplicate child')),result)
+        self.assertEqual(self.c.reconcile(self.config,'invocation-1',lambda _:[self.row()])['result'],'pending')
+        terminal = self.c.reconcile(self.config,'invocation-1',lambda _:[self.row('completed')])
+        self.assertEqual(terminal['native_outcome'],'success')
+        self.assertEqual(self.c.read(Path(claim['directory'])/'observations/process.json'),process)
+        decision = self.c.transition(claim,{'operation':'release','artifact':None,'event_id':None})
+        self.assertEqual(decision['response']['result'],'released')
+
+    def test_two_failures_survive_release_and_stop_before_next_child(self):
+        first=self.claim();self.collect(first)
+        self.assertEqual(self.c.check(first,'plan',self.command_runner(1))['response']['failures'],1)
+        self.c.reconcile(self.config,'invocation-1',lambda _:[self.row('failed')])
+        self.c.transition(first,{'operation':'release','artifact':None,'event_id':None})
+        second=self.claim('invocation-2');self.collect(second)
+        self.assertTrue(self.c.check(second,'plan',self.command_runner(1))['response']['stopped'])
+        # Even a different declared event may not start another child after the retained stop.
+        second['ticket']['checks'][0]['event_id']='forbidden-next-event'
+        with self.assertRaisesRegex(ValueError,'check_stopped'):
+            self.c.check(second,'plan',lambda *_:self.fail('child after stop'))
+
+    def test_native_substitution_and_duplicate_claim_are_refused(self):
+        self.c.admit(self.config,self.request())
+        with self.assertRaisesRegex(ValueError,'native_identity_mismatch'):
+            self.c.bind(self.config,{**self.env,'MULTICA_AGENT_ID':'other'})
+        claim=self.c.bind(self.config,self.env)
+        with self.assertRaisesRegex(ValueError,'pending_missing_or_ambiguous'):self.c.bind(self.config,self.env)
+        with self.assertRaisesRegex(ValueError,'native_row_mismatch'):
+            self.c.multica_rows(claim,True,lambda _:[{**self.row(),'agent_id':'other'}])
+        with self.assertRaisesRegex(ValueError,'native_row_missing_or_duplicate'):
+            self.c.multica_rows(claim,True,lambda _:[self.row(),self.row()])
+        with self.assertRaisesRegex(ValueError,'task_token_missing'):self.c.multica_rows(claim,True)
+
+    def test_model_prose_and_zero_count_cannot_be_recorded(self):
+        claim=self.claim()
+        with self.assertRaises(FileNotFoundError):self.c.check(claim,'plan',self.command_runner())
+        self.collect(claim)
+        with self.assertRaisesRegex(ValueError,'check_incomplete'):self.c.check(claim,'plan',self.command_runner(executed=0))
+        self.assertFalse(self.cli('status')['events'])
+
+    def test_lost_record_response_recovers_exact_event_without_second_execution(self):
+        claim=self.claim();self.collect(claim)
+        def lost(argv):
+            result=subprocess.run(argv,capture_output=True,text=True,check=True)
+            if 'record' in argv:raise TimeoutError('response lost after durable record')
+            return json.loads(result.stdout)
+        with self.assertRaises(TimeoutError):self.c.check(claim,'plan',self.command_runner(),lost)
+        result=self.c.check(claim,'plan',lambda *_:self.fail('second execution'))
+        self.assertEqual(result['response']['result'],'recorded')
+
+    def test_symlink_hardlink_oversize_and_source_drift_are_refused(self):
+        claim=self.claim();path=self.private_root/'ordinary.json';self.c.publish(path,{'ok':1})
+        link=self.private_root/'link.json';link.symlink_to(path)
+        with self.assertRaisesRegex(ValueError,'unsafe_file'):self.c.read(link)
+        link.unlink();os.link(path,link)
+        with self.assertRaisesRegex(ValueError,'unsafe_file'):self.c.read(path)
+        self.write('server/code.txt','drift')
+        with self.assertRaisesRegex(ValueError,'gate_input_changed'):self.c.current(claim)
+
+
+class CollectorPrelaunchRecovery(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    request = CollectorIntegrationTests.request
+    row = CollectorIntegrationTests.row
+
+    def test_provider_refusal_reconciles_exact_observation_and_releases_own_slot(self):
+        self.c.admit(self.config, self.request())
+        claim = self.c.bind(self.config, self.env)
+        ticket = claim['ticket']['adapter_ticket']
+        adapter = self.c.module(self.c.RUNTIME / 'native_adapter.py')
+        bound_ticket = {**ticket, 'native_task_id': 'native-1'}
+        adapter._claim(bound_ticket)
+        adapter._write_observation(bound_ticket, claim['ticket']['adapter_sha256'], 1,
+                                   refusal='provider_input_refused')
+        observation = Path(ticket['observation'])
+        original = observation.read_bytes()
+        for field, value in [('native_task_id', 'foreign'), ('ticket_sha256', '0'*64),
+                             ('runtime_status', 0), ('refusal', 'adapter_refused')]:
+            bad = json.loads(original); bad[field] = value
+            observation.write_text(json.dumps(bad))
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+        observation.write_bytes(original)
+        terminal = self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+        self.assertEqual(terminal['reason'], 'provider_input_refused')
+        self.assertEqual(terminal['process_outcome'], 'not_started')
+        self.assertEqual(terminal['task_acceptance'], 'not_checked')
+        self.assertFalse(self.cli('status')['slot'])
+        self.assertEqual(observation.read_bytes(), original)
+        self.c.admit(self.config, self.request('invocation-2'))
+
+    def interrupted_bind(self):
+        self.c.admit(self.config, self.request())
+        self.cli('release', '--actor', 'agent-1', '--run', 'invocation-1')
+        with self.assertRaisesRegex(ValueError, 'gate_slot_changed'):
+            self.c.bind(self.config, self.env)
+        return self.c.retained(self.config, 'invocation-1')
+
+    def test_failed_bind_reconciles_without_inventing_process_success(self):
+        claim = self.interrupted_bind()
+        before = (Path(claim['directory']) / 'ticket.json').read_bytes()
+        try:
+            terminal = self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+        except FileNotFoundError:
+            self.fail('prelaunch failure cannot be reconciled without a nonexistent process receipt')
+        self.assertEqual(terminal['native_outcome'], 'failed')
+        self.assertEqual(terminal['process_outcome'], 'not_started')
+        self.assertIsNone(terminal['process_sha256'])
+        self.assertEqual(terminal['task_acceptance'], 'not_checked')
+        self.assertEqual((Path(claim['directory']) / 'ticket.json').read_bytes(), before)
+        self.c.admit(self.config, self.request('invocation-2'))
+
+    def test_active_or_successful_native_run_cannot_retire_missing_process(self):
+        self.interrupted_bind()
+        try:
+            result = self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row()])
+        except FileNotFoundError:
+            self.fail('active prelaunch run must remain pending')
+        self.assertEqual(result['result'], 'pending')
+        with self.assertRaisesRegex(ValueError, 'prelaunch_terminal_not_failed'):
+            self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('completed')])
+
+    def test_launch_evidence_or_identity_mismatch_refuses_prelaunch_recovery(self):
+        claim = self.interrupted_bind()
+        wrong = {**self.row('failed'), 'agent_id':'another-agent'}
+        with self.assertRaisesRegex(ValueError, 'native_row_mismatch'):
+            self.c.reconcile(self.config, 'invocation-1', lambda _:[wrong])
+        paths = [Path(claim['directory']) / 'journal/01-bound.json',
+                 Path(claim['directory']) / 'observations/runtime.json',
+                 Path(claim['ticket']['adapter_ticket']['claim']),
+                 Path(claim['ticket']['adapter_ticket']['observation'])]
+        for path in paths:
+            with self.subTest(path=path):
+                self.c.publish(path, {})
+                with self.assertRaisesRegex(ValueError, 'process_receipt_missing_after_admission'):
+                    self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+                path.unlink()
+
+
+class CollectorFinishRegression(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    start = CollectorIntegrationTests.start
+    record = CollectorIntegrationTests.record
+    request = CollectorIntegrationTests.request
+    collect = CollectorIntegrationTests.collect
+    row = CollectorIntegrationTests.row
+    command_runner = CollectorIntegrationTests.command_runner
+    snapshot = fixtures.LifecycleTests.snapshot
+    def test_own_archive_commit_bind_and_finish_use_gate_equivalence(self):
+        request = self.request()
+        request['allowed_transitions'].append('bind-artifacts')
+        self.c.admit(self.config, request)
+        claim = self.c.bind(self.config, self.env)
+        self.collect(claim)
+        self.c.check(claim, 'plan', self.command_runner())
+        self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('completed')])
+        fixtures.LifecycleTests.report_pair(self)
+        self.git('add', 'docs/reports')
+        self.git('commit', '-qm', 'own immutable report and check evidence')
+        with self.assertRaisesRegex(ValueError, 'gate_input_changed'):
+            self.c.current(claim)
+        bound = self.c.transition(claim, {'operation':'bind-artifacts', 'artifact':self.plan, 'event_id':'bind-own-artifacts'})
+        self.assertEqual(bound['after']['tasks']['T-fixture']['relations'][-1]['kind'], 'artifacts')
+        finished = self.c.transition(claim, {'operation':'finish', 'artifact':self.report, 'event_id':None})
+        self.assertIsNone(finished['after']['slot'])
+        self.assertIn('plan', finished['after']['tasks']['T-fixture']['current_stages'])
+
+
+    def test_standalone_collect_cli_refuses_model_writable_observation_paths(self):
+        import sys
+        writable = self.private_root / 'run-evidence'; writable.mkdir(mode=0o700)
+        forged = writable / 'runtime.json'; self.c.publish(forged, {'worker_quiescence':'proven'})
+        proc = subprocess.run([sys.executable, str(Path(__file__).with_name('native_collector.py')),
+            '--config', str(self.private_root / 'unused-config.json'), '--sha256', 'a'*64,
+            'collect', '--invocation', 'invocation-1', '--adapter-observation', str(forged),
+            '--runtime-observation', str(forged)], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn('invalid choice', proc.stderr)
+        self.assertEqual(self.cli('status')['events'], {})
+
+
+class CollectorLegacyVerificationRegression(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    start = CollectorIntegrationTests.start
+    record = CollectorIntegrationTests.record
+    request = CollectorIntegrationTests.request
+    collect = CollectorIntegrationTests.collect
+    row = CollectorIntegrationTests.row
+    command_runner = CollectorIntegrationTests.command_runner
+    snapshot = fixtures.LifecycleTests.snapshot
+
+    def test_two_legacy_verification_stages_admit_collect_record_and_finish(self):
+        self.passport['stages'] = [{'name':stage, 'checks':[{'check_id':'plan','criterion':'AC-1'}]}
+                                   for stage in ('test','review')]
+        self.write(self.plan,self.passport)
+        self.git('add','docs/plans');self.git('commit','-qm','legacy verification passport')
+        original_passport = (self.root / self.plan).read_bytes()
+        for stage in ('test','review'):
+            invocation = 'legacy-' + stage
+            request = self.request(invocation);request['stage']=stage
+            self.c.admit(self.config,request)
+            claim=self.c.bind(self.config,self.env)
+            slot=self.cli('status')['slot']
+            self.assertNotIn('input',slot);self.assertNotIn('iteration',slot)
+            self.assertEqual(claim['ticket']['gate_input'],self.snapshot())
+            self.collect(claim)
+            recorded=self.c.check(claim,'plan',self.command_runner())
+            self.assertEqual(recorded['stored_event']['result'],'passed')
+            self.c.reconcile(self.config,invocation,lambda _:[self.row('completed')])
+            fixtures.LifecycleTests.report_pair(self)
+            finished=self.c.transition(claim,{'operation':'finish','artifact':self.report,'event_id':None})
+            self.assertIsNone(finished['after']['slot'])
+            self.assertIn(stage,finished['after']['tasks']['T-fixture']['completed_stages'])
+            self.assertEqual((self.root/self.plan).read_bytes(),original_passport)
+        self.assertIsNone(self.cli('status')['parent'])
+
+
+class CollectorPermanentAdapterChain(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    start = CollectorIntegrationTests.start
+    record = CollectorIntegrationTests.record
+    request = CollectorIntegrationTests.request
+    row = CollectorIntegrationTests.row
+    command_runner = CollectorIntegrationTests.command_runner
+
+    def test_admitted_ticket_reaches_permanent_adapter_both_claims_and_gate_record(self):
+        import importlib.machinery
+        runtime_dir=Path(__file__).resolve().parent.parent/'agent-runtime'
+        adapter=self.c.module(runtime_dir/'native_adapter.py')
+        config={k:v for k,v in self.config.items() if k!='_reference'}
+        config['provider']='codex'
+        sources={'collector':Path(self.c.__file__), 'gate':Path(__file__).with_name('gate.py'),
+                 'runtime':runtime_dir/'runtime.py','adapter':runtime_dir/'native_adapter.py','prepare':runtime_dir/'prepare_native.py'}
+        config['modules']={k:self.c.sha(v.read_bytes()) for k,v in sources.items()}
+        cli=self.private_root/'multica-boundary';cli.write_text('#!/bin/sh\nexit 0\n');cli.chmod(0o700)
+        config['multica']={'path':str(cli),'sha256':self.c.sha(cli.read_bytes())}
+        config_path=self.private_root/'collector-config.json';config_sha=self.c.publish(config_path,config)
+        config=self.c.deployment(str(config_path),config_sha)
+        request=self.request('adapter-chain')
+        registry=self.private_root/'adapter-registry';registry.mkdir(mode=0o700)
+        request['prepare_request']['destination']=str(registry/'adapter-chain')
+        auth=self.private_root/'synthetic-auth.json';auth.write_text('{}');auth.chmod(0o600)
+        request['prepare_request']['provider_input'].update(probe='/synthetic/provider-probe',auth_file=str(auth))
+        admitted=self.c.admit(config,request)
+        pending=self.c.read(admitted['adapter_path'])
+        self.assertEqual(pending['gate_input']['dirty_fingerprint'],'clean')
+        hashes=lambda name:self.c.sha((runtime_dir/name).read_bytes())
+        stable={'schema_version':1,'provider':'codex','actor':'agent-1','agent_id':'agent-1',
+                'workspace_id':'workspace-1','registry':str(registry),
+                'claims':str(Path(pending['claim']).parent),'observations':str(Path(pending['observation']).parent),
+                'authority':{'native_adapter_sha256':hashes('native_adapter.py'),
+                    'provider_adapter_sha256':hashes('native_codex_adapter.py'),'prepare_native_sha256':hashes('prepare_native.py'),
+                    'runtime_sha256':hashes('runtime.py'),'credential_refresh_sha256':hashes('credential_refresh.py'),
+                    'codex_mapper_sha256':hashes('codex_toml_map.py'),'source':str(self.root)}}
+        stable_path=self.private_root/'adapter-config.json';stable_sha=self.c.publish(stable_path,stable)
+        original_exec=importlib.machinery.SourceFileLoader.exec_module
+        launched=[];command_runner=self.command_runner()
+        def boundary_loader(loader,loaded):
+            original_exec(loader,loaded)
+            path=Path(getattr(loaded,'__file__','')).name
+            if path=='native_adapter.py':
+                loaded.verify_provider=lambda ticket,argv:{'managed_mapping_verified':True}
+            elif path=='runtime.py':
+                def launch(manifest,incoming,outcome_sink,*,invocation_id):
+                    launched.append(list(incoming))
+                    outcome_sink({'invocation_id':invocation_id,'child_created':True,'child_reaped':True,
+                        'raw_wait':0,'worker_quiescence':'proven','container_removed':True,'provider_cleanup':'proven',
+                        'validation':'verified','source_before':manifest['state'],'source_after':manifest['state'],
+                        'policy_before':manifest['policy_sha256'],'policy_after':manifest['policy_sha256'],'runtime_status':0})
+                    return 0
+                loaded.launch=launch;loaded.check=command_runner
+            elif path=='native_collector.py':
+                original_bounded=loaded.bounded_process
+                def boundary(argv,environment,*args,**kwargs):
+                    if argv[0]==str(cli):
+                        self.assertEqual(set(environment),{'PATH','HOME','MULTICA_TOKEN'})
+                        return 0,json.dumps([self.row()]).encode(),b''
+                    return original_bounded(argv,environment,*args,**kwargs)
+                loaded.bounded_process=boundary
+        previous=os.getcwd()
+        try:
+            os.chdir(self.root)
+            with patch.object(importlib.machinery.SourceFileLoader,'exec_module',new=boundary_loader):
+                status=adapter.run_registered('codex',stable_path,stable_sha,['app-server','--listen','stdio://'],
+                    environment={**self.env,'MULTICA_TOKEN':'synthetic-opaque-token'})
+        finally:os.chdir(previous)
+        self.assertEqual(status,0)
+        self.assertEqual(launched,[['app-server','--listen','stdio://']])
+        self.assertTrue(Path(pending['claim']).exists())
+        self.assertTrue((Path(config['registry'])/'claimed/adapter-chain/binding.json').exists())
+        self.assertEqual(self.cli('status')['events']['adapter-chain-plan']['result'],'passed')

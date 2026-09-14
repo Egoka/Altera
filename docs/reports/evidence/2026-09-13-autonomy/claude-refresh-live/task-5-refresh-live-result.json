@@ -1,0 +1,71 @@
+{
+  "check_id": "claude-refresh-live-v1",
+  "attempt_id": "394771f72e5a4101bfcbe8795222cae5",
+  "commit": "6e197f8f42660da0fe7fd7c21c545f02ed156651",
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "policy_sha256": "9c0a1086d0c999f229c3f2e3544316dd8708825f40c96c35c99d8d0fea9c1280",
+  "started_at_utc": "2026-09-14T01:04:30.073176+00:00",
+  "ended_at_utc": "2026-09-14T01:04:39.887621+00:00",
+  "elapsed_seconds": 9.814,
+  "exit": 0,
+  "stderr_bytes": 0,
+  "result": {
+    "generation_changed": true,
+    "model_result": {
+      "billingVerified": false,
+      "modelUsage": {
+        "claude-haiku-4-5-20251001": {
+          "cacheCreationInputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "canonicalModel": "claude-haiku-4-5",
+          "contextWindow": 200000,
+          "costBasis": "list",
+          "costUSD": 0.0009989999999999999,
+          "inputTokens": 904,
+          "maxOutputTokens": 32000,
+          "outputTokens": 19,
+          "provider": "firstParty",
+          "thinkingTokens": 0,
+          "webSearchRequests": 0
+        },
+        "claude-opus-4-6": {
+          "cacheCreationInputTokens": 6354,
+          "cacheReadInputTokens": 0,
+          "canonicalModel": "claude-opus-4-6",
+          "contextWindow": 200000,
+          "costBasis": "list",
+          "costUSD": 0.06387999999999999,
+          "inputTokens": 3,
+          "maxOutputTokens": 64000,
+          "outputTokens": 13,
+          "provider": "firstParty",
+          "thinkingTokens": 0,
+          "webSearchRequests": 0
+        }
+      },
+      "status": "model_accepted",
+      "totalCostUsd": 0.06487899999999999,
+      "usage": {
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 6354,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "cache_creation_input_tokens": 6354,
+        "cache_read_input_tokens": 0,
+        "input_tokens": 3,
+        "output_tokens": 13,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_fetch_requests": 0,
+          "web_search_requests": 0
+        }
+      }
+    },
+    "status": "published"
+  },
+  "credential_values_or_hashes_recorded": false,
+  "blind_retry_performed": false,
+  "explicit_user_confirmation": true
+}

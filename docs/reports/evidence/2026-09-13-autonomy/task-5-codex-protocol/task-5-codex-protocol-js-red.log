@@ -1,0 +1,22 @@
+✖ native Codex start resume and turn default tier is accepted without rewriting bytes (1.786375ms)
+✔ native default tier allowance is confined to direct params of three Codex methods (0.616167ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 39.356209
+
+✖ failing tests:
+
+test at scripts/agent-runtime/test_protocol_guard.mjs:91:1
+✖ native Codex start resume and turn default tier is accepted without rewriting bytes (1.786375ms)
+  Error: preserved_model_settings_changed
+      at visit (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/protocol-guard.mjs:26:15)
+      at visit (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/protocol-guard.mjs:45:7)
+      at validate (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/protocol-guard.mjs:48:3)
+      at TestContext.<anonymous> (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_protocol_guard.mjs:101:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)

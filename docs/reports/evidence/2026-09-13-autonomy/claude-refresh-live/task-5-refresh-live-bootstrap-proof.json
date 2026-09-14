@@ -1,0 +1,14 @@
+{
+  "operation": "opaque_bootstrap",
+  "check_id": "claude-refresh-live-v1",
+  "attempt_id": "394771f72e5a4101bfcbe8795222cae5",
+  "at_utc": "2026-09-14T00:55:11.929878+00:00",
+  "exit": 0,
+  "result": {
+    "original_retained": true,
+    "status": "bootstrapped"
+  },
+  "stderr_bytes": 0,
+  "credential_contents_inspected_or_hashed": false,
+  "exchange_started": false
+}

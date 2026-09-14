@@ -1,0 +1,17 @@
+test_failed_worker_removal_blocks_recovery_until_exact_absence_is_proven (__main__.RefreshTests) ... FAIL
+
+======================================================================
+FAIL: test_failed_worker_removal_blocks_recovery_until_exact_absence_is_proven (__main__.RefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_credential_refresh.py", line 343, in test_failed_worker_removal_blocks_recovery_until_exact_absence_is_proven
+    self.assertEqual(store.refresh()['status'], 'worker_cleanup_unconfirmed')
+AssertionError: 'candidate_recovery_required' != 'worker_cleanup_unconfirmed'
+- candidate_recovery_required
++ worker_cleanup_unconfirmed
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.012s
+
+FAILED (failures=1)

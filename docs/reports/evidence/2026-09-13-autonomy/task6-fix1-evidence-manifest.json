@@ -1,0 +1,18 @@
+{
+  "task-6-fix1-report.md": "3afdb6816af67c3658f18567f7b776a6686cf73bc8b7d54a2da17d6e3253bff4",
+  "task6-fix1-commit.txt": "8f46da0aed400e64259cccbd8dda5624860769527c5e622df6eb4ba3b0bd9b89",
+  "task6-fix1-full-exit.json": "cafb686c7a2ec4df6fc4209f689d7cdbccfb74983f1b7c495c84e6d6d7df3952",
+  "task6-fix1-full-green.txt": "7aec31ab4a8788abd8e43d1cbc415a38fdbdc5e1198f2427b25c2fa4e611d64b",
+  "task6-fix1-full-precheck.json": "a23c20858aff2cf024cd8fa9d52133cf83707f2bb73e16083027fa793591917a",
+  "task6-fix1-full-precheck.patch": "9d0c487bb19e637d7302f3f9c340fd357c85837a34b7fc1790f5a1c04df08be2",
+  "task6-fix1-green-exit.json": "9e4896fbaafbad1e966e948ff4523c4ca2925371b235b9ea3c7104273d883e7d",
+  "task6-fix1-green-precheck.json": "b2afb75329173954ca560e641426a13672686b68f608c34ad34f48f5073f35b4",
+  "task6-fix1-green.txt": "07f1be70701f5dc08399e6a76f7d46420e2d29a6b6faf789c697db146d737051",
+  "task6-fix1-postcommit.json": "d20c5c6fd1b7460fabf5e819d6411bd6bb81eac837e9b22f09bcdc70e0cddbee",
+  "task6-fix1-precommit.json": "8f9eafec74eb85feccc30e71d2768d02a6b85198898d7f0e4dc0c60d8231f250",
+  "task6-fix1-red-exit.json": "75a3fc36c2293d7e9639fe5250b86fa2420ee2a5396b69c7424e534283b66218",
+  "task6-fix1-red-precheck.json": "7222d2bc48efa8f80b1f34cec784ac319c5ff445fda460c84b0112eb598a6c9d",
+  "task6-fix1-red.txt": "564047e9bb5016f0443882595ef9b41e8f9352ca05a235ed47519c0c9b8e7a01",
+  "task6-fix1-staged.json": "640e4d4582d0b48c37a7c1646578de33f4cda6ce9ca65f8dee52385a579e5fa8",
+  "task6-fix1-staged.patch": "9d0c487bb19e637d7302f3f9c340fd357c85837a34b7fc1790f5a1c04df08be2"
+}

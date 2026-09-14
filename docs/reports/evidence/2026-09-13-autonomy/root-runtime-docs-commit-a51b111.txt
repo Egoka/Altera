@@ -1,0 +1,294 @@
+[docs/agent-loop-autonomy a51b111] docs(agent-loop): preserve runtime verification and current blockers
+ 262 files changed, 8249 insertions(+), 1 deletion(-)
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-persistent-auth/auth-status-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-persistent-auth/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/claude-persistent-auth/model-auth-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/build_metadata_probe.py.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/metadata-probe.c.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/native-d0-cleanup-proof.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/provenance.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-build-test-review.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-build.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-controller-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-imports.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/task-5-d0-source-review.diff
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/d0-review/test_metadata_probe.py.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/native-mcp-roster.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/owner-native-discovery-readback.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/remote-heads-runtime-preflight.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/root-docs-commit-9e1f8be.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/root-docs-precommit-9e1f8be.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-3-recovery-cause-analysis.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-commit.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-precommit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-protocol-final.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-protocol-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-protocol-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-python-final.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-python-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-python-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-result.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1-schema-audit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-fix1/task-5-fix1.diff.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/archive-manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-auth-mapping-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-auth-mapping-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/policy/provider-proxy.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/run/evidence/trace-help.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/run/network-inspect.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/run/proxy-inspect.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/stderr-2.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/stdout-2.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-cli-preflight-1/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/policy/codex-config.toml
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/policy/provider-proxy.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/evidence/codex-protocol.jsonl
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/evidence/codex-result.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/evidence/codex-stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/evidence/model-canary.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/evidence/trace-index.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/network-inspect.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/proxy-inspect.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/tmp/trace-mcp-alive-25c92efc33a3
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/tmp/trace-mcp-consulted-25c92efc33a3/a869c158efe04c1de5576abca74b8ce848d2656373fe783a661be13ac33a2df2
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/tmp/trace-mcp-explored-25c92efc33a3/29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/run/tmp/trace-mcp-status-25c92efc33a3.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-codex-1/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-commit-result.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-commit.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-d0-build.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-d0-final-build.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-d0-final.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-d0-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-d0-imports.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-d0-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/protocol/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/command.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/run/evidence/new-evidence.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/readonly-boundary/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/results.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/signal/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/command.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/policy/created
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/policy/renamed
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/run/evidence/new-evidence.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-1/writable-control/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/protocol-guard.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/codex-cwd-guard/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/protocol/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/command.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/run/evidence/new-evidence.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/readonly-boundary/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/results.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/signal/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/command.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/policy/created
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/policy/renamed
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/run/evidence/new-evidence.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final-2/writable-control/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/protocol-guard.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/codex-cwd-guard/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/protocol/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/command.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/run/evidence/new-evidence.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/readonly-boundary/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/results.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/policy/delete-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/policy/rename-canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/signal/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/command.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/policy/alias
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/policy/canary
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/policy/created
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/policy/renamed
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/run/evidence/new-evidence.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-docker-final/writable-control/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/exit.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/policy/provider-proxy.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/run/network-inspect.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/run/proxy-inspect.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-egress-1/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-final-postcheck-2.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-final-postcheck.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-final-precheck-2.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-final-precheck.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-guard-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-guard-model-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-guard-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-image-build.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-login-command-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-login-command-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-model-defaults-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-proxy-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-proxy-guard-final-2.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-proxy-guard-final.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-proxy-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-runtime-final-2.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-runtime-final-3.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-runtime-final.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-runtime-green.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-runtime-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/manifest.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/policy/claude-settings.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/policy/fixture.mjs.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/run/evidence/trace-index.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/run/evidence/trace-results.json
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/run/evidence/trace-stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/run/tmp/trace-mcp-consulted-25c92efc33a3/a869c158efe04c1de5576abca74b8ce848d2656373fe783a661be13ac33a2df2
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/run/tmp/trace-mcp-explored-25c92efc33a3/29c0ab8448db107f67c62cd8a830ea58a4854296d2aed599e7801f7d6e5006da
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/stderr.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-trace-1/stdout.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/task-5-untracked-red.log.txt
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-5-independent-review.md
+ create mode 100644 docs/reports/evidence/2026-09-13-autonomy/task-6-fix1-review.md
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  23:59:35
+web test:    Duration  99ms (transform 64%, import 21%, tests 8%, worker 7%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  23:59:35
+server test:    Duration  275ms (import 78%, transform 19%, worker 2%, tests 1%)
+server test: Done

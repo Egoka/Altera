@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "source_sha256": "fc08cd669760e584511e9bf44629d6eee082ffb6128f7a1aeeb59e1b3cb5e0c7",
+  "build_sha256": "94532ad86749a5ab684511ea556030201467e699e817564c30d285b5ffbfc4a8",
+  "argc": 3,
+  "read_status": "ok",
+  "path_class": "daemon_private_temp",
+  "mapping_candidate": "exact",
+  "task_acceptance": "not_checked",
+  "unknown_servers": 0,
+  "unknown_fields": 0,
+  "unreviewed_fields": false,
+  "servers": [
+    {
+      "name": "context7",
+      "transport": "http",
+      "endpoint": "context7_public_mcp",
+      "command": "unknown",
+      "args": "unknown",
+      "endpoint_match": true,
+      "command_match": false,
+      "args_match": false,
+      "headers_present": false,
+      "env_present": false,
+      "known_secret_fields": 0,
+      "unknown_secret_fields": 0,
+      "secret_types_match": true,
+      "unknown_fields": 0,
+      "unknown_env_fields": 0,
+      "env_types_match": true,
+      "headers_unreviewed_fields": false,
+      "env_unreviewed_fields": false,
+      "unreviewed_fields": false
+    }
+  ],
+  "known_flags": [
+    "--mcp-config"
+  ]
+}

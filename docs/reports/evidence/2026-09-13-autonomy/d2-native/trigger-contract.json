@@ -1,0 +1,18 @@
+{
+  "at_utc": "2026-09-13T23:30:58.160373+00:00",
+  "state": "prepared_waiting_independent_review",
+  "check_id": "task5-d2-native-metadata",
+  "maximum_explicit_triggers": 1,
+  "expected_exit": 78,
+  "binary": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/d2-review/codex-path-probe",
+  "binary_sha256": "0e3f16bb910154660d5bc8c22b4e3de16f0a20504d8b79487a70c589f28eb5e3",
+  "source_sha256": "30f0d4363e4ddafca0d2cb8a49e4807d7ee56da8374a9025add70cf1147dc2d8",
+  "build_sha256": "4316863681f5378a5846cdb48ff49ccb49daeff353f5cdbeeab0740f0e4e8bbc",
+  "task_acceptance": "not_checked",
+  "model": "not_invoked",
+  "config_auth": "not_read",
+  "original_agent_runtime": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+  "original_issue_assignment": null,
+  "original_issue_status": "backlog",
+  "cleanup": "drain then restore agent and issue; disable/unbind then delete own profile"
+}

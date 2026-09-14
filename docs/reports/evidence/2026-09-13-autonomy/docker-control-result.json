@@ -1,0 +1,26 @@
+[
+  {
+    "check": "overwrite",
+    "outcome": "unexpected-write"
+  },
+  {
+    "check": "create",
+    "outcome": "unexpected-write"
+  },
+  {
+    "check": "delete",
+    "outcome": "unexpected-write"
+  },
+  {
+    "check": "rename",
+    "outcome": "unexpected-write"
+  },
+  {
+    "check": "git-write",
+    "outcome": "unexpected-write"
+  },
+  {
+    "check": "symlink",
+    "outcome": "unexpected-write"
+  }
+]

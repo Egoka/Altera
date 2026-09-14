@@ -1,0 +1,21 @@
+{
+  "base": "563844e6461b76c97065842efb1cb0f5b9b5099f",
+  "owned": {
+    "scripts/agent-runtime/codex-path-probe.c": "30f0d4363e4ddafca0d2cb8a49e4807d7ee56da8374a9025add70cf1147dc2d8",
+    "scripts/agent-runtime/build_codex_path_probe.py": "b2bca26c453dd052f73c36cd58f70fecb471d98bb629ecee6bdf120e96b43e1f",
+    "scripts/agent-runtime/test_codex_path_probe.py": "6f609b13739d32305426528ae8b946dc19737df34adc64a24755a65a6bad43fe",
+    "docs/development/runtime-isolation.md": "2d159471862e3527c95d086fb6d451e3bde3ddb49d18be78f1853791d286a68f"
+  },
+  "scoped_diff_sha256": "da82d75d31ea6a87df8963692f39221c7bbb8b196e2dd00db996dd290da0b9c0",
+  "binary_sha256": "0e3f16bb910154660d5bc8c22b4e3de16f0a20504d8b79487a70c589f28eb5e3",
+  "build_sha256": "4316863681f5378a5846cdb48ff49ccb49daeff353f5cdbeeab0740f0e4e8bbc",
+  "maximum_tested_stderr_bytes": 1375,
+  "root_report_diff_sha256": "2be0418791b7d8f94820c33e2bf1571e28ead4345be6e71a9bb488073939f95c",
+  "counters": {
+    "covering_failures_total": 2,
+    "covering_consecutive_failures": 0,
+    "authorized_recoveries_consumed": 1,
+    "historical_d1_counters_unchanged": true
+  },
+  "native_run": false
+}

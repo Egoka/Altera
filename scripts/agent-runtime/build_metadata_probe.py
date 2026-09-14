@@ -1,0 +1,16 @@
+"""Только trusted build: executable не читает файлы для вычисления своего hash."""
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+source = Path(__file__).with_name('metadata-probe.c').resolve()
+target = Path(sys.argv[1]).resolve()
+compiler = '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang'
+digest = hashlib.sha256(source.read_bytes()).hexdigest()
+subprocess.run([compiler, '-std=c11', '-Os', '-Wall', '-Wextra', '-Werror',
+    '-DPROBE_SOURCE_SHA256="' + digest + '"', str(source), '-o', str(target)], check=True)
+target.chmod(0o555)
+print(json.dumps({'source': str(source), 'source_sha256': digest, 'binary': str(target),
+    'binary_sha256': hashlib.sha256(target.read_bytes()).hexdigest(), 'compiler': compiler}, indent=2))

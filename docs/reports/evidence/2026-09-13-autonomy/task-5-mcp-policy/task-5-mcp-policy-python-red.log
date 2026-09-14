@@ -1,0 +1,43 @@
+test_verified_reviewer_mcp_policy_preserves_both_trace_argv_forms_and_context7 (__main__.RuntimeTests) ... ERROR
+test_mcp_policy_rejects_unknown_servers_transports_and_fields (__main__.RuntimeTests) ... test_mcp_policy_rejects_duplicate_or_malformed_json_without_echoing_values (__main__.RuntimeTests) ... FAIL
+
+======================================================================
+ERROR: test_verified_reviewer_mcp_policy_preserves_both_trace_argv_forms_and_context7 (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 176, in test_verified_reviewer_mcp_policy_preserves_both_trace_argv_forms_and_context7
+    args = self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 255, in command
+    final = effective_args(manifest, incoming)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 205, in effective_args
+    raise ValueError('unverified_mcp_server')
+ValueError: unverified_mcp_server
+
+======================================================================
+FAIL: test_mcp_policy_rejects_unknown_servers_transports_and_fields (__main__.RuntimeTests) (servers=['other'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 202, in test_mcp_policy_rejects_unknown_servers_transports_and_fields
+    self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_mcp_policy_rejects_unknown_servers_transports_and_fields (__main__.RuntimeTests) (servers=['context7'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 202, in test_mcp_policy_rejects_unknown_servers_transports_and_fields
+    self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_mcp_policy_rejects_duplicate_or_malformed_json_without_echoing_values (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 211, in test_mcp_policy_rejects_duplicate_or_malformed_json_without_echoing_values
+    self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 3 tests in 2.153s
+
+FAILED (failures=3, errors=1)

@@ -1,0 +1,33 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  03:47:31
+web test:    Duration  100ms (transform 62%, import 19%, tests 11%, worker 7%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  03:47:31
+server test:    Duration  278ms (import 78%, transform 19%, worker 1%, tests 1%)
+server test: Done
+[docs/agent-loop-autonomy 6e197f8] fix(runtime): require refresh worker quiescence and safe policy reads
+ 6 files changed, 345 insertions(+), 30 deletions(-)

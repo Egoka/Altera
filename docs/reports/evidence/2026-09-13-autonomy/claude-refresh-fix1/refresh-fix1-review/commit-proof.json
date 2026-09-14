@@ -1,0 +1,17 @@
+{
+  "base": "40a43e874799e4be4701d4ef4441bd81809466b7",
+  "commit": "6e197f8f42660da0fe7fd7c21c545f02ed156651",
+  "changed_paths": [
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/credential_refresh.py",
+    "scripts/agent-runtime/runtime.py",
+    "scripts/agent-runtime/test_credential_refresh.py",
+    "scripts/agent-runtime/test_refresh_docker.py",
+    "scripts/agent-runtime/test_runtime.py"
+  ],
+  "frozen_sources_match_commit": true,
+  "index_empty": true,
+  "diff_sha256": "8fce0dfbe7e834fc90aa2ebe756758d03790440ef7a1b8433b9e13f600b2a10a",
+  "normal_hooks": "passed",
+  "raw_hook_log": "task-5-refresh-fix1-commit.log"
+}

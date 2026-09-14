@@ -1,0 +1,59 @@
+{
+  "at_utc": "2026-09-14T00:39:59.554035+00:00",
+  "operation": "lstat_only",
+  "source_contents_read_or_hashed": false,
+  "credential_store_exists": false,
+  "entries": [
+    {
+      "reference": "auth-root",
+      "owner_matches": true,
+      "mode": "0o700",
+      "symlink": false,
+      "directory": true,
+      "regular": false,
+      "single_link": null,
+      "size_bounded": null
+    },
+    {
+      "reference": "login-run",
+      "owner_matches": true,
+      "mode": "0o700",
+      "symlink": false,
+      "directory": true,
+      "regular": false,
+      "single_link": null,
+      "size_bounded": null
+    },
+    {
+      "reference": "login-run/cache",
+      "owner_matches": true,
+      "mode": "0o777",
+      "symlink": false,
+      "directory": true,
+      "regular": false,
+      "single_link": null,
+      "size_bounded": null
+    },
+    {
+      "reference": "login-run/cache/claude",
+      "owner_matches": true,
+      "mode": "0o700",
+      "symlink": false,
+      "directory": true,
+      "regular": false,
+      "single_link": null,
+      "size_bounded": null
+    },
+    {
+      "reference": "login-run/cache/claude/.credentials.json",
+      "owner_matches": true,
+      "mode": "0o600",
+      "symlink": false,
+      "directory": false,
+      "regular": true,
+      "single_link": true,
+      "size_bounded": true
+    }
+  ],
+  "live_operation_started": false
+}

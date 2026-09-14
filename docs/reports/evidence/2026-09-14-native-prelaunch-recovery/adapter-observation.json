@@ -1,0 +1,41 @@
+{
+  "actor": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+  "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+  "check_ids": ["runtime-isolation"],
+  "container_id": null,
+  "criteria": ["AC-1"],
+  "ended_at_ns": 1789390597143086000,
+  "event_ids": {
+    "claimed": "7a71652c7ded4fcb91d038f3399c57b6:claimed",
+    "observed": "7a71652c7ded4fcb91d038f3399c57b6:observed"
+  },
+  "evidence_inventory": [],
+  "evidence_trust": "untrusted_output_inventory",
+  "gate": {
+    "lease": {
+      "automatic_expiry": false,
+      "owner": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+      "run": "codex-7a71652c7ded4fcb91d038f3399c57b6"
+    },
+    "run": "codex-7a71652c7ded4fcb91d038f3399c57b6",
+    "stage": "test",
+    "task": "T-native-runtime-20260914"
+  },
+  "gate_input": { "dirty_fingerprint": "clean", "revision_commit": "abb0c4e8367b2a86037aaa003057d63faace90dc" },
+  "invocation_id": "7a71652c7ded4fcb91d038f3399c57b6",
+  "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+  "native_run_id": "codex-7a71652c7ded4fcb91d038f3399c57b6",
+  "native_task_id": "01a09ffd-a1e0-7ef6-a66b-7c4d499692da",
+  "passport_path": "/Users/egorbondarenko/WebstormProjects/Altera/docs/plans/2026-09-14-native-runtime-pilot.gate.json",
+  "passport_sha256": "94c7bc5a0813badfad510c1c05232538b399452215dec80e13d8a6867dd3b1ca",
+  "provider": "codex",
+  "raw_child_exit": null,
+  "refusal": "provider_input_refused",
+  "runtime_status": null,
+  "schema_version": 1,
+  "signal": null,
+  "started_at_ns": 1789390596852038000,
+  "ticket_sha256": "668cf8360f73400c998a76b2c9190bda3e0fe8b46430678636358a12756170de",
+  "worker_quiescence": "unknown",
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+}

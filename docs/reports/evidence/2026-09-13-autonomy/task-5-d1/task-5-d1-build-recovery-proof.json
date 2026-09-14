@@ -1,0 +1,14 @@
+{
+  "check_id": "task-5-d1-build",
+  "prior_consecutive_failures": 2,
+  "cause": "sanitized compiler environment omitted TMPDIR; clang selected a non-writable default",
+  "correction": "compiler TMPDIR points to its dedicated existing /private/tmp build directory",
+  "builder_sha256": "d6747b24fc6cf5e8213ab5ed09339fceb08820f79e81d6500e4089ac976b1c14",
+  "dedicated_temp_write_verified": true,
+  "bytes": 40,
+  "uid": 501,
+  "root_mode": "0o700",
+  "native_or_model_started": false,
+  "recovery_consumable_once": true,
+  "does_not_prove_build_success": true
+}

@@ -1,0 +1,17 @@
+test_lexical_guard_and_marker_state_fail_closed (__main__.CodexTomlMappingTests) ... 
+======================================================================
+FAIL: test_lexical_guard_and_marker_state_fail_closed (__main__.CodexTomlMappingTests) (data=b'r\xe2\x80\xa8')
+----------------------------------------------------------------------
+codex_toml_map.MappingError: managed_block_invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 183, in test_lexical_guard_and_marker_state_fail_closed
+    mapper.build_mapping(data, "codex-mcp-map-v1")
+AssertionError: "^config_encoding_invalid$" does not match "managed_block_invalid"
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)

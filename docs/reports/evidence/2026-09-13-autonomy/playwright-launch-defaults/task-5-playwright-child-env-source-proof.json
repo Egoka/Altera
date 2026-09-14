@@ -1,0 +1,51 @@
+{
+  "base": "123d1e6f9c6c5199c8a4fe6bf16b451bfe11a084",
+  "scope": "immutable environment construction only; no execution or actual host environment read",
+  "trace_first": "get_outline for exact runtime and guard paths returned SECURITY_VIOLATION; parent authorized immutable fallback",
+  "files": {
+    "scripts/agent-runtime/runtime.py": {
+      "sha256": "053369e7724fe894fe0c882b2467ebd19d8634a3e7604ba06d4d9ffd9c5aed86",
+      "spans": [
+        {
+          "symbol": "child_env",
+          "first_line": 23,
+          "last_line": 26,
+          "text": "\ndef child_env():\n    # Docker \u043d\u0435 \u043d\u0443\u0436\u043d\u044b model/API/Multica credentials \u0438 \u0443\u043d\u0430\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u043d\u043d\u044b\u0435 plugin paths.\n    return {'PATH': '/usr/local/bin:/usr/bin:/bin', 'HOME': '/var/empty',\n"
+        },
+        {
+          "symbol": "command",
+          "first_line": 437,
+          "last_line": 461,
+          "text": "    if manifest['family'] == 'codex' and (policy / 'codex-config.toml').is_file():\n        placeholder = run / 'cache/codex/config.toml'\n        if placeholder.is_symlink():\n            raise ValueError('unsafe_config_mountpoint')\n        if not placeholder.exists():\n            placeholder.touch(mode=0o600, exist_ok=False)\n        args.append('--mount=type=bind,src=' + str(policy / 'codex-config.toml') +\n                    ',dst=/runtime/cache/codex/config.toml,readonly')\n    for entry in ('HOME=/runtime/cache/home', 'CODEX_HOME=/runtime/cache/codex',\n                  'CLAUDE_CONFIG_DIR=/runtime/cache/claude', 'TMPDIR=/runtime/tmp',\n                  'TMP=/runtime/tmp', 'TEMP=/runtime/tmp', 'XDG_CACHE_HOME=/runtime/cache/xdg'):\n        args.extend(['--env', entry])\n    args.extend(['--env', 'TRACE_MCP_TELEMETRY=off'])\n    if operation == 'claude-login':\n        args.extend(['--entrypoint=/usr/local/bin/claude', manifest['image']])\n    elif manifest.get('fixture'):\n        # \u042f\u0432\u043d\u0430\u044f coordinator policy, \u0442\u0435 \u0436\u0435 mounts/OS policy, \u0447\u0442\u043e \u0443 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0435\u0433\u043e CLI.\n        args.extend(['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/fixture.mjs'])\n    else:\n        if not manifest['managed_mapping_verified']:\n            raise ValueError('managed_mapping_unverified')\n        if not (policy / 'protocol-guard.mjs').is_file():\n            raise ValueError('protocol_guard_missing')\n        args.extend(['--entrypoint=/usr/local/bin/node', manifest['image'],\n                     '/runtime/policy/protocol-guard.mjs', manifest['family']])\n"
+        },
+        {
+          "symbol": "launch",
+          "first_line": 518,
+          "last_line": 530,
+          "text": "def launch(manifest, incoming):\n    evidence = Path(manifest['run_root']) / 'evidence'\n    if evidence.exists() and any(evidence.iterdir()):\n        raise ValueError('evidence_directory_not_fresh')\n    args = command(manifest, incoming, os.environ)\n    with provider_network(manifest) as network:\n        if network:\n            args[args.index('--network=none')] = '--network=' + network\n            args[2:2] = ['--env', 'HTTPS_PROXY=http://egress-proxy:8080',\n                          '--env', 'HTTP_PROXY=http://egress-proxy:8080',\n                          '--env', 'ALL_PROXY=http://egress-proxy:8080',\n                          '--env', 'NO_PROXY=', '--env', 'NODE_USE_ENV_PROXY=1']\n        code = execute(args)\n"
+        },
+        {
+          "symbol": "execute",
+          "first_line": 506,
+          "last_line": 508,
+          "text": "def execute(args):\n    process = subprocess.Popen(args, env=child_env(), stdin=sys.stdin.buffer,\n                               stdout=sys.stdout.buffer, stderr=sys.stderr.buffer)\n"
+        }
+      ]
+    },
+    "scripts/agent-runtime/protocol-guard.mjs": {
+      "sha256": "dbf3e9399c12e29fe71cc1cf2057e06f79694a9b77c60d94eabbafd644183fc2",
+      "spans": [
+        {
+          "first_line": 35,
+          "last_line": 47,
+          "text": "        (key === \"serviceTier\" && child !== null && !(item === nativeParams && child === \"default\")) ||\n        ([\"service_tier\", \"modelProvider\", \"model_provider\"].includes(key) && child !== null) ||\n        (key === \"serviceTierForTurn\" && child !== null && child !== \"default\")\n      )\n        throw new Error(\"preserved_model_settings_changed\")\n      // Thread config \u2014 \u043f\u0440\u043e\u0438\u0437\u0432\u043e\u043b\u044c\u043d\u044b\u0439 TOML override; \u0440\u0430\u0437\u0440\u0435\u0448\u0435\u043d\u044b \u0442\u043e\u043b\u044c\u043a\u043e \u0437\u0430\u043a\u0440\u0435\u043f\u043b\u0451\u043d\u043d\u044b\u0435 knobs.\n      if (family === \"codex\" && key === \"config\" && child !== null) {\n        if (\n          typeof child !== \"object\" ||\n          Array.isArray(child) ||\n          Object.keys(child).some((name) => ![\"model\", \"model_reasoning_effort\", \"service_tier\"].includes(name))\n        )\n          throw new Error(\"preserved_model_settings_changed\")\n"
+        },
+        {
+          "first_line": 64,
+          "last_line": 67,
+          "text": "function main() {\n  const family = process.argv[2]\n  if (![\"codex\", \"claude\"].includes(family)) throw new Error(\"invalid_family\")\n  const child = spawn(`/usr/local/bin/${family}`, process.argv.slice(3), { stdio: [\"pipe\", \"inherit\", \"inherit\"] })\n"
+        }
+      ]
+    }
+  }
+}

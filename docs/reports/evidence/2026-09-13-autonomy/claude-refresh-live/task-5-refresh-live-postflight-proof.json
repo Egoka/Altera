@@ -1,0 +1,77 @@
+{
+  "at_utc": "2026-09-14T01:06:23.057719+00:00",
+  "check_id": "claude-refresh-live-v1",
+  "attempt_id": "394771f72e5a4101bfcbe8795222cae5",
+  "stage": "published",
+  "pointer_matches_candidate": true,
+  "worker_quiescence": "confirmed",
+  "worker_cleanup": {
+    "exit": 0,
+    "absent": true,
+    "stderr_bytes": 0
+  },
+  "operations": [
+    {
+      "operation": "exchange",
+      "internal": true,
+      "isolated": true,
+      "network_cleanup": {
+        "exit": 0,
+        "absent": true,
+        "stderr_bytes": 0
+      },
+      "proxy_cleanup": {
+        "exit": 0,
+        "absent": true,
+        "stderr_bytes": 0
+      }
+    },
+    {
+      "operation": "model",
+      "internal": true,
+      "isolated": true,
+      "network_cleanup": {
+        "exit": 0,
+        "absent": true,
+        "stderr_bytes": 0
+      },
+      "proxy_cleanup": {
+        "exit": 0,
+        "absent": true,
+        "stderr_bytes": 0
+      }
+    },
+    {
+      "operation": "status",
+      "internal": true,
+      "isolated": true,
+      "network_cleanup": {
+        "exit": 0,
+        "absent": true,
+        "stderr_bytes": 0
+      },
+      "proxy_cleanup": {
+        "exit": 0,
+        "absent": true,
+        "stderr_bytes": 0
+      }
+    }
+  ],
+  "credential_metadata_only": [
+    {
+      "reference": "old_generation",
+      "retained_regular_private_single_link": true
+    },
+    {
+      "reference": "published_generation",
+      "retained_regular_private_single_link": true
+    },
+    {
+      "reference": "original_login",
+      "retained_regular_private_single_link": true
+    }
+  ],
+  "source_policy_hashes_unchanged": true,
+  "credential_values_or_hashes_recorded": false,
+  "additional_exchange_or_model_call": false
+}

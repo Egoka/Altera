@@ -1,0 +1,39 @@
+{
+  "head": "bc46e9bca72e372a29552d63669bd3b91292c139",
+  "scope": "read-only selected symbols after trace outline/get_symbol; no typecheck rerun",
+  "files": [
+    {
+      "path": "web/app/components/show/Author.vue",
+      "first_six_lines": [
+        "<script setup lang=\"ts\">",
+        "  defineProps<{",
+        "    link: Date | string",
+        "    name?: string",
+        "  }>()",
+        "</script>"
+      ]
+    },
+    {
+      "path": "web/app/components/show/Type.vue",
+      "first_six_lines": [
+        "<script setup lang=\"ts\">",
+        "  defineProps<{",
+        "    link: Date | string",
+        "    name?: string",
+        "  }>()",
+        "</script>"
+      ]
+    },
+    {
+      "path": "web/app/pages/index.vue",
+      "first_six_lines": [
+        "<script setup lang=\"ts\"></script>",
+        "",
+        "<template>",
+        "  <PagesStartFeatured />",
+        "  <PagesStartLatest />",
+        "  <PagesStartPopular />"
+      ]
+    }
+  ]
+}

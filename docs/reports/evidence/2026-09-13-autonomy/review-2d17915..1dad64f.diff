@@ -1,0 +1,234 @@
+# Review package: 2d17915740cbefcb535c76e0b67e701b918b04fc..1dad64f9fa0af196e32dd2f9f5676740c8d13797
+
+## Commits
+1dad64f test(e2e): address infrastructure review findings
+
+## Files changed
+ web/tests/e2e/05-manual-moderation.spec.ts     | 19 +++++++++++--
+ web/tests/e2e/11-admin-archive-account.spec.ts | 10 +++++++
+ web/tests/e2e/12-self-archive-export.spec.ts   |  7 +++++
+ web/tests/e2e/16-permanent-delete.spec.ts      | 37 ++++++++++++++++++++++----
+ web/tests/e2e/homepage.smoke.spec.ts           |  3 ++-
+ 5 files changed, 68 insertions(+), 8 deletions(-)
+
+## Diff
+diff --git a/web/tests/e2e/05-manual-moderation.spec.ts b/web/tests/e2e/05-manual-moderation.spec.ts
+index 3bd68ba..0cb35b7 100644
+--- a/web/tests/e2e/05-manual-moderation.spec.ts
++++ b/web/tests/e2e/05-manual-moderation.spec.ts
+@@ -7,26 +7,41 @@ test("flow #5 claims the oldest review and preserves every manual outcome", asyn
+     await page.goto("/admin/review")
+     await page
+       .getByRole("button", { name: /взять в работу|claim/i })
+       .first()
+       .click()
+     await expect(page.getByText(/in_review|в работе/i)).toBeVisible()
+     await expect(page.getByText(/причин|reason/i)).toBeVisible()
+     await expect(page.getByText(/истори.*верс|revision history/i)).toBeVisible()
+   })
+ 
+-  await test.step("request rework and accept the author's resubmission without another AI run", async () => {
++  await test.step("request rework with revision-bound recommendations", async () => {
+     await page.getByLabel(/рекомендац|recommendation/i).fill("Clarify the cited source.")
+     await page.getByRole("button", { name: /запросить доработку|request rework/i }).click()
+     await expect(page.getByText(/rework|на доработке/i)).toBeVisible()
+-    await page.goto("/admin/review")
++  })
++
++  await test.step("let the author reply, resolve notes, edit, and resubmit without another AI run", async () => {
++    await page.goto("/me/articles/rework-fixture/review")
++    await expect(page.getByText(/Clarify the cited source/)).toBeVisible()
++    await page.getByLabel(/ответ|reply/i).fill("The citation now names the primary source.")
++    await page.getByRole("button", { name: /отправить ответ|send reply/i }).click()
++    await page.getByRole("checkbox", { name: /замечание решено|note resolved/i }).check()
++    await page.getByRole("link", { name: /редактировать|edit/i }).click()
++    await page.getByLabel(/текст|body/i).fill("A revised body with the primary citation.")
++    await page.getByRole("button", { name: /отправить|submit/i }).click()
++    await expect(page.getByText(/^review$|ручн.*проверк/i)).toBeVisible()
++    await expect(page.getByText(/^ai_check$/i)).toHaveCount(0)
++
++    await page.goto("/admin/review/rework-fixture")
+     await expect(page.getByText(/ответ автора|author reply/i)).toBeVisible()
++    await expect(page.getByText(/истори.*верс|revision history/i)).toBeVisible()
+   })
+ 
+   await test.step("support manual publish, final rejection, and unpublish branches", async () => {
+     await page.goto("/admin/review/manual-publish-fixture")
+     await page.getByRole("button", { name: /опубликовать вручную|publish manually/i }).click()
+     await expect(page.getByText(/published|опубликован/i)).toBeVisible()
+     await page.goto("/admin/review/final-reject-fixture")
+     await page.getByRole("button", { name: /окончательн.*отказ|final reject/i }).click()
+     await expect(page.getByText(/отклонена редакцией|final rejection/i)).toBeVisible()
+     await page.goto("/admin/articles/published-fixture")
+diff --git a/web/tests/e2e/11-admin-archive-account.spec.ts b/web/tests/e2e/11-admin-archive-account.spec.ts
+index a3e18cb..6fad0ef 100644
+--- a/web/tests/e2e/11-admin-archive-account.spec.ts
++++ b/web/tests/e2e/11-admin-archive-account.spec.ts
+@@ -7,31 +7,41 @@ test("flow #11 archives an account transactionally and resolves one appeal", asy
+     await page.goto("/admin/users/archive-fixture")
+     await page.getByRole("button", { name: /архивировать аккаунт|archive account/i }).click()
+     await expect(page.getByText(/стат|article/i)).toBeVisible()
+     await expect(page.getByText(/план.*продолж|plan.*continue/i)).toBeVisible()
+   })
+ 
+   await test.step("archive the account, revoke sessions, and archive its articles", async () => {
+     await page.getByLabel(/причин|reason/i).fill("Policy fixture")
+     await page.getByRole("button", { name: /подтвердить|confirm/i }).click()
+     await expect(page.getByText(/archived|архив/i)).toBeVisible()
++    await expect(page.getByText(/все сессии отозваны|all sessions revoked/i)).toBeVisible()
++    await expect(page.getByText(/статьи.*архив|articles.*archived/i)).toBeVisible()
++
++    const articleResponse = await page.request.get("/admin-archive-fixture-article")
++    expect(articleResponse.status()).toBe(410)
+   })
+ 
+   await test.step("block login and accept only one appeal", async () => {
+     await page.goto("/auth/verify?token=fake-admin-archived-token")
+     await expect(page).toHaveURL(/\/auth\/appeal\?token=/)
+     await page.getByLabel(/обращени|appeal/i).fill("Please review the fixture block.")
+     await page.getByRole("button", { name: /отправить|submit/i }).click()
+     await expect(page.getByRole("button", { name: /отправить|submit/i })).toBeDisabled()
+   })
+ 
+   await test.step("record the admin decision and restore articles one by one", async () => {
+     await page.goto("/admin/users/archive-fixture")
++    await page.getByRole("tab", { name: /оспариван|appeal/i }).click()
++    await expect(page.getByText(/Please review the fixture block/)).toBeVisible()
++    await page.getByLabel(/причин.*решен|decision reason/i).fill("Appeal accepted after review.")
+     await page.getByRole("button", { name: /восстановить аккаунт|restore account/i }).click()
++    await expect(page.getByText(/аккаунт восстановлен|account restored/i)).toBeVisible()
+     await expect(page.getByText(/статьи.*архив|articles.*archived/i)).toBeVisible()
+     await page.goto("/me/articles?status=archived")
+     await page
+       .getByRole("button", { name: /восстановить|restore/i })
+       .first()
+       .click()
++    await expect(page.getByText(/published|опубликован/i)).toBeVisible()
+   })
+ })
+diff --git a/web/tests/e2e/12-self-archive-export.spec.ts b/web/tests/e2e/12-self-archive-export.spec.ts
+index 05ae5f2..6e91487 100644
+--- a/web/tests/e2e/12-self-archive-export.spec.ts
++++ b/web/tests/e2e/12-self-archive-export.spec.ts
+@@ -7,27 +7,34 @@ test("flow #12 exports data, self-archives, and restores articles separately", a
+     await page.goto("/me/export")
+     await page.getByRole("button", { name: /запросить выгрузку|request export/i }).click()
+     await expect(page.getByRole("link", { name: /скачать|download/i })).toBeVisible()
+   })
+ 
+   await test.step("confirm self-archive by email", async () => {
+     await page.goto("/me/delete")
+     await page.getByRole("button", { name: /отправить письмо|send.*e-mail/i }).click()
+     await page.goto("/me/delete/confirm?token=fake-self-archive-token")
+     await expect(page).toHaveURL(/\/$/)
++
++    await page.goto("/me")
++    await expect(page).toHaveURL(/\/login(?:\?|$)/)
++    const articleResponse = await page.request.get("/self-archive-fixture-article")
++    expect(articleResponse.status()).toBe(410)
+   })
+ 
+   await test.step("enter a limited session and restore only the account", async () => {
+     await page.goto("/auth/verify?token=fake-self-archived-login-token")
+     await expect(page).toHaveURL(/\/me\/archived$/)
+     await page.getByRole("button", { name: /восстановить аккаунт|restore account/i }).click()
+     await expect(page).toHaveURL(/\/me(?:\?|$)/)
++    await page.goto("/me/articles?status=archived")
++    await expect(page.getByText(/self-archive fixture/i)).toBeVisible()
+   })
+ 
+   await test.step("restore archived articles one at a time", async () => {
+     await page.goto("/me/articles?status=archived")
+     await page
+       .getByRole("button", { name: /восстановить|restore/i })
+       .first()
+       .click()
+     await expect(page.getByText(/published|draft|опубликован|черновик/i)).toBeVisible()
+   })
+diff --git a/web/tests/e2e/16-permanent-delete.spec.ts b/web/tests/e2e/16-permanent-delete.spec.ts
+index 5739912..883a712 100644
+--- a/web/tests/e2e/16-permanent-delete.spec.ts
++++ b/web/tests/e2e/16-permanent-delete.spec.ts
+@@ -1,35 +1,62 @@
+ import { expect, test } from "@playwright/test"
+ 
+ test("flow #16 permanently deletes only an archived entity after exact confirmation", async ({ page }) => {
+-  test.skip(true, "Requires T-076; destructive flow must run only against its isolated fixture environment")
++  test.skip(
++    true,
++    "Requires T-076 plus role, archive, relation-conflict, and reservation fixtures; destructive flow must run only against its isolated fixture environment"
++  )
++
++  await test.step("hide permanent deletion from non-owners and for active entities", async () => {
++    await page.goto("/auth/fixture-login?role=admin")
++    await page.goto("/admin/articles/archived-permanent-delete-fixture")
++    await expect(page.getByRole("button", { name: /удалить навсегда|delete permanently/i })).toHaveCount(0)
++
++    await page.goto("/auth/fixture-login?role=owner")
++    await page.goto("/admin/articles/active-permanent-delete-fixture")
++    await expect(page.getByText(/published|опубликован/i)).toBeVisible()
++    await expect(page.getByRole("button", { name: /удалить навсегда|delete permanently/i })).toHaveCount(0)
++  })
+ 
+   await test.step("show the owner a cascade preview for an archived entity", async () => {
+     await page.goto("/admin/articles/permanent-delete-fixture")
++    await expect(page.getByText(/archived|архив/i)).toBeVisible()
+     await page.getByRole("button", { name: /удалить навсегда|delete permanently/i }).click()
+     await expect(page.getByText(/верс|медиа|аудит|version|media|audit/i)).toBeVisible()
+   })
+ 
+-  await test.step("reject a mismatched name and conflicting entity state", async () => {
++  await test.step("reject a mismatched exact name", async () => {
+     await page.getByLabel(/точное имя|exact name/i).fill("wrong name")
+     await page.getByLabel(/причин|reason/i).fill("Fixture cleanup")
+     await page.getByRole("button", { name: /подтвердить|confirm/i }).click()
+     await expect(page.getByText(/имя не совпадает|name does not match/i)).toBeVisible()
+   })
+ 
++  await test.step("report relation conflicts for a linked category and the last owner", async () => {
++    await page.goto("/admin/categories/linked-category-fixture")
++    await page.getByRole("button", { name: /удалить навсегда|delete permanently/i }).click()
++    await expect(page.getByText(/связ.*материал|linked articles/i)).toBeVisible()
++
++    await page.goto("/admin/users/last-owner-fixture")
++    await page.getByRole("button", { name: /удалить навсегда|delete permanently/i }).click()
++    await expect(page.getByText(/последн.*владел|last owner/i)).toBeVisible()
++  })
++
+   await test.step("delete transactionally and retain the immutable audit", async () => {
+     await page.getByLabel(/точное имя|exact name/i).fill("Permanent delete fixture")
+     await page.getByRole("button", { name: /подтвердить|confirm/i }).click()
+     const deletedResponse = await page.request.get("/permanent-delete-fixture")
+     expect(deletedResponse.status()).toBe(404)
+     await page.goto("/admin/audit")
+     await expect(page.getByText(/entity\.delete\.permanent/i)).toBeVisible()
+   })
+ 
+-  await test.step("keep the slug reserved and block invalid owner or relation cases", async () => {
++  await test.step("keep deleted slugs and handles reserved", async () => {
+     await page.goto("/admin/articles/new")
+     await page.getByLabel(/slug/i).fill("permanent-delete-fixture")
+     await expect(page.getByText(/занят|reserved/i)).toBeVisible()
+-    await page.goto("/admin/users/last-owner-fixture")
+-    await expect(page.getByRole("button", { name: /удалить навсегда|delete permanently/i })).toHaveCount(0)
++
++    await page.goto("/admin/users/new")
++    await page.getByLabel(/хэндл|handle/i).fill("permanently-deleted-user")
++    await expect(page.getByText(/занят|reserved/i)).toBeVisible()
+   })
+ })
+diff --git a/web/tests/e2e/homepage.smoke.spec.ts b/web/tests/e2e/homepage.smoke.spec.ts
+index fa14b16..d324a98 100644
+--- a/web/tests/e2e/homepage.smoke.spec.ts
++++ b/web/tests/e2e/homepage.smoke.spec.ts
+@@ -1,8 +1,9 @@
+ import { expect, test } from "@playwright/test"
+ 
+-test("homepage opens and shows the accessible Altera brand", async ({ page }) => {
++test("homepage exposes the required Altera document title", async ({ page }) => {
+   await page.goto("/")
+ 
+   await expect(page).toHaveURL(/\/$/)
+   await expect(page.getByRole("link", { name: /^Altera/ }).first()).toBeVisible()
++  await expect(page).toHaveTitle("Altera")
+ })

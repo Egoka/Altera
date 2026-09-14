@@ -1,0 +1,659 @@
+diff --git a/docs/development/runtime-isolation.md b/docs/development/runtime-isolation.md
+index 53965a5..084c287 100644
+--- a/docs/development/runtime-isolation.md
++++ b/docs/development/runtime-isolation.md
+@@ -22,7 +22,8 @@ service tier: trace project map/outline, отказ shell-записи `Read-onl
+ — успешный `claude-opus-4-6`, medium и marker при отключённых tools. macOS Keychain не
+ экспортировался. Это не native приёмка: context/MCP, фактическое отключение hooks, refresh
+ и managed stream-json canary остаются непроверенными. D0 также не устанавливает эти факты.
+-Actual managed MCP input остаётся неразрешённым; production mapping отказывает до его проверки.
++D1 metadata diagnostic установил reviewer roster: Context7 HTTP `/mcp` без headers/env и
++trace с argv `["serve"]` без env. Это descriptor evidence; native production mapping пока не реализован.
+ Готовность всей Task 5, M4/M7 и автопилотов этим документом не объявляется.
+ 
+ ## Источник и mounts
+@@ -75,8 +76,12 @@ argv отвергаются. Для Claude
+ сохраняются известные stream-json flags, модель, effort и disallowedTools; неизвестные флаги
+ не пропускаются вслепую. `[mcp_servers.trace]` в RO `codex-config.toml` запускает Linux
+ `/usr/local/bin/trace-mcp serve --preset review`. Его проверенный index находится в отдельном
+-`HOME/.trace/index` внутри cache. Назначенные роли context7/playwright и native managed inputs
+-требуют собственного mapping/canary; успешный локальный trace не доказывает их наличие.
++`HOME/.trace/index` внутри cache. Для Claude JSON разрешены только имена `trace` и `context7`:
++trace — stdio с `/usr/local/bin/trace-mcp` и точными argv `["serve"]` либо ранее поддержанными
++`["serve", "--preset", "review"]`; Context7 — ровно `{"type":"http","url":"https://mcp.context7.com/mcp"}`.
++Policy bytes не переписываются. Unknown names/fields, headers/env даже пустые, duplicate JSON keys,
++malformed JSON и варианты URL отклоняются. Пустой `mcpServers` сохранён для существующих fixtures,
++но не доказывает наличие полного roster. Native adapter и tester Playwright требуют отдельной приёмки.
+ 
+ `protocol-guard.mjs` работает внутри границы и проверяет каждый JSONL input: вложенный `cwd`
+ может указывать только на declared source или его подкаталог без `..`. Валидные bytes
+@@ -109,7 +114,7 @@ null/omitted. Thread `config` ограничен `model`, `model_reasoning_effor
+ [официальной документации Docker](https://docs.docker.com/engine/network/port-publishing/#gateway-modes).
+ Модель подключена только к isolated сети. Отдельный proxy имеет исходящий bridge, но не
+ получает checkout, credentials, cache или Docker socket. Он поддерживает только HTTPS CONNECT
+-на точные provider domains: OpenAI/ChatGPT и Anthropic/Claude; HTTP endpoints и прочие домены
++на точные provider domains: OpenAI/ChatGPT, Anthropic/Claude и `mcp.context7.com`; HTTP endpoints и прочие домены
+ отклоняются. Все DNS answers должны быть публичными IPv4, connect использует уже проверенный IP.
+ У proxy нет опубликованных host ports. Его image/policy hash, network и container inspect сохраняются
+ в trusted run root. Сеть и proxy удаляются после процесса; daemon не перезапускается.
+@@ -119,6 +124,15 @@ null/omitted. Thread `config` ограничен `model`, `model_reasoning_effor
+ недоступны. Эти ответы подтверждают транспорт, не авторизацию модели. Proxy не расшифровывает
+ TLS и не является HTTP authorization firewall для разрешённых сервисов.
+ 
++[reviewer MCP canary](../../scripts/agent-runtime/test_mcp_canary.py) запускается с
++`--canary /absolute/new/evidence-directory`: он создаёт synthetic Git snapshot и RO policy,
++использует закреплённый image и этот proxy, без auth mount и model CLI. Context7 получает только
++public React query через initialize → tools/list → resolve-library-id; trace запускается с `["serve"]`
++и проверяется через index, get_project_map и get_outline. HTTP redirects запрещены клиентом;
++opaque MCP session header остаётся только в памяти. Bounded protocol evidence, шесть forbidden
++CONNECT statuses и before/after source/snapshot/policy hashes сохраняются отдельно. Этот опыт
++проверяет MCP transport/tools; он не подтверждает native model/context/hooks/refresh или collector.
++
+ `auth_file` разрешает ровно один существующий regular file, RO в выделенный runtime home:
+ Codex `auth.json` или Claude `.credentials.json`. Весь HOME не монтируется. UID совпадает с
+ владельцем host-процесса, поэтому permissions credential file не расширяются. Codex ChatGPT
+diff --git a/scripts/agent-runtime/provider-proxy.mjs b/scripts/agent-runtime/provider-proxy.mjs
+index dc10cd3..b6983aa 100644
+--- a/scripts/agent-runtime/provider-proxy.mjs
++++ b/scripts/agent-runtime/provider-proxy.mjs
+@@ -12,7 +12,8 @@ const allowed = new Set([
+   "api.anthropic.com",
+   "claude.ai",
+   "console.anthropic.com",
+-  "platform.claude.com"
++  "platform.claude.com",
++  "mcp.context7.com"
+ ])
+ 
+ export function authority(value) {
+diff --git a/scripts/agent-runtime/runtime.py b/scripts/agent-runtime/runtime.py
+index a71d361..cd02520 100755
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -194,14 +194,36 @@ def effective_args(manifest, incoming):
+             mapped = Path(manifest['policy']) / value.removeprefix('/runtime/policy/')
+             if not mapped.is_file():
+                 raise ValueError('mapped_mcp_file_missing')
+-            config = json.loads(mapped.read_text())
++            def unique_object(pairs):
++                result = {}
++                for key, item in pairs:
++                    if key in result:
++                        raise ValueError('unsupported_mcp_config')
++                    result[key] = item
++                return result
++
++            def reject_constant(_value):
++                raise ValueError('unsupported_mcp_config')
++
++            try:
++                config = json.loads(mapped.read_text(), object_pairs_hook=unique_object,
++                                    parse_constant=reject_constant)
++            except (ValueError, UnicodeError):
++                raise ValueError('unsupported_mcp_config') from None
+             if not isinstance(config, dict) or set(config) != {'mcpServers'} or not isinstance(config['mcpServers'], dict):
+                 raise ValueError('unsupported_mcp_config')
+-            for server in config['mcpServers'].values():
+-                if (not isinstance(server, dict) or set(server) - {'command', 'args', 'type'} or
+-                    server.get('type', 'stdio') != 'stdio' or
+-                    server.get('command') != '/usr/local/bin/trace-mcp' or
+-                    server.get('args') != ['serve', '--preset', 'review']):
++            for name, server in config['mcpServers'].items():
++                if name == 'trace':
++                    valid = (isinstance(server, dict) and not set(server) - {'command', 'args', 'type'} and
++                             server.get('type', 'stdio') == 'stdio' and
++                             server.get('command') == '/usr/local/bin/trace-mcp' and
++                             server.get('args') in (['serve'], ['serve', '--preset', 'review']))
++                elif name == 'context7':
++                    valid = (isinstance(server, dict) and set(server) == {'type', 'url'} and
++                             server['type'] == 'http' and server['url'] == 'https://mcp.context7.com/mcp')
++                else:
++                    valid = False
++                if not valid:
+                     raise ValueError('unverified_mcp_server')
+         result.extend([flag, value]); i += 2
+     for flag in ('--model', '--effort'):
+diff --git a/scripts/agent-runtime/test_proxy.mjs b/scripts/agent-runtime/test_proxy.mjs
+index 2fe4ca5..1342518 100644
+--- a/scripts/agent-runtime/test_proxy.mjs
++++ b/scripts/agent-runtime/test_proxy.mjs
+@@ -33,3 +33,22 @@ test("proxy refuses host endpoints, ambiguous authorities and non-public DNS ans
+   }
+   assert.equal(publicAddress("1.1.1.1"), true)
+ })
++
++test("proxy permits only the exact observed Context7 CONNECT authority", async () => {
++  const { authority } = await import("./provider-proxy.mjs")
++  assert.equal(authority("mcp.context7.com:443"), "mcp.context7.com")
++  for (const value of [
++    "mcp.context7.com:80",
++    "mcp.context7.com.:443",
++    "MCP.context7.com:443",
++    "mcp.context7.com.evil.invalid:443",
++    "evil-mcp.context7.com:443",
++    "mcp.context7.com@evil.invalid:443",
++    "https://mcp.context7.com:443",
++    "mcp.context7.com:443/mcp",
++    "mcp.context7.com%00:443",
++    "[::1]:443"
++  ]) {
++    assert.throws(() => authority(value), /destination_denied/)
++  }
++})
+diff --git a/scripts/agent-runtime/test_runtime.py b/scripts/agent-runtime/test_runtime.py
+index 05889e1..5ea4fc7 100644
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -164,6 +164,53 @@ class RuntimeTests(unittest.TestCase):
+         with self.assertRaisesRegex(ValueError, 'overlap'):
+             self.runtime.command(self.manifest, [], {})
+ 
++    def test_verified_reviewer_mcp_policy_preserves_both_trace_argv_forms_and_context7(self):
++        for trace_args in [['serve'], ['serve', '--preset', 'review']]:
++            config = {'mcpServers': {
++                'trace': {'type': 'stdio', 'command': '/usr/local/bin/trace-mcp', 'args': trace_args},
++                'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}}}
++            path = self.policy / 'mcp.json'
++            raw = json.dumps(config, indent=2)
++            path.write_text(raw)
++            self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
++            args = self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
++            self.assertIn('/runtime/policy/mcp.json', args)
++            self.assertEqual(path.read_text(), raw)
++
++    def test_mcp_policy_rejects_unknown_servers_transports_and_fields(self):
++        trace = {'command': '/usr/local/bin/trace-mcp', 'args': ['serve', '--preset', 'review']}
++        context7 = {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}
++        invalid = [
++            {'other': trace}, {'context7': trace}, {'trace': context7},
++            {'trace': {**trace, 'args': []}}, {'trace': {**trace, 'args': ['serve', '--preset', 'full']}},
++            {'trace': {**trace, 'args': 'serve'}}, {'trace': {**trace, 'args': ['serve', 'D1_SECRET_CANARY']}},
++            {'trace': {**trace, 'command': '/host/trace'}}, {'trace': {**trace, 'type': 'http'}},
++            {'trace': {**trace, 'env': {}}}, {'trace': {**trace, 'headers': {}}},
++            {'context7': {**context7, 'headers': {}}}, {'context7': {**context7, 'env': {}}},
++            {'context7': {**context7, 'type': 'sse'}}, {'context7': {'url': context7['url']}},
++            {'context7': {**context7, 'command': '/bin/sh'}}, {'trace': None}]
++        for url in ['https://mcp.context7.com/mcp/oauth', 'https://mcp.context7.com/mcp?secret',
++                    'https://mcp.context7.com/mcp#fragment', 'https://user@mcp.context7.com/mcp',
++                    'https://mcp.context7.com:443/mcp', 'http://mcp.context7.com/mcp',
++                    'https://mcp.context7.com.evil.invalid/mcp']:
++            invalid.append({'context7': {**context7, 'url': url}})
++        for servers in invalid:
++            with self.subTest(servers=list(servers)):
++                (self.policy / 'mcp.json').write_text(json.dumps({'mcpServers': servers}))
++                self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
++                with self.assertRaises(ValueError):
++                    self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
++
++    def test_mcp_policy_rejects_duplicate_or_malformed_json_without_echoing_values(self):
++        for raw in ['{"mcpServers":{},"mcpServers":{}}',
++                    '{"mcpServers":{"trace":{"command":"D1_SECRET_CANARY","command":"/usr/local/bin/trace-mcp","args":["serve","--preset","review"]}}}',
++                    '{"mcpServers":{},"extra":NaN}', 'D1_SECRET_CANARY', '[]']:
++            (self.policy / 'mcp.json').write_text(raw)
++            self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
++            with self.assertRaises(ValueError) as raised:
++                self.runtime.command(self.manifest, ['--mcp-config', '/managed/task/mcp.json'], {})
++            self.assertNotIn('D1_SECRET_CANARY', str(raised.exception))
++
+     def test_unresolved_managed_home_is_rejected(self):
+         with self.assertRaisesRegex(ValueError, 'managed_env_unresolved'):
+             self.runtime.command(self.manifest, [], {'CODEX_HOME': '/managed/unknown'})
+diff --git a/scripts/agent-runtime/reviewer-mcp-canary.mjs b/scripts/agent-runtime/reviewer-mcp-canary.mjs
+new file mode 100644
+index 0000000..58dc5e2
+--- /dev/null
++++ b/scripts/agent-runtime/reviewer-mcp-canary.mjs
+@@ -0,0 +1,320 @@
++// No-model проверка точного reviewer MCP roster внутри изолированного runtime.
++import { spawn, spawnSync } from "node:child_process"
++import fs from "node:fs"
++import http from "node:http"
++import readline from "node:readline"
++import { pathToFileURL } from "node:url"
++
++const LIMIT = 524288
++const ENDPOINT = "https://mcp.context7.com/mcp"
++const VERSION = "2025-03-26"
++const clientInfo = { name: "altera-reviewer-mcp-canary", version: "1.0.0" }
++
++export function acceptedResult(message, id) {
++  if (
++    !message ||
++    message.jsonrpc !== "2.0" ||
++    message.id !== id ||
++    "error" in message ||
++    !message.result ||
++    typeof message.result !== "object" ||
++    Array.isArray(message.result) ||
++    message.result.isError
++  )
++    throw new Error("rpc_result_unaccepted")
++  return message.result
++}
++
++function sseMessages(text) {
++  return text
++    .replaceAll("\r\n", "\n")
++    .split("\n\n")
++    .slice(0, -1)
++    .flatMap((event) => {
++      const data = event
++        .split("\n")
++        .filter((line) => line.startsWith("data:"))
++        .map((line) => line.slice(5).replace(/^ /, ""))
++        .join("\n")
++      return data ? [JSON.parse(data)] : []
++    })
++}
++
++export function decodeRpc(text, contentType, id) {
++  const type = contentType.split(";")[0].trim()
++  const messages =
++    type === "application/json" ? [JSON.parse(text)] : type === "text/event-stream" ? sseMessages(text) : []
++  const message = messages.find((item) => item?.id === id)
++  acceptedResult(message, id)
++  return message
++}
++
++export async function readRpc(response, id) {
++  const type = response.headers.get("content-type") || ""
++  if (!response.ok || !/^(application\/json|text\/event-stream)(;|$)/.test(type)) {
++    throw new Error(`http_response_unaccepted_${response.status}`)
++  }
++  const reader = response.body.getReader()
++  const decoder = new TextDecoder("utf-8", { fatal: true })
++  let text = ""
++  let size = 0
++  try {
++    while (true) {
++      const { value, done } = await reader.read()
++      if (done) return decodeRpc(text + decoder.decode(), type, id)
++      size += value.byteLength
++      if (size > LIMIT) throw new Error("rpc_body_limit")
++      text += decoder.decode(value, { stream: true })
++      if (type.startsWith("text/event-stream")) {
++        const message = sseMessages(text).find((item) => item?.id === id)
++        if (message) {
++          acceptedResult(message, id)
++          return message
++        }
++      }
++    }
++  } finally {
++    await reader.cancel()
++  }
++}
++
++export function libraryIds(result) {
++  if (result?.isError || !Array.isArray(result?.content)) throw new Error("library_result_unaccepted")
++  const text = result.content
++    .filter((item) => item.type === "text")
++    .map((item) => item.text)
++    .join("\n")
++  const ids = [
++    ...text.matchAll(/^\s*-?\s*Context7-compatible library ID:\s*(\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_./-]+)\s*$/gim)
++  ].map((match) => match[1])
++  if (!ids.length) throw new Error("library_result_unaccepted")
++  return ids
++}
++
++function record(name, data) {
++  const text = JSON.stringify(data, null, 2) + "\n"
++  if (Buffer.byteLength(text) > LIMIT) throw new Error("evidence_limit")
++  fs.writeFileSync(`/runtime/evidence/${name}.json`, text)
++}
++
++export function traceAccepted(map, outline) {
++  function payload(result) {
++    if (result?.isError || result?.content?.length !== 1 || result.content[0].type !== "text") {
++      throw new Error("trace_content_unaccepted")
++    }
++    return JSON.parse(result.content[0].text)
++  }
++  const summary = payload(map)
++  const file = payload(outline)
++  if (
++    summary?.fileCount !== 1 ||
++    summary.symbolCount !== 1 ||
++    !summary.languages?.includes("javascript") ||
++    file?.path !== "sample.js" ||
++    file.language !== "javascript" ||
++    file._freshness !== "fresh" ||
++    !file.symbols?.some(
++      (symbol) =>
++        symbol.symbolId === "sample.js::answer#function" && symbol.name === "answer" && symbol.kind === "function"
++    )
++  ) {
++    throw new Error("trace_content_unaccepted")
++  }
++}
++
++async function context7() {
++  let session
++  let id = 0
++  const exchanges = []
++  async function request(method, params, notification = false) {
++    const body = { jsonrpc: "2.0", ...(notification ? {} : { id: ++id }), method, ...(params ? { params } : {}) }
++    const headers = { "Content-Type": "application/json", Accept: "application/json, text/event-stream" }
++    if (session) headers["Mcp-Session-Id"] = session
++    if (method !== "initialize") headers["MCP-Protocol-Version"] = VERSION
++    const response = await fetch(ENDPOINT, {
++      method: "POST",
++      headers,
++      body: JSON.stringify(body),
++      redirect: "error",
++      signal: AbortSignal.timeout(25000)
++    })
++    // Session ID остаётся только в памяти: headers никогда не входят в evidence.
++    if (method === "initialize") session = response.headers.get("mcp-session-id") || undefined
++    const exchange = { request: body, status: response.status }
++    exchanges.push(exchange)
++    record("context7-protocol", exchanges)
++    if (notification) {
++      await response.body?.cancel()
++      if (response.status !== 202) throw new Error("initialized_notification_unaccepted")
++      return
++    }
++    exchange.response = await readRpc(response, body.id)
++    record("context7-protocol", exchanges)
++    return acceptedResult(exchange.response, body.id)
++  }
++  const initialized = await request("initialize", { protocolVersion: VERSION, capabilities: {}, clientInfo })
++  if (initialized.protocolVersion !== VERSION || !initialized.serverInfo) throw new Error("initialize_unaccepted")
++  await request("notifications/initialized", undefined, true)
++  const tools = await request("tools/list", {})
++  if (!tools.tools?.some((tool) => tool.name === "resolve-library-id")) throw new Error("resolve_tool_missing")
++  const result = await request("tools/call", {
++    name: "resolve-library-id",
++    arguments: { libraryName: "react", query: "Synthetic public documentation lookup for the React useState API." }
++  })
++  return { endpoint: ENDPOINT, tool: "resolve-library-id", libraryIds: libraryIds(result) }
++}
++
++async function trace() {
++  const index = spawnSync("/usr/local/bin/trace-mcp", ["index", process.cwd()], {
++    encoding: "utf8",
++    timeout: 30000,
++    maxBuffer: LIMIT
++  })
++  fs.writeFileSync("/runtime/evidence/trace-index.log", ((index.stdout || "") + (index.stderr || "")).slice(0, LIMIT))
++  record("trace-index-exit", { exit: index.status, signal: index.signal })
++  if (index.status !== 0) throw new Error("trace_index_failed")
++  const child = spawn("/usr/local/bin/trace-mcp", ["serve"], { stdio: ["pipe", "pipe", "pipe"] })
++  const pending = new Map()
++  const exchanges = []
++  let stderr = ""
++  let bytes = 0
++  let nextId = 0
++  let childFailure
++  const fail = () => {
++    childFailure = new Error("trace_process_failed")
++    for (const callback of pending.values()) callback.reject(childFailure)
++    pending.clear()
++  }
++  child.on("error", fail)
++  child.on("exit", fail)
++  child.stdin.on("error", fail)
++  child.stderr.on("data", (data) => {
++    stderr = (stderr + data.toString()).slice(0, LIMIT)
++  })
++  child.stdout.on("data", (data) => {
++    bytes += data.byteLength
++    if (bytes > LIMIT * 4) {
++      fail()
++      child.kill("SIGTERM")
++    }
++  })
++  const lines = readline.createInterface({ input: child.stdout })
++  lines.on("line", (line) => {
++    try {
++      const message = JSON.parse(line)
++      const callback = pending.get(message.id)
++      if (callback) {
++        pending.delete(message.id)
++        callback.resolve(message)
++      }
++    } catch {
++      /* Произвольный stdout не считается ответом MCP. */
++    }
++  })
++  async function request(method, params) {
++    if (childFailure) throw childFailure
++    const body = { jsonrpc: "2.0", id: ++nextId, method, params }
++    let timer
++    try {
++      const response = await new Promise((resolve, reject) => {
++        timer = setTimeout(() => {
++          pending.delete(body.id)
++          reject(new Error("trace_timeout"))
++        }, 25000)
++        pending.set(body.id, { resolve, reject })
++        child.stdin.write(JSON.stringify(body) + "\n")
++      })
++      exchanges.push({ request: body, response })
++      record("trace-protocol", exchanges)
++      return acceptedResult(response, body.id)
++    } finally {
++      clearTimeout(timer)
++    }
++  }
++  try {
++    const initialized = await request("initialize", { protocolVersion: VERSION, capabilities: {}, clientInfo })
++    if (!initialized.serverInfo || !initialized.protocolVersion) throw new Error("trace_initialize_unaccepted")
++    child.stdin.write('{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
++    const tools = await request("tools/list", {})
++    for (const name of ["get_project_map", "get_outline"]) {
++      if (!tools.tools?.some((tool) => tool.name === name)) throw new Error("trace_tool_missing")
++    }
++    const map = await request("tools/call", { name: "get_project_map", arguments: { summary_only: true } })
++    const outline = await request("tools/call", { name: "get_outline", arguments: { path: "sample.js" } })
++    traceAccepted(map, outline)
++    return {
++      command: "/usr/local/bin/trace-mcp",
++      args: ["serve"],
++      indexExit: 0,
++      tools: ["get_project_map", "get_outline"],
++      projectMap: true,
++      outline: true
++    }
++  } finally {
++    lines.close()
++    child.kill("SIGTERM")
++    const killTimer = setTimeout(() => child.kill("SIGKILL"), 1000)
++    killTimer.unref()
++    fs.writeFileSync("/runtime/evidence/trace-stderr.log", stderr)
++  }
++}
++
++function forbidden(destination) {
++  return new Promise((resolve, reject) => {
++    const request = http.request({
++      host: "egress-proxy",
++      port: 8080,
++      method: "CONNECT",
++      path: destination,
++      timeout: 10000
++    })
++    request.on("timeout", () => request.destroy(new Error("connect_timeout")))
++    request.on("error", reject)
++    request.on("connect", (response, socket) => {
++      socket.destroy()
++      resolve(response.statusCode)
++    })
++    request.end()
++  })
++}
++
++export async function main() {
++  const report = { modelLaunched: false, tokenAbsent: !process.env.MULTICA_TOKEN, phases: {} }
++  for (const [name, action] of [
++    [
++      "forbidden",
++      async () => {
++        const destinations = [
++          "host.docker.internal:443",
++          "127.0.0.1:443",
++          "169.254.169.254:443",
++          "mcp.context7.com:80",
++          "mcp.context7.com.:443",
++          "mcp.context7.com.evil.invalid:443"
++        ]
++        const statuses = await Promise.all(destinations.map(forbidden))
++        record("forbidden-connect", { destinations, statuses })
++        if (statuses.some((status) => status !== 403)) throw new Error("forbidden_destination_accepted")
++        return { destinations, statuses }
++      }
++    ],
++    ["trace", trace],
++    ["context7", context7]
++  ]) {
++    try {
++      report.phases[name] = { ok: true, result: await action() }
++    } catch (error) {
++      // Только локальные коды ошибок; исключения fetch/JSON не раскрывают данные сервера.
++      const known = /^(rpc_|http_response_|initialized_|initialize_|resolve_|library_|trace_|forbidden_|evidence_)/
++      report.phases[name] = {
++        ok: false,
++        error: known.test(error.message) ? error.message : "transport_or_protocol_error"
++      }
++    }
++  }
++  record("reviewer-mcp-result", report)
++  process.stdout.write(JSON.stringify(report) + "\n")
++  return report.tokenAbsent && Object.values(report.phases).every((phase) => phase.ok) ? 0 : 1
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) process.exitCode = await main()
+diff --git a/scripts/agent-runtime/test_mcp_canary.py b/scripts/agent-runtime/test_mcp_canary.py
+new file mode 100644
+index 0000000..4c83211
+--- /dev/null
++++ b/scripts/agent-runtime/test_mcp_canary.py
+@@ -0,0 +1,127 @@
++"""Контракты no-model MCP canary; --canary запускает отдельную реальную проверку."""
++import importlib.util
++import json
++from pathlib import Path
++import subprocess
++import sys
++import unittest
++
++ROOT = Path(__file__).resolve().parent
++NODE = '/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node'
++IMAGE = 'sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a'
++
++
++class CanaryContracts(unittest.TestCase):
++    def node(self, source):
++        script = ('import assert from "node:assert/strict";\n'
++                  'import { decodeRpc, acceptedResult, libraryIds, readRpc, traceAccepted } from ' +
++                  json.dumps((ROOT / 'reviewer-mcp-canary.mjs').as_uri()) + ';\n' + source)
++        result = subprocess.run([NODE, '--input-type=module', '-e', script],
++                                capture_output=True, text=True, timeout=10)
++        self.assertEqual(result.returncode, 0, result.stderr)
++
++    def test_json_and_sse_require_matching_successful_rpc(self):
++        self.node(r'''
++const message = {jsonrpc: "2.0", id: 7, result: {tools: []}};
++assert.deepEqual(decodeRpc(JSON.stringify(message), "application/json", 7), message);
++assert.deepEqual(decodeRpc(': ping\n\nevent: message\ndata: ' + JSON.stringify(message) + '\n\n', "text/event-stream", 7), message);
++for (const bad of [{...message, id: 8}, {...message, jsonrpc: "1.0"}, {jsonrpc:"2.0", id:7}, {...message, error:{code:1}}, {...message,result:{isError:true}}]) {
++  assert.throws(() => acceptedResult(bad, 7));
++}
++assert.throws(() => decodeRpc(JSON.stringify(message), "text/html", 7));
++''')
++
++    def test_library_result_requires_actual_public_library_id(self):
++        self.node('''
++assert.deepEqual(libraryIds({content:[{type:"text",text:"Title: React\\nContext7-compatible library ID: /websites/react_dev\\nDescription: Public React docs"}]}), ["/websites/react_dev"]);
++for (const result of [{}, {isError:true,content:[{type:"text",text:"Context7-compatible library ID: /x/y"}]}, {content:[{type:"text",text:"Authentication required"}]}, {content:[{type:"text",text:"Context7-compatible library ID: https://evil.invalid/x/y"}]}]) assert.throws(() => libraryIds(result));
++''')
++
++    def test_stream_body_is_bounded_and_stops_after_matching_sse(self):
++        self.node('''
++const encoded = new TextEncoder();
++let cancelled = false;
++const stream = new ReadableStream({start(c) {c.enqueue(encoded.encode('data: {"jsonrpc":"2.0","id":3,"result":{}}\\n\\n'));}, cancel() {cancelled = true;}});
++assert.deepEqual(await readRpc(new Response(stream,{headers:{"content-type":"text/event-stream"}}),3), {jsonrpc:"2.0",id:3,result:{}});
++assert.equal(cancelled,true);
++await assert.rejects(readRpc(new Response('x'.repeat(524289),{headers:{"content-type":"application/json"}}),3));
++''')
++
++    def test_trace_summary_counts_and_exact_outline_are_accepted(self):
++        self.node('''
++const content = (value) => ({content:[{type:"text",text:JSON.stringify(value)}]});
++const map = {fileCount:1,symbolCount:1,languages:["javascript"]};
++const outline = {path:"sample.js",language:"javascript",symbols:[{symbolId:"sample.js::answer#function",name:"answer",kind:"function"}],_freshness:"fresh"};
++traceAccepted(content(map),content(outline));
++for (const bad of [{...map,fileCount:0},{...map,symbolCount:0},{...map,languages:[]}]) assert.throws(() => traceAccepted(content(bad),content(outline)));
++for (const bad of [{...outline,path:"elsewhere.js"},{...outline,symbols:[]},{...outline,_freshness:"stale_index"}]) assert.throws(() => traceAccepted(content(map),content(bad)));
++assert.throws(() => traceAccepted({content:[{type:"text",text:"sample.js"}]},{content:[{type:"text",text:"answer"}]}));
++''')
++
++
++def canary(destination):
++    spec = importlib.util.spec_from_file_location('runtime', ROOT / 'runtime.py')
++    runtime = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(runtime)
++    base = Path(destination).resolve()
++    base.mkdir(exist_ok=False)
++    source = base / 'source'
++    source.mkdir()
++    runtime.git(source, 'init', '-q')
++    runtime.git(source, 'config', 'user.name', 'Synthetic MCP Canary')
++    runtime.git(source, 'config', 'user.email', 'fixture@example.invalid')
++    (source / 'sample.js').write_text('export function answer() { return 42; }\n')
++    runtime.git(source, 'add', 'sample.js')
++    runtime.git(source, 'commit', '-qm', 'Synthetic MCP fixture')
++    snapshot = base / 'snapshot'
++    state = runtime.snapshot(source, snapshot, [])
++    policy = base / 'policy'
++    policy.mkdir()
++    for filename, target in [('reviewer-mcp-canary.mjs', 'fixture.mjs'), ('provider-proxy.mjs', 'provider-proxy.mjs')]:
++        (policy / target).write_bytes((ROOT / filename).read_bytes())
++    (policy / 'claude-settings.json').write_text('{"disableAllHooks":true}')
++    (policy / 'mcp.json').write_text(json.dumps({'mcpServers': {
++        'trace': {'type': 'stdio', 'command': '/usr/local/bin/trace-mcp', 'args': ['serve']},
++        'context7': {'type': 'http', 'url': 'https://mcp.context7.com/mcp'}}}, indent=2))
++    run = base / 'run'
++    run.mkdir()
++    manifest = {'schema_version': 1, 'family': 'claude', 'source': str(source),
++        'snapshot': str(snapshot), 'state': state, 'dirty_paths': [], 'policy': str(policy),
++        'policy_sha256': runtime.tree_hash(policy), 'run_root': str(run), 'image': IMAGE,
++        'model': 'claude-opus-4-6', 'effort': 'medium', 'env_paths': {},
++        'path_map': {'/synthetic/managed/mcp.json': '/runtime/policy/mcp.json'},
++        'managed_mapping_verified': False, 'fixture': True, 'network': 'provider-proxy'}
++    path = base / 'manifest.json'
++    path.write_text(json.dumps(manifest, indent=2) + '\n')
++    invocation = ['/usr/bin/python3', '-I', str(ROOT / 'runtime.py'), str(path),
++                  '--mcp-config', '/synthetic/managed/mcp.json']
++    prepared = runtime.command(manifest, invocation[-2:], {})
++    (base / 'prepared-command.json').write_text(json.dumps(prepared, indent=2) + '\n')
++    before = {'source': runtime.fingerprint(source, []), 'snapshot': runtime.tree_hash(snapshot),
++              'policy': runtime.tree_hash(policy), 'runtime_sha256': runtime.digest((ROOT / 'runtime.py').read_bytes())}
++    (base / 'before.json').write_text(json.dumps(before, indent=2) + '\n')
++    process = subprocess.Popen(invocation, env=runtime.child_env(), stdin=subprocess.PIPE,
++                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++    try:
++        stdout, stderr = process.communicate(b'', timeout=300)
++        code = process.returncode
++    except subprocess.TimeoutExpired:
++        # Launcher пересылает SIGTERM контейнеру и освобождает отдельную сеть в finally.
++        process.terminate()
++        stdout, stderr = process.communicate(timeout=30)
++        code = 124
++    (base / 'stdout.log').write_bytes(stdout)
++    (base / 'stderr.log').write_bytes(stderr)
++    after = {'source': runtime.fingerprint(source, []), 'snapshot': runtime.tree_hash(snapshot),
++             'policy': runtime.tree_hash(policy), 'runtime_sha256': runtime.digest((ROOT / 'runtime.py').read_bytes())}
++    proof = {'exit': code, 'unchanged': before == after, 'after': after, 'image': IMAGE,
++             'invocation': invocation, 'model_launched': False, 'auth_mounted': False}
++    (base / 'exit.json').write_text(json.dumps(proof, indent=2) + '\n')
++    print(json.dumps({'exit': code, 'unchanged': before == after, 'evidence': str(base)}))
++    return 0 if code == 0 and before == after else 1
++
++
++if __name__ == '__main__':
++    if len(sys.argv) == 3 and sys.argv[1] == '--canary':
++        sys.exit(canary(sys.argv[2]))
++    unittest.main(verbosity=2)

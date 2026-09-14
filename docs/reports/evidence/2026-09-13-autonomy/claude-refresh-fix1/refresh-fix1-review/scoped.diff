@@ -1,0 +1,588 @@
+diff --git a/docs/development/runtime-isolation.md b/docs/development/runtime-isolation.md
+index d6decab..6b05bc9 100644
+--- a/docs/development/runtime-isolation.md
++++ b/docs/development/runtime-isolation.md
+@@ -186,7 +186,11 @@ credential JSON и не считает его digest. Пример manifest:
+ Store, policy и run_root — отдельные absolute canonical directories mode0700 текущего UID.
+ Policy содержит ровно reviewed `claude-refresh.mjs`, `provider-proxy.mjs`, `empty-mcp.json`
+ с `{"mcpServers":{}}` и `claude-settings.json` с `{"disableAllHooks":true}`; hash связывает
+-их содержимое с manifest. Используется только закреплённый image ID из example.
++их содержимое с manifest. Refresh проверяет metadata всех четырёх entries до чтения/hash:
++no-follow regular files, один link, текущий UID, отсутствие group/other write, размер1–65536 bytes.
++Validated fd удерживаются через bounded read; named/held identities повторно сверяются до digest/JSON
++и после них. Замена даже на файл с теми же байтами отвергается. General runtime tree hash не меняется.
++Используется только закреплённый image ID из example.
+ 
+ Store содержит `refresh.lock`, `current.json`, `refresh-state.json` и `generations/`.
+ Pointer — regular mode0600 JSON ровно `{"generation":"<32 lowercase hex>"}`. Поколение
+@@ -222,6 +226,15 @@ Refresh exchange сам не вызывает модель; model acceptance —
+ pending в `prepared` можно удалить. Смена attempt ID не обходит незавершённую recovery.
+ Старый pointer не доказывает, что уже использованный refresh token ещё пригоден.
+ 
++До каждого worker launch journal сохраняет internally generated exact name, operation и
++`quiescence:unconfirmed`. `docker rm` сам по себе не доказывает остановку: только успешный
++пустой `docker container ls --all --filter name=^/NAME$ --format '{{.Names}}'` подтверждает
++отсутствие именно этого worker. После завершения/прерывания Docker client cleanup проверяется
++до снятия proxy и до status/model/publication. При неизвестном результате возвращается
++`worker_cleanup_unconfirmed`, journal и candidate сохраняются; следующий coordinator обязан
++повторно подтвердить quiescence до продолжения. Legacy journal без worker identity отвергается,
++автоматической миграции нет. Это адресная recovery, без broad cleanup и повторного exchange.
++
+ Fixed bounds: JSON containers depth16, string16384 UTF-8 bytes, credential65536 bytes,
+ combined child output8192 bytes; CLI exchange/status/model deadlines60/30/120 seconds.
+ Timeout убивает process group. Raw child output и error strings не выходят из wrapper;
+diff --git a/scripts/agent-runtime/credential_refresh.py b/scripts/agent-runtime/credential_refresh.py
+index 8aaf51e..a4a37c8 100644
+--- a/scripts/agent-runtime/credential_refresh.py
++++ b/scripts/agent-runtime/credential_refresh.py
+@@ -289,11 +289,18 @@ class Store:
+     def state(self):
+         value = self.read_json('refresh-state.json', optional=True)
+         if value is None: return None
+-        required = {'stage', 'old', 'candidate', 'attempt_id', 'check_id', 'image', 'policy_sha256'}
++        required = {'stage', 'old', 'candidate', 'attempt_id', 'check_id', 'image', 'policy_sha256', 'worker'}
+         if (not isinstance(value, dict) or not required.issubset(value) or set(value) - required - {'model_result'} or
+             value['stage'] not in STAGES or any(not isinstance(value[key], str) or not GENERATION.fullmatch(value[key]) for key in ('old', 'candidate', 'attempt_id')) or
+             value['old'] == value['candidate']):
+             raise ValueError('invalid_refresh_journal')
++        worker = value['worker']
++        if worker is None:
++            if value['stage'] != 'prepared': raise ValueError('worker_identity_missing')
++        elif (not isinstance(worker, dict) or set(worker) != {'name', 'operation', 'quiescence'} or
++              not isinstance(worker['name'], str) or not re.fullmatch(r'altera-refresh-[a-f0-9]{32}', worker['name']) or
++              worker['operation'] not in ('exchange', 'status', 'model') or worker['quiescence'] not in ('unconfirmed', 'confirmed')):
++            raise ValueError('invalid_worker_identity')
+         for key in ('image', 'policy_sha256', 'check_id'):
+             if value[key] != self.manifest[key]:
+                 raise ValueError('refresh_identity_changed')
+@@ -301,6 +308,42 @@ class Store:
+             value['model_result'] = public_model_result(value.get('model_result', {}))
+         return value
+ 
++    def quiesce(self, state):
++        """Только адресный cleanup; успешный пустой Docker listing доказывает отсутствие worker."""
++        worker = state['worker']
++        if worker is None: return state['stage'] == 'prepared'
++        if worker['quiescence'] == 'confirmed': return True
++        name = worker['name']
++        try:
++            subprocess.run([runtime.DOCKER, 'rm', '--force', name], env=runtime.child_env(),
++                           stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
++                           timeout=15, check=False)
++        except (OSError, subprocess.SubprocessError):
++            pass
++        try:
++            proof = subprocess.run([runtime.DOCKER, 'container', 'ls', '--all', '--filter', 'name=^/' + name + '$',
++                                    '--format', '{{.Names}}'], env=runtime.child_env(), stdin=subprocess.DEVNULL,
++                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15, check=False)
++            if proof.returncode != 0 or proof.stdout != b'': return False
++        except (OSError, subprocess.SubprocessError):
++            return False
++        state['worker'] = {**worker, 'quiescence': 'confirmed'}
++        self.write_state(state)
++        return True
++
++    def run_operation(self, state, operation, credential, output):
++        if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
++        if operation == 'exchange': state['stage'] = 'exchange_started'
++        state['worker'] = {'name': 'altera-refresh-' + uuid.uuid4().hex,
++                           'operation': operation, 'quiescence': 'unconfirmed'}
++        self.write_state(state)
++        try:
++            result = self.runner(operation, credential, output)
++        finally:
++            # container уже проверяет cleanup до снятия proxy; после interruption перечитываем durable результат.
++            state.update(self.state())
++        return result if self.quiesce(state) else {'status': 'worker_cleanup_unconfirmed'}
++
+     def candidate(self, state):
+         pending, final = state['candidate'] + '.pending', state['candidate']
+         names = [name for name in (pending, final) if self.exists(self.generations, name)]
+@@ -311,6 +354,7 @@ class Store:
+     def publish(self, state):
+         if state['stage'] != 'candidate_accepted':
+             raise ValueError('unaccepted_candidate')
++        if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
+         selected = self.candidate(state); os.close(selected.fd)
+         if selected.path.parent.name.endswith('.pending'):
+             os.rename(state['candidate'] + '.pending', state['candidate'], src_dir_fd=self.generations, dst_dir_fd=self.generations)
+@@ -326,6 +370,7 @@ class Store:
+             old = self.current()
+             previous = self.credential(old); os.close(previous.fd)
+             state = self.state()
++            if state and not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
+             if state and state['stage'] == 'published':
+                 if old != state['candidate']: raise ValueError('pointer_journal_mismatch')
+                 if state['attempt_id'] == self.manifest['attempt_id']:
+@@ -348,14 +393,14 @@ class Store:
+             if state is None:
+                 name = uuid.uuid4().hex
+                 os.mkdir(name + '.pending', 0o700, dir_fd=self.generations); os.fsync(self.generations)
+-                state = {'stage': 'prepared', 'old': old, 'candidate': name,
++                state = {'stage': 'prepared', 'old': old, 'candidate': name, 'worker': None,
+                          **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')}}
+                 self.write_state(state)
+-                state = {**state, 'stage': 'exchange_started'}; self.write_state(state)
+                 try:
+-                    outcome = self.runner('exchange', previous.path, self.path / 'generations' / (name + '.pending'))
++                    outcome = self.run_operation(state, 'exchange', previous.path, self.path / 'generations' / (name + '.pending'))
+                 except Exception:
+                     outcome = {'status': 'child_failed'}
++                if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
+                 if outcome.get('status') != 'exchange_succeeded':
+                     try:
+                         found = self.candidate(state); os.close(found.fd)
+@@ -376,10 +421,12 @@ class Store:
+                 return self.publish(state)
+             state = {**state, 'stage': 'candidate_written'}; self.write_state(state)
+             try:
+-                if self.runner('status', selected.path, None).get('status') != 'authenticated':
++                if self.run_operation(state, 'status', selected.path, None).get('status') != 'authenticated':
++                    if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
+                     return {'status': 'candidate_rejected'}
+-                result = public_model_result(self.runner('model', selected.path, None))
++                result = public_model_result(self.run_operation(state, 'model', selected.path, None))
+             except Exception:
++                if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
+                 return {'status': 'candidate_rejected'}
+             state = {**state, 'stage': 'candidate_accepted', 'model_result': result}; self.write_state(state)
+             return self.publish(state)
+@@ -389,7 +436,10 @@ class Store:
+         run = base / (operation + '-' + uuid.uuid4().hex); run.mkdir(mode=0o700)
+         manifest = {**self.manifest, 'run_root': str(run)}
+         command = runtime.refresh_command(manifest, operation, credential, output)
+-        name = 'altera-refresh-' + uuid.uuid4().hex
++        state = self.state()
++        if not state or not state['worker'] or state['worker']['operation'] != operation or state['worker']['quiescence'] != 'unconfirmed':
++            raise ValueError('worker_not_reserved')
++        name = state['worker']['name']
+         command[2:2] = ['--name', name]
+         with runtime.provider_network(manifest) as network:
+             command[command.index('--network=none')] = '--network=' + network
+@@ -403,13 +453,17 @@ class Store:
+                     return {'status': 'timeout'}
+             finally:
+                 # Docker client exit не гарантирует остановку worker; cleanup предшествует снятию proxy.
+-                subprocess.run([runtime.DOCKER, 'rm', '--force', name], env=runtime.child_env(),
+-                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+-                               timeout=15, check=False)
+-                if process is not None:
+-                    try: process.wait(timeout=15)
+-                    except subprocess.TimeoutExpired:
+-                        process.kill(); process.wait(timeout=15)
++                try:
++                    if process is not None:
++                        if process.returncode is None: process.terminate()
++                        try: process.wait(timeout=15)
++                        except subprocess.TimeoutExpired:
++                            process.kill(); process.wait(timeout=15)
++                    self.quiesce(state)
++                finally:
++                    if process is not None:
++                        for stream in (getattr(process, 'stdout', None), getattr(process, 'stderr', None)):
++                            if stream is not None: stream.close()
+         if len(stdout) + len(stderr) > 8192:
+             return {'status': 'output_limit'}
+         try:
+diff --git a/scripts/agent-runtime/runtime.py b/scripts/agent-runtime/runtime.py
+index db315b6..13e289f 100755
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -256,6 +256,60 @@ def private_reference(value, directory=False):
+     return path
+ 
+ 
++def refresh_policy(policy, expected_hash):
++    """Сначала metadata всех exact entries, затем bounded fd reads и проверка замены до digest."""
++    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
++    directory_fd = os.open(policy, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
++    opened = {}
++    def identity(info):
++        return (info.st_dev, info.st_ino, info.st_mode, info.st_uid, info.st_gid,
++                info.st_nlink, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
++    def file_metadata(info):
++        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or
++            info.st_mode & 0o022 or not 0 < info.st_size <= 65536):
++            raise ValueError('unsafe_refresh_policy')
++    try:
++        original_directory = os.fstat(directory_fd)
++        if (not stat.S_ISDIR(original_directory.st_mode) or original_directory.st_uid != os.getuid() or
++            stat.S_IMODE(original_directory.st_mode) != 0o700 or set(os.listdir(directory_fd)) != expected):
++            raise ValueError('unsafe_refresh_policy')
++        for name in sorted(expected):
++            fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
++            opened[name] = (fd, os.fstat(fd))
++            file_metadata(opened[name][1])
++        def unchanged():
++            if (identity(os.fstat(directory_fd)) != identity(original_directory) or
++                identity(policy.lstat()) != identity(original_directory) or
++                set(os.listdir(directory_fd)) != expected):
++                raise ValueError('refresh_policy_replaced')
++            for name, (fd, before) in opened.items():
++                held, named = os.fstat(fd), os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
++                file_metadata(held); file_metadata(named)
++                if identity(held) != identity(before) or identity(named) != identity(before):
++                    raise ValueError('refresh_policy_replaced')
++        unchanged()
++        content = {}
++        for name, (fd, before) in opened.items():
++            data = bytearray()
++            while len(data) <= 65536:
++                chunk = os.read(fd, 65537 - len(data))
++                if not chunk: break
++                data.extend(chunk)
++            if len(data) != before.st_size: raise ValueError('refresh_policy_replaced')
++            content[name] = bytes(data)
++        unchanged()
++        entries = [[name, digest(content[name])] for name in sorted(expected)]
++        if digest(json.dumps(entries, separators=(',', ':')).encode()) != expected_hash:
++            raise ValueError('refresh_policy_changed')
++        if (json.loads(content['empty-mcp.json']) != {'mcpServers': {}} or
++            json.loads(content['claude-settings.json']) != {'disableAllHooks': True}):
++            raise ValueError('invalid_refresh_policy')
++        unchanged()
++    finally:
++        for fd, _info in opened.values(): os.close(fd)
++        os.close(directory_fd)
++
++
+ def refresh_command(manifest, operation, credential, output=None):
+     """Фиксированная операция без source/MCP/stdin и без credential values в argv/env."""
+     required = {'schema_version', 'store', 'policy', 'policy_sha256', 'run_root', 'image',
+@@ -271,16 +325,7 @@ def refresh_command(manifest, operation, credential, output=None):
+             raise ValueError('refresh_mount_overlap')
+     if any(run.iterdir()):
+         raise ValueError('refresh_run_not_fresh')
+-    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
+-    if {item.name for item in policy.iterdir()} != expected or tree_hash(policy) != manifest['policy_sha256']:
+-        raise ValueError('refresh_policy_changed')
+-    if (json.loads((policy / 'empty-mcp.json').read_text()) != {'mcpServers': {}} or
+-        json.loads((policy / 'claude-settings.json').read_text()) != {'disableAllHooks': True}):
+-        raise ValueError('invalid_refresh_policy')
+-    for name in expected:
+-        info = (policy / name).stat()
+-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or info.st_mode & 0o022:
+-            raise ValueError('unsafe_refresh_policy')
++    refresh_policy(policy, manifest['policy_sha256'])
+     credential = private_reference(credential)
+     generation = private_reference(credential.parent, directory=True)
+     if (credential.name != '.credentials.json' or generation.parent != store / 'generations' or
+diff --git a/scripts/agent-runtime/test_credential_refresh.py b/scripts/agent-runtime/test_credential_refresh.py
+index d7005f0..fb512f5 100644
+--- a/scripts/agent-runtime/test_credential_refresh.py
++++ b/scripts/agent-runtime/test_credential_refresh.py
+@@ -54,9 +54,23 @@ class RefreshTests(unittest.TestCase):
+     def store(self, runner=None):
+         self.assertIsNotNone(self.module, 'credential refresh coordinator missing')
+         store = self.module.Store(self.manifest, runner=runner or self.runner)
++        def confirmed(state):
++            if state['worker'] and state['worker']['quiescence'] != 'confirmed':
++                state['worker'] = {**state['worker'], 'quiescence': 'confirmed'}
++                store.write_state(state)
++            return True
++        store.quiesce = confirmed  # Unit runner не создаёт Docker worker; transport проверяется отдельно.
+         self.addCleanup(store.close)
+         return store
+ 
++    def reserve_worker(self, store, operation):
++        state = {'stage': 'exchange_started' if operation == 'exchange' else 'candidate_written',
++                 'old': self.pointer(), 'candidate': uuid.uuid4().hex,
++                 **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')},
++                 'worker': {'name': 'altera-refresh-' + uuid.uuid4().hex, 'operation': operation, 'quiescence': 'unconfirmed'}}
++        store.write_state(state)
++        return state
++
+     def runner(self, operation, credential, output):
+         self.calls.append(operation)
+         if operation == 'exchange':
+@@ -250,6 +264,7 @@ class RefreshTests(unittest.TestCase):
+         from contextlib import nullcontext
+         from types import SimpleNamespace
+         store = self.initialized()
++        self.reserve_worker(store, 'model')
+         process = SimpleNamespace(returncode=1, communicate=lambda **kwargs: (json.dumps(model_result()).encode(), b''), wait=lambda **kwargs: 1)
+         with patch.object(self.module.runtime, 'refresh_command', return_value=['docker', '--network=none']), \
+              patch.object(self.module.runtime, 'provider_network', return_value=nullcontext('synthetic')), \
+@@ -288,6 +303,7 @@ class RefreshTests(unittest.TestCase):
+         from contextlib import contextmanager
+         from types import SimpleNamespace
+         store = self.initialized(); events = []
++        store.quiesce = self.module.Store.quiesce.__get__(store)
+         @contextmanager
+         def network(_manifest):
+             try: yield 'synthetic'
+@@ -295,12 +311,17 @@ class RefreshTests(unittest.TestCase):
+         process = SimpleNamespace(returncode=0, communicate=lambda **kwargs: (b'{"status":"authenticated"}', b''),
+                                   wait=lambda **kwargs: 0)
+         def remove(command, **kwargs):
++            if command[1:4] == ['container', 'ls', '--all']:
++                events.append('worker_absence')
++                return SimpleNamespace(returncode=0, stdout=b'')
+             self.assertEqual(command[:3], [self.module.runtime.DOCKER, 'rm', '--force'])
+             self.assertRegex(command[3], r'^altera-refresh-[a-f0-9]{32}$')
+             events.append('worker_cleanup')
++            return SimpleNamespace(returncode=1, stdout=b'')
+         for scenario in ('success', 'watchdog', 'exception'):
+             with self.subTest(scenario=scenario):
+                 events.clear()
++                self.reserve_worker(store, 'status')
+                 def communicate(**kwargs):
+                     if scenario == 'watchdog': raise subprocess.TimeoutExpired('synthetic', 45)
+                     if scenario == 'exception': raise RuntimeError('synthetic_transport_failure')
+@@ -315,7 +336,80 @@ class RefreshTests(unittest.TestCase):
+                     else:
+                         self.assertEqual(store.container('status', self.source, None),
+                                          {'status': 'timeout' if scenario == 'watchdog' else 'authenticated'})
+-                self.assertEqual(events, ['worker_cleanup', 'proxy_cleanup'])
++                self.assertEqual(events, ['worker_cleanup', 'worker_absence', 'proxy_cleanup'])
++
++    def test_failed_worker_removal_blocks_recovery_until_exact_absence_is_proven(self):
++        from contextlib import nullcontext
++        from types import SimpleNamespace
++        store = self.initialized(); old = self.pointer(); live = True; names = []
++        store.quiesce = self.module.Store.quiesce.__get__(store)
++        def start(command, **kwargs):
++            names.append(command[command.index('--name') + 1])
++            journal = store.state()
++            self.assertEqual(journal['worker'], {'name': names[-1], 'operation': 'exchange', 'quiescence': 'unconfirmed'})
++            def communicate(**kwargs): raise subprocess.TimeoutExpired('synthetic', 75)
++            return SimpleNamespace(returncode=1, communicate=communicate, wait=lambda **kwargs: 1)
++        def docker(command, **kwargs):
++            if command[1:3] == ['rm', '--force']:
++                return SimpleNamespace(returncode=1, stdout=b'')
++            self.assertEqual(command[1:4], ['container', 'ls', '--all'])
++            self.assertRegex(command[5], r'^name=\^/altera-refresh-[a-f0-9]{32}\$$')
++            if live: self.assertIn('name=^/' + names[0] + '$', command)
++            return SimpleNamespace(returncode=0, stdout=(names[0] + '\n').encode() if live else b'')
++        def runner(operation, credential, output):
++            result = self.runner(operation, credential, output)
++            return store.container(operation, credential, output) if operation == 'exchange' else result
++        store.runner = runner
++        with patch.object(self.module.runtime, 'refresh_command', return_value=[self.module.runtime.DOCKER, 'run', '--network=none']), \
++             patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('synthetic')), \
++             patch.object(self.module.subprocess, 'Popen', side_effect=start), \
++             patch.object(self.module.subprocess, 'run', side_effect=docker):
++            for _ in range(2):
++                self.assertEqual(store.refresh()['status'], 'worker_cleanup_unconfirmed')
++                self.assertEqual(self.pointer(), old)
++                self.assertEqual(self.calls, ['exchange'])
++            journal = json.loads((Path(self.manifest['store']) / 'refresh-state.json').read_text())
++            self.assertEqual(journal['worker'], {'name': names[0], 'operation': 'exchange', 'quiescence': 'unconfirmed'})
++            live = False
++            self.assertEqual(store.refresh()['status'], 'published')
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++        self.assertEqual(len(names), 1)
++
++    def test_unknown_cleanup_survives_reopen_and_legacy_journal_is_rejected(self):
++        from types import SimpleNamespace
++        store = self.initialized(); state = self.reserve_worker(store, 'exchange')
++        pending = Path(self.manifest['store']) / 'generations' / (state['candidate'] + '.pending')
++        pending.mkdir(mode=0o700); self.runner('exchange', self.source, pending); self.calls.clear()
++        store.close()
++        reopened = self.module.Store(self.manifest, runner=self.runner); self.addCleanup(reopened.close)
++        commands = []
++        def unknown(command, **kwargs):
++            commands.append(command)
++            if command[1] == 'rm': return SimpleNamespace(returncode=1, stdout=b'')
++            raise subprocess.TimeoutExpired('synthetic', 15)
++        with patch.object(self.module.subprocess, 'run', side_effect=unknown):
++            self.assertEqual(reopened.refresh()['status'], 'worker_cleanup_unconfirmed')
++        self.assertEqual(self.calls, [])
++        self.assertEqual(reopened.state()['worker'], state['worker'])
++        self.assertTrue(all(state['worker']['name'] in ' '.join(command) for command in commands))
++        legacy = dict(state); del legacy['worker']; reopened.write_state(legacy)
++        with patch.object(self.module.subprocess, 'run') as docker:
++            with self.assertRaises(ValueError): reopened.refresh()
++            docker.assert_not_called()
++
++
++    def test_model_worker_unknown_blocks_acceptance_and_publication(self):
++        store = self.initialized(); old = self.pointer(); confirmed = store.quiesce
++        def uncertain(state):
++            if state['worker'] and state['worker']['operation'] == 'model': return False
++            return confirmed(state)
++        store.quiesce = uncertain
++        for _ in range(2):
++            self.assertEqual(store.refresh()['status'], 'worker_cleanup_unconfirmed')
++            self.assertEqual(self.pointer(), old)
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++        self.assertEqual(store.state()['stage'], 'candidate_written')
++        self.assertEqual(store.state()['worker']['operation'], 'model')
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/scripts/agent-runtime/test_refresh_docker.py b/scripts/agent-runtime/test_refresh_docker.py
+index 06e02af..a750925 100644
+--- a/scripts/agent-runtime/test_refresh_docker.py
++++ b/scripts/agent-runtime/test_refresh_docker.py
+@@ -43,7 +43,8 @@ if (op === 'login') {
+ }
+ fs.writeFileSync('/runtime/cache/fake-proof.json', JSON.stringify(checks), {mode:0o600});
+ const behavior = '__BEHAVIOR__';
+-if (behavior === 'timeout') {
++if (behavior === 'timeout' || behavior === 'pending-timeout') {
++  if (behavior === 'pending-timeout') fs.writeFileSync('/runtime/output/claude/.credentials.json', JSON.stringify(data), {mode:0o600});
+   spawn('/usr/local/bin/node', ['-e', 'setInterval(()=>{},1000)'], {stdio:'inherit'});
+   setInterval(()=>{},1000);
+ } else if (behavior === 'overflow') {
+@@ -198,6 +199,65 @@ class DockerRefreshTests(unittest.TestCase):
+         self.assertEqual(len(self.commands), 1, 'recovery retried exchange')
+         self.assert_redacted({'status': 'manual_login_required'})
+ 
++    def test_unconfirmed_cleanup_recovery_removes_only_reserved_worker(self):
++        original_start, original_run = subprocess.Popen, subprocess.run
++        names = []; observations = []; old = self.fixture.pointer()
++        def start(command, **kwargs):
++            process = original_start(command, **kwargs)
++            if command[:2] == [self.module.runtime.DOCKER, 'run']:
++                names.append(command[command.index('--name') + 1])
++                process.terminate = process.kill  # SIGKILL клиента не проксируется в worker: моделируем abrupt disconnect.
++                def interrupt(**_kwargs):
++                    deadline = time.monotonic() + 10
++                    while not list((Path(self.manifest['store']) / 'generations').glob('*.pending/.credentials.json')):
++                        if process.poll() is not None or time.monotonic() >= deadline:
++                            raise AssertionError('synthetic candidate was not written')
++                        time.sleep(0.05)
++                    raise KeyboardInterrupt()
++                process.communicate = interrupt
++            return process
++        def failed_remove(command, **kwargs):
++            if command[:3] == [self.module.runtime.DOCKER, 'rm', '--force']:
++                self.assertEqual(command[3:], names)
++                return subprocess.CompletedProcess(command, 1)
++            result = original_run(command, **kwargs)
++            if command[1:4] == ['container', 'ls', '--all']:
++                self.assertEqual(result.returncode, 0)
++                self.assertIn('name=^/' + names[0] + '$', command)
++                self.assertEqual(result.stdout, (names[0] + '\n').encode())
++                observations.append('present')
++            return result
++        def actual_cleanup(command, **kwargs):
++            result = original_run(command, **kwargs)
++            if command[1:4] == ['container', 'ls', '--all'] and 'name=^/' + names[0] + '$' in command:
++                self.assertEqual(result.returncode, 0)
++                self.assertEqual(result.stdout, b'')
++                observations.append('absent')
++            return result
++        try:
++            with self.fake('pending-timeout'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')), \
++                 patch.object(self.module.subprocess, 'Popen', side_effect=start), \
++                 patch.object(self.module.subprocess, 'run', side_effect=failed_remove):
++                with self.assertRaises(KeyboardInterrupt): self.store.refresh()
++                self.assertEqual(self.store.state()['worker']['quiescence'], 'unconfirmed')
++                self.assertEqual(self.store.refresh()['status'], 'worker_cleanup_unconfirmed')
++                self.assertEqual(self.fixture.pointer(), old)
++                self.assertEqual(len(self.commands), 1)
++            with self.fake('success'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')), \
++                 patch.object(self.module.subprocess, 'run', side_effect=actual_cleanup):
++                result = self.store.refresh()
++            self.assertEqual(result['status'], 'published')
++            self.assertEqual(len(self.commands), 3, 'recovery exchanged the old token again')
++            self.assertEqual(self.store.state()['worker']['quiescence'], 'confirmed')
++            self.assert_redacted(result)
++            self.assertIn('present', observations); self.assertIn('absent', observations)
++            print(json.dumps({'exactFilterSeesLiveWorker': True, 'sameFilterProvesAbsenceAfterRemoval': True,
++                              'unknownCleanupBlockedPublication': True, 'exchangeCount': 1, 'syntheticOnly': True}))
++        finally:
++            for name in names:
++                original_run([self.module.runtime.DOCKER, 'rm', '--force', name], env=self.module.runtime.child_env(),
++                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
++
+ 
+ class PinnedCompatibilityTests(unittest.TestCase):
+     setUp = DockerRefreshTests.setUp
+@@ -205,8 +265,11 @@ class PinnedCompatibilityTests(unittest.TestCase):
+     def test_pinned_cli_invalid_synthetic_token_uses_refresh_branch(self):
+         with self.store.select_current() as selected:
+             candidate = Path(self.manifest['store']) / 'generations' / (uuid.uuid4().hex + '.pending'); candidate.mkdir(mode=0o700)
++            state = {'stage': 'prepared', 'old': selected.path.parent.name, 'candidate': candidate.name.removesuffix('.pending'),
++                     'worker': None, **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')}}
++            self.store.write_state(state)
+             start = time.monotonic()
+-            result = self.store.container('exchange', selected.path, candidate)
++            result = self.store.run_operation(state, 'exchange', selected.path, candidate)
+         self.assertLess(time.monotonic() - start, 75)
+         self.assertEqual(result, {'status': 'exchange_failed', 'refreshBranchObserved': True, 'browserHandoffObserved': False})
+         inspections = list(Path(self.manifest['run_root']).glob('*/network-inspect.json'))
+diff --git a/scripts/agent-runtime/test_runtime.py b/scripts/agent-runtime/test_runtime.py
+index 7b926db..1821408 100644
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -7,6 +7,7 @@ from pathlib import Path
+ import subprocess
+ import tempfile
+ import unittest
++from unittest.mock import patch
+ 
+ ROOT = Path(__file__).resolve().parent
+ 
+@@ -77,8 +78,7 @@ class RuntimeTests(unittest.TestCase):
+         self.assertFalse((dest / '.git/objects/info/alternates').exists())
+         self.assertEqual(state['head'], self.git('rev-parse', 'HEAD').decode().strip())
+ 
+-    def test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env(self):
+-        self.assertTrue(hasattr(self.runtime, 'refresh_command'), 'dedicated refresh command builder missing')
++    def refresh_inputs(self):
+         policy = self.base / 'refresh-policy'
+         policy.mkdir(mode=0o700)
+         for filename in ['claude-refresh.mjs', 'provider-proxy.mjs']:
+@@ -94,6 +94,11 @@ class RuntimeTests(unittest.TestCase):
+             'policy_sha256': self.runtime.tree_hash(policy), 'run_root': str(self.run),
+             'image': self.runtime.REFRESH_IMAGE, 'network': 'provider-proxy',
+             'check_id': 'synthetic-refresh', 'attempt_id': 'c' * 32}
++        self.run.chmod(0o700)
++        return manifest, credential, pending
++
++    def test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env(self):
++        manifest, credential, pending = self.refresh_inputs()
+         for operation in ['exchange', 'status', 'model']:
+             run = self.base / ('refresh-' + operation); run.mkdir(mode=0o700)
+             args = self.runtime.refresh_command({**manifest, 'run_root': str(run)}, operation, credential,
+@@ -114,6 +119,47 @@ class RuntimeTests(unittest.TestCase):
+             with self.assertRaises(ValueError):
+                 self.runtime.refresh_command({**manifest, **changed}, 'exchange', credential, pending)
+ 
++    def test_refresh_policy_hardlink_is_rejected_before_read_or_digest(self):
++        manifest, credential, pending = self.refresh_inputs()
++        forbidden = self.base / 'synthetic-private'; forbidden.write_bytes(os.urandom(32)); forbidden.chmod(0o600)
++        target = Path(manifest['policy']) / 'claude-refresh.mjs'; target.unlink(); os.link(forbidden, target)
++        observed = {'read': False, 'digest': False}; identity = forbidden.stat().st_ino
++        original_bytes, original_read, original_digest = Path.read_bytes, os.read, self.runtime.digest
++        def path_read(path):
++            if path.stat().st_ino == identity: observed['read'] = True
++            return original_bytes(path)
++        def fd_read(fd, size):
++            if os.fstat(fd).st_ino == identity: observed['read'] = True
++            return original_read(fd, size)
++        def digest(data):
++            observed['digest'] = True
++            return original_digest(data)
++        with patch.object(Path, 'read_bytes', path_read), patch.object(os, 'read', side_effect=fd_read), \
++             patch.object(self.runtime, 'digest', side_effect=digest):
++            with self.assertRaises(ValueError): self.runtime.refresh_command(manifest, 'exchange', credential, pending)
++        self.assertEqual(observed, {'read': False, 'digest': False})
++
++    def test_refresh_policy_replacement_during_read_is_rejected_before_digest(self):
++        manifest, credential, pending = self.refresh_inputs()
++        policy = Path(manifest['policy']); target = policy / 'empty-mcp.json'
++        replacement = self.base / 'replacement'; replacement.write_bytes(target.read_bytes())
++        observed = {'replaced': False, 'digest': False}
++        first_inode = (policy / 'claude-refresh.mjs').stat().st_ino
++        original_bytes, original_read, original_digest = Path.read_bytes, os.read, self.runtime.digest
++        def replace(inode):
++            if inode == first_inode and not observed['replaced']:
++                os.replace(replacement, target); observed['replaced'] = True
++        def path_read(path):
++            replace(path.stat().st_ino); return original_bytes(path)
++        def fd_read(fd, size):
++            replace(os.fstat(fd).st_ino); return original_read(fd, size)
++        def digest(data):
++            observed['digest'] = True; return original_digest(data)
++        with patch.object(Path, 'read_bytes', path_read), patch.object(os, 'read', side_effect=fd_read), \
++             patch.object(self.runtime, 'digest', side_effect=digest):
++            with self.assertRaises(ValueError): self.runtime.refresh_command(manifest, 'exchange', credential, pending)
++        self.assertEqual(observed, {'replaced': True, 'digest': False})
++
+     def test_external_symlink_and_ignored_explicit_input_are_rejected(self):
+         (self.source / 'escape').symlink_to('/etc/passwd')
+         for paths in [['escape'], ['.env']]:

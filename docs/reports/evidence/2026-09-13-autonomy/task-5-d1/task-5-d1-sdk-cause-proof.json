@@ -1,0 +1,17 @@
+{
+  "check_id": "task-5-d1-build",
+  "prior_consecutive_failures": 3,
+  "prior_recovery_consumed": true,
+  "cause": "direct clang with sanitized environment lacks an explicit macOS SDK sysroot",
+  "evidence_tools": [
+    "85de98",
+    "3ce3fa",
+    "7ad314",
+    "40f7ca"
+  ],
+  "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+  "sdk_and_fcntl_header_verified": true,
+  "required_correction": "explicit -isysroot pinned SDK, recorded in build pins; retain dedicated TMPDIR",
+  "source_correction_pending": true,
+  "does_not_prove_build_success": true
+}

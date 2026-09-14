@@ -1,0 +1,6 @@
+test_unknown_cleanup_survives_reopen_and_legacy_journal_is_rejected (__main__.RefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.012s
+
+OK

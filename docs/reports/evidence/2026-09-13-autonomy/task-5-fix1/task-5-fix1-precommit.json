@@ -1,0 +1,58 @@
+{
+  "captured_at": "2026-09-13T20:53:05.870941+00:00",
+  "head": "62567862027b3a0ba056a916f9f1466214fcc55e",
+  "index_diff": "",
+  "owned_files": [
+    {
+      "path": "scripts/agent-runtime/runtime.py",
+      "mode": "0o755",
+      "sha256": "c2c732b59cf95540638adcc8942c79b37a25b5938b08bc71e6408f5db019f91d"
+    },
+    {
+      "path": "scripts/agent-runtime/protocol-guard.mjs",
+      "mode": "0o644",
+      "sha256": "e3ce3c1ac14f50ddfa25b9413986915651b5b281efa7b8ee3539bdfb1905b4df"
+    },
+    {
+      "path": "scripts/agent-runtime/test_runtime.py",
+      "mode": "0o644",
+      "sha256": "a7365151ab537d463c77d2b0f0da7d84747cbfae77dcef19c51706d2b0e731a5"
+    },
+    {
+      "path": "scripts/agent-runtime/test_protocol_guard.mjs",
+      "mode": "0o644",
+      "sha256": "4f35644d2f21a3491c879881ce5832afbaf5f0466d2f0a5ee44928fcebb6e211"
+    },
+    {
+      "path": "docs/development/runtime-isolation.md",
+      "mode": "0o644",
+      "sha256": "cdf9b99ac90ba66139c655073105cb9aded2ade95c10acaafd95a6852787c606"
+    }
+  ],
+  "owned_scope_sha256": "389f9fbfa5190df54716487eb2e5128485f2013d1108d1ffca976e4cfc063878",
+  "dirty_scope": " M docs/development/runtime-isolation.md\n M docs/reports/2026-09-13-autonomy-execution-report.md\n M scripts/agent-runtime/protocol-guard.mjs\n M scripts/agent-runtime/runtime.py\n M scripts/agent-runtime/test_protocol_guard.mjs\n M scripts/agent-runtime/test_runtime.py\n?? docs/reports/evidence/2026-09-13-autonomy/claude-persistent-auth/\n?? docs/reports/evidence/2026-09-13-autonomy/d0-review/\n?? docs/reports/evidence/2026-09-13-autonomy/native-mcp-roster.json\n?? docs/reports/evidence/2026-09-13-autonomy/owner-native-discovery-readback.json\n?? docs/reports/evidence/2026-09-13-autonomy/remote-heads-runtime-preflight.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-commit-9e1f8be.txt\n?? docs/reports/evidence/2026-09-13-autonomy/root-docs-precommit-9e1f8be.json\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-implementation/\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-independent-review.md\n?? docs/reports/evidence/2026-09-13-autonomy/task-6-fix1-review.md\n",
+  "checks": {
+    "python_final": {
+      "exit": 0,
+      "tests": 14
+    },
+    "protocol_proxy_final": {
+      "exit": 0,
+      "tests": 6
+    },
+    "focused_red_python": {
+      "exit": 1,
+      "tests": 3,
+      "failed_assertions": 5
+    },
+    "focused_red_protocol": {
+      "exit": 1,
+      "tests": 3
+    }
+  },
+  "real_boundary_check_failures_this_round": 0,
+  "old_failure_counters_reset": false,
+  "model_or_native_launches": 0,
+  "docker_launches": 0,
+  "precheck_tool_limitation": "git write-tree index.lock denied by workspace sandbox; read-only cached diff substituted, no index mutation"
+}

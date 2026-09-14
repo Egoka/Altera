@@ -1,0 +1,60 @@
+// Реальный stdio MCP в контейнере: index → project map → outline.
+import { spawn, spawnSync } from "node:child_process"
+import fs from "node:fs"
+import readline from "node:readline"
+
+const index = spawnSync("/usr/local/bin/trace-mcp", ["index", process.cwd()], { encoding: "utf8", timeout: 30000 })
+fs.writeFileSync("/runtime/evidence/trace-index.log", (index.stdout || "") + (index.stderr || ""))
+if (index.status !== 0) throw new Error(`trace_index_exit_${index.status}`)
+const child = spawn("/usr/local/bin/trace-mcp", ["serve", "--preset", "review"], { stdio: ["pipe", "pipe", "pipe"] })
+const errors = fs.createWriteStream("/runtime/evidence/trace-stderr.log")
+child.stderr.pipe(errors)
+const pending = new Map()
+readline.createInterface({ input: child.stdout }).on("line", (line) => {
+  try {
+    const message = JSON.parse(line)
+    const callback = pending.get(message.id)
+    if (callback) {
+      pending.delete(message.id)
+      callback(message)
+    }
+  } catch {
+    /* Не принимать произвольный текст за protocol result. */
+  }
+})
+let id = 0
+async function request(method, params) {
+  const requestId = ++id
+  const result = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timeout_${method}`)), 30000)
+    pending.set(requestId, (value) => {
+      clearTimeout(timer)
+      resolve(value)
+    })
+  })
+  child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id: requestId, method, params }) + "\n")
+  return result
+}
+try {
+  const initialize = await request("initialize", {
+    protocolVersion: "2024-11-05",
+    capabilities: {},
+    clientInfo: { name: "altera-runtime-canary", version: "1.0.0" }
+  })
+  if (initialize.error) throw new Error("initialize_failed")
+  child.stdin.write('{"jsonrpc":"2.0","method":"notifications/initialized"}\n')
+  const map = await request("tools/call", { name: "get_project_map", arguments: { summary_only: true } })
+  const outline = await request("tools/call", { name: "get_outline", arguments: { path: "sample.js" } })
+  fs.writeFileSync("/runtime/evidence/trace-results.json", JSON.stringify({ initialize, map, outline }, null, 2))
+  if (
+    map.error ||
+    map.result?.isError ||
+    outline.error ||
+    outline.result?.isError ||
+    !JSON.stringify(outline).includes("answer")
+  )
+    throw new Error("trace_results_unaccepted")
+  process.stdout.write(JSON.stringify({ indexExit: 0, projectMap: true, outline: true }) + "\n")
+} finally {
+  child.kill("SIGTERM")
+}

@@ -1,0 +1,6 @@
+test_interrupted_transport_removes_worker_before_recovery (__main__.DockerRefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.433s
+
+OK

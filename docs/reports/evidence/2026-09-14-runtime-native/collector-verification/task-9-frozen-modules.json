@@ -1,0 +1,11 @@
+{
+  "scripts/agent-loop/native_collector.py": "cfd53f4739781f2618a52246705646524fccf050e2016b26b43fe0486989e95b",
+  "scripts/agent-loop/test_native_collector.py": "a5cfd058ec420ff69c33ebdd7dc42667b18b8ea1e12432b77a0857107693bf12",
+  "scripts/agent-runtime/runtime.py": "3f104d127949a68f57040be35916be4a14dd999b71918a7c33d81611dc69183c",
+  "scripts/agent-runtime/test_runtime.py": "0a8bf2b56545cb266246014037d532920fb6f091f2c99f0c25c106051dcac224",
+  "scripts/agent-runtime/native_adapter.py": "476adea1c1de99977332d26030c9382d00b4b11ae91ab0a781c0ee2fbb6bfa55",
+  "scripts/agent-runtime/native_codex_adapter.py": "30d9a585af556d9d7fb500aa8cece14534fe9313e3abc5f89c3c80774de5b0b9",
+  "scripts/agent-runtime/native_claude_adapter.py": "aec8f6374b7623607b27f019ef07b9036bec172912e39b2c44d5496673fe1f23",
+  "scripts/agent-runtime/test_native_adapter.py": "583bce52348ff611dbb5f807ee3879ad1edb4278a8fd28fb596b6f5be1f35064",
+  "scripts/agent-runtime/runtime-check.test.mjs": "45214742cf4426559244382b25608fee639c6d615af3387a0ff16c8fd1b162ee"
+}

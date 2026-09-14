@@ -1,0 +1,26 @@
+{
+  "base": "945397d47481d20c928b6779f98d5b5ab2c7cbbf",
+  "commit": "40a43e874799e4be4701d4ef4441bd81809466b7",
+  "owned_paths": [
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/claude-refresh.mjs",
+    "scripts/agent-runtime/credential_refresh.py",
+    "scripts/agent-runtime/refresh-manifest.example.json",
+    "scripts/agent-runtime/runtime.py",
+    "scripts/agent-runtime/test_claude_refresh.mjs",
+    "scripts/agent-runtime/test_credential_refresh.py",
+    "scripts/agent-runtime/test_refresh_docker.py",
+    "scripts/agent-runtime/test_runtime.py"
+  ],
+  "frozen_source_hashes_match_commit": true,
+  "index_empty": true,
+  "committed_diff_sha256": "ece5455bb161cb5503e9d987549e2e83883d65c831987388db726104ed6b3ff5",
+  "normal_hooks": "passed",
+  "hook_log": "task-5-refresh-commit.log",
+  "hook_tests": {
+    "web_pass": 5,
+    "server_pass": 19,
+    "server_todo": 1,
+    "server_files_skipped": 1
+  }
+}

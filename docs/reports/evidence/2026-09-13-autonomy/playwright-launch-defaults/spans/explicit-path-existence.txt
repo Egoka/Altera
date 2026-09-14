@@ -1,0 +1,7 @@
+      async resolveExecutablePath(options) {
+        const { executablePath } = options;
+        if (!executablePath)
+          return void 0;
+        if (!await existsAsync(executablePath))
+          throw new Error(`Failed to launch ${this._name} because executable doesn't exist at ${executablePath}`);
+        return executablePath;

@@ -1,0 +1,23 @@
+test_final_reopen_rejects_foreign_regular_file_before_any_read (__main__.CodexTomlMappingTests) ... FAIL
+test_final_reopen_refuses_fifo_nonblocking_before_any_read (__main__.CodexTomlMappingTests) ... FAIL
+
+======================================================================
+FAIL: test_final_reopen_rejects_foreign_regular_file_before_any_read (__main__.CodexTomlMappingTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 455, in test_final_reopen_rejects_foreign_regular_file_before_any_read
+    self.assertEqual(sum(foreign_read_bytes), 0)
+AssertionError: 29 != 0
+
+======================================================================
+FAIL: test_final_reopen_refuses_fifo_nonblocking_before_any_read (__main__.CodexTomlMappingTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_toml_map.py", line 495, in test_final_reopen_refuses_fifo_nonblocking_before_any_read
+    self.assertTrue(final_flags[0] & os.O_NONBLOCK)
+AssertionError: 0 is not true
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.004s
+
+FAILED (failures=2)

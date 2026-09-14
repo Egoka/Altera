@@ -1,0 +1,348 @@
+test_exact_lexical_candidates_and_cwd_boolean (__main__.CodexPathTests) ... FAIL
+test_help_and_version_are_static_and_truthful (__main__.CodexPathTests) ... FAIL
+test_imports_have_no_file_process_or_network_capability (__main__.CodexPathTests) ... FAIL
+test_maximum_candidate_is_not_truncated (__main__.CodexPathTests) ... FAIL
+test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) ... test_unrelated_env_and_argv_never_appear_or_change_capability (__main__.CodexPathTests) ... FAIL
+
+======================================================================
+FAIL: test_exact_lexical_candidates_and_cwd_boolean (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 81, in test_exact_lexical_candidates_and_cwd_boolean
+    data, _ = self.diagnostic(home, args=['app-server', '--listen', 'stdio://'])
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_help_and_version_are_static_and_truthful (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 121, in test_help_and_version_are_static_and_truthful
+    first = self.run_probe('D2_SECRET_VALUE', [argument], extra={'MULTICA_TOKEN': 'D2_SECRET_OTHER'})
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_imports_have_no_file_process_or_network_capability (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 149, in test_imports_have_no_file_process_or_network_capability
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_maximum_candidate_is_not_truncated (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 132, in test_maximum_candidate_is_not_truncated
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=6)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=7)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=8)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=9)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=10)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=11)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=12)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=13)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=14)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=15)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=16)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=17)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=18)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=19)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=20)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=21)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=22)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_missing_and_invalid_paths_are_opaque (__main__.CodexPathTests) (case=23)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 102, in test_missing_and_invalid_paths_are_opaque
+    data, raw = self.diagnostic(candidate)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+======================================================================
+FAIL: test_unrelated_env_and_argv_never_appear_or_change_capability (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 111, in test_unrelated_env_and_argv_never_appear_or_change_capability
+    data, raw = self.diagnostic(None, args=['--mcp-config', secret, '--CODEX_HOME=' + secret], extra={
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 65, in diagnostic
+    code, stdout, stderr = self.run_probe(home, **kwargs)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 47, in run_probe
+    self.assertTrue(self.binary.exists(), 'D2 metadata-only executable is missing')
+AssertionError: False is not true : D2 metadata-only executable is missing
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.002s
+
+FAILED (failures=29)

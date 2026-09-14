@@ -1,0 +1,59 @@
+test_prerequisite_output_rechecked_at_record (test_gate.GateTests) ... FAIL
+test_prerequisites_rechecked_at_completed_stop (test_gate.GateTests) ... FAIL
+test_prerequisites_rechecked_at_finish_and_active_stop (test_gate.GateTests) ... FAIL
+test_prerequisites_rechecked_at_record_after_review_start (test_gate.GateTests) ... FAIL
+
+======================================================================
+FAIL: test_prerequisite_output_rechecked_at_record (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 408, in test_prerequisite_output_rechecked_at_record
+    self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"failures": 0, "result": "recorded", "stopped": false}
+
+
+======================================================================
+FAIL: test_prerequisites_rechecked_at_completed_stop (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 428, in test_prerequisites_rechecked_at_completed_stop
+    self.cli('stop', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "contract_valid", "task_acceptance": "not_checked"}
+
+
+======================================================================
+FAIL: test_prerequisites_rechecked_at_finish_and_active_stop (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 417, in test_prerequisites_rechecked_at_finish_and_active_stop
+    self.finish(run='review-1', stage='review', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 97, in finish
+    return self.cli('finish', self.report, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"result": "contract_valid", "task_acceptance": "not_checked"}
+
+
+======================================================================
+FAIL: test_prerequisites_rechecked_at_record_after_review_start (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 400, in test_prerequisites_rechecked_at_record_after_review_start
+    self.record(self.evidence(run='review-1', stage='review', check='review', event='review-1'),
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"failures": 0, "result": "recorded", "stopped": false}
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 7.785s
+
+FAILED (failures=4)

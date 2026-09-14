@@ -1,0 +1,31 @@
+{
+  "at_utc": "2026-09-13T21:46:39.107749+00:00",
+  "source_head": "9534a378680b5fc16d3cec4319202bcaa6daa8fd",
+  "source_branch": "web/home-grid",
+  "source_paths": 733,
+  "source_bytes": 16482255,
+  "agent_tasks_count": 5,
+  "issue_runs_count": 2,
+  "nonterminal_count": 0,
+  "profiles": [],
+  "runtime_ids": [
+    "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "10b7bf57-0972-4439-aa71-2a2c30af4484",
+    "aad0c3d2-cfe4-47b4-8330-c94108f41f7a"
+  ],
+  "autopilots": [
+    {
+      "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "status": "paused"
+    },
+    {
+      "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+      "status": "paused"
+    },
+    {
+      "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+      "status": "paused"
+    }
+  ],
+  "native_started": false
+}

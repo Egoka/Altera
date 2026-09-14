@@ -1,0 +1,59 @@
+{
+  "head": "bbe668c59b3f3dbfe3c2a8bb0157f9e4e6e0fcff",
+  "files": [
+    {
+      "path": "scripts/agent-runtime/metadata-config-probe.c",
+      "sha256": "fc08cd669760e584511e9bf44629d6eee082ffb6128f7a1aeeb59e1b3cb5e0c7",
+      "mode": "0o644"
+    },
+    {
+      "path": "scripts/agent-runtime/test_metadata_config_probe.py",
+      "sha256": "fa795837e941fcf280276aeaedce52efbbc51b360e36e4978f0c7ac07c033838",
+      "mode": "0o644"
+    }
+  ],
+  "owned_scope_sha256": "cd0530db3253215c9beea2e1fcb8b02116919852d112efa22b6cfe995b84e84a",
+  "full_dirty_scope": " M docs/reports/2026-09-13-autonomy-execution-report.md\n M scripts/agent-runtime/metadata-config-probe.c\n M scripts/agent-runtime/test_metadata_config_probe.py\n?? docs/reports/evidence/2026-09-13-autonomy/next-step-preflight/\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.txt\n?? docs/reports/evidence/2026-09-13-autonomy/task-5-d1/\n",
+  "build": {
+    "alias": "/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T",
+    "binary": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-d1-fix1-probe",
+    "binary_sha256": "d0aa8b38065d2dfa0ed0fd6953be4554b2ceb8c884f416ddd60c17d0d5fe9464",
+    "build_sha256": "9c04d76e87424ef8d7dea89e8600e69ccfdd21fd2bb8c683b0e210217cb4ac91",
+    "builder_sha256": "3467dd9486fb9a5a8c3635dafa6c73c89092976e279f33fbe477046b55fa21fe",
+    "compiler": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
+    "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T",
+    "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+    "source_sha256": "fc08cd669760e584511e9bf44629d6eee082ffb6128f7a1aeeb59e1b3cb5e0c7",
+    "uid": 501
+  },
+  "old_d1_review_unchanged": true,
+  "checks": {
+    "focused_red": {
+      "exit": 1,
+      "tests": 3,
+      "failed_assertions": 18
+    },
+    "focused_green": {
+      "exit": 0,
+      "pass": 3
+    },
+    "covering_suite": {
+      "exit": 0,
+      "pass": 21
+    },
+    "sandbox": {
+      "control_allowed": 4,
+      "denied": 4
+    },
+    "pinned_binary": {
+      "canonical_exit": 78,
+      "alias_exit": 78,
+      "stdout_empty": true
+    }
+  },
+  "historical_build_failures": 3,
+  "new_real_check_failures": 0,
+  "independent_review_consecutive_failures": 1,
+  "native_or_models_launched": 0,
+  "actual_daemon_configs_read": 0
+}

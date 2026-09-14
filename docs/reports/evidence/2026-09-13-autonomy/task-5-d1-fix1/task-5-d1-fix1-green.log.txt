@@ -1,0 +1,8 @@
+test_option_values_cannot_become_mcp_read_authority (__main__.MetadataConfigTests) ... ok
+test_unsupported_or_ambiguous_native_argv_is_rejected_before_read (__main__.MetadataConfigTests) ... ok
+test_unreviewed_counts_cover_root_server_headers_and_env_without_disclosure (__main__.MetadataConfigTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.053s
+
+OK

@@ -1,0 +1,28 @@
+{
+  "attempt_id": "410601918bb743a780236d78e35824f8",
+  "check_id": "playwright canary",
+  "started_at": "2026-09-14T08:43:57.830Z",
+  "finished_at": "2026-09-14T08:44:01.099Z",
+  "outer_exit": 1,
+  "runner_exit": 1,
+  "mcp_exit": {
+    "code": 0,
+    "signal": null
+  },
+  "control_started": true,
+  "control_accepted": false,
+  "acceptance_started": false,
+  "navigation_response": "successful page URL/title plus linked snapshot, not inline snapshot text",
+  "snapshot_contains_marker": true,
+  "snapshot_sha256": "f04e9fd7f885796009058a2db52cc1bb1eda9a2b0952d1c779c7e14b96be91a5",
+  "seccomp_before_after_sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+  "sources_unchanged": true,
+  "cleanup": {
+    "three_exact_removals_exit0": true,
+    "network_empty_after_removals": true,
+    "network_removal_exit0": true,
+    "separate_absence_probe": false
+  },
+  "failure_count": 3,
+  "stopped": true
+}

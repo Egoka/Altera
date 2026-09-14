@@ -1,0 +1,15 @@
+{
+  "commit": "bbe668c59b3f3dbfe3c2a8bb0157f9e4e6e0fcff",
+  "tree": "f72d9650e4304d46ce8e09191fef9f761026f3c5",
+  "base": "a51b1116e1e2553605ab704bda2efc1cb463b31b",
+  "files": [
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/build_metadata_config_probe.py",
+    "scripts/agent-runtime/metadata-config-probe.c",
+    "scripts/agent-runtime/test_metadata_config_probe.py"
+  ],
+  "owned_source_matches_verified": true,
+  "hooks_exit": 0,
+  "hooks_log_sha256": "4d9441b09cf413baaba5027cec56e1ef3cb2789f99e091365b65680f2c01adab",
+  "remaining_dirty_scope": "?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.json\n?? docs/reports/evidence/2026-09-13-autonomy/root-runtime-docs-commit-a51b111.txt\n"
+}

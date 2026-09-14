@@ -1,0 +1,10 @@
+{
+  "authorized_at": "2026-09-14T08:34:40.749505+00:00",
+  "user_text": "\u0440\u0430\u0437\u0440\u0435\u0448\u0430\u044e \u043d\u0430 `chroot`",
+  "scope_document": "../task-5-playwright-chroot-approval-request.md",
+  "candidate_sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+  "two_cause_arms_authorized": true,
+  "one_browser_recovery_conditional_on_control_eperm_candidate_success": true,
+  "claude_refresh_authorized": false,
+  "browser_consecutive_failures_before": 2
+}

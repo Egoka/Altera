@@ -1,0 +1,20 @@
+{
+  "kind": "terminal_receipt",
+  "native": {
+    "id": "01a09fe5-ca39-7608-a030-082fa93798ce",
+    "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+    "status": "failed",
+    "started_at": "2026-09-14T12:30:32Z",
+    "completed_at": "2026-09-14T12:30:33Z"
+  },
+  "authority": "explicit_controller_runner",
+  "process_sha256": null,
+  "native_outcome": "failed",
+  "task_acceptance": "not_checked",
+  "process_outcome": "not_started",
+  "reason": "bind_incomplete",
+  "binding_sha256": "951e6182824ff50cf86db5de87f40751a5678e38e13dc333b6b3de5047e20a14",
+  "ticket_sha256": "0beff7b99b618e52713c96d0c9ca0b37d6b357bf35766a1ceea8eb8ce1b105fc"
+}

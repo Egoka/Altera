@@ -1,0 +1,223 @@
+[
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "image",
+      "inspect",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "create",
+      "--internal",
+      "--opt",
+      "com.docker.network.bridge.gateway_mode_ipv4=isolated",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "run",
+      "--detach",
+      "--name",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-web",
+      "--network=altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33",
+      "--network-alias=altera-web",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/policy/canary.mjs,dst=/fixture.mjs,readonly",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/fixture.mjs",
+      "web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "run",
+      "--detach",
+      "--name",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-sink",
+      "--network=altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33",
+      "--network-alias=forbidden-sink",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/policy/canary.mjs,dst=/fixture.mjs,readonly",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/fixture.mjs",
+      "sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "create",
+      "--init",
+      "--name",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-runner",
+      "--network=altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--security-opt=seccomp=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/seccomp.json",
+      "--workdir=/source",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/policy,dst=/runtime/policy,readonly",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/source,dst=/source,readonly",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/evidence,dst=/runtime/evidence",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/cache,dst=/runtime/cache",
+      "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-5/control/tmp,dst=/runtime/tmp",
+      "--env=HOME=/runtime/cache/home",
+      "--env=TMPDIR=/runtime/tmp",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/runtime/policy/canary.mjs",
+      "control",
+      "62129"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "start",
+      "--attach",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-runner"
+    ],
+    "exit": 1
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33-sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "rm",
+      "altera-pw-d9d5ab1f7e2843cdbd26dd54b69c9b33"
+    ],
+    "exit": 0
+  }
+]

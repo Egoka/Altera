@@ -1,0 +1,14 @@
+{
+  "at_utc": "2026-09-14T00:57:29.267190+00:00",
+  "check_id": "claude-refresh-live-v1",
+  "attempt_id": "394771f72e5a4101bfcbe8795222cae5",
+  "exchange_claim_exists": false,
+  "refresh_journal_exists": false,
+  "bootstrap_pointer_exists": true,
+  "rejected_before_process_creation": true,
+  "provider_exchange_executed": false,
+  "model_executed": false,
+  "live_failure_count": 0,
+  "reason": "automatic_approval_review_requires_explicit_credential_transfer_confirmation",
+  "workaround_attempted": false
+}

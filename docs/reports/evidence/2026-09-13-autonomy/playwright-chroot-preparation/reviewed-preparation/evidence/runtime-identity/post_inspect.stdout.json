@@ -1,0 +1,203 @@
+[
+    {
+        "Id": "6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c",
+        "Created": "2026-09-14T03:03:02.804770044Z",
+        "Path": "/usr/local/bin/node",
+        "Args": [
+            "-e",
+            "const fs=require('fs'),c=require('crypto'),p='/usr/bin/perl';const s=fs.statSync(p),b=fs.readFileSync(p);console.log(JSON.stringify({path:p,canonical:fs.realpathSync(p),regular:s.isFile(),executable:!!(s.mode\u002673),sha256:c.createHash('sha256').update(b).digest('hex'),elf:b.subarray(0,20).toString('hex')}));"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2026-09-14T03:03:02.910276585Z",
+            "FinishedAt": "2026-09-14T03:03:02.99490496Z"
+        },
+        "Image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+        "ResolvConfPath": "/var/lib/docker/containers/6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c/hostname",
+        "HostsPath": "/var/lib/docker/containers/6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c/hosts",
+        "LogPath": "/var/lib/docker/containers/6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c/6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c-json.log",
+        "Name": "/altera-chroot-identity-97bd451e7177",
+        "RestartCount": 0,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "none",
+            "PortBindings": {},
+            "RestartPolicy": {
+                "Name": "no",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": [
+                "ALL"
+            ],
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": true,
+            "SecurityOpt": [
+                "no-new-privileges"
+            ],
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 67108864,
+            "NanoCpus": 1000000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 134217728,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": 16,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/acpi",
+                "/proc/asound",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/sys/devices/virtual/powercap",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "Storage": {
+            "RootFS": {
+                "Snapshot": {
+                    "Name": "overlayfs"
+                }
+            }
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "6c07dc425e28",
+            "Domainname": "",
+            "User": "1000:1000",
+            "AttachStdin": false,
+            "AttachStdout": true,
+            "AttachStderr": true,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "NODE_VERSION=24.12.0",
+                "YARN_VERSION=1.22.22"
+            ],
+            "Cmd": [
+                "-e",
+                "const fs=require('fs'),c=require('crypto'),p='/usr/bin/perl';const s=fs.statSync(p),b=fs.readFileSync(p);console.log(JSON.stringify({path:p,canonical:fs.realpathSync(p),regular:s.isFile(),executable:!!(s.mode\u002673),sha256:c.createHash('sha256').update(b).digest('hex'),elf:b.subarray(0,20).toString('hex')}));"
+            ],
+            "Image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+            "Volumes": null,
+            "WorkingDir": "/runtime",
+            "Entrypoint": [
+                "/usr/local/bin/node"
+            ],
+            "Labels": {},
+            "StopTimeout": 1
+        },
+        "NetworkSettings": {
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "Networks": {
+                "none": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "504cdfe06d013c1a19e8aa768659d8be417b4423fc43691dd767db7e1c61e731",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "MacAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "digest": "sha256:53d55e6c9611b721b98e7549981ce353f9d1f88e10e675ee44d27ec33c43f58b",
+            "size": 2197,
+            "platform": {
+                "architecture": "arm64",
+                "os": "linux"
+            }
+        }
+    }
+]

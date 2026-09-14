@@ -1,0 +1,97 @@
+test_docs_only_requires_explicit_baseline_and_rejects_committed_product (test_gate.GateTests) ... ok
+test_duplicate_event_rejected_without_mutation (test_gate.GateTests) ... FAIL
+test_global_slot_and_run_replay_rejected (test_gate.GateTests) ... ok
+test_hook_repeated_stop_does_not_bypass_missing_passport (test_gate.GateTests) ... ok
+test_linked_worktrees_share_slot (test_gate.GateTests) ... ok
+test_lock_and_corrupt_state_fail_closed (test_gate.GateTests) ... ok
+test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests) ... FAIL
+test_paths_and_symlink_evidence_rejected (test_gate.GateTests) ... ok
+test_scope_cannot_omit_product_changes (test_gate.GateTests) ... ok
+test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests) ... FAIL
+test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests) ... FAIL
+test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests) ... FAIL
+test_two_failures_stop_stable_check_across_runs (test_gate.GateTests) ... FAIL
+test_wrong_stage_actor_and_unknown_check_rejected (test_gate.GateTests) ... ok
+
+======================================================================
+FAIL: test_duplicate_event_rejected_without_mutation (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 170, in test_duplicate_event_rejected_without_mutation
+    self.record(path)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "evidence cwd mismatch"}
+
+
+======================================================================
+FAIL: test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 221, in test_missing_foreign_or_modified_plan_report_rejected
+    self.record(self.evidence())
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "evidence cwd mismatch"}
+
+
+======================================================================
+FAIL: test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 198, in test_stale_evidence_and_output_tampering_rejected
+    self.record(self.evidence(event='event-2'), event='event-2')
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "evidence cwd mismatch"}
+
+
+======================================================================
+FAIL: test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 178, in test_success_resets_own_counter_and_expected_red_is_success
+    self.record(self.evidence('failed'))
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "evidence cwd mismatch"}
+
+
+======================================================================
+FAIL: test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 125, in test_supported_flow_checks_committed_and_dirty_revision
+    self.record(self.evidence())
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "evidence cwd mismatch"}
+
+
+======================================================================
+FAIL: test_two_failures_stop_stable_check_across_runs (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 156, in test_two_failures_stop_stable_check_across_runs
+    self.record(self.evidence('failed'))
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 84, in record
+    return self.cli('record', path, '--event', event, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"result": "rejected", "error": "evidence cwd mismatch"}
+
+
+----------------------------------------------------------------------
+Ran 14 tests in 9.539s
+
+FAILED (failures=6)

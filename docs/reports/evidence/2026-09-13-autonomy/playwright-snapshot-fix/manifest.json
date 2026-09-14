@@ -1,0 +1,65 @@
+{
+  "state": "offline_snapshot_fix_independent_pass_format_only_delta_browser_count3_stopped",
+  "files": [
+    {
+      "path": "task-5-playwright-snapshot-fix-report.md",
+      "bytes": 4424,
+      "sha256": "d32436fd6079e83d39d8e896d397bb3e0b545b1f27f32569c6e402a87a7bba90"
+    },
+    {
+      "path": "playwright-static/snapshot-fix/snapshot-only.diff",
+      "bytes": 15573,
+      "sha256": "e5c80ef5cfa33a30838254f696375b0def933e1b969c10f18caf134e5919cb7a"
+    },
+    {
+      "path": "playwright-static/snapshot-fix/source-proof.json",
+      "bytes": 2997,
+      "sha256": "fe465bb2052c5ad695361f7eeb7e6f3a447a5c66e54dbf7bc5d2b79cdbfa374c"
+    },
+    {
+      "path": "playwright-static/snapshot-fix/commands-and-results.json",
+      "bytes": 959,
+      "sha256": "dc56119736e23bba96a83495c0a0c595c08ed1ec4a212d32981c66695e3cfc55"
+    },
+    {
+      "path": "playwright-static/snapshot-fix/red.log",
+      "bytes": 869,
+      "sha256": "8f1dd296c1352df1310acd82480dd250e65a9b0eb2d8d7ccec116d3381146363"
+    },
+    {
+      "path": "playwright-static/snapshot-fix/green.log",
+      "bytes": 98,
+      "sha256": "8aab28da655a3f21320b0a03d2b54e0849d74845284cd66aeabfb61ac5c33c84"
+    },
+    {
+      "path": "playwright-static/snapshot-fix/covering.log",
+      "bytes": 103,
+      "sha256": "6340868bcb6fdb67e5f34c1b3013c8762c3a51faa85adab5e9daf2e9eb1b45ff"
+    },
+    {
+      "path": "task-5-playwright-snapshot-fix-independent-review.md",
+      "bytes": 4833,
+      "sha256": "8b83b15eea732662901d6e8e958fd5f818c17ab56142d6fba193bd8942daa530"
+    },
+    {
+      "path": "task-5-playwright-snapshot-recovery-request.md",
+      "bytes": 4390,
+      "sha256": "89011bf9c0deec22993f3c93278639fe51580c339f66cd4f16b5b2b91527792b"
+    },
+    {
+      "path": "playwright-static/format-only/format-only.diff",
+      "bytes": 697,
+      "sha256": "c5bce9e69e8fdc3372d95fdff0f6f0eab2da946f8ca3d247fbeb15b082450738"
+    },
+    {
+      "path": "playwright-static/format-only/source-proof.json",
+      "bytes": 478,
+      "sha256": "059d6bea02ee0ca775536cbf8386b04b264ad30c47a00438ac59044de0858f68"
+    },
+    {
+      "path": "root-playwright-chroot-recovery-integrity.json",
+      "bytes": 597,
+      "sha256": "61e9ab39246128d2874751b9c7ca797e074b6b3d1519f3e25ebc6c212bcc5474"
+    }
+  ]
+}

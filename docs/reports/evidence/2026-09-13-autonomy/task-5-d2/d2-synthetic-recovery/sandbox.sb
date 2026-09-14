@@ -1,0 +1,6 @@
+(version 1)
+(deny default)
+(allow sysctl-read)
+(allow file-read-metadata)
+(allow file-read-data (subpath "/usr/lib") (subpath "/System/Library") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/d2-synthetic-recovery") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers") (literal "/private/tmp/altera-agent-loop-autonomy") (literal "/private/tmp") (literal "/private") (literal "/") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/d2-synthetic-recovery/codex-path-probe") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/d2-synthetic-recovery/sandbox-control"))
+(allow process-exec (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/d2-synthetic-recovery/codex-path-probe") (literal "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/d2-synthetic-recovery/sandbox-control"))

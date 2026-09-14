@@ -1,0 +1,181 @@
+test_docs_only_requires_explicit_baseline_and_rejects_committed_product (test_gate.GateTests) ... FAIL
+test_duplicate_event_rejected_without_mutation (test_gate.GateTests) ... FAIL
+test_global_slot_and_run_replay_rejected (test_gate.GateTests) ... FAIL
+test_hook_repeated_stop_does_not_bypass_missing_passport (test_gate.GateTests) ... FAIL
+test_linked_worktrees_share_slot (test_gate.GateTests) ... FAIL
+test_lock_and_corrupt_state_fail_closed (test_gate.GateTests) ... FAIL
+test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests) ... FAIL
+test_paths_and_symlink_evidence_rejected (test_gate.GateTests) ... FAIL
+test_scope_cannot_omit_product_changes (test_gate.GateTests) ... ok
+test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests) ... FAIL
+test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests) ... FAIL
+test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests) ... FAIL
+test_two_failures_stop_stable_check_across_runs (test_gate.GateTests) ... FAIL
+test_wrong_stage_actor_and_unknown_check_rejected (test_gate.GateTests) ... FAIL
+
+======================================================================
+FAIL: test_docs_only_requires_explicit_baseline_and_rejects_committed_product (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 111, in test_docs_only_requires_explicit_baseline_and_rejects_committed_product
+    self.cli('docs-only', '--baseline', self.base)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_duplicate_event_rejected_without_mutation (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 169, in test_duplicate_event_rejected_without_mutation
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_global_slot_and_run_replay_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 146, in test_global_slot_and_run_replay_rejected
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_hook_repeated_stop_does_not_bypass_missing_passport (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 106, in test_hook_repeated_stop_does_not_bypass_missing_passport
+    self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : 
+
+======================================================================
+FAIL: test_linked_worktrees_share_slot (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 257, in test_linked_worktrees_share_slot
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_lock_and_corrupt_state_fail_closed (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 246, in test_lock_and_corrupt_state_fail_closed
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_missing_foreign_or_modified_plan_report_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 219, in test_missing_foreign_or_modified_plan_report_rejected
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_paths_and_symlink_evidence_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 228, in test_paths_and_symlink_evidence_rejected
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_stale_evidence_and_output_tampering_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 193, in test_stale_evidence_and_output_tampering_rejected
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_success_resets_own_counter_and_expected_red_is_success (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 178, in test_success_resets_own_counter_and_expected_red_is_success
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_supported_flow_checks_committed_and_dirty_revision (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 125, in test_supported_flow_checks_committed_and_dirty_revision
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_two_failures_stop_stable_check_across_runs (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 156, in test_two_failures_stop_stable_check_across_runs
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+======================================================================
+FAIL: test_wrong_stage_actor_and_unknown_check_rejected (test_gate.GateTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 204, in test_wrong_stage_actor_and_unknown_check_rejected
+    self.start()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 60, in start
+    return self.cli('start', self.plan, '--stage', stage, '--actor', actor, '--run', run, ok=ok)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 56, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 2 != 0 : {"error": "gate not implemented"}
+
+
+----------------------------------------------------------------------
+Ran 14 tests in 1.209s
+
+FAILED (failures=13)

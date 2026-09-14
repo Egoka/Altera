@@ -1,0 +1,8 @@
+[
+  "/usr/bin/python3",
+  "-I",
+  "scripts/agent-runtime/test_playwright_mcp.py",
+  "--docker",
+  "sha256:b0d67b0db2aaff00e3b12e487099fd9c9f0ff1c78c9e355f998d3dc291e5a8f9",
+  "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/canary-1"
+]

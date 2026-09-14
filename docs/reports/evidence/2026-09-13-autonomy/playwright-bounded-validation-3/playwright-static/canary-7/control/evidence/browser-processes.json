@@ -1,0 +1,352 @@
+{
+  "observer": {
+    "pid": "self",
+    "argv": [],
+    "raw_cmdline": null,
+    "command_format": "nul-argv",
+    "errors": [],
+    "starttime": "24855093",
+    "fields": {
+      "Uid": "1000\t1000\t1000\t1000",
+      "Gid": "1000\t1000\t1000\t1000",
+      "NSpid": "7",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapAmb": "0000000000000000",
+      "NoNewPrivs": "1",
+      "Seccomp": "2",
+      "Seccomp_filters": "1"
+    },
+    "uid_map": "         0          0 4294967295\n",
+    "gid_map": "         0          0 4294967295\n",
+    "user_namespace": {
+      "value": "user:[4026531837]"
+    }
+  },
+  "rows": [
+    {
+      "pid": "32",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "--disable-field-trial-config",
+        "--disable-background-networking",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-back-forward-cache",
+        "--disable-breakpad",
+        "--disable-client-side-phishing-detection",
+        "--disable-component-extensions-with-background-pages",
+        "--disable-component-update",
+        "--no-default-browser-check",
+        "--disable-default-apps",
+        "--disable-dev-shm-usage",
+        "--disable-edgeupdater",
+        "--disable-extensions",
+        "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+        "--enable-features=CDPScreenshotNewSurface",
+        "--allow-pre-commit-input",
+        "--disable-hang-monitor",
+        "--disable-ipc-flooding-protection",
+        "--disable-popup-blocking",
+        "--disable-prompt-on-repost",
+        "--disable-renderer-backgrounding",
+        "--disable-updater-scheduler",
+        "--force-color-profile=srgb",
+        "--metrics-recording-only",
+        "--no-first-run",
+        "--password-store=basic",
+        "--use-mock-keychain",
+        "--no-service-autorun",
+        "--export-tagged-pdf",
+        "--disable-search-engine-choice-screen",
+        "--unsafely-disable-devtools-self-xss-warnings",
+        "--edge-skip-compat-layer-relaunch",
+        "--disable-infobars",
+        "--disable-search-engine-choice-screen",
+        "--disable-sync",
+        "--enable-unsafe-swiftshader",
+        "--headless",
+        "--hide-scrollbars",
+        "--mute-audio",
+        "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+        "--disable-blink-features=AutomationControlled",
+        "--user-data-dir=/runtime/tmp/playwright_chromiumdev_profile-wtmwAd",
+        "--remote-debugging-pipe",
+        "--no-startup-window"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell\u0000--disable-field-trial-config\u0000--disable-background-networking\u0000--disable-background-timer-throttling\u0000--disable-backgrounding-occluded-windows\u0000--disable-back-forward-cache\u0000--disable-breakpad\u0000--disable-client-side-phishing-detection\u0000--disable-component-extensions-with-background-pages\u0000--disable-component-update\u0000--no-default-browser-check\u0000--disable-default-apps\u0000--disable-dev-shm-usage\u0000--disable-edgeupdater\u0000--disable-extensions\u0000--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion\u0000--enable-features=CDPScreenshotNewSurface\u0000--allow-pre-commit-input\u0000--disable-hang-monitor\u0000--disable-ipc-flooding-protection\u0000--disable-popup-blocking\u0000--disable-prompt-on-repost\u0000--disable-renderer-backgrounding\u0000--disable-updater-scheduler\u0000--force-color-profile=srgb\u0000--metrics-recording-only\u0000--no-first-run\u0000--password-store=basic\u0000--use-mock-keychain\u0000--no-service-autorun\u0000--export-tagged-pdf\u0000--disable-search-engine-choice-screen\u0000--unsafely-disable-devtools-self-xss-warnings\u0000--edge-skip-compat-layer-relaunch\u0000--disable-infobars\u0000--disable-search-engine-choice-screen\u0000--disable-sync\u0000--enable-unsafe-swiftshader\u0000--headless\u0000--hide-scrollbars\u0000--mute-audio\u0000--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4\u0000--disable-blink-features=AutomationControlled\u0000--user-data-dir=/runtime/tmp/playwright_chromiumdev_profile-wtmwAd\u0000--remote-debugging-pipe\u0000--no-startup-window\u0000",
+      "command_format": "nul-argv",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855192",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "32",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "35",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --no-zygote-sandbox --headless"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --no-zygote-sandbox --headless\u0000",
+      "command_format": "rewritten-title",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855196",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "35",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "36",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless\u0000",
+      "command_format": "rewritten-title",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855197",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "36\t1",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "000001ffffffffff",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "      1000       1000          1\n",
+      "gid_map": "      1000       1000          1\n",
+      "user_namespace": {
+        "value": "user:[4026535659]"
+      }
+    },
+    {
+      "pid": "38",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless\u0000",
+      "command_format": "rewritten-title",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855198",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "38\t3",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000200000",
+        "CapEff": "0000000000200000",
+        "CapBnd": "000001ffffffffff",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "      1000       1000          1\n",
+      "gid_map": "      1000       1000          1\n",
+      "user_namespace": {
+        "value": "user:[4026535659]"
+      }
+    },
+    {
+      "pid": "53",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=gpu-process --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAA"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=gpu-process --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAA\u0000",
+      "command_format": "rewritten-title",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855199",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "53",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "72",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-dev-shm-usage --use-angle=swiftshader-webgl --use-gl=angle --mute-audio --headless=old --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,15312113499335419479,14183251289569169316,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BlockOriginHeaderModificationOnRedirect,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=7,i,1539721864368982417,7627440919525445068,4 --trace-process-track-uuid=3190708989122997041"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-dev-shm-usage --use-angle=swiftshader-webgl --use-gl=angle --mute-audio --headless=old --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,15312113499335419479,14183251289569169316,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BlockOriginHeaderModificationOnRedirect,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=7,i,1539721864368982417,7627440919525445068,4 --trace-process-track-uuid=3190708989122997041\u0000",
+      "command_format": "rewritten-title",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855249",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "72",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "93",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=renderer --headless=old --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-plat"
+      ],
+      "raw_cmdline": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=renderer --headless=old --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-plat\u0000",
+      "command_format": "rewritten-title",
+      "errors": [],
+      "exe": {
+        "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "dev": "117",
+        "ino": "647425",
+        "regular": true,
+        "mode": "33261",
+        "size": "189402512",
+        "mtimeNs": "1789352140000000000",
+        "ctimeNs": "1789352155076503013"
+      },
+      "starttime": "24855251",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "93\t4\t1",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "000001ffffffffff",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "2"
+      },
+      "uid_map": "      1000       1000          1\n",
+      "gid_map": "      1000       1000          1\n",
+      "user_namespace": {
+        "value": "user:[4026535659]"
+      }
+    }
+  ],
+  "scanErrors": [],
+  "executable": {
+    "path": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+    "dev": "117",
+    "ino": "647425",
+    "regular": true,
+    "mode": "33261",
+    "size": "189402512",
+    "mtimeNs": "1789352140000000000",
+    "ctimeNs": "1789352155076503013"
+  }
+}

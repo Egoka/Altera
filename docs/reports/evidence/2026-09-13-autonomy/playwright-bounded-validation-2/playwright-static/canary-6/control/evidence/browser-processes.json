@@ -1,0 +1,256 @@
+{
+  "observer": {
+    "pid": "self",
+    "argv": [],
+    "errors": [],
+    "starttime": "24790037",
+    "fields": {
+      "Uid": "1000\t1000\t1000\t1000",
+      "Gid": "1000\t1000\t1000\t1000",
+      "NSpid": "7",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapAmb": "0000000000000000",
+      "NoNewPrivs": "1",
+      "Seccomp": "2",
+      "Seccomp_filters": "1"
+    },
+    "uid_map": "         0          0 4294967295\n",
+    "gid_map": "         0          0 4294967295\n",
+    "user_namespace": {
+      "value": "user:[4026531837]"
+    }
+  },
+  "rows": [
+    {
+      "pid": "32",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+        "--disable-field-trial-config",
+        "--disable-background-networking",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-back-forward-cache",
+        "--disable-breakpad",
+        "--disable-client-side-phishing-detection",
+        "--disable-component-extensions-with-background-pages",
+        "--disable-component-update",
+        "--no-default-browser-check",
+        "--disable-default-apps",
+        "--disable-dev-shm-usage",
+        "--disable-edgeupdater",
+        "--disable-extensions",
+        "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+        "--enable-features=CDPScreenshotNewSurface",
+        "--allow-pre-commit-input",
+        "--disable-hang-monitor",
+        "--disable-ipc-flooding-protection",
+        "--disable-popup-blocking",
+        "--disable-prompt-on-repost",
+        "--disable-renderer-backgrounding",
+        "--disable-updater-scheduler",
+        "--force-color-profile=srgb",
+        "--metrics-recording-only",
+        "--no-first-run",
+        "--password-store=basic",
+        "--use-mock-keychain",
+        "--no-service-autorun",
+        "--export-tagged-pdf",
+        "--disable-search-engine-choice-screen",
+        "--unsafely-disable-devtools-self-xss-warnings",
+        "--edge-skip-compat-layer-relaunch",
+        "--disable-infobars",
+        "--disable-search-engine-choice-screen",
+        "--disable-sync",
+        "--enable-unsafe-swiftshader",
+        "--headless",
+        "--hide-scrollbars",
+        "--mute-audio",
+        "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+        "--disable-blink-features=AutomationControlled",
+        "--user-data-dir=/runtime/tmp/playwright_chromiumdev_profile-4KDDzl",
+        "--remote-debugging-pipe",
+        "--no-startup-window"
+      ],
+      "errors": [],
+      "starttime": "24790142",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "32",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "35",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --no-zygote-sandbox --headless"
+      ],
+      "errors": [],
+      "starttime": "24790145",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "35",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "36",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless"
+      ],
+      "errors": [],
+      "starttime": "24790145",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "36\t1",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "000001ffffffffff",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "      1000       1000          1\n",
+      "gid_map": "      1000       1000          1\n",
+      "user_namespace": {
+        "value": "user:[4026535659]"
+      }
+    },
+    {
+      "pid": "38",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless"
+      ],
+      "errors": [],
+      "starttime": "24790146",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "38\t3",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000200000",
+        "CapEff": "0000000000200000",
+        "CapBnd": "000001ffffffffff",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "      1000       1000          1\n",
+      "gid_map": "      1000       1000          1\n",
+      "user_namespace": {
+        "value": "user:[4026535659]"
+      }
+    },
+    {
+      "pid": "54",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=gpu-process --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAA"
+      ],
+      "errors": [],
+      "starttime": "24790147",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "54",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "73",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-dev-shm-usage --use-angle=swiftshader-webgl --use-gl=angle --mute-audio --headless=old --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,17905413727812230093,8369023344363284317,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BlockOriginHeaderModificationOnRedirect,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=7,i,6199143251911370035,5957414092429795204,4 --trace-process-track-uuid=3190708989122997041"
+      ],
+      "errors": [],
+      "starttime": "24790164",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "73",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "1"
+      },
+      "uid_map": "         0          0 4294967295\n",
+      "gid_map": "         0          0 4294967295\n",
+      "user_namespace": {
+        "value": "user:[4026531837]"
+      }
+    },
+    {
+      "pid": "94",
+      "argv": [
+        "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=renderer --headless=old --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-plat"
+      ],
+      "errors": [],
+      "starttime": "24790167",
+      "fields": {
+        "Uid": "1000\t1000\t1000\t1000",
+        "Gid": "1000\t1000\t1000\t1000",
+        "NSpid": "94\t4\t1",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapBnd": "000001ffffffffff",
+        "CapAmb": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "Seccomp_filters": "2"
+      },
+      "uid_map": "      1000       1000          1\n",
+      "gid_map": "      1000       1000          1\n",
+      "user_namespace": {
+        "value": "user:[4026535659]"
+      }
+    }
+  ],
+  "scanErrors": []
+}

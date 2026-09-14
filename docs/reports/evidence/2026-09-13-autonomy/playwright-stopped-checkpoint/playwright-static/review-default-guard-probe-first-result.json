@@ -1,0 +1,1 @@
+{"exit_code":1,"exception":"ValueError: playwright_policy_invalid","cause":"Synthetic encoder replaced lowercase playwright only; uppercase PLAYWRIGHT environment names still matched the guard after lower().","correction":"Encode the first character of case-insensitive occurrences while preserving decoded case.","same_probe_unexpected_failure_count":1,"external_action":false}

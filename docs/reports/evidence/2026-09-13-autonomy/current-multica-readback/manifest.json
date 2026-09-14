@@ -1,0 +1,10 @@
+{
+  "state": "read_only_three_commands_success_no_mutations",
+  "files": [
+    {
+      "path": "task-closure-current-multica-readback.json",
+      "bytes": 2055,
+      "sha256": "42d3d6cea7d22254875d39e1f384c9ccba61896db16f0a6b71e614fd570eb432"
+    }
+  ]
+}

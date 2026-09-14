@@ -1,0 +1,17 @@
+test_malformed_v3_counters_and_history_are_rejected_without_reset (test_gate.LifecycleTests) ... FAIL
+
+======================================================================
+FAIL: test_malformed_v3_counters_and_history_are_rejected_without_reset (test_gate.LifecycleTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 768, in test_malformed_v3_counters_and_history_are_rejected_without_reset
+    self.cli('status', ok=False)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-loop/test_gate.py", line 55, in cli
+    self.assertEqual(proc.returncode, 0 if ok else 2, proc.stdout + proc.stderr)
+AssertionError: 0 != 2 : {"completed": {}, "docs_only": {}, "events": {}, "parent": {"passport": "docs/plans/fixture.gate.json", "passport_hash": "f6c254d03c8bcc514222741f93aa8eded06e61421bcbeef78506785dbfde3f24", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmpmhj4a6yk", "task": "T-fixture"}, "runs": ["plan-1"], "slot": {"actor": "plan", "evidence": [], "input": {"dirty_fingerprint": "clean", "revision_commit": "82074cb03350db2e6f4a2ebf92e5c8a264660b38"}, "iteration": 0, "lease": {"automatic_expiry": false, "owner": "plan", "run": "plan-1"}, "outside_dirty": "clean", "passport": "docs/plans/fixture.gate.json", "passport_hash": "f6c254d03c8bcc514222741f93aa8eded06e61421bcbeef78506785dbfde3f24", "protected_dirty": "clean", "root": "/private/var/folders/xz/yn80lx2x1p53m340xfdlcsmc0000gn/T/tmpmhj4a6yk", "run": "plan-1", "stage": "plan", "task": "T-fixture"}, "tasks": {"T-fixture": {"anchor": {"dirty_fingerprint": "clean", "revision_commit": "82074cb03350db2e6f4a2ebf92e5c8a264660b38"}, "checks": {"plan": {"plan": {"failures": 0}}}, "current_stages": {}, "iteration": 0, "lifecycle": true, "passport_hash": "f6c254d03c8bcc514222741f93aa8eded06e61421bcbeef78506785dbfde3f24", "pending_publication": null, "relations": [], "used_remedies": [], "verification_target": null}}, "version": 3}
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.611s
+
+FAILED (failures=1)

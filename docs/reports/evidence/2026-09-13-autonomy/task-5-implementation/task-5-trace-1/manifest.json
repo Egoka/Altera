@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "family": "claude",
+  "source": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-trace-1/source",
+  "snapshot": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-trace-1/snapshot",
+  "state": {
+    "head": "d20d986f2c363e54ea0fe61b9624885eed7e8c0b",
+    "tree": "e6633c6c9b446582175f89e259ebedcc1f5166d4",
+    "dirty_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {}
+  },
+  "dirty_paths": [],
+  "policy": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-trace-1/policy",
+  "policy_sha256": "8c035690038e5cd97062dd2781f4412d3ca08cd2f18d3b796a563442de0d02ae",
+  "run_root": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-trace-1/run",
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "model": "claude-opus-4-6",
+  "effort": "medium",
+  "env_paths": {},
+  "path_map": {},
+  "managed_mapping_verified": false,
+  "fixture": true
+}

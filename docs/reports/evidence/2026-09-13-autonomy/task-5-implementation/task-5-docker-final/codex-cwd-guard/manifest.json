@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "family": "codex",
+  "source": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-final/codex-cwd-guard/source",
+  "snapshot": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-final/codex-cwd-guard/snapshot",
+  "state": {
+    "head": "aaa39968fe1236976bbf9cd205714ab4dfea69fd",
+    "tree": "1971f5f834cff8ffd569aab628f1409587d4a060",
+    "dirty_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked": {}
+  },
+  "dirty_paths": [],
+  "policy": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-final/codex-cwd-guard/policy",
+  "policy_sha256": "1a68bd3d6083f8189734c5be77c29c3afc0813f76ddf23873d4b65b764d49973",
+  "run_root": "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/task-5-docker-final/codex-cwd-guard/run",
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "env_paths": {},
+  "path_map": {},
+  "managed_mapping_verified": true,
+  "fixture": false
+}

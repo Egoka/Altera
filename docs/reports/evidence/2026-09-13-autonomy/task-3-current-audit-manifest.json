@@ -1,0 +1,27 @@
+{
+  "audit_kind": "post_commit_current_audit_not_precommit_evidence",
+  "observed_at": "2026-09-13T20:14:10.785294+03:00",
+  "revision_commit": "b8e00f13b53cd73db8571d248e6823165d5f3764",
+  "files": [
+    { "path": ".github/workflows/pull_request.yml", "commit_sha256": "4c7203ed6ff095a573f874e6218f180b9ac341feebdd4016b839c908f7a0158c", "worktree_sha256": "4c7203ed6ff095a573f874e6218f180b9ac341feebdd4016b839c908f7a0158c", "equal": true },
+    { "path": ".nvmrc", "commit_sha256": "38d8d1f43fc6a2759abe574ea7a05eae49e3b894110006ec85dba94603c5e226", "worktree_sha256": "38d8d1f43fc6a2759abe574ea7a05eae49e3b894110006ec85dba94603c5e226", "equal": true },
+    { "path": "package.json", "commit_sha256": "f564b953b3ab475316a1de0559471374ea3c891df9a8647a8ba4828decc00214", "worktree_sha256": "f564b953b3ab475316a1de0559471374ea3c891df9a8647a8ba4828decc00214", "equal": true },
+    { "path": "pnpm-lock.yaml", "commit_sha256": "56b0a77ebeb2aedcf7b8b4b801cb385ae119edf697798cac4eb4a4eb43723438", "worktree_sha256": "56b0a77ebeb2aedcf7b8b4b801cb385ae119edf697798cac4eb4a4eb43723438", "equal": true },
+    { "path": "server/package.json", "commit_sha256": "e4584197c28e83a58e837bef1fb9d50c2e76bb36f65d6860f9289887e1aafb07", "worktree_sha256": "e4584197c28e83a58e837bef1fb9d50c2e76bb36f65d6860f9289887e1aafb07", "equal": true },
+    { "path": "server/tests/public-schema-contract.test.ts", "commit_sha256": "a5ce76be1992b94268ae7bbb3398f07895b74666a8c7c530b2582a9ef61c256b", "worktree_sha256": "a5ce76be1992b94268ae7bbb3398f07895b74666a8c7c530b2582a9ef61c256b", "equal": true },
+    { "path": "web/.prettierignore", "commit_sha256": "c3f469b40937a2e0b9ee315e68c68163dfe529564b83a34db7d6bb044c450c0c", "worktree_sha256": "c3f469b40937a2e0b9ee315e68c68163dfe529564b83a34db7d6bb044c450c0c", "equal": true },
+    { "path": "web/package.json", "commit_sha256": "fe31c0de888b68b7ac5b30b6a618cefc4f064e4bb5e3f514f7349b684bd8a145", "worktree_sha256": "fe31c0de888b68b7ac5b30b6a618cefc4f064e4bb5e3f514f7349b684bd8a145", "equal": true },
+    { "path": "web/playwright.config.ts", "commit_sha256": "4c90c31019c8c6f5417db2b6f27e4144699b348c3568c0511a8877286a34a776", "worktree_sha256": "4c90c31019c8c6f5417db2b6f27e4144699b348c3568c0511a8877286a34a776", "equal": true },
+    { "path": "web/tests/e2e/01-register-login.spec.ts", "commit_sha256": "2937a506427aa52a5023559f9f10483f34158aeaae6389b05e0ef9f4f5c7118c", "worktree_sha256": "2937a506427aa52a5023559f9f10483f34158aeaae6389b05e0ef9f4f5c7118c", "equal": true },
+    { "path": "web/tests/e2e/03-write-publish.spec.ts", "commit_sha256": "15bbbefe4de1ceeb2d9701e30cb0d688595944c69c4adc34a13030e16555f119", "worktree_sha256": "15bbbefe4de1ceeb2d9701e30cb0d688595944c69c4adc34a13030e16555f119", "equal": true },
+    { "path": "web/tests/e2e/04-reedit-after-autopublish.spec.ts", "commit_sha256": "0b80d3fffbc009b906b22bf6b1fd03a17c0dc61e9cda60812ffa1c14e6f5af31", "worktree_sha256": "0b80d3fffbc009b906b22bf6b1fd03a17c0dc61e9cda60812ffa1c14e6f5af31", "equal": true },
+    { "path": "web/tests/e2e/05-manual-moderation.spec.ts", "commit_sha256": "fb09b7723689aff7cfdae0681660d79dac16346e62a7aaa14462e8d25a4b76ea", "worktree_sha256": "fb09b7723689aff7cfdae0681660d79dac16346e62a7aaa14462e8d25a4b76ea", "equal": true },
+    { "path": "web/tests/e2e/11-admin-archive-account.spec.ts", "commit_sha256": "79129ba5cef6b7fb60526581213c8e1c6dc5749f2876b6e2505e89cede7d48a0", "worktree_sha256": "79129ba5cef6b7fb60526581213c8e1c6dc5749f2876b6e2505e89cede7d48a0", "equal": true },
+    { "path": "web/tests/e2e/12-self-archive-export.spec.ts", "commit_sha256": "0a94d087a2c9b18994488f67c293bd4968d532391ec519637047f0c6e54100f7", "worktree_sha256": "0a94d087a2c9b18994488f67c293bd4968d532391ec519637047f0c6e54100f7", "equal": true },
+    { "path": "web/tests/e2e/13-email-change-recovery.spec.ts", "commit_sha256": "394531788cc7ac034ededb2ed10585edf384fbd7723e5f483a56fcfa0849f1e2", "worktree_sha256": "394531788cc7ac034ededb2ed10585edf384fbd7723e5f483a56fcfa0849f1e2", "equal": true },
+    { "path": "web/tests/e2e/15-article-archive-restore.spec.ts", "commit_sha256": "af048fc4faeace3747b94481a24d843116d6cb19bf3a3e5c4c34dc95ce34e7d9", "worktree_sha256": "af048fc4faeace3747b94481a24d843116d6cb19bf3a3e5c4c34dc95ce34e7d9", "equal": true },
+    { "path": "web/tests/e2e/16-permanent-delete.spec.ts", "commit_sha256": "7abdc7dd307d3f1c93c758d2159d8e57f004804816aabbe5338e5d1ef2b7f6ea", "worktree_sha256": "7abdc7dd307d3f1c93c758d2159d8e57f004804816aabbe5338e5d1ef2b7f6ea", "equal": true },
+    { "path": "web/tests/e2e/homepage.smoke.spec.ts", "commit_sha256": "7ba3ee53214cbf885e4f86f7b6d28602a874d6000a40ef87ec90ec2d6132b1d5", "worktree_sha256": "7ba3ee53214cbf885e4f86f7b6d28602a874d6000a40ef87ec90ec2d6132b1d5", "equal": true }
+  ],
+  "all_equal": true
+}

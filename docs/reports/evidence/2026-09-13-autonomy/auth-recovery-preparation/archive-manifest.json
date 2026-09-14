@@ -1,0 +1,10 @@
+{
+  "state": "read_only_preparation_no_implementation_or_task_acceptance",
+  "files": [
+    {
+      "file": "task-3-minimal-auth-dispatch-readiness.md",
+      "bytes": 16102,
+      "sha256": "c22f98de8adb3f740370a8bd9751e5f13eca692c75f0c77a97e59133804ce0e9"
+    }
+  ]
+}

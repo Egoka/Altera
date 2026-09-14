@@ -104,6 +104,7 @@ docs/.vitepress/cache
 .claude/settings.local.json
 AGENTS.md
 .multica/
+.worktrees/
 .trace-mcp/
 
 # Playwright runtime artifacts

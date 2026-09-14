@@ -1,0 +1,9 @@
+clang: error: unable to make temporary file: Operation not permitted
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_metadata_config_probe.py", line 51, in <module>
+    build(args.output, args.root, args.uid, args.alias)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_metadata_config_probe.py", line 36, in build
+    subprocess.run([COMPILER, '-std=c11', '-Wall', '-Wextra', '-Werror', '-O2',
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/subprocess.py", line 528, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang', '-std=c11', '-Wall', '-Wextra', '-Werror', '-O2', '-I', '/private/tmp/altera-d1-build-zqq4y9bx', '/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/metadata-config-probe.c', '-o', '/private/tmp/altera-d1-debug']' returned non-zero exit status 1.

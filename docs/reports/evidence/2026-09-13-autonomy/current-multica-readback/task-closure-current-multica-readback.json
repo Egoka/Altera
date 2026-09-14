@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-09-14T10:05:49.299853+00:00",
+  "read_only": true,
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "autopilots": {
+    "command": [
+      "/Applications/Multica.app/Contents/Resources/app.asar.unpacked/resources/bin/multica",
+      "--workspace-id",
+      "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+      "autopilot",
+      "list",
+      "--output",
+      "json"
+    ],
+    "exit": 0,
+    "stderr_bytes": 0,
+    "rows": [
+      {
+        "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+        "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+        "name": null,
+        "status": "paused",
+        "enabled": null
+      },
+      {
+        "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+        "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+        "name": null,
+        "status": "paused",
+        "enabled": null
+      },
+      {
+        "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+        "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+        "name": null,
+        "status": "paused",
+        "enabled": null
+      }
+    ]
+  },
+  "profiles": {
+    "command": [
+      "/Applications/Multica.app/Contents/Resources/app.asar.unpacked/resources/bin/multica",
+      "--workspace-id",
+      "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+      "runtime",
+      "profile",
+      "list",
+      "--output",
+      "json"
+    ],
+    "exit": 0,
+    "stderr_bytes": 0,
+    "rows": []
+  },
+  "issue": {
+    "command": [
+      "/Applications/Multica.app/Contents/Resources/app.asar.unpacked/resources/bin/multica",
+      "--workspace-id",
+      "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+      "issue",
+      "get",
+      "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+      "--output",
+      "json"
+    ],
+    "exit": 0,
+    "stderr_bytes": 0,
+    "issue": {
+      "id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+      "identifier": "ALTE-11",
+      "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+      "status": "backlog",
+      "status_id": null,
+      "assignee_id": null,
+      "assignee_type": null
+    }
+  }
+}

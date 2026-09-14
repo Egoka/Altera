@@ -1,0 +1,118 @@
+{
+  "checked_at": "2026-09-14T14:39:00.023913+00:00",
+  "autopilots": [
+    {
+      "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "title": "Altera — актуальность контекста",
+      "status": "paused",
+      "execution_mode": "run_only"
+    },
+    {
+      "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+      "title": "Altera — восстановление работы",
+      "status": "paused",
+      "execution_mode": "run_only"
+    },
+    {
+      "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+      "title": "Altera — очередь разработки",
+      "status": "paused",
+      "execution_mode": "run_only"
+    }
+  ],
+  "todo": ["ALTE-10"],
+  "done": "ALTE-4",
+  "cancelled": "ALTE-11",
+  "experimental_profiles_enabled": false,
+  "local_resource": {
+    "daemon_id": "019f94d8-3dd7-7cf8-bdfc-0f8e52e01687",
+    "execution_mode": "in_place",
+    "label": "Altera Autopilot — отдельное рабочее дерево, одна цепочка",
+    "local_path": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot"
+  },
+  "agents": [
+    {
+      "id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+      "name": "Altera — оркестратор",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "model": "claude-sonnet-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+      "name": "Altera — архитектор",
+      "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+      "model": "gpt-5.6-sol",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+      "name": "Altera — разработчик",
+      "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+      "model": "gpt-5.6-sol",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+      "name": "Altera — тестировщик",
+      "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+      "model": "gpt-5.6-terra",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+      "name": "Altera — независимый ревьюер",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "model": "claude-opus-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+      "name": "Altera — дизайнер",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "model": "claude-sonnet-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+      "name": "Altera — релиз-инженер",
+      "runtime_id": "10b7bf57-0972-4439-aa71-2a2c30af4484",
+      "model": "gpt-5.6-terra",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+      "name": "Altera — хранитель документации",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "model": "claude-sonnet-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "b7f90cba-518a-4130-993a-f047a4355f96",
+      "name": "Altera — редактор и бренд-стратег",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "model": "claude-sonnet-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    },
+    {
+      "id": "41f9ec44-b58b-48d3-bd24-30d3774d2b5e",
+      "name": "Altera — SEO-специалист",
+      "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+      "model": "claude-sonnet-4-6",
+      "thinking_level": "medium",
+      "max_concurrent_tasks": 1
+    }
+  ],
+  "active_agent_runs": 0,
+  "schedules_unchanged": true,
+  "node_env_verified": true
+}

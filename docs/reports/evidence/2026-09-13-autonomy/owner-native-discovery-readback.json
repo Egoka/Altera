@@ -1,0 +1,27 @@
+{
+  "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+  "run_id": "01a09c79-1610-73a0-a665-a2fbd6687eeb",
+  "trigger": "owner manual retry",
+  "status": "completed",
+  "started_at": "2026-09-13T20:32:57Z",
+  "completed_at": "2026-09-13T20:34:27Z",
+  "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+  "runtime_kind": "existing native macOS Claude",
+  "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+  "model": "claude-opus-4-6",
+  "thinking_level": "medium",
+  "reported_revision": "82d3b96a048cc25b32d9375dcf5a80c3e6912bbb",
+  "comment_id": "01a09c7a-54e3-7f23-bb0d-141f0aab63e5",
+  "task_acceptance": "not_checked",
+  "readback_provenance": [
+    "04cbaa",
+    "888047"
+  ],
+  "limitations": [
+    "Native host run, not Docker runtime adoption",
+    "Trace success reported in comment; raw tool transcript not independently inspected",
+    "Unchanged git status does not prove byte-level preservation or OS write denial",
+    "Attribution of staged CLAUDE.md to owner is agent inference, not independently proven",
+    "Previous D0 exit78 was predeclared diagnostic result, not provider/model failure"
+  ]
+}

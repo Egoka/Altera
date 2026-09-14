@@ -1,0 +1,583 @@
+[
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/agent-introspection-debugging",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/agent-introspection-debugging",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:18:56Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Structured self-debugging workflow for AI agent failures using capture, diagnosis, contained recovery, and introspection reports.",
+    "id": "d6a12c48-ca89-4dc7-992e-5ad91dd6d612",
+    "name": "agent-introspection-debugging",
+    "updated_at": "2026-09-05T15:18:56Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/ai-regression-testing",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/ai-regression-testing",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:18:58Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when reproducing a defect or verifying that a code change does not reintroduce known failures.",
+    "id": "c4fda471-648b-4aee-90f8-b800627cf1f1",
+    "name": "ai-regression-testing",
+    "updated_at": "2026-09-05T16:22:11Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {},
+    "created_at": "2026-09-09T18:17:33Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Правила проекта Altera, которые нужно знать до чтения репозитория: иерархия источников, ритуал плана и отчёта, стадии и evidence, бюджет попыток, ветки, коммиты и команды проверки",
+    "id": "a65ce5c7-674b-44fe-b418-81c7f55b4116",
+    "name": "altera-project-rules",
+    "updated_at": "2026-09-09T18:21:13Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": ".agents/skills/api-design",
+        "ref": "main",
+        "repo": "ECC",
+        "source_url": "https://github.com/affaan-m/ECC/tree/main/.agents/skills/api-design",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:18:59Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "REST API design patterns including resource naming, status codes, pagination, filtering, error responses, versioning, and rate limiting for production APIs.",
+    "id": "1b18463e-25d6-4db1-b232-e10eead97064",
+    "name": "api-design",
+    "updated_at": "2026-09-05T15:18:59Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "wshobson",
+        "repo": "agents",
+        "skill": "architecture-decision-records",
+        "source_url": "https://www.skills.sh/wshobson/agents/architecture-decision-records",
+        "type": "skills_sh"
+      }
+    },
+    "created_at": "2026-09-05T15:19:02Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Write and maintain Architecture Decision Records (ADRs) following best practices for technical decision documentation. Use when documenting significant technical decisions, reviewing past architectural choices, or establishing decision processes.",
+    "id": "377d4b17-ddf9-495a-bae6-0deea9d7cc61",
+    "name": "architecture-decision-records",
+    "updated_at": "2026-09-05T15:19:02Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "repo": "ecc",
+        "skill": "brand-discovery",
+        "source_url": "https://skills.sh/affaan-m/ecc/brand-discovery",
+        "type": "skills_sh"
+      }
+    },
+    "created_at": "2026-09-05T15:19:03Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when a brand needs to discover or articulate its identity through structured multi-session interviews. Covers purpose, positioning, audience, personality, voice, narrative, and founder-brand tension across 8 modules using laddering, 5 Whys, and projective techniques. Produces a resumable session with disk-persisted state and a master brandbook (90_SYNTHESIS.md).",
+    "id": "ee290682-7a6e-4ec7-8b01-6d4ca69a7083",
+    "name": "brand-discovery",
+    "updated_at": "2026-09-05T15:19:03Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/brand-voice",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/brand-voice",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:11Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Build a source-derived writing style profile from real posts, essays, launch notes, docs, or site copy, then reuse that profile across content, outreach, and social workflows. Use when the user wants voice consistency without generic AI writing tropes.",
+    "id": "4532fa21-1b43-4ce7-8076-db4406015d0b",
+    "name": "brand-voice",
+    "updated_at": "2026-09-05T15:19:11Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "repo": "everything-claude-code",
+        "skill": "browser-qa",
+        "source_url": "https://skills.sh/affaan-m/everything-claude-code/browser-qa",
+        "type": "skills_sh"
+      }
+    },
+    "created_at": "2026-09-05T15:19:14Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "このスキルを使用して、機能をデプロイ後にブラウザ自動化を使用した自動ビジュアルテストとUI相互作用検証を自動化します。",
+    "id": "8ec18521-c28f-4c34-885f-f03045a40801",
+    "name": "browser-qa",
+    "updated_at": "2026-09-05T15:19:14Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/codebase-onboarding",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/codebase-onboarding",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:15Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Analyze an unfamiliar codebase and generate a structured onboarding guide with architecture map, key entry points, conventions, and a starter CLAUDE.md. Use when joining a new project or setting up Claude Code for the first time in a repo.",
+    "id": "b593dcc1-6d86-4bc6-b421-2582ad242704",
+    "name": "codebase-onboarding",
+    "updated_at": "2026-09-05T15:19:15Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/code-tour",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/code-tour",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:16Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Create CodeTour `.tour` files — persona-targeted, step-by-step walkthroughs with real file and line anchors. Use for onboarding tours, architecture walkthroughs, PR tours, RCA tours, and structured \"explain how this works\" requests.",
+    "id": "8139d418-07c2-487e-9186-bb4dad4a8fa3",
+    "name": "code-tour",
+    "updated_at": "2026-09-05T15:19:16Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": ".agents/skills/coding-standards",
+        "ref": "main",
+        "repo": "ECC",
+        "source_url": "https://github.com/affaan-m/ECC/tree/main/.agents/skills/coding-standards",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:18Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when implementing, refactoring, or reviewing TypeScript, Vue/Nuxt, or GraphQL code in Altera.",
+    "id": "5532f34d-ab86-454a-84d4-638c83154cd0",
+    "name": "coding-standards",
+    "updated_at": "2026-09-05T16:22:09Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {},
+    "created_at": "2026-09-05T15:19:45Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when handing an implementation, review, test result, or blocked task to another Altera agent.",
+    "id": "5d5650f8-ec46-4756-85b1-07cd554de361",
+    "name": "delivery-standards",
+    "updated_at": "2026-09-05T16:22:12Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/deployment-patterns",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/deployment-patterns",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:47Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when preparing or performing an authorized Altera deployment, release verification, or recovery plan.",
+    "id": "8fde98c4-c472-4627-82b8-088bea7bd3fa",
+    "name": "deployment-patterns",
+    "updated_at": "2026-09-05T16:30:08Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/documentation-lookup",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/documentation-lookup",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:48Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when a task depends on current library, framework, or API behavior and version-specific documentation.",
+    "id": "eea8bc58-38eb-42cd-8262-32bf15e0abd0",
+    "name": "documentation-lookup",
+    "updated_at": "2026-09-05T16:22:15Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/e2e-testing",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/e2e-testing",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:50Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when writing, diagnosing, or reviewing Playwright browser tests and their verification artifacts.",
+    "id": "ccb74abb-9374-4286-b3b3-3391debfc203",
+    "name": "e2e-testing",
+    "updated_at": "2026-09-05T16:22:18Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "provider": "claude",
+        "runtime_id": "f3f72e80-9423-4551-8654-16258f7bb9e0",
+        "source_path": "~/.agents/skills/frontend-design",
+        "type": "runtime_local"
+      }
+    },
+    "created_at": "2026-09-05T15:19:51Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+    "id": "93c12928-3491-4a79-90c2-4f4daef5e619",
+    "name": "frontend-design",
+    "updated_at": "2026-09-05T15:19:51Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/github-ops",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/github-ops",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:52Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when reviewing or performing authorized GitHub issue, pull request, CI, or release operations for Altera.",
+    "id": "f3a16534-ca9b-41e9-9ea0-575da2454252",
+    "name": "github-ops",
+    "updated_at": "2026-09-05T16:30:09Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/git-workflow",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/git-workflow",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:54Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when preparing Altera branches, scoped commits, pull requests, or resolving Git conflicts.",
+    "id": "c23d9e36-3abe-48d6-a8a4-5b786d45ea7c",
+    "name": "git-workflow",
+    "updated_at": "2026-09-05T16:30:11Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/knowledge-ops",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/knowledge-ops",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:55Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when preserving or retrieving decisions and execution context across Altera agents or runs.",
+    "id": "8ca8e25c-8c7f-4bcd-acdb-c1ff77c6b005",
+    "name": "knowledge-ops",
+    "updated_at": "2026-09-05T16:22:13Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/laravel-patterns",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/laravel-patterns",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:57Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Laravel architecture patterns, routing/controllers, Eloquent ORM, service layers, queues, events, caching, and API resources for production apps.",
+    "id": "f145dcf2-3d22-487c-b40f-7de4a4e70b8e",
+    "name": "laravel-patterns",
+    "updated_at": "2026-09-05T15:19:57Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/laravel-security",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/laravel-security",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:19:59Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Laravel security best practices — authentication, authorization, Eloquent safety, CSRF, XSS prevention, API security, and secure deployment configurations.",
+    "id": "54dcc9b3-8be7-411c-b7c7-88b3a97fa53a",
+    "name": "laravel-security",
+    "updated_at": "2026-09-05T15:19:59Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/laravel-tdd",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/laravel-tdd",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:01Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Laravel testing strategies with PHPUnit, Pest, model factories, HTTP tests, Sanctum authentication testing, mocking, and coverage.",
+    "id": "81f94ded-f557-4bcf-b280-2c1b5302eed7",
+    "name": "laravel-tdd",
+    "updated_at": "2026-09-05T15:20:01Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/laravel-verification",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/laravel-verification",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:02Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Verification loop for Laravel projects: env checks, linting, static analysis, tests with coverage, security scans, and deployment readiness.",
+    "id": "3160b3ce-46c3-478b-bb69-4ab1c1298d72",
+    "name": "laravel-verification",
+    "updated_at": "2026-09-05T15:20:02Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/make-interfaces-feel-better",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/make-interfaces-feel-better",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:04Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Apply concrete design-engineering details that make interfaces feel polished. Use when reviewing or improving UI spacing, typography, borders, shadows, motion, hit areas, icons, text wrapping, and interaction states.",
+    "id": "c51f4746-829d-4f9f-ac67-c3719b98eab1",
+    "name": "make-interfaces-feel-better",
+    "updated_at": "2026-09-05T15:20:04Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/motion-advanced",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/motion-advanced",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:05Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Advanced motion patterns for React / Next.js — drag & drop, gestures, text animations, SVG path drawing, custom hooks, imperative sequences (useAnimate), loaders, and the full API decision tree. Requires motion-foundations.",
+    "id": "b95735c0-ea08-4f0d-97d8-b696e990face",
+    "name": "motion-advanced",
+    "updated_at": "2026-09-05T15:20:05Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/motion-foundations",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/motion-foundations",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:07Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Motion tokens, spring presets, performance rules, device adaptation, accessibility enforcement, and SSR safety for React / Next.js using motion/react. Foundation layer — all other motion skills depend on this.",
+    "id": "cb36849b-329a-47ec-b872-2eeb338f12e6",
+    "name": "motion-foundations",
+    "updated_at": "2026-09-05T15:20:07Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/motion-patterns",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/motion-patterns",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:09Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Production-ready animation patterns for React / Next.js — button, modal, toast, stagger, page transitions, exit animations, scroll, and layout — built on motion-foundations tokens and springs.",
+    "id": "ebdf8b3d-0f32-4b93-8f7e-84e5cb042096",
+    "name": "motion-patterns",
+    "updated_at": "2026-09-05T15:20:09Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/motion-ui",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/motion-ui",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:11Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Production-ready UI motion system for React/Next.js. Use when implementing animations, transitions, or motion patterns.",
+    "id": "a90bfeec-7f31-4cbd-8785-2dee559153b8",
+    "name": "motion-ui",
+    "updated_at": "2026-09-05T15:20:11Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "path": "skills/nuxt4-patterns",
+        "ref": "main",
+        "repo": "everything-claude-code",
+        "source_url": "https://github.com/affaan-m/everything-claude-code/tree/main/skills/nuxt4-patterns",
+        "type": "github"
+      }
+    },
+    "created_at": "2026-09-05T15:20:12Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Nuxt 4 app patterns for hydration safety, performance, route rules, lazy loading, and SSR-safe data fetching with useFetch and useAsyncData.",
+    "id": "f8bf178b-ec00-49d8-a7ab-477f423c8dfa",
+    "name": "nuxt4-patterns",
+    "updated_at": "2026-09-05T15:20:12Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "affaan-m",
+        "repo": "everything-claude-code",
+        "skill": "security-review",
+        "source_url": "https://skills.sh/affaan-m/everything-claude-code/security-review",
+        "type": "skills_sh"
+      }
+    },
+    "created_at": "2026-09-05T15:20:14Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Use when reviewing authentication, authorization, untrusted content, uploads, or sensitive data handling in Altera.",
+    "id": "cf3b4ced-5331-4567-9063-0301f2daaf9c",
+    "name": "security-review",
+    "updated_at": "2026-09-05T16:22:20Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "owner": "agricidaniel",
+        "repo": "claude-seo",
+        "skill": "seo",
+        "source_url": "https://skills.sh/agricidaniel/claude-seo/seo",
+        "type": "skills_sh"
+      }
+    },
+    "created_at": "2026-09-05T15:20:16Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Comprehensive SEO analysis for any website or business type. Full site audits, single-page analysis, technical SEO (crawlability, indexability, Core Web Vitals with INP), schema markup, content quality (E-E-A-T), image optimization, sitemap analysis, and GEO for AI Overviews/ChatGPT/Perplexity. Industry detection for SaaS, e-commerce, local, publishers, agencies. Triggers on: SEO, audit, schema, Core Web Vitals, sitemap, E-E-A-T, AI Overviews, GEO, technical SEO, content quality, page speed.",
+    "id": "f04e818e-8cb7-4173-84b8-deade5a8526e",
+    "name": "seo",
+    "updated_at": "2026-09-05T15:20:16Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "config": {
+      "origin": {
+        "provider": "claude",
+        "runtime_id": "f3f72e80-9423-4551-8654-16258f7bb9e0",
+        "source_path": "~/.agents/skills/transitions-dev",
+        "type": "runtime_local"
+      }
+    },
+    "created_at": "2026-09-05T15:20:28Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "description": "Production-ready CSS transitions for web apps. Use when implementing notification badges, dropdowns, modals, panel reveals, page transitions, card resizes, number pop-ins, text swaps, icon swaps, success checks, avatar group hovers, error state shakes, search/input clear, skeleton loaders, shimmer text, sliding tabs, tooltips, or staggered text reveals. Triggers on \"add a transition\", \"animate the dropdown\", \"make the modal open smoothly\", \"swap icon\", \"page slide\", \"stagger animation\", \"open / close transition\", \"make it animate\", \"fade between\", \"success animation\", \"form error\", \"shake on invalid\", \"hover lift\", \"avatar stack hover\", \"clear the search\", \"skeleton loader\", \"loading shimmer\", \"shimmer text\", \"sliding tabs\", \"segmented control\", \"tooltip\", \"reveal text\". Also transitions reveal, transitions review, transitions apply, transitions refine.",
+    "id": "0be434af-f98d-4bb8-91bd-77b0dd295a7e",
+    "name": "transitions-dev",
+    "updated_at": "2026-09-05T15:20:28Z",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  }
+]

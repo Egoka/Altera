@@ -1,0 +1,8 @@
+test_base_policy_semantic_mcp_forms_refuse_without_publication (__main__.CodexTomlMappingTests) ... ok
+test_publication_rejects_replaced_temp_inode_and_preserves_foreign_entry (__main__.CodexTomlMappingTests) ... ok
+test_public_errors_suppress_causes_and_validate_semantic_types (__main__.CodexTomlMappingTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.016s
+
+OK

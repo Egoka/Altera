@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "/usr/local/bin/docker",
+    "create",
+    "--name=altera-chroot-candidate-e75c64002d22",
+    "--security-opt=seccomp=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/candidate.json",
+    "--platform=linux/arm64",
+    "--network=none",
+    "--read-only",
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges",
+    "--user=1000:1000",
+    "--pids-limit=32",
+    "--memory=128m",
+    "--cpus=1",
+    "--mount=type=bind,src=/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-chroot-preparation/probe.pl,dst=/probe.pl,readonly",
+    "--entrypoint=/usr/bin/env",
+    "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+    "-i",
+    "/usr/bin/perl",
+    "-T",
+    "/probe.pl"
+  ],
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty",
+    "DOCKER_HOST": "unix:///Users/egorbondarenko/.docker/run/docker.sock"
+  }
+}

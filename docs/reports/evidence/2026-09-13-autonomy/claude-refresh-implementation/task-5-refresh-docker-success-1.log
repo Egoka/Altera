@@ -1,0 +1,14 @@
+test_success_concurrent_selection_and_interrupted_publication (__main__.DockerRefreshTests) ... FAIL
+
+======================================================================
+FAIL: test_success_concurrent_selection_and_interrupted_publication (__main__.DockerRefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_refresh_docker.py", line 126, in test_success_concurrent_selection_and_interrupted_publication
+    with self.assertRaises(Interrupted): self.store.refresh()
+AssertionError: Interrupted not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.597s
+
+FAILED (failures=1)

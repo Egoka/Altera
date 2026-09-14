@@ -1,0 +1,10 @@
+{
+  "state": "fixture_playwright_acceptance_pass_native_integration_pending",
+  "files": [
+    {
+      "path": "task-8-runtime-acceptance-review.md",
+      "bytes": 8983,
+      "sha256": "f79316094f1fd137318063dfa8281fa093c7b61fd4a3be99dd135f6a5fe78dbc"
+    }
+  ]
+}

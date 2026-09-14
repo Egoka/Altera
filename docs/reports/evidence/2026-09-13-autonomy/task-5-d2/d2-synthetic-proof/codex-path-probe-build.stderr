@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 58, in <module>
+    build(arguments.output, arguments.root, arguments.cwd, arguments.uid)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 23, in build
+    root, cwd = path_pin(root, 993), path_pin(cwd, 1024)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 18, in path_pin
+    raise ValueError('invalid_path_pin')
+ValueError: invalid_path_pin

@@ -1,0 +1,26 @@
+{
+  "exit": 0,
+  "unchanged": true,
+  "after": {
+    "source": {
+      "head": "ff5b402f15c0ccacb5ee990f27401867e5c8e387",
+      "tree": "318ad37629325732c480ab104eb8118d299f6490",
+      "dirty_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untracked": {}
+    },
+    "snapshot": "85613c0f49ab04afec161e5d68ba4d69edc823b28e4eca926b7859d689f6bc7a",
+    "policy": "13a509487439f67a6e15f0c55c5ce107ed663291fc11e0df374790c3e5f2b38f",
+    "runtime_sha256": "435abda70f7ca56dce248ee5087f1a5dfea6bdb492bb53d6c7fa423a21ae3f99"
+  },
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "invocation": [
+    "/usr/bin/python3",
+    "-I",
+    "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py",
+    "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/mcp-policy-canary-2/manifest.json",
+    "--mcp-config",
+    "/synthetic/managed/mcp.json"
+  ],
+  "model_launched": false,
+  "auth_mounted": false
+}

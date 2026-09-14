@@ -1,0 +1,213 @@
+{
+  "head": "e6f868472708e460877c631d90616a061d5698dd",
+  "files": [
+    {
+      "path": "docs/development/testing.md",
+      "sha256": "7caa802852d43a42b942d1a568b3a5cf8b95a90bc5dcd218f0d9b8fdccb80ca3"
+    },
+    {
+      "path": "docs/reports/2026-09-13-autonomy-execution-report.md",
+      "sha256": "6c558fe42350e94833e32ac7268543ac4ecd59795ba4edcaf138e6797f54ed9f"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/multica-fields-preflight-second.json",
+      "sha256": "c8f351a3f0abf50f5f8b31281a1da7d7e513b56fed7eeb3b71732fb51f9cd090"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/preservation-during-task6.json",
+      "sha256": "33f73cd3e39022a7f983eb803c21bac23652cc60ee994977a52ce513fb5d935f"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/resource-branch-drift-9435606.json",
+      "sha256": "19a9f90175dd93ddd25a65b9bac9178dffbf27565a4d1f19ef5346365881cbb1"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/review-1dad64f..e6f8684.diff",
+      "sha256": "7643c90a616ec96941eac6b0c751ee5598b0cab1f4eadcde2a020ebfefbd6763"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/review-2d17915..1dad64f.diff",
+      "sha256": "18092d3d726f62df34254a124e507cf2a18236d2a66a7364c81cad4e96aec349"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/root-status-docs-check.json",
+      "sha256": "fbc0b4a3c054e88f7e451583ce2efb0dfd984a6e0da733ffeecd9638b536d608"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-before-edit-snapshot.json",
+      "sha256": "04928d3ab1bcaa71e362ac95c20f77abe075abbc40fc5a78d71b919a4b487d25"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-browser-title-red.txt",
+      "sha256": "5c72d1fc355b51ab73341ae10c2c8747409b6ae2d56dcdf3bb666c1fcee9874c"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-disjoint-head-advance.txt",
+      "sha256": "ee111c6d06ef232bad54d6a35fa2b284d2ee7bf3b04a7a0654b737b24854bae7"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-evidence-manifest.json",
+      "sha256": "2a0b17d2353eb3411d61a6ba2580f5c67c258f7254ac84c0e22c6c6557e1e500"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-final-manifest.json",
+      "sha256": "2e77c36fae6e8d6e00d53db0e2bf080aa03d2a3c16ce2872ce1c990be880809a"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-format.txt",
+      "sha256": "f86460f215b5d6dfe5507ea542ba4e3b092c5aaf7a7fa096d6379eb5000903e7"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-lint.txt",
+      "sha256": "1c32ec19ab40fa4101633866bcbe114c71704b0cc37bd59ca6539d622080dd04"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precheck-snapshot.json",
+      "sha256": "2c9fa950fe9c1aad73041d7c512febdd6e517ae5925d00a924d478260e18434b"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precheck.patch",
+      "sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precommit-snapshot.json",
+      "sha256": "627f121c32b688694d9c8f330409e1e159f1111f04f4acd4e631cc19697ba509"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precommit.patch",
+      "sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-precommit.txt",
+      "sha256": "7bf1ba8744e3a6607bd7c1a4acf24ccd3b797c053ac9607eda6a8b5ae556dd9f"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-report.md",
+      "sha256": "534031bf7a6f636e5d16fe04c84cab2e66a0645ac6c850fb95a65826bfd8cbcd"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-review.md",
+      "sha256": "4c30cab07b2610bc8653ed7cba26b1698ff509d9024c1c66a1f0499f21708772"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-staged-snapshot.json",
+      "sha256": "84623eb52bac9d4bed75b79a8d1d6d7b1b7660b3967a76499575626f3095c28d"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-fix1-staged.patch",
+      "sha256": "e048811ecf92ef4ff94881c19f700c92739fdec0d71e75fca6c72c2d1a81d692"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-3-stopped-handoff.md",
+      "sha256": "f4bce9cb5aa7666efb7de93d327cb6454b8ab6806c7869169b8967597d1420dc"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-6-initial-evidence-manifest.json",
+      "sha256": "bfce82c5eaa297f2530a9e916f0d4ab667e53ab00dc28e8c4f14c20e2d5af515"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task-6-report.md",
+      "sha256": "ed113b7c921a5cb8598aae4893cbd19950f5b28bd0a796ed273c33faaae5875e"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-commit.txt",
+      "sha256": "d154475bc1f9cd7f287c1bdc699daeaa0c53c83b8e5f66e31034f340cab91295"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-evidence-manifest.json",
+      "sha256": "33b5a3d434c765acec5589989f2db4211582d5becb314bf545e63180ea66d1fb"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-final-precheck.json",
+      "sha256": "a00da9f503a61fad09e7aceac2cdf3839ccef8374c65c51b5a936377180c33f9"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-final-precheck.patch",
+      "sha256": "b27932ea7f9fe062b6abdd34beebaebfb47a68a998e2548b860d95c57ee159f4"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-final2-green.txt",
+      "sha256": "8a9c861f82feac54056cfda19ff187f08bee452bf5f5a66c0333db425b0d2bb0"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-final2-precheck.json",
+      "sha256": "7ebdc2a23751d187059eb47e80cbf16f37ce8a6b2427ecbf40c83a43c8aac754"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-final2-precheck.patch",
+      "sha256": "3298423f4e943e397e8938e51f054aed7c64a02a60a1057d76751ffa524a3708"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-full-green.txt",
+      "sha256": "d54484f973c8f82f90634d202490b64d5bc2c21957d2e3742f3ce726da8bdd2f"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-green1-precheck.json",
+      "sha256": "c8f0d447e6e598e271514a104fad7a711c0233640e4e6f307d80c5b1e6d48524"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-green1.txt",
+      "sha256": "6fbb983da6523a5548738d368368d4ca191a6ce8c8a7be6a64f46fc4a6de9bda"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-green2.txt",
+      "sha256": "a83f541aeb17cfa8489b601f5a1180484dda46f82444faa4fedf7ce9aa004c4f"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-green3-precheck.json",
+      "sha256": "771da0351e4f193706e8eba502eb9fd0b9cca89345e8e9997f0999042a54c80c"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-green3.txt",
+      "sha256": "75151f54b69d562d1a291787e5c24906c94e09f93485ec72cf2f61e1e4628ea8"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-passport-flow-green.txt",
+      "sha256": "ab1b13efdb0b043e33086cf639dd73d59f3dd4e67c5660ca8b598e6872bdf349"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-passport-green.txt",
+      "sha256": "780d12dfb915ad0666896f10eb00cb5c8595ac99b9f92bef2ba734d267aef509"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-passport-red.txt",
+      "sha256": "fbb6e300a856a1e28c2cf97b911c1aed4633e8096d5c0dcdc50961137c7e4ed0"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-postcommit.json",
+      "sha256": "da5a91775b154293dbba13d981a03656f9f0607faf030222136424c4184216a4"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-precommit-gate-snapshot.json",
+      "sha256": "75c4c1153c7bf3b9142aa3d7be4c7697f82dee3721896285df8d350b9c0453d6"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-red-snapshot.json",
+      "sha256": "20ba45270d2c9cf148434db0b8d6cc0c5aeb8768fdc5a3a033528df9d51b1f74"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-red.txt",
+      "sha256": "60fab2e5246e4df3dd52babb24e503ca05fe8faf4826c22f0f911253266e855d"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-staged-gate-snapshot.json",
+      "sha256": "d5fcda5e153d5cb44d17ca7559c94341f30021a760fd6c46c43a27424265d86b"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-staged-snapshot.json",
+      "sha256": "1af39e59209dbf74a5c7dde971b9384ae232958fa08cfb62be8775b833ede438"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-staged.patch",
+      "sha256": "3298423f4e943e397e8938e51f054aed7c64a02a60a1057d76751ffa524a3708"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-state-green.txt",
+      "sha256": "00c63d4959fd610978d4ac5f437f25f60fe84a95776536551189547822ca08f7"
+    },
+    {
+      "path": "docs/reports/evidence/2026-09-13-autonomy/task6-state-red.txt",
+      "sha256": "af69eb186ee14dff8e2c799e6c27526f5e9caa7afab4eaea272728ee927811bc"
+    }
+  ]
+}

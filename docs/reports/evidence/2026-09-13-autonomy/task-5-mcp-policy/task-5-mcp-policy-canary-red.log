@@ -1,0 +1,98 @@
+test_json_and_sse_require_matching_successful_rpc (__main__.CanaryContracts) ... FAIL
+test_library_result_requires_actual_public_library_id (__main__.CanaryContracts) ... FAIL
+test_stream_body_is_bounded_and_stops_after_matching_sse (__main__.CanaryContracts) ... FAIL
+
+======================================================================
+FAIL: test_json_and_sse_require_matching_successful_rpc (__main__.CanaryContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 24, in test_json_and_sse_require_matching_successful_rpc
+    self.node('''
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 21, in node
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs' imported from /private/tmp/altera-agent-loop-autonomy/[eval1]
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+    at #resolve (node:internal/modules/esm/loader:700:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:228:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs'
+}
+
+Node.js v24.12.0
+
+
+======================================================================
+FAIL: test_library_result_requires_actual_public_library_id (__main__.CanaryContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 35, in test_library_result_requires_actual_public_library_id
+    self.node('''
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 21, in node
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs' imported from /private/tmp/altera-agent-loop-autonomy/[eval1]
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+    at #resolve (node:internal/modules/esm/loader:700:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:228:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs'
+}
+
+Node.js v24.12.0
+
+
+======================================================================
+FAIL: test_stream_body_is_bounded_and_stops_after_matching_sse (__main__.CanaryContracts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 41, in test_stream_body_is_bounded_and_stops_after_matching_sse
+    self.node('''
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_mcp_canary.py", line 21, in node
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 1 != 0 : node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs' imported from /private/tmp/altera-agent-loop-autonomy/[eval1]
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+    at #resolve (node:internal/modules/esm/loader:700:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:228:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/reviewer-mcp-canary.mjs'
+}
+
+Node.js v24.12.0
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.082s
+
+FAILED (failures=3)

@@ -1,0 +1,67 @@
+{
+  "inventory": {
+    "selected": {
+      "name": "chromium-headless-shell",
+      "revision": "1243",
+      "installByDefault": true,
+      "browserVersion": "153.0.8010.12",
+      "title": "Chrome Headless Shell"
+    },
+    "browser": "/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+    "packages": {
+      "@playwright/mcp": {
+        "version": "0.0.80",
+        "sha256": "4419e25dd95397dc7fb79771716f327bd9c186b0dc8013903ef197fb89d4c55d"
+      },
+      "playwright": {
+        "version": "1.63.0-alpha-2026-08-31",
+        "sha256": "36ff5105063fe264930f2a897d7f242396582fcb55b2538353e1fa6b17859294"
+      },
+      "playwright-core": {
+        "version": "1.63.0-alpha-2026-08-31",
+        "sha256": "82118e484cfd69f7422a3a85129da5d7a61068d4f8e8217800c511baa175d470"
+      },
+      "@playwright/browser-chromium": {
+        "version": "1.63.0-alpha-2026-08-31",
+        "sha256": "46dab53d94cb7d88af112d019121747b5723e28dbf5668958b62f5224d17d328"
+      }
+    },
+    "uid": 1000,
+    "gid": 1000,
+    "browser_sha256": "f5d89353cc9ef8dc1541268bbee1f05ee40a31ce3d9799b3a274e5147f6a8cdb",
+    "env_sha256": "67a8c7fac47281a5ee335366bcd12f31aa7eeca008cef6eccad38304753ddee9",
+    "descriptor_sha256": "f1336b4be3fb71a7b9f2c7acf1bd37a43c154434ea719919a2805507094e4bbf",
+    "packages_tree": "3991eee46a4635cd0050cb6b0950abb4965b6235f978c032fb5a21ea8ad92007",
+    "browsers_tree": "4833fe0d8aad38164e5cd6fe10b77bae1fe96074a26c60ba5ac4a7a76befb15a"
+  },
+  "environment": {
+    "names": [
+      "HOME",
+      "PATH",
+      "PLAYWRIGHT_BROWSERS_PATH",
+      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD",
+      "PLAYWRIGHT_SKIP_BROWSER_GC",
+      "TMPDIR",
+      "npm_config_offline"
+    ],
+    "values": {
+      "PATH": "/usr/local/bin:/usr/bin:/bin",
+      "HOME": "/runtime/cache/playwright-home",
+      "TMPDIR": "/runtime/tmp",
+      "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright",
+      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1",
+      "PLAYWRIGHT_SKIP_BROWSER_GC": "1",
+      "npm_config_offline": "true"
+    },
+    "exit": {
+      "code": 23,
+      "signal": null
+    },
+    "poisonPreloadExecuted": false,
+    "stdinEcho": true
+  },
+  "image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+  "browser_acceptance": false,
+  "archive_sha256": null,
+  "archive_retained": "not established; no second acquisition for hashing"
+}

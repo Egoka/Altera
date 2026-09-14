@@ -1,0 +1,272 @@
+{
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "project_id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+  "raw_backup": "/private/tmp/altera-multica-before-full",
+  "note": "Third-party full skill texts retained in local backup; owned Altera rules and exact changed configuration retained in repository. No secret values captured. Designer detail used full agent-list record after detail timeout.",
+  "files": [
+    {
+      "file": "agent-41f9ec44-b58b-48d3-bd24-30d3774d2b5e.json",
+      "sha256": "daca4c43a05c05e9cf93c9458ab50cfa7c512ad740a6d18dd70fe67ec67096a1"
+    },
+    {
+      "file": "agent-49314ca0-8c53-44a9-a9de-15c3f297818a.json",
+      "sha256": "53fa8d0bd83b1ca5307252edab676471f66cfe3bdf6a3bc1168acf54c3bc171c"
+    },
+    {
+      "file": "agent-4d98c007-0a6b-4254-85b1-1f57c99cb9ea.json",
+      "sha256": "20a7065f993e1883328915114800115626a5bc854b0c39d50e3a99b73500f78b"
+    },
+    {
+      "file": "agent-5f18f628-67ca-491c-80ae-85ffed2c6687.json",
+      "sha256": "d04e47a23eb85961f37eba46e10862f9173863c4c699cc824a5987eb9323fa97"
+    },
+    {
+      "file": "agent-8c80740a-ba6c-4ea2-8011-17a229e214e3.json",
+      "sha256": "180cedd17de9cc293ff6c72f09889d1b447d2285c552bc0ab3d122b090794927"
+    },
+    {
+      "file": "agent-b0f3bc32-dd95-471e-b40e-517aaf83edf0.json",
+      "sha256": "399167a52c450945cc8d6dbd1cb01f49e99b801d145c696708742ff5c890796f"
+    },
+    {
+      "file": "agent-b7f90cba-518a-4130-993a-f047a4355f96.json",
+      "sha256": "8562ac4172fcb68bca574c55cfbfad2e575ab834550a26008ccf9d077796a314"
+    },
+    {
+      "file": "agent-d08ef989-e4d4-4772-bc33-335127a85f0f.json",
+      "sha256": "0233d75bc438da643187eb2d140fcf93ef21db7918e154db9fe27cdfbecb7eb4"
+    },
+    {
+      "file": "agent-db94a617-807c-4eec-981f-51fd4b3217d4.json",
+      "sha256": "a396e9a6dbbcffa1fa8d77ed136d7b800959b84f7d86821987c1b84a55fe0e9b"
+    },
+    {
+      "file": "agent-e682f2d5-7541-475e-a0b4-ef0b8ae885f4.json",
+      "sha256": "2c61dfc430c77822d7ab8b51b1780713cbf2754af0a0aa56de77cd10e4c19e4e"
+    },
+    {
+      "file": "agents.json",
+      "sha256": "205334e2fa9ccf14ea0c75324ae0a05e6b8aebe963d307ebedfb2179d9bbd245"
+    },
+    {
+      "file": "autopilot-8c1f12a9-382b-4516-bbd2-f37bda927e53.json",
+      "sha256": "4a8433a5274779b38b1d211315217b193059adb76202ead81fe73ea99769a201"
+    },
+    {
+      "file": "autopilot-c40fbc10-3bb3-4181-b244-14b87e8ae3f1.json",
+      "sha256": "95d6b84a4d3b1e4e9a4b82b263cd588cd64727b8db3a523693e4568ca6063b24"
+    },
+    {
+      "file": "autopilot-e564a6fb-d7cd-4ab6-b719-b0570b730ccf.json",
+      "sha256": "79504d96e65b519f891bc6fb0b48af0d8594e671835cf496be4f790e92da1173"
+    },
+    {
+      "file": "autopilots.json",
+      "sha256": "729de55de4b11dd4efcde6cfdf25469dab473dd3733f3d94d5c908e726c858df"
+    },
+    {
+      "file": "capture.json",
+      "sha256": "8e514d5f9f75b8011fd1655d6f1e5bb97620622a67596b40927308bc7cee8b29"
+    },
+    {
+      "file": "issues.json",
+      "sha256": "bcf2be27989e1f7745221205248cdac477aec651b76a21259c58c3ea004272f2"
+    },
+    {
+      "file": "mcp-41f9ec44-b58b-48d3-bd24-30d3774d2b5e.json",
+      "sha256": "3f59ec72800c79d39c459bbaf3dc24dc3c9358558548a549a38db757f68db54d"
+    },
+    {
+      "file": "mcp-49314ca0-8c53-44a9-a9de-15c3f297818a.json",
+      "sha256": "b4a10f2bbb0c1c4279452e1e99810b99a52536af3d4ddb88465fba75b413b821"
+    },
+    {
+      "file": "mcp-4d98c007-0a6b-4254-85b1-1f57c99cb9ea.json",
+      "sha256": "b4a10f2bbb0c1c4279452e1e99810b99a52536af3d4ddb88465fba75b413b821"
+    },
+    {
+      "file": "mcp-5f18f628-67ca-491c-80ae-85ffed2c6687.json",
+      "sha256": "3f59ec72800c79d39c459bbaf3dc24dc3c9358558548a549a38db757f68db54d"
+    },
+    {
+      "file": "mcp-8c80740a-ba6c-4ea2-8011-17a229e214e3.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "mcp-b0f3bc32-dd95-471e-b40e-517aaf83edf0.json",
+      "sha256": "b4a10f2bbb0c1c4279452e1e99810b99a52536af3d4ddb88465fba75b413b821"
+    },
+    {
+      "file": "mcp-b7f90cba-518a-4130-993a-f047a4355f96.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "mcp-d08ef989-e4d4-4772-bc33-335127a85f0f.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "mcp-db94a617-807c-4eec-981f-51fd4b3217d4.json",
+      "sha256": "b4a10f2bbb0c1c4279452e1e99810b99a52536af3d4ddb88465fba75b413b821"
+    },
+    {
+      "file": "mcp-e682f2d5-7541-475e-a0b4-ef0b8ae885f4.json",
+      "sha256": "b4a10f2bbb0c1c4279452e1e99810b99a52536af3d4ddb88465fba75b413b821"
+    },
+    {
+      "file": "members.json",
+      "sha256": "7a81bfbe4bb18b71891e2fcd903097ca6a45ccb7ce7b9340429783eac003ce35"
+    },
+    {
+      "file": "project.json",
+      "sha256": "9bd1c84cef278a70c3874464e75da61d342f2cd4f027baf00074b0cda0492ce3"
+    },
+    {
+      "file": "resources.json",
+      "sha256": "a7062fabf3cfd5b1aaee7861dc20ef618d840722a0108716130448f9fa208f5a"
+    },
+    {
+      "file": "runtime-profiles.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "file": "runtimes.json",
+      "sha256": "b6263394e9fd9adae8443f4e1da73637bb8b31a823ce3d590c3a356ab3649a6d"
+    },
+    {
+      "file": "skill-0be434af-f98d-4bb8-91bd-77b0dd295a7e.json",
+      "sha256": "21117e10a5c1cd02db2a633d6636ca6617116c597274ba3c65d83cf7fcdc50d1"
+    },
+    {
+      "file": "skill-1b18463e-25d6-4db1-b232-e10eead97064.json",
+      "sha256": "78e03c7703bbc650cd3326b15618ab1c29b7f32c250d1577b3639156880fd18c"
+    },
+    {
+      "file": "skill-3160b3ce-46c3-478b-bb69-4ab1c1298d72.json",
+      "sha256": "f711ce5c745fa559e9bd3d0d649c65a488ed2c9b601147478b0a5baa66c74ac3"
+    },
+    {
+      "file": "skill-377d4b17-ddf9-495a-bae6-0deea9d7cc61.json",
+      "sha256": "2074a55ca061da5e81408f41a2b6fad317296968aa296d85f6eb8ed854a6385d"
+    },
+    {
+      "file": "skill-4532fa21-1b43-4ce7-8076-db4406015d0b.json",
+      "sha256": "8141b39617359f1ad2b64c154dff887204405732c6cbf142666453c81f449078"
+    },
+    {
+      "file": "skill-54dcc9b3-8be7-411c-b7c7-88b3a97fa53a.json",
+      "sha256": "7a6e732a8b6029265b6a437fbf410388d3fcc40b8de5ebac24c7755b427be357"
+    },
+    {
+      "file": "skill-5532f34d-ab86-454a-84d4-638c83154cd0.json",
+      "sha256": "977d0cbdc7082e7ca7478bac7015becc97166b882bcaaab97d80aa99266d9496"
+    },
+    {
+      "file": "skill-5d5650f8-ec46-4756-85b1-07cd554de361.json",
+      "sha256": "df06b8698ce7bfdaa5a089e94cf896c0cd324b923a2b83f9c7a2062950fd3b56"
+    },
+    {
+      "file": "skill-8139d418-07c2-487e-9186-bb4dad4a8fa3.json",
+      "sha256": "c124e3db6e53da5f347cfffc3c8738e2f4759b170721361a27919b390ed8256c"
+    },
+    {
+      "file": "skill-81f94ded-f557-4bcf-b280-2c1b5302eed7.json",
+      "sha256": "6ab4329273df96155c1326487a0b7efe8098dc5ddb9b38d33860e00b2bb6faf7"
+    },
+    {
+      "file": "skill-8ca8e25c-8c7f-4bcd-acdb-c1ff77c6b005.json",
+      "sha256": "be36d820793efe34d337d6ddd99913e697bc061620373a85502341e3d27d1ea3"
+    },
+    {
+      "file": "skill-8ec18521-c28f-4c34-885f-f03045a40801.json",
+      "sha256": "284f564820f766fcf006559e6c47fb7c6529b1c21a1b02a379b644f3c10db16b"
+    },
+    {
+      "file": "skill-8fde98c4-c472-4627-82b8-088bea7bd3fa.json",
+      "sha256": "520eeb8fd90cee620d6e24b67dfcd583c1240284ac22412a37e9880ee68a7deb"
+    },
+    {
+      "file": "skill-93c12928-3491-4a79-90c2-4f4daef5e619.json",
+      "sha256": "6de32106d374eac3301112a6fb409517f8e54cbe70833274f3a3ebe835631fd3"
+    },
+    {
+      "file": "skill-a65ce5c7-674b-44fe-b418-81c7f55b4116.json",
+      "sha256": "c3b05728e073b37fe52d03e89477c3d84cf92ff5e26a3678d20a52ade39be902"
+    },
+    {
+      "file": "skill-a90bfeec-7f31-4cbd-8785-2dee559153b8.json",
+      "sha256": "ca659843c6045989db45b9942e1497b0306665e8f9707d16eab0a1cd17b8c9cb"
+    },
+    {
+      "file": "skill-b593dcc1-6d86-4bc6-b421-2582ad242704.json",
+      "sha256": "42d7db54dc7cfb7f973b31c0c720f6912b0c6fd40a69ff1eea4ed10589cd6b3b"
+    },
+    {
+      "file": "skill-b95735c0-ea08-4f0d-97d8-b696e990face.json",
+      "sha256": "32c952faab04ac1dcd82ac530854b3aee98f0511c1aecb3b0dc9f14e115ca270"
+    },
+    {
+      "file": "skill-c23d9e36-3abe-48d6-a8a4-5b786d45ea7c.json",
+      "sha256": "f30129dac8a89d60278fa5172d19cd5df1235bbb0e4f4ed16cb859cad6f21740"
+    },
+    {
+      "file": "skill-c4fda471-648b-4aee-90f8-b800627cf1f1.json",
+      "sha256": "29ff242f5e5e64fcdd390fefc4b7216b08af125aecc15b306f7ce1a8f1ec3dbc"
+    },
+    {
+      "file": "skill-c51f4746-829d-4f9f-ac67-c3719b98eab1.json",
+      "sha256": "2315d748905659808193c4916f3198503675a69925f0ab66df70b1a4192374ea"
+    },
+    {
+      "file": "skill-cb36849b-329a-47ec-b872-2eeb338f12e6.json",
+      "sha256": "e409ea9951c818c7c5a4ddf3779455b029b4038048778648d59486f6cdfd6076"
+    },
+    {
+      "file": "skill-ccb74abb-9374-4286-b3b3-3391debfc203.json",
+      "sha256": "b5ff0a40672d94e90d4b5ea62b6965ec729af1679272c1500cbe28c5322ce630"
+    },
+    {
+      "file": "skill-cf3b4ced-5331-4567-9063-0301f2daaf9c.json",
+      "sha256": "b74d59970364fec6669870c56b4ac69d8e8b82b6b54cda2c122a01a59638c665"
+    },
+    {
+      "file": "skill-d6a12c48-ca89-4dc7-992e-5ad91dd6d612.json",
+      "sha256": "b3ecf899c74a35811b410367b83ddba8741d9f25c6ef184767796284337a4532"
+    },
+    {
+      "file": "skill-ebdf8b3d-0f32-4b93-8f7e-84e5cb042096.json",
+      "sha256": "5184219404297fc1d390232b40806524e39c3ce8720c1cb6137b1abe550a269e"
+    },
+    {
+      "file": "skill-ee290682-7a6e-4ec7-8b01-6d4ca69a7083.json",
+      "sha256": "184133a912f5db0b024262c20c523267e4b9db6649dd722d5c716f73aa8a6b16"
+    },
+    {
+      "file": "skill-eea8bc58-38eb-42cd-8262-32bf15e0abd0.json",
+      "sha256": "e7e397ffc7f5aba6bd99a584523c640eb0e23561ca1117b07c6de203b762f05d"
+    },
+    {
+      "file": "skill-f04e818e-8cb7-4173-84b8-deade5a8526e.json",
+      "sha256": "0984533225a57e37de590dacf035997a36f859109af934501ecf57a7fac4418a"
+    },
+    {
+      "file": "skill-f145dcf2-3d22-487c-b40f-7de4a4e70b8e.json",
+      "sha256": "0c7f97b45570074b2b44f6136b5bc284c1a112064b025e5f0d6e3f5bdf924597"
+    },
+    {
+      "file": "skill-f3a16534-ca9b-41e9-9ea0-575da2454252.json",
+      "sha256": "589d76d13f08af89d12085df4cb88f4372218479bd0fb973df81e77bf228c897"
+    },
+    {
+      "file": "skill-f8bf178b-ec00-49d8-a7ab-477f423c8dfa.json",
+      "sha256": "e5fae7d267182b9ccf67c3d248edd7334d53d693e4456dd4aa8d78de7d74cd93"
+    },
+    {
+      "file": "skills.json",
+      "sha256": "6300995d3179a1c314f61a79e64f54ed68a86ac10ab11afd3b1ffc150e1fd1d7"
+    },
+    {
+      "file": "squad.json",
+      "sha256": "719dfefb5a98019fc5a5ef5dad090b45976997f647d09421894dc0fc783ecb66"
+    }
+  ]
+}

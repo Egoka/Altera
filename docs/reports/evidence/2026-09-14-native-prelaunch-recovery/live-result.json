@@ -1,0 +1,17 @@
+{
+  "id": "01a09ffd-a1e0-7ef6-a66b-7c4d499692da",
+  "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+  "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "status": "failed",
+  "started_at": "2026-09-14T12:56:35Z",
+  "completed_at": "2026-09-14T12:56:37Z",
+  "error": "codex initialize failed: codex process exited",
+  "active_runs": 0,
+  "local_mapping_failure": "managed_block_ambiguous",
+  "managed_only_mapping_failure": "managed_block_invalid",
+  "observed_config_structure": {
+    "multiline_notify_array": true,
+    "managed_servers": ["computer-use", "context7", "node_repl", "playwright", "trace"]
+  }
+}

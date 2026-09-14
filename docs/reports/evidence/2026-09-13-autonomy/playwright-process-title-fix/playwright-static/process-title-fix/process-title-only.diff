@@ -1,0 +1,230 @@
+--- a/scripts/agent-runtime/playwright-mcp-canary.mjs
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -89,7 +89,16 @@
+ }
+ 
+ // Только фиксированные proc-поля browser/observer; чтение не меняет namespace или права.
+-function collectBrowserProcesses(procRoot = '/proc') {
++function collectBrowserProcesses(procRoot = '/proc', binary) {
++  const executable = (file, name) => {
++    const st = fs.statSync(file, { bigint: true })
++    return { path: name, dev: String(st.dev), ino: String(st.ino), regular: st.isFile(),
++      mode: String(st.mode), size: String(st.size), mtimeNs: String(st.mtimeNs), ctimeNs: String(st.ctimeNs) }
++  }
++  const kernelExecutable = (pid) => {
++    const file = `${procRoot}/${pid}/exe`
++    return executable(file, fs.readlinkSync(file))
++  }
+   const selected = ['Uid', 'Gid', 'CapEff', 'CapPrm', 'CapInh', 'CapAmb', 'CapBnd', 'NoNewPrivs', 'Seccomp', 'Seccomp_filters', 'NSpid']
+   const read = (file, limit = 65536) => {
+     const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK)
+@@ -111,8 +120,12 @@
+     return result
+   }
+   const start = (pid) => read(`${procRoot}/${pid}/stat`, 4096).split(') ').slice(1).join(') ').split(/\s+/)[19]
+-  const collect = (pid, argv) => {
+-    const row = { pid, argv, errors: [] }
++  const collect = (pid, argv, rawCmdline = null) => {
++    const row = { pid, argv, raw_cmdline: rawCmdline, command_format: argv.length === 1 && argv[0] !== binary ? 'rewritten-title' : 'nul-argv', errors: [] }
++    if (pid !== 'self') {
++      try { row.exe = kernelExecutable(pid) }
++      catch (error) { row.errors.push('executable:' + (error.code || 'INVALID')) }
++    }
+     for (const [key, get] of [
+       ['starttime', () => start(pid)], ['fields', () => fields(pid)],
+       ['uid_map', () => read(`${procRoot}/${pid}/uid_map`, 4096)],
+@@ -129,24 +142,49 @@
+       if (start(pid) !== row.starttime || JSON.stringify(fields(pid)) !== JSON.stringify(row.fields) ||
+           JSON.stringify(namespace) !== JSON.stringify(row.user_namespace) ||
+           read(`${procRoot}/${pid}/uid_map`, 4096) !== row.uid_map || read(`${procRoot}/${pid}/gid_map`, 4096) !== row.gid_map ||
+-          pid !== 'self' && JSON.stringify(read(`${procRoot}/${pid}/cmdline`, 16384).split('\0').filter(Boolean)) !== JSON.stringify(argv))
++          pid !== 'self' && (read(`${procRoot}/${pid}/cmdline`, 16384) !== rawCmdline ||
++            JSON.stringify(kernelExecutable(pid)) !== JSON.stringify(row.exe)))
+         row.errors.push('ROW_CHANGED')
+     } catch (error) { row.errors.push('recheck:' + (error.code || 'INVALID')) }
+     return row
+   }
+   const result = { observer: collect('self', []), rows: [], scanErrors: [] }
++  try { result.executable = executable(binary, binary) }
++  catch (error) { result.scanErrors.push('fixed_executable:' + (error.code || 'INVALID')) }
+   try {
+     const pids = fs.readdirSync(procRoot).filter((pid) => /^\d+$/.test(pid))
+     if (pids.length > 128) result.scanErrors.push('PID_LIMIT')
+     for (const pid of pids.slice(0, 128)) {
+       try {
+-        const argv = read(`${procRoot}/${pid}/cmdline`, 16384).split('\0').filter(Boolean)
++        const rawCmdline = read(`${procRoot}/${pid}/cmdline`, 16384)
++        const argv = rawCmdline.split('\0').filter(Boolean)
+         if (!argv[0]?.includes('chrome-headless-shell')) continue
+-        result.rows.push(collect(pid, argv))
++        result.rows.push(collect(pid, argv, rawCmdline))
+       } catch (error) { if (error.code !== 'ENOENT') result.scanErrors.push(pid + ':' + (error.code || 'INVALID')) }
+     }
+   } catch (error) { result.scanErrors.push(error.code || 'INVALID') }
++  try {
++    if (JSON.stringify(executable(binary, binary)) !== JSON.stringify(result.executable)) result.scanErrors.push('FIXED_EXE_CHANGED')
++  } catch (error) { result.scanErrors.push('fixed_executable_recheck:' + (error.code || 'INVALID')) }
+   return result
++}
++
++// Title — только наблюдаемый prefix/role, не реконструкция полного argv.
++function browserCommand(row, binary) {
++  const fail = () => { throw new Error('BROWSER_COMMAND_UNPROVEN') }
++  if (!Array.isArray(row.argv) || !row.argv.length || row.argv.some((a) => typeof a !== 'string')) fail()
++  const known = ['zygote', 'renderer', 'gpu-process', 'utility']
++  if (row.argv[0] === binary) {
++    if (row.argv.some((a) => a === '--no-sandbox' || a.startsWith('--no-sandbox='))) fail()
++    const types = row.argv.filter((a) => a.startsWith('--type'))
++    if (types.length > 1 || types.length && !known.some((role) => types[0] === '--type=' + role)) fail()
++    return { format: 'nul-argv', role: types[0]?.slice(7) || 'browser', complete_argv: true }
++  }
++  const title = row.argv[0]
++  if (row.argv.length !== 1 || !title.startsWith(binary + ' --type=') || /[\x00-\x1f]/.test(title)) fail()
++  const tail = title.slice(binary.length + 1), type = /^--type=(zygote|renderer|gpu-process|utility)(?: |$)/.exec(tail)
++  if (!type || [...tail.matchAll(/(?:^|\s)--type(?:=|\s|$)/g)].length !== 1 || /(?:^|\s)--no-sandbox(?:=|\s|$)/.test(tail)) fail()
++  return { format: 'rewritten-title', role: type[1], complete_argv: false, title }
+ }
+ 
+ function validateBrowserProcesses(diagnostic, binary) {
+@@ -174,13 +212,16 @@
+   const observer = diagnostic.observer, outer = common(observer), outerNS = identity(observer)
+   if (!outerNS || caps.some((key) => outer[key] !== '0000000000000000')) fail()
+   const observerUID = map(observer.uid_map), observerGID = map(observer.gid_map), narrow = '[[1000,1000,1]]'
+-  let renderer = false
++  const expectedExe = diagnostic.executable
++  if (!expectedExe || expectedExe.path !== binary || expectedExe.regular !== true ||
++      !/^\d+$/.test(expectedExe.dev || '') || !/^\d+$/.test(expectedExe.ino || '')) fail()
++  let renderer = false, mainBrowser = false
+   for (const row of diagnostic.rows) {
+     const f = common(row), uid = map(row.uid_map), gid = map(row.gid_map), ns = identity(row)
+-    if (!Array.isArray(row.argv) || row.argv[0] !== binary || row.argv.some((a) => a === '--no-sandbox' || a.startsWith('--no-sandbox='))) fail()
+-    const types = row.argv.filter((a) => a.startsWith('--type='))
+-    if (types.length > 1) fail()
+-    const role = types[0]?.slice(7) || 'browser'
++    if (!row.exe || row.exe.path !== binary || row.exe.regular !== true ||
++        row.exe.dev !== expectedExe.dev || row.exe.ino !== expectedExe.ino) fail()
++    const command = browserCommand(row, binary), role = command.role
++    if (role === 'browser' && command.format === 'nul-argv' && row.argv.length > 1) mainBrowser = true
+     const same = ns === outerNS
+     const mapProof = uid === narrow && gid === narrow && uid !== observerUID && gid !== observerGID
+     const inner = !same && uid === narrow && gid === narrow &&
+@@ -196,12 +237,12 @@
+     }
+     if (role === 'renderer') renderer = true
+   }
+-  if (!renderer) fail()
++  if (!renderer || !mainBrowser) fail()
+ }
+ 
+ function inspectBrowserProcesses(report, binary, procRoot = '/proc', persist = (rows) =>
+   fs.writeFileSync('/runtime/evidence/browser-processes.json', JSON.stringify(rows, null, 2) + '\n')) {
+-  report.browser_processes = collectBrowserProcesses(procRoot)
++  report.browser_processes = collectBrowserProcesses(procRoot, binary)
+   persist(report.browser_processes)
+   validateBrowserProcesses(report.browser_processes, binary)
+ }
+@@ -224,6 +265,14 @@
+     other_path: pathDenial(error('EACCES /other/path'), '/source/forbidden.png'),
+     not_error: pathDenial(error('EROFS /source/forbidden.png', false), '/source/forbidden.png'),
+   } }))
++} else if (mode === 'process-title-contract') {
++  const inputs = JSON.parse(fs.readFileSync(0, 'utf8'))
++  const cases = inputs.map((item) => {
++    try { validateBrowserProcesses(item.diagnostic, process.argv[4]); return { name: item.name, ok: true } }
++    catch { return { name: item.name, ok: false } }
++  })
++  const formats = inputs[0].diagnostic.rows.map((row) => browserCommand(row, process.argv[4]).format)
++  console.log(JSON.stringify({ cases, formats }))
+ } else if (mode === 'process-contract') {
+   const cases = JSON.parse(fs.readFileSync(0, 'utf8')).map((item) => {
+     try { validateBrowserProcesses(item.diagnostic, process.argv[4]); return { name: item.name, ok: true } }
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -32,6 +32,8 @@
+ SAVED_FORM_RESPONSE = {'content': [{'type': 'text', 'text': '### Page\n- Page URL: http://altera-web:3000/form\n- Page Title: Form\n### Snapshot\n- [Snapshot](../runtime/evidence/playwright/page-2026-09-14T09-29-07-217Z.yml)'}]}
+ SAVED_EMPTY_ACTION = {'content': [{'type': 'text', 'text': ''}]}
+ SAVED_FORM_YAML = '- generic [ref=f1e2]:\n  - generic [ref=f1e3]:\n    - text: Name\n    - textbox "Name" [ref=f1e4]\n  - button "Submit" [ref=f1e5]'
++
++SAVED_PROCESS_ROWS = {'observer': {'pid': 'self', 'argv': [], 'errors': [], 'starttime': '24790037', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '7', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '0000000000000000', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '         0          0 4294967295\n', 'gid_map': '         0          0 4294967295\n', 'user_namespace': {'value': 'user:[4026531837]'}}, 'rows': [{'pid': '32', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell', '--disable-field-trial-config', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows', '--disable-back-forward-cache', '--disable-breakpad', '--disable-client-side-phishing-detection', '--disable-component-extensions-with-background-pages', '--disable-component-update', '--no-default-browser-check', '--disable-default-apps', '--disable-dev-shm-usage', '--disable-edgeupdater', '--disable-extensions', '--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,BlockOriginHeaderModificationOnRedirect,Translate,AutoDeElevate,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion', '--enable-features=CDPScreenshotNewSurface', '--allow-pre-commit-input', '--disable-hang-monitor', '--disable-ipc-flooding-protection', '--disable-popup-blocking', '--disable-prompt-on-repost', '--disable-renderer-backgrounding', '--disable-updater-scheduler', '--force-color-profile=srgb', '--metrics-recording-only', '--no-first-run', '--password-store=basic', '--use-mock-keychain', '--no-service-autorun', '--export-tagged-pdf', '--disable-search-engine-choice-screen', '--unsafely-disable-devtools-self-xss-warnings', '--edge-skip-compat-layer-relaunch', '--disable-infobars', '--disable-search-engine-choice-screen', '--disable-sync', '--enable-unsafe-swiftshader', '--headless', '--hide-scrollbars', '--mute-audio', '--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4', '--disable-blink-features=AutomationControlled', '--user-data-dir=/runtime/tmp/playwright_chromiumdev_profile-4KDDzl', '--remote-debugging-pipe', '--no-startup-window'], 'errors': [], 'starttime': '24790142', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '32', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '0000000000000000', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '         0          0 4294967295\n', 'gid_map': '         0          0 4294967295\n', 'user_namespace': {'value': 'user:[4026531837]'}}, {'pid': '35', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --no-zygote-sandbox --headless'], 'errors': [], 'starttime': '24790145', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '35', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '0000000000000000', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '         0          0 4294967295\n', 'gid_map': '         0          0 4294967295\n', 'user_namespace': {'value': 'user:[4026531837]'}}, {'pid': '36', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless'], 'errors': [], 'starttime': '24790145', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '36\t1', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '000001ffffffffff', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '      1000       1000          1\n', 'gid_map': '      1000       1000          1\n', 'user_namespace': {'value': 'user:[4026535659]'}}, {'pid': '38', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=zygote --headless'], 'errors': [], 'starttime': '24790146', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '38\t3', 'CapInh': '0000000000000000', 'CapPrm': '0000000000200000', 'CapEff': '0000000000200000', 'CapBnd': '000001ffffffffff', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '      1000       1000          1\n', 'gid_map': '      1000       1000          1\n', 'user_namespace': {'value': 'user:[4026535659]'}}, {'pid': '54', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=gpu-process --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --enable-unsafe-swiftshader --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAA'], 'errors': [], 'starttime': '24790147', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '54', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '0000000000000000', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '         0          0 4294967295\n', 'gid_map': '         0          0 4294967295\n', 'user_namespace': {'value': 'user:[4026531837]'}}, {'pid': '73', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --disable-dev-shm-usage --use-angle=swiftshader-webgl --use-gl=angle --mute-audio --headless=old --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,17905413727812230093,8369023344363284317,262144 --enable-features=CDPScreenshotNewSurface --disable-features=AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,BlockOriginHeaderModificationOnRedirect,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,ThirdPartyStoragePartitioning,Translate,msEdgeUpdateLaunchServicesPreferredVersion,msForceBrowserSignIn --variations-seed-version --pseudonymization-salt-handle=7,i,6199143251911370035,5957414092429795204,4 --trace-process-track-uuid=3190708989122997041'], 'errors': [], 'starttime': '24790164', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '73', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '0000000000000000', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '1'}, 'uid_map': '         0          0 4294967295\n', 'gid_map': '         0          0 4294967295\n', 'user_namespace': {'value': 'user:[4026531837]'}}, {'pid': '94', 'argv': ['/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell --type=renderer --headless=old --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-plat'], 'errors': [], 'starttime': '24790167', 'fields': {'Uid': '1000\t1000\t1000\t1000', 'Gid': '1000\t1000\t1000\t1000', 'NSpid': '94\t4\t1', 'CapInh': '0000000000000000', 'CapPrm': '0000000000000000', 'CapEff': '0000000000000000', 'CapBnd': '000001ffffffffff', 'CapAmb': '0000000000000000', 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '2'}, 'uid_map': '      1000       1000          1\n', 'gid_map': '      1000       1000          1\n', 'user_namespace': {'value': 'user:[4026535659]'}}], 'scanErrors': []}
+ 
+ class PlaywrightStaticTests(unittest.TestCase):
+     def test_locked_four_package_closure_and_build(self):
+@@ -220,7 +222,7 @@
+             fields = {'Uid': '1000 1000 1000 1000', 'Gid': '1000 1000 1000 1000',
+                       'CapEff': capabilities, 'CapPrm': capabilities, 'CapInh': zero, 'CapAmb': zero,
+                       'CapBnd': bound if inner else zero, 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '2', 'NSpid': str(pid)}
+-            return {'pid': str(pid), 'argv': [binary] + (['--type=' + role] if role else []), 'fields': fields,
++            return {'pid': str(pid), 'argv': [binary] + (['--type=' + role] if role else ['--headless']), 'fields': fields,
+                     'uid_map': '1000 1000 1\n' if inner else '0 0 4294967295\n',
+                     'gid_map': '1000 1000 1\n' if inner else '0 0 4294967295\n',
+                     'user_namespace': {'value': 'user:[%d]' % (200 + pid if inner else 100)}, 'starttime': '100', 'errors': []}
+@@ -264,12 +266,20 @@
+         bad('raced_row', lambda d: d['rows'][1]['errors'].append('ROW_CHANGED'))
+         with tempfile.TemporaryDirectory() as temp:
+             proc = Path(temp).resolve()
++            file = proc / 'chrome-headless-shell'; file.write_text('SYNTHETIC_EXECUTABLE'); file.chmod(0o755)
++            previous_binary = binary; binary = str(file); info = file.stat()
++            for case in cases:
++                case['diagnostic']['executable'] = {'path': binary, 'dev': str(info.st_dev), 'ino': str(info.st_ino), 'regular': True}
++                for row in case['diagnostic']['rows']:
++                    row['exe'] = dict(case['diagnostic']['executable'])
++                    if row['argv'][0] == previous_binary: row['argv'][0] = binary
+             for entry, directory in [(good['observer'], 'self'), (good['rows'][1], '12')]:
+                 folder = proc / directory; folder.mkdir(); (folder / 'ns').mkdir()
+                 (folder / 'cmdline').write_bytes(('\0'.join(entry['argv']) + '\0').encode())
+                 (folder / 'status').write_text('\n'.join(k + ':\t' + v for k, v in entry['fields'].items()))
+                 for name in ['uid_map', 'gid_map']: (folder / name).write_text(entry[name])
+                 (folder / 'ns/user').symlink_to(entry['user_namespace']['value'])
++                (folder / 'exe').symlink_to(file)
+                 (folder / 'stat').write_text(entry['pid'] + ' (chrome) ' + ' '.join(['S'] + ['0'] * 18 + ['100']))
+             # Неправильный extra bit сохраняется в диагностике до отказа; renderer также отсутствует.
+             status = proc / '12/status'; status.write_text(status.read_text().replace(admin, '0000000000200001'))
+@@ -283,6 +293,48 @@
+             rows = proof['capture']['persisted']['rows']; self.assertEqual(len(rows), 1)
+             self.assertEqual(rows[0]['fields']['CapEff'], '0000000000200001')
+             self.assertEqual(rows[0]['uid_map'].split(), ['1000', '1000', '1'])
++            self.assertEqual(rows[0]['exe']['path'], binary)
++            self.assertEqual(rows[0]['exe']['ino'], str(info.st_ino))
++            self.assertEqual(rows[0]['raw_cmdline'], '\0'.join(good['rows'][1]['argv']) + '\0')
++            (proc / '12/exe').unlink()
++            result = subprocess.run(command, input='[]', text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++            self.assertEqual(result.returncode, 0, result.stderr)
++            failed = json.loads(result.stdout)['capture']; self.assertFalse(failed['ok'])
++            self.assertEqual(failed['persisted'], failed['report']['browser_processes'])
++            self.assertIn('executable:ENOENT', failed['persisted']['rows'][0]['errors'])
++
++    def test_rewritten_titles_require_kernel_executable_identity(self):
++        binary = SAVED_PROCESS_ROWS['rows'][0]['argv'][0]
++        good = copy.deepcopy(SAVED_PROCESS_ROWS)
++        good['executable'] = {'path': binary, 'dev': '1', 'ino': '42', 'regular': True}
++        for row in good['rows']: row['exe'] = dict(good['executable'])
++        cases = [{'name': 'all_seven_saved_rows', 'diagnostic': good, 'expected': True}]
++        def bad(name, mutate):
++            diagnostic = copy.deepcopy(good); mutate(diagnostic)
++            cases.append({'name': name, 'diagnostic': diagnostic, 'expected': False})
++        bad('wrong_prefix', lambda d: d['rows'][1]['argv'].__setitem__(0, '/wrong' + d['rows'][1]['argv'][0]))
++        bad('wrong_inode', lambda d: d['rows'][1]['exe'].update(ino='99'))
++        bad('wrong_device', lambda d: d['rows'][1]['exe'].update(dev='99'))
++        bad('wrong_exe_path', lambda d: d['rows'][1]['exe'].update(path='/wrong/browser'))
++        bad('missing_exe', lambda d: d['rows'][1].pop('exe'))
++        bad('exe_permission', lambda d: d['rows'][1].update(exe={'error': 'EACCES'}))
++        bad('multiple_types', lambda d: d['rows'][1]['argv'].__setitem__(0, d['rows'][1]['argv'][0] + ' --type=renderer'))
++        bad('unknown_type', lambda d: d['rows'][1]['argv'].__setitem__(0, binary + ' --type=unknown'))
++        bad('unanchored_type', lambda d: d['rows'][1]['argv'].__setitem__(0, binary + ' --headless --type=zygote'))
++        bad('title_no_sandbox', lambda d: d['rows'][1]['argv'].__setitem__(0, d['rows'][1]['argv'][0] + ' --no-sandbox'))
++        bad('main_no_sandbox', lambda d: d['rows'][0]['argv'].append('--no-sandbox'))
++        bad('missing_main', lambda d: d['rows'].pop(0))
++        bad('exe_race', lambda d: d['rows'][1]['errors'].append('EXE_CHANGED'))
++        source = (ROOT / 'playwright-mcp-canary.mjs').read_text()
++        mode = 'process-title-contract' if "mode === 'process-title-contract'" in source else 'process-contract'
++        command = ['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', str(ROOT / 'playwright-mcp-canary.mjs'), mode, '/unused-synthetic-proc', binary]
++        result = subprocess.run(command, input=json.dumps(cases), text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++        self.assertEqual(result.returncode, 0, result.stderr); self.assertEqual(result.stderr, '')
++        proof = json.loads(result.stdout); self.assertEqual(len(proof['cases']), len(cases))
++        for expected, actual in zip(cases, proof['cases']):
++            with self.subTest(case=expected['name']): self.assertEqual(actual['ok'], expected['expected'])
++        if 'formats' in proof:
++            self.assertEqual(proof['formats'], ['nul-argv'] + ['rewritten-title'] * 6)
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),

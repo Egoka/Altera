@@ -1,0 +1,25 @@
+{
+  "scope": "allowlisted native metadata and cleanup only",
+  "files": [
+    {
+      "path": "cleanup-proof.json",
+      "sha256": "a4cc997276c7f136f38a6d90d6841fc18447b5a312b1198b4649892ad74d61c2"
+    },
+    {
+      "path": "native-descriptor-proof.json",
+      "sha256": "42b3de63d58ecb3d8e69cf80d5c4a4a5991499e506f31d16edf02832846eab3c"
+    },
+    {
+      "path": "preflight.json",
+      "sha256": "5b29248a711c51ab039f9c1254f38098b416190cb1404f568c65587b6e728304"
+    },
+    {
+      "path": "source-after-proof.json",
+      "sha256": "7d41d927015d0a42f5261bd96e3c4f4e39b8327103dd836276bcf3049e0104dc"
+    },
+    {
+      "path": "trigger-contract.json",
+      "sha256": "399e112441814bd4d2e7474b1f0fd327b8c7ad66ebe64fc45150613a1d3020f9"
+    }
+  ]
+}

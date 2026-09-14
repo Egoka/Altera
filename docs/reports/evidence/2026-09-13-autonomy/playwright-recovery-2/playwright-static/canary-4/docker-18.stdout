@@ -1,0 +1,44 @@
+[
+    {
+        "Name": "altera-pw-61749a5e21bf411cb32a7ee685ad7c96",
+        "Id": "f588111953332387e66a9ce571847a36b76b33b48f41a6503684efbe1779ddae",
+        "Created": "2026-09-14T09:29:04.545053917Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv4": true,
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.20.0.0/16"
+                }
+            ]
+        },
+        "Internal": true,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Options": {
+            "com.docker.network.bridge.gateway_mode_ipv4": "isolated",
+            "com.docker.network.enable_ipv4": "true",
+            "com.docker.network.enable_ipv6": "false"
+        },
+        "Labels": {},
+        "Containers": {},
+        "Status": {
+            "IPAM": {
+                "Subnets": {
+                    "172.20.0.0/16": {
+                        "IPsInUse": 2,
+                        "DynamicIPsAvailable": 65534
+                    }
+                }
+            }
+        }
+    }
+]

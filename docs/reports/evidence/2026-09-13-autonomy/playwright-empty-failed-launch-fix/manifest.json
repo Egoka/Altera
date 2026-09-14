@@ -1,0 +1,45 @@
+{
+  "state": "offline_fix_review_pass_overall_runtime_incomplete_no_live_validation_package_exhausted",
+  "files": [
+    {
+      "path": "task-5-playwright-empty-failed-launch-fix-report.md",
+      "bytes": 4521,
+      "sha256": "18c183644c25bbc4189ab1a5cf8642abfa7f1493044eb75634d0d6b4eb54a101"
+    },
+    {
+      "path": "playwright-static/empty-failed-launch-fix/empty-failed-launch-only.diff",
+      "bytes": 8321,
+      "sha256": "3b933b9ff16bed59fc6aef409cd58f143e7fd3f6b632f13aed3b020cea02eb66"
+    },
+    {
+      "path": "playwright-static/empty-failed-launch-fix/source-proof.json",
+      "bytes": 2946,
+      "sha256": "e42645af1de371ad03c7d06be5608fd197d1f1d242841d4a3a7493174823b5cc"
+    },
+    {
+      "path": "playwright-static/empty-failed-launch-fix/commands-and-results.json",
+      "bytes": 935,
+      "sha256": "b98b212bc2bb97c9dfb58de4177f939c91e83331125c72f55052cb2fcefe0a74"
+    },
+    {
+      "path": "playwright-static/empty-failed-launch-fix/red.log",
+      "bytes": 1424,
+      "sha256": "5a3a8d75e8ffb33f4939d8e297b6b23aa31982d865d686f7f4c140073b0d8291"
+    },
+    {
+      "path": "playwright-static/empty-failed-launch-fix/green.log",
+      "bytes": 98,
+      "sha256": "b9aa554545c72b0f090c5a6663dc126560149a94e7203358f700378aeac7cbd2"
+    },
+    {
+      "path": "playwright-static/empty-failed-launch-fix/covering.log",
+      "bytes": 109,
+      "sha256": "70e0b1d80c962f88da2b778dfae4a824ad431f992a87d546de7106a442359e86"
+    },
+    {
+      "path": "task-closure-final-runtime-review.md",
+      "bytes": 5873,
+      "sha256": "9a93b4d09edcfcd14cceef5c2af68a09aa766a9db2e6bd12c912e178d218784c"
+    }
+  ]
+}

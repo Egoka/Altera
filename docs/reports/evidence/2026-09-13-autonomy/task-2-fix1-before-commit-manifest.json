@@ -1,0 +1,16 @@
+{
+  "captured_at": "2026-09-13T16:33:55.196304+00:00",
+  "review_base": "ea7f142b729bd88b2b79e247130cd40d2e329992",
+  "worktree_base": "f5f95f49a0027e2258e409674e3f9f4d77b7584b",
+  "snapshot": {
+    "dirty_fingerprint": "sha256:4df7dfc6c15191115d0b5cd4e341486e09dafa0b036bf2df6ee9b5c407ca0eef",
+    "revision_commit": "f5f95f49a0027e2258e409674e3f9f4d77b7584b"
+  },
+  "own_files_sha256": {
+    "scripts/agent-loop/gate.py": "b1a30569006dc4159175c30d6d735c2a0c26d19045a6122ab9bed15617165dbb",
+    "scripts/agent-loop/test_gate.py": "d98cb3aa102d5802546e7c85783b38ac7c40e5e02d088b2d050230657a40133c",
+    "docs/development/agent-loop-gate.md": "134ef6e8299541bd2cbfbf20967b4f74680ba724ea7fdbf4ae5cdcaaa3476cbc"
+  },
+  "review_report_sha256": "be35d4bf17154ffa0b6271aff2cda05f780cd117a4bb79137144533ab8e0e84b",
+  "review_probes_sha256": "615f339f1126bb79bde20247b062dc34ea3d38001d9ce2e0cb302cdae04adc8e"
+}

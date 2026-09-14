@@ -1,0 +1,32 @@
+{
+  "scope": "Local CLI status only; no credentials exported, no model request, no Linux runtime authentication proven",
+  "date": "2026-09-13",
+  "observations": [
+    {
+      "command": "codex login status",
+      "exit_code": 0,
+      "reported_auth": "ChatGPT"
+    },
+    {
+      "command": "claude auth status --json",
+      "environment": "Codex filesystem sandbox",
+      "exit_code": 1,
+      "loggedIn": false,
+      "authMethod": "none"
+    },
+    {
+      "command": "claude auth status --json",
+      "environment": "Approved host execution outside filesystem sandbox",
+      "exit_code": 0,
+      "loggedIn": true,
+      "authMethod": "claude.ai",
+      "apiProvider": "firstParty"
+    }
+  ],
+  "credential_file_metadata": {
+    "standard_claude_linux_credentials_file_exists": false,
+    "historical_multica_codex_auth_file_is_symlink": true,
+    "credential_values_read": false
+  },
+  "source": "https://code.claude.com/docs/en/authentication"
+}
