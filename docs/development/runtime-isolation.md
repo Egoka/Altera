@@ -304,10 +304,16 @@ Playwright `npx` получают `playwright_dynamic_npx`, но `mapping_ready:
 структурно корректный empty или неполный набор не разрешает роль, которой нужны отсутствующие tools.
 
 Base policy принимается только с ожидаемым digest и без существующих `mcp_servers`/managed markers.
-Новые `codex-mcp-catalog.json` и `codex-config.toml` публикуются exclusive, mode0600, через fsync и
-атомарный hard-link в свежем private generation; partial publication удаляется при ошибке. Mapper
-не открывает `auth.json`/`AGENTS.md`, не перечисляет task home, не использует global HOME fallback,
-не запускает MCP/package/model и не меняет runtime launcher. Synthetic check:
+Bounded base-key scanner распознаёт bare, quoted, whitespace и dotted table/array-table/assignment
+формы и отказывает при любой семантической MCP authority; multiline и неразбираемый key syntax
+также fail closed. Новые `codex-mcp-catalog.json` и `codex-config.toml` публикуются exclusive,
+mode0600, через удерживаемый directory FD, fsync и атомарный hard-link в свежем private generation.
+До возврата mapper связывает validated temporary, named final и повторно открытый final по
+device/inode и сверяет опубликованные bytes; cleanup удаляет только повторно подтверждённые entries
+этой попытки. Fixed `MappingError` подавляет underlying filesystem context, а command/argv types
+проверяются до set membership. Mapper не открывает `auth.json`/`AGENTS.md`, не перечисляет task home,
+не использует global HOME fallback, не запускает MCP/package/model и не меняет runtime launcher.
+Synthetic check:
 `/usr/bin/python3 -I scripts/agent-runtime/test_codex_toml_map.py`. Первый historical map и каждый
 следующий actual invocation выполняет trusted coordinator отдельно после review, с собственным
 fresh descriptor и source/AGENTS/run-record bindings.

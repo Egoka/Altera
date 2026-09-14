@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import stat
 import tempfile
+import traceback
 import unittest
 from unittest import mock
 
@@ -363,6 +364,80 @@ class CodexTomlMappingTests(unittest.TestCase):
         with self.assertRaisesRegex(mapper.MappingError, "^output_exists$"):
             self.fixture.materialize(managed())
         self.assertEqual(target.read_text(), "PRESERVE")
+
+    def test_base_policy_semantic_mcp_forms_refuse_without_publication(self):
+        variants = [
+            b'[ "mcp_servers".unmanaged ]\ncommand = "SYNTHETIC_ONLY"\n',
+            b'[ mcp_servers . unmanaged ]\ncommand = "SYNTHETIC_ONLY"\n',
+            b'["mcp_servers" . "unmanaged"]\ncommand = "SYNTHETIC_ONLY"\n',
+            b"[ 'mcp_servers' . unmanaged ]\ncommand = \"SYNTHETIC_ONLY\"\n",
+            b'[[ "mcp_servers" . unmanaged ]]\ncommand = "SYNTHETIC_ONLY"\n',
+            b'mcp_servers.unmanaged.command = "SYNTHETIC_ONLY"\n',
+            b'"mcp_servers" . unmanaged . command = "SYNTHETIC_ONLY"\n',
+        ]
+        for base in variants:
+            with self.subTest(base=base):
+                fixture = MappingFixture()
+                self.addCleanup(fixture.close)
+                fixture.write_config(managed())
+                fixture.base.write_bytes(base)
+                with self.assertRaisesRegex(mapper.MappingError, "^base_policy_invalid$"):
+                    mapper.materialize(
+                        fixture.record(), workspace_root=str(fixture.workspace),
+                        expected_cwd=os.getcwd(), expected_uid=fixture.uid,
+                        base_policy_path=str(fixture.base),
+                        expected_base_sha256=hashlib.sha256(base).hexdigest(),
+                        output_dir=str(fixture.output), mapping_policy_version="codex-mcp-map-v1")
+                self.assertEqual(list(fixture.output.iterdir()), [])
+
+    def test_publication_rejects_replaced_temp_inode_and_preserves_foreign_entry(self):
+        self.fixture.write_config(managed())
+        real_link = mapper.os.link
+        replaced = []
+
+        def replace_before_link(source, destination, **kwargs):
+            if Path(destination).name == "codex-config.toml":
+                source_path = Path(source)
+                if not source_path.is_absolute():
+                    source_path = self.fixture.output / source_path
+                original = source_path.read_bytes()
+                substitute = self.fixture.output / "synthetic-substitute"
+                substitute.write_bytes(original.replace(b"medium", b"high  "))
+                os.chmod(substitute, 0o600)
+                os.replace(substitute, source_path)
+                replaced.append(source_path.name)
+            return real_link(source, destination, **kwargs)
+
+        with mock.patch.object(mapper.os, "link", replace_before_link):
+            with self.assertRaisesRegex(mapper.MappingError, "^output_invalid$"):
+                self.fixture.materialize(managed())
+
+        self.assertEqual(len(replaced), 1)
+        self.assertFalse((self.fixture.output / "codex-config.toml").exists())
+        self.assertFalse((self.fixture.output / "codex-mcp-catalog.json").exists())
+        remaining = list(self.fixture.output.iterdir())
+        self.assertEqual(len(remaining), 1)
+        self.assertEqual(remaining[0].name, replaced[0])
+        self.assertIn(b'high  ', remaining[0].read_bytes())
+
+    def test_public_errors_suppress_causes_and_validate_semantic_types(self):
+        missing_home = self.fixture.workspace / "alte-9-abcdef012345" / "codex-home"
+        with self.assertRaisesRegex(mapper.MappingError, "^descriptor_invalid$") as caught:
+            mapper._read_validated_config(str(missing_home), str(self.fixture.workspace), self.fixture.uid)
+        rendered = "".join(traceback.format_exception(
+            type(caught.exception), caught.exception, caught.exception.__traceback__))
+        self.assertNotIn(missing_home.parent.name, rendered)
+        self.assertNotIn("FileNotFoundError", rendered)
+
+        malformed = [
+            managed("[mcp_servers.trace]", 'command = ["SYNTHETIC_ONLY"]', 'args = ["serve"]'),
+            managed("[mcp_servers.playwright]", 'command = "npx"', 'args = [["SYNTHETIC_ONLY"]]'),
+        ]
+        for data in malformed:
+            with self.subTest(data=data):
+                plan = mapper.build_mapping(data, "codex-mcp-map-v1")
+                self.assertEqual(plan["failure"], "unverified_managed_config")
+                self.assertFalse(plan["catalog"]["managed_mapping_verified"])
 
     def test_atomic_publication_removes_a_link_after_directory_fsync_failure(self):
         self.fixture.write_config(managed())

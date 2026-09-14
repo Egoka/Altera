@@ -48,7 +48,7 @@ class MappingError(ValueError):
 
 
 def _fail(code):
-    raise MappingError(code)
+    raise MappingError(code) from None
 
 
 def _digest(data):
@@ -350,7 +350,8 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
     if not isinstance(mapping_policy_version, str) or not _POLICY_VERSION.fullmatch(mapping_policy_version):
         _fail("mapping_policy_invalid")
     if (not isinstance(required_servers, (tuple, list)) or
-            any(name not in ("context7", "playwright", "trace") for name in required_servers) or
+            any(not isinstance(name, str) or name not in ("context7", "playwright", "trace")
+                for name in required_servers) or
             len(required_servers) != len(set(required_servers))):
         _fail("required_roster_invalid")
 
@@ -391,13 +392,21 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
                 shape = "context7_public_mcp"
             elif name == "trace":
                 expected = {"command", "args"}
-                valid = (set(fields) == expected and fields.get("command") in _TRACE_COMMANDS and
-                         fields.get("args") == ["serve"])
+                command = fields.get("command")
+                arguments = fields.get("args")
+                valid = (set(fields) == expected and isinstance(command, str) and
+                         command in _TRACE_COMMANDS and isinstance(arguments, list) and
+                         all(isinstance(argument, str) for argument in arguments) and
+                         arguments == ["serve"])
                 shape = "trace_serve"
             else:
                 expected = {"command", "args"}
-                valid = (set(fields) == expected and fields.get("command") == "npx" and
-                         isinstance(fields.get("args"), list) and tuple(fields["args"]) in _PLAYWRIGHT_ARGS)
+                command = fields.get("command")
+                arguments = fields.get("args")
+                valid = (set(fields) == expected and isinstance(command, str) and command == "npx" and
+                         isinstance(arguments, list) and
+                         all(isinstance(argument, str) for argument in arguments) and
+                         tuple(arguments) in _PLAYWRIGHT_ARGS)
                 shape = "playwright_dynamic_npx"
             if set(fields) - expected:
                 unknown = True
@@ -440,6 +449,11 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
 def _identity(info):
     return (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), stat.S_IMODE(info.st_mode),
             info.st_uid, info.st_gid, info.st_nlink, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+def _inode_identity(info):
+    return (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), stat.S_IMODE(info.st_mode),
+            info.st_uid, info.st_gid, info.st_size)
 
 
 def _read_all(fd):
@@ -485,7 +499,11 @@ def _validate_descriptor(record, workspace_root, expected_cwd, expected_uid):
     if os.getcwd() != expected_cwd:
         _fail("descriptor_invalid")
     candidate = descriptor.get("candidate_path")
-    if not isinstance(candidate, str) or len(candidate.encode("utf-8")) > 1024:
+    try:
+        candidate_size = len(candidate.encode("utf-8")) if isinstance(candidate, str) else None
+    except UnicodeEncodeError:
+        _fail("descriptor_invalid")
+    if candidate_size is None or candidate_size > 1024:
         _fail("descriptor_invalid")
     pattern = re.escape(workspace_root) + r"/alte-[0-9]{1,9}-[0-9a-f]{12}/codex-home"
     if not re.fullmatch(pattern, candidate):
@@ -566,9 +584,116 @@ def _read_validated_config(candidate, workspace_root, expected_uid):
             os.close(fd)
 
 
+def _base_line_without_comment(line):
+    state = "normal"
+    escaped = False
+    for index, character in enumerate(line):
+        if state == "basic":
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                state = "normal"
+        elif state == "literal":
+            if character == "'":
+                state = "normal"
+        elif character == '"':
+            state = "basic"
+        elif character == "'":
+            state = "literal"
+        elif character == "#":
+            return line[:index]
+    if state != "normal" or escaped:
+        _fail("base_policy_invalid")
+    return line
+
+
+def _base_key_path(raw):
+    position = 0
+    parts = []
+    while True:
+        while position < len(raw) and raw[position] in " \t":
+            position += 1
+        if position >= len(raw):
+            _fail("base_policy_invalid")
+        quote = raw[position] if raw[position] in "\"'" else None
+        if quote is not None:
+            position += 1
+            start = position
+            while position < len(raw) and raw[position] != quote:
+                if raw[position] == "\\" or ord(raw[position]) < 32:
+                    _fail("base_policy_invalid")
+                position += 1
+            if position >= len(raw) or position == start:
+                _fail("base_policy_invalid")
+            parts.append(raw[start:position])
+            position += 1
+        else:
+            match = _BARE_KEY.match(raw, position)
+            if not match:
+                _fail("base_policy_invalid")
+            parts.append(match.group(0))
+            position = match.end()
+        while position < len(raw) and raw[position] in " \t":
+            position += 1
+        if position == len(raw):
+            return parts
+        if raw[position] != ".":
+            _fail("base_policy_invalid")
+        position += 1
+
+
+def _reject_base_mcp_authority(text):
+    if '"""' in text or "'''" in text:
+        _fail("base_policy_invalid")
+    for raw_line in text.splitlines():
+        line = _base_line_without_comment(raw_line).strip()
+        if not line:
+            continue
+        if line.startswith("[["):
+            if not line.endswith("]]"):
+                _fail("base_policy_invalid")
+            key_path = _base_key_path(line[2:-2])
+        elif line.startswith("["):
+            if not line.endswith("]"):
+                _fail("base_policy_invalid")
+            key_path = _base_key_path(line[1:-1])
+        else:
+            state = "normal"
+            escaped = False
+            separator = None
+            for index, character in enumerate(line):
+                if state == "basic":
+                    if escaped:
+                        escaped = False
+                    elif character == "\\":
+                        escaped = True
+                    elif character == '"':
+                        state = "normal"
+                elif state == "literal":
+                    if character == "'":
+                        state = "normal"
+                elif character == '"':
+                    state = "basic"
+                elif character == "'":
+                    state = "literal"
+                elif character == "=":
+                    separator = index
+                    break
+            if separator is None:
+                _fail("base_policy_invalid")
+            key_path = _base_key_path(line[:separator])
+        if key_path[0] == "mcp_servers":
+            _fail("base_policy_invalid")
+
+
 def _read_base_policy(path, expected_sha256):
     if not isinstance(expected_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
         _fail("base_policy_digest_mismatch")
+    if (not isinstance(path, str) or "\x00" in path or not path.startswith("/") or
+            os.path.normpath(path) != path):
+        _fail("base_policy_invalid")
     try:
         info = os.lstat(path)
         if not stat.S_ISREG(info.st_mode):
@@ -585,43 +710,108 @@ def _read_base_policy(path, expected_sha256):
     if _digest(data) != expected_sha256:
         _fail("base_policy_digest_mismatch")
     try:
-        data.decode("utf-8")
+        text = data.decode("utf-8")
     except UnicodeDecodeError:
         _fail("base_policy_invalid")
     if (b"\x00" in data or b"\r" in data or data.startswith(b"\xef\xbb\xbf") or
-            BEGIN_MARKER.encode() in data or END_MARKER.encode() in data or b"[mcp_servers" in data or
+            BEGIN_MARKER.encode() in data or END_MARKER.encode() in data or
             (data and not data.endswith(b"\n"))):
         _fail("base_policy_invalid")
+    _reject_base_mcp_authority(text)
     return data
 
 
-def _validate_output_directory(path, expected_uid):
+def _directory_identity(info):
+    return (info.st_dev, info.st_ino, stat.S_IFMT(info.st_mode), stat.S_IMODE(info.st_mode),
+            info.st_uid, info.st_gid)
+
+
+def _check_output_directory(path, directory_fd, expected_identity, expected_uid):
     try:
-        info = os.lstat(path)
+        named = os.lstat(path)
+        held = os.fstat(directory_fd)
     except OSError:
         _fail("output_invalid")
-    if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or info.st_uid != expected_uid or
-            stat.S_IMODE(info.st_mode) != 0o700):
+    if (_identity(named) != _identity(held) or _directory_identity(held) != expected_identity or
+            not stat.S_ISDIR(held.st_mode) or stat.S_ISLNK(named.st_mode) or
+            held.st_uid != expected_uid or stat.S_IMODE(held.st_mode) != 0o700):
         _fail("output_invalid")
-    for name in ("codex-config.toml", "codex-mcp-catalog.json"):
-        try:
-            os.lstat(os.path.join(path, name))
-        except FileNotFoundError:
-            continue
-        except OSError:
+
+
+def _open_output_directory(path, expected_uid):
+    if (not isinstance(path, str) or "\x00" in path or not path.startswith("/") or
+            os.path.normpath(path) != path):
+        _fail("output_invalid")
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW
+    directory_fd = None
+    try:
+        named = os.lstat(path)
+        directory_fd = os.open(path, flags)
+        held = os.fstat(directory_fd)
+    except OSError:
+        if directory_fd is not None:
+            os.close(directory_fd)
+        _fail("output_invalid")
+    identity = _directory_identity(held)
+    try:
+        if (_identity(named) != _identity(held) or not stat.S_ISDIR(held.st_mode) or
+                stat.S_ISLNK(named.st_mode) or held.st_uid != expected_uid or
+                stat.S_IMODE(held.st_mode) != 0o700):
             _fail("output_invalid")
-        _fail("output_exists")
+        for name in ("codex-config.toml", "codex-mcp-catalog.json"):
+            try:
+                os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            except FileNotFoundError:
+                continue
+            except OSError:
+                _fail("output_invalid")
+            _fail("output_exists")
+        return directory_fd, identity
+    except MappingError:
+        os.close(directory_fd)
+        raise
 
 
-def _write_atomic(directory, name, data, expected_uid):
+def _unlink_bound_entry(directory_fd, name, expected_inode):
+    try:
+        current = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return False
+    if _inode_identity(current) != expected_inode:
+        return False
+    try:
+        os.unlink(name, dir_fd=directory_fd)
+    except OSError:
+        return False
+    return True
+
+
+def _read_published(fd, expected_size):
+    chunks = []
+    remaining = expected_size + 1
+    while remaining:
+        chunk = os.read(fd, min(8192, remaining))
+        if not chunk:
+            break
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    return b"".join(chunks)
+
+
+def _write_atomic(directory, directory_fd, directory_identity, name, data, expected_uid):
     temporary = ".%s.%s.tmp" % (name, uuid.uuid4().hex)
-    temporary_path = os.path.join(directory, temporary)
     final_path = os.path.join(directory, name)
     fd = None
-    linked = False
+    temporary_inode = None
+    linked_inode = None
+    link_created = False
     completed = False
     try:
-        fd = os.open(temporary_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600)
+        _check_output_directory(directory, directory_fd, directory_identity, expected_uid)
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW,
+                     0o600, dir_fd=directory_fd)
         offset = 0
         while offset < len(data):
             written = os.write(fd, data[offset:])
@@ -635,44 +825,67 @@ def _write_atomic(directory, name, data, expected_uid):
                 stat.S_IMODE(before.st_mode) != 0o600 or before.st_nlink != 1 or
                 before.st_size != len(data)):
             _fail("output_invalid")
-        os.close(fd)
-        fd = None
+        temporary_inode = _inode_identity(before)
+        named_temporary = os.stat(temporary, dir_fd=directory_fd, follow_symlinks=False)
+        if _identity(named_temporary) != _identity(before):
+            _fail("output_invalid")
         try:
-            os.link(temporary_path, final_path, follow_symlinks=False)
+            os.link(temporary, name, src_dir_fd=directory_fd, dst_dir_fd=directory_fd,
+                    follow_symlinks=False)
         except FileExistsError:
             _fail("output_exists")
-        linked = True
-        os.unlink(temporary_path)
-        temporary_path = None
-        directory_fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW)
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
-        final = os.lstat(final_path)
-        if (not stat.S_ISREG(final.st_mode) or final.st_uid != expected_uid or
-                stat.S_IMODE(final.st_mode) != 0o600 or final.st_nlink != 1 or
-                final.st_size != len(data)):
+        link_created = True
+        final_after_link = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        linked_inode = _inode_identity(final_after_link)
+        held_after_link = os.fstat(fd)
+        temporary_after_link = os.stat(temporary, dir_fd=directory_fd, follow_symlinks=False)
+        if (temporary_inode != _inode_identity(held_after_link) or
+                temporary_inode != _inode_identity(temporary_after_link) or
+                temporary_inode != linked_inode or held_after_link.st_nlink != 2 or
+                _identity(held_after_link) != _identity(temporary_after_link) or
+                _identity(held_after_link) != _identity(final_after_link)):
             _fail("output_invalid")
+        if not _unlink_bound_entry(directory_fd, temporary, temporary_inode):
+            _fail("output_invalid")
+        temporary_inode = None
+        held_after_unlink = os.fstat(fd)
+        final_after_unlink = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        if (_inode_identity(held_after_unlink) != linked_inode or
+                _inode_identity(final_after_unlink) != linked_inode or
+                held_after_unlink.st_nlink != 1 or final_after_unlink.st_nlink != 1 or
+                _identity(held_after_unlink) != _identity(final_after_unlink)):
+            _fail("output_invalid")
+        os.fsync(directory_fd)
+        _check_output_directory(directory, directory_fd, directory_identity, expected_uid)
+        final_fd = os.open(name, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=directory_fd)
+        try:
+            final_before_read = os.fstat(final_fd)
+            published = _read_published(final_fd, len(data))
+            final_after_read = os.fstat(final_fd)
+            named_final = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+            if (_inode_identity(final_before_read) != linked_inode or
+                    _identity(final_before_read) != _identity(final_after_read) or
+                    _identity(final_after_read) != _identity(named_final) or
+                    final_after_read.st_nlink != 1 or published != data):
+                _fail("output_invalid")
+        finally:
+            os.close(final_fd)
+        _check_output_directory(directory, directory_fd, directory_identity, expected_uid)
         completed = True
-        return final_path
+        return final_path, linked_inode
     except MappingError:
         raise
     except OSError:
         _fail("output_invalid")
     finally:
+        if temporary_inode is not None:
+            _unlink_bound_entry(directory_fd, temporary, temporary_inode)
+        if link_created and not completed:
+            cleanup_inode = linked_inode if linked_inode is not None else temporary_inode
+            if cleanup_inode is not None:
+                _unlink_bound_entry(directory_fd, name, cleanup_inode)
         if fd is not None:
             os.close(fd)
-        if temporary_path is not None:
-            try:
-                os.unlink(temporary_path)
-            except FileNotFoundError:
-                pass
-        if linked and not completed:
-            try:
-                os.unlink(final_path)
-            except OSError:
-                pass
 
 
 def materialize(d2_record, *, workspace_root, expected_cwd, expected_uid,
@@ -680,26 +893,34 @@ def materialize(d2_record, *, workspace_root, expected_cwd, expected_uid,
                 mapping_policy_version, required_servers=()):
     """Validate, map, and exclusively publish one secret-free policy generation."""
     candidate = _validate_descriptor(d2_record, workspace_root, expected_cwd, expected_uid)
-    _validate_output_directory(output_dir, expected_uid)
-    base_policy = _read_base_policy(base_policy_path, expected_base_sha256)
-    config = _read_validated_config(candidate, workspace_root, expected_uid)
-    plan = build_mapping(config, mapping_policy_version, required_servers)
-    if plan["failure"] is not None:
-        _fail(plan["failure"])
-    policy = base_policy + plan["policy_block"]
-    created = []
+    output_fd, output_identity = _open_output_directory(output_dir, expected_uid)
     try:
-        catalog_path = _write_atomic(output_dir, "codex-mcp-catalog.json", plan["catalog_json"], expected_uid)
-        created.append(catalog_path)
-        policy_path = _write_atomic(output_dir, "codex-config.toml", policy, expected_uid)
-        created.append(policy_path)
-    except MappingError:
-        for path in created:
+        base_policy = _read_base_policy(base_policy_path, expected_base_sha256)
+        config = _read_validated_config(candidate, workspace_root, expected_uid)
+        plan = build_mapping(config, mapping_policy_version, required_servers)
+        if plan["failure"] is not None:
+            _fail(plan["failure"])
+        policy = base_policy + plan["policy_block"]
+        created = []
+        try:
+            catalog_path, catalog_inode = _write_atomic(
+                output_dir, output_fd, output_identity, "codex-mcp-catalog.json",
+                plan["catalog_json"], expected_uid)
+            created.append(("codex-mcp-catalog.json", catalog_inode))
+            policy_path, policy_inode = _write_atomic(
+                output_dir, output_fd, output_identity, "codex-config.toml", policy, expected_uid)
+            created.append(("codex-config.toml", policy_inode))
+        except MappingError:
+            for name, inode in created:
+                _unlink_bound_entry(output_fd, name, inode)
             try:
-                os.unlink(path)
+                os.fsync(output_fd)
             except OSError:
                 pass
-        raise
+            raise
+        _check_output_directory(output_dir, output_fd, output_identity, expected_uid)
+    finally:
+        os.close(output_fd)
     return {
         "schema": SCHEMA,
         "managed_mapping_verified": True,
