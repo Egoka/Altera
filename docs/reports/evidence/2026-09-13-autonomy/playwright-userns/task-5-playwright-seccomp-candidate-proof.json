@@ -1,0 +1,21 @@
+{
+  "base_sha256": "536529b665dd0972c37bfb569f5d4ac8a53592e7b00752bc39ff063ca9864c74",
+  "candidate_sha256": "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140",
+  "semantic_diff": {
+    "added_syscall_rule": {
+      "comment": "Allow create user namespaces",
+      "names": [
+        "clone",
+        "setns",
+        "unshare"
+      ],
+      "action": "SCMP_ACT_ALLOW",
+      "args": [],
+      "includes": {},
+      "excludes": {}
+    },
+    "other_rules_and_fields_unchanged": true
+  },
+  "source": "https://raw.githubusercontent.com/microsoft/playwright/ae935a43d9e376e4759548f6b3c6905c7b282333/utils/docker/seccomp_profile.json",
+  "prepared_only": true
+}

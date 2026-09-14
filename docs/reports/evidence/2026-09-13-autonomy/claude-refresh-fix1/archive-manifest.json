@@ -1,0 +1,103 @@
+{
+  "base": "40a43e874799e4be4701d4ef4441bd81809466b7",
+  "head": "6e197f8f42660da0fe7fd7c21c545f02ed156651",
+  "review": "pending",
+  "live_acceptance": false,
+  "files": [
+    {
+      "file": "refresh-fix1-review/commit-proof.json",
+      "bytes": 654,
+      "sha256": "9931fda6c532a51d981cfc86aefde54ec9f97c8191b7a157ca09ab834264203c"
+    },
+    {
+      "file": "refresh-fix1-review/committed-review.diff",
+      "bytes": 38216,
+      "sha256": "8fce0dfbe7e834fc90aa2ebe756758d03790440ef7a1b8433b9e13f600b2a10a"
+    },
+    {
+      "file": "refresh-fix1-review/precommit-status.txt",
+      "bytes": 695,
+      "sha256": "0659480d76aa5856be4d61202addb5250c480bfc1873f86ff9c53e4ddcd98e48"
+    },
+    {
+      "file": "refresh-fix1-review/scoped.diff",
+      "bytes": 38216,
+      "sha256": "8fce0dfbe7e834fc90aa2ebe756758d03790440ef7a1b8433b9e13f600b2a10a"
+    },
+    {
+      "file": "refresh-fix1-review/source-manifest.json",
+      "bytes": 1306,
+      "sha256": "12c7ee0237105e59254f6992117e24a5d7a40b418d32e8c5a641c83326fe4ca6"
+    },
+    {
+      "file": "task-5-refresh-fix1-brief.md",
+      "bytes": 2454,
+      "sha256": "3c8d1c0e9c7c3a58f7e9be8889509eab7b19530db29e4f310d41efe8ed77b8b5"
+    },
+    {
+      "file": "task-5-refresh-fix1-commit.log",
+      "bytes": 1082,
+      "sha256": "9fc8e1cd82e1585a66bf15899e1b2ba156f05af871f33181331022a59c484fe5"
+    },
+    {
+      "file": "task-5-refresh-fix1-docker-recovery-1.log",
+      "bytes": 854,
+      "sha256": "e8e90eb524e6e3a9208906cf39ea0da8315ed9bebc290be8b219ef84776a1545"
+    },
+    {
+      "file": "task-5-refresh-fix1-docker-recovery-final.log",
+      "bytes": 363,
+      "sha256": "3ce3fd34393448b05f02c64f50d619b841db58d8c813b9355989d0e46f77ea72"
+    },
+    {
+      "file": "task-5-refresh-fix1-format.log",
+      "bytes": 55,
+      "sha256": "cb065c7ccf4342ae3554408257443610babf048661c5df344f835e8e441d2693"
+    },
+    {
+      "file": "task-5-refresh-fix1-policy-green-2.log",
+      "bytes": 396,
+      "sha256": "e46eb0af771558e824aa8e55acaa8e56ba7cdcd06d05f5de6ab4e9fa52f478a8"
+    },
+    {
+      "file": "task-5-refresh-fix1-policy-green.log",
+      "bytes": 2640,
+      "sha256": "f0bb99a7b34b856c5012a0c177c38cb1bb7f4ed1ef1b3a70b1e19603bd14973e"
+    },
+    {
+      "file": "task-5-refresh-fix1-policy-red.log",
+      "bytes": 1630,
+      "sha256": "034005513378ec2b38a7fefec5e6f5d9727b711b81f09f787f679cff63a17a5d"
+    },
+    {
+      "file": "task-5-refresh-fix1-runtime-covering.log",
+      "bytes": 2217,
+      "sha256": "25ecefde3776692b488f361c1f281174a93d1fcb59f69d508254096c2b7e2de1"
+    },
+    {
+      "file": "task-5-refresh-fix1-store-covering.log",
+      "bytes": 2061,
+      "sha256": "33cea9c88d94a271bc9d861c51fa7c90a382f1cf33f7ab51f59deb182be176c1"
+    },
+    {
+      "file": "task-5-refresh-fix1-worker-green.log",
+      "bytes": 298,
+      "sha256": "d99866f806ef4ee94bfa32c38f44eeaca3d2f198197b1bc0d908cd7115dfbe72"
+    },
+    {
+      "file": "task-5-refresh-fix1-worker-recovery.log",
+      "bytes": 196,
+      "sha256": "516be5c2fcb8cc537dff5c380a719aef990cbf0c30440af8e5a3fe5ee879371c"
+    },
+    {
+      "file": "task-5-refresh-fix1-worker-red.log",
+      "bytes": 902,
+      "sha256": "4ce96ac06ea179d91ae1a4317bfb394c1f65a0c083a11469c8cb9702e6bb0c36"
+    },
+    {
+      "file": "task-5-refresh-implementation-report.md",
+      "bytes": 20432,
+      "sha256": "926e6c52c6d14f68c5c269f24490d50a5dd4424add96a002dbc059580d3b1a70"
+    }
+  ]
+}

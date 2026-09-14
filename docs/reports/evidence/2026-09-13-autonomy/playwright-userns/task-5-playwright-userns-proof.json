@@ -1,0 +1,39 @@
+{
+  "at_utc": "2026-09-14T00:05:41.730965+00:00",
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "candidate_sha256": "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140",
+  "candidate_unchanged": true,
+  "records": [
+    {
+      "policy": "builtin",
+      "docker_exit": 0,
+      "docker_stderr_bytes": 0,
+      "observation": {
+        "available": true,
+        "uid": 1000,
+        "status": 1,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": "unshare: unshare failed: Operation not permitted\n"
+      }
+    },
+    {
+      "policy": "candidate",
+      "docker_exit": 0,
+      "docker_stderr_bytes": 0,
+      "observation": {
+        "available": true,
+        "uid": 1000,
+        "status": 0,
+        "signal": null,
+        "error": null,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ],
+  "browser_tested": false,
+  "host_policy_changed": false,
+  "credentials_network_mounts": false
+}

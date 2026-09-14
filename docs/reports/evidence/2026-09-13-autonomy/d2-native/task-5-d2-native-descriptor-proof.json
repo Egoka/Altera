@@ -1,0 +1,28 @@
+{
+  "id": "01a09d1e-ab73-7dfe-8fbb-50862a0326df",
+  "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+  "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+  "runtime_id": "f4364903-8fe0-4911-aeb5-bfb05632a166",
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "status": "failed",
+  "started_at": "2026-09-13T23:33:49Z",
+  "completed_at": "2026-09-13T23:33:50Z",
+  "attempt": 1,
+  "max_attempts": 2,
+  "descriptor": {
+    "source_sha256": "30f0d4363e4ddafca0d2cb8a49e4807d7ee56da8374a9025add70cf1147dc2d8",
+    "build_sha256": "4316863681f5378a5846cdb48ff49ccb49daeff353f5cdbeeab0740f0e4e8bbc",
+    "read_status": "lexical_candidate",
+    "cwd_matches_expected": true,
+    "argc": 4,
+    "canonical_identity": "not_checked",
+    "task_acceptance": "not_checked",
+    "candidate_path": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6/alte-11-50862a0326df/codex-home"
+  },
+  "expected_diagnostic_exit": 78,
+  "observed_numeric_exit": "not_exposed_by_issue_runs",
+  "handshake_failure": "expected diagnostic behavior",
+  "native_model_acceptance": false,
+  "read_config_auth": false,
+  "binary_sha256": "0e3f16bb910154660d5bc8c22b4e3de16f0a20504d8b79487a70c589f28eb5e3"
+}

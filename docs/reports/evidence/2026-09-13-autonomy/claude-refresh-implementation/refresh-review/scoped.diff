@@ -1,0 +1,1819 @@
+diff --git a/scripts/agent-runtime/credential_refresh.py b/scripts/agent-runtime/credential_refresh.py
+new file mode 100644
+index 0000000..8aaf51e
+--- /dev/null
++++ b/scripts/agent-runtime/credential_refresh.py
+@@ -0,0 +1,458 @@
++#!/usr/bin/python3 -I
++"""Trusted coordinator: opaque credential generations, shared lock и durable publication."""
++from contextlib import contextmanager
++import fcntl
++import importlib.util
++import json
++import os
++from pathlib import Path
++import re
++import stat
++import subprocess
++import sys
++from types import SimpleNamespace
++import uuid
++
++spec = importlib.util.spec_from_file_location('refresh_runtime', Path(__file__).with_name('runtime.py'))
++runtime = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(runtime)
++GENERATION = re.compile(r'[a-f0-9]{32}')
++MAX_FILE = 65536
++STAGES = ('prepared', 'exchange_started', 'candidate_written', 'candidate_accepted', 'published')
++
++
++def directory(path):
++    """Каждый компонент открывается относительно предыдущего fd, без symlink traversal."""
++    path = Path(path)
++    if not path.is_absolute() or '..' in path.parts or re.search(r'[\x00-\x1f,=]', str(path)):
++        raise ValueError('unsafe_store_path')
++    fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
++    try:
++        for part in path.parts[1:]:
++            next_fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
++            os.close(fd); fd = next_fd
++        return fd
++    except BaseException:
++        os.close(fd)
++        raise
++
++
++def metadata(info, is_directory=False, allow_empty=False):
++    kind = stat.S_ISDIR(info.st_mode) if is_directory else stat.S_ISREG(info.st_mode)
++    if (not kind or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != (0o700 if is_directory else 0o600) or
++        (not is_directory and (info.st_nlink != 1 or info.st_size > MAX_FILE or (not allow_empty and info.st_size == 0)))):
++        raise ValueError('unsafe_private_metadata')
++
++
++def public_model_result(result):
++    """Повторная граница redaction: journal не доверяет произвольным полям stdout."""
++    def numbers(value, keys):
++        if not isinstance(value, dict):
++            raise ValueError('model_result_unaccepted')
++        clean = {}
++        for key in keys:
++            if key in value:
++                number = value[key]
++                if type(number) not in (int, float) or not 0 <= number < float('inf'):
++                    raise ValueError('model_result_unaccepted')
++                clean[key] = number
++        return clean
++    if result.get('status') != 'model_accepted' or result.get('billingVerified') is not False:
++        raise ValueError('model_result_unaccepted')
++    usage = numbers(result.get('usage'), ('input_tokens', 'output_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens'))
++    for group, keys in [('output_tokens_details', ('thinking_tokens',)), ('cache_creation', ('ephemeral_1h_input_tokens', 'ephemeral_5m_input_tokens')),
++                        ('server_tool_use', ('web_search_requests', 'web_fetch_requests'))]:
++        if group in result['usage']:
++            usage[group] = numbers(result['usage'][group], keys)
++            if group == 'server_tool_use' and any(usage[group].values()):
++                raise ValueError('model_result_unaccepted')
++    models = result.get('modelUsage')
++    if not isinstance(models, dict) or 'claude-opus-4-6' not in models:
++        raise ValueError('model_result_unaccepted')
++    clean_models = {}
++    for name, value in models.items():
++        expected = {'claude-opus-4-6': 'claude-opus-4-6', 'claude-haiku-4-5-20251001': 'claude-haiku-4-5'}.get(name)
++        if (not expected or not isinstance(value, dict) or value.get('canonicalModel') != expected or
++            value.get('provider') != 'firstParty' or value.get('costBasis') != 'list'):
++            raise ValueError('model_result_unaccepted')
++        clean = numbers(value, ('inputTokens', 'outputTokens', 'cacheReadInputTokens', 'cacheCreationInputTokens',
++                               'webSearchRequests', 'costUSD', 'contextWindow', 'maxOutputTokens', 'thinkingTokens'))
++        if clean.get('webSearchRequests', 0) != 0:
++            raise ValueError('model_result_unaccepted')
++        clean_models[name] = {**clean, 'canonicalModel': expected, 'provider': 'firstParty', 'costBasis': 'list'}
++    cost = numbers(result, ('totalCostUsd',))
++    if 'totalCostUsd' not in cost:
++        raise ValueError('model_result_unaccepted')
++    return {'status': 'model_accepted', 'usage': usage, 'modelUsage': clean_models, **cost, 'billingVerified': False}
++
++
++class Store:
++    def __init__(self, manifest, runner=None):
++        required = {'schema_version', 'store', 'policy', 'policy_sha256', 'run_root', 'image', 'network', 'check_id', 'attempt_id'}
++        if (set(manifest) != required or manifest['schema_version'] != 1 or manifest['image'] != runtime.REFRESH_IMAGE or
++            manifest['network'] != 'provider-proxy' or not GENERATION.fullmatch(manifest['attempt_id']) or
++            not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]{0,95}', manifest['check_id'])):
++            raise ValueError('invalid_refresh_manifest')
++        self.manifest = dict(manifest)
++        self.path = Path(manifest['store'])
++        if not self.path.is_absolute() or self.path in (Path('/'), Path.home()) or os.getuid() == 0:
++            raise ValueError('unsafe_store_path')
++        if not self.path.exists() and not self.path.is_symlink():
++            self.path.mkdir(mode=0o700)
++        self.fd = directory(self.path)
++        try:
++            metadata(os.fstat(self.fd), True)
++            try:
++                os.mkdir('generations', 0o700, dir_fd=self.fd); os.fsync(self.fd)
++            except FileExistsError:
++                pass
++            self.generations = os.open('generations', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=self.fd)
++            metadata(os.fstat(self.generations), True)
++            if os.fstat(self.generations).st_dev != os.fstat(self.fd).st_dev:
++                raise ValueError('cross_filesystem_store')
++        except BaseException:
++            if hasattr(self, 'generations'): os.close(self.generations)
++            os.close(self.fd)
++            raise
++        self.runner = runner or self.container
++
++    def close(self):
++        if self.fd is not None:
++            os.close(self.generations); os.close(self.fd); self.fd = None
++
++    def file(self, parent, name, allow_empty=False):
++        try:
++            fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent)
++        except OSError:
++            raise ValueError('unsafe_or_missing_store_file') from None
++        try:
++            metadata(os.fstat(fd), allow_empty=allow_empty)
++            return fd
++        except BaseException:
++            os.close(fd)
++            raise
++
++    @contextmanager
++    def locked(self):
++        metadata(os.fstat(self.fd), True)
++        lock = os.open('refresh.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600, dir_fd=self.fd)
++        try:
++            metadata(os.fstat(lock), allow_empty=True)
++            fcntl.flock(lock, fcntl.LOCK_EX)
++            metadata(os.fstat(self.fd), True)
++            metadata(os.fstat(lock), allow_empty=True)
++            metadata(os.fstat(self.generations), True)
++            named = os.stat('generations', dir_fd=self.fd, follow_symlinks=False)
++            held_generation = os.fstat(self.generations)
++            if (named.st_dev, named.st_ino) != (held_generation.st_dev, held_generation.st_ino):
++                raise ValueError('generations_replaced')
++            found = os.stat('refresh.lock', dir_fd=self.fd, follow_symlinks=False)
++            held = os.fstat(lock)
++            if (found.st_dev, found.st_ino) != (held.st_dev, held.st_ino):
++                raise ValueError('lock_replaced')
++            actual = os.stat(self.path, follow_symlinks=False)
++            if (actual.st_dev, actual.st_ino) != (os.fstat(self.fd).st_dev, os.fstat(self.fd).st_ino):
++                raise ValueError('store_replaced')
++            for name in os.listdir(self.generations):
++                if not re.fullmatch(r'[a-f0-9]{32}(?:\.pending)?', name):
++                    raise ValueError('unexpected_generation_name')
++            yield
++        finally:
++            fcntl.flock(lock, fcntl.LOCK_UN); os.close(lock)
++
++    def exists(self, parent, name):
++        try:
++            os.stat(name, dir_fd=parent, follow_symlinks=False)
++            return True
++        except FileNotFoundError:
++            return False
++
++    def read_json(self, name, optional=False):
++        if optional and not self.exists(self.fd, name):
++            return None
++        fd = self.file(self.fd, name)
++        try:
++            data = os.read(fd, MAX_FILE + 1)
++            def unique(pairs):
++                value = {}
++                for key, item in pairs:
++                    if key in value:
++                        raise ValueError('invalid_metadata_json')
++                    value[key] = item
++                return value
++            return json.loads(data, object_pairs_hook=unique)
++        except (ValueError, UnicodeError):
++            raise ValueError('invalid_metadata_json') from None
++        finally:
++            os.close(fd)
++
++    def atomic_json(self, name, value):
++        if self.exists(self.fd, name):
++            existing = self.file(self.fd, name); os.close(existing)
++        temporary = '.metadata-' + uuid.uuid4().hex
++        fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600, dir_fd=self.fd)
++        try:
++            data = (json.dumps(value, sort_keys=True, separators=(',', ':')) + '\n').encode()
++            if len(data) > MAX_FILE:
++                raise ValueError('metadata_limit')
++            while data:
++                written = os.write(fd, data); data = data[written:]
++            os.fsync(fd)
++        finally:
++            os.close(fd)
++        os.replace(temporary, name, src_dir_fd=self.fd, dst_dir_fd=self.fd)
++        os.fsync(self.fd)
++
++    def current(self):
++        value = self.read_json('current.json')
++        if not isinstance(value, dict) or set(value) != {'generation'} or not isinstance(value['generation'], str) or not GENERATION.fullmatch(value['generation']):
++            raise ValueError('invalid_current_pointer')
++        return value['generation']
++
++    def generation(self, name):
++        if not re.fullmatch(r'[a-f0-9]{32}(?:\.pending)?', name):
++            raise ValueError('invalid_generation')
++        try:
++            fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=self.generations)
++        except OSError:
++            raise ValueError('unsafe_or_missing_generation') from None
++        try:
++            metadata(os.fstat(fd), True)
++            if os.fstat(fd).st_dev != os.fstat(self.generations).st_dev:
++                raise ValueError('cross_filesystem_generation')
++            return fd
++        except BaseException:
++            os.close(fd)
++            raise
++
++    def credential(self, name):
++        parent = self.generation(name)
++        try:
++            fd = self.file(parent, '.credentials.json')
++        finally:
++            os.close(parent)
++        return SimpleNamespace(path=self.path / 'generations' / name / '.credentials.json', fd=fd)
++
++    @contextmanager
++    def select_current(self):
++        with self.locked():
++            selected = self.credential(self.current())
++        try:
++            yield selected
++        finally:
++            os.close(selected.fd)
++
++    def bootstrap(self, source):
++        with self.locked():
++            if self.exists(self.fd, 'current.json') or self.exists(self.fd, 'refresh-state.json') or os.listdir(self.generations):
++                raise ValueError('bootstrap_store_not_empty')
++            source = Path(source)
++            parent = directory(source.parent)
++            try:
++                original = self.file(parent, source.name)
++            finally:
++                os.close(parent)
++            try:
++                before = os.fstat(original)
++                name = uuid.uuid4().hex
++                os.mkdir(name, 0o700, dir_fd=self.generations)
++                generation = self.generation(name)
++                try:
++                    target = os.open('.credentials.json', os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600, dir_fd=generation)
++                    try:
++                        total = 0
++                        while True:
++                            data = os.read(original, 8192)
++                            if not data: break
++                            total += len(data)
++                            if total > MAX_FILE: raise ValueError('bootstrap_source_changed')
++                            while data:
++                                count = os.write(target, data); data = data[count:]
++                        os.fsync(target)
++                    finally:
++                        os.close(target)
++                    os.fsync(generation)
++                finally:
++                    os.close(generation)
++                after = os.fstat(original)
++                if total != before.st_size or (before.st_ino, before.st_dev, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (after.st_ino, after.st_dev, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
++                    raise ValueError('bootstrap_source_changed')
++                os.fsync(self.generations)
++                self.atomic_json('current.json', {'generation': name})
++                return {'status': 'bootstrapped', 'original_retained': True}
++            finally:
++                os.close(original)
++
++    def write_state(self, state):
++        self.atomic_json('refresh-state.json', state)
++
++    def state(self):
++        value = self.read_json('refresh-state.json', optional=True)
++        if value is None: return None
++        required = {'stage', 'old', 'candidate', 'attempt_id', 'check_id', 'image', 'policy_sha256'}
++        if (not isinstance(value, dict) or not required.issubset(value) or set(value) - required - {'model_result'} or
++            value['stage'] not in STAGES or any(not isinstance(value[key], str) or not GENERATION.fullmatch(value[key]) for key in ('old', 'candidate', 'attempt_id')) or
++            value['old'] == value['candidate']):
++            raise ValueError('invalid_refresh_journal')
++        for key in ('image', 'policy_sha256', 'check_id'):
++            if value[key] != self.manifest[key]:
++                raise ValueError('refresh_identity_changed')
++        if value['stage'] in ('candidate_accepted', 'published'):
++            value['model_result'] = public_model_result(value.get('model_result', {}))
++        return value
++
++    def candidate(self, state):
++        pending, final = state['candidate'] + '.pending', state['candidate']
++        names = [name for name in (pending, final) if self.exists(self.generations, name)]
++        if len(names) != 1:
++            raise ValueError('candidate_missing_or_ambiguous')
++        return self.credential(names[0])
++
++    def publish(self, state):
++        if state['stage'] != 'candidate_accepted':
++            raise ValueError('unaccepted_candidate')
++        selected = self.candidate(state); os.close(selected.fd)
++        if selected.path.parent.name.endswith('.pending'):
++            os.rename(state['candidate'] + '.pending', state['candidate'], src_dir_fd=self.generations, dst_dir_fd=self.generations)
++            os.fsync(self.generations)
++        changed = self.current() != state['candidate']
++        if changed:
++            self.atomic_json('current.json', {'generation': state['candidate']})
++        self.write_state({**state, 'stage': 'published'})
++        return {'status': 'published', 'generation_changed': changed, 'model_result': state['model_result']}
++
++    def refresh(self):
++        with self.locked():
++            old = self.current()
++            previous = self.credential(old); os.close(previous.fd)
++            state = self.state()
++            if state and state['stage'] == 'published':
++                if old != state['candidate']: raise ValueError('pointer_journal_mismatch')
++                if state['attempt_id'] == self.manifest['attempt_id']:
++                    return {'status': 'published', 'generation_changed': False, 'model_result': state['model_result']}
++                state = None
++            if state and state['attempt_id'] != self.manifest['attempt_id']:
++                return {'status': 'existing_attempt_requires_recovery'}
++            if state and old not in (state['old'], state['candidate']):
++                raise ValueError('pointer_journal_mismatch')
++            if state and state['stage'] == 'prepared':
++                pending = state['candidate'] + '.pending'
++                if self.exists(self.generations, state['candidate']): return {'status': 'manual_login_required'}
++                if self.exists(self.generations, pending):
++                    fd = self.generation(pending)
++                    try:
++                        if os.listdir(fd): return {'status': 'manual_login_required'}
++                    finally: os.close(fd)
++                    os.rmdir(pending, dir_fd=self.generations); os.fsync(self.generations)
++                state = None
++            if state is None:
++                name = uuid.uuid4().hex
++                os.mkdir(name + '.pending', 0o700, dir_fd=self.generations); os.fsync(self.generations)
++                state = {'stage': 'prepared', 'old': old, 'candidate': name,
++                         **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')}}
++                self.write_state(state)
++                state = {**state, 'stage': 'exchange_started'}; self.write_state(state)
++                try:
++                    outcome = self.runner('exchange', previous.path, self.path / 'generations' / (name + '.pending'))
++                except Exception:
++                    outcome = {'status': 'child_failed'}
++                if outcome.get('status') != 'exchange_succeeded':
++                    try:
++                        found = self.candidate(state); os.close(found.fd)
++                        return {'status': 'candidate_recovery_required'}
++                    except ValueError:
++                        return {'status': 'manual_login_required'}
++            try:
++                selected = self.candidate(state)
++                try:
++                    os.fsync(selected.fd)
++                    parent = self.generation(selected.path.parent.name)
++                    try: os.fsync(parent)
++                    finally: os.close(parent)
++                finally: os.close(selected.fd)
++            except ValueError:
++                return {'status': 'manual_login_required'}
++            if state['stage'] == 'candidate_accepted':
++                return self.publish(state)
++            state = {**state, 'stage': 'candidate_written'}; self.write_state(state)
++            try:
++                if self.runner('status', selected.path, None).get('status') != 'authenticated':
++                    return {'status': 'candidate_rejected'}
++                result = public_model_result(self.runner('model', selected.path, None))
++            except Exception:
++                return {'status': 'candidate_rejected'}
++            state = {**state, 'stage': 'candidate_accepted', 'model_result': result}; self.write_state(state)
++            return self.publish(state)
++
++    def container(self, operation, credential, output):
++        base = runtime.private_reference(self.manifest['run_root'], directory=True)
++        run = base / (operation + '-' + uuid.uuid4().hex); run.mkdir(mode=0o700)
++        manifest = {**self.manifest, 'run_root': str(run)}
++        command = runtime.refresh_command(manifest, operation, credential, output)
++        name = 'altera-refresh-' + uuid.uuid4().hex
++        command[2:2] = ['--name', name]
++        with runtime.provider_network(manifest) as network:
++            command[command.index('--network=none')] = '--network=' + network
++            process = None
++            try:
++                process = subprocess.Popen(command, env=runtime.child_env(), stdin=subprocess.DEVNULL,
++                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                try:
++                    stdout, stderr = process.communicate(timeout={'exchange': 75, 'status': 45, 'model': 135}[operation])
++                except subprocess.TimeoutExpired:
++                    return {'status': 'timeout'}
++            finally:
++                # Docker client exit не гарантирует остановку worker; cleanup предшествует снятию proxy.
++                subprocess.run([runtime.DOCKER, 'rm', '--force', name], env=runtime.child_env(),
++                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
++                               timeout=15, check=False)
++                if process is not None:
++                    try: process.wait(timeout=15)
++                    except subprocess.TimeoutExpired:
++                        process.kill(); process.wait(timeout=15)
++        if len(stdout) + len(stderr) > 8192:
++            return {'status': 'output_limit'}
++        try:
++            result = json.loads(stdout)
++            if operation == 'model':
++                if process.returncode != 0: raise ValueError()
++                return public_model_result(result)
++            allowed = {'exchange': {'exchange_succeeded', 'exchange_failed', 'browser_flow_rejected', 'invalid_credential', 'child_failed', 'timeout', 'output_limit'},
++                       'status': {'authenticated', 'status_unaccepted', 'child_failed', 'timeout', 'output_limit'}}[operation]
++            if not isinstance(result, dict) or result.get('status') not in allowed:
++                raise ValueError()
++            if result['status'] in ('exchange_succeeded', 'authenticated') and process.returncode != 0:
++                raise ValueError()
++            clean = {'status': result['status']}
++            if operation == 'exchange':
++                for key in ('refreshBranchObserved', 'browserHandoffObserved'):
++                    if key in result and type(result[key]) is bool: clean[key] = result[key]
++            return clean
++        except (ValueError, TypeError):
++            return {'status': 'child_failed'}
++
++
++def main(argv):
++    store = None
++    try:
++        if len(argv) not in (2, 3): raise ValueError()
++        manifest = json.loads(Path(argv[0]).read_text())
++        store = Store(manifest)
++        if argv[1] == 'bootstrap' and len(argv) == 3:
++            result = store.bootstrap(Path(argv[2]))
++        elif argv[1] == 'refresh' and len(argv) == 2:
++            result = store.refresh()
++        elif argv[1] == 'select' and len(argv) == 2:
++            with store.select_current() as selected:
++                result = {'status': 'selected', 'auth_file': str(selected.path)}
++        else: raise ValueError()
++    except Exception:
++        result = {'status': 'store_rejected'}
++    finally:
++        if store is not None: store.close()
++    print(json.dumps(result, sort_keys=True))
++    return 0 if result['status'] in ('bootstrapped', 'published', 'selected') else 1
++
++
++if __name__ == '__main__':
++    sys.exit(main(sys.argv[1:]))
+diff --git a/scripts/agent-runtime/claude-refresh.mjs b/scripts/agent-runtime/claude-refresh.mjs
+new file mode 100644
+index 0000000..a7a6e98
+--- /dev/null
++++ b/scripts/agent-runtime/claude-refresh.mjs
+@@ -0,0 +1,350 @@
++// Trusted container operation: секреты доступны только фиксированному дочернему Claude CLI.
++import { spawn } from "node:child_process"
++import fs from "node:fs"
++import { pathToFileURL } from "node:url"
++
++export const LIMITS = Object.freeze({
++  credentialBytes: 65536,
++  depth: 16,
++  stringBytes: 16384,
++  childBytes: 8192,
++  exchangeMs: 60000,
++  statusMs: 30000,
++  modelMs: 120000
++})
++const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value)
++const own = (value, key) => Object.hasOwn(value, key)
++
++function boundedJson(bytes) {
++  if (bytes.length > LIMITS.credentialBytes) throw new Error("invalid_json")
++  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes)
++  const result = JSON.parse(text)
++  const pending = [[result, 1]]
++  while (pending.length) {
++    const [value, depth] = pending.pop()
++    if (typeof value === "string" && Buffer.byteLength(value) > LIMITS.stringBytes) throw new Error("invalid_json")
++    if (value && typeof value === "object") {
++      if (depth > LIMITS.depth) throw new Error("invalid_json")
++      for (const [key, item] of Object.entries(value)) {
++        if (Buffer.byteLength(key) > LIMITS.stringBytes) throw new Error("invalid_json")
++        pending.push([item, depth + 1])
++      }
++    }
++  }
++  // JSON.parse уже проверил грамматику; отдельный проход запрещает duplicate object keys.
++  const stack = []
++  for (let i = 0; i < text.length; i++) {
++    const char = text[i]
++    if (char === "{" || char === "[") stack.push({ object: char === "{", keys: new Set(), key: true })
++    else if (char === "}" || char === "]") stack.pop()
++    else if (char === "," && stack.at(-1)?.object) stack.at(-1).key = true
++    else if (char === '"') {
++      const start = i++
++      while (text[i] !== '"') {
++        if (text[i] === "\\") i++
++        i++
++      }
++      const frame = stack.at(-1)
++      if (frame?.object && frame.key) {
++        const key = JSON.parse(text.slice(start, i + 1))
++        if (frame.keys.has(key)) throw new Error("invalid_json")
++        frame.keys.add(key)
++        frame.key = false
++      }
++    }
++  }
++  return result
++}
++
++export function parseCredential(bytes) {
++  try {
++    const data = boundedJson(bytes)
++    if (!object(data) || !own(data, "claudeAiOauth") || !object(data.claudeAiOauth)) throw new Error()
++    const oauth = data.claudeAiOauth
++    if (
++      !own(oauth, "refreshToken") ||
++      typeof oauth.refreshToken !== "string" ||
++      !oauth.refreshToken ||
++      oauth.refreshToken.includes("\0")
++    )
++      throw new Error()
++    if (
++      !own(oauth, "scopes") ||
++      !Array.isArray(oauth.scopes) ||
++      !oauth.scopes.length ||
++      oauth.scopes.some((scope) => typeof scope !== "string" || !scope || /[\s\0]/u.test(scope))
++    )
++      throw new Error()
++    if (
++      own(oauth, "clientId") &&
++      (typeof oauth.clientId !== "string" ||
++        !oauth.clientId ||
++        Buffer.byteLength(oauth.clientId) > 256 ||
++        /[\s\x00-\x1f\x7f]/u.test(oauth.clientId))
++    )
++      throw new Error()
++    return {
++      refreshToken: oauth.refreshToken,
++      scopes: oauth.scopes.join(" "),
++      ...(own(oauth, "clientId") ? { clientId: oauth.clientId } : {})
++    }
++  } catch {
++    throw new Error("invalid_credential")
++  }
++}
++
++export function fixedCommand(operation) {
++  if (operation === "exchange") return ["/usr/local/bin/claude", "auth", "login"]
++  if (operation === "status") return ["/usr/local/bin/claude", "auth", "status"]
++  if (operation === "model")
++    return [
++      "/usr/local/bin/claude",
++      "--print",
++      "--output-format",
++      "json",
++      "--model",
++      "claude-opus-4-6",
++      "--effort",
++      "medium",
++      "--tools",
++      "",
++      "--strict-mcp-config",
++      "--mcp-config",
++      "/runtime/policy/empty-mcp.json",
++      "--settings",
++      "/runtime/policy/claude-settings.json",
++      "Reply exactly ALTERA_CLAUDE_AUTH_OK"
++    ]
++  throw new Error("unsupported_operation")
++}
++
++export function childEnvironment(operation, fields = {}) {
++  fixedCommand(operation)
++  const env = {
++    PATH: "/usr/local/bin:/usr/bin:/bin",
++    HOME: "/runtime/cache/home",
++    CLAUDE_CONFIG_DIR: operation === "exchange" ? "/runtime/output/claude" : "/runtime/cache/claude",
++    TMPDIR: "/runtime/tmp",
++    TMP: "/runtime/tmp",
++    TEMP: "/runtime/tmp",
++    XDG_CACHE_HOME: "/runtime/cache/xdg",
++    HTTPS_PROXY: "http://egress-proxy:8080",
++    HTTP_PROXY: "http://egress-proxy:8080",
++    ALL_PROXY: "http://egress-proxy:8080",
++    NO_PROXY: "",
++    NODE_USE_ENV_PROXY: "1"
++  }
++  if (operation === "exchange") {
++    env.CLAUDE_CODE_OAUTH_REFRESH_TOKEN = fields.refreshToken
++    env.CLAUDE_CODE_OAUTH_SCOPES = fields.scopes
++    if (own(fields, "clientId")) env.CLAUDE_CODE_OAUTH_CLIENT_ID = fields.clientId
++  }
++  return env
++}
++
++function usageResult(data) {
++  const numeric = (value) => typeof value === "number" && Number.isFinite(value) && value >= 0
++  if (!object(data.modelUsage) || data.modelUsage["claude-opus-4-6"]?.canonicalModel !== "claude-opus-4-6")
++    throw new Error()
++  const models = {}
++  for (const [name, value] of Object.entries(data.modelUsage)) {
++    const canonical = { "claude-opus-4-6": "claude-opus-4-6", "claude-haiku-4-5-20251001": "claude-haiku-4-5" }[name]
++    if (
++      !canonical ||
++      !object(value) ||
++      value.canonicalModel !== canonical ||
++      value.provider !== "firstParty" ||
++      value.costBasis !== "list"
++    )
++      throw new Error()
++    const clean = { canonicalModel: canonical, provider: "firstParty", costBasis: "list" }
++    for (const field of [
++      "inputTokens",
++      "outputTokens",
++      "cacheReadInputTokens",
++      "cacheCreationInputTokens",
++      "webSearchRequests",
++      "costUSD",
++      "contextWindow",
++      "maxOutputTokens",
++      "thinkingTokens"
++    ]) {
++      if (own(value, field)) {
++        if (!numeric(value[field])) throw new Error()
++        clean[field] = value[field]
++      }
++    }
++    if (clean.webSearchRequests) throw new Error()
++    models[name] = clean
++  }
++  const usage = {}
++  if (!object(data.usage) || !numeric(data.total_cost_usd)) throw new Error()
++  for (const key of ["input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"]) {
++    if (own(data.usage, key)) {
++      if (!numeric(data.usage[key])) throw new Error()
++      usage[key] = data.usage[key]
++    }
++  }
++  for (const [key, fields] of [
++    ["output_tokens_details", ["thinking_tokens"]],
++    ["cache_creation", ["ephemeral_1h_input_tokens", "ephemeral_5m_input_tokens"]],
++    ["server_tool_use", ["web_search_requests", "web_fetch_requests"]]
++  ]) {
++    if (own(data.usage, key)) {
++      if (!object(data.usage[key])) throw new Error()
++      usage[key] = {}
++      for (const field of fields)
++        if (own(data.usage[key], field)) {
++          const value = data.usage[key][field]
++          if (!numeric(value) || (key === "server_tool_use" && value !== 0)) throw new Error()
++          usage[key][field] = value
++        }
++    }
++  }
++  return { usage, modelUsage: models, totalCostUsd: data.total_cost_usd, billingVerified: false }
++}
++
++export function classify(operation, code, stdout, stderr) {
++  if (operation === "exchange") {
++    const browserHandoffObserved = [
++      "Opening browser to sign in",
++      "If the browser didn't open, visit: ",
++      "Paste code here if prompted > "
++    ].some((text) => (stdout + stderr).includes(text))
++    const refreshBranchObserved = stderr.split("\n").some((line) => line.startsWith("Login failed: "))
++    return {
++      status: browserHandoffObserved ? "browser_flow_rejected" : code === 0 ? "exchange_succeeded" : "exchange_failed",
++      refreshBranchObserved,
++      browserHandoffObserved
++    }
++  }
++  try {
++    if (code !== 0) throw new Error()
++    const data = boundedJson(Buffer.from(stdout))
++    if (operation === "status")
++      return {
++        status: data.loggedIn === true && data.authMethod === "claude.ai" ? "authenticated" : "status_unaccepted"
++      }
++    if (
++      operation !== "model" ||
++      data.type !== "result" ||
++      data.subtype !== "success" ||
++      data.is_error !== false ||
++      typeof data.result !== "string" ||
++      data.result.trim() !== "ALTERA_CLAUDE_AUTH_OK"
++    )
++      throw new Error()
++    return { status: "model_accepted", ...usageResult(data) }
++  } catch {
++    return { status: operation === "status" ? "status_unaccepted" : "model_unaccepted" }
++  }
++}
++
++export function runChild(operation, env, dependencies = {}) {
++  const command = fixedCommand(operation)
++  const spawnProcess = dependencies.spawnProcess || spawn
++  const killGroup =
++    dependencies.killGroup ||
++    ((pid) => {
++      try {
++        process.kill(-pid, "SIGKILL")
++      } catch {
++        /* Процесс мог уже завершиться. */
++      }
++    })
++  const setTimer = dependencies.setTimer || setTimeout
++  const clearTimer = dependencies.clearTimer || clearTimeout
++  return new Promise((resolve) => {
++    let child,
++      timer,
++      forced,
++      finished = false,
++      bytes = 0
++    const out = [],
++      errors = []
++    function finish(code) {
++      if (finished) return
++      finished = true
++      clearTimer(timer)
++      const result = forced
++        ? { status: forced }
++        : classify(operation, code, Buffer.concat(out).toString("utf8"), Buffer.concat(errors).toString("utf8"))
++      for (const chunk of [...out, ...errors]) chunk.fill(0)
++      resolve(result)
++    }
++    function stop(status) {
++      if (!forced) forced = status
++      if (child?.pid) killGroup(child.pid)
++    }
++    try {
++      child = spawnProcess(command[0], command.slice(1), { env, detached: true, stdio: ["ignore", "pipe", "pipe"] })
++      const capture = (list) => (data) => {
++        bytes += data.length
++        if (bytes > LIMITS.childBytes) {
++          stop("output_limit")
++          return
++        }
++        list.push(Buffer.from(data))
++      }
++      child.stdout.on("data", capture(out))
++      child.stderr.on("data", capture(errors))
++      child.on("error", () => {
++        forced = "child_failed"
++        finish(null)
++      })
++      child.on("close", (code) => finish(code))
++      timer = setTimer(
++        () => stop("timeout"),
++        { exchange: LIMITS.exchangeMs, status: LIMITS.statusMs, model: LIMITS.modelMs }[operation]
++      )
++    } catch {
++      forced = "child_failed"
++      finish(null)
++    }
++  })
++}
++
++function readRefreshFields() {
++  const fd = fs.openSync("/runtime/input/.credentials.json", fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW)
++  const bytes = Buffer.alloc(LIMITS.credentialBytes + 1)
++  try {
++    const info = fs.fstatSync(fd)
++    if (
++      !info.isFile() ||
++      info.nlink !== 1 ||
++      info.uid !== process.getuid() ||
++      (info.mode & 0o777) !== 0o600 ||
++      info.size > LIMITS.credentialBytes
++    )
++      throw new Error()
++    const size = fs.readSync(fd, bytes, 0, bytes.length, 0)
++    if (size !== info.size) throw new Error()
++    return parseCredential(bytes.subarray(0, size))
++  } finally {
++    bytes.fill(0)
++    fs.closeSync(fd)
++  }
++}
++
++export async function main(args) {
++  try {
++    if (args.length !== 1) throw new Error()
++    const operation = args[0]
++    fixedCommand(operation)
++    let fields
++    try {
++      fields = operation === "exchange" ? readRefreshFields() : {}
++    } catch {
++      return { status: "invalid_credential" }
++    }
++    return await runChild(operation, childEnvironment(operation, fields))
++  } catch {
++    return { status: "invalid_operation" }
++  }
++}
++
++if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
++  const result = await main(process.argv.slice(2))
++  process.stdout.write(JSON.stringify(result) + "\n")
++  process.exitCode = ["exchange_succeeded", "authenticated", "model_accepted"].includes(result.status) ? 0 : 1
++}
+diff --git a/scripts/agent-runtime/test_credential_refresh.py b/scripts/agent-runtime/test_credential_refresh.py
+new file mode 100644
+index 0000000..d7005f0
+--- /dev/null
++++ b/scripts/agent-runtime/test_credential_refresh.py
+@@ -0,0 +1,322 @@
++"""Synthetic credentials only: transactional store, lock и recovery без model/network."""
++import hashlib
++import importlib.util
++import json
++import os
++from pathlib import Path
++import subprocess
++import tempfile
++import unittest
++import uuid
++from unittest.mock import patch
++
++ROOT = Path(__file__).resolve().parent
++IMAGE = 'sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a'
++
++
++def load(name):
++    path = ROOT / (name + '.py')
++    if not path.exists():
++        return None
++    spec = importlib.util.spec_from_file_location(name, path)
++    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
++    return module
++
++
++def model_result():
++    return {'status': 'model_accepted', 'usage': {'input_tokens': 3, 'output_tokens': 5},
++        'modelUsage': {'claude-opus-4-6': {'canonicalModel': 'claude-opus-4-6', 'provider': 'firstParty',
++            'costBasis': 'list', 'inputTokens': 3, 'outputTokens': 5, 'costUSD': 0.05}},
++        'totalCostUsd': 0.05, 'billingVerified': False}
++
++
++class RefreshTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory(prefix='altera-refresh-', dir='/private/tmp')
++        self.addCleanup(self.temp.cleanup)
++        self.base = Path(self.temp.name)
++        self.module = load('credential_refresh')
++        self.secret = 'SYNTHETIC_' + uuid.uuid4().hex
++        self.source = self.base / 'bootstrap.credentials'
++        self.source.write_text(json.dumps({'claudeAiOauth': {'refreshToken': self.secret, 'scopes': ['user:profile']}}))
++        self.source.chmod(0o600)
++        policy = self.base / 'policy'; policy.mkdir(mode=0o700)
++        for filename in ['claude-refresh.mjs', 'provider-proxy.mjs']:
++            (policy / filename).write_bytes((ROOT / filename).read_bytes())
++        (policy / 'empty-mcp.json').write_text('{"mcpServers":{}}')
++        (policy / 'claude-settings.json').write_text('{"disableAllHooks":true}')
++        run = self.base / 'run'; run.mkdir(mode=0o700)
++        self.manifest = {'schema_version': 1, 'store': str(self.base / 'store'), 'policy': str(policy),
++            'policy_sha256': load('runtime').tree_hash(policy), 'run_root': str(run), 'image': IMAGE,
++            'network': 'provider-proxy', 'check_id': 'synthetic-refresh', 'attempt_id': uuid.uuid4().hex}
++        self.calls = []
++
++    def store(self, runner=None):
++        self.assertIsNotNone(self.module, 'credential refresh coordinator missing')
++        store = self.module.Store(self.manifest, runner=runner or self.runner)
++        self.addCleanup(store.close)
++        return store
++
++    def runner(self, operation, credential, output):
++        self.calls.append(operation)
++        if operation == 'exchange':
++            state = json.loads((Path(self.manifest['store']) / 'refresh-state.json').read_text())
++            self.assertEqual(state['stage'], 'exchange_started')
++            path = output / '.credentials.json'
++            path.write_text(json.dumps({'claudeAiOauth': {'refreshToken': self.secret + '_NEW', 'scopes': ['user:profile']}}))
++            path.chmod(0o600)
++            return {'status': 'exchange_succeeded'}
++        return {'status': 'authenticated'} if operation == 'status' else model_result()
++
++    def initialized(self, runner=None):
++        store = self.store(runner)
++        store.bootstrap(self.source)
++        return store
++
++    def pointer(self):
++        return json.loads((Path(self.manifest['store']) / 'current.json').read_text())['generation']
++
++    def test_bootstrap_opaque_copy_retains_original_and_refuses_existing_state(self):
++        before = self.source.read_bytes()
++        store = self.initialized()
++        with store.select_current() as selected:
++            self.assertTrue(selected.path.read_bytes() == before)
++            self.assertTrue(self.source.read_bytes() == before)
++        with self.assertRaises(ValueError):
++            store.bootstrap(self.source)
++        self.assertEqual(self.calls, [])
++
++    def test_exchange_started_is_durable_before_child_spawn_and_publication_retains_previous(self):
++        store = self.initialized(); old = self.pointer()
++        result = store.refresh()
++        self.assertEqual(result['status'], 'published')
++        self.assertTrue(result['generation_changed'])
++        self.assertNotEqual(self.pointer(), old)
++        self.assertTrue((Path(self.manifest['store']) / 'generations' / old / '.credentials.json').is_file())
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++
++    def test_crash_after_exchange_uses_existing_candidate_without_second_exchange(self):
++        class Interrupted(BaseException):
++            pass
++        def crash(operation, credential, output):
++            result = self.runner(operation, credential, output)
++            if operation == 'exchange':
++                raise Interrupted()
++            return result
++        store = self.initialized(crash)
++        with self.assertRaises(Interrupted):
++            store.refresh()
++        store.runner = self.runner
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.assertEqual(self.calls.count('exchange'), 1)
++
++    def test_missing_candidate_after_exchange_requires_manual_login_without_retry(self):
++        def fail(operation, _credential, _output):
++            self.calls.append(operation)
++            return {'status': 'timeout'}
++        store = self.initialized(fail); old = self.pointer()
++        self.assertEqual(store.refresh()['status'], 'manual_login_required')
++        self.assertEqual(store.refresh()['status'], 'manual_login_required')
++        self.assertEqual(self.pointer(), old)
++        self.assertEqual(self.calls, ['exchange'])
++
++    def test_candidate_accepted_recovers_publication_without_another_container(self):
++        store = self.initialized()
++        original = store.publish
++        class Interrupted(BaseException):
++            pass
++        def crash(_state):
++            raise Interrupted()
++        store.publish = crash
++        with self.assertRaises(Interrupted):
++            store.refresh()
++        store.publish = original
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++
++    def test_pointer_published_before_journal_recovers_idempotently(self):
++        store = self.initialized()
++        original = store.write_state
++        class Interrupted(BaseException):
++            pass
++        def crash(state):
++            if state['stage'] == 'published':
++                raise Interrupted()
++            original(state)
++        store.write_state = crash
++        with self.assertRaises(Interrupted):
++            store.refresh()
++        published = self.pointer(); store.write_state = original
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.assertEqual(self.pointer(), published)
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++
++    def test_status_failure_retains_unpublished_candidate_and_never_reexchanges(self):
++        def fail_status(operation, credential, output):
++            if operation == 'status':
++                self.calls.append(operation); return {'status': 'status_unaccepted'}
++            return self.runner(operation, credential, output)
++        store = self.initialized(fail_status); old = self.pointer()
++        self.assertEqual(store.refresh()['status'], 'candidate_rejected')
++        self.assertEqual(self.pointer(), old)
++        store.runner = self.runner
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.assertEqual(self.calls.count('exchange'), 1)
++
++    def test_wrong_mode_symlink_hardlink_escape_and_oversize_fail_closed(self):
++        store = self.initialized()
++        current = Path(self.manifest['store']) / 'generations' / self.pointer() / '.credentials.json'
++        initial = current.read_bytes()
++        for mutate in [lambda: current.chmod(0o644), lambda: current.write_bytes(b'x' * 65537),
++                       lambda: os.link(current, self.base / 'hardlink')]:
++            mutate()
++            with self.assertRaises(ValueError):
++                with store.select_current(): pass
++            if (self.base / 'hardlink').exists(): (self.base / 'hardlink').unlink()
++            current.write_bytes(initial); current.chmod(0o600)
++        current.unlink(); current.symlink_to(self.source)
++        with self.assertRaises(ValueError):
++            with store.select_current(): pass
++        pointer = Path(self.manifest['store']) / 'current.json'
++        pointer.write_text('{"generation":"../../outside"}')
++        with self.assertRaises(ValueError):
++            with store.select_current(): pass
++
++    def test_refresh_and_checker_selection_share_one_lock(self):
++        store = self.initialized()
++        manifest = self.base / 'manifest.json'; manifest.write_text(json.dumps(self.manifest))
++        script = 'import importlib.util,json,sys;from pathlib import Path;spec=importlib.util.spec_from_file_location("refresh",sys.argv[1]);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);s=m.Store(json.loads(Path(sys.argv[2]).read_text()));print("ready",flush=True);s.select_once_for_test()'
++        # Отдельный процесс доказывает блокировку; только тест вызывает selection context.
++        script = script.replace('s.select_once_for_test()', 'selection=s.select_current();selection.__enter__();print("selected",flush=True);selection.__exit__(None,None,None);s.close()')
++        with store.locked():
++            child = subprocess.Popen(['/usr/bin/python3', '-I', '-c', script, str(ROOT / 'credential_refresh.py'), str(manifest)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++            self.assertEqual(child.stdout.readline(), b'ready\n')
++            with self.assertRaises(subprocess.TimeoutExpired):
++                child.wait(timeout=0.15)
++        stdout, stderr = child.communicate(timeout=3)
++        self.assertEqual((child.returncode, stdout, stderr), (0, b'selected\n', b''))
++
++    def test_status_and_journal_contain_no_secret_or_secret_digest(self):
++        store = self.initialized(); result = store.refresh()
++        outputs = json.dumps(result).encode() + (Path(self.manifest['store']) / 'refresh-state.json').read_bytes()
++        self.assertTrue(self.secret.encode() not in outputs)
++        self.assertTrue(hashlib.sha256(self.secret.encode()).hexdigest().encode() not in outputs)
++
++    def test_generation_root_permissions_and_replacement_are_rechecked_under_lock(self):
++        store = self.initialized()
++        generations = Path(self.manifest['store']) / 'generations'
++        generations.chmod(0o755)
++        with self.assertRaises(ValueError):
++            with store.select_current(): pass
++        generations.chmod(0o700)
++        generations.rename(generations.with_name('saved-generations'))
++        generations.mkdir(mode=0o700)
++        with self.assertRaises(ValueError):
++            with store.select_current(): pass
++
++    def test_candidate_file_and_directory_are_synced_before_written_journal(self):
++        store = self.initialized()
++        original_sync = os.fsync; synced = set(); original_state = store.write_state
++        def sync(fd):
++            synced.add(os.fstat(fd).st_ino)
++            original_sync(fd)
++        def state(value):
++            if value['stage'] == 'candidate_written':
++                path = Path(self.manifest['store']) / 'generations' / (value['candidate'] + '.pending')
++                self.assertIn((path / '.credentials.json').stat().st_ino, synced)
++                self.assertIn(path.stat().st_ino, synced)
++            original_state(value)
++        store.write_state = state
++        with patch.object(self.module.os, 'fsync', side_effect=sync):
++            self.assertEqual(store.refresh()['status'], 'published')
++
++    def test_prepared_recovery_removes_only_proven_empty_pending_directory(self):
++        store = self.initialized(); original = store.write_state
++        class Interrupted(BaseException): pass
++        def state(value):
++            original(value)
++            if value['stage'] == 'prepared': raise Interrupted()
++        store.write_state = state
++        with self.assertRaises(Interrupted): store.refresh()
++        pending = json.loads((Path(self.manifest['store']) / 'refresh-state.json').read_text())['candidate'] + '.pending'
++        store.write_state = original
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.assertFalse((Path(self.manifest['store']) / 'generations' / pending).exists())
++        self.assertEqual(self.calls.count('exchange'), 1)
++
++    def test_nonzero_container_exit_cannot_accept_model_result(self):
++        from contextlib import nullcontext
++        from types import SimpleNamespace
++        store = self.initialized()
++        process = SimpleNamespace(returncode=1, communicate=lambda **kwargs: (json.dumps(model_result()).encode(), b''), wait=lambda **kwargs: 1)
++        with patch.object(self.module.runtime, 'refresh_command', return_value=['docker', '--network=none']), \
++             patch.object(self.module.runtime, 'provider_network', return_value=nullcontext('synthetic')), \
++             patch.object(self.module.subprocess, 'Popen', return_value=process), \
++             patch.object(self.module.subprocess, 'run'):
++            self.assertEqual(store.container('model', self.source, None), {'status': 'child_failed'})
++
++    def test_foreign_owner_metadata_and_changed_journal_identity_fail_closed(self):
++        from types import SimpleNamespace
++        actual = self.source.stat()
++        foreign = SimpleNamespace(st_uid=actual.st_uid + 1, st_mode=actual.st_mode, st_nlink=1, st_size=actual.st_size)
++        with self.assertRaises(ValueError): self.module.metadata(foreign)
++        store = self.initialized()
++        self.assertEqual(store.refresh()['status'], 'published')
++        self.manifest['check_id'] = 'different-check'
++        other = self.store()
++        with self.assertRaises(ValueError): other.refresh()
++        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
++
++    def test_prepared_nonempty_candidate_is_retained_without_exchange(self):
++        store = self.initialized(); original = store.write_state
++        class Interrupted(BaseException): pass
++        def state(value):
++            original(value)
++            if value['stage'] == 'prepared': raise Interrupted()
++        store.write_state = state
++        with self.assertRaises(Interrupted): store.refresh()
++        journal = json.loads((Path(self.manifest['store']) / 'refresh-state.json').read_text())
++        pending = Path(self.manifest['store']) / 'generations' / (journal['candidate'] + '.pending')
++        retained = pending / 'unexpected'; retained.write_text('synthetic'); retained.chmod(0o600)
++        store.write_state = original
++        self.assertEqual(store.refresh()['status'], 'manual_login_required')
++        self.assertTrue(retained.is_file()); self.assertEqual(self.calls, [])
++
++    def test_container_cleanup_removes_named_worker_before_proxy_cleanup(self):
++        from contextlib import contextmanager
++        from types import SimpleNamespace
++        store = self.initialized(); events = []
++        @contextmanager
++        def network(_manifest):
++            try: yield 'synthetic'
++            finally: events.append('proxy_cleanup')
++        process = SimpleNamespace(returncode=0, communicate=lambda **kwargs: (b'{"status":"authenticated"}', b''),
++                                  wait=lambda **kwargs: 0)
++        def remove(command, **kwargs):
++            self.assertEqual(command[:3], [self.module.runtime.DOCKER, 'rm', '--force'])
++            self.assertRegex(command[3], r'^altera-refresh-[a-f0-9]{32}$')
++            events.append('worker_cleanup')
++        for scenario in ('success', 'watchdog', 'exception'):
++            with self.subTest(scenario=scenario):
++                events.clear()
++                def communicate(**kwargs):
++                    if scenario == 'watchdog': raise subprocess.TimeoutExpired('synthetic', 45)
++                    if scenario == 'exception': raise RuntimeError('synthetic_transport_failure')
++                    return b'{"status":"authenticated"}', b''
++                process.communicate = communicate
++                with patch.object(self.module.runtime, 'refresh_command', return_value=[self.module.runtime.DOCKER, 'run', '--network=none']), \
++                     patch.object(self.module.runtime, 'provider_network', side_effect=network), \
++                     patch.object(self.module.subprocess, 'Popen', return_value=process), \
++                     patch.object(self.module.subprocess, 'run', side_effect=remove):
++                    if scenario == 'exception':
++                        with self.assertRaises(RuntimeError): store.container('status', self.source, None)
++                    else:
++                        self.assertEqual(store.container('status', self.source, None),
++                                         {'status': 'timeout' if scenario == 'watchdog' else 'authenticated'})
++                self.assertEqual(events, ['worker_cleanup', 'proxy_cleanup'])
++
++
++if __name__ == '__main__':
++    unittest.main(verbosity=2)
+diff --git a/scripts/agent-runtime/test_claude_refresh.mjs b/scripts/agent-runtime/test_claude_refresh.mjs
+new file mode 100644
+index 0000000..147acf3
+--- /dev/null
++++ b/scripts/agent-runtime/test_claude_refresh.mjs
+@@ -0,0 +1,178 @@
++import assert from "node:assert/strict"
++import { randomBytes } from "node:crypto"
++import { EventEmitter } from "node:events"
++import fs from "node:fs"
++import { PassThrough } from "node:stream"
++import test from "node:test"
++
++async function implementation() {
++  assert.ok(fs.existsSync(new URL("./claude-refresh.mjs", import.meta.url)), "refresh wrapper missing")
++  return import("./claude-refresh.mjs")
++}
++const secret = "SYNTHETIC_" + randomBytes(24).toString("hex")
++const credential = () => ({
++  claudeAiOauth: { refreshToken: secret, scopes: ["user:profile", "user:inference"], clientId: "fixture-client" },
++  irrelevant: secret
++})
++
++test("exact pinned schema rejects aliases, empty scopes, normalization and bounds", async () => {
++  const { parseCredential, LIMITS } = await implementation()
++  const parsed = parseCredential(Buffer.from(JSON.stringify(credential())))
++  assert.ok(
++    parsed.refreshToken === secret &&
++      parsed.scopes === "user:profile user:inference" &&
++      parsed.clientId === "fixture-client"
++  )
++  const invalid = [
++    { refreshToken: secret },
++    { wrapper: credential() },
++    { claudeAiOauth: { ...credential().claudeAiOauth, refreshToken: "" } }
++  ]
++  for (const scopes of [[], "user:profile", [""], ["user:profile user:inference"], ["scope\tbad"], [42]])
++    invalid.push({ claudeAiOauth: { ...credential().claudeAiOauth, scopes } })
++  for (const clientId of ["", "bad id", "bad\u0001id", "x".repeat(257), null])
++    invalid.push({ claudeAiOauth: { ...credential().claudeAiOauth, clientId } })
++  invalid.push({ ...credential(), extra: "x".repeat(16385) })
++  let deep = credential()
++  for (let n = 0; n < 17; n++) deep = { nested: deep }
++  invalid.push(deep)
++  let exactDepth = "leaf"
++  for (let n = 0; n < 15; n++) exactDepth = { nested: exactDepth }
++  assert.ok(
++    parseCredential(Buffer.from(JSON.stringify({ ...credential(), extra: exactDepth }))).refreshToken === secret
++  )
++  assert.throws(() => parseCredential(Buffer.from('{"claudeAiOauth":{},"claudeAiOauth":{}}')), /invalid_credential/)
++  for (const value of invalid) {
++    assert.throws(
++      () => parseCredential(Buffer.from(JSON.stringify(value))),
++      (error) => error.message === "invalid_credential"
++    )
++  }
++  assert.throws(() => parseCredential(Buffer.alloc(65537)), /invalid_credential/)
++  assert.throws(() => parseCredential(Buffer.from([0xff])), /invalid_credential/)
++  assert.deepEqual(LIMITS, {
++    credentialBytes: 65536,
++    depth: 16,
++    stringBytes: 16384,
++    childBytes: 8192,
++    exchangeMs: 60000,
++    statusMs: 30000,
++    modelMs: 120000
++  })
++})
++
++test("only fixed exchange child receives refresh fields, later children are clean", async () => {
++  const { childEnvironment, fixedCommand } = await implementation()
++  const fields = { refreshToken: secret, scopes: "user:profile", clientId: "fixture-client" }
++  const env = childEnvironment("exchange", fields)
++  assert.ok(env.CLAUDE_CODE_OAUTH_REFRESH_TOKEN === secret && env.CLAUDE_CODE_OAUTH_SCOPES === "user:profile")
++  assert.equal(env.CLAUDE_CODE_OAUTH_CLIENT_ID, "fixture-client")
++  for (const operation of ["status", "model"]) {
++    const clean = childEnvironment(operation, fields)
++    assert.ok(!Object.keys(clean).some((key) => /TOKEN|SCOPES|CLIENT_ID|MULTICA|API_KEY/.test(key)))
++    assert.ok(!JSON.stringify(clean).includes(secret))
++  }
++  assert.deepEqual(fixedCommand("exchange"), ["/usr/local/bin/claude", "auth", "login"])
++  assert.deepEqual(fixedCommand("status"), ["/usr/local/bin/claude", "auth", "status"])
++  const model = fixedCommand("model")
++  assert.equal(model[model.indexOf("--tools") + 1], "")
++  assert.equal(model[model.indexOf("--model") + 1], "claude-opus-4-6")
++  assert.equal(model[model.indexOf("--effort") + 1], "medium")
++  assert.equal(model.at(-1), "Reply exactly ALTERA_CLAUDE_AUTH_OK")
++  assert.throws(() => fixedCommand("arbitrary"))
++})
++
++test("captured output and timeout produce only fixed enums and kill the child group", async () => {
++  const { runChild } = await implementation()
++  for (const scenario of ["failure", "overflow", "timeout", "spawn_error"]) {
++    const child = new EventEmitter()
++    child.stdout = new PassThrough()
++    child.stderr = new PassThrough()
++    child.pid = 12345
++    let timeoutCallback,
++      timeoutMs,
++      killed = false
++    const result = await runChild(
++      "exchange",
++      {},
++      {
++        spawnProcess: () => {
++          queueMicrotask(() => {
++            if (scenario === "failure") {
++              child.stderr.write("Login failed: " + secret)
++              child.emit("close", 1, null)
++            }
++            if (scenario === "overflow") {
++              child.stdout.write(secret.repeat(500))
++              child.emit("close", null, "SIGKILL")
++            }
++            if (scenario === "timeout") {
++              timeoutCallback()
++              child.emit("close", null, "SIGKILL")
++            }
++            if (scenario === "spawn_error") child.emit("error", new Error(secret))
++          })
++          return child
++        },
++        killGroup: (pid) => {
++          assert.equal(pid, 12345)
++          killed = true
++        },
++        setTimer: (callback, ms) => {
++          timeoutCallback = callback
++          timeoutMs = ms
++          return 1
++        },
++        clearTimer: () => {}
++      }
++    )
++    assert.equal(timeoutMs, 60000)
++    assert.ok(!JSON.stringify(result).includes(secret))
++    assert.equal(
++      result.status,
++      { failure: "exchange_failed", overflow: "output_limit", timeout: "timeout", spawn_error: "child_failed" }[
++        scenario
++      ]
++    )
++    if (["overflow", "timeout"].includes(scenario)) assert.equal(killed, true)
++    if (scenario === "failure") assert.equal(result.refreshBranchObserved, true)
++  }
++})
++
++test("status and fixed model acceptance expose only safe approved metadata", async () => {
++  const { classify } = await implementation()
++  assert.deepEqual(
++    classify("status", 0, JSON.stringify({ loggedIn: true, authMethod: "claude.ai", email: secret }), ""),
++    { status: "authenticated" }
++  )
++  assert.equal(
++    classify("status", 0, JSON.stringify({ loggedIn: true, authMethod: "api_key" }), "").status,
++    "status_unaccepted"
++  )
++  const model = {
++    type: "result",
++    subtype: "success",
++    is_error: false,
++    result: "ALTERA_CLAUDE_AUTH_OK",
++    usage: { input_tokens: 3, output_tokens: 5 },
++    total_cost_usd: 0.05,
++    modelUsage: {
++      "claude-opus-4-6": {
++        canonicalModel: "claude-opus-4-6",
++        provider: "firstParty",
++        costBasis: "list",
++        inputTokens: 3,
++        outputTokens: 5,
++        costUSD: 0.05
++      }
++    },
++    email: secret
++  }
++  const result = classify("model", 0, JSON.stringify(model), "")
++  assert.equal(result.status, "model_accepted")
++  assert.equal(result.totalCostUsd, 0.05)
++  assert.equal(result.billingVerified, false)
++  assert.ok(!JSON.stringify(result).includes(secret))
++  assert.equal(classify("model", 0, JSON.stringify({ ...model, result: "wrong" }), "").status, "model_unaccepted")
++  assert.equal(classify("model", 0, JSON.stringify({ ...model, modelUsage: {} }), "").status, "model_unaccepted")
++})
+diff --git a/scripts/agent-runtime/test_refresh_docker.py b/scripts/agent-runtime/test_refresh_docker.py
+new file mode 100644
+index 0000000..06e02af
+--- /dev/null
++++ b/scripts/agent-runtime/test_refresh_docker.py
+@@ -0,0 +1,225 @@
++"""Только synthetic credentials: fake CLI без сети и отдельная invalid-token compatibility."""
++from contextlib import nullcontext
++import importlib.util
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import time
++import unittest
++import uuid
++from unittest.mock import patch
++
++ROOT = Path(__file__).resolve().parent
++spec = importlib.util.spec_from_file_location('refresh_tests', ROOT / 'test_credential_refresh.py')
++fixtures = importlib.util.module_from_spec(spec); spec.loader.exec_module(fixtures)
++
++FAKE = r'''#!/bin/sh
++exec /usr/local/bin/node --input-type=commonjs - "$@" <<'FAKE_JS'
++const fs = require('node:fs'), {spawn} = require('node:child_process');
++const op = process.argv[2] === 'auth' ? process.argv[3] : 'model';
++const checks = {};
++const check = (name, value) => {checks[name] = Boolean(value); if (!value) throw Error('fixture_boundary_failed')};
++check('privateHome', process.env.HOME === '/runtime/cache/home');
++check('noSource', !fs.existsSync('/workspace') && !fs.existsSync('/var/run/docker.sock'));
++check('noCoordinatorToken', !Object.hasOwn(process.env, 'MULTICA_TOKEN'));
++check('readonlyRoot', (() => {try {fs.writeFileSync('/boundary-write', 'x'); return false} catch {return true}})());
++const file = op === 'login' ? '/runtime/input/.credentials.json' : '/runtime/cache/claude/.credentials.json';
++const data = JSON.parse(fs.readFileSync(file));
++check('readonlyCredential', (() => {try {fs.appendFileSync(file, 'x'); return false} catch {return true}})());
++if (op === 'login') {
++  check('exactArgv', JSON.stringify(process.argv.slice(2)) === JSON.stringify(['auth','login']));
++  check('childFields', process.env.CLAUDE_CODE_OAUTH_REFRESH_TOKEN === data.claudeAiOauth.refreshToken &&
++    process.env.CLAUDE_CODE_OAUTH_SCOPES === data.claudeAiOauth.scopes.join(' ') &&
++    process.env.CLAUDE_CODE_OAUTH_CLIENT_ID === data.claudeAiOauth.clientId);
++  check('parentHasNoSecret', !fs.readFileSync(`/proc/${process.ppid}/environ`).includes(Buffer.from(data.claudeAiOauth.refreshToken)));
++  check('candidateConfig', process.env.CLAUDE_CONFIG_DIR === '/runtime/output/claude');
++} else {
++  check('noRefreshFields', ['CLAUDE_CODE_OAUTH_REFRESH_TOKEN','CLAUDE_CODE_OAUTH_SCOPES','CLAUDE_CODE_OAUTH_CLIENT_ID'].every(k=>!Object.hasOwn(process.env,k)));
++  check('noOldInput', !fs.existsSync('/runtime/input/.credentials.json') && !fs.existsSync('/runtime/output/claude'));
++  check('candidateConfig', process.env.CLAUDE_CONFIG_DIR === '/runtime/cache/claude');
++}
++fs.writeFileSync('/runtime/cache/fake-proof.json', JSON.stringify(checks), {mode:0o600});
++const behavior = '__BEHAVIOR__';
++if (behavior === 'timeout') {
++  spawn('/usr/local/bin/node', ['-e', 'setInterval(()=>{},1000)'], {stdio:'inherit'});
++  setInterval(()=>{},1000);
++} else if (behavior === 'overflow') {
++  process.stdout.write(data.claudeAiOauth.refreshToken + 'X'.repeat(9000)); setInterval(()=>{},1000);
++} else if (behavior === 'failure') {
++  process.stderr.write('Login failed: ' + data.claudeAiOauth.refreshToken); process.exitCode=1;
++} else if (op === 'login') {
++  data.claudeAiOauth.refreshToken += '_NEW';
++  fs.writeFileSync('/runtime/output/claude/.credentials.json', JSON.stringify(data), {mode:0o600});
++  process.stdout.write(data.claudeAiOauth.refreshToken); process.stderr.write(data.irrelevant);
++} else if (op === 'status') {
++  check('exactArgv', JSON.stringify(process.argv.slice(2)) === JSON.stringify(['auth','status']));
++  process.stdout.write(JSON.stringify({loggedIn:true,authMethod:'claude.ai',email:data.irrelevant}));
++} else {
++  check('exactArgv', JSON.stringify(process.argv.slice(2)) === JSON.stringify(['--print','--output-format','json','--model','claude-opus-4-6','--effort','medium','--tools','','--strict-mcp-config','--mcp-config','/runtime/policy/empty-mcp.json','--settings','/runtime/policy/claude-settings.json','Reply exactly ALTERA_CLAUDE_AUTH_OK']));
++  check('emptyMcp', JSON.stringify(JSON.parse(fs.readFileSync('/runtime/policy/empty-mcp.json'))) === '{"mcpServers":{}}');
++  check('hooksDisabled', JSON.parse(fs.readFileSync('/runtime/policy/claude-settings.json')).disableAllHooks === true);
++  process.stdout.write(JSON.stringify({type:'result',subtype:'success',is_error:false,result:'ALTERA_CLAUDE_AUTH_OK',
++    usage:{input_tokens:3,output_tokens:5}, modelUsage:{'claude-opus-4-6':{canonicalModel:'claude-opus-4-6',provider:'firstParty',costBasis:'list',inputTokens:3,outputTokens:5,costUSD:0.05}},
++    total_cost_usd:0.05,irrelevant:data.irrelevant}));
++}
++if (op !== 'login') fs.writeFileSync('/runtime/cache/fake-proof.json', JSON.stringify(checks), {mode:0o600});
++FAKE_JS
++'''
++
++
++class DockerRefreshTests(unittest.TestCase):
++    def setUp(self):
++        self.fixture = fixtures.RefreshTests('test_bootstrap_opaque_copy_retains_original_and_refuses_existing_state')
++        self.fixture.setUp(); self.addCleanup(self.fixture.doCleanups)
++        self.base = self.fixture.base
++        self.module = self.fixture.module
++        self.manifest = self.fixture.manifest
++        data = {'claudeAiOauth': {'refreshToken': self.fixture.secret, 'scopes': ['user:profile', 'SYNTHETIC_' + uuid.uuid4().hex],
++                                 'clientId': 'SYNTHETIC_' + uuid.uuid4().hex}, 'irrelevant': 'SYNTHETIC_' + uuid.uuid4().hex}
++        self.fixture.source.write_text(json.dumps(data))
++        self.secrets = [data['claudeAiOauth']['refreshToken'], data['claudeAiOauth']['scopes'][1], data['claudeAiOauth']['clientId'], data['irrelevant']]
++        self.store = self.module.Store(self.manifest); self.addCleanup(self.store.close)
++        self.store.bootstrap(self.fixture.source)
++        self.commands = []; self.results = []
++
++    def fake(self, behavior):
++        path = self.base / ('fake-' + behavior)
++        path.write_text(FAKE.replace('__BEHAVIOR__', behavior)); path.chmod(0o755)
++        original = self.module.runtime.refresh_command
++        def command(*args):
++            vector = original(*args)
++            vector.insert(vector.index('--entrypoint=/usr/local/bin/node'), '--mount=type=bind,src=' + str(path) + ',dst=/usr/local/bin/claude,readonly')
++            self.commands.append(vector)
++            return vector
++        return patch.object(self.module.runtime, 'refresh_command', side_effect=command)
++
++    def assert_redacted(self, result):
++        outputs = json.dumps([self.commands, result]).encode()
++        journal = (Path(self.manifest['store']) / 'refresh-state.json').read_bytes()
++        self.assertTrue(all(secret.encode() not in outputs + journal for secret in self.secrets), 'synthetic secret leaked')
++        proofs = list(Path(self.manifest['run_root']).glob('*/cache/fake-proof.json'))
++        self.assertTrue(proofs, 'fake executable did not run')
++        for path in proofs:
++            proof = json.loads(path.read_text())
++            self.assertTrue(proof and all(value is True for value in proof.values()), 'boundary predicate failed')
++
++    def test_success_concurrent_selection_and_interrupted_publication(self):
++        class Interrupted(BaseException): pass
++        original = self.store.write_state
++        def state(value):
++            original(value)
++            if value['stage'] == 'candidate_accepted': raise Interrupted()
++        self.store.write_state = state
++        manifest = self.base / 'manifest.json'; manifest.write_text(json.dumps(self.manifest)); manifest.chmod(0o600)
++        reader = None
++        container = self.store.container
++        def runner(*args):
++            nonlocal reader
++            if args[0] == 'exchange':
++                reader = subprocess.Popen(['/usr/bin/python3', '-I', str(ROOT / 'credential_refresh.py'), str(manifest), 'select'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++                time.sleep(0.2)
++                self.assertIsNone(reader.poll(), 'checker selection bypassed refresh lock')
++            result = container(*args); self.results.append(result)
++            print(json.dumps({'syntheticOperation': args[0], 'result': result}), flush=True)
++            return result
++        self.store.runner = runner
++        with self.fake('success'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')):
++            with self.assertRaises(Interrupted): self.store.refresh()
++            self.assertIsNotNone(reader)
++            stdout, stderr = reader.communicate(timeout=5)
++            self.assertEqual(reader.returncode, 0); self.assertEqual(stderr, b'')
++            self.assertEqual(json.loads(stdout)['status'], 'selected')
++            self.store.write_state = original
++            result = self.store.refresh()
++        self.assertEqual(result['status'], 'published')
++        self.assertEqual([item['status'] for item in self.results], ['exchange_succeeded', 'authenticated', 'model_accepted'])
++        self.assertEqual(len(self.commands), 3, 'accepted recovery spawned another CLI')
++        self.assert_redacted(result)
++
++    def test_failure_retains_journal_without_second_exchange(self):
++        with self.fake('failure'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')):
++            result = self.store.refresh()
++            self.assertEqual(result['status'], 'manual_login_required')
++            self.assertEqual(self.store.refresh()['status'], 'manual_login_required')
++        self.assertEqual(len(self.commands), 1)
++        self.assert_redacted(result)
++
++    def test_output_limit_is_bounded_and_redacted(self):
++        results = []; container = self.store.container
++        def runner(*args):
++            result = container(*args); results.append(result); return result
++        self.store.runner = runner
++        with self.fake('overflow'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')):
++            result = self.store.refresh()
++        self.assertEqual(results, [{'status': 'output_limit'}])
++        self.assertEqual(result['status'], 'manual_login_required')
++        self.assert_redacted(result)
++
++    def test_fixed_timeout_kills_child_group_with_inherited_pipes(self):
++        results = []; container = self.store.container
++        def runner(*args):
++            result = container(*args); results.append(result); return result
++        self.store.runner = runner
++        start = time.monotonic()
++        with self.fake('timeout'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')):
++            result = self.store.refresh()
++        elapsed = time.monotonic() - start
++        self.assertEqual(results, [{'status': 'timeout'}])
++        self.assertGreaterEqual(elapsed, 60); self.assertLess(elapsed, 75)
++        self.assertEqual(result['status'], 'manual_login_required')
++        self.assert_redacted(result)
++
++    def test_interrupted_transport_removes_worker_before_recovery(self):
++        original = subprocess.Popen; names = []
++        def start(command, **kwargs):
++            process = original(command, **kwargs)
++            if command[:2] == [self.module.runtime.DOCKER, 'run']:
++                names.append(command[command.index('--name') + 1])
++                def interrupt(**_kwargs):
++                    deadline = time.monotonic() + 10
++                    while not list(Path(self.manifest['run_root']).glob('*/cache/fake-proof.json')):
++                        if process.poll() is not None or time.monotonic() >= deadline:
++                            raise AssertionError('synthetic worker did not reach controlled interruption')
++                        time.sleep(0.05)
++                    raise KeyboardInterrupt()
++                process.communicate = interrupt
++            return process
++        with self.fake('timeout'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')), \
++             patch.object(self.module.subprocess, 'Popen', side_effect=start):
++            with self.assertRaises(KeyboardInterrupt): self.store.refresh()
++        self.assertEqual(len(names), 1)
++        inspection = subprocess.run([self.module.runtime.DOCKER, 'inspect', names[0]], env=self.module.runtime.child_env(),
++                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++        self.assertNotEqual(inspection.returncode, 0, 'interrupted worker survived cleanup')
++        self.assertEqual(self.store.refresh()['status'], 'manual_login_required')
++        self.assertEqual(len(self.commands), 1, 'recovery retried exchange')
++        self.assert_redacted({'status': 'manual_login_required'})
++
++
++class PinnedCompatibilityTests(unittest.TestCase):
++    setUp = DockerRefreshTests.setUp
++
++    def test_pinned_cli_invalid_synthetic_token_uses_refresh_branch(self):
++        with self.store.select_current() as selected:
++            candidate = Path(self.manifest['store']) / 'generations' / (uuid.uuid4().hex + '.pending'); candidate.mkdir(mode=0o700)
++            start = time.monotonic()
++            result = self.store.container('exchange', selected.path, candidate)
++        self.assertLess(time.monotonic() - start, 75)
++        self.assertEqual(result, {'status': 'exchange_failed', 'refreshBranchObserved': True, 'browserHandoffObserved': False})
++        inspections = list(Path(self.manifest['run_root']).glob('*/network-inspect.json'))
++        self.assertEqual(len(inspections), 1)
++        network = json.loads(inspections[0].read_text())
++        self.assertTrue(network['Internal'])
++        self.assertEqual(network['Options']['com.docker.network.bridge.gateway_mode_ipv4'], 'isolated')
++        proxy = json.loads(inspections[0].with_name('proxy-inspect.json').read_text())[0]
++        self.assertEqual(len(proxy['Mounts']), 1)
++        self.assertFalse(proxy['Mounts'][0]['RW'])
++        print(json.dumps({'compatibility': result, 'image': self.manifest['image'], 'syntheticOnly': True,
++                          'network': 'provider-proxy', 'internalIsolatedVerified': True, 'proxyPolicyReadOnly': True}))
++
++
++if __name__ == '__main__':
++    unittest.main(verbosity=2)
+diff --git a/scripts/agent-runtime/refresh-manifest.example.json b/scripts/agent-runtime/refresh-manifest.example.json
+new file mode 100644
+index 0000000..ac0475e
+--- /dev/null
++++ b/scripts/agent-runtime/refresh-manifest.example.json
+@@ -0,0 +1,11 @@
++{
++  "schema_version": 1,
++  "store": "/private/tmp/claude-refresh/credential-store",
++  "policy": "/private/tmp/claude-refresh/policy",
++  "policy_sha256": "REPLACE_WITH_REVIEWED_POLICY_SHA256",
++  "run_root": "/private/tmp/claude-refresh/runs",
++  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
++  "network": "provider-proxy",
++  "check_id": "claude-refresh",
++  "attempt_id": "00000000000000000000000000000000"
++}
+diff --git a/scripts/agent-runtime/runtime.py b/scripts/agent-runtime/runtime.py
+index cd02520..db315b6 100755
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -233,6 +233,88 @@ def effective_args(manifest, incoming):
+     return result
+ 
+ 
++def sandbox_arguments(interactive=True):
++    return [DOCKER, 'run', '--rm', '--init', *(['--interactive'] if interactive else []),
++            '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges',
++            '--pids-limit=128', '--memory=2g', '--cpus=2',
++            '--user=' + str(os.getuid()) + ':' + str(os.getgid())]
++
++
++REFRESH_IMAGE = 'sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a'
++
++
++def private_reference(value, directory=False):
++    path = Path(value)
++    if (not path.is_absolute() or path.is_symlink() or path.resolve(strict=True) != path or
++        re.search(r'[\x00-\x1f,=]', str(path))):
++        raise ValueError('unsafe_private_reference')
++    info = path.stat()
++    kind = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
++    if (not kind or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != (0o700 if directory else 0o600) or
++        (not directory and (info.st_nlink != 1 or not 0 < info.st_size <= 65536))):
++        raise ValueError('unsafe_private_metadata')
++    return path
++
++
++def refresh_command(manifest, operation, credential, output=None):
++    """Фиксированная операция без source/MCP/stdin и без credential values в argv/env."""
++    required = {'schema_version', 'store', 'policy', 'policy_sha256', 'run_root', 'image',
++                'network', 'check_id', 'attempt_id'}
++    if (set(manifest) != required or manifest['schema_version'] != 1 or manifest['image'] != REFRESH_IMAGE or
++        manifest['network'] != 'provider-proxy' or operation not in ('exchange', 'status', 'model') or
++        not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]{0,95}', manifest['check_id']) or
++        not re.fullmatch(r'[a-f0-9]{32}', manifest['attempt_id']) or os.getuid() == 0):
++        raise ValueError('invalid_refresh_manifest')
++    store, policy, run = [private_reference(manifest[key], directory=True) for key in ('store', 'policy', 'run_root')]
++    for left, right in ((store, policy), (store, run), (policy, run)):
++        if left.is_relative_to(right) or right.is_relative_to(left):
++            raise ValueError('refresh_mount_overlap')
++    if any(run.iterdir()):
++        raise ValueError('refresh_run_not_fresh')
++    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
++    if {item.name for item in policy.iterdir()} != expected or tree_hash(policy) != manifest['policy_sha256']:
++        raise ValueError('refresh_policy_changed')
++    if (json.loads((policy / 'empty-mcp.json').read_text()) != {'mcpServers': {}} or
++        json.loads((policy / 'claude-settings.json').read_text()) != {'disableAllHooks': True}):
++        raise ValueError('invalid_refresh_policy')
++    for name in expected:
++        info = (policy / name).stat()
++        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or info.st_mode & 0o022:
++            raise ValueError('unsafe_refresh_policy')
++    credential = private_reference(credential)
++    generation = private_reference(credential.parent, directory=True)
++    if (credential.name != '.credentials.json' or generation.parent != store / 'generations' or
++        not re.fullmatch(r'[a-f0-9]{32}(?:\.pending)?', generation.name)):
++        raise ValueError('unmapped_credential_generation')
++    private_reference(store / 'generations', directory=True)
++    if operation == 'exchange':
++        output = private_reference(output, directory=True)
++        if (generation.name.endswith('.pending') or output.parent != generation.parent or
++            not re.fullmatch(r'[a-f0-9]{32}\.pending', output.name) or any(output.iterdir())):
++            raise ValueError('invalid_candidate_directory')
++    elif output is not None:
++        raise ValueError('unexpected_candidate_write_mount')
++    args = sandbox_arguments(False) + ['--workdir=/runtime/cache/home',
++        '--mount=type=bind,src=' + str(policy / 'claude-refresh.mjs') + ',dst=/runtime/policy/claude-refresh.mjs,readonly']
++    for name in ('cache', 'tmp'):
++        path = run / name; path.mkdir(mode=0o700)
++        args.append('--mount=type=bind,src=' + str(path) + ',dst=/runtime/' + name)
++    for name in ('home', 'claude', 'xdg'):
++        (run / 'cache' / name).mkdir(mode=0o700)
++    destination = '/runtime/input/.credentials.json' if operation == 'exchange' else '/runtime/cache/claude/.credentials.json'
++    if operation != 'exchange':
++        (run / 'cache/claude/.credentials.json').touch(mode=0o600)
++    args.append('--mount=type=bind,src=' + str(credential) + ',dst=' + destination + ',readonly')
++    if operation == 'exchange':
++        args.append('--mount=type=bind,src=' + str(output) + ',dst=/runtime/output/claude')
++    if operation == 'model':
++        for name in ('empty-mcp.json', 'claude-settings.json'):
++            args.append('--mount=type=bind,src=' + str(policy / name) + ',dst=/runtime/policy/' + name + ',readonly')
++    for entry in ('HOME=/runtime/cache/home', 'TMPDIR=/runtime/tmp', 'TMP=/runtime/tmp', 'TEMP=/runtime/tmp'):
++        args.extend(['--env', entry])
++    return args + ['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/claude-refresh.mjs', operation]
++
++
+ def command(manifest, incoming, environment):
+     required = {'schema_version', 'family', 'source', 'snapshot', 'state', 'dirty_paths', 'policy',
+                 'policy_sha256', 'run_root', 'image', 'model', 'effort', 'env_paths', 'path_map',
+@@ -280,9 +362,7 @@ def command(manifest, incoming, environment):
+     network = manifest.get('network', 'none')
+     if network not in ('none', 'provider-proxy'):
+         raise ValueError('unsupported_network')
+-    args = [DOCKER, 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none',
+-            '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128',
+-            '--memory=2g', '--cpus=2', '--user=' + str(os.getuid()) + ':' + str(os.getgid()), '--workdir=' + str(source),
++    args = sandbox_arguments() + ['--workdir=' + str(source),
+             '--mount=type=bind,src=' + str(snap) + ',dst=' + str(source) + ',readonly',
+             '--mount=type=bind,src=' + str(policy) + ',dst=/runtime/policy,readonly']
+     for name in ('evidence', 'cache', 'tmp'):
+diff --git a/scripts/agent-runtime/test_runtime.py b/scripts/agent-runtime/test_runtime.py
+index 5ea4fc7..7b926db 100644
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -54,6 +54,17 @@ class RuntimeTests(unittest.TestCase):
+     def git(self, *args):
+         return subprocess.check_output(['/usr/bin/git', '-C', str(self.source), *args], stderr=subprocess.DEVNULL)
+ 
++    def test_ordinary_commands_match_pre_refresh_boundary(self):
++        expected = {'claude': ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '$USER', '--workdir=$BASE/source', '--mount=type=bind,src=$BASE/snapshot,dst=$BASE/source,readonly', '--mount=type=bind,src=$BASE/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=$BASE/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=$BASE/run/cache,dst=/runtime/cache', '--mount=type=bind,src=$BASE/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/node', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '/runtime/policy/fixture.mjs', '--model', 'claude-opus-4-6', '--effort', 'medium', '--settings', '/runtime/policy/claude-settings.json', '--strict-mcp-config'], 'codex': ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '$USER', '--workdir=$BASE/source', '--mount=type=bind,src=$BASE/snapshot,dst=$BASE/source,readonly', '--mount=type=bind,src=$BASE/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=$BASE/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=$BASE/run/cache,dst=/runtime/cache', '--mount=type=bind,src=$BASE/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/node', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '/runtime/policy/fixture.mjs', 'app-server', '--listen', 'stdio://', '-c', 'model="gpt-5.6-terra"', '-c', 'model_reasoning_effort="medium"'], 'claude-login': ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '$USER', '--workdir=$BASE/source', '--mount=type=bind,src=$BASE/snapshot,dst=$BASE/source,readonly', '--mount=type=bind,src=$BASE/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=$BASE/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=$BASE/run/cache,dst=/runtime/cache', '--mount=type=bind,src=$BASE/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/claude', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'auth', 'login']}
++        for mode, incoming in [("claude", ["--model", "claude-opus-4-6"]), ("codex", ["app-server", "--listen", "stdio://"]), ("claude-login", [])]:
++            manifest = dict(self.manifest)
++            if mode == "codex":
++                manifest.update(family="codex", model="gpt-5.6-terra")
++            if mode == "claude-login":
++                manifest["operation"] = "claude-login"
++            actual = [value.replace(str(self.base), "$BASE").replace("--user=" + str(os.getuid()) + ":" + str(os.getgid()), "$USER") for value in self.runtime.command(manifest, incoming, {})]
++            self.assertEqual(actual, expected[mode])
++
+     def test_snapshot_preserves_revision_and_dirty_without_ignored_secrets(self):
+         (self.source / 'code.txt').write_text('modified\n')
+         (self.source / 'new-test.txt').write_text('new\n')
+@@ -66,6 +77,43 @@ class RuntimeTests(unittest.TestCase):
+         self.assertFalse((dest / '.git/objects/info/alternates').exists())
+         self.assertEqual(state['head'], self.git('rev-parse', 'HEAD').decode().strip())
+ 
++    def test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env(self):
++        self.assertTrue(hasattr(self.runtime, 'refresh_command'), 'dedicated refresh command builder missing')
++        policy = self.base / 'refresh-policy'
++        policy.mkdir(mode=0o700)
++        for filename in ['claude-refresh.mjs', 'provider-proxy.mjs']:
++            (policy / filename).write_bytes((ROOT / filename).read_bytes())
++        (policy / 'empty-mcp.json').write_text('{"mcpServers":{}}')
++        (policy / 'claude-settings.json').write_text('{"disableAllHooks":true}')
++        store = self.base / 'store'; store.mkdir(mode=0o700)
++        generations = store / 'generations'; generations.mkdir(mode=0o700)
++        old = generations / ('a' * 32); old.mkdir(mode=0o700)
++        credential = old / '.credentials.json'; credential.write_text('SYNTHETIC_PRIVATE'); credential.chmod(0o600)
++        pending = generations / ('b' * 32 + '.pending'); pending.mkdir(mode=0o700)
++        manifest = {'schema_version': 1, 'store': str(store), 'policy': str(policy),
++            'policy_sha256': self.runtime.tree_hash(policy), 'run_root': str(self.run),
++            'image': self.runtime.REFRESH_IMAGE, 'network': 'provider-proxy',
++            'check_id': 'synthetic-refresh', 'attempt_id': 'c' * 32}
++        for operation in ['exchange', 'status', 'model']:
++            run = self.base / ('refresh-' + operation); run.mkdir(mode=0o700)
++            args = self.runtime.refresh_command({**manifest, 'run_root': str(run)}, operation, credential,
++                                                pending if operation == 'exchange' else None)
++            encoded = ' '.join(args)
++            for forbidden in [str(self.source), str(self.snapshot), 'MULTICA_TOKEN', 'REFRESH_TOKEN', 'OAUTH_SCOPES', 'CODEX_HOME', 'docker.sock', 'SYNTHETIC_PRIVATE', '--interactive']:
++                self.assertNotIn(forbidden, encoded)
++            self.assertIn('--read-only', args)
++            self.assertIn('--cap-drop=ALL', args)
++            self.assertEqual(args[-1], operation)
++            mounts = [arg for arg in args if arg.startswith('--mount=')]
++            self.assertTrue(any(str(credential) in arg and arg.endswith(',readonly') for arg in mounts))
++            self.assertFalse(any('dst=/runtime/policy,' in arg for arg in mounts))
++            if operation != 'model':
++                self.assertFalse(any('mcp' in arg or 'settings' in arg for arg in mounts))
++            self.assertEqual(any('dst=/runtime/output/claude' in arg for arg in mounts), operation == 'exchange')
++        for changed in [{'image': 'sha256:' + '0' * 64}, {'network': 'bridge'}, {'prompt': 'arbitrary'}]:
++            with self.assertRaises(ValueError):
++                self.runtime.refresh_command({**manifest, **changed}, 'exchange', credential, pending)
++
+     def test_external_symlink_and_ignored_explicit_input_are_rejected(self):
+         (self.source / 'escape').symlink_to('/etc/passwd')
+         for paths in [['escape'], ['.env']]:
+diff --git a/docs/development/runtime-isolation.md b/docs/development/runtime-isolation.md
+index b68b318..d6decab 100644
+--- a/docs/development/runtime-isolation.md
++++ b/docs/development/runtime-isolation.md
+@@ -175,6 +175,64 @@ archives. Перед final finish коммитит только собствен
+ Missing/stale evidence и сбой collector/record/finish оставляют стадию непринятой. Два
+ последовательных реальных неуспеха одного check останавливают его; другой run не обнуляет счёт.
+ 
++## Поколения Claude credentials и refresh
++
++`credential_refresh.py MANIFEST bootstrap SOURCE` создаёт первоначальное поколение только
++в новом private store. SOURCE — явный существующий regular file, mode0600, текущего UID,
++без symlink/hardlink; оригинал сохраняется. Host копирует байты непрозрачно, не разбирает
++credential JSON и не считает его digest. Пример manifest:
++[refresh-manifest.example.json](../../scripts/agent-runtime/refresh-manifest.example.json).
++Перед использованием заменить placeholder policy hash и назначить неизменные check/attempt IDs.
++Store, policy и run_root — отдельные absolute canonical directories mode0700 текущего UID.
++Policy содержит ровно reviewed `claude-refresh.mjs`, `provider-proxy.mjs`, `empty-mcp.json`
++с `{"mcpServers":{}}` и `claude-settings.json` с `{"disableAllHooks":true}`; hash связывает
++их содержимое с manifest. Используется только закреплённый image ID из example.
++
++Store содержит `refresh.lock`, `current.json`, `refresh-state.json` и `generations/`.
++Pointer — regular mode0600 JSON ровно `{"generation":"<32 lowercase hex>"}`. Поколение
++`generations/ID/` и кандидат `generations/ID.pending/` имеют mode0700; выбранный
++`.credentials.json` — mode0600, один hardlink, ≤65536 bytes. Проверки fd/owner/mode и
++отсутствия symlink выполняются до использования. Checker выбирает поколение через
++`select_current()` под той же exclusive lock; CLI `select` возвращает только его путь.
++Cooperative store не удаляет и не заменяет опубликованные поколения. Это не защита от
++произвольного вредоносного процесса того же host UID, способного менять trusted code/store.
++
++`credential_refresh.py MANIFEST refresh` держит lock через exchange и приёмку. Journal
++проходит `prepared → exchange_started → candidate_written → candidate_accepted → published`;
++metadata, candidate и parent directories fsync перед следующей durable стадией. Exchange
++запускает только `/usr/local/bin/claude auth login` в контейнере: старый файл RO, новый
++config directory RW, reviewed wrapper RO, отдельные HOME/cache/tmp и provider proxy.
++Source, stdin, MCP, Multica token, host HOME и Docker socket отсутствуют. Только wrapper
++внутри контейнера читает exact `claudeAiOauth.refreshToken`, непустой массив `scopes` и
++optional `clientId`; только fixed CLI child получает их в environment. Docker argv/env,
++host journal и результат не содержат этих значений. Никаких browser/setup-token fallback.
++
++Отдельный свежий контейнер проверяет candidate RO через `claude auth status`. Следующая
++отдельная fixed operation вызывает explicit Opus4.6/medium с tools="", empty MCP, hooks
++disabled и `Reply exactly ALTERA_CLAUDE_AUTH_OK`. Требуются exit0, success/is_error=false,
++точный marker и Opus canonical modelUsage; разрешён observed auxiliary Haiku usage.
++В journal остаются только allowlisted numeric usage и list-price estimate, не billing proof.
++После обеих проверок coordinator атомарно публикует pointer, сохраняя старое поколение.
++Refresh exchange сам не вызывает модель; model acceptance — отдельная явная стадия.
++
++После `exchange_started` старый refresh token повторно не используется. Recovery продолжает
++приёмку существующего valid candidate; отсутствующий/небезопасный кандидат даёт
++`manual_login_required`, сохраняя journal и pending. `candidate_accepted` публикуется
++идемпотентно без нового CLI; уже опубликованный pointer завершает journal. Только proven-empty
++pending в `prepared` можно удалить. Смена attempt ID не обходит незавершённую recovery.
++Старый pointer не доказывает, что уже использованный refresh token ещё пригоден.
++
++Fixed bounds: JSON containers depth16, string16384 UTF-8 bytes, credential65536 bytes,
++combined child output8192 bytes; CLI exchange/status/model deadlines60/30/120 seconds.
++Timeout убивает process group. Raw child output и error strings не выходят из wrapper;
++совместимость headless branch показывает только fixed prefix booleans и enum.
++Synthetic tests: `test_credential_refresh.py`, `test_claude_refresh.mjs`; Docker fake fixtures
++запускаются явно как `test_refresh_docker.py DockerRefreshTests` без сети. Отдельный
++`PinnedCompatibilityTests` использует намеренно невалидный synthetic token через proxy.
++Эти проверки не подтверждают live refresh. Реальные bootstrap/exchange/status/fixed-model
++выполняет trusted coordinator после независимого review, с исходной check history и без
++credential hashes, account data или raw provider output в evidence.
++
+ ## Проверки и D0
+ 
+ Сборка image: `docker build -t altera-agent-runtime:task5 scripts/agent-runtime`; затем записать

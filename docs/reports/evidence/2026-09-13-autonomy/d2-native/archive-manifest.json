@@ -1,0 +1,46 @@
+{
+  "at_utc": "2026-09-13T23:39:21.476878+00:00",
+  "files": [
+    {
+      "path": "task-5-d2-native-descriptor-proof.json",
+      "sha256": "ce4a23bdaa22c53363581b170eac0c234bb3c2a392ffdf24e09877295ba41ab2",
+      "bytes": 1219
+    },
+    {
+      "path": "task-5-d2-native-cleanup-proof.json",
+      "sha256": "0ca0811fb68899b23fc2b4461a79457ba6bf21dd121e595af897f8b68bc4586b",
+      "bytes": 1096
+    },
+    {
+      "path": "task-5-d2-native-source-after-proof.json",
+      "sha256": "2cfe7b9a28402a655cb272c484f2dfcbad56fa3bcd289261c9b9a9e26b7d7c4a",
+      "bytes": 364
+    },
+    {
+      "path": "task-5-d2-postrun-path-metadata.json",
+      "sha256": "0cf042e7f74bdeb578fd51c050055ac49ba84bf1c2e2348fc1abe26370d4f176",
+      "bytes": 1066
+    },
+    {
+      "path": "task-5-d2-native-runbook.md",
+      "sha256": "8f94c36ac5394d8acd1866615e693e3e121ab35f02bf60422f88aeda23d05c23",
+      "bytes": 5027
+    },
+    {
+      "path": "task-5-d2-preliminary-state.json",
+      "sha256": "4853205f78d8f88ac78fcfa3a2d0ea11606ee9c36d3bbc3b4b5812c83e64e438",
+      "bytes": 989
+    },
+    {
+      "path": "trigger-contract.json",
+      "sha256": "fb58ab7a44fe84bb9b41da794b5f7ebea6d10cb679a151fadb15ea6a79479791",
+      "bytes": 914
+    },
+    {
+      "path": "trigger-claimed.json",
+      "sha256": "f0160a092696f6172a3196e0c76ec9e2c9030f0111f7b3a850868de7a9363322",
+      "bytes": 163
+    }
+  ],
+  "scope": "allowlisted native metadata and cleanup only; raw issue/agent data and source copies excluded"
+}

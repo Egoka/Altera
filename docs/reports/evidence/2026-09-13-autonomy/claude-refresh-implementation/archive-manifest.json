@@ -1,0 +1,242 @@
+{
+  "implementation_commit": "40a43e874799e4be4701d4ef4441bd81809466b7",
+  "review": "Issues found: Important R1/R2; fix round1 in progress",
+  "live_acceptance": false,
+  "files": [
+    {
+      "file": "refresh-review/commit-proof.json",
+      "bytes": 936,
+      "sha256": "8ddd62cdac18fc9c5934954e82f05fd76610e2df48985d2b15fcf87fe38dcdff"
+    },
+    {
+      "file": "refresh-review/committed-review.diff",
+      "bytes": 97634,
+      "sha256": "ece5455bb161cb5503e9d987549e2e83883d65c831987388db726104ed6b3ff5"
+    },
+    {
+      "file": "refresh-review/postcommit-status.txt",
+      "bytes": 354,
+      "sha256": "6d693710a9e4f80dd1c9b3f2e099f3beb1c3028a9b0fdfcd33b0457872b4de97"
+    },
+    {
+      "file": "refresh-review/precommit-status.txt",
+      "bytes": 767,
+      "sha256": "a59c8f7026e3aeecb5ce48e828b2eb2469afe57ef141bf4bfbf0f5c43b406f66"
+    },
+    {
+      "file": "refresh-review/scoped.diff",
+      "bytes": 97634,
+      "sha256": "16e5cecad6fcbc54d02f3fc24c6770a0839f19bea4cfae4ef0460f271bbb2a3d"
+    },
+    {
+      "file": "refresh-review/source-manifest.json",
+      "bytes": 1929,
+      "sha256": "e163a147cc599995ef719745d1ec32dca34546f1aac0656a8a403377641a1b2c"
+    },
+    {
+      "file": "task-5-refresh-administrative-errors.json",
+      "bytes": 557,
+      "sha256": "4246f0d3eec54620357b2212b5e878ab50935e4cf9712026e23a027b75d8b60c"
+    },
+    {
+      "file": "task-5-refresh-cleanup-green.log",
+      "bytes": 280,
+      "sha256": "96f4c0685c96acac561faba335ffe697c842103f210367e13c34d7d48f0f06aa"
+    },
+    {
+      "file": "task-5-refresh-cleanup-red.log",
+      "bytes": 1019,
+      "sha256": "882cd6aac74971f95f805050675a51a9742eb3569f877bbeb868f1fffd8bfbc9"
+    },
+    {
+      "file": "task-5-refresh-commit.log",
+      "bytes": 1462,
+      "sha256": "02dea0e21ad6126d365889e22dc3fcf67235713ae84854b03d681ac96dd059af"
+    },
+    {
+      "file": "task-5-refresh-depth-green-2.log",
+      "bytes": 204,
+      "sha256": "f6fcec479a989c4c8e7cc5d939e15ecabeb211a95594e44f70dcdccc8ee0a9df"
+    },
+    {
+      "file": "task-5-refresh-depth-green.log",
+      "bytes": 95,
+      "sha256": "bce4e0de7b058486c5d0362799b14d55d3c8aac57b250475db7549e762a3e507"
+    },
+    {
+      "file": "task-5-refresh-depth-red.log",
+      "bytes": 810,
+      "sha256": "b2c898837babdb1f494a10687c6cca3af20c53929ab2754056b5324749755333"
+    },
+    {
+      "file": "task-5-refresh-docker-cleanup-1.log",
+      "bytes": 192,
+      "sha256": "eb8268a9a0fa00d51f79d7aa187d87396ed8b4ee1028bcada9b305d7c4b40254"
+    },
+    {
+      "file": "task-5-refresh-docker-failure-bounds-1.log",
+      "bytes": 1682,
+      "sha256": "b4146288d758aae8d2c5cc63c71b461021d11908e94fe7cc893b977e5e9c2452"
+    },
+    {
+      "file": "task-5-refresh-docker-overflow-2.log",
+      "bytes": 176,
+      "sha256": "f8f7beeb6cc6077bb4545ae9a7e3face6f92907cf643f005857fcb7cdfae156d"
+    },
+    {
+      "file": "task-5-refresh-docker-success-1.log",
+      "bytes": 762,
+      "sha256": "0f9974ae8e65afacf2e84fe9c9fea70170548cee27d9f1138c971404e1be9048"
+    },
+    {
+      "file": "task-5-refresh-docker-success-2.log",
+      "bytes": 757,
+      "sha256": "73356a06ce5f614c5e86333c850f262136ae1867a345720597f1ec9dde398f7e"
+    },
+    {
+      "file": "task-5-refresh-exit-green.log",
+      "bytes": 183,
+      "sha256": "d0037585edf964943d358cda0adcc0b0f31abc9d754b7bd5c1b76717bb5a2c1b"
+    },
+    {
+      "file": "task-5-refresh-exit-red.log",
+      "bytes": 1377,
+      "sha256": "7b1f4c29d5651e72e8628feaeb02ff5b996df319ccc4b8960754728024089f5b"
+    },
+    {
+      "file": "task-5-refresh-fake-launch-cause.json",
+      "bytes": 99,
+      "sha256": "ee1ff6b4808d5a1858f6c2fcec23dc97d240b1c55bf9cbd8c70eea24bcc96ce2"
+    },
+    {
+      "file": "task-5-refresh-fake-package-cause.json",
+      "bytes": 25,
+      "sha256": "c996c28ad472beb9a6908d9b3bf8a1598e8534e1bc3e8f7379f9f1500cd269ef"
+    },
+    {
+      "file": "task-5-refresh-format.log",
+      "bytes": 220,
+      "sha256": "11a4e49c37607ccfb76091c08e144034b659e75bf65db0d137c1140bcff36a83"
+    },
+    {
+      "file": "task-5-refresh-headless-source-window.txt",
+      "bytes": 4400,
+      "sha256": "ca0f73f462867fbb08f919de56f191b75979d46a2f4edb2cfb7d92bd4273bf7c"
+    },
+    {
+      "file": "task-5-refresh-implementation-brief.md",
+      "bytes": 13445,
+      "sha256": "b7ec06925a03af85cc8c3a096064e1c4bd8e4bc13380f29438ee4f7070282a10"
+    },
+    {
+      "file": "task-5-refresh-implementation-report.md",
+      "bytes": 12359,
+      "sha256": "036cef74f2086da2bad532a1117b7bf86eecd7fb3832f6b7730365f2d2fd8772"
+    },
+    {
+      "file": "task-5-refresh-live-runbook.md",
+      "bytes": 3913,
+      "sha256": "f435cb5d2e9fcbbe57716888f9a7e6756118614d65153044bbf4bfe23bb17f1e"
+    },
+    {
+      "file": "task-5-refresh-ordinary-baseline.json",
+      "bytes": 3806,
+      "sha256": "d7556bd02538ae3d757961b1f09f164337877e8086d93634764cb6b3e74d8977"
+    },
+    {
+      "file": "task-5-refresh-pinned-compatibility-1.log",
+      "bytes": 512,
+      "sha256": "e3dc549d9db0ffc36609a99fbdcd8731114119d6939c7b923b127d75e820a73a"
+    },
+    {
+      "file": "task-5-refresh-root-rulings.md",
+      "bytes": 6757,
+      "sha256": "c0096bde6fd1c3b10190310b4da92b9b3dc8a8e1900af6edded6972cb4ccfbfe"
+    },
+    {
+      "file": "task-5-refresh-runtime-covering.log",
+      "bytes": 2022,
+      "sha256": "4abfb2235fa7904e38f5019ecedbbfc1720d059af096824b27a223ebd44ca7ce"
+    },
+    {
+      "file": "task-5-refresh-runtime-green.log",
+      "bytes": 282,
+      "sha256": "0f4bcd0724cf9598ed71dc89ff2224f8efd28d1e7edfa3cc75c9f480daefb2ae"
+    },
+    {
+      "file": "task-5-refresh-runtime-red.log",
+      "bytes": 938,
+      "sha256": "c1892159c1b0714f06a287f25f8c4cd74b22332c6f98aa9bc17ad66f2d067e04"
+    },
+    {
+      "file": "task-5-refresh-schema-proof.md",
+      "bytes": 7818,
+      "sha256": "ca14d4be03d8f027924505e502d374cf44547a9d282f5319a713d07ad3f5c4cc"
+    },
+    {
+      "file": "task-5-refresh-store-covering.log",
+      "bytes": 1671,
+      "sha256": "3dfbff36920c34194f221f1f17d81339f283e20e7b0f791972a05529b4125f75"
+    },
+    {
+      "file": "task-5-refresh-store-durability-green.log",
+      "bytes": 400,
+      "sha256": "896be28eed0177a778b45047f4c76f83ef79ef4c4f2d9f3c0e31490fa07589c9"
+    },
+    {
+      "file": "task-5-refresh-store-durability-red.log",
+      "bytes": 1946,
+      "sha256": "a15041f2181e0e57d4a34382b6396df3cb9f1d5007e2c28fd6a884846f58d8ba"
+    },
+    {
+      "file": "task-5-refresh-store-final.log",
+      "bytes": 1767,
+      "sha256": "55fccfee4c3870d422fd25bfc72b10449b67f123c7050bd5251539aed3876911"
+    },
+    {
+      "file": "task-5-refresh-store-green.log",
+      "bytes": 1090,
+      "sha256": "bbfc33dc97856d83365a71f5ba92bbdeddff5ce24b93290c73b5f48f64375d83"
+    },
+    {
+      "file": "task-5-refresh-store-red.log",
+      "bytes": 10370,
+      "sha256": "09b75e7cf8f4d37ee9f23f8e795b5f68ce2f4ef7b3e228306e506a0f3808474d"
+    },
+    {
+      "file": "task-5-refresh-wrapper-covering.log",
+      "bytes": 479,
+      "sha256": "44fdb3fdc4b45c4edb93e35ce4c84f297f1f959d655a35f5db8c7f0a126a3e1e"
+    },
+    {
+      "file": "task-5-refresh-wrapper-green.log",
+      "bytes": 481,
+      "sha256": "dd11cb1deeb1800a891a334ba154a7c2ae25bb155d1eb896b3ff12f7ba87e674"
+    },
+    {
+      "file": "task-5-refresh-wrapper-red.log",
+      "bytes": 4377,
+      "sha256": "6894eee10ed6e6c7a0318e37e5f37db55502b668b44b3be3fd65fd36063d306a"
+    },
+    {
+      "file": "task-5-refresh-independent-review.md",
+      "bytes": 11993,
+      "sha256": "d0eae3ce1f0c81066d46abf0ce8d6f0a818980e44a17ffd122824a241851eea6"
+    },
+    {
+      "file": "task-5-refresh-review-cleanup-proof.json",
+      "bytes": 485,
+      "sha256": "b24ffee2d6f1ffcc4f5343996a71552d451c6ab29852762c404757ccb3f71687"
+    },
+    {
+      "file": "task-5-refresh-review-policy-proof.json",
+      "bytes": 313,
+      "sha256": "abf69edaa0d759ade01ffe98a737b3d5dd8c27632eb5f996638990bfff97e98a"
+    },
+    {
+      "file": "task-5-refresh-fix1-brief.md",
+      "bytes": 2454,
+      "sha256": "3c8d1c0e9c7c3a58f7e9be8889509eab7b19530db29e4f310d41efe8ed77b8b5"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "recorded_from_tool_outputs": true,
+  "version_lookup": {
+    "chunk_id": "b7f12b",
+    "command": "/Users/egorborbondarenko/.nvm/versions/node/v24.12.0/bin/node --version",
+    "exit": 127,
+    "output": "zsh:1: no such file or directory: /Users/egorborbondarenko/.nvm/versions/node/v24.12.0/bin/node\n",
+    "consecutive_failures": 1
+  },
+  "depth_green_launch": {
+    "chunk_id": "cef01d",
+    "exit": 127,
+    "raw_log": "task-5-refresh-depth-green.log",
+    "corrected_pass": "task-5-refresh-depth-green-2.log",
+    "consecutive_failures": 0
+  }
+}

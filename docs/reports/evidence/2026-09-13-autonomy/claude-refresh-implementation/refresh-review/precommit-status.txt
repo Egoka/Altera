@@ -1,0 +1,14 @@
+ M docs/development/runtime-isolation.md
+ M docs/reports/2026-09-13-autonomy-execution-report.md
+ M docs/reports/evidence/2026-09-13-autonomy/task-5-d2/archive-manifest.json
+ M scripts/agent-runtime/runtime.py
+ M scripts/agent-runtime/test_runtime.py
+?? docs/reports/evidence/2026-09-13-autonomy/d2-native/
+?? docs/reports/evidence/2026-09-13-autonomy/playwright-userns/
+?? docs/reports/evidence/2026-09-13-autonomy/task-5-d2/task-5-codex-path-probe-independent-review.md
+?? scripts/agent-runtime/claude-refresh.mjs
+?? scripts/agent-runtime/credential_refresh.py
+?? scripts/agent-runtime/refresh-manifest.example.json
+?? scripts/agent-runtime/test_claude_refresh.mjs
+?? scripts/agent-runtime/test_credential_refresh.py
+?? scripts/agent-runtime/test_refresh_docker.py

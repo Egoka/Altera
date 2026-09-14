@@ -1,0 +1,60 @@
+{
+  "scope": "Docker user namespace prerequisite; Chromium/MCP/browser not tested",
+  "files": [
+    {
+      "file": "task-5-playwright-engine-vendored-seccomp.json",
+      "bytes": 13470,
+      "sha256": "536529b665dd0972c37bfb569f5d4ac8a53592e7b00752bc39ff063ca9864c74"
+    },
+    {
+      "file": "task-5-playwright-engine-local-readback.json",
+      "bytes": 429,
+      "sha256": "41dacc244e14f82e89a5320fb7fc7f5bec158716fd4c95f566cb8bb4f22458a9"
+    },
+    {
+      "file": "task-5-playwright-seccomp-candidate.json",
+      "bytes": 16878,
+      "sha256": "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140"
+    },
+    {
+      "file": "task-5-playwright-seccomp-candidate-proof.json",
+      "bytes": 676,
+      "sha256": "acfaab9ceb0538f9b802d875f0cfc6d9e9ba2f71ea37c161e412fbe7a40e3062"
+    },
+    {
+      "file": "task-5-playwright-userns-proof.json",
+      "bytes": 999,
+      "sha256": "f4e48390268ac6633a62afaa772574b6ebd232d4c2dcba0bea8df34162c6ec0e"
+    },
+    {
+      "file": "task-5-playwright-userns-builtin.stdout",
+      "bytes": 141,
+      "sha256": "baa248e377cf42744f23c558ce688e7c2ec71e43e98f68133eb0f1023de6be76"
+    },
+    {
+      "file": "task-5-playwright-userns-builtin.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "task-5-playwright-userns-candidate.stdout",
+      "bytes": 91,
+      "sha256": "b1f955b6a4d113bee9dc51ad1a6398e98fce91984244a989ee000fb89063cd2b"
+    },
+    {
+      "file": "task-5-playwright-userns-candidate.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "task-5-playwright-static-brief.md",
+      "bytes": 23381,
+      "sha256": "fd04ae27d63f5764ac157b4a801cf670ca3a1d9470bf2a18b821765c229c17fe"
+    },
+    {
+      "file": "task-5-playwright-engine-profile-proof.md",
+      "bytes": 8507,
+      "sha256": "a946d542edf7aa8a7e2f1123ea130753512f33fbc372e5757063e4ed5ab6f29b"
+    }
+  ]
+}
