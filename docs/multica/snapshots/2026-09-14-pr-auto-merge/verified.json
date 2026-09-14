@@ -1,0 +1,46 @@
+{
+  "release": {
+    "field": "instructions",
+    "matches": true,
+    "sha256": "bcb336a008d08b6013512d19c7d7ab1cd086b32a5004a29ece753d36678e5df5"
+  },
+  "squad": {
+    "field": "instructions",
+    "matches": true,
+    "sha256": "bbb939f0f0918955cf87dd2b48ea8b2c9bda1ba297753d52586a14eae64b6bc0"
+  },
+  "orchestrator": {
+    "field": "instructions",
+    "matches": true,
+    "sha256": "f1bc0417603b8d01f8b84be6820d5e27733120f0b139eb6499a9ccd156443144"
+  },
+  "recovery": {
+    "field": "description",
+    "matches": true,
+    "sha256": "1a60f664fb2ea6fc13986df5531275eca8e70d33101b968c36f597c5faae1c95",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ee760de4-5d9d-469b-8895-bd21bee1663e",
+        "enabled": true,
+        "cron_expression": "15 */4 * * *",
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "queue": {
+    "field": "description",
+    "matches": true,
+    "sha256": "313b40b4cbc728358458994dc9f04496f3677db470660e87fdd3e00fbf27daa9",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ea042b57-0793-444d-b7a1-740579482431",
+        "enabled": true,
+        "cron_expression": "0 * * * *",
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "checked_at": "2026-09-14T16:49:38.810557+00:00"
+}
