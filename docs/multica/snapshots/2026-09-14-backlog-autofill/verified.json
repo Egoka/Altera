@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "matches": true,
+    "sha256": "63dba5451260a9c452be08d07bfef6422970611f3f2bb36ebb2e043a220284ea"
+  },
+  "orchestrator": {
+    "matches": true,
+    "sha256": "745f6a8a3aa624f636efbe4551c20d5abf724c210b1765ebc695bda6c92bde33"
+  },
+  "queue": {
+    "matches": true,
+    "sha256": "1b9e865fa4eb0b7cbd30884e764b73925364902c8182803c2cba7252c8e19e1e",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ea042b57-0793-444d-b7a1-740579482431",
+        "cron_expression": "0 * * * *",
+        "enabled": true,
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "checked_at": "2026-09-14T16:18:35.298645+00:00"
+}
