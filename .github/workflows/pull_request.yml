@@ -22,6 +22,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
+      - name: Print Node.js version
+        run: node -v
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Format
@@ -44,6 +46,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
+      - name: Print Node.js version
+        run: node -v
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build web
@@ -64,6 +68,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
+      - name: Print Node.js version
+        run: node -v
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Chromium
@@ -117,6 +123,8 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
+      - name: Print Node.js version
+        run: node -v
       - name: Install server dependencies
         run: cd server && pnpm install --frozen-lockfile
       - name: Build server

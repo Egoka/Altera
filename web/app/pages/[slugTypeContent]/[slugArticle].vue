@@ -1,11 +1,11 @@
 <script setup lang="ts">
-  import { useRoute } from "vue-router"
   const route = useRoute()
+  const slugArticle = computed(() => String(route.params.slugArticle ?? ""))
 </script>
 
 <template>
   <div>
-    <HeaderTag :tag="{ name: route.params.slugArticle }" />
+    <HeaderTag :tag="{ name: slugArticle }" />
   </div>
 </template>
 

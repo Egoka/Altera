@@ -8,6 +8,7 @@
   }
 
   const props = defineProps<ErrorProps>()
+  const router = useRouter()
 
   const handleError = () => {
     clearError({ redirect: "/" })
@@ -68,7 +69,7 @@
       <div class="error-actions">
         <button class="btn-primary" @click="handleError">Вернуться на главную</button>
 
-        <button class="btn-secondary" @click="$router.go(-1)">Назад</button>
+        <button class="btn-secondary" @click="router.go(-1)">Назад</button>
       </div>
 
       <div v-if="error.statusCode" class="error-code">Код ошибки: {{ error.statusCode }}</div>

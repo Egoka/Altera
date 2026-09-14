@@ -1,6 +1,6 @@
 <script setup lang="ts">
   defineProps<{
-    link: Date | string
+    link: string
     name?: string
   }>()
 </script>
