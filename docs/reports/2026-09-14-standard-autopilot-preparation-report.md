@@ -28,10 +28,36 @@ ALTE-10 уточнена по текущему YAML/package.json; критери
 - Новые agent/autopilot run эта подготовка не вызывает. Runtime online подтверждает связь
   с daemon, но не является сквозной проверкой задачи или авторизации модельного запроса.
 
-## Остаток подготовки
+## Итог подготовки и проверка checkout
 
-Создать отдельный checkout, установить зависимости, проверить baseline и прочитать настройки
-обратно. Результаты будут дополнены до передачи владельцу. Включение оставлено владельцу.
+Подготовка завершена. Финальный readback API от `2026-09-14T14:39:00Z`:
+`docs/multica/snapshots/2026-09-14-standard-launch/final-readback.json`.
+AC-1/2/3/4 подготовки подтверждены: десять агентов на штатных runtime, модели/effort
+сохранены, concurrency=1, ALTE-10 единственная Todo, ALTE-4 Done, ALTE-11 Cancelled,
+три autopilot paused, расписания совпадают с исходными, активных agent run нет.
+
+Checkout: `/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot`;
+ветка `codex/autopilot-start`. Проверенная исходная ревизия checkout:
+`8b2c1d8335bb09c6acf47028ca36b00d8a3f458b`. Dirty tree до/после проверок — clean.
+Последующее дополнение этого отчёта и launch-инструкции не меняет проверенный source.
+
+- `pnpm install --frozen-lockfile` — exit 0, установлено 1244 пакета, lockfile не изменён.
+  Первый install предупредил о Node 24.3.0 в исходном PATH; установленная 24.12.0 найдена
+  и закреплена первой в custom PATH всех десяти агентов. Их прежний custom_env был пуст.
+  Readback каждого env совпал с заданным значением; секретные env не читались.
+- `PATH=/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin:$PATH pnpm format` — exit 0.
+- С тем же PATH `pnpm lint` — exit 0; `pnpm test` — exit 0, server 19 и web 56 passed,
+  server один TODO и один skipped test file. Node v24.12.0, pnpm 10.18.3 подтверждены.
+- Установка предупредила об отключённых dependency build scripts; workspace postinstall
+  Prisma/Nuxt выполнились, baseline проверки прошли. Build/typecheck и фактический CI остаются
+  критериями ALTE-10, подготовка не выдаёт их за выполненные.
+- Локальный `.claude/settings.local.json` в новом checkout отключает hooks, чтобы M4 Stop-hook
+  не требовал ticket в штатном режиме. Общие permission rules сохранены. Основная папка
+  владельца остаётся на `docs/agent-loop-autonomy` с прежним пользовательским lockfile.
+
+Сетевые таймауты при env update и финальном readback устранены проверкой фактического
+состояния и повтором только чтения/незавершённых записей. Новые model run не запускались.
+Решение включить autopilot оставлено владельцу. Инструкция: `docs/multica/standard-autopilot-launch.md`.
 
 Основной `pnpm-lock.yaml` — чужое незакоммиченное изменение, в commits подготовки не входит.
 Trace: история tool calls этой сессии и безопасные snapshots. Полный native runtime trace

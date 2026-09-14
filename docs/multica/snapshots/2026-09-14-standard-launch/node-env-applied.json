@@ -1,0 +1,57 @@
+{
+  "value": {
+    "PATH": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin:/Users/egorbondarenko/.local/bin:/Users/egorbondarenko/.trace/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+  },
+  "agents": [
+    {
+      "id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+      "name": "Altera — оркестратор",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+      "name": "Altera — архитектор",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+      "name": "Altera — разработчик",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+      "name": "Altera — тестировщик",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+      "name": "Altera — независимый ревьюер",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+      "name": "Altera — дизайнер",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+      "name": "Altera — релиз-инженер",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+      "name": "Altera — хранитель документации",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "b7f90cba-518a-4130-993a-f047a4355f96",
+      "name": "Altera — редактор и бренд-стратег",
+      "custom_env_keys": ["PATH"]
+    },
+    {
+      "id": "41f9ec44-b58b-48d3-bd24-30d3774d2b5e",
+      "name": "Altera — SEO-специалист",
+      "custom_env_keys": ["PATH"]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "kind": "agent",
+    "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "verified_fields": ["runtime_id", "instructions", "model", "thinking_level"]
+  },
+  {
+    "kind": "agent",
+    "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "verified_fields": ["runtime_id", "instructions", "model", "thinking_level"]
+  },
+  {
+    "kind": "autopilot",
+    "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+    "verified_fields": ["description", "status"]
+  },
+  {
+    "kind": "autopilot",
+    "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+    "verified_fields": ["description", "status"]
+  },
+  {
+    "kind": "autopilot",
+    "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+    "verified_fields": ["description", "status"]
+  },
+  {
+    "kind": "project",
+    "id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+    "verified_fields": ["description"]
+  },
+  {
+    "kind": "issue",
+    "id": "01a08809-768d-7e3a-8eff-76fa172f8c50",
+    "verified_fields": ["description", "status"]
+  }
+]

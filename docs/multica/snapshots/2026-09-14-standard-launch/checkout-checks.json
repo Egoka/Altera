@@ -1,0 +1,33 @@
+{
+  "criterion": "AC-3",
+  "check_id": "standard-checkout-baseline",
+  "revision_commit": "8b2c1d8335bb09c6acf47028ca36b00d8a3f458b",
+  "dirty_fingerprint": "clean",
+  "cwd": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+  "node": "v24.12.0",
+  "pnpm": "10.18.3",
+  "commands": [
+    {
+      "command": "pnpm install --frozen-lockfile",
+      "exit_code": 0,
+      "note": "initial inherited Node24.3; pinned Node24.12 for subsequent checks"
+    },
+    {
+      "command": "pnpm format",
+      "exit_code": 0
+    },
+    {
+      "command": "pnpm lint",
+      "exit_code": 0
+    },
+    {
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": 75,
+      "todo": 1,
+      "skipped_test_files": 1
+    }
+  ],
+  "trace_ref": "Codex tool results in owner standard-autopilot preparation session 2026-09-14",
+  "limits": "No model run, no end-to-end stage acceptance; build/typecheck/CI remain ALTE-10 checks."
+}

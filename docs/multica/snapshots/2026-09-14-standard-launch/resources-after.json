@@ -1,0 +1,31 @@
+[
+  {
+    "created_at": "2026-09-05T15:04:07Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "id": "eb3b1050-4d67-4e6c-9fa1-c65353488919",
+    "label": null,
+    "position": 0,
+    "project_id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+    "resource_ref": {
+      "url": "https://github.com/Egoka/Altera.git"
+    },
+    "resource_type": "github_repo",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  },
+  {
+    "created_at": "2026-09-05T16:39:42Z",
+    "created_by": "f3b703eb-4059-497c-8b13-d3ebad710e4a",
+    "id": "26db43db-cb46-4e1e-8aeb-2d5335cd3a86",
+    "label": "Altera Autopilot — отдельное рабочее дерево, одна цепочка",
+    "position": 1,
+    "project_id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+    "resource_ref": {
+      "daemon_id": "019f94d8-3dd7-7cf8-bdfc-0f8e52e01687",
+      "execution_mode": "in_place",
+      "label": "Altera Autopilot — отдельное рабочее дерево, одна цепочка",
+      "local_path": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot"
+    },
+    "resource_type": "local_directory",
+    "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6"
+  }
+]
