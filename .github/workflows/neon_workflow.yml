@@ -1,0 +1,87 @@
+name: Ветка Neon для pull request
+
+# Ветка базы Neon на каждый pull request: создаётся при открытии и обновлении, удаляется
+# при закрытии. Шаблон — руководство https://neon.com/docs/guides/neon-github-app.
+# Секрет NEON_API_KEY и переменную NEON_PROJECT_ID записала интеграция Neon GitHub App
+# (2026-09-14). Родитель новой ветки не задан, поэтому это ветка проекта по умолчанию —
+# production.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  setup:
+    name: Имя git-ветки
+    outputs:
+      branch: ${{ steps.branch_name.outputs.current_branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        id: branch_name
+        uses: tj-actions/branch-names@v8
+
+  create_neon_branch:
+    name: Создать ветку Neon
+    # В шаблоне Neon outputs ссылаются на шаг create_neon_branch_encode, которого нет.
+    # Здесь ссылка на реальный id шага.
+    outputs:
+      db_url: ${{ steps.create_neon_branch.outputs.db_url }}
+      db_url_with_pooler: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+    needs: setup
+    if: |
+      github.event_name == 'pull_request' && (
+      github.event.action == 'synchronize'
+      || github.event.action == 'opened'
+      || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Neon Branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      # Ветка создана. Дальше на ней можно прогнать миграции Prisma и тесты или отдать строку
+      # подключения окружению предпросмотра. URL доступны как
+      # steps.create_neon_branch.outputs.db_url (прямое подключение) и
+      # steps.create_neon_branch.outputs.db_url_with_pooler (через пулер).
+      # Печатать их в лог нельзя: в них логин и пароль базы.
+      #
+      # Пример миграций — пока не включён, решение отдельное:
+      #      - name: Миграции Prisma
+      #        run: cd server && npx prisma migrate deploy
+      #        env:
+      #          DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
+      #          DATABASE_URL_UNPOOLED: "${{ steps.create_neon_branch.outputs.db_url }}"
+      #
+      # Schema diff комментарием к pull request (джобу нужны permissions: contents: read и
+      # pull-requests: write; см. https://github.com/neondatabase/schema-diff-action):
+      #      - name: Schema diff в комментарий к pull request
+      #        uses: neondatabase/schema-diff-action@v1
+      #        with:
+      #          project_id: ${{ vars.NEON_PROJECT_ID }}
+      #          compare_branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+      #          api_key: ${{ secrets.NEON_API_KEY }}
+
+  delete_neon_branch:
+    name: Удалить ветку Neon
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Neon Branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
