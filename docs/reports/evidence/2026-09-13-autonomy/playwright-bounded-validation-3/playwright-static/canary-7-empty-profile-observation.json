@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-09-14T10:14:47.728689+00:00",
+  "after_container_removal": true,
+  "residual_name": "playwright_chromiumdev_profile-lJcdZs",
+  "mode": "0o40700",
+  "uid_on_host": 501,
+  "entries": [],
+  "main_profile_name": "playwright_chromiumdev_profile-wtmwAd",
+  "same_as_main": false,
+  "main_profile_still_exists": false,
+  "inference": "empty residue is associated with intentionally failed launch; no before-missing-launch directory snapshot was captured in old harness"
+}

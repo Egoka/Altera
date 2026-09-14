@@ -1,0 +1,9 @@
+[
+  "/usr/local/bin/docker",
+  "build",
+  "--platform=linux/arm64",
+  "--progress=plain",
+  "--iidfile",
+  "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/image.id",
+  "/private/tmp/altera-agent-loop-autonomy/.superpowers/sdd/2026-09-13-autonomy-execution/playwright-static/build-context"
+]

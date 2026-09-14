@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/usr/local/bin/docker",
+    "container",
+    "ls",
+    "--all",
+    "--filter",
+    "name=^/altera-chroot-identity-97bd451e7177$",
+    "--format",
+    "{{.Names}}"
+  ],
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty",
+    "DOCKER_HOST": "unix:///Users/egorbondarenko/.docker/run/docker.sock"
+  }
+}

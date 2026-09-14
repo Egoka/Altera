@@ -263,6 +263,29 @@ class CodexTomlMappingTests(unittest.TestCase):
             self.assertEqual(plan["path_map"], {})
             self.assertIsNone(plan["policy_block"])
 
+    def test_playwright_requires_private_pinned_receipt_and_exact_image(self):
+        receipt_dir = self.fixture.root / 'receipt'; receipt_dir.mkdir(mode=0o700)
+        receipt = receipt_dir / 'accepted.json'
+        image = 'sha256:' + 'a' * 64
+        data = managed('[mcp_servers.playwright]', 'command = "npx"', 'args = ["-y", "@playwright/mcp@latest"]')
+        record = mapper.playwright_receipt_template(image)
+        record['artifacts'] = {key: 'b' * 64 for key in mapper.PLAYWRIGHT_ARTIFACTS}
+        record['checks'] = {key: 'c' * 64 for key in mapper.PLAYWRIGHT_CHECKS}
+        receipt.write_bytes(mapper._canonical_json(record)); receipt.chmod(0o600)
+        reference = {'path': str(receipt), 'sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'image': image}
+        plan = mapper.build_mapping(data, 'pw-v1', playwright=reference)
+        self.assertTrue(plan['catalog']['servers'][1]['mapping_ready'])
+        self.assertEqual(plan['catalog']['servers'][1]['shape'], 'playwright_static_0_0_80')
+        tables = mapper._parse_managed(plan['policy_block'])
+        self.assertEqual(tables['playwright'], {'command': '/usr/bin/env', 'args': mapper.PLAYWRIGHT_VECTOR[1:]})
+        for bad in [True, {**reference, 'image': 'sha256:' + 'd' * 64}, {**reference, 'sha256': 'e' * 64}]:
+            with self.assertRaisesRegex(mapper.MappingError, '^playwright_attestation_invalid$'):
+                mapper.build_mapping(data, 'pw-v1', playwright=bad)
+        receipt.chmod(0o644)
+        with mock.patch.object(mapper.os, 'read', side_effect=AssertionError('read before metadata')):
+            with self.assertRaisesRegex(mapper.MappingError, '^playwright_attestation_invalid$'):
+                mapper.build_mapping(data, 'pw-v1', playwright=reference)
+
     def test_unknown_server_and_fields_are_presence_only_and_bounded(self):
         secret_name = "unknown_SECRET_server_9182"
         secret_value = "SECRET_VALUE_5da9"

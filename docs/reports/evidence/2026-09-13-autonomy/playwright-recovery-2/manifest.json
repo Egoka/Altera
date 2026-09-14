@@ -1,0 +1,315 @@
+{
+  "state": "single_authorized_canary4_failed_count4_no_receipt",
+  "files": [
+    {
+      "path": "run-playwright-canary-4.py",
+      "bytes": 3295,
+      "sha256": "8b520f32f0c2f194d824a95d890ee0ce8794105ae11ec518029072c2e91b2cc5"
+    },
+    {
+      "path": "task-5-playwright-canary-4-authorization.json",
+      "bytes": 1894,
+      "sha256": "8e31f27833bfb0c5ef335d8cfee29219d792119335f3c757e59965c87efbed9b"
+    },
+    {
+      "path": "task-5-playwright-snapshot-recovery-request.md",
+      "bytes": 4390,
+      "sha256": "89011bf9c0deec22993f3c93278639fe51580c339f66cd4f16b5b2b91527792b"
+    },
+    {
+      "path": "playwright-static/canary-4-invocation-claim.json",
+      "bytes": 2022,
+      "sha256": "6c992b05781ff3f45153589e196f55a70c3e1ef3af49ff344eca41cebfdc3c89"
+    },
+    {
+      "path": "playwright-static/canary-4-command.json",
+      "bytes": 293,
+      "sha256": "f797f07747405d11a063aefcef8d8e3c2bf8fe88ddfd7c30717d4af7dee1d1f2"
+    },
+    {
+      "path": "playwright-static/canary-4-env.json",
+      "bytes": 123,
+      "sha256": "d793e563bb151fb4ebe566de6d63a7015df11d9a1ebc6503eb8a8c779b85e2f8"
+    },
+    {
+      "path": "playwright-static/canary-4-started.json",
+      "bytes": 107,
+      "sha256": "e6bd24a52835af47e59ef35cf8e590a8665c517d2899d4bcdd231411312de572"
+    },
+    {
+      "path": "playwright-static/canary-4-result.json",
+      "bytes": 1509,
+      "sha256": "b9132af87cb36284158e86d43991fc094506ba86087eefe1d1b64787ec5329e8"
+    },
+    {
+      "path": "playwright-static/canary-4.log",
+      "bytes": 508,
+      "sha256": "58aa522ca44f17141d73ce97d0eab3e06801a2954c3d4fcd8657332ba1884813"
+    },
+    {
+      "path": "playwright-static/failure-history.json",
+      "bytes": 2062,
+      "sha256": "13b9b5ec001257c7d1036208be518182e180b72a4ab9cb06d4c3489733fe9587"
+    },
+    {
+      "path": "playwright-static/canary-4/commands.json",
+      "bytes": 6007,
+      "sha256": "0a669abac5de0aa2ff546019db8bc2a69dbef407017f281adac2a3301bdf9ad5"
+    },
+    {
+      "path": "playwright-static/canary-4/image-inspect.json",
+      "bytes": 1878,
+      "sha256": "de8af5bdab4baead6c1b25f5c3d53c3a25c0285ee535831c6477b10753c86087"
+    },
+    {
+      "path": "playwright-static/canary-4/seccomp.json",
+      "bytes": 16794,
+      "sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1"
+    },
+    {
+      "path": "playwright-static/canary-4/control/container-inspect.json",
+      "bytes": 18314,
+      "sha256": "a535e31d77f1f8c596d01be5f59748a03ef24af334449f47dd8a25fd29e46627"
+    },
+    {
+      "path": "playwright-static/canary-4/control/network-inspect.json",
+      "bytes": 2042,
+      "sha256": "6c62231f53abe260c34909c2da2d26f39767bb52ef5f3673b7ef5d20d3ef1602"
+    },
+    {
+      "path": "playwright-static/canary-4/control/exit.json",
+      "bytes": 269,
+      "sha256": "05e4e56e7c88ee98e63cac5bb6509e7f1382121fcb5c9900e26b3486783158af"
+    },
+    {
+      "path": "playwright-static/canary-4/control/evidence/canary-report.json",
+      "bytes": 31939,
+      "sha256": "068433d23fd1520d92aa593e028c9b28cdec0284fd814960cbc65ba0cf556f5f"
+    },
+    {
+      "path": "playwright-static/canary-4/control/evidence/main-protocol.jsonl",
+      "bytes": 19269,
+      "sha256": "4ca0a3135ec9fb10052ee9051c85f9ce7a348c4d3de6abc395197a3d464359fb"
+    },
+    {
+      "path": "playwright-static/canary-4/control/evidence/main-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/control/evidence/playwright/page-2026-09-14T09-29-06-646Z.yml",
+      "bytes": 151,
+      "sha256": "f04e9fd7f885796009058a2db52cc1bb1eda9a2b0952d1c779c7e14b96be91a5"
+    },
+    {
+      "path": "playwright-static/canary-4/control/evidence/playwright/page-2026-09-14T09-29-07-217Z.yml",
+      "bytes": 125,
+      "sha256": "d416e11f533bcd98ac148555b4fefe3bea797f7739a8984d3e41469596765f82"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-01.stdout",
+      "bytes": 2328,
+      "sha256": "868108eb0ee31bb138cd35dcc664c9b40cd58d7e97c9932186866c664abc4811"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-01.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-02.stdout",
+      "bytes": 65,
+      "sha256": "3ebe08189b755942815c9ff63e96457f59b5351f0362170ffb84fcb38313ac8a"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-02.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-03.stdout",
+      "bytes": 65,
+      "sha256": "729c66764b2952da70abd8279206e6fc4021a32071ec8e9126c7a3b7d9b0dfde"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-03.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-04.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-04.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-05.stdout",
+      "bytes": 14,
+      "sha256": "4486d633296025de7b3e45680f47f3748aca0f3cf551b4afe3dd3350a04f9abf"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-05.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-06.stdout",
+      "bytes": 65,
+      "sha256": "ab10d0245b6f6e99eac448019664eb4e031af4c67d78eae1c2882fdeb8edd23b"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-06.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-07.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-07.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-08.stdout",
+      "bytes": 14,
+      "sha256": "4486d633296025de7b3e45680f47f3748aca0f3cf551b4afe3dd3350a04f9abf"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-08.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-09.stdout",
+      "bytes": 65,
+      "sha256": "c9495654a4a87249c1e19a46722e02a6a57f5d3dbf1593bdcfe1e89d8ac5b926"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-09.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-10.stdout",
+      "bytes": 20756,
+      "sha256": "5590f535121494b19d83836e0cce33114d7f8889f19599359087cd0db4b5bddc"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-10.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-11.stdout",
+      "bytes": 2042,
+      "sha256": "6c62231f53abe260c34909c2da2d26f39767bb52ef5f3673b7ef5d20d3ef1602"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-11.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-12.stdout",
+      "bytes": 84,
+      "sha256": "91b8c08f83e89963d9db57fc5b5b6a88e326fa4dedd84a8815585b847db4fdae"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-12.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-13.stdout",
+      "bytes": 2042,
+      "sha256": "6c62231f53abe260c34909c2da2d26f39767bb52ef5f3673b7ef5d20d3ef1602"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-13.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-14.stdout",
+      "bytes": 21438,
+      "sha256": "70445f982c394dab59803daac70c0023cdac8f9cd800f75d4daf1e926db1a2bf"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-14.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-15.stdout",
+      "bytes": 47,
+      "sha256": "a1c69997b758d8166899a7f5a793acb98b5b24447546553271db178e3b21af6f"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-15.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-16.stdout",
+      "bytes": 50,
+      "sha256": "9e07b3d7f8a7b1ceca6f80361c09235683e8053e5eab1a203c149b80e57acb1e"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-16.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-17.stdout",
+      "bytes": 48,
+      "sha256": "50d02abdc37ad81bdbb4547a363de7e7af5665eaa7b8cb90e322b718d662c2ae"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-17.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-18.stdout",
+      "bytes": 1229,
+      "sha256": "e63608e501f976aba97996f2ecf769f4b34ec0b3211509e123e531ecdd930a97"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-18.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-19.stdout",
+      "bytes": 43,
+      "sha256": "34d0cd040a96802190e2b31f482ac3e3a28c9054397ddac0b948335c04bcdf01"
+    },
+    {
+      "path": "playwright-static/canary-4/docker-19.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "task-5-playwright-canary-4-report.md",
+      "bytes": 2060,
+      "sha256": "130f58da7f7ae063ddf18f4174c15720cd1e49b2aac1872424f79dc5bdbf5f53"
+    },
+    {
+      "path": "task-5-playwright-canary-4-evidence-review.md",
+      "bytes": 4065,
+      "sha256": "8a7e347665a057de1d98f5475fba6ba96a35013cb2e399884c4daffc41cb5eff"
+    },
+    {
+      "path": "manifest-reviewed.json",
+      "bytes": 10619,
+      "sha256": "4fb568c6a1c15f19aaee67175128858626ea7a903d57bb716d2f1effc0d06de2"
+    }
+  ]
+}

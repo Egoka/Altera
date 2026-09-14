@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_snapshot_observation_uses_saved_artifact_and_rejects_unsafe_reads (__main__.PlaywrightStaticTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 86, in test_snapshot_observation_uses_saved_artifact_and_rejects_unsafe_reads
+    self.assertIn('ALTERA_PLAYWRIGHT_CANARY', observed)
+AssertionError: 'ALTERA_PLAYWRIGHT_CANARY' not found in '### Page\n- Page URL: http://altera-web:3000/\n- Page Title: Altera synthetic\n### Snapshot\n- [Snapshot](../runtime/evidence/playwright/page-2026-09-14T08-44-00-471Z.yml)\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.030s
+
+FAILED (failures=1)

@@ -1,0 +1,262 @@
+--- a/scripts/agent-runtime/playwright-mcp-canary.mjs
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -88,6 +88,124 @@
+     [page.action, page.snapshot].some((result) => text(result).includes('/done?name=Ada'))
+ }
+ 
++// Только фиксированные proc-поля browser/observer; чтение не меняет namespace или права.
++function collectBrowserProcesses(procRoot = '/proc') {
++  const selected = ['Uid', 'Gid', 'CapEff', 'CapPrm', 'CapInh', 'CapAmb', 'CapBnd', 'NoNewPrivs', 'Seccomp', 'Seccomp_filters', 'NSpid']
++  const read = (file, limit = 65536) => {
++    const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK)
++    try {
++      const bytes = Buffer.alloc(limit + 1)
++      const length = fs.readSync(fd, bytes, 0, bytes.length, 0)
++      if (length > limit) throw new Error('PROC_LIMIT')
++      return bytes.subarray(0, length).toString('utf8')
++    } finally { fs.closeSync(fd) }
++  }
++  const fields = (pid) => {
++    const result = {}
++    for (const line of read(`${procRoot}/${pid}/status`).split('\n')) {
++      const at = line.indexOf(':'), key = line.slice(0, at)
++      if (!selected.includes(key)) continue
++      if (key in result) throw new Error('PROC_DUPLICATE')
++      result[key] = line.slice(at + 1).trim()
++    }
++    return result
++  }
++  const start = (pid) => read(`${procRoot}/${pid}/stat`, 4096).split(') ').slice(1).join(') ').split(/\s+/)[19]
++  const collect = (pid, argv) => {
++    const row = { pid, argv, errors: [] }
++    for (const [key, get] of [
++      ['starttime', () => start(pid)], ['fields', () => fields(pid)],
++      ['uid_map', () => read(`${procRoot}/${pid}/uid_map`, 4096)],
++      ['gid_map', () => read(`${procRoot}/${pid}/gid_map`, 4096)],
++    ]) {
++      try { row[key] = get() } catch (error) { row.errors.push(key + ':' + (error.code || 'INVALID')) }
++    }
++    try { row.user_namespace = { value: fs.readlinkSync(`${procRoot}/${pid}/ns/user`) } }
++    catch (error) { row.user_namespace = { error: error.code || 'INVALID' } }
++    try {
++      let namespace
++      try { namespace = { value: fs.readlinkSync(`${procRoot}/${pid}/ns/user`) } }
++      catch (error) { namespace = { error: error.code || 'INVALID' } }
++      if (start(pid) !== row.starttime || JSON.stringify(fields(pid)) !== JSON.stringify(row.fields) ||
++          JSON.stringify(namespace) !== JSON.stringify(row.user_namespace) ||
++          read(`${procRoot}/${pid}/uid_map`, 4096) !== row.uid_map || read(`${procRoot}/${pid}/gid_map`, 4096) !== row.gid_map ||
++          pid !== 'self' && JSON.stringify(read(`${procRoot}/${pid}/cmdline`, 16384).split('\0').filter(Boolean)) !== JSON.stringify(argv))
++        row.errors.push('ROW_CHANGED')
++    } catch (error) { row.errors.push('recheck:' + (error.code || 'INVALID')) }
++    return row
++  }
++  const result = { observer: collect('self', []), rows: [], scanErrors: [] }
++  try {
++    const pids = fs.readdirSync(procRoot).filter((pid) => /^\d+$/.test(pid))
++    if (pids.length > 128) result.scanErrors.push('PID_LIMIT')
++    for (const pid of pids.slice(0, 128)) {
++      try {
++        const argv = read(`${procRoot}/${pid}/cmdline`, 16384).split('\0').filter(Boolean)
++        if (!argv[0]?.includes('chrome-headless-shell')) continue
++        result.rows.push(collect(pid, argv))
++      } catch (error) { if (error.code !== 'ENOENT') result.scanErrors.push(pid + ':' + (error.code || 'INVALID')) }
++    }
++  } catch (error) { result.scanErrors.push(error.code || 'INVALID') }
++  return result
++}
++
++function validateBrowserProcesses(diagnostic, binary) {
++  const fail = () => { throw new Error('BROWSER_ISOLATION_UNPROVEN') }
++  const caps = ['CapEff', 'CapPrm', 'CapInh', 'CapAmb', 'CapBnd']
++  const map = (value) => {
++    if (typeof value !== 'string' || value.length > 4096) fail()
++    const rows = value.trim().split('\n').map((line) => line.trim().split(/\s+/))
++    if (!rows.length || rows.length > 32 || rows.some((row) => row.length !== 3 || row.some((v) => !/^\d+$/.test(v)))) fail()
++    const parsed = rows.map((row) => row.map(Number))
++    if (parsed.some(([inner, outer, length]) => length < 1 || inner + length > 4294967296 || outer + length > 4294967296)) fail()
++    return JSON.stringify(parsed)
++  }
++  const identity = (row) => /^user:\[\d+\]$/.test(row.user_namespace?.value || '') ? row.user_namespace.value : null
++  const common = (row) => {
++    if (!row || !Array.isArray(row.errors) || row.errors.length || !/^\d+$/.test(row.starttime || '')) fail()
++    const f = row.fields || {}
++    for (const key of ['Uid', 'Gid']) if (!/^1000\s+1000\s+1000\s+1000$/.test(f[key] || '')) fail()
++    for (const key of caps) if (!/^[0-9a-f]{16}$/.test(f[key] || '')) fail()
++    if (f.NoNewPrivs !== '1' || f.Seccomp !== '2' || !/^[1-9]\d*$/.test(f.Seccomp_filters || '') ||
++        !/^\d+(?:\s+\d+)*$/.test(f.NSpid || '')) fail()
++    return f
++  }
++  if (!Array.isArray(diagnostic.scanErrors) || diagnostic.scanErrors.length || !Array.isArray(diagnostic.rows)) fail()
++  const observer = diagnostic.observer, outer = common(observer), outerNS = identity(observer)
++  if (!outerNS || caps.some((key) => outer[key] !== '0000000000000000')) fail()
++  const observerUID = map(observer.uid_map), observerGID = map(observer.gid_map), narrow = '[[1000,1000,1]]'
++  let renderer = false
++  for (const row of diagnostic.rows) {
++    const f = common(row), uid = map(row.uid_map), gid = map(row.gid_map), ns = identity(row)
++    if (!Array.isArray(row.argv) || row.argv[0] !== binary || row.argv.some((a) => a === '--no-sandbox' || a.startsWith('--no-sandbox='))) fail()
++    const types = row.argv.filter((a) => a.startsWith('--type='))
++    if (types.length > 1) fail()
++    const role = types[0]?.slice(7) || 'browser'
++    const same = ns === outerNS
++    const mapProof = uid === narrow && gid === narrow && uid !== observerUID && gid !== observerGID
++    const inner = !same && uid === narrow && gid === narrow &&
++      (ns !== null || row.user_namespace?.error === 'EACCES' && mapProof)
++    if (!ns && row.user_namespace?.error !== 'EACCES') fail()
++    if (same && (uid !== observerUID || gid !== observerGID)) fail()
++    if (!inner) {
++      if (uid !== observerUID || gid !== observerGID || caps.some((key) => f[key] !== '0000000000000000')) fail()
++    } else {
++      if (f.CapInh !== '0000000000000000' || f.CapAmb !== '0000000000000000') fail()
++      const expected = role === 'zygote' && f.CapEff !== '0000000000000000' ? '0000000000200000' : '0000000000000000'
++      if (f.CapEff !== expected || f.CapPrm !== expected) fail()
++    }
++    if (role === 'renderer') renderer = true
++  }
++  if (!renderer) fail()
++}
++
++function inspectBrowserProcesses(report, binary, procRoot = '/proc', persist = (rows) =>
++  fs.writeFileSync('/runtime/evidence/browser-processes.json', JSON.stringify(rows, null, 2) + '\n')) {
++  report.browser_processes = collectBrowserProcesses(procRoot)
++  persist(report.browser_processes)
++  validateBrowserProcesses(report.browser_processes, binary)
++}
++
+ const mode = process.argv[2]
+ if (mode === 'contract') {
+   const error = (text, isError = true) => ({ isError, content: [{ type: 'text', text }] })
+@@ -106,6 +224,15 @@
+     other_path: pathDenial(error('EACCES /other/path'), '/source/forbidden.png'),
+     not_error: pathDenial(error('EROFS /source/forbidden.png', false), '/source/forbidden.png'),
+   } }))
++} else if (mode === 'process-contract') {
++  const cases = JSON.parse(fs.readFileSync(0, 'utf8')).map((item) => {
++    try { validateBrowserProcesses(item.diagnostic, process.argv[4]); return { name: item.name, ok: true } }
++    catch { return { name: item.name, ok: false } }
++  })
++  const report = {}; let persisted, ok = true
++  try { inspectBrowserProcesses(report, process.argv[4], process.argv[3], (rows) => { persisted = JSON.parse(JSON.stringify(rows)) }) }
++  catch { ok = false }
++  console.log(JSON.stringify({ cases, capture: { ok, persisted, report } }))
+ } else if (mode === 'action-contract') {
+   const observations = []
+   for (const item of JSON.parse(fs.readFileSync(0, 'utf8'))) {
+@@ -261,22 +388,6 @@
+     assert.ok(line, 'missing accessible reference:' + label)
+     return line.match(/\[ref=([^\]]+)\]/)[1]
+   }
+-  function processes() {
+-    const rows = []
+-    for (const pid of fs.readdirSync('/proc').filter((p) => /^\d+$/.test(p))) {
+-      try {
+-        const argv = fs.readFileSync('/proc/' + pid + '/cmdline', 'utf8').split('\0').filter(Boolean)
+-        if (!argv[0]?.includes('chrome-headless-shell')) continue
+-        assert.ok(!argv.includes('--no-sandbox'))
+-        const status = fs.readFileSync('/proc/' + pid + '/status', 'utf8')
+-        const fields = Object.fromEntries(status.split('\n').filter((l) => /^(Uid|Gid|CapEff|NoNewPrivs|Seccomp|Seccomp_filters):/.test(l)).map((l) => l.split(':').map((s) => s.trim())))
+-        assert.equal(fields.NoNewPrivs, '1'); assert.equal(fields.CapEff, '0000000000000000'); assert.equal(fields.Seccomp, '2')
+-        rows.push({ argv, fields })
+-      } catch (error) { if (error.code !== 'ENOENT') throw error }
+-    }
+-    assert.ok(rows.some((r) => r.argv.includes('--type=renderer')))
+-    return rows
+-  }
+   async function unreachable(host, port) {
+     return new Promise((resolve) => {
+       const socket = net.connect({ host, port }); socket.setTimeout(1500)
+@@ -303,7 +414,7 @@
+       page = await actionObservation(call, 'browser_type', typeArgs(ref(page.snapshot, 'Name'), 'Name', 'Ada'))
+       page = await actionObservation(call, 'browser_click', clickArgs(ref(page.snapshot, 'Submit'), 'Submit'))
+       assert.ok(completedPage(page))
+-      report.browser_processes = processes()
++      inspectBrowserProcesses(report, report.inventory.browser)
+       const oldOutput = path.join(output, 'synthetic-old-output.bin')
+       fs.writeFileSync(oldOutput, Buffer.alloc(17 * 1024 * 1024)); fs.utimesSync(oldOutput, 1, 1)
+       report.screenshot = await call('browser_take_screenshot', screenshotArgs())
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -1,5 +1,6 @@
+ """Синтетические проверки закреплённого Playwright runtime без модели."""
+ import hashlib
++import copy
+ import importlib.util
+ import json
+ import re
+@@ -211,6 +212,77 @@
+                     self.assertEqual(completed, case['name'] in ('action_url_inline_tree', 'action_url_linked_tree', 'empty_action_full_snapshot'))
+                     if 'actionText' in item:
+                         self.assertEqual(item['actionText'], '\n'.join(part['text'] for part in case['action']['content']))
++
++    def test_namespace_capabilities_require_real_isolation_and_preserve_diagnostics(self):
++        binary = '/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell'
++        zero, admin, bound = '0000000000000000', '0000000000200000', '000001ffffffffff'
++        def row(pid, role=None, inner=False, capabilities=zero):
++            fields = {'Uid': '1000 1000 1000 1000', 'Gid': '1000 1000 1000 1000',
++                      'CapEff': capabilities, 'CapPrm': capabilities, 'CapInh': zero, 'CapAmb': zero,
++                      'CapBnd': bound if inner else zero, 'NoNewPrivs': '1', 'Seccomp': '2', 'Seccomp_filters': '2', 'NSpid': str(pid)}
++            return {'pid': str(pid), 'argv': [binary] + (['--type=' + role] if role else []), 'fields': fields,
++                    'uid_map': '1000 1000 1\n' if inner else '0 0 4294967295\n',
++                    'gid_map': '1000 1000 1\n' if inner else '0 0 4294967295\n',
++                    'user_namespace': {'value': 'user:[%d]' % (200 + pid if inner else 100)}, 'starttime': '100', 'errors': []}
++        good = {'observer': row(10), 'rows': [row(11), row(12, 'zygote', True, admin), row(13, 'renderer', True)], 'scanErrors': []}
++        good['rows'][1]['argv'].append('--no-zygote-sandbox')
++        source = (ROOT / 'playwright-mcp-canary.mjs').read_text()
++        if "mode === 'process-contract'" not in source:
++            assertion = re.search(r"assert.equal\(fields.CapEff, '[0-9a-f]+'\)", source).group()
++            script = "const assert=require('node:assert/strict'),fields=" + json.dumps(good['rows'][1]['fields']) + ';' + assertion
++            result = subprocess.run(['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', '-e', script], capture_output=True, text=True)
++            self.assertEqual(result.returncode, 0, result.stderr)
++            return
++        cases = [{'name': 'proven_inner', 'diagnostic': good, 'expected': True}]
++        unavailable = copy.deepcopy(good); unavailable['rows'][1]['user_namespace'] = {'error': 'EACCES'}
++        cases.append({'name': 'maps_prove_separation', 'diagnostic': unavailable, 'expected': True})
++        def bad(name, mutate):
++            diagnostic = copy.deepcopy(good); mutate(diagnostic)
++            cases.append({'name': name, 'diagnostic': diagnostic, 'expected': False})
++        bad('same_namespace_admin', lambda d: d['rows'][1].update(user_namespace={'value': 'user:[100]'}))
++        bad('outer_admin', lambda d: d['rows'][0]['fields'].update(CapEff=admin, CapPrm=admin))
++        bad('outer_bounding', lambda d: d['rows'][0]['fields'].update(CapBnd=bound))
++        bad('observer_bounding', lambda d: d['observer']['fields'].update(CapBnd=bound))
++        bad('renderer_admin', lambda d: d['rows'][2]['fields'].update(CapEff=admin, CapPrm=admin))
++        bad('zygote_extra_bit', lambda d: d['rows'][1]['fields'].update(CapEff='0000000000200001', CapPrm='0000000000200001'))
++        bad('ambient', lambda d: d['rows'][1]['fields'].update(CapAmb=admin))
++        bad('inheritable', lambda d: d['rows'][1]['fields'].update(CapInh=admin))
++        bad('outer_zero_mapping', lambda d: d['rows'][1].update(uid_map='1000 0 1\n'))
++        bad('inner_zero_mapping', lambda d: d['rows'][1].update(uid_map='0 1000 1\n'))
++        bad('range_mapping', lambda d: d['rows'][1].update(gid_map='1000 1000 2\n'))
++        bad('missing_map', lambda d: d['rows'][1].update(gid_map=None))
++        bad('ambiguous_maps', lambda d: d['rows'][1].update(user_namespace={'error': 'EACCES'}, uid_map=d['observer']['uid_map'], gid_map=d['observer']['gid_map']))
++        bad('same_narrow_maps_without_identity', lambda d: (d['observer'].update(uid_map='1000 1000 1\n', gid_map='1000 1000 1\n'), d['rows'][1].update(user_namespace={'error': 'EACCES'})))
++        bad('missing_observer_map', lambda d: d['observer'].update(uid_map=None))
++        bad('missing_observer_namespace', lambda d: d['observer'].update(user_namespace={'error': 'EACCES'}))
++        bad('bad_uid', lambda d: d['rows'][1]['fields'].update(Uid='1000 0 1000 1000'))
++        bad('nnp', lambda d: d['rows'][1]['fields'].update(NoNewPrivs='0'))
++        bad('seccomp', lambda d: d['rows'][1]['fields'].update(Seccomp='0'))
++        bad('wrong_binary', lambda d: d['rows'][1]['argv'].__setitem__(0, '/unreviewed/browser'))
++        bad('no_sandbox', lambda d: d['rows'][1]['argv'].append('--no-sandbox'))
++        bad('missing_renderer', lambda d: d['rows'].pop())
++        bad('raced_row', lambda d: d['rows'][1]['errors'].append('ROW_CHANGED'))
++        with tempfile.TemporaryDirectory() as temp:
++            proc = Path(temp).resolve()
++            for entry, directory in [(good['observer'], 'self'), (good['rows'][1], '12')]:
++                folder = proc / directory; folder.mkdir(); (folder / 'ns').mkdir()
++                (folder / 'cmdline').write_bytes(('\0'.join(entry['argv']) + '\0').encode())
++                (folder / 'status').write_text('\n'.join(k + ':\t' + v for k, v in entry['fields'].items()))
++                for name in ['uid_map', 'gid_map']: (folder / name).write_text(entry[name])
++                (folder / 'ns/user').symlink_to(entry['user_namespace']['value'])
++                (folder / 'stat').write_text(entry['pid'] + ' (chrome) ' + ' '.join(['S'] + ['0'] * 18 + ['100']))
++            # Неправильный extra bit сохраняется в диагностике до отказа; renderer также отсутствует.
++            status = proc / '12/status'; status.write_text(status.read_text().replace(admin, '0000000000200001'))
++            command = ['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', str(ROOT / 'playwright-mcp-canary.mjs'), 'process-contract', str(proc), binary]
++            result = subprocess.run(command, input=json.dumps(cases), text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++            self.assertEqual(result.returncode, 0, result.stderr); self.assertEqual(result.stderr, '')
++            proof = json.loads(result.stdout); self.assertEqual(len(proof['cases']), len(cases))
++            for expected, actual in zip(cases, proof['cases']):
++                with self.subTest(case=expected['name']): self.assertEqual(actual['ok'], expected['expected'])
++            self.assertFalse(proof['capture']['ok']); self.assertEqual(proof['capture']['persisted'], proof['capture']['report']['browser_processes'])
++            rows = proof['capture']['persisted']['rows']; self.assertEqual(len(rows), 1)
++            self.assertEqual(rows[0]['fields']['CapEff'], '0000000000200001')
++            self.assertEqual(rows[0]['uid_map'].split(), ['1000', '1000', '1'])
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),

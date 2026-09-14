@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_actions_await_fresh_snapshot_before_reference_lookup (__main__.PlaywrightStaticTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 151, in test_actions_await_fresh_snapshot_before_reference_lookup
+    self.assertIn('"Submit"', json.loads(result.stdout)[0]['text'])
+AssertionError: '"Submit"' not found in ''
+
+----------------------------------------------------------------------
+Ran 1 test in 0.044s
+
+FAILED (failures=1)

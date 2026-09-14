@@ -1,0 +1,78 @@
+{
+  "metadata_fetch": [
+    {
+      "exit": 1,
+      "cause": "sandbox DNS unavailable",
+      "raw": "tool chunk928833"
+    },
+    {
+      "exit": 0,
+      "raw": "tool chunk ec7acd; four saved package metadata JSON files"
+    }
+  ],
+  "lock_generation": [
+    {
+      "exit": 1,
+      "log": "lock-generation.log",
+      "cause": "npm rejects one /dev/null loaded as user and global config"
+    },
+    {
+      "exit": 0,
+      "log": "lock-generation-2.log",
+      "cause_correction": "two separate empty private config files"
+    }
+  ],
+  "build": [
+    {
+      "exit": 125,
+      "log": "build-1.log",
+      "cause": "legacy Docker builder lacks --progress after empty HOME omitted plugin discovery"
+    },
+    {
+      "exit": 0,
+      "log": "build-2.log",
+      "correction": "exact installed Buildx + empty private state"
+    },
+    {
+      "exit": 0,
+      "log": "build-3.log",
+      "reason": "separate chmod a+rX layer after proven root0600 browser metadata, original installer layer CACHED"
+    }
+  ],
+  "canary": [
+    {
+      "exit": 1,
+      "log": "canary-1.log",
+      "cause": "root-owned mode0600 deb.deps denies nonroot tree inventory, before MCP launch"
+    },
+    {
+      "exit": 1,
+      "log": "canary-2.log",
+      "cause": "real sandboxed Chromium zygote sys_chroot failure after MCP initialization"
+    },
+    {
+      "exit": 1,
+      "log": "canary-3.log",
+      "attempt_id": "410601918bb743a780236d78e35824f8",
+      "cause": "navigation returns linked snapshot; inline text marker assertion fails although saved snapshot contains marker",
+      "cause_corrected_profile": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1"
+    },
+    {
+      "exit": 1,
+      "log": "canary-4.log",
+      "attempt_id": "880d525a2c7c47178f9c91303bb0a2b3",
+      "cause": "browser_type succeeds with empty text; canary incorrectly replaces page observation, then cannot find Submit reference",
+      "snapshot_fix_exercised": true
+    },
+    {
+      "exit": 1,
+      "log": "canary-5.log",
+      "attempt_id": "2490d61bdac142118c897e42c951d993",
+      "cause": "process check expects CapEff zero for every Chromium process; observed 0000000000200000; namespace context not yet recorded",
+      "complete_form_flow": true
+    }
+  ],
+  "canary_consecutive_failures": 5,
+  "canary_stopped": true,
+  "accepted_receipt": false
+}

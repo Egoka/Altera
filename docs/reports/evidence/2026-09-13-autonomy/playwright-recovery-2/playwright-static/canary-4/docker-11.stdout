@@ -1,0 +1,59 @@
+[
+    {
+        "Name": "altera-pw-61749a5e21bf411cb32a7ee685ad7c96",
+        "Id": "f588111953332387e66a9ce571847a36b76b33b48f41a6503684efbe1779ddae",
+        "Created": "2026-09-14T09:29:04.545053917Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv4": true,
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.20.0.0/16"
+                }
+            ]
+        },
+        "Internal": true,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Options": {
+            "com.docker.network.bridge.gateway_mode_ipv4": "isolated",
+            "com.docker.network.enable_ipv4": "true",
+            "com.docker.network.enable_ipv6": "false"
+        },
+        "Labels": {},
+        "Containers": {
+            "3167db983274b2f9bafbd269b143d37f011b7825b329ba4e7ee04af35ff1ae6e": {
+                "Name": "altera-pw-61749a5e21bf411cb32a7ee685ad7c96-web",
+                "EndpointID": "e68e378883797822917d202cfd5461a23a22409eae24b48179da031b53616e18",
+                "MacAddress": "12:95:02:91:70:6c",
+                "IPv4Address": "172.20.0.1/16",
+                "IPv6Address": ""
+            },
+            "4f3b355deb9c4996353d8bb6754f950eb55294d4543564ef631f4d2b59476286": {
+                "Name": "altera-pw-61749a5e21bf411cb32a7ee685ad7c96-sink",
+                "EndpointID": "afc3cc6f6be09d9a673e469da00ac1a05793c0ac8aaf60a9b41be4c7c596df4e",
+                "MacAddress": "e6:75:79:86:0a:fc",
+                "IPv4Address": "172.20.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Status": {
+            "IPAM": {
+                "Subnets": {
+                    "172.20.0.0/16": {
+                        "IPsInUse": 4,
+                        "DynamicIPsAvailable": 65532
+                    }
+                }
+            }
+        }
+    }
+]

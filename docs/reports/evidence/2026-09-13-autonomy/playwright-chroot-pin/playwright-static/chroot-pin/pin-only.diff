@@ -1,0 +1,38 @@
+--- a/scripts/agent-runtime/playwright-seccomp.json
++++ b/scripts/agent-runtime/playwright-seccomp.json
+@@ -752,12 +752,7 @@
+       "names": [
+         "chroot"
+       ],
+-      "action": "SCMP_ACT_ALLOW",
+-      "includes": {
+-        "caps": [
+-          "CAP_SYS_CHROOT"
+-        ]
+-      }
++      "action": "SCMP_ACT_ALLOW"
+     },
+     {
+       "names": [
+--- a/scripts/agent-runtime/codex_toml_map.py
++++ b/scripts/agent-runtime/codex_toml_map.py
+@@ -50,7 +50,7 @@
+     "--codegen=none", "--image-responses=omit", "--output-dir=/runtime/evidence/playwright",
+     "--output-max-size=16777216",
+ ]
+-PLAYWRIGHT_SECCOMP = "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140"
++PLAYWRIGHT_SECCOMP = "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1"
+ PLAYWRIGHT_SOURCES = ("Dockerfile", "playwright-mcp/package.json", "playwright-mcp/package-lock.json",
+                       "playwright-seccomp.json", "codex_toml_map.py", "runtime.py", "playwright-mcp-canary.mjs")
+ PLAYWRIGHT_ARTIFACTS = ("browser", "env_executable", "browsers_json", "packages_tree", "browsers_tree")
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -74,7 +74,7 @@
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),
+-                         'ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140')
++                         'e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1')
+ 
+     def test_exact_environment_and_vector(self):
+         mapper = module('codex_toml_map')

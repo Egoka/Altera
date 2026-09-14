@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_canary_requests_match_saved_real_schema_and_denials_are_specific (__main__.PlaywrightStaticTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 66, in test_canary_requests_match_saved_real_schema_and_denials_are_specific
+    self.assertTrue(set(schema['required']) <= set(args), request)
+AssertionError: False is not true : {'name': 'browser_click', 'arguments': {'element': 'synthetic', 'ref': 'synthetic'}}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

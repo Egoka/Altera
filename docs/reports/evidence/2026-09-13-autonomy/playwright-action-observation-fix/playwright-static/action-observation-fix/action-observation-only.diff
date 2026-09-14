@@ -1,0 +1,134 @@
+--- a/scripts/agent-runtime/playwright-mcp-canary.mjs
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -74,6 +74,16 @@
+   }
+ }
+ 
++const requiredTools = ['browser_navigate', 'browser_click', 'browser_type', 'browser_snapshot', 'browser_take_screenshot', 'browser_close']
++// Успех действия не обещает snapshot: новая observation всегда запрашивается отдельно.
++async function actionObservation(call, name, args, observe = snapshotObservation) {
++  const action = await call(name, args)
++  if (action.isError === true) throw new Error('MCP_ACTION_FAILED')
++  const snapshot = await call('browser_snapshot', {})
++  if (snapshot.isError === true) throw new Error('MCP_SNAPSHOT_FAILED')
++  return observe(snapshot)
++}
++
+ const mode = process.argv[2]
+ if (mode === 'contract') {
+   const error = (text, isError = true) => ({ isError, content: [{ type: 'text', text }] })
+@@ -92,6 +102,27 @@
+     other_path: pathDenial(error('EACCES /other/path'), '/source/forbidden.png'),
+     not_error: pathDenial(error('EROFS /source/forbidden.png', false), '/source/forbidden.png'),
+   } }))
++} else if (mode === 'action-contract') {
++  const observations = []
++  for (const item of JSON.parse(fs.readFileSync(0, 'utf8'))) {
++    const calls = [], events = []
++    let observed = 0
++    const call = async (name, args) => {
++      calls.push({ name, args })
++      if (name === 'browser_snapshot') { events.push('snapshot'); return item.snapshot }
++      events.push('action-start')
++      await new Promise((resolve) => setImmediate(resolve))
++      if (item.rejectAction) throw new Error('SYNTHETIC_ACTION_REJECTED')
++      events.push('action-complete'); return item.action
++    }
++    try {
++      const result = await actionObservation(call, item.method, { synthetic: true }, (snapshot) => {
++        observed++; return snapshotObservation(snapshot, process.argv[3])
++      })
++      observations.push({ name: item.name, ok: true, text: text(result), calls, events, observed })
++    } catch (error) { observations.push({ name: item.name, ok: false, error: error.message, calls, events, observed }) }
++  }
++  console.log(JSON.stringify({ requiredTools, observations }))
+ } else if (mode === 'snapshot-contract') {
+   const cases = JSON.parse(fs.readFileSync(0, 'utf8'))
+   console.log(JSON.stringify(cases.map((item) => {
+@@ -218,7 +249,7 @@
+     const init = await c.send('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'altera-static-canary', version: '1' } })
+     c.send('notifications/initialized', {}, true)
+     const list = await c.send('tools/list', {})
+-    for (const tool of ['browser_navigate', 'browser_click', 'browser_type', 'browser_take_screenshot', 'browser_close']) assert.ok(list.tools.some((t) => t.name === tool))
++    for (const tool of requiredTools) assert.ok(list.tools.some((t) => t.name === tool))
+     return { init, tools: list.tools }
+   }
+   function ref(result, label) {
+@@ -262,11 +293,11 @@
+         if (!allowedError) assert.notEqual(result.isError, true, text(result))
+         return result
+       }
+-      let page = snapshotObservation(await call('browser_navigate', { url: 'http://altera-web:3000' }))
++      let page = await actionObservation(call, 'browser_navigate', { url: 'http://altera-web:3000' })
+       assert.ok(text(page).includes('ALTERA_PLAYWRIGHT_CANARY'))
+-      page = snapshotObservation(await call('browser_click', clickArgs(ref(page, 'Continue'), 'Continue')))
+-      page = snapshotObservation(await call('browser_type', typeArgs(ref(page, 'Name'), 'Name', 'Ada')))
+-      page = snapshotObservation(await call('browser_click', clickArgs(ref(page, 'Submit'), 'Submit')))
++      page = await actionObservation(call, 'browser_click', clickArgs(ref(page, 'Continue'), 'Continue'))
++      page = await actionObservation(call, 'browser_type', typeArgs(ref(page, 'Name'), 'Name', 'Ada'))
++      page = await actionObservation(call, 'browser_click', clickArgs(ref(page, 'Submit'), 'Submit'))
+       assert.ok(text(page).includes('FORM_COMPLETE_ADA')); assert.ok(text(page).includes('/done?name=Ada'))
+       report.browser_processes = processes()
+       const oldOutput = path.join(output, 'synthetic-old-output.bin')
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -27,6 +27,10 @@
+ 
+ SAVED_SNAPSHOT_RESPONSE = {'content': [{'type': 'text', 'text': '### Page\n- Page URL: http://altera-web:3000/\n- Page Title: Altera synthetic\n### Snapshot\n- [Snapshot](../runtime/evidence/playwright/page-2026-09-14T08-44-00-471Z.yml)'}]}
+ SAVED_SNAPSHOT_YAML = '- generic [active] [ref=e1]:\n  - heading "ALTERA_PLAYWRIGHT_CANARY" [level=1] [ref=e2]\n  - link "Continue" [ref=e3] [cursor=pointer]:\n    - /url: /form'
++
++SAVED_FORM_RESPONSE = {'content': [{'type': 'text', 'text': '### Page\n- Page URL: http://altera-web:3000/form\n- Page Title: Form\n### Snapshot\n- [Snapshot](../runtime/evidence/playwright/page-2026-09-14T09-29-07-217Z.yml)'}]}
++SAVED_EMPTY_ACTION = {'content': [{'type': 'text', 'text': ''}]}
++SAVED_FORM_YAML = '- generic [ref=f1e2]:\n  - generic [ref=f1e3]:\n    - text: Name\n    - textbox "Name" [ref=f1e4]\n  - button "Submit" [ref=f1e5]'
+ 
+ class PlaywrightStaticTests(unittest.TestCase):
+     def test_locked_four_package_closure_and_build(self):
+@@ -132,6 +136,48 @@
+             command[-1] = str(alias)
+             result = subprocess.run(command, input=json.dumps(cases[:1]), text=True, env={'PATH': '/usr/bin:/bin'}, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5)
+             self.assertEqual(json.loads(result.stdout), [{'name': 'saved', 'ok': False, 'error': 'SNAPSHOT_OBSERVATION_INVALID'}])
++
++    def test_actions_await_fresh_snapshot_before_reference_lookup(self):
++        source = (ROOT / 'playwright-mcp-canary.mjs').read_text()
++        with tempfile.TemporaryDirectory() as temp:
++            evidence = Path(temp).resolve()
++            (evidence / 'page-2026-09-14T09-29-07-217Z.yml').write_text(SAVED_FORM_YAML)
++            command = ['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', str(ROOT / 'playwright-mcp-canary.mjs'), 'action-contract', str(evidence)]
++            if "mode === 'action-contract'" not in source:
++                # RED применяет действующий observer к реальному пустому action success.
++                command[2] = 'snapshot-contract'
++                result = subprocess.run(command, input=json.dumps([{'name': 'empty_type', 'result': SAVED_EMPTY_ACTION}]), text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++                self.assertEqual(result.returncode, 0, result.stderr)
++                self.assertIn('"Submit"', json.loads(result.stdout)[0]['text'])
++                return
++            cases = [{'name': method, 'method': method, 'action': SAVED_EMPTY_ACTION, 'snapshot': SAVED_FORM_RESPONSE}
++                     for method in ['browser_navigate', 'browser_click', 'browser_type']]
++            cases += [{'name': 'inline', 'method': 'browser_click', 'action': SAVED_EMPTY_ACTION,
++                       'snapshot': {'content': [{'type': 'text', 'text': SAVED_FORM_YAML}]}},
++                      {'name': 'stale_action', 'method': 'browser_click',
++                       'action': {'content': [{'type': 'text', 'text': '- button "Submit" [ref=STALE]'}]}, 'snapshot': SAVED_FORM_RESPONSE},
++                      {'name': 'action_error', 'method': 'browser_type', 'action': {'isError': True, 'content': []}, 'snapshot': SAVED_FORM_RESPONSE},
++                      {'name': 'action_reject', 'method': 'browser_type', 'rejectAction': True, 'snapshot': SAVED_FORM_RESPONSE},
++                      {'name': 'snapshot_error', 'method': 'browser_type', 'action': SAVED_EMPTY_ACTION, 'snapshot': {'isError': True, 'content': []}}]
++            result = subprocess.run(command, input=json.dumps(cases), text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++            self.assertEqual(result.returncode, 0, result.stderr); self.assertEqual(result.stderr, '')
++            proof = json.loads(result.stdout)
++            self.assertIn('browser_snapshot', proof['requiredTools'])
++            self.assertEqual(len(proof['observations']), len(cases))
++            for case, actual in zip(cases, proof['observations']):
++                with self.subTest(case=case['name']):
++                    self.assertEqual(actual['calls'][0], {'name': case['method'], 'args': {'synthetic': True}})
++                    if case['name'].startswith('action_'):
++                        self.assertFalse(actual['ok']); self.assertEqual(actual['observed'], 0)
++                        self.assertEqual(len(actual['calls']), 1); self.assertNotIn('snapshot', actual['events'])
++                    else:
++                        self.assertEqual(actual['calls'][1], {'name': 'browser_snapshot', 'args': {}})
++                        self.assertEqual(actual['events'], ['action-start', 'action-complete', 'snapshot'])
++                        if case['name'] == 'snapshot_error':
++                            self.assertFalse(actual['ok']); self.assertEqual(actual['observed'], 0)
++                        else:
++                            self.assertTrue(actual['ok']); self.assertEqual(actual['observed'], 1)
++                            self.assertIn('"Submit" [ref=f1e5]', actual['text']); self.assertNotIn('STALE', actual['text'])
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),

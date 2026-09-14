@@ -1,0 +1,14 @@
+{
+  "inventory_rows": {
+    "playwright-chroot-cause": 69,
+    "playwright-chroot-pin": 17,
+    "playwright-recovery-1": 30,
+    "playwright-snapshot-fix": 7
+  },
+  "hash_errors": [],
+  "missing_report_links": [],
+  "diff_check_exit": 2,
+  "diff_check_output": "scripts/agent-runtime/test_runtime.py:132: trailing whitespace.\n+                     \"description = 'playwright is harmless here too'\\n\", \n",
+  "head": "139954950e91c530772216975d1c85bce4bbd155",
+  "scope": "current uncommitted worktree evidence; no Git acceptance; independent snapshot review pending; browser count3 stopped"
+}

@@ -1,0 +1,1815 @@
+diff --git a/scripts/agent-runtime/Dockerfile b/scripts/agent-runtime/Dockerfile
+index fa73dc9..96b0f96 100644
+--- a/scripts/agent-runtime/Dockerfile
++++ b/scripts/agent-runtime/Dockerfile
+@@ -9,5 +9,15 @@ RUN apt-get update \
+     && npm install -g @openai/codex@${CODEX_VERSION} @anthropic-ai/claude-code@${CLAUDE_VERSION} trace-mcp@${TRACE_VERSION} \
+     && npm cache clean --force
+ 
++COPY playwright-mcp/package.json playwright-mcp/package-lock.json /opt/playwright-mcp/
++RUN cd /opt/playwright-mcp \
++    && npm ci --omit=dev --ignore-scripts \
++    && /usr/local/bin/node /opt/playwright-mcp/node_modules/playwright-core/cli.js install-deps chromium \
++    && PLAYWRIGHT_BROWSERS_PATH=/ms-playwright /usr/local/bin/node /opt/playwright-mcp/node_modules/playwright-core/cli.js install chromium --only-shell \
++    && rm -rf /var/lib/apt/lists/* \
++    && npm cache clean --force
++
++RUN chmod -R a+rX /ms-playwright
++
+ USER 1000:1000
+ WORKDIR /runtime
+diff --git a/scripts/agent-runtime/codex_toml_map.py b/scripts/agent-runtime/codex_toml_map.py
+index df882ca..671820b 100644
+--- a/scripts/agent-runtime/codex_toml_map.py
++++ b/scripts/agent-runtime/codex_toml_map.py
+@@ -39,6 +39,80 @@ _PLAYWRIGHT_ARGS = {
+ _SECRET_PARTS = ("auth", "cookie", "credential", "env", "header", "password", "secret", "token")
+ 
+ 
++PLAYWRIGHT_VECTOR = [
++    "/usr/bin/env", "-i", "PATH=/usr/local/bin:/usr/bin:/bin",
++    "HOME=/runtime/cache/playwright-home", "TMPDIR=/runtime/tmp",
++    "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright", "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1",
++    "PLAYWRIGHT_SKIP_BROWSER_GC=1", "npm_config_offline=true", "/usr/local/bin/node",
++    "/opt/playwright-mcp/node_modules/@playwright/mcp/cli.js", "--headless", "--sandbox",
++    "--executable-path=/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
++    "--isolated", "--block-service-workers", "--allowed-origins=http://altera-web:3000",
++    "--codegen=none", "--image-responses=omit", "--output-dir=/runtime/evidence/playwright",
++    "--output-max-size=16777216",
++]
++PLAYWRIGHT_SECCOMP = "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140"
++PLAYWRIGHT_SOURCES = ("Dockerfile", "playwright-mcp/package.json", "playwright-mcp/package-lock.json",
++                      "playwright-seccomp.json", "codex_toml_map.py", "runtime.py", "playwright-mcp-canary.mjs")
++PLAYWRIGHT_ARTIFACTS = ("browser", "env_executable", "browsers_json", "packages_tree", "browsers_tree")
++PLAYWRIGHT_CHECKS = ("static", "tools", "screenshot", "readonly", "no_download", "network",
++                     "sandbox", "environment", "stdio_signal", "cleanup")
++
++
++def playwright_receipt_template(image):
++    """Каркас без результатов: сам по себе не разрешает mapping."""
++    root = Path(__file__).resolve().parent
++    return {"schema": "ALTERA_PLAYWRIGHT_STATIC_V1", "image": image,
++            "platform": "linux/arm64", "os": "debian12", "node": "24.12.0",
++            "mcp": "0.0.80", "core": "1.63.0-alpha-2026-08-31",
++            "browser_revision": "1243", "browser_version": "153.0.8010.12",
++            "vector_sha256": _digest(_canonical_json(PLAYWRIGHT_VECTOR)),
++            "sources": {name: _digest((root / name).read_bytes()) for name in PLAYWRIGHT_SOURCES},
++            "artifacts": {}, "checks": {}}
++
++
++def read_playwright_attestation(reference):
++    """Только coordinator receipt с внешним digest; никаких caller readiness booleans."""
++    try:
++        if not isinstance(reference, dict) or set(reference) != {"path", "sha256", "image"}:
++            _fail("playwright_attestation_invalid")
++        path = Path(reference["path"])
++        if (not path.is_absolute() or str(path.resolve(strict=True)) != str(path) or
++                not re.fullmatch(r"[a-f0-9]{64}", reference["sha256"]) or
++                not re.fullmatch(r"sha256:[a-f0-9]{64}", reference["image"])):
++            _fail("playwright_attestation_invalid")
++        parent = path.parent.lstat()
++        before = path.lstat()
++        if (not stat.S_ISDIR(parent.st_mode) or stat.S_IMODE(parent.st_mode) != 0o700 or
++                parent.st_uid != os.getuid() or not stat.S_ISREG(before.st_mode) or
++                stat.S_IMODE(before.st_mode) != 0o600 or before.st_uid != os.getuid() or
++                before.st_nlink != 1 or not 0 < before.st_size <= MAX_CATALOG_BYTES):
++            _fail("playwright_attestation_invalid")
++        fd = os.open(str(path), os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
++        try:
++            if _identity(os.fstat(fd)) != _identity(before):
++                _fail("playwright_attestation_invalid")
++            data = _read_all(fd)
++            if (_identity(os.fstat(fd)) != _identity(before) or _identity(path.lstat()) != _identity(before) or
++                    _identity(path.parent.lstat()) != _identity(parent)):
++                _fail("playwright_attestation_invalid")
++        finally:
++            os.close(fd)
++        if _digest(data) != reference["sha256"]:
++            _fail("playwright_attestation_invalid")
++        record = json.loads(data)
++        expected = playwright_receipt_template(reference["image"])
++        if (not isinstance(record, dict) or set(record) != set(expected) or _canonical_json(record) != data or
++                any(record[key] != value for key, value in expected.items() if key not in ("artifacts", "checks"))):
++            _fail("playwright_attestation_invalid")
++        for key, names in (("artifacts", PLAYWRIGHT_ARTIFACTS), ("checks", PLAYWRIGHT_CHECKS)):
++            if (not isinstance(record[key], dict) or set(record[key]) != set(names) or
++                    any(not isinstance(v, str) or not re.fullmatch(r"[a-f0-9]{64}", v) for v in record[key].values())):
++                _fail("playwright_attestation_invalid")
++        return record
++    except (OSError, TypeError, ValueError, KeyError):
++        _fail("playwright_attestation_invalid")
++
++
+ class MappingError(ValueError):
+     """A fixed, non-disclosing mapper failure."""
+ 
+@@ -330,7 +404,7 @@ def _secret_key(key):
+ def _render_block(ready):
+     lines = [BEGIN_MARKER]
+     first = True
+-    for name in ("context7", "trace"):
++    for name in ("context7", "playwright", "trace"):
+         if name not in ready:
+             continue
+         if not first:
+@@ -339,14 +413,16 @@ def _render_block(ready):
+         lines.append("[mcp_servers.%s]" % name)
+         if name == "context7":
+             lines.extend(("experimental_use_rmcp_client = true", 'url = "https://mcp.context7.com/mcp"'))
++        elif name == "playwright":
++            lines.extend(('command = "/usr/bin/env"', 'args = ' + json.dumps(PLAYWRIGHT_VECTOR[1:], separators=(",", ":"))))
+         else:
+             lines.extend(('command = "/usr/local/bin/trace-mcp"', 'args = ["serve"]'))
+     lines.append(END_MARKER)
+     return ("\n".join(lines) + "\n").encode()
+ 
+ 
+-def build_mapping(data, mapping_policy_version, required_servers=()):
+-    """Parse and classify managed TOML bytes without filesystem access."""
++def build_mapping(data, mapping_policy_version, required_servers=(), *, playwright=None):
++    """Разобрать managed TOML; optional receipt читается только через строгий validator."""
+     if not isinstance(mapping_policy_version, str) or not _POLICY_VERSION.fullmatch(mapping_policy_version):
+         _fail("mapping_policy_invalid")
+     if (not isinstance(required_servers, (tuple, list)) or
+@@ -355,6 +431,7 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
+             len(required_servers) != len(set(required_servers))):
+         _fail("required_roster_invalid")
+ 
++    attestation = read_playwright_attestation(playwright) if playwright is not None else None
+     tables = _parse_managed(data)
+     rows = _server_rows()
+     catalog = {
+@@ -418,6 +495,9 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
+                 ready.add(name)
+                 if name == "trace":
+                     path_map[fields["command"]] = "/usr/local/bin/trace-mcp"
++            elif valid and attestation is not None:
++                row.update(shape="playwright_static_0_0_80", mapping_ready=True)
++                ready.add(name)
+             elif valid:
+                 row.update(shape=shape, mapping_ready=False)
+                 failure = failure or "mapping_not_ready"
+@@ -902,14 +982,14 @@ def _write_atomic(directory, directory_fd, directory_identity, name, data, expec
+ 
+ def materialize(d2_record, *, workspace_root, expected_cwd, expected_uid,
+                 base_policy_path, expected_base_sha256, output_dir,
+-                mapping_policy_version, required_servers=()):
++                mapping_policy_version, required_servers=(), playwright=None):
+     """Validate, map, and exclusively publish one secret-free policy generation."""
+     candidate = _validate_descriptor(d2_record, workspace_root, expected_cwd, expected_uid)
+     output_fd, output_identity = _open_output_directory(output_dir, expected_uid)
+     try:
+         base_policy = _read_base_policy(base_policy_path, expected_base_sha256)
+         config = _read_validated_config(candidate, workspace_root, expected_uid)
+-        plan = build_mapping(config, mapping_policy_version, required_servers)
++        plan = build_mapping(config, mapping_policy_version, required_servers, playwright=playwright)
+         if plan["failure"] is not None:
+             _fail(plan["failure"])
+         policy = base_policy + plan["policy_block"]
+diff --git a/scripts/agent-runtime/runtime.py b/scripts/agent-runtime/runtime.py
+index 13e289f..0c02d74 100755
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -360,11 +360,95 @@ def refresh_command(manifest, operation, credential, output=None):
+     return args + ['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/claude-refresh.mjs', operation]
+ 
+ 
++def playwright_mapper():
++    import importlib.util
++    spec = importlib.util.spec_from_file_location('altera_playwright_policy', Path(__file__).with_name('codex_toml_map.py'))
++    module = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(module)
++    return module
++
++
++def playwright_policy(manifest):
++    """Проверить trusted receipt и exact vector до Docker; fixture topology не даёт model acceptance."""
++    item = manifest.get('playwright')
++    if item is None:
++        config = Path(manifest['policy']) / 'codex-config.toml'
++        if (manifest.get('network') == 'playwright-fixture' or
++                (config.is_file() and b'playwright' in config.read_bytes().lower())):
++            raise ValueError('playwright_policy_invalid')
++        return None
++    try:
++        mapper = playwright_mapper()
++        if (not isinstance(item, dict) or set(item) != {'receipt', 'seccomp', 'origin'} or
++                item['origin'] != 'http://altera-web:3000' or manifest['family'] != 'codex' or
++                manifest.get('network') != 'playwright-fixture' or manifest.get('fixture') is not True or
++                manifest.get('auth_file') or item['receipt']['image'] != manifest['image']):
++            raise ValueError('playwright_policy_invalid')
++        mapper.read_playwright_attestation(item['receipt'])
++        seccomp = private_reference(item['seccomp'])
++        private_reference(str(seccomp.parent), directory=True)
++        for reference in (seccomp, Path(item['receipt']['path'])):
++            for name in ('source', 'snapshot', 'policy', 'run_root'):
++                if reference.is_relative_to(Path(manifest[name])):
++                    raise ValueError('playwright_policy_invalid')
++        before = seccomp.lstat()
++        fd = os.open(seccomp, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
++        try:
++            if mapper._identity(os.fstat(fd)) != mapper._identity(before):
++                raise ValueError('playwright_policy_invalid')
++            data = os.read(fd, 65537)
++            if (mapper._identity(os.fstat(fd)) != mapper._identity(before) or
++                    mapper._identity(seccomp.lstat()) != mapper._identity(before) or digest(data) != mapper.PLAYWRIGHT_SECCOMP):
++                raise ValueError('playwright_policy_invalid')
++        finally:
++            os.close(fd)
++        policy = Path(manifest['policy'])
++        tables = mapper._parse_managed((policy / 'codex-config.toml').read_bytes())
++        if (tables is None or tables.get('playwright') != {'command': mapper.PLAYWRIGHT_VECTOR[0], 'args': mapper.PLAYWRIGHT_VECTOR[1:]} or
++                digest((policy / 'playwright-mcp-canary.mjs').read_bytes()) !=
++                digest(Path(__file__).with_name('playwright-mcp-canary.mjs').read_bytes())):
++            raise ValueError('playwright_policy_invalid')
++        return {'path': str(seccomp), 'sha256': digest(data), 'identity': mapper._identity(before)}
++    except (OSError, KeyError, TypeError, ValueError):
++        raise ValueError('playwright_policy_invalid') from None
++
++
++@contextmanager
++def playwright_fixture_network(manifest):
++    """Только no-model fixture: один fixed web server, internal bridge, без host ports."""
++    name = 'altera-playwright-' + uuid.uuid4().hex
++    web = name + '-web'
++    def docker(*args, check=True):
++        return subprocess.run([DOCKER, *args], check=check, env=child_env(),
++                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
++    created = False
++    try:
++        docker('network', 'create', '--internal', '--opt',
++               'com.docker.network.bridge.gateway_mode_ipv4=isolated', name)
++        created = True
++        docker('run', '--detach', '--name', web, '--network=' + name, '--network-alias=altera-web',
++               '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--user=1000:1000',
++               '--pids-limit=32', '--memory=128m', '--cpus=1',
++               '--mount=type=bind,src=' + manifest['policy'] + '/playwright-mcp-canary.mjs,dst=/fixture.mjs,readonly',
++               '--entrypoint=/usr/local/bin/node', manifest['image'], '/fixture.mjs', 'web')
++        inspection = json.loads(docker('network', 'inspect', name))[0]
++        if (not inspection['Internal'] or inspection['EnableIPv6'] or
++                inspection['Options'].get('com.docker.network.bridge.gateway_mode_ipv4') != 'isolated' or
++                len(inspection['Containers']) != 1):
++            raise ValueError('network_boundary_unverified')
++        Path(manifest['run_root'], 'playwright-network.json').write_text(json.dumps(inspection, indent=2))
++        yield name
++    finally:
++        if created:
++            docker('rm', '--force', web, check=False)
++            docker('network', 'rm', name, check=False)
++
++
+ def command(manifest, incoming, environment):
+     required = {'schema_version', 'family', 'source', 'snapshot', 'state', 'dirty_paths', 'policy',
+                 'policy_sha256', 'run_root', 'image', 'model', 'effort', 'env_paths', 'path_map',
+                 'managed_mapping_verified'}
+-    optional = {'network', 'fixture', 'auth_file', 'operation'}
++    optional = {'network', 'fixture', 'auth_file', 'operation', 'playwright'}
+     if set(manifest) - required - optional or not required.issubset(manifest) or manifest['schema_version'] != 1:
+         raise ValueError('invalid_manifest_schema')
+     if manifest['family'] not in ('codex', 'claude') or manifest['effort'] != 'medium':
+@@ -405,9 +489,10 @@ def command(manifest, incoming, environment):
+     else:
+         raise ValueError('unsupported_operation')
+     network = manifest.get('network', 'none')
+-    if network not in ('none', 'provider-proxy'):
++    if network not in ('none', 'provider-proxy', 'playwright-fixture'):
+         raise ValueError('unsupported_network')
+-    args = sandbox_arguments() + ['--workdir=' + str(source),
++    playwright = playwright_policy(manifest)
++    args = sandbox_arguments() + (['--security-opt=seccomp=' + playwright['path']] if playwright else []) + ['--workdir=' + str(source),
+             '--mount=type=bind,src=' + str(snap) + ',dst=' + str(source) + ',readonly',
+             '--mount=type=bind,src=' + str(policy) + ',dst=/runtime/policy,readonly']
+     for name in ('evidence', 'cache', 'tmp'):
+@@ -417,7 +502,7 @@ def command(manifest, incoming, environment):
+             raise ValueError('unsafe_run_directory')
+         path.chmod(0o777)
+         args.append('--mount=type=bind,src=' + str(path) + ',dst=/runtime/' + name)
+-    for name in ('home', 'codex', 'claude', 'xdg'):
++    for name in ('home', 'codex', 'claude', 'xdg', *(['playwright-home'] if playwright else [])):
+         path = run / 'cache' / name
+         path.mkdir(exist_ok=True, mode=0o700)
+         if path.is_symlink() or path.resolve() != path:
+@@ -468,6 +553,10 @@ def provider_network(manifest):
+     if manifest.get('network', 'none') == 'none':
+         yield None
+         return
++    if manifest.get('network') == 'playwright-fixture':
++        with playwright_fixture_network(manifest) as network:
++            yield network
++        return
+     name = 'altera-check-' + uuid.uuid4().hex
+     proxy = name + '-proxy'
+     def docker(*args, check=True):
+@@ -520,14 +609,18 @@ def launch(manifest, incoming):
+     if evidence.exists() and any(evidence.iterdir()):
+         raise ValueError('evidence_directory_not_fresh')
+     args = command(manifest, incoming, os.environ)
++    playwright_before = playwright_policy(manifest)
+     with provider_network(manifest) as network:
+         if network:
+             args[args.index('--network=none')] = '--network=' + network
++        if manifest.get('network') == 'provider-proxy':
+             args[2:2] = ['--env', 'HTTPS_PROXY=http://egress-proxy:8080',
+                           '--env', 'HTTP_PROXY=http://egress-proxy:8080',
+                           '--env', 'ALL_PROXY=http://egress-proxy:8080',
+                           '--env', 'NO_PROXY=', '--env', 'NODE_USE_ENV_PROXY=1']
+         code = execute(args)
++    if playwright_policy(manifest) != playwright_before:
++        raise ValueError('playwright_policy_changed')
+     if fingerprint(manifest['source'], manifest['dirty_paths']) != manifest['state']:
+         print('ALTERA_RUNTIME source_changed_after_run', file=sys.stderr)
+         return 78
+diff --git a/scripts/agent-runtime/test_codex_toml_map.py b/scripts/agent-runtime/test_codex_toml_map.py
+index 5f7ca46..e1a813d 100644
+--- a/scripts/agent-runtime/test_codex_toml_map.py
++++ b/scripts/agent-runtime/test_codex_toml_map.py
+@@ -263,6 +263,29 @@ class CodexTomlMappingTests(unittest.TestCase):
+             self.assertEqual(plan["path_map"], {})
+             self.assertIsNone(plan["policy_block"])
+ 
++    def test_playwright_requires_private_pinned_receipt_and_exact_image(self):
++        receipt_dir = self.fixture.root / 'receipt'; receipt_dir.mkdir(mode=0o700)
++        receipt = receipt_dir / 'accepted.json'
++        image = 'sha256:' + 'a' * 64
++        data = managed('[mcp_servers.playwright]', 'command = "npx"', 'args = ["-y", "@playwright/mcp@latest"]')
++        record = mapper.playwright_receipt_template(image)
++        record['artifacts'] = {key: 'b' * 64 for key in mapper.PLAYWRIGHT_ARTIFACTS}
++        record['checks'] = {key: 'c' * 64 for key in mapper.PLAYWRIGHT_CHECKS}
++        receipt.write_bytes(mapper._canonical_json(record)); receipt.chmod(0o600)
++        reference = {'path': str(receipt), 'sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'image': image}
++        plan = mapper.build_mapping(data, 'pw-v1', playwright=reference)
++        self.assertTrue(plan['catalog']['servers'][1]['mapping_ready'])
++        self.assertEqual(plan['catalog']['servers'][1]['shape'], 'playwright_static_0_0_80')
++        tables = mapper._parse_managed(plan['policy_block'])
++        self.assertEqual(tables['playwright'], {'command': '/usr/bin/env', 'args': mapper.PLAYWRIGHT_VECTOR[1:]})
++        for bad in [True, {**reference, 'image': 'sha256:' + 'd' * 64}, {**reference, 'sha256': 'e' * 64}]:
++            with self.assertRaisesRegex(mapper.MappingError, '^playwright_attestation_invalid$'):
++                mapper.build_mapping(data, 'pw-v1', playwright=bad)
++        receipt.chmod(0o644)
++        with mock.patch.object(mapper.os, 'read', side_effect=AssertionError('read before metadata')):
++            with self.assertRaisesRegex(mapper.MappingError, '^playwright_attestation_invalid$'):
++                mapper.build_mapping(data, 'pw-v1', playwright=reference)
++
+     def test_unknown_server_and_fields_are_presence_only_and_bounded(self):
+         secret_name = "unknown_SECRET_server_9182"
+         secret_value = "SECRET_VALUE_5da9"
+diff --git a/scripts/agent-runtime/test_runtime.py b/scripts/agent-runtime/test_runtime.py
+index 1821408..5035535 100644
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -66,6 +66,36 @@ class RuntimeTests(unittest.TestCase):
+             actual = [value.replace(str(self.base), "$BASE").replace("--user=" + str(os.getuid()) + ":" + str(os.getgid()), "$USER") for value in self.runtime.command(manifest, incoming, {})]
+             self.assertEqual(actual, expected[mode])
+ 
++    def test_playwright_admission_binds_receipt_image_vector_and_private_seccomp(self):
++        mapper = self.runtime.playwright_mapper()
++        receipt_dir = self.base / 'accepted'; receipt_dir.mkdir(mode=0o700)
++        receipt = receipt_dir / 'playwright.json'
++        record = mapper.playwright_receipt_template(self.manifest['image'])
++        record['artifacts'] = {key: 'b' * 64 for key in mapper.PLAYWRIGHT_ARTIFACTS}
++        record['checks'] = {key: 'c' * 64 for key in mapper.PLAYWRIGHT_CHECKS}
++        receipt.write_bytes(mapper._canonical_json(record)); receipt.chmod(0o600)
++        seccomp = receipt_dir / 'seccomp.json'; seccomp.write_bytes((ROOT / 'playwright-seccomp.json').read_bytes()); seccomp.chmod(0o600)
++        (self.policy / 'codex-config.toml').write_bytes(mapper._render_block({'playwright'}))
++        (self.policy / 'playwright-mcp-canary.mjs').write_bytes((ROOT / 'playwright-mcp-canary.mjs').read_bytes())
++        self.manifest.update(family='codex', model='gpt-5.6-terra', network='playwright-fixture',
++            policy_sha256=self.runtime.tree_hash(self.policy),
++            playwright={'receipt': {'path': str(receipt), 'sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'image': self.manifest['image']},
++                        'seccomp': str(seccomp), 'origin': 'http://altera-web:3000'})
++        args = self.runtime.command(self.manifest, ['app-server'], {})
++        self.assertIn('--security-opt=seccomp=' + str(seccomp), args)
++        self.assertFalse(any('dst=' + str(seccomp) in arg for arg in args))
++        without = dict(self.manifest); without.pop('playwright'); without['network'] = 'none'
++        with self.assertRaisesRegex(ValueError, 'playwright_policy_invalid'):
++            self.runtime.command(without, ['app-server'], {})
++        for mutation in [{'image': 'sha256:' + 'd' * 64}, {'network': 'provider-proxy'}, {'auth_file': '/synthetic/auth'}]:
++            with self.assertRaises(ValueError):
++                self.runtime.command({**self.manifest, **mutation}, ['app-server'], {})
++        config = self.policy / 'codex-config.toml'
++        config.write_bytes(config.read_bytes().replace(b'--sandbox', b'--no-sandbox'))
++        self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
++        with self.assertRaisesRegex(ValueError, 'playwright_policy_invalid'):
++            self.runtime.command(self.manifest, ['app-server'], {})
++
+     def test_snapshot_preserves_revision_and_dirty_without_ignored_secrets(self):
+         (self.source / 'code.txt').write_text('modified\n')
+         (self.source / 'new-test.txt').write_text('new\n')
+diff --git a/scripts/agent-runtime/playwright-seccomp.json b/scripts/agent-runtime/playwright-seccomp.json
+new file mode 100644
+index 0000000..481b3a8
+--- /dev/null
++++ b/scripts/agent-runtime/playwright-seccomp.json
+@@ -0,0 +1,887 @@
++{
++  "defaultAction": "SCMP_ACT_ERRNO",
++  "defaultErrnoRet": 1,
++  "archMap": [
++    {
++      "architecture": "SCMP_ARCH_X86_64",
++      "subArchitectures": [
++        "SCMP_ARCH_X86",
++        "SCMP_ARCH_X32"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_AARCH64",
++      "subArchitectures": [
++        "SCMP_ARCH_ARM"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_MIPS64",
++      "subArchitectures": [
++        "SCMP_ARCH_MIPS",
++        "SCMP_ARCH_MIPS64N32"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_MIPS64N32",
++      "subArchitectures": [
++        "SCMP_ARCH_MIPS",
++        "SCMP_ARCH_MIPS64"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_MIPSEL64",
++      "subArchitectures": [
++        "SCMP_ARCH_MIPSEL",
++        "SCMP_ARCH_MIPSEL64N32"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_MIPSEL64N32",
++      "subArchitectures": [
++        "SCMP_ARCH_MIPSEL",
++        "SCMP_ARCH_MIPSEL64"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_S390X",
++      "subArchitectures": [
++        "SCMP_ARCH_S390"
++      ]
++    },
++    {
++      "architecture": "SCMP_ARCH_RISCV64",
++      "subArchitectures": null
++    },
++    {
++      "architecture": "SCMP_ARCH_LOONGARCH64",
++      "subArchitectures": null
++    }
++  ],
++  "syscalls": [
++    {
++      "comment": "Allow create user namespaces",
++      "names": [
++        "clone",
++        "setns",
++        "unshare"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [],
++      "includes": {},
++      "excludes": {}
++    },
++    {
++      "names": [
++        "accept",
++        "accept4",
++        "access",
++        "adjtimex",
++        "alarm",
++        "bind",
++        "brk",
++        "cachestat",
++        "capget",
++        "capset",
++        "chdir",
++        "chmod",
++        "chown",
++        "chown32",
++        "clock_adjtime",
++        "clock_adjtime64",
++        "clock_getres",
++        "clock_getres_time64",
++        "clock_gettime",
++        "clock_gettime64",
++        "clock_nanosleep",
++        "clock_nanosleep_time64",
++        "close",
++        "close_range",
++        "connect",
++        "copy_file_range",
++        "creat",
++        "dup",
++        "dup2",
++        "dup3",
++        "epoll_create",
++        "epoll_create1",
++        "epoll_ctl",
++        "epoll_ctl_old",
++        "epoll_pwait",
++        "epoll_pwait2",
++        "epoll_wait",
++        "epoll_wait_old",
++        "eventfd",
++        "eventfd2",
++        "execve",
++        "execveat",
++        "exit",
++        "exit_group",
++        "faccessat",
++        "faccessat2",
++        "fadvise64",
++        "fadvise64_64",
++        "fallocate",
++        "fanotify_mark",
++        "fchdir",
++        "fchmod",
++        "fchmodat",
++        "fchmodat2",
++        "fchown",
++        "fchown32",
++        "fchownat",
++        "fcntl",
++        "fcntl64",
++        "fdatasync",
++        "fgetxattr",
++        "flistxattr",
++        "flock",
++        "fork",
++        "fremovexattr",
++        "fsetxattr",
++        "fstat",
++        "fstat64",
++        "fstatat64",
++        "fstatfs",
++        "fstatfs64",
++        "fsync",
++        "ftruncate",
++        "ftruncate64",
++        "futex",
++        "futex_requeue",
++        "futex_time64",
++        "futex_wait",
++        "futex_waitv",
++        "futex_wake",
++        "futimesat",
++        "getcpu",
++        "getcwd",
++        "getdents",
++        "getdents64",
++        "getegid",
++        "getegid32",
++        "geteuid",
++        "geteuid32",
++        "getgid",
++        "getgid32",
++        "getgroups",
++        "getgroups32",
++        "getitimer",
++        "getpeername",
++        "getpgid",
++        "getpgrp",
++        "getpid",
++        "getppid",
++        "getpriority",
++        "getrandom",
++        "getresgid",
++        "getresgid32",
++        "getresuid",
++        "getresuid32",
++        "getrlimit",
++        "get_robust_list",
++        "getrusage",
++        "getsid",
++        "getsockname",
++        "getsockopt",
++        "get_thread_area",
++        "gettid",
++        "gettimeofday",
++        "getuid",
++        "getuid32",
++        "getxattr",
++        "getxattrat",
++        "inotify_add_watch",
++        "inotify_init",
++        "inotify_init1",
++        "inotify_rm_watch",
++        "io_cancel",
++        "ioctl",
++        "io_destroy",
++        "io_getevents",
++        "io_pgetevents",
++        "io_pgetevents_time64",
++        "ioprio_get",
++        "ioprio_set",
++        "io_setup",
++        "io_submit",
++        "ipc",
++        "kill",
++        "landlock_add_rule",
++        "landlock_create_ruleset",
++        "landlock_restrict_self",
++        "lchown",
++        "lchown32",
++        "lgetxattr",
++        "link",
++        "linkat",
++        "listen",
++        "listmount",
++        "listxattr",
++        "listxattrat",
++        "llistxattr",
++        "_llseek",
++        "lremovexattr",
++        "lseek",
++        "lsetxattr",
++        "lstat",
++        "lstat64",
++        "madvise",
++        "map_shadow_stack",
++        "membarrier",
++        "memfd_create",
++        "memfd_secret",
++        "mincore",
++        "mkdir",
++        "mkdirat",
++        "mknod",
++        "mknodat",
++        "mlock",
++        "mlock2",
++        "mlockall",
++        "mmap",
++        "mmap2",
++        "mprotect",
++        "mq_getsetattr",
++        "mq_notify",
++        "mq_open",
++        "mq_timedreceive",
++        "mq_timedreceive_time64",
++        "mq_timedsend",
++        "mq_timedsend_time64",
++        "mq_unlink",
++        "mremap",
++        "mseal",
++        "msgctl",
++        "msgget",
++        "msgrcv",
++        "msgsnd",
++        "msync",
++        "munlock",
++        "munlockall",
++        "munmap",
++        "name_to_handle_at",
++        "nanosleep",
++        "newfstatat",
++        "_newselect",
++        "open",
++        "openat",
++        "openat2",
++        "pause",
++        "pidfd_open",
++        "pidfd_send_signal",
++        "pipe",
++        "pipe2",
++        "pkey_alloc",
++        "pkey_free",
++        "pkey_mprotect",
++        "poll",
++        "ppoll",
++        "ppoll_time64",
++        "prctl",
++        "pread64",
++        "preadv",
++        "preadv2",
++        "prlimit64",
++        "process_mrelease",
++        "pselect6",
++        "pselect6_time64",
++        "pwrite64",
++        "pwritev",
++        "pwritev2",
++        "read",
++        "readahead",
++        "readlink",
++        "readlinkat",
++        "readv",
++        "recv",
++        "recvfrom",
++        "recvmmsg",
++        "recvmmsg_time64",
++        "recvmsg",
++        "remap_file_pages",
++        "removexattr",
++        "removexattrat",
++        "rename",
++        "renameat",
++        "renameat2",
++        "restart_syscall",
++        "riscv_hwprobe",
++        "rmdir",
++        "rseq",
++        "rt_sigaction",
++        "rt_sigpending",
++        "rt_sigprocmask",
++        "rt_sigqueueinfo",
++        "rt_sigreturn",
++        "rt_sigsuspend",
++        "rt_sigtimedwait",
++        "rt_sigtimedwait_time64",
++        "rt_tgsigqueueinfo",
++        "sched_getaffinity",
++        "sched_getattr",
++        "sched_getparam",
++        "sched_get_priority_max",
++        "sched_get_priority_min",
++        "sched_getscheduler",
++        "sched_rr_get_interval",
++        "sched_rr_get_interval_time64",
++        "sched_setaffinity",
++        "sched_setattr",
++        "sched_setparam",
++        "sched_setscheduler",
++        "sched_yield",
++        "seccomp",
++        "select",
++        "semctl",
++        "semget",
++        "semop",
++        "semtimedop",
++        "semtimedop_time64",
++        "send",
++        "sendfile",
++        "sendfile64",
++        "sendmmsg",
++        "sendmsg",
++        "sendto",
++        "setfsgid",
++        "setfsgid32",
++        "setfsuid",
++        "setfsuid32",
++        "setgid",
++        "setgid32",
++        "setgroups",
++        "setgroups32",
++        "setitimer",
++        "setpgid",
++        "setpriority",
++        "setregid",
++        "setregid32",
++        "setresgid",
++        "setresgid32",
++        "setresuid",
++        "setresuid32",
++        "setreuid",
++        "setreuid32",
++        "setrlimit",
++        "set_robust_list",
++        "setsid",
++        "setsockopt",
++        "set_thread_area",
++        "set_tid_address",
++        "setuid",
++        "setuid32",
++        "setxattr",
++        "setxattrat",
++        "shmat",
++        "shmctl",
++        "shmdt",
++        "shmget",
++        "shutdown",
++        "sigaltstack",
++        "signalfd",
++        "signalfd4",
++        "sigprocmask",
++        "sigreturn",
++        "socketcall",
++        "socketpair",
++        "splice",
++        "stat",
++        "stat64",
++        "statfs",
++        "statfs64",
++        "statmount",
++        "statx",
++        "symlink",
++        "symlinkat",
++        "sync",
++        "sync_file_range",
++        "syncfs",
++        "sysinfo",
++        "tee",
++        "tgkill",
++        "time",
++        "timer_create",
++        "timer_delete",
++        "timer_getoverrun",
++        "timer_gettime",
++        "timer_gettime64",
++        "timer_settime",
++        "timer_settime64",
++        "timerfd_create",
++        "timerfd_gettime",
++        "timerfd_gettime64",
++        "timerfd_settime",
++        "timerfd_settime64",
++        "times",
++        "tkill",
++        "truncate",
++        "truncate64",
++        "ugetrlimit",
++        "umask",
++        "uname",
++        "unlink",
++        "unlinkat",
++        "uretprobe",
++        "utime",
++        "utimensat",
++        "utimensat_time64",
++        "utimes",
++        "vfork",
++        "vmsplice",
++        "wait4",
++        "waitid",
++        "waitpid",
++        "write",
++        "writev"
++      ],
++      "action": "SCMP_ACT_ALLOW"
++    },
++    {
++      "names": [
++        "process_vm_readv",
++        "process_vm_writev",
++        "ptrace"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "minKernel": "4.8"
++      }
++    },
++    {
++      "names": [
++        "socket"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 38,
++          "op": "SCMP_CMP_LT"
++        }
++      ]
++    },
++    {
++      "names": [
++        "socket"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 39,
++          "op": "SCMP_CMP_EQ"
++        }
++      ]
++    },
++    {
++      "names": [
++        "socket"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 40,
++          "op": "SCMP_CMP_GT"
++        }
++      ]
++    },
++    {
++      "names": [
++        "personality"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 0,
++          "op": "SCMP_CMP_EQ"
++        }
++      ]
++    },
++    {
++      "names": [
++        "personality"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 8,
++          "op": "SCMP_CMP_EQ"
++        }
++      ]
++    },
++    {
++      "names": [
++        "personality"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 131072,
++          "op": "SCMP_CMP_EQ"
++        }
++      ]
++    },
++    {
++      "names": [
++        "personality"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 131080,
++          "op": "SCMP_CMP_EQ"
++        }
++      ]
++    },
++    {
++      "names": [
++        "personality"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 4294967295,
++          "op": "SCMP_CMP_EQ"
++        }
++      ]
++    },
++    {
++      "names": [
++        "sync_file_range2",
++        "swapcontext"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "arches": [
++          "ppc64le"
++        ]
++      }
++    },
++    {
++      "names": [
++        "arm_fadvise64_64",
++        "arm_sync_file_range",
++        "sync_file_range2",
++        "breakpoint",
++        "cacheflush",
++        "set_tls"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "arches": [
++          "arm",
++          "arm64"
++        ]
++      }
++    },
++    {
++      "names": [
++        "arch_prctl"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "arches": [
++          "amd64",
++          "x32"
++        ]
++      }
++    },
++    {
++      "names": [
++        "modify_ldt"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "arches": [
++          "amd64",
++          "x32",
++          "x86"
++        ]
++      }
++    },
++    {
++      "names": [
++        "s390_pci_mmio_read",
++        "s390_pci_mmio_write",
++        "s390_runtime_instr"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "arches": [
++          "s390",
++          "s390x"
++        ]
++      }
++    },
++    {
++      "names": [
++        "riscv_flush_icache"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "arches": [
++          "riscv64"
++        ]
++      }
++    },
++    {
++      "names": [
++        "open_by_handle_at"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_DAC_READ_SEARCH"
++        ]
++      }
++    },
++    {
++      "names": [
++        "bpf",
++        "clone",
++        "clone3",
++        "fanotify_init",
++        "fsconfig",
++        "fsmount",
++        "fsopen",
++        "fspick",
++        "lookup_dcookie",
++        "lsm_get_self_attr",
++        "lsm_list_modules",
++        "lsm_set_self_attr",
++        "mount",
++        "mount_setattr",
++        "move_mount",
++        "open_tree",
++        "perf_event_open",
++        "quotactl",
++        "quotactl_fd",
++        "setdomainname",
++        "sethostname",
++        "setns",
++        "syslog",
++        "umount",
++        "umount2",
++        "unshare"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_ADMIN"
++        ]
++      }
++    },
++    {
++      "names": [
++        "clone"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 0,
++          "value": 2114060288,
++          "op": "SCMP_CMP_MASKED_EQ"
++        }
++      ],
++      "excludes": {
++        "caps": [
++          "CAP_SYS_ADMIN"
++        ],
++        "arches": [
++          "s390",
++          "s390x"
++        ]
++      }
++    },
++    {
++      "names": [
++        "clone"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "args": [
++        {
++          "index": 1,
++          "value": 2114060288,
++          "op": "SCMP_CMP_MASKED_EQ"
++        }
++      ],
++      "comment": "s390 parameter ordering for clone is different",
++      "includes": {
++        "arches": [
++          "s390",
++          "s390x"
++        ]
++      },
++      "excludes": {
++        "caps": [
++          "CAP_SYS_ADMIN"
++        ]
++      }
++    },
++    {
++      "names": [
++        "clone3"
++      ],
++      "action": "SCMP_ACT_ERRNO",
++      "errnoRet": 38,
++      "excludes": {
++        "caps": [
++          "CAP_SYS_ADMIN"
++        ]
++      }
++    },
++    {
++      "names": [
++        "reboot"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_BOOT"
++        ]
++      }
++    },
++    {
++      "names": [
++        "chroot"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_CHROOT"
++        ]
++      }
++    },
++    {
++      "names": [
++        "delete_module",
++        "init_module",
++        "finit_module"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_MODULE"
++        ]
++      }
++    },
++    {
++      "names": [
++        "acct"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_PACCT"
++        ]
++      }
++    },
++    {
++      "names": [
++        "kcmp",
++        "pidfd_getfd",
++        "process_madvise",
++        "process_vm_readv",
++        "process_vm_writev",
++        "ptrace"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_PTRACE"
++        ]
++      }
++    },
++    {
++      "names": [
++        "iopl",
++        "ioperm"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_RAWIO"
++        ]
++      }
++    },
++    {
++      "names": [
++        "settimeofday",
++        "stime",
++        "clock_settime",
++        "clock_settime64"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_TIME"
++        ]
++      }
++    },
++    {
++      "names": [
++        "vhangup"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_TTY_CONFIG"
++        ]
++      }
++    },
++    {
++      "names": [
++        "get_mempolicy",
++        "mbind",
++        "set_mempolicy",
++        "set_mempolicy_home_node"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYS_NICE"
++        ]
++      }
++    },
++    {
++      "names": [
++        "syslog"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_SYSLOG"
++        ]
++      }
++    },
++    {
++      "names": [
++        "bpf"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_BPF"
++        ]
++      }
++    },
++    {
++      "names": [
++        "perf_event_open"
++      ],
++      "action": "SCMP_ACT_ALLOW",
++      "includes": {
++        "caps": [
++          "CAP_PERFMON"
++        ]
++      }
++    }
++  ]
++}
+diff --git a/scripts/agent-runtime/playwright-mcp/package.json b/scripts/agent-runtime/playwright-mcp/package.json
+new file mode 100644
+index 0000000..1462ac0
+--- /dev/null
++++ b/scripts/agent-runtime/playwright-mcp/package.json
+@@ -0,0 +1,15 @@
++{
++  "name": "altera-isolated-playwright-mcp",
++  "version": "1.0.0",
++  "private": true,
++  "engines": {
++    "node": "24.12.0",
++    "npm": "11.6.2"
++  },
++  "dependencies": {
++    "@playwright/mcp": "0.0.80",
++    "playwright": "1.63.0-alpha-2026-08-31",
++    "playwright-core": "1.63.0-alpha-2026-08-31",
++    "@playwright/browser-chromium": "1.63.0-alpha-2026-08-31"
++  }
++}
+diff --git a/scripts/agent-runtime/playwright-mcp/package-lock.json b/scripts/agent-runtime/playwright-mcp/package-lock.json
+new file mode 100644
+index 0000000..08c34bf
+--- /dev/null
++++ b/scripts/agent-runtime/playwright-mcp/package-lock.json
+@@ -0,0 +1,74 @@
++{
++  "name": "altera-isolated-playwright-mcp",
++  "version": "1.0.0",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "altera-isolated-playwright-mcp",
++      "version": "1.0.0",
++      "dependencies": {
++        "@playwright/browser-chromium": "1.63.0-alpha-2026-08-31",
++        "@playwright/mcp": "0.0.80",
++        "playwright": "1.63.0-alpha-2026-08-31",
++        "playwright-core": "1.63.0-alpha-2026-08-31"
++      },
++      "engines": {
++        "node": "24.12.0",
++        "npm": "11.6.2"
++      }
++    },
++    "node_modules/@playwright/browser-chromium": {
++      "version": "1.63.0-alpha-2026-08-31",
++      "resolved": "https://registry.npmjs.org/@playwright/browser-chromium/-/browser-chromium-1.63.0-alpha-2026-08-31.tgz",
++      "integrity": "sha512-jp8uxALEPKBmUhMrM9QEz4+3EbKYhx9JFUtzFXhxzPj8BOvVTpIMDVgWnANni4BF88SsBy9xhbVGXjXRHQHTyA==",
++      "hasInstallScript": true,
++      "dependencies": {
++        "playwright-core": "1.63.0-alpha-2026-08-31"
++      },
++      "engines": {
++        "node": ">=20"
++      }
++    },
++    "node_modules/@playwright/mcp": {
++      "version": "0.0.80",
++      "resolved": "https://registry.npmjs.org/@playwright/mcp/-/mcp-0.0.80.tgz",
++      "integrity": "sha512-FOPXHm2SvFhAQylm10jMZ35B/SR2TaMLVkavAlwoG4N2qCb5RqbvhQYcu3zmXNyxR2DW0Ooxe+9XPVt5UjKRCQ==",
++      "dependencies": {
++        "playwright": "1.63.0-alpha-2026-08-31",
++        "playwright-core": "1.63.0-alpha-2026-08-31"
++      },
++      "bin": {
++        "playwright-mcp": "cli.js"
++      },
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/playwright": {
++      "version": "1.63.0-alpha-2026-08-31",
++      "resolved": "https://registry.npmjs.org/playwright/-/playwright-1.63.0-alpha-2026-08-31.tgz",
++      "integrity": "sha512-3XAsuznfu8jBVJ4QxdGvBkt0+b8ZFwuwJYyOfiIw5ZjUOrNLNRhKxzLzLuydou3gJ9c6eMwVqgzdiOwhy54Kzw==",
++      "dependencies": {
++        "playwright-core": "1.63.0-alpha-2026-08-31"
++      },
++      "bin": {
++        "playwright": "cli.js"
++      },
++      "engines": {
++        "node": ">=20"
++      }
++    },
++    "node_modules/playwright-core": {
++      "version": "1.63.0-alpha-2026-08-31",
++      "resolved": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.63.0-alpha-2026-08-31.tgz",
++      "integrity": "sha512-1ek0Lyr12h6jcs/WTcNoVtzZkQp7D/90PsMuBW/Rm6h3AsWAbzpqj0geMv8+8Tzzr9CSUYvg9kznrVZINQMXXw==",
++      "bin": {
++        "playwright-core": "cli.js"
++      },
++      "engines": {
++        "node": ">=20"
++      }
++    }
++  }
++}
+diff --git a/scripts/agent-runtime/playwright-mcp-canary.mjs b/scripts/agent-runtime/playwright-mcp-canary.mjs
+new file mode 100644
+index 0000000..f113f8b
+--- /dev/null
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -0,0 +1,237 @@
++// Синтетический fixture/MCP клиент: без модели, credentials и внешних HTTP destinations.
++import assert from 'node:assert/strict'
++import crypto from 'node:crypto'
++import fs from 'node:fs'
++import http from 'node:http'
++import net from 'node:net'
++import path from 'node:path'
++import { spawn } from 'node:child_process'
++
++const mode = process.argv[2]
++if (mode === 'web' || mode === 'sink') {
++  let hits = 0
++  http.createServer((req, res) => {
++    if (mode === 'sink') {
++      if (req.url !== '/count') hits++
++      res.end(req.url === '/count' ? JSON.stringify({ hits }) : 'FORBIDDEN_SYNTHETIC_SINK')
++      return
++    }
++    if (req.url === '/redirect') {
++      res.writeHead(302, { Location: 'http://forbidden-sink:3001/target' }); res.end(); return
++    }
++    res.setHeader('Content-Type', 'text/html')
++    if (req.url.startsWith('/done')) res.end('<title>Complete</title><h1>FORM_COMPLETE_ADA</h1>')
++    else if (req.url === '/form') res.end('<title>Form</title><form action="/done"><label>Name<input name="name"></label><button>Submit</button></form>')
++    else res.end('<title>Altera synthetic</title><h1>ALTERA_PLAYWRIGHT_CANARY</h1><a href="/form">Continue</a>')
++  }).listen(mode === 'sink' ? 3001 : 3000, '0.0.0.0', () => console.log('FIXTURE_READY'))
++} else {
++  const output = '/runtime/evidence/playwright'
++  fs.mkdirSync(output, { recursive: true })
++  fs.mkdirSync('/runtime/cache/playwright-home', { recursive: true })
++  const vector = JSON.parse(fs.readFileSync('/runtime/policy/vector.json'))
++  const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex')
++  function tree(root) {
++    const entries = []
++    function walk(dir) {
++      for (const entry of fs.readdirSync(dir).sort()) {
++        const file = path.join(dir, entry), st = fs.lstatSync(file)
++        const relative = path.relative(root, file)
++        if (st.isSymbolicLink()) entries.push([relative, 'link', fs.readlinkSync(file)])
++        else if (st.isDirectory()) walk(file)
++        else entries.push([relative, st.mode & 0o777, hash(fs.readFileSync(file))])
++      }
++    }
++    walk(root)
++    return hash(JSON.stringify(entries))
++  }
++  function inventory() {
++    const browser = vector.find((a) => a.startsWith('--executable-path=')).split('=')[1]
++    const descriptor = JSON.parse(fs.readFileSync('/opt/playwright-mcp/node_modules/playwright-core/browsers.json'))
++    const selected = descriptor.browsers.find((b) => b.name === 'chromium-headless-shell')
++    assert.equal(selected.revision, '1243'); assert.equal(selected.browserVersion, '153.0.8010.12')
++    assert.equal(process.platform, 'linux'); assert.equal(process.arch, 'arm64'); assert.equal(process.version, 'v24.12.0')
++    assert.match(fs.readFileSync('/etc/os-release', 'utf8'), /VERSION_ID="12"/)
++    const packages = {}
++    for (const name of ['@playwright/mcp', 'playwright', 'playwright-core', '@playwright/browser-chromium']) {
++      const data = JSON.parse(fs.readFileSync('/opt/playwright-mcp/node_modules/' + name + '/package.json'))
++      assert.equal(data.version, name === '@playwright/mcp' ? '0.0.80' : '1.63.0-alpha-2026-08-31')
++      packages[name] = { version: data.version, sha256: hash(fs.readFileSync('/opt/playwright-mcp/node_modules/' + name + '/package.json')) }
++    }
++    assert.equal(fs.realpathSync(browser), browser)
++    assert.ok(fs.statSync(browser).isFile()); assert.ok(fs.statSync(browser).mode & 0o111)
++    assert.ok(!fs.readdirSync('/ms-playwright').some((name) => /^(chromium-|chromium_|firefox|webkit)/.test(name) && !name.startsWith('chromium_headless_shell-')))
++    return { selected, browser, packages, uid: process.getuid(), gid: process.getgid(),
++      browser_sha256: hash(fs.readFileSync(browser)), env_sha256: hash(fs.readFileSync('/usr/bin/env')),
++      descriptor_sha256: hash(fs.readFileSync('/opt/playwright-mcp/node_modules/playwright-core/browsers.json')),
++      packages_tree: tree('/opt/playwright-mcp'), browsers_tree: tree('/ms-playwright') }
++  }
++  const poison = { ...process.env, NODE_OPTIONS: '--require=/runtime/policy/poison.cjs',
++    PWDEBUG: '1', SELENIUM_REMOTE_URL: 'http://forbidden-sink:3001', PLAYWRIGHT_MCP_BROWSER: 'firefox',
++    PLAYWRIGHT_MCP_CDP_ENDPOINT: 'http://forbidden-sink:3001', PLAYWRIGHT_MCP_EXECUTABLE_PATH: '/missing', PLAYWRIGHT_MCP_SANDBOX: 'false' }
++  async function envProof() {
++    const script = `process.stdout.write(JSON.stringify(process.env)+'\\n');process.stdin.once('data',b=>process.stdout.write(b));process.on('SIGTERM',()=>process.exit(23))`
++    const child = spawn(vector[0], [...vector.slice(1, 10), '-e', script], { env: poison, stdio: ['pipe', 'pipe', 'pipe'] })
++    let stdout = '', stderr = ''
++    child.stdout.on('data', (b) => { stdout += b }); child.stderr.on('data', (b) => { stderr += b })
++    const done = new Promise((resolve) => child.once('close', (code, signal) => resolve({ code, signal })))
++    for (let n = 0; n < 100 && !stdout.includes('\n'); n++) await new Promise((r) => setTimeout(r, 20))
++    const observed = JSON.parse(stdout.split('\n')[0])
++    assert.deepEqual(observed, Object.fromEntries(vector.slice(2, 9).map((s) => [s.slice(0, s.indexOf('=')), s.slice(s.indexOf('=') + 1)])))
++    child.stdin.write('STDIO_CANARY\n')
++    for (let n = 0; n < 100 && !stdout.includes('STDIO_CANARY'); n++) await new Promise((r) => setTimeout(r, 20))
++    assert.ok(stdout.includes('STDIO_CANARY')); child.kill('SIGTERM')
++    const exit = await done; assert.deepEqual(exit, { code: 23, signal: null }); assert.equal(stderr, '')
++    assert.equal(fs.existsSync('/runtime/evidence/poison-executed'), false)
++    return { names: Object.keys(observed).sort(), values: observed, exit, poisonPreloadExecuted: false, stdinEcho: true }
++  }
++  function client(argv = vector) {
++    const child = spawn(argv[0], argv.slice(1), { env: poison, stdio: ['pipe', 'pipe', 'pipe'] })
++    let next = 0, pending = '', stderr = '', raw = ''
++    const awaiting = new Map()
++    const close = new Promise((resolve) => child.once('close', (code, signal) => {
++      for (const { reject } of awaiting.values()) reject(new Error('MCP_CHILD_CLOSED'))
++      resolve({ code, signal })
++    }))
++    child.stderr.on('data', (b) => { stderr += b; assert.ok(stderr.length < 1024 * 1024) })
++    child.stdout.on('data', (b) => {
++      pending += b; raw += b; assert.ok(pending.length < 4 * 1024 * 1024)
++      while (pending.includes('\n')) {
++        const end = pending.indexOf('\n'), line = pending.slice(0, end); pending = pending.slice(end + 1)
++        if (!line) continue
++        const message = JSON.parse(line)
++        if (awaiting.has(message.id)) {
++          const waiter = awaiting.get(message.id); awaiting.delete(message.id); clearTimeout(waiter.timer)
++          if (message.error) waiter.reject(new Error(JSON.stringify(message.error)))
++          else waiter.resolve(message.result)
++        }
++      }
++    })
++    function send(method, params, notification = false) {
++      const message = { jsonrpc: '2.0', method, params }
++      if (notification) { child.stdin.write(JSON.stringify(message) + '\n'); return }
++      const id = ++next; message.id = id
++      return new Promise((resolve, reject) => {
++        const timer = setTimeout(() => { awaiting.delete(id); reject(new Error('MCP_TIMEOUT:' + method)) }, 30000)
++        awaiting.set(id, { resolve, reject, timer }); child.stdin.write(JSON.stringify(message) + '\n')
++      })
++    }
++    return { child, send, async stop(label) {
++      child.stdin.end(); child.kill('SIGTERM')
++      const timer = setTimeout(() => child.kill('SIGKILL'), 2000)
++      const exit = await close; clearTimeout(timer)
++      fs.writeFileSync('/runtime/evidence/' + label + '-protocol.jsonl', raw)
++      fs.writeFileSync('/runtime/evidence/' + label + '-stderr.log', stderr)
++      return exit
++    } }
++  }
++  async function initialize(c) {
++    const init = await c.send('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'altera-static-canary', version: '1' } })
++    c.send('notifications/initialized', {}, true)
++    const list = await c.send('tools/list', {})
++    for (const tool of ['browser_navigate', 'browser_click', 'browser_type', 'browser_take_screenshot', 'browser_close']) assert.ok(list.tools.some((t) => t.name === tool))
++    return { init, tools: list.tools }
++  }
++  const text = (r) => (r.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n')
++  function ref(result, label) {
++    const line = text(result).split('\n').find((l) => l.includes('"' + label + '"') && l.includes('[ref='))
++    assert.ok(line, 'missing accessible reference:' + label)
++    return line.match(/\[ref=([^\]]+)\]/)[1]
++  }
++  function processes() {
++    const rows = []
++    for (const pid of fs.readdirSync('/proc').filter((p) => /^\d+$/.test(p))) {
++      try {
++        const argv = fs.readFileSync('/proc/' + pid + '/cmdline', 'utf8').split('\0').filter(Boolean)
++        if (!argv[0]?.includes('chrome-headless-shell')) continue
++        assert.ok(!argv.includes('--no-sandbox'))
++        const status = fs.readFileSync('/proc/' + pid + '/status', 'utf8')
++        const fields = Object.fromEntries(status.split('\n').filter((l) => /^(Uid|Gid|CapEff|NoNewPrivs|Seccomp|Seccomp_filters):/.test(l)).map((l) => l.split(':').map((s) => s.trim())))
++        assert.equal(fields.NoNewPrivs, '1'); assert.equal(fields.CapEff, '0000000000000000'); assert.equal(fields.Seccomp, '2')
++        rows.push({ argv, fields })
++      } catch (error) { if (error.code !== 'ENOENT') throw error }
++    }
++    assert.ok(rows.some((r) => r.argv.includes('--type=renderer')))
++    return rows
++  }
++  async function unreachable(host, port) {
++    return new Promise((resolve) => {
++      const socket = net.connect({ host, port }); socket.setTimeout(1500)
++      socket.on('connect', () => { socket.destroy(); resolve(false) })
++      socket.on('error', () => resolve(true)); socket.on('timeout', () => { socket.destroy(); resolve(true) })
++    })
++  }
++  const report = { mode, accepted: false }
++  const watchdog = setTimeout(() => { console.error('CANARY_WATCHDOG'); process.exit(78) }, 180000)
++  try {
++    report.inventory = inventory(); assert.notEqual(report.inventory.uid, 0)
++    report.environment = await envProof()
++    const c = client()
++    try {
++      report.protocol = await initialize(c)
++      const call = async (name, args = {}, allowedError = false) => {
++        const result = await c.send('tools/call', { name, arguments: args })
++        if (!allowedError) assert.notEqual(result.isError, true, text(result))
++        return result
++      }
++      let page = await call('browser_navigate', { url: 'http://altera-web:3000' })
++      assert.ok(text(page).includes('ALTERA_PLAYWRIGHT_CANARY'))
++      page = await call('browser_click', { element: 'Continue', ref: ref(page, 'Continue') })
++      page = await call('browser_type', { element: 'Name', ref: ref(page, 'Name'), text: 'Ada' })
++      page = await call('browser_click', { element: 'Submit', ref: ref(page, 'Submit') })
++      assert.ok(text(page).includes('FORM_COMPLETE_ADA')); assert.ok(text(page).includes('/done?name=Ada'))
++      report.browser_processes = processes()
++      const oldOutput = path.join(output, 'synthetic-old-output.bin')
++      fs.writeFileSync(oldOutput, Buffer.alloc(17 * 1024 * 1024)); fs.utimesSync(oldOutput, 1, 1)
++      report.screenshot = await call('browser_take_screenshot', { type: 'png' })
++      assert.equal(fs.existsSync(oldOutput), false); report.outputEviction = true
++      const images = fs.readdirSync(output).filter((p) => p.endsWith('.png'))
++      assert.ok(images.length > 0); for (const image of images) assert.equal(fs.readFileSync(path.join(output, image)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
++      report.sourceScreenshot = await call('browser_take_screenshot', { filename: '/source/forbidden.png', type: 'png' }, true)
++      report.relativeScreenshot = await call('browser_take_screenshot', { filename: '../../source/relative.png', type: 'png' }, true)
++      assert.equal(report.relativeScreenshot.isError, true)
++      report.policyScreenshot = await call('browser_take_screenshot', { filename: '/runtime/policy/forbidden.png', type: 'png' }, true)
++      assert.equal(report.sourceScreenshot.isError, true); assert.equal(report.policyScreenshot.isError, true)
++      assert.ok(!fs.existsSync('/source/forbidden.png')); assert.ok(!fs.existsSync('/runtime/policy/forbidden.png'))
++      report.redirect = await call('browser_navigate', { url: 'http://altera-web:3000/redirect' }, true)
++      if (mode === 'control') {
++        report.sink = await fetch('http://forbidden-sink:3001/count').then((r) => r.json())
++        report.sinkReachable = true
++      } else {
++        assert.equal(report.redirect.isError, true)
++        assert.ok(await unreachable('forbidden-sink', 3001))
++      }
++      await call('browser_close')
++      report.tools = true
++    } finally { report.exit = await c.stop('main') }
++    const missing = [...vector]; missing[13] += '-missing'
++    const d = client(missing)
++    try {
++      await initialize(d)
++      const result = await d.send('tools/call', { name: 'browser_navigate', arguments: { url: 'http://altera-web:3000' } })
++      assert.equal(result.isError, true); assert.match(text(result), /executable.*(exist|missing)|doesn.t exist/i)
++      report.missingBrowser = true
++    } finally { await d.stop('missing') }
++    report.denials = {}
++    for (const file of ['/source/write-denial', '/runtime/policy/write-denial', '/opt/playwright-mcp/write-denial', '/ms-playwright/write-denial', '/write-denial']) {
++      try { fs.writeFileSync(file, 'DENIAL'); assert.fail('write allowed:' + file) }
++      catch (error) { assert.ok(['EROFS', 'EACCES'].includes(error.code)); report.denials[file] = error.code }
++    }
++    for (const [host, port] of [['192.0.2.1', 80], ['host.docker.internal', Number(process.argv[3])], ['172.17.0.1', Number(process.argv[3])]]) {
++      assert.ok(await unreachable(host, port)); report.denials[host + ':' + port] = 'unreachable'
++    }
++    report.after = inventory()
++    assert.equal(report.after.packages_tree, report.inventory.packages_tree)
++    assert.equal(report.after.browsers_tree, report.inventory.browsers_tree)
++    report.outputBytes = fs.readdirSync(output).reduce((total, name) => total + fs.statSync(path.join(output, name)).size, 0)
++    assert.ok(report.outputBytes <= 16777216)
++    report.profileResidue = fs.readdirSync('/runtime/tmp').filter((p) => p.startsWith('playwright_chromiumdev_profile-'))
++    assert.deepEqual(report.profileResidue, [])
++    assert.ok(!fs.existsSync('/runtime/evidence/poison-executed'))
++    report.accepted = true
++  } catch (error) { report.failure = { name: error.name, message: error.message, stack: error.stack }; process.exitCode = 1 }
++  finally {
++    clearTimeout(watchdog)
++    fs.writeFileSync('/runtime/evidence/canary-report.json', JSON.stringify(report, null, 2) + '\n')
++    console.log(JSON.stringify({ accepted: report.accepted, mode, failure: report.failure?.message }))
++  }
++}
+diff --git a/scripts/agent-runtime/test_playwright_mcp.py b/scripts/agent-runtime/test_playwright_mcp.py
+new file mode 100644
+index 0000000..ff8c827
+--- /dev/null
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -0,0 +1,176 @@
++"""Синтетические проверки закреплённого Playwright runtime без модели."""
++import hashlib
++import importlib.util
++import json
++import http.server
++import os
++import shutil
++import subprocess
++import sys
++import threading
++import time
++import uuid
++from pathlib import Path
++import unittest
++
++ROOT = Path(__file__).resolve().parent
++
++def module(name):
++    spec = importlib.util.spec_from_file_location(name, ROOT / (name + '.py'))
++    result = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(result)
++    return result
++
++class PlaywrightStaticTests(unittest.TestCase):
++    def test_locked_four_package_closure_and_build(self):
++        package = json.loads((ROOT / 'playwright-mcp/package.json').read_text())
++        lock = json.loads((ROOT / 'playwright-mcp/package-lock.json').read_text())
++        self.assertEqual(lock['lockfileVersion'], 3)
++        self.assertEqual(package['engines'], {'node': '24.12.0', 'npm': '11.6.2'})
++        self.assertEqual(set(package['dependencies']), {'@playwright/mcp', 'playwright', 'playwright-core', '@playwright/browser-chromium'})
++        self.assertEqual(set(lock['packages']), {''} | {'node_modules/' + name for name in package['dependencies']})
++        for name, version in package['dependencies'].items():
++            entry = lock['packages']['node_modules/' + name]
++            self.assertEqual(version, '0.0.80' if name == '@playwright/mcp' else '1.63.0-alpha-2026-08-31')
++            self.assertEqual(entry['version'], version)
++            self.assertTrue(entry['integrity'].startswith('sha512-'))
++            self.assertNotIn('optionalDependencies', entry)
++        dockerfile = (ROOT / 'Dockerfile').read_text()
++        self.assertIn('npm ci --omit=dev --ignore-scripts', dockerfile)
++        self.assertIn('install chromium --only-shell', dockerfile)
++        self.assertIn('install-deps chromium', dockerfile)
++        self.assertNotIn('npx', dockerfile)
++        self.assertIn('RUN chmod -R a+rX /ms-playwright', dockerfile)
++        self.assertTrue(dockerfile.index('USER 1000:1000') > dockerfile.index('install chromium'))
++
++    def test_seccomp_exact_bytes(self):
++        self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),
++                         'ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140')
++
++    def test_exact_environment_and_vector(self):
++        mapper = module('codex_toml_map')
++        vector = mapper.PLAYWRIGHT_VECTOR
++        self.assertEqual(vector[:2], ['/usr/bin/env', '-i'])
++        self.assertEqual(vector[2:9], [
++            'PATH=/usr/local/bin:/usr/bin:/bin', 'HOME=/runtime/cache/playwright-home',
++            'TMPDIR=/runtime/tmp', 'PLAYWRIGHT_BROWSERS_PATH=/ms-playwright',
++            'PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1', 'PLAYWRIGHT_SKIP_BROWSER_GC=1', 'npm_config_offline=true'])
++        self.assertEqual(vector[9:14], ['/usr/local/bin/node', '/opt/playwright-mcp/node_modules/@playwright/mcp/cli.js', '--headless', '--sandbox',
++            '--executable-path=/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell'])
++        self.assertEqual(vector[14:], ['--isolated', '--block-service-workers', '--allowed-origins=http://altera-web:3000', '--codegen=none',
++            '--image-responses=omit', '--output-dir=/runtime/evidence/playwright', '--output-max-size=16777216'])
++
++def run_docker_canary(image, evidence):
++    """Прямой trusted bootstrap harness: receipt ещё не существует, production admission не обходится."""
++    out = Path(evidence).resolve(); out.mkdir(mode=0o700, exist_ok=False)
++    mapper = module('codex_toml_map')
++    env = {'PATH': '/usr/local/bin:/usr/bin:/bin', 'HOME': '/var/empty',
++           'DOCKER_HOST': 'unix:///Users/egorbondarenko/.docker/run/docker.sock'}
++    commands = []
++    def docker(*args, check=True, timeout=240):
++        cmd = ['/usr/local/bin/docker', *args]
++        result = subprocess.run(cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
++        commands.append({'argv': cmd, 'exit': result.returncode})
++        (out / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
++        (out / ('docker-%02d.stdout' % len(commands))).write_bytes(result.stdout)
++        (out / ('docker-%02d.stderr' % len(commands))).write_bytes(result.stderr)
++        if check and result.returncode:
++            raise AssertionError('Docker command failed; inspect saved numbered raw logs')
++        return result
++    info = json.loads(docker('image', 'inspect', image).stdout)[0]
++    image = info['Id']; assert info['Architecture'] == 'arm64' and info['Os'] == 'linux'
++    assert set(item.split('=', 1)[0] for item in info['Config']['Env']) <= {'PATH', 'NODE_VERSION', 'YARN_VERSION'}
++    (out / 'image-inspect.json').write_text(json.dumps(info, indent=2) + '\n')
++    seccomp = out / 'seccomp.json'; seccomp.write_bytes((ROOT / 'playwright-seccomp.json').read_bytes()); seccomp.chmod(0o600)
++    assert hashlib.sha256(seccomp.read_bytes()).hexdigest() == mapper.PLAYWRIGHT_SECCOMP
++    class Control(http.server.BaseHTTPRequestHandler):
++        def do_GET(self):
++            self.send_response(200); self.end_headers(); self.wfile.write(b'HOST_SYNTHETIC_CONTROL')
++        def log_message(self, *args):
++            pass
++    server = http.server.HTTPServer(('127.0.0.1', 0), Control)
++    thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
++    import urllib.request
++    assert urllib.request.urlopen('http://127.0.0.1:%d' % server.server_port).read() == b'HOST_SYNTHETIC_CONTROL'
++    reports = {}
++    try:
++        for mode in ['control', 'acceptance']:
++            area = out / mode; area.mkdir(mode=0o700)
++            policy = area / 'policy'; policy.mkdir(mode=0o755)
++            shutil.copyfile(ROOT / 'playwright-mcp-canary.mjs', policy / 'canary.mjs')
++            (policy / 'vector.json').write_text(json.dumps(mapper.PLAYWRIGHT_VECTOR))
++            (policy / 'poison.cjs').write_text("require('fs').writeFileSync('/runtime/evidence/poison-executed','EXECUTED')")
++            source = area / 'source'; source.mkdir(mode=0o755); (source / 'input.txt').write_text('SYNTHETIC_SOURCE')
++            for name in ['evidence', 'cache', 'tmp']:
++                (area / name).mkdir(mode=0o777); (area / name).chmod(0o777)
++            def fingerprint(root):
++                return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file()}
++            before = {'policy': fingerprint(policy), 'source': fingerprint(source)}
++            network = 'altera-pw-' + uuid.uuid4().hex
++            names = [network + '-web', network + '-runner'] + ([network + '-sink'] if mode == 'control' else [])
++            created = False
++            try:
++                docker('network', 'create', '--internal', '--opt', 'com.docker.network.bridge.gateway_mode_ipv4=isolated', network)
++                created = True
++                common = ['--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--user=1000:1000',
++                          '--pids-limit=128', '--memory=2g', '--cpus=2']
++                for name, role, alias in [(names[0], 'web', 'altera-web')] + ([(names[2], 'sink', 'forbidden-sink')] if mode == 'control' else []):
++                    docker('run', '--detach', '--name', name, '--network=' + network, '--network-alias=' + alias, *common,
++                           '--mount=type=bind,src=' + str(policy / 'canary.mjs') + ',dst=/fixture.mjs,readonly',
++                           '--entrypoint=/usr/local/bin/node', image, '/fixture.mjs', role)
++                    for _ in range(50):
++                        if b'FIXTURE_READY' in docker('logs', name).stdout:
++                            break
++                        time.sleep(0.1)
++                    else:
++                        raise AssertionError('fixture_not_ready')
++                cmd = ['create', '--init', '--name', names[1], '--network=' + network, *common,
++                       '--security-opt=seccomp=' + str(seccomp), '--workdir=/source',
++                       '--mount=type=bind,src=' + str(policy) + ',dst=/runtime/policy,readonly',
++                       '--mount=type=bind,src=' + str(source) + ',dst=/source,readonly']
++                for name in ['evidence', 'cache', 'tmp']:
++                    cmd += ['--mount=type=bind,src=' + str(area / name) + ',dst=/runtime/' + name]
++                cmd += ['--env=HOME=/runtime/cache/home', '--env=TMPDIR=/runtime/tmp', '--entrypoint=/usr/local/bin/node',
++                        image, '/runtime/policy/canary.mjs', mode, str(server.server_port)]
++                docker(*cmd)
++                runtime = json.loads(docker('inspect', names[1]).stdout)[0]
++                inspect = json.loads(docker('network', 'inspect', network).stdout)[0]
++                assert inspect['Internal'] and not inspect['EnableIPv6']
++                assert inspect['Options']['com.docker.network.bridge.gateway_mode_ipv4'] == 'isolated'
++                # Created runner ещё не подключён; membership после запуска сохраняется отдельно.
++                assert runtime['HostConfig']['ReadonlyRootfs'] and runtime['HostConfig']['CapDrop'] == ['ALL']
++                assert not runtime['HostConfig']['CapAdd'] and not runtime['HostConfig']['Privileged']
++                assert not runtime['HostConfig']['PortBindings'] and not runtime['HostConfig']['ExtraHosts']
++                assert runtime['Config']['User'] == '1000:1000'
++                assert all(m['Destination'] in ['/runtime/policy', '/source', '/runtime/evidence', '/runtime/cache', '/runtime/tmp'] for m in runtime['Mounts'])
++                (area / 'container-inspect.json').write_text(json.dumps(runtime, indent=2) + '\n')
++                result = docker('start', '--attach', names[1], check=False)
++                (area / 'network-inspect.json').write_bytes(docker('network', 'inspect', network).stdout)
++                state = json.loads(docker('inspect', names[1]).stdout)[0]['State']
++                (area / 'exit.json').write_text(json.dumps(state, indent=2) + '\n')
++                assert state['ExitCode'] == 0 and result.returncode == 0, 'real MCP canary failed; inspect canary-report.json'
++                report = json.loads((area / 'evidence/canary-report.json').read_text()); assert report['accepted']
++                reports[mode] = report
++                assert before == {'policy': fingerprint(policy), 'source': fingerprint(source)}
++                (area / 'readonly-source-policy.json').write_text(json.dumps(before, indent=2) + '\n')
++            finally:
++                if created:
++                    for name in names:
++                        docker('rm', '--force', name, check=False)
++                    remaining = json.loads(docker('network', 'inspect', network).stdout)[0]
++                    assert not remaining.get('Containers'), 'targeted_cleanup_unconfirmed'
++                    docker('network', 'rm', network)
++    finally:
++        server.shutdown(); server.server_close(); thread.join(timeout=2)
++    assert hashlib.sha256(seccomp.read_bytes()).hexdigest() == mapper.PLAYWRIGHT_SECCOMP
++    proof = {'image': image, 'accepted': True, 'modes': list(reports), 'host_listener_positive': True,
++             'seccomp_sha256': mapper.PLAYWRIGHT_SECCOMP, 'cleanup': True}
++    (out / 'result.json').write_text(json.dumps(proof, indent=2) + '\n')
++    print(json.dumps(proof))
++
++
++if __name__ == '__main__':
++    if len(sys.argv) == 4 and sys.argv[1] == '--docker':
++        run_docker_canary(sys.argv[2], sys.argv[3])
++    else:
++        unittest.main()

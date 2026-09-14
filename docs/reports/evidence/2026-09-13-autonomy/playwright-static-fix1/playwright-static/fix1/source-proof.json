@@ -1,0 +1,34 @@
+{
+  "base": "139954950e91c530772216975d1c85bce4bbd155",
+  "fix_base": "playwright-static/stopped-review.diff",
+  "files": {
+    "scripts/agent-runtime/runtime.py": {
+      "before_sha256": "52d9313ac3e2440346bd3224ff154fb09c83845c4f28a9a24818716a11e4f69c",
+      "after_sha256": "86856ef487d5eaab2048e624a69678160ef8dd11a8d098884cf2e32e6e19c285"
+    },
+    "scripts/agent-runtime/test_runtime.py": {
+      "before_sha256": "8b4fe7bad9db7bc2362440c6ea3c2e343c5bbe7fc3fffc87f621fe9cc79fe6cb",
+      "after_sha256": "4344cb784e93ed2ba10155e74626cefcf495016371808d3961f240b376e5769b"
+    },
+    "scripts/agent-runtime/playwright-mcp-canary.mjs": {
+      "before_sha256": "ac27fda40371db8308691f6d3763af43a673b8069600c37f089a132e45b2bfbd",
+      "after_sha256": "507040e0b6f3eb4b24632e2f90a7c32ecf40147d77a40a1eb411f915fe7302c2"
+    },
+    "scripts/agent-runtime/test_playwright_mcp.py": {
+      "before_sha256": "701e9c2e534c96cab3895bc3e0f3ef30de5ef2a503d1c3b085d695b98de2a04c",
+      "after_sha256": "a1675d0cacc3780872f150c42c3c1d2f2b2c14f16b36a341e76adeaa42852a14"
+    }
+  },
+  "diff_sha256": "ce716fbfc00f30fec4a914ed927c3a0780be5a6070b4be16f0d0f7d9eac13670",
+  "checks": {
+    "r1-red": 1,
+    "r1-green": 0,
+    "r2-red": 1,
+    "r2-green": 0,
+    "runtime-covering": 0,
+    "playwright-covering": 0
+  },
+  "browser_canary_consecutive_failures": 2,
+  "docker_runs": 0,
+  "accepted_receipt": false
+}

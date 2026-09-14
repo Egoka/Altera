@@ -1,0 +1,15 @@
+{
+  "control_sha256": "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140",
+  "candidate_sha256": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+  "removed": {
+    "json_pointer": "/syscalls/23/includes",
+    "value": {
+      "caps": [
+        "CAP_SYS_CHROOT"
+      ]
+    }
+  },
+  "all_other_semantics_identical": true,
+  "duplicate_free": true,
+  "executed": false
+}

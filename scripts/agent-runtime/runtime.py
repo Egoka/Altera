@@ -360,11 +360,155 @@ def refresh_command(manifest, operation, credential, output=None):
     return args + ['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/claude-refresh.mjs', operation]
 
 
+def playwright_mapper():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('altera_playwright_policy', Path(__file__).with_name('codex_toml_map.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def no_receipt_mcp_policy(config):
+    """Без receipt допустим только однозначный subset и точные известные MCP формы."""
+    mapper = playwright_mapper()
+    try:
+        with config.open('rb') as stream:
+            data = stream.read(65537)
+        if (len(data) > 65536 or b'\x00' in data or b'\r' in data or
+                data.startswith(b'\xef\xbb\xbf')):
+            raise ValueError()
+        text = data.decode('utf-8')
+        if '"""' in text or "'" * 3 in text:
+            raise ValueError()
+        expected = {
+            'context7': {'experimental_use_rmcp_client': True, 'url': 'https://mcp.context7.com/mcp'},
+            'trace': {'command': '/usr/local/bin/trace-mcp', 'args': ['serve']},
+        }
+        tables, keys, section, servers = set(), set(), (), {}
+        for raw in text.split('\n'):
+            line = mapper._base_line_without_comment(raw).strip()
+            if not line:
+                continue
+            if line.startswith('['):
+                if line.startswith('[[') or not line.endswith(']'):
+                    raise ValueError()
+                section = tuple(mapper._base_key_path(line[1:-1]))
+                if section in tables:
+                    raise ValueError()
+                tables.add(section)
+                if 'mcp_servers' in section:
+                    if len(section) != 2 or section[0] != 'mcp_servers' or section[1] not in expected:
+                        raise ValueError()
+                    servers[section[1]] = {}
+                continue
+            raw_key, separator, value = line.partition('=')
+            key = tuple(mapper._base_key_path(raw_key))
+            if not separator or 'mcp_servers' in key or (section, key) in keys:
+                raise ValueError()
+            keys.add((section, key))
+            value = value.strip()
+            # Inline tables и многострочные значения не входят в этот admission subset.
+            if value.startswith("'") and value.endswith("'") and "'" not in value[1:-1]:
+                parsed = value[1:-1]
+            else:
+                parsed = json.loads(value)
+            def scalar_or_array(item):
+                return (isinstance(item, (str, bool, int, float)) or
+                        isinstance(item, list) and all(scalar_or_array(part) for part in item))
+            if not scalar_or_array(parsed):
+                raise ValueError()
+            if section and section[0] == 'mcp_servers':
+                if len(key) != 1 or key[0] not in expected[section[1]]:
+                    raise ValueError()
+                servers[section[1]][key[0]] = parsed
+        if any(fields != expected[name] for name, fields in servers.items()):
+            raise ValueError()
+    except (OSError, ValueError, RecursionError):
+        raise ValueError('playwright_policy_invalid') from None
+
+
+def playwright_policy(manifest):
+    """Проверить trusted receipt и exact vector до Docker; fixture topology не даёт model acceptance."""
+    item = manifest.get('playwright')
+    if item is None:
+        config = Path(manifest['policy']) / 'codex-config.toml'
+        if manifest.get('network') == 'playwright-fixture':
+            raise ValueError('playwright_policy_invalid')
+        if config.exists():
+            no_receipt_mcp_policy(config)
+        return None
+    try:
+        mapper = playwright_mapper()
+        if (not isinstance(item, dict) or set(item) != {'receipt', 'seccomp', 'origin'} or
+                item['origin'] != 'http://altera-web:3000' or manifest['family'] != 'codex' or
+                manifest.get('network') != 'playwright-fixture' or manifest.get('fixture') is not True or
+                manifest.get('auth_file') or item['receipt']['image'] != manifest['image']):
+            raise ValueError('playwright_policy_invalid')
+        mapper.read_playwright_attestation(item['receipt'])
+        seccomp = private_reference(item['seccomp'])
+        private_reference(str(seccomp.parent), directory=True)
+        for reference in (seccomp, Path(item['receipt']['path'])):
+            for name in ('source', 'snapshot', 'policy', 'run_root'):
+                if reference.is_relative_to(Path(manifest[name])):
+                    raise ValueError('playwright_policy_invalid')
+        before = seccomp.lstat()
+        fd = os.open(seccomp, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            if mapper._identity(os.fstat(fd)) != mapper._identity(before):
+                raise ValueError('playwright_policy_invalid')
+            data = os.read(fd, 65537)
+            if (mapper._identity(os.fstat(fd)) != mapper._identity(before) or
+                    mapper._identity(seccomp.lstat()) != mapper._identity(before) or digest(data) != mapper.PLAYWRIGHT_SECCOMP):
+                raise ValueError('playwright_policy_invalid')
+        finally:
+            os.close(fd)
+        policy = Path(manifest['policy'])
+        tables = mapper._parse_managed((policy / 'codex-config.toml').read_bytes())
+        if (tables is None or tables.get('playwright') != {'command': mapper.PLAYWRIGHT_VECTOR[0], 'args': mapper.PLAYWRIGHT_VECTOR[1:]} or
+                digest((policy / 'playwright-mcp-canary.mjs').read_bytes()) !=
+                digest(Path(__file__).with_name('playwright-mcp-canary.mjs').read_bytes())):
+            raise ValueError('playwright_policy_invalid')
+        return {'path': str(seccomp), 'sha256': digest(data), 'identity': mapper._identity(before)}
+    except (OSError, KeyError, TypeError, ValueError):
+        raise ValueError('playwright_policy_invalid') from None
+
+
+@contextmanager
+def playwright_fixture_network(manifest):
+    """Только no-model fixture: один fixed web server, internal bridge, без host ports."""
+    name = 'altera-playwright-' + uuid.uuid4().hex
+    web = name + '-web'
+    def docker(*args, check=True):
+        return subprocess.run([DOCKER, *args], check=check, env=child_env(),
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+    created = False
+    try:
+        docker('network', 'create', '--internal', '--opt',
+               'com.docker.network.bridge.gateway_mode_ipv4=isolated', name)
+        created = True
+        docker('run', '--detach', '--name', web, '--network=' + name, '--network-alias=altera-web',
+               '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--user=1000:1000',
+               '--pids-limit=32', '--memory=128m', '--cpus=1',
+               '--mount=type=bind,src=' + manifest['policy'] + '/playwright-mcp-canary.mjs,dst=/fixture.mjs,readonly',
+               '--entrypoint=/usr/local/bin/node', manifest['image'], '/fixture.mjs', 'web')
+        inspection = json.loads(docker('network', 'inspect', name))[0]
+        if (not inspection['Internal'] or inspection['EnableIPv6'] or
+                inspection['Options'].get('com.docker.network.bridge.gateway_mode_ipv4') != 'isolated' or
+                len(inspection['Containers']) != 1):
+            raise ValueError('network_boundary_unverified')
+        Path(manifest['run_root'], 'playwright-network.json').write_text(json.dumps(inspection, indent=2))
+        yield name
+    finally:
+        if created:
+            docker('rm', '--force', web, check=False)
+            docker('network', 'rm', name, check=False)
+
+
 def command(manifest, incoming, environment):
     required = {'schema_version', 'family', 'source', 'snapshot', 'state', 'dirty_paths', 'policy',
                 'policy_sha256', 'run_root', 'image', 'model', 'effort', 'env_paths', 'path_map',
                 'managed_mapping_verified'}
-    optional = {'network', 'fixture', 'auth_file', 'operation'}
+    optional = {'network', 'fixture', 'auth_file', 'operation', 'playwright'}
     if set(manifest) - required - optional or not required.issubset(manifest) or manifest['schema_version'] != 1:
         raise ValueError('invalid_manifest_schema')
     if manifest['family'] not in ('codex', 'claude') or manifest['effort'] != 'medium':
@@ -405,9 +549,10 @@ def command(manifest, incoming, environment):
     else:
         raise ValueError('unsupported_operation')
     network = manifest.get('network', 'none')
-    if network not in ('none', 'provider-proxy'):
+    if network not in ('none', 'provider-proxy', 'playwright-fixture'):
         raise ValueError('unsupported_network')
-    args = sandbox_arguments() + ['--workdir=' + str(source),
+    playwright = playwright_policy(manifest)
+    args = sandbox_arguments() + (['--security-opt=seccomp=' + playwright['path']] if playwright else []) + ['--workdir=' + str(source),
             '--mount=type=bind,src=' + str(snap) + ',dst=' + str(source) + ',readonly',
             '--mount=type=bind,src=' + str(policy) + ',dst=/runtime/policy,readonly']
     for name in ('evidence', 'cache', 'tmp'):
@@ -417,7 +562,7 @@ def command(manifest, incoming, environment):
             raise ValueError('unsafe_run_directory')
         path.chmod(0o777)
         args.append('--mount=type=bind,src=' + str(path) + ',dst=/runtime/' + name)
-    for name in ('home', 'codex', 'claude', 'xdg'):
+    for name in ('home', 'codex', 'claude', 'xdg', *(['playwright-home'] if playwright else [])):
         path = run / 'cache' / name
         path.mkdir(exist_ok=True, mode=0o700)
         if path.is_symlink() or path.resolve() != path:
@@ -467,6 +612,10 @@ def provider_network(manifest):
     """Отдельная internal сеть без адреса host bridge, плюс HTTPS-only proxy."""
     if manifest.get('network', 'none') == 'none':
         yield None
+        return
+    if manifest.get('network') == 'playwright-fixture':
+        with playwright_fixture_network(manifest) as network:
+            yield network
         return
     name = 'altera-check-' + uuid.uuid4().hex
     proxy = name + '-proxy'
@@ -520,14 +669,18 @@ def launch(manifest, incoming):
     if evidence.exists() and any(evidence.iterdir()):
         raise ValueError('evidence_directory_not_fresh')
     args = command(manifest, incoming, os.environ)
+    playwright_before = playwright_policy(manifest)
     with provider_network(manifest) as network:
         if network:
             args[args.index('--network=none')] = '--network=' + network
+        if manifest.get('network') == 'provider-proxy':
             args[2:2] = ['--env', 'HTTPS_PROXY=http://egress-proxy:8080',
                           '--env', 'HTTP_PROXY=http://egress-proxy:8080',
                           '--env', 'ALL_PROXY=http://egress-proxy:8080',
                           '--env', 'NO_PROXY=', '--env', 'NODE_USE_ENV_PROXY=1']
         code = execute(args)
+    if playwright_policy(manifest) != playwright_before:
+        raise ValueError('playwright_policy_changed')
     if fingerprint(manifest['source'], manifest['dirty_paths']) != manifest['state']:
         print('ALTERA_RUNTIME source_changed_after_run', file=sys.stderr)
         return 78

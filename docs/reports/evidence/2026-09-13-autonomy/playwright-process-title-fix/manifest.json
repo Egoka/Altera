@@ -1,0 +1,50 @@
+{
+  "state": "process_title_fix_static9_independent_pass",
+  "files": [
+    {
+      "path": "task-5-playwright-process-title-fix-report.md",
+      "bytes": 5222,
+      "sha256": "e5d034687e02526dee06cc95d3a09558232d2c60c5e94a758e39bf79c2524abe"
+    },
+    {
+      "path": "task-5-playwright-process-title-ruling.md",
+      "bytes": 1321,
+      "sha256": "42ce37a2b2e043b9dbb32965ab1fee34984168830cae2e46a9726875bc6fb3cc"
+    },
+    {
+      "path": "playwright-static/process-title-fix/process-title-only.diff",
+      "bytes": 23960,
+      "sha256": "de1f0d6ad21134cb68ea1d46701e1c13dca06cd21526882c514c3b7498f2beaa"
+    },
+    {
+      "path": "playwright-static/process-title-fix/source-proof.json",
+      "bytes": 3037,
+      "sha256": "b92b2bcadb77a9568eb063482fd73e5255bb51c6d5706f5d6a051d9655d05f85"
+    },
+    {
+      "path": "playwright-static/process-title-fix/commands-and-results.json",
+      "bytes": 931,
+      "sha256": "cc974ce289ec7adacf676b41147e82c5e21d90c742d7e1842a48368af156d601"
+    },
+    {
+      "path": "playwright-static/process-title-fix/red.log",
+      "bytes": 712,
+      "sha256": "614e8018e64484578c3ad2d42cf4f853cd4eab1f5e1cf9098540c8c263f545e2"
+    },
+    {
+      "path": "playwright-static/process-title-fix/green.log",
+      "bytes": 98,
+      "sha256": "9152bd257679336b40c628719f593ad31d6a57b4b0f6b839cb7ee8dbb189fcb2"
+    },
+    {
+      "path": "playwright-static/process-title-fix/covering.log",
+      "bytes": 107,
+      "sha256": "83aa2dcdecea9390f300c28b51a0cb55757dcf7f0719f471af949c8fc58d108a"
+    },
+    {
+      "path": "task-5-playwright-process-title-fix-independent-review.md",
+      "bytes": 5298,
+      "sha256": "fe095c023e785ddbad745a9a9f4cb34f7d1bd60839838ad213d72f9ad5c741f6"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"accepted":false,"mode":"control","failure":"Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'playwright_chromiumdev_profile-lJcdZs'\n+ ]\n- []\n"}

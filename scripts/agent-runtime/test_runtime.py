@@ -3,6 +3,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -65,6 +66,74 @@ class RuntimeTests(unittest.TestCase):
                 manifest["operation"] = "claude-login"
             actual = [value.replace(str(self.base), "$BASE").replace("--user=" + str(os.getuid()) + ":" + str(os.getgid()), "$USER") for value in self.runtime.command(manifest, incoming, {})]
             self.assertEqual(actual, expected[mode])
+
+    def test_playwright_admission_binds_receipt_image_vector_and_private_seccomp(self):
+        mapper = self.runtime.playwright_mapper()
+        receipt_dir = self.base / 'accepted'; receipt_dir.mkdir(mode=0o700)
+        receipt = receipt_dir / 'playwright.json'
+        record = mapper.playwright_receipt_template(self.manifest['image'])
+        record['artifacts'] = {key: 'b' * 64 for key in mapper.PLAYWRIGHT_ARTIFACTS}
+        record['checks'] = {key: 'c' * 64 for key in mapper.PLAYWRIGHT_CHECKS}
+        receipt.write_bytes(mapper._canonical_json(record)); receipt.chmod(0o600)
+        seccomp = receipt_dir / 'seccomp.json'; seccomp.write_bytes((ROOT / 'playwright-seccomp.json').read_bytes()); seccomp.chmod(0o600)
+        (self.policy / 'codex-config.toml').write_bytes(mapper._render_block({'playwright'}))
+        (self.policy / 'playwright-mcp-canary.mjs').write_bytes((ROOT / 'playwright-mcp-canary.mjs').read_bytes())
+        self.manifest.update(family='codex', model='gpt-5.6-terra', network='playwright-fixture',
+            policy_sha256=self.runtime.tree_hash(self.policy),
+            playwright={'receipt': {'path': str(receipt), 'sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'image': self.manifest['image']},
+                        'seccomp': str(seccomp), 'origin': 'http://altera-web:3000'})
+        args = self.runtime.command(self.manifest, ['app-server'], {})
+        self.assertIn('--security-opt=seccomp=' + str(seccomp), args)
+        self.assertFalse(any('dst=' + str(seccomp) in arg for arg in args))
+        without = dict(self.manifest); without.pop('playwright'); without['network'] = 'none'
+        with self.assertRaisesRegex(ValueError, 'playwright_policy_invalid'):
+            self.runtime.command(without, ['app-server'], {})
+        for mutation in [{'image': 'sha256:' + 'd' * 64}, {'network': 'provider-proxy'}, {'auth_file': '/synthetic/auth'}]:
+            with self.assertRaises(ValueError):
+                self.runtime.command({**self.manifest, **mutation}, ['app-server'], {})
+        config = self.policy / 'codex-config.toml'
+        config.write_bytes(config.read_bytes().replace(b'--sandbox', b'--no-sandbox'))
+        self.manifest['policy_sha256'] = self.runtime.tree_hash(self.policy)
+        with self.assertRaisesRegex(ValueError, 'playwright_policy_invalid'):
+            self.runtime.command(self.manifest, ['app-server'], {})
+
+    def test_no_receipt_rejects_semantic_playwright_and_ambiguous_mcp_authority(self):
+        mapper = self.runtime.playwright_mapper()
+        config = self.policy / 'codex-config.toml'
+        server = json.dumps('playwright').replace('p', '\\u0070')
+        arguments = re.sub('playwright', lambda match: '\\u%04x' % ord(match.group()[0]) + match.group()[1:],
+                           json.dumps(mapper.PLAYWRIGHT_VECTOR[1:]), flags=re.IGNORECASE)
+        encoded = ('[mcp_servers.' + server + ']\ncommand = ' + json.dumps(mapper.PLAYWRIGHT_VECTOR[0]) + '\nargs = ' + arguments + '\n').encode()
+        self.assertNotIn(b'playwright', encoded.lower())
+        self.assertEqual(json.loads(server), 'playwright')
+        self.assertEqual(json.loads(arguments), mapper.PLAYWRIGHT_VECTOR[1:])
+        config.write_bytes(encoded)
+        with self.assertRaisesRegex(ValueError, '^playwright_policy_invalid$'):
+            self.runtime.playwright_policy(self.manifest)
+        for text in ['[mcp_servers."playwright"]\ncommand = "ignored"\n',
+                     "[mcp_servers.'playwright']\ncommand = \"ignored\"\n",
+                     'mcp_servers = { "playwright" = {} }\n',
+                     '[mcp_servers]\nplaywright = {}\n',
+                     'mcp_servers.playwright.command = "ignored"\n',
+                     '[[mcp_servers.playwright]]\ncommand = "ignored"\n',
+                     '[profiles.test.mcp_servers.playwright]\ncommand = "ignored"\n',
+                     'profiles = { test = { mcp_servers = {} } }\n',
+                     '[mcp_servers.future]\ncommand = "ignored"\n',
+                     '[mcp_servers.trace]\ncommand = "/usr/bin/env"\nargs = []\n',
+                     '[mcp_servers.trace]\ncommand = "/usr/bin/env"\nargs = ' + arguments + '\n',
+                     '[mcp_servers.context7]\nexperimental_use_rmcp_client = true\nurl = "https://unreviewed.invalid/mcp"\n',
+                     '[mcp_servers.trace]\ncommand = "/usr/local/bin/trace-mcp"\nargs = ["serve"]\nenv = {}\n',
+                     '[mcp_servers.trace.env]\nNODE_OPTIONS = "ignored"\n']:
+            config.write_text(text)
+            with self.subTest(policy=text):
+                with self.assertRaisesRegex(ValueError, '^playwright_policy_invalid$'):
+                    self.runtime.playwright_policy(self.manifest)
+        for text in ['description = "playwright appears harmlessly here"\n',
+                     "description = 'playwright is harmless here too'\n",
+                     'model = "gpt-5.6-terra"\n' + mapper._render_block(set()).decode(),
+                     mapper._render_block({'context7', 'trace'}).decode()]:
+            config.write_text(text)
+            self.assertIsNone(self.runtime.playwright_policy(self.manifest))
 
     def test_snapshot_preserves_revision_and_dirty_without_ignored_secrets(self):
         (self.source / 'code.txt').write_text('modified\n')

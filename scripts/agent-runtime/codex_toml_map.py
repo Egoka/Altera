@@ -39,6 +39,80 @@ _PLAYWRIGHT_ARGS = {
 _SECRET_PARTS = ("auth", "cookie", "credential", "env", "header", "password", "secret", "token")
 
 
+PLAYWRIGHT_VECTOR = [
+    "/usr/bin/env", "-i", "PATH=/usr/local/bin:/usr/bin:/bin",
+    "HOME=/runtime/cache/playwright-home", "TMPDIR=/runtime/tmp",
+    "PLAYWRIGHT_BROWSERS_PATH=/ms-playwright", "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1",
+    "PLAYWRIGHT_SKIP_BROWSER_GC=1", "npm_config_offline=true", "/usr/local/bin/node",
+    "/opt/playwright-mcp/node_modules/@playwright/mcp/cli.js", "--headless", "--sandbox",
+    "--executable-path=/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/chrome-headless-shell",
+    "--isolated", "--block-service-workers", "--allowed-origins=http://altera-web:3000",
+    "--codegen=none", "--image-responses=omit", "--output-dir=/runtime/evidence/playwright",
+    "--output-max-size=16777216",
+]
+PLAYWRIGHT_SECCOMP = "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1"
+PLAYWRIGHT_SOURCES = ("Dockerfile", "playwright-mcp/package.json", "playwright-mcp/package-lock.json",
+                      "playwright-seccomp.json", "codex_toml_map.py", "runtime.py", "playwright-mcp-canary.mjs")
+PLAYWRIGHT_ARTIFACTS = ("browser", "env_executable", "browsers_json", "packages_tree", "browsers_tree")
+PLAYWRIGHT_CHECKS = ("static", "tools", "screenshot", "readonly", "no_download", "network",
+                     "sandbox", "environment", "stdio_signal", "cleanup")
+
+
+def playwright_receipt_template(image):
+    """Каркас без результатов: сам по себе не разрешает mapping."""
+    root = Path(__file__).resolve().parent
+    return {"schema": "ALTERA_PLAYWRIGHT_STATIC_V1", "image": image,
+            "platform": "linux/arm64", "os": "debian12", "node": "24.12.0",
+            "mcp": "0.0.80", "core": "1.63.0-alpha-2026-08-31",
+            "browser_revision": "1243", "browser_version": "153.0.8010.12",
+            "vector_sha256": _digest(_canonical_json(PLAYWRIGHT_VECTOR)),
+            "sources": {name: _digest((root / name).read_bytes()) for name in PLAYWRIGHT_SOURCES},
+            "artifacts": {}, "checks": {}}
+
+
+def read_playwright_attestation(reference):
+    """Только coordinator receipt с внешним digest; никаких caller readiness booleans."""
+    try:
+        if not isinstance(reference, dict) or set(reference) != {"path", "sha256", "image"}:
+            _fail("playwright_attestation_invalid")
+        path = Path(reference["path"])
+        if (not path.is_absolute() or str(path.resolve(strict=True)) != str(path) or
+                not re.fullmatch(r"[a-f0-9]{64}", reference["sha256"]) or
+                not re.fullmatch(r"sha256:[a-f0-9]{64}", reference["image"])):
+            _fail("playwright_attestation_invalid")
+        parent = path.parent.lstat()
+        before = path.lstat()
+        if (not stat.S_ISDIR(parent.st_mode) or stat.S_IMODE(parent.st_mode) != 0o700 or
+                parent.st_uid != os.getuid() or not stat.S_ISREG(before.st_mode) or
+                stat.S_IMODE(before.st_mode) != 0o600 or before.st_uid != os.getuid() or
+                before.st_nlink != 1 or not 0 < before.st_size <= MAX_CATALOG_BYTES):
+            _fail("playwright_attestation_invalid")
+        fd = os.open(str(path), os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            if _identity(os.fstat(fd)) != _identity(before):
+                _fail("playwright_attestation_invalid")
+            data = _read_all(fd)
+            if (_identity(os.fstat(fd)) != _identity(before) or _identity(path.lstat()) != _identity(before) or
+                    _identity(path.parent.lstat()) != _identity(parent)):
+                _fail("playwright_attestation_invalid")
+        finally:
+            os.close(fd)
+        if _digest(data) != reference["sha256"]:
+            _fail("playwright_attestation_invalid")
+        record = json.loads(data)
+        expected = playwright_receipt_template(reference["image"])
+        if (not isinstance(record, dict) or set(record) != set(expected) or _canonical_json(record) != data or
+                any(record[key] != value for key, value in expected.items() if key not in ("artifacts", "checks"))):
+            _fail("playwright_attestation_invalid")
+        for key, names in (("artifacts", PLAYWRIGHT_ARTIFACTS), ("checks", PLAYWRIGHT_CHECKS)):
+            if (not isinstance(record[key], dict) or set(record[key]) != set(names) or
+                    any(not isinstance(v, str) or not re.fullmatch(r"[a-f0-9]{64}", v) for v in record[key].values())):
+                _fail("playwright_attestation_invalid")
+        return record
+    except (OSError, TypeError, ValueError, KeyError):
+        _fail("playwright_attestation_invalid")
+
+
 class MappingError(ValueError):
     """A fixed, non-disclosing mapper failure."""
 
@@ -330,7 +404,7 @@ def _secret_key(key):
 def _render_block(ready):
     lines = [BEGIN_MARKER]
     first = True
-    for name in ("context7", "trace"):
+    for name in ("context7", "playwright", "trace"):
         if name not in ready:
             continue
         if not first:
@@ -339,14 +413,16 @@ def _render_block(ready):
         lines.append("[mcp_servers.%s]" % name)
         if name == "context7":
             lines.extend(("experimental_use_rmcp_client = true", 'url = "https://mcp.context7.com/mcp"'))
+        elif name == "playwright":
+            lines.extend(('command = "/usr/bin/env"', 'args = ' + json.dumps(PLAYWRIGHT_VECTOR[1:], separators=(",", ":"))))
         else:
             lines.extend(('command = "/usr/local/bin/trace-mcp"', 'args = ["serve"]'))
     lines.append(END_MARKER)
     return ("\n".join(lines) + "\n").encode()
 
 
-def build_mapping(data, mapping_policy_version, required_servers=()):
-    """Parse and classify managed TOML bytes without filesystem access."""
+def build_mapping(data, mapping_policy_version, required_servers=(), *, playwright=None):
+    """Разобрать managed TOML; optional receipt читается только через строгий validator."""
     if not isinstance(mapping_policy_version, str) or not _POLICY_VERSION.fullmatch(mapping_policy_version):
         _fail("mapping_policy_invalid")
     if (not isinstance(required_servers, (tuple, list)) or
@@ -355,6 +431,7 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
             len(required_servers) != len(set(required_servers))):
         _fail("required_roster_invalid")
 
+    attestation = read_playwright_attestation(playwright) if playwright is not None else None
     tables = _parse_managed(data)
     rows = _server_rows()
     catalog = {
@@ -418,6 +495,9 @@ def build_mapping(data, mapping_policy_version, required_servers=()):
                 ready.add(name)
                 if name == "trace":
                     path_map[fields["command"]] = "/usr/local/bin/trace-mcp"
+            elif valid and attestation is not None:
+                row.update(shape="playwright_static_0_0_80", mapping_ready=True)
+                ready.add(name)
             elif valid:
                 row.update(shape=shape, mapping_ready=False)
                 failure = failure or "mapping_not_ready"
@@ -902,14 +982,14 @@ def _write_atomic(directory, directory_fd, directory_identity, name, data, expec
 
 def materialize(d2_record, *, workspace_root, expected_cwd, expected_uid,
                 base_policy_path, expected_base_sha256, output_dir,
-                mapping_policy_version, required_servers=()):
+                mapping_policy_version, required_servers=(), playwright=None):
     """Validate, map, and exclusively publish one secret-free policy generation."""
     candidate = _validate_descriptor(d2_record, workspace_root, expected_cwd, expected_uid)
     output_fd, output_identity = _open_output_directory(output_dir, expected_uid)
     try:
         base_policy = _read_base_policy(base_policy_path, expected_base_sha256)
         config = _read_validated_config(candidate, workspace_root, expected_uid)
-        plan = build_mapping(config, mapping_policy_version, required_servers)
+        plan = build_mapping(config, mapping_policy_version, required_servers, playwright=playwright)
         if plan["failure"] is not None:
             _fail(plan["failure"])
         policy = base_policy + plan["policy_block"]

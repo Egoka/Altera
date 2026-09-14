@@ -1,0 +1,70 @@
+{
+  "base": "139954950e91c530772216975d1c85bce4bbd155",
+  "files": {
+    "scripts/agent-runtime/playwright-mcp-canary.mjs": {
+      "before": "8fdb109a7baf80cdab9449b41cc2facb5fa2043263afdb41dc6b8228f75be9f3",
+      "after": "f80e150a3e0bf5c51c4a076dae797b7445b560ed2ca29233a32cff065602d76e"
+    },
+    "scripts/agent-runtime/test_playwright_mcp.py": {
+      "before": "5469691b9b6d856c0121da9c89ebd1e3bde2fcf5928aa0efee3408d2ae6e9297",
+      "after": "559df8046db86b2eb7aa056158d8e171f6fcaafa0b34b8496e28d482b711ab76"
+    }
+  },
+  "unchanged_sources": {
+    "scripts/agent-runtime/Dockerfile": "f1e05c7a862717d3fb240ddc579f9e3e73aabad52ed9621f036bc09f91e28215",
+    "scripts/agent-runtime/playwright-seccomp.json": "e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1",
+    "scripts/agent-runtime/playwright-mcp/package.json": "bc5f332d770e02e928bba6c83e50c9980aad60e71c3a4d574d2bd9a6663a70e3",
+    "scripts/agent-runtime/playwright-mcp/package-lock.json": "0e823db84be42dcd8b82bad7ba34f8072d08ba47d35ad7d5f7a3e8f30358e6ff",
+    "scripts/agent-runtime/codex_toml_map.py": "80daff5a550d08a12dc830ba896f71c46500463103513690ecafd999603c4bc4",
+    "scripts/agent-runtime/test_codex_toml_map.py": "3bc139cc131000c0e7337ef6c509aafea752de97c52a2ad86f2c998ef3c69558",
+    "scripts/agent-runtime/runtime.py": "86856ef487d5eaab2048e624a69678160ef8dd11a8d098884cf2e32e6e19c285",
+    "scripts/agent-runtime/test_runtime.py": "3625ee4b52f2bf5af3586818a0ad3fd9fa37f32723143edf31e3dfe0ededd3bc"
+  },
+  "diff_sha256": "33a97e69da1b7fc50197b8d015835069ba577c053b685aa2f8d0f0b92daf61c8",
+  "diff_bytes": 9641,
+  "saved_protocol_sha256": "4ca0a3135ec9fb10052ee9051c85f9ce7a348c4d3de6abc395197a3d464359fb",
+  "saved_form_yaml_sha256": "d416e11f533bcd98ac148555b4fefe3bea797f7739a8984d3e41469596765f82",
+  "saved_fixtures_equal": true,
+  "snapshot_observer_unchanged": true,
+  "screenshot_classifier_unchanged": true,
+  "actual_page_action_sites": 4,
+  "checks": {
+    "red": {
+      "argv": [
+        "/usr/bin/python3",
+        "-I",
+        "scripts/agent-runtime/test_playwright_mcp.py",
+        "PlaywrightStaticTests.test_actions_await_fresh_snapshot_before_reference_lookup"
+      ],
+      "exit": 1,
+      "raw": "red.log",
+      "sha256": "e76d25a8ef113eb971eeb594217960505cdd7ce3339da79fc784282eb733458b"
+    },
+    "green": {
+      "argv": [
+        "/usr/bin/python3",
+        "-I",
+        "scripts/agent-runtime/test_playwright_mcp.py",
+        "PlaywrightStaticTests.test_actions_await_fresh_snapshot_before_reference_lookup"
+      ],
+      "exit": 0,
+      "raw": "green.log",
+      "sha256": "c61a7d071bcbbd18c2b81c3641e7cd2e933d0cc2c5112a561ad4fc5bd497790d"
+    },
+    "covering": {
+      "argv": [
+        "/usr/bin/python3",
+        "-I",
+        "scripts/agent-runtime/test_playwright_mcp.py"
+      ],
+      "exit": 0,
+      "raw": "covering.log",
+      "sha256": "067daaad349562947c465e5f08f59e642134e3e603dad67499040b5ca0835354"
+    }
+  },
+  "browser_count": 4,
+  "browser_runs": 0,
+  "docker_runs": 0,
+  "receipt": false,
+  "commit": false
+}

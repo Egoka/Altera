@@ -1,0 +1,11 @@
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -129,7 +129,7 @@
+                 with self.assertRaisesRegex(ValueError, '^playwright_policy_invalid$'):
+                     self.runtime.playwright_policy(self.manifest)
+         for text in ['description = "playwright appears harmlessly here"\n',
+-                     "description = 'playwright is harmless here too'\n", 
++                     "description = 'playwright is harmless here too'\n",
+                      'model = "gpt-5.6-terra"\n' + mapper._render_block(set()).decode(),
+                      mapper._render_block({'context7', 'trace'}).decode()]:
+             config.write_text(text)

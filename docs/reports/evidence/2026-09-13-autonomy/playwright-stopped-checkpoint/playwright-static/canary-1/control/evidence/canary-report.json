@@ -1,0 +1,9 @@
+{
+  "mode": "control",
+  "accepted": false,
+  "failure": {
+    "name": "Error",
+    "message": "EACCES: permission denied, open '/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/deb.deps'",
+    "stack": "Error: EACCES: permission denied, open '/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/deb.deps'\n    at Object.openSync (node:fs:560:18)\n    at Object.readFileSync (node:fs:444:35)\n    at walk (file:///runtime/policy/canary.mjs:41:63)\n    at walk (file:///runtime/policy/canary.mjs:40:36)\n    at walk (file:///runtime/policy/canary.mjs:40:36)\n    at tree (file:///runtime/policy/canary.mjs:44:5)\n    at inventory (file:///runtime/policy/canary.mjs:66:66)\n    at file:///runtime/policy/canary.mjs:166:24\n    at ModuleJob.run (node:internal/modules/esm/module_job:413:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)"
+  }
+}

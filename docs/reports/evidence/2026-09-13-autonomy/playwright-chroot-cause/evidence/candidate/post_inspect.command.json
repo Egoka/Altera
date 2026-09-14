@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/usr/local/bin/docker",
+    "inspect",
+    "altera-chroot-candidate-e75c64002d22"
+  ],
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty",
+    "DOCKER_HOST": "unix:///Users/egorbondarenko/.docker/run/docker.sock"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "/usr/local/bin/docker",
+    "create",
+    "--name=altera-chroot-identity-97bd451e7177",
+    "--platform=linux/arm64",
+    "--network=none",
+    "--read-only",
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges",
+    "--user=1000:1000",
+    "--pids-limit=16",
+    "--memory=64m",
+    "--cpus=1",
+    "--entrypoint=/usr/local/bin/node",
+    "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+    "-e",
+    "const fs=require('fs'),c=require('crypto'),p='/usr/bin/perl';const s=fs.statSync(p),b=fs.readFileSync(p);console.log(JSON.stringify({path:p,canonical:fs.realpathSync(p),regular:s.isFile(),executable:!!(s.mode&73),sha256:c.createHash('sha256').update(b).digest('hex'),elf:b.subarray(0,20).toString('hex')}));"
+  ],
+  "environment": {
+    "PATH": "/usr/local/bin:/usr/bin:/bin",
+    "HOME": "/var/empty",
+    "DOCKER_HOST": "unix:///Users/egorbondarenko/.docker/run/docker.sock"
+  }
+}

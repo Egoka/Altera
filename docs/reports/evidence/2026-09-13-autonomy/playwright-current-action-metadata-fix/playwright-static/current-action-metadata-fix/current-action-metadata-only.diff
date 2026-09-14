@@ -1,0 +1,83 @@
+--- a/scripts/agent-runtime/playwright-mcp-canary.mjs
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -81,7 +81,11 @@
+   if (action.isError === true) throw new Error('MCP_ACTION_FAILED')
+   const snapshot = await call('browser_snapshot', {})
+   if (snapshot.isError === true) throw new Error('MCP_SNAPSHOT_FAILED')
+-  return observe(snapshot)
++  return { action, snapshot: observe(snapshot) }
++}
++function completedPage(page) {
++  return text(page.snapshot).includes('FORM_COMPLETE_ADA') &&
++    [page.action, page.snapshot].some((result) => text(result).includes('/done?name=Ada'))
+ }
+ 
+ const mode = process.argv[2]
+@@ -119,7 +123,7 @@
+       const result = await actionObservation(call, item.method, { synthetic: true }, (snapshot) => {
+         observed++; return snapshotObservation(snapshot, process.argv[3])
+       })
+-      observations.push({ name: item.name, ok: true, text: text(result), calls, events, observed })
++      observations.push({ name: item.name, ok: true, text: text(result.snapshot), actionText: text(result.action), completed: completedPage(result), calls, events, observed })
+     } catch (error) { observations.push({ name: item.name, ok: false, error: error.message, calls, events, observed }) }
+   }
+   console.log(JSON.stringify({ requiredTools, observations }))
+@@ -294,11 +298,11 @@
+         return result
+       }
+       let page = await actionObservation(call, 'browser_navigate', { url: 'http://altera-web:3000' })
+-      assert.ok(text(page).includes('ALTERA_PLAYWRIGHT_CANARY'))
+-      page = await actionObservation(call, 'browser_click', clickArgs(ref(page, 'Continue'), 'Continue'))
+-      page = await actionObservation(call, 'browser_type', typeArgs(ref(page, 'Name'), 'Name', 'Ada'))
+-      page = await actionObservation(call, 'browser_click', clickArgs(ref(page, 'Submit'), 'Submit'))
+-      assert.ok(text(page).includes('FORM_COMPLETE_ADA')); assert.ok(text(page).includes('/done?name=Ada'))
++      assert.ok(text(page.snapshot).includes('ALTERA_PLAYWRIGHT_CANARY'))
++      page = await actionObservation(call, 'browser_click', clickArgs(ref(page.snapshot, 'Continue'), 'Continue'))
++      page = await actionObservation(call, 'browser_type', typeArgs(ref(page.snapshot, 'Name'), 'Name', 'Ada'))
++      page = await actionObservation(call, 'browser_click', clickArgs(ref(page.snapshot, 'Submit'), 'Submit'))
++      assert.ok(completedPage(page))
+       report.browser_processes = processes()
+       const oldOutput = path.join(output, 'synthetic-old-output.bin')
+       fs.writeFileSync(oldOutput, Buffer.alloc(17 * 1024 * 1024)); fs.utimesSync(oldOutput, 1, 1)
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -178,6 +178,39 @@
+                         else:
+                             self.assertTrue(actual['ok']); self.assertEqual(actual['observed'], 1)
+                             self.assertIn('"Submit" [ref=f1e5]', actual['text']); self.assertNotIn('STALE', actual['text'])
++
++    def test_current_action_url_and_fresh_snapshot_have_separate_authority(self):
++        with tempfile.TemporaryDirectory() as temp:
++            evidence = Path(temp).resolve()
++            tree = '- heading "FORM_COMPLETE_ADA" [ref=FRESH]'
++            (evidence / 'completion.yml').write_text(tree)
++            def response(body):
++                return {'content': [{'type': 'text', 'text': body}]}
++            current_action = response('### Page\n- Page URL: http://altera-web:3000/done?name=Ada\n- button "Submit" [ref=STALE]')
++            cases = [
++                {'name': 'action_url_inline_tree', 'method': 'browser_click', 'action': current_action, 'snapshot': response(tree)},
++                {'name': 'action_url_linked_tree', 'method': 'browser_click', 'action': current_action,
++                 'snapshot': response('### Snapshot\n- [Snapshot](../runtime/evidence/playwright/completion.yml)')},
++                {'name': 'empty_action_full_snapshot', 'method': 'browser_click', 'action': SAVED_EMPTY_ACTION,
++                 'snapshot': response('### Page\n- Page URL: http://altera-web:3000/done?name=Ada\n' + tree)},
++                {'name': 'neither_current_url', 'method': 'browser_click', 'action': SAVED_EMPTY_ACTION,
++                 'snapshot': response(tree), 'previous': current_action},
++                {'name': 'stale_action_marker', 'method': 'browser_click',
++                 'action': response('### Page\n- Page URL: http://altera-web:3000/done?name=Ada\n' + tree),
++                 'snapshot': response('- heading "NOT_COMPLETE" [ref=FRESH]')},
++            ]
++            command = ['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', str(ROOT / 'playwright-mcp-canary.mjs'), 'action-contract', str(evidence)]
++            result = subprocess.run(command, input=json.dumps(cases), text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++            self.assertEqual(result.returncode, 0, result.stderr); self.assertEqual(result.stderr, '')
++            observed = json.loads(result.stdout)['observations']
++            for case, item in zip(cases, observed):
++                with self.subTest(case=case['name']):
++                    self.assertTrue(item['ok']); self.assertNotIn('STALE', item['text'])
++                    # RED воспроизводит прежнюю actual final assertion по snapshot-only результату.
++                    completed = item.get('completed', 'FORM_COMPLETE_ADA' in item['text'] and '/done?name=Ada' in item['text'])
++                    self.assertEqual(completed, case['name'] in ('action_url_inline_tree', 'action_url_linked_tree', 'empty_action_full_snapshot'))
++                    if 'actionText' in item:
++                        self.assertEqual(item['actionText'], '\n'.join(part['text'] for part in case['action']['content']))
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),

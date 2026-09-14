@@ -1,0 +1,29 @@
+# Final bounded runtime closure review
+
+**Overall runtime/browser closure: FAIL / INCOMPLETE.** Canary7 failed; acceptance topology never started; the authorized package is exhausted at **3/3**, with browser failure count **7** and **no receipt**. The final empty-directory correction passes this scoped offline spec/quality review but has **not been live validated**. No new actionable finding was identified in its exact two-file delta.
+
+## Final offline fix
+
+Reviewed `task-5-playwright-empty-failed-launch-fix-report.md`, independently verified SHA256 `18c183644c25bbc4189ab1a5cf8642abfa7f1493044eb75634d0d6b4eb54a101`. Frozen diff `playwright-static/empty-failed-launch-fix/empty-failed-launch-only.diff`: 8,321 bytes, SHA256 `3b933b9ff16bed59fc6aef409cd58f143e7fd3f6b632f13aed3b020cea02eb66`. Trace rejected the execution-worktree outline; the immutable diff was read once as the exact fallback. BASE/HEAD remains `139954950e91c530772216975d1c85bce4bbd155` with uncommitted changes at review time.
+
+Independent reconstruction from frozen `.before` files verifies both before/after source hashes. Final canary SHA256 is `6d90fc348b6be0d7970e4883db1dc1fdad4b45635e9f086a224f494cc298b030`; test SHA256 is `0ac10c0d9de73f4f1df22d89d16c11c262087fc19b13d08214bdb39c86adedf1`. All eight other release pins match the proof, including `test_runtime.py` at `3625ee4b52f2bf5af3586818a0ad3fd9fa37f32723143edf31e3dfe0ededd3bc`. Preceding helpers are byte-preserved; no security/vector/image/runtime permission change is introduced.
+
+The new main-close gate at canary lines 522–528 records the actual residue and requires no profile entries before the intentional missing-executable client is created. Even an empty directory fails in this phase. Known main-profile names are retained, and absence of a captured identity refuses. The final phase at lines 550–555 retains all actual residue names and permits only empty real nonsymlink directories that are not recorded main/prior names. Files, symlinks, nonempty/unreadable/changed entries and reused names refuse. Directory identity and timestamps are rechecked. `reusableState:false` and the allowed empty-directory names are assigned only after the predicate succeeds. The observer/predicate deletes no evidence and does not replace residue with an empty list.
+
+Read and hash-verified exact command metadata and raw RED/GREEN/covering logs. RED reproduces the old empty-list assertion against the saved residue name. Focused GREEN passes 1/1; covering passes 10/10. Synthetic filesystem cases cover phase separation, reused names, nonempty/symlink/file refusal, clean phases and retention of actual names and fixtures after both success and failure. These establish offline behavior only. No suite was rerun, and the new temporal main-close gate was never executed in canary7.
+
+## Archived actual outcome
+
+Inspected `docs/reports/evidence/2026-09-13-autonomy/playwright-bounded-validation-3/manifest.json`; independently verified the size and SHA256 of **all 70 referenced files**. The archive retains the original raw report SHA256 `10831694d179ab5396dad5e547ddcdce782d9f9c19aca942efd573f55ef735e8` and the actual executed canary SHA256 `4074a327fe72e90aa033816120ed5ae4a5d31f18c67687b78f310f82502b6d86`, distinct from the final offline fix.
+
+`playwright-static/canary-7-result.json` records attempt `bce797f7e6ca4aaa80e72af79687b0df`, exit1, unchanged source pins, `acceptance:"failed_stopped"` and `receipt_created:false`. The raw control report has `accepted:false` and fails the final `profileResidue == []` assertion. Container exit evidence independently records exit1. The authorization marks this invocation3of3; the retained failure history records seven failures and stopped status. The 19-command ledger contains only the control topology, followed by cleanup; there is no acceptance-topology launch.
+
+Partial control evidence is real: protocol id8 shows Ada in the Name textbox, id9/10 show `/done?name=Ada` and completion; the control proceeds beyond process/kernel/namespace checks and retains seven process rows. The report records screenshot output/eviction, filesystem denials, missing-browser negative, TestNet/host denials and equal before/after inventory. Redirect control records the forbidden-sink destination and **hits1**, which is stronger than endpoint reachability alone. These partial results do not establish the unstarted acceptance topology's isolation or an overall pass.
+
+## Residue and cleanup limits
+
+The later `canary-7-empty-profile-observation.json` records `playwright_chromiumdev_profile-lJcdZs` as an empty real mode0700 directory, host UID501, with distinct original main profile `playwright_chromiumdev_profile-wtmwAd` absent. Those are observations after container removal. Attribution of the empty directory to the intentional failed launch is explicitly an **inference**: the old harness captured no before-missing-launch directory snapshot. The new phase predicate must not be applied retrospectively to turn this run into PASS.
+
+The exact cleanup commands removed the `altera-pw-1b37cc6a7a9b4e6f960166374a166fb1` web, runner and sink containers with `docker rm --force`, each exit0 and matching raw name output. A subsequent network inspect recorded `Containers:{}`, then `docker network rm` returned exit0 and the exact network name. This supports successful targeted cleanup commands. No separate post-removal absence probe was retained; do not describe it as independent final absence verification.
+
+The session can be checkpointed honestly as incomplete. No further invocation is authorized by this review. No browser, Docker, model, auth, native, Multica, configuration, source/index/HEAD mutation, commit, new tests or subagent operation occurred during this bounded review. Prior negative history, exhausted package accounting and missing acceptance remain preserved.

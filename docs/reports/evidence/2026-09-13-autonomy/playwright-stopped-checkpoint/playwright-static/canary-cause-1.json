@@ -1,0 +1,19 @@
+{
+  "command": [
+    "/usr/local/bin/docker",
+    "run",
+    "--rm",
+    "--read-only",
+    "--network=none",
+    "--cap-drop=ALL",
+    "--security-opt=no-new-privileges",
+    "--user=1000:1000",
+    "--entrypoint=/usr/local/bin/node",
+    "sha256:b0d67b0db2aaff00e3b12e487099fd9c9f0ff1c78c9e355f998d3dc291e5a8f9",
+    "-e",
+    "const fs=require('fs'),p='/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/deb.deps'; const s=fs.statSync(p); console.log(JSON.stringify({path:p,mode:(s.mode&511).toString(8),uid:s.uid,gid:s.gid,size:s.size,runner:process.getuid()}));"
+  ],
+  "exit": 0,
+  "stdout": "{\"path\":\"/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux-arm64/deb.deps\",\"mode\":\"600\",\"uid\":0,\"gid\":0,\"size\":660,\"runner\":1000}\n",
+  "stderr": ""
+}

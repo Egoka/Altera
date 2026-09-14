@@ -1,0 +1,125 @@
+--- a/scripts/agent-runtime/playwright-mcp-canary.mjs
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -247,6 +247,30 @@
+   validateBrowserProcesses(report.browser_processes, binary)
+ }
+ 
++function observeProfileResidue(root = '/runtime/tmp') {
++  return fs.readdirSync(root).filter((name) => name.startsWith('playwright_chromiumdev_profile-')).sort().map((name) => {
++    const row = { name, type: 'unreadable', empty: false }
++    try {
++      const file = path.join(root, name), before = fs.lstatSync(file, { bigint: true })
++      row.type = before.isSymbolicLink() ? 'symlink' : before.isDirectory() ? 'directory' : before.isFile() ? 'file' : 'other'
++      row.dev = String(before.dev); row.ino = String(before.ino); row.mode = Number(before.mode & 0o777n); row.uid = Number(before.uid)
++      if (row.type === 'directory') {
++        row.empty = fs.readdirSync(file).length === 0
++        const after = fs.lstatSync(file, { bigint: true })
++        if (!after.isDirectory() || after.isSymbolicLink() || after.dev !== before.dev || after.ino !== before.ino ||
++            after.mtimeNs !== before.mtimeNs || after.ctimeNs !== before.ctimeNs) row.error = 'PROFILE_CHANGED'
++      }
++    } catch (error) { row.error = error.code || 'PROFILE_UNREADABLE' }
++    return row
++  })
++}
++function profileResidueState(rows, phase, priorNames = []) {
++  if (!['main', 'failed-launch'].includes(phase) || phase === 'main' && rows.length ||
++      rows.some((row) => row.error || row.type !== 'directory' || !row.empty || priorNames.includes(row.name)))
++    throw new Error('REUSABLE_PROFILE_STATE_UNPROVEN')
++  return { failedLaunchEmptyDirectories: phase === 'failed-launch' ? rows.map((row) => row.name) : [], reusableState: false }
++}
++
+ const mode = process.argv[2]
+ if (mode === 'contract') {
+   const error = (text, isError = true) => ({ isError, content: [{ type: 'text', text }] })
+@@ -265,6 +289,13 @@
+     other_path: pathDenial(error('EACCES /other/path'), '/source/forbidden.png'),
+     not_error: pathDenial(error('EROFS /source/forbidden.png', false), '/source/forbidden.png'),
+   } }))
++} else if (mode === 'profile-contract') {
++  const cases = JSON.parse(fs.readFileSync(0, 'utf8'))
++  console.log(JSON.stringify(cases.map((item) => {
++    const rows = observeProfileResidue(path.join(process.argv[3], item.name)), profileResidue = rows.map((row) => row.name)
++    try { return { name: item.name, ok: true, profileResidue, state: profileResidueState(rows, item.phase, item.prior) } }
++    catch (error) { return { name: item.name, ok: false, profileResidue, error: error.message } }
++  })))
+ } else if (mode === 'process-title-contract') {
+   const inputs = JSON.parse(fs.readFileSync(0, 'utf8'))
+   const cases = inputs.map((item) => {
+@@ -488,6 +519,13 @@
+       await call('browser_close')
+       report.tools = true
+     } finally { report.exit = await c.stop('main') }
++    report.mainProfileObservation = observeProfileResidue()
++    report.mainProfileResidue = report.mainProfileObservation.map((row) => row.name)
++    profileResidueState(report.mainProfileObservation, 'main')
++    report.mainProfileNames = [...new Set(report.browser_processes.rows.flatMap((row) => row.argv
++      .filter((arg) => arg.startsWith('--user-data-dir=/runtime/tmp/playwright_chromiumdev_profile-'))
++      .map((arg) => path.basename(arg.slice('--user-data-dir='.length)))))]
++    assert.ok(report.mainProfileNames.length > 0, 'MAIN_PROFILE_IDENTITY_UNPROVEN')
+     const missing = [...vector]; missing[13] += '-missing'
+     const d = client(missing)
+     try {
+@@ -509,8 +547,11 @@
+     assert.equal(report.after.browsers_tree, report.inventory.browsers_tree)
+     report.outputBytes = fs.readdirSync(output).reduce((total, name) => total + fs.statSync(path.join(output, name)).size, 0)
+     assert.ok(report.outputBytes <= 16777216)
+-    report.profileResidue = fs.readdirSync('/runtime/tmp').filter((p) => p.startsWith('playwright_chromiumdev_profile-'))
+-    assert.deepEqual(report.profileResidue, [])
++    report.failedLaunchProfileObservation = observeProfileResidue()
++    report.profileResidue = report.failedLaunchProfileObservation.map((row) => row.name)
++    const profileState = profileResidueState(report.failedLaunchProfileObservation, 'failed-launch', report.mainProfileNames)
++    report.failedLaunchEmptyDirectories = profileState.failedLaunchEmptyDirectories
++    report.reusableState = profileState.reusableState
+     assert.ok(!fs.existsSync('/runtime/evidence/poison-executed'))
+     report.accepted = true
+   } catch (error) { report.failure = { name: error.name, message: error.message, stack: error.stack }; process.exitCode = 1 }
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -335,6 +335,47 @@
+             with self.subTest(case=expected['name']): self.assertEqual(actual['ok'], expected['expected'])
+         if 'formats' in proof:
+             self.assertEqual(proof['formats'], ['nul-argv'] + ['rewritten-title'] * 6)
++
++    def test_only_new_empty_failed_launch_profiles_are_nonreusable(self):
++        source = (ROOT / 'playwright-mcp-canary.mjs').read_text()
++        name = 'playwright_chromiumdev_profile-lJcdZs'
++        if "mode === 'profile-contract'" not in source:
++            assertion = re.search(r'assert.deepEqual\(report.profileResidue, \[\]\)', source).group()
++            script = "const assert=require('node:assert/strict'),report={profileResidue:" + json.dumps([name]) + '};' + assertion
++            result = subprocess.run(['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', '-e', script], capture_output=True, text=True)
++            self.assertEqual(result.returncode, 0, result.stderr)
++            return
++        with tempfile.TemporaryDirectory() as temp:
++            root = Path(temp).resolve(); cases = []
++            for label, phase, kind, prior, accepted in [
++                ('new_empty', 'failed-launch', 'empty', [], True),
++                ('main_empty_dir', 'main', 'empty', [], False),
++                ('reused', 'failed-launch', 'empty', [name], False),
++                ('nonempty', 'failed-launch', 'nonempty', [], False),
++                ('symlink', 'failed-launch', 'symlink', [], False),
++                ('file', 'failed-launch', 'file', [], False),
++                ('main_clean', 'main', 'none', [], True),
++                ('failed_clean', 'failed-launch', 'none', [], True)]:
++                area = root / label; area.mkdir()
++                profile = area / name
++                if kind in ('empty', 'nonempty'):
++                    profile.mkdir(mode=0o700)
++                    if kind == 'nonempty': (profile / 'state').write_text('SYNTHETIC_STATE')
++                elif kind == 'symlink': profile.symlink_to(root, target_is_directory=True)
++                elif kind == 'file': profile.write_text('SYNTHETIC_STATE')
++                cases.append({'name': label, 'phase': phase, 'prior': prior, 'expected': accepted, 'hasResidue': kind != 'none'})
++            command = ['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', str(ROOT / 'playwright-mcp-canary.mjs'), 'profile-contract', str(root)]
++            result = subprocess.run(command, input=json.dumps(cases), text=True, env={'PATH': '/usr/bin:/bin'}, capture_output=True, timeout=5)
++            self.assertEqual(result.returncode, 0, result.stderr); self.assertEqual(result.stderr, '')
++            actual = json.loads(result.stdout); self.assertEqual(len(actual), len(cases))
++            for case, item in zip(cases, actual):
++                with self.subTest(case=case['name']):
++                    self.assertEqual(item['ok'], case['expected'])
++                    self.assertEqual(item['profileResidue'], [name] if case['hasResidue'] else [])
++                    if item['ok']:
++                        self.assertFalse(item['state']['reusableState'])
++                        self.assertEqual(item['state']['failedLaunchEmptyDirectories'], [name] if case['hasResidue'] else [])
++                    self.assertEqual((root / case['name'] / name).exists() or (root / case['name'] / name).is_symlink(), case['hasResidue'])
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),

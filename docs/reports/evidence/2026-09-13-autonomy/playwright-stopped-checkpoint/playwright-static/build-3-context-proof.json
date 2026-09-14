@@ -1,0 +1,8 @@
+{
+  "inventory": {
+    "Dockerfile": "f1e05c7a862717d3fb240ddc579f9e3e73aabad52ed9621f036bc09f91e28215",
+    "playwright-mcp/package.json": "bc5f332d770e02e928bba6c83e50c9980aad60e71c3a4d574d2bd9a6663a70e3",
+    "playwright-mcp/package-lock.json": "0e823db84be42dcd8b82bad7ba34f8072d08ba47d35ad7d5f7a3e8f30358e6ff"
+  },
+  "correction": "separate cached-layer RUN chmod grants public browser files nonroot readability, no write privilege; installer layer unchanged"
+}

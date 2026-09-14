@@ -1,0 +1,16 @@
+F
+======================================================================
+FAIL: test_seccomp_exact_bytes (__main__.PlaywrightStaticTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 76, in test_seccomp_exact_bytes
+    self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),
+AssertionError: 'ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140' != 'e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1'
+- ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140
++ e75c64002d22c7893bbc3aef2f8d7c0dde8f673254d0846d9182e89b180024f1
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

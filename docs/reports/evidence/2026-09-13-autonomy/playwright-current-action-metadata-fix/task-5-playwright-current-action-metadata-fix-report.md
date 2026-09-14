@@ -1,0 +1,17 @@
+# Current action metadata — scoped offline correction
+
+Base/HEAD `139954950e91c530772216975d1c85bce4bbd155`; previous checkpoint is the action-observation fix, preserved in its original report/archive and two new `.before` copies. Independent P2 finding and root's `task-5-playwright-current-action-metadata-ruling.md` were read. This corrects a stronger unproven output assumption; it is not another observed browser failure.
+
+Exactly two owned files changed. `actionObservation` returns the successful current action and its immediately requested fresh snapshot as separate fields. Every reference lookup and initial/final marker assertion uses only the fresh snapshot. Shared `completedPage` requires the fresh completion marker and accepts the destination URL from this current action OR its fresh snapshot. No previous page/action is an input or fallback; stale action references and marker cannot satisfy fresh-snapshot checks. Action/snapshot failure handling and ordering remain as before. The accepted bounded snapshot reader, screenshot classifier, required inventory, vector/security/image/runtime/package behavior are unchanged.
+
+## Meaningful offline checks
+
+Expected focused RED reproduced the actual former snapshot-only final condition. A current action carrying destination URL plus either fresh inline or linked tree-only completion snapshot incorrectly yielded false; both failing subcases belong to one focused regression invocation. Focused GREEN uses the same shared final predicate as production and passes. Additional cases cover empty successful action plus a fresh response supplying marker/URL; neither current action nor snapshot supplies the URL even though a previous-page fixture does; and action-only marker with a noncomplete fresh tree. Stale action refs never enter fresh text. Retained orchestration tests cover fresh refs, action error/rejected promise preventing snapshot request/read, and snapshot error preventing observation.
+
+Commands use `/usr/bin/python3 -I scripts/agent-runtime/test_playwright_mcp.py`, with focused target `PlaywrightStaticTests.test_current_action_url_and_fresh_snapshot_have_separate_authority` for RED/GREEN. Exact argv, exits and log hashes: `playwright-static/current-action-metadata-fix/commands-and-results.json`. Raw `red.log`: expected exit1 (two relevant subcase assertions); `green.log`:1/1 pass exit0; `covering.log`: final full static7/7 pass exit0, run once. No unexpected local failure. Browser count4 remains stopped; no actual invocation, Docker/model/auth/native/Multica/receipt/source expansion occurred.
+
+## Immutable result and scope
+
+`playwright-static/current-action-metadata-fix/current-action-metadata-only.diff`: 6009 bytes, SHA256 `50f765034a16a756e8900ac1c9aa8357b4eeab513854dc95c34aca9281b369f2`. `source-proof.json` pins both before/after files and all eight unchanged release sources, including root's test_runtime `3625ee4b52f2bf5af3586818a0ad3fd9fa37f32723143edf31e3dfe0ededd3bc`. No staging/commit/hooks. Source writer released for independent scoped review.
+
+The existing redirect control remains unchanged under root's clarification: it records count/reachability, and endpoint fetch alone is never browser-hit proof. No mandatory positive hit assertion was added. Actual browser_snapshot metadata, input value, final navigation, screenshot/denial/network/sandbox/cleanup acceptance remain unexecuted and unclaimed. Root must separately authorize any further same-check recovery; this offline fix supplies no invocation authority.

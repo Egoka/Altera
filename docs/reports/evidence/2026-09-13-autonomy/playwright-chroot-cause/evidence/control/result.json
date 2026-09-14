@@ -1,0 +1,125 @@
+{
+  "kind": "control",
+  "started_at": "2026-09-14T08:37:06.639744+00:00",
+  "profile_sha256": "ff9cc602bfbd54007f4894c121d9f3013e4e7a2a9b9b7a7d3fcd7c2f0f3b7140",
+  "commands": {
+    "pre_absence": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.018019375000000004,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0
+    },
+    "create": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.058557082999999996,
+      "stdout_bytes": 65,
+      "stderr_bytes": 0
+    },
+    "inspect": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.014983667000000006,
+      "stdout_bytes": 17965,
+      "stderr_bytes": 0
+    },
+    "start_attach": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.16643920900000003,
+      "stdout_bytes": 1045,
+      "stderr_bytes": 0
+    },
+    "post_inspect": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.017307375000000014,
+      "stdout_bytes": 18511,
+      "stderr_bytes": 0
+    },
+    "remove": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.04698891599999999,
+      "stdout_bytes": 35,
+      "stderr_bytes": 0
+    },
+    "post_absence": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.013369125000000037,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0
+    }
+  },
+  "accepted_observation": true,
+  "container_id": "172e37bbc4f1facd7d40ca40d9f5564bb97e71e0cfee3940156ae525e57c0189",
+  "probe_result": {
+    "parent_before": {
+      "CapAmb": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "NoNewPrivs": "1",
+      "Seccomp": "2",
+      "gid": 1000,
+      "namespace_inode": 4026531837,
+      "uid": 1000
+    },
+    "parent_after": {
+      "CapAmb": "0000000000000000",
+      "CapBnd": "0000000000000000",
+      "CapEff": "0000000000000000",
+      "CapInh": "0000000000000000",
+      "CapPrm": "0000000000000000",
+      "NoNewPrivs": "1",
+      "Seccomp": "2",
+      "gid": 1000,
+      "namespace_inode": 4026531837,
+      "uid": 1000
+    },
+    "reaped": 1,
+    "child": {
+      "after": {
+        "CapAmb": "0000000000000000",
+        "CapBnd": "000001ffffffffff",
+        "CapEff": "000001ffffffffff",
+        "CapInh": "0000000000000000",
+        "CapPrm": "000001ffffffffff",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "gid": 1000,
+        "namespace_inode": 4026535134,
+        "uid": 1000
+      },
+      "before": {
+        "CapAmb": "0000000000000000",
+        "CapBnd": "0000000000000000",
+        "CapEff": "0000000000000000",
+        "CapInh": "0000000000000000",
+        "CapPrm": "0000000000000000",
+        "NoNewPrivs": "1",
+        "Seccomp": "2",
+        "gid": 1000,
+        "namespace_inode": 4026531837,
+        "uid": 1000
+      },
+      "chroot_attempted": 1,
+      "errno": 1,
+      "map_ok": 1,
+      "phase": "chroot_result",
+      "return": -1
+    }
+  },
+  "cleanup_confirmed": true,
+  "finished_at": "2026-09-14T08:37:06.979048+00:00"
+}

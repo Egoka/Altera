@@ -1,0 +1,21 @@
+
+======================================================================
+FAIL: test_current_action_url_and_fresh_snapshot_have_separate_authority (__main__.PlaywrightStaticTests) (case='action_url_inline_tree')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 211, in test_current_action_url_and_fresh_snapshot_have_separate_authority
+    self.assertEqual(completed, case['name'] in ('action_url_inline_tree', 'action_url_linked_tree', 'empty_action_full_snapshot'))
+AssertionError: False != True
+
+======================================================================
+FAIL: test_current_action_url_and_fresh_snapshot_have_separate_authority (__main__.PlaywrightStaticTests) (case='action_url_linked_tree')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_playwright_mcp.py", line 211, in test_current_action_url_and_fresh_snapshot_have_separate_authority
+    self.assertEqual(completed, case['name'] in ('action_url_inline_tree', 'action_url_linked_tree', 'empty_action_full_snapshot'))
+AssertionError: False != True
+
+----------------------------------------------------------------------
+Ran 1 test in 0.071s
+
+FAILED (failures=2)

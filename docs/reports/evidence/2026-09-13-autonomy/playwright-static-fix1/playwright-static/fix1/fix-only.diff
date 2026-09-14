@@ -1,0 +1,259 @@
+--- a/scripts/agent-runtime/runtime.py
++++ b/scripts/agent-runtime/runtime.py
+@@ -368,14 +368,74 @@
+     return module
+ 
+ 
++def no_receipt_mcp_policy(config):
++    """Без receipt допустим только однозначный subset и точные известные MCP формы."""
++    mapper = playwright_mapper()
++    try:
++        with config.open('rb') as stream:
++            data = stream.read(65537)
++        if (len(data) > 65536 or b'\x00' in data or b'\r' in data or
++                data.startswith(b'\xef\xbb\xbf')):
++            raise ValueError()
++        text = data.decode('utf-8')
++        if '"""' in text or "'" * 3 in text:
++            raise ValueError()
++        expected = {
++            'context7': {'experimental_use_rmcp_client': True, 'url': 'https://mcp.context7.com/mcp'},
++            'trace': {'command': '/usr/local/bin/trace-mcp', 'args': ['serve']},
++        }
++        tables, keys, section, servers = set(), set(), (), {}
++        for raw in text.split('\n'):
++            line = mapper._base_line_without_comment(raw).strip()
++            if not line:
++                continue
++            if line.startswith('['):
++                if line.startswith('[[') or not line.endswith(']'):
++                    raise ValueError()
++                section = tuple(mapper._base_key_path(line[1:-1]))
++                if section in tables:
++                    raise ValueError()
++                tables.add(section)
++                if 'mcp_servers' in section:
++                    if len(section) != 2 or section[0] != 'mcp_servers' or section[1] not in expected:
++                        raise ValueError()
++                    servers[section[1]] = {}
++                continue
++            raw_key, separator, value = line.partition('=')
++            key = tuple(mapper._base_key_path(raw_key))
++            if not separator or 'mcp_servers' in key or (section, key) in keys:
++                raise ValueError()
++            keys.add((section, key))
++            value = value.strip()
++            # Inline tables и многострочные значения не входят в этот admission subset.
++            if value.startswith("'") and value.endswith("'") and "'" not in value[1:-1]:
++                parsed = value[1:-1]
++            else:
++                parsed = json.loads(value)
++            def scalar_or_array(item):
++                return (isinstance(item, (str, bool, int, float)) or
++                        isinstance(item, list) and all(scalar_or_array(part) for part in item))
++            if not scalar_or_array(parsed):
++                raise ValueError()
++            if section and section[0] == 'mcp_servers':
++                if len(key) != 1 or key[0] not in expected[section[1]]:
++                    raise ValueError()
++                servers[section[1]][key[0]] = parsed
++        if any(fields != expected[name] for name, fields in servers.items()):
++            raise ValueError()
++    except (OSError, ValueError, RecursionError):
++        raise ValueError('playwright_policy_invalid') from None
++
++
+ def playwright_policy(manifest):
+     """Проверить trusted receipt и exact vector до Docker; fixture topology не даёт model acceptance."""
+     item = manifest.get('playwright')
+     if item is None:
+         config = Path(manifest['policy']) / 'codex-config.toml'
+-        if (manifest.get('network') == 'playwright-fixture' or
+-                (config.is_file() and b'playwright' in config.read_bytes().lower())):
++        if manifest.get('network') == 'playwright-fixture':
+             raise ValueError('playwright_policy_invalid')
++        if config.exists():
++            no_receipt_mcp_policy(config)
+         return None
+     try:
+         mapper = playwright_mapper()
+--- a/scripts/agent-runtime/test_runtime.py
++++ b/scripts/agent-runtime/test_runtime.py
+@@ -3,6 +3,7 @@
+ import importlib.util
+ import json
+ import os
++import re
+ from pathlib import Path
+ import subprocess
+ import tempfile
+@@ -96,6 +97,44 @@
+         with self.assertRaisesRegex(ValueError, 'playwright_policy_invalid'):
+             self.runtime.command(self.manifest, ['app-server'], {})
+ 
++    def test_no_receipt_rejects_semantic_playwright_and_ambiguous_mcp_authority(self):
++        mapper = self.runtime.playwright_mapper()
++        config = self.policy / 'codex-config.toml'
++        server = json.dumps('playwright').replace('p', '\\u0070')
++        arguments = re.sub('playwright', lambda match: '\\u%04x' % ord(match.group()[0]) + match.group()[1:],
++                           json.dumps(mapper.PLAYWRIGHT_VECTOR[1:]), flags=re.IGNORECASE)
++        encoded = ('[mcp_servers.' + server + ']\ncommand = ' + json.dumps(mapper.PLAYWRIGHT_VECTOR[0]) + '\nargs = ' + arguments + '\n').encode()
++        self.assertNotIn(b'playwright', encoded.lower())
++        self.assertEqual(json.loads(server), 'playwright')
++        self.assertEqual(json.loads(arguments), mapper.PLAYWRIGHT_VECTOR[1:])
++        config.write_bytes(encoded)
++        with self.assertRaisesRegex(ValueError, '^playwright_policy_invalid$'):
++            self.runtime.playwright_policy(self.manifest)
++        for text in ['[mcp_servers."playwright"]\ncommand = "ignored"\n',
++                     "[mcp_servers.'playwright']\ncommand = \"ignored\"\n",
++                     'mcp_servers = { "playwright" = {} }\n',
++                     '[mcp_servers]\nplaywright = {}\n',
++                     'mcp_servers.playwright.command = "ignored"\n',
++                     '[[mcp_servers.playwright]]\ncommand = "ignored"\n',
++                     '[profiles.test.mcp_servers.playwright]\ncommand = "ignored"\n',
++                     'profiles = { test = { mcp_servers = {} } }\n',
++                     '[mcp_servers.future]\ncommand = "ignored"\n',
++                     '[mcp_servers.trace]\ncommand = "/usr/bin/env"\nargs = []\n',
++                     '[mcp_servers.trace]\ncommand = "/usr/bin/env"\nargs = ' + arguments + '\n',
++                     '[mcp_servers.context7]\nexperimental_use_rmcp_client = true\nurl = "https://unreviewed.invalid/mcp"\n',
++                     '[mcp_servers.trace]\ncommand = "/usr/local/bin/trace-mcp"\nargs = ["serve"]\nenv = {}\n',
++                     '[mcp_servers.trace.env]\nNODE_OPTIONS = "ignored"\n']:
++            config.write_text(text)
++            with self.subTest(policy=text):
++                with self.assertRaisesRegex(ValueError, '^playwright_policy_invalid$'):
++                    self.runtime.playwright_policy(self.manifest)
++        for text in ['description = "playwright appears harmlessly here"\n',
++                     "description = 'playwright is harmless here too'\n", 
++                     'model = "gpt-5.6-terra"\n' + mapper._render_block(set()).decode(),
++                     mapper._render_block({'context7', 'trace'}).decode()]:
++            config.write_text(text)
++            self.assertIsNone(self.runtime.playwright_policy(self.manifest))
++
+     def test_snapshot_preserves_revision_and_dirty_without_ignored_secrets(self):
+         (self.source / 'code.txt').write_text('modified\n')
+         (self.source / 'new-test.txt').write_text('new\n')
+--- a/scripts/agent-runtime/playwright-mcp-canary.mjs
++++ b/scripts/agent-runtime/playwright-mcp-canary.mjs
+@@ -7,8 +7,36 @@
+ import path from 'node:path'
+ import { spawn } from 'node:child_process'
+ 
++// Эти же builders используются реальным flow и no-browser schema fixture.
++const clickArgs = (target, element) => ({ element, target })
++const typeArgs = (target, element, text) => ({ element, target, text })
++const screenshotArgs = (filename) => ({ type: 'png', scale: 'css', ...(filename ? { filename } : {}) })
++function pathDenial(result, expectedPath) {
++  const detail = (result.content || []).filter((item) => item.type === 'text').map((item) => item.text).join('\n')
++  return result.isError === true && detail.includes(expectedPath) &&
++    !/invalid.*(?:argument|input)|required|unrecognized|additional propert|validation/i.test(detail) &&
++    /EROFS|EACCES|EPERM|read-only file system|permission denied|access denied|outside.*(?:workspace|allowed|root)/i.test(detail)
++}
++
+ const mode = process.argv[2]
+-if (mode === 'web' || mode === 'sink') {
++if (mode === 'contract') {
++  const error = (text, isError = true) => ({ isError, content: [{ type: 'text', text }] })
++  console.log(JSON.stringify({ requests: [
++    { name: 'browser_click', arguments: clickArgs('e1', 'Continue') },
++    { name: 'browser_type', arguments: typeArgs('e2', 'Name', 'Ada') },
++    { name: 'browser_click', arguments: clickArgs('e3', 'Submit') },
++    ...[undefined, '/source/forbidden.png', '../../../source/relative.png', '/runtime/policy/forbidden.png'].map((filename) =>
++      ({ name: 'browser_take_screenshot', arguments: screenshotArgs(filename) })),
++  ], denials: {
++    readonly: pathDenial(error("EROFS: read-only file system, open '/source/forbidden.png'"), '/source/forbidden.png'),
++    policy_path: pathDenial(error('Access denied: /runtime/policy/forbidden.png is outside workspace roots'), '/runtime/policy/forbidden.png'),
++    schema_error: pathDenial(error('Invalid arguments: scale is required'), '/source/forbidden.png'),
++    schema_with_errno: pathDenial(error('Invalid arguments EROFS /source/forbidden.png'), '/source/forbidden.png'),
++    generic_failure: pathDenial(error('Browser closed /source/forbidden.png'), '/source/forbidden.png'),
++    other_path: pathDenial(error('EACCES /other/path'), '/source/forbidden.png'),
++    not_error: pathDenial(error('EROFS /source/forbidden.png', false), '/source/forbidden.png'),
++  } }))
++} else if (mode === 'web' || mode === 'sink') {
+   let hits = 0
+   http.createServer((req, res) => {
+     if (mode === 'sink') {
+@@ -175,22 +203,23 @@
+       }
+       let page = await call('browser_navigate', { url: 'http://altera-web:3000' })
+       assert.ok(text(page).includes('ALTERA_PLAYWRIGHT_CANARY'))
+-      page = await call('browser_click', { element: 'Continue', ref: ref(page, 'Continue') })
+-      page = await call('browser_type', { element: 'Name', ref: ref(page, 'Name'), text: 'Ada' })
+-      page = await call('browser_click', { element: 'Submit', ref: ref(page, 'Submit') })
++      page = await call('browser_click', clickArgs(ref(page, 'Continue'), 'Continue'))
++      page = await call('browser_type', typeArgs(ref(page, 'Name'), 'Name', 'Ada'))
++      page = await call('browser_click', clickArgs(ref(page, 'Submit'), 'Submit'))
+       assert.ok(text(page).includes('FORM_COMPLETE_ADA')); assert.ok(text(page).includes('/done?name=Ada'))
+       report.browser_processes = processes()
+       const oldOutput = path.join(output, 'synthetic-old-output.bin')
+       fs.writeFileSync(oldOutput, Buffer.alloc(17 * 1024 * 1024)); fs.utimesSync(oldOutput, 1, 1)
+-      report.screenshot = await call('browser_take_screenshot', { type: 'png' })
++      report.screenshot = await call('browser_take_screenshot', screenshotArgs())
+       assert.equal(fs.existsSync(oldOutput), false); report.outputEviction = true
+       const images = fs.readdirSync(output).filter((p) => p.endsWith('.png'))
+       assert.ok(images.length > 0); for (const image of images) assert.equal(fs.readFileSync(path.join(output, image)).subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
+-      report.sourceScreenshot = await call('browser_take_screenshot', { filename: '/source/forbidden.png', type: 'png' }, true)
+-      report.relativeScreenshot = await call('browser_take_screenshot', { filename: '../../source/relative.png', type: 'png' }, true)
+-      assert.equal(report.relativeScreenshot.isError, true)
+-      report.policyScreenshot = await call('browser_take_screenshot', { filename: '/runtime/policy/forbidden.png', type: 'png' }, true)
+-      assert.equal(report.sourceScreenshot.isError, true); assert.equal(report.policyScreenshot.isError, true)
++      report.sourceScreenshot = await call('browser_take_screenshot', screenshotArgs('/source/forbidden.png'), true)
++      report.relativeScreenshot = await call('browser_take_screenshot', screenshotArgs('../../../source/relative.png'), true)
++      assert.ok(pathDenial(report.relativeScreenshot, '/source/relative.png'), text(report.relativeScreenshot))
++      report.policyScreenshot = await call('browser_take_screenshot', screenshotArgs('/runtime/policy/forbidden.png'), true)
++      assert.ok(pathDenial(report.sourceScreenshot, '/source/forbidden.png'), text(report.sourceScreenshot))
++      assert.ok(pathDenial(report.policyScreenshot, '/runtime/policy/forbidden.png'), text(report.policyScreenshot))
+       assert.ok(!fs.existsSync('/source/forbidden.png')); assert.ok(!fs.existsSync('/runtime/policy/forbidden.png'))
+       report.redirect = await call('browser_navigate', { url: 'http://altera-web:3000/redirect' }, true)
+       if (mode === 'control') {
+--- a/scripts/agent-runtime/test_playwright_mcp.py
++++ b/scripts/agent-runtime/test_playwright_mcp.py
+@@ -2,6 +2,7 @@
+ import hashlib
+ import importlib.util
+ import json
++import re
+ import http.server
+ import os
+ import shutil
+@@ -20,6 +21,8 @@
+     result = importlib.util.module_from_spec(spec)
+     spec.loader.exec_module(result)
+     return result
++
++SAVED_TOOL_SCHEMAS = {'browser_type': {'$schema': 'https://json-schema.org/draft/2020-12/schema', 'type': 'object', 'properties': {'element': {'description': 'Human-readable element description used to obtain permission to interact with the element', 'type': 'string'}, 'target': {'type': 'string', 'description': 'Exact target element reference from the page snapshot, or a unique element selector'}, 'text': {'type': 'string', 'description': 'Text to type into the element'}, 'submit': {'description': 'Whether to submit entered text (press Enter after)', 'type': 'boolean'}, 'slowly': {'description': 'Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once.', 'type': 'boolean'}}, 'required': ['target', 'text'], 'additionalProperties': False}, 'browser_take_screenshot': {'$schema': 'https://json-schema.org/draft/2020-12/schema', 'type': 'object', 'properties': {'element': {'description': 'Human-readable element description used to obtain permission to interact with the element', 'type': 'string'}, 'target': {'description': 'Exact target element reference from the page snapshot, or a unique element selector', 'type': 'string'}, 'type': {'description': 'Image format for the screenshot. If unset, inferred from the filename extension, otherwise png.', 'type': 'string', 'enum': ['png', 'jpeg', 'webp']}, 'filename': {'description': 'File name to save the screenshot to. Defaults to `page-{timestamp}.{png|jpeg|webp}` if not specified. Prefer relative file names to stay within the output directory.', 'type': 'string'}, 'fullPage': {'description': 'When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Cannot be used with element screenshots.', 'type': 'boolean'}, 'scale': {'default': 'css', 'description': 'Image resolution scale. "css" produces a screenshot sized in CSS pixels (smaller, consistent across devices). "device" produces a high-resolution screenshot using device pixels (larger, accounts for the device pixel ratio). Default is css.', 'type': 'string', 'enum': ['css', 'device']}}, 'required': ['scale'], 'additionalProperties': False}, 'browser_click': {'$schema': 'https://json-schema.org/draft/2020-12/schema', 'type': 'object', 'properties': {'element': {'description': 'Human-readable element description used to obtain permission to interact with the element', 'type': 'string'}, 'target': {'type': 'string', 'description': 'Exact target element reference from the page snapshot, or a unique element selector'}, 'doubleClick': {'description': 'Whether to perform a double click instead of a single click', 'type': 'boolean'}, 'button': {'description': 'Button to click, defaults to left', 'type': 'string', 'enum': ['left', 'right', 'middle']}, 'modifiers': {'description': 'Modifier keys to press', 'type': 'array', 'items': {'type': 'string', 'enum': ['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']}}}, 'required': ['target'], 'additionalProperties': False}}
+ 
+ class PlaywrightStaticTests(unittest.TestCase):
+     def test_locked_four_package_closure_and_build(self):
+@@ -42,6 +45,32 @@
+         self.assertNotIn('npx', dockerfile)
+         self.assertIn('RUN chmod -R a+rX /ms-playwright', dockerfile)
+         self.assertTrue(dockerfile.index('USER 1000:1000') > dockerfile.index('install chromium'))
++
++    def test_canary_requests_match_saved_real_schema_and_denials_are_specific(self):
++        source = (ROOT / 'playwright-mcp-canary.mjs').read_text()
++        if "mode === 'contract'" in source:
++            command = ['/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/node', str(ROOT / 'playwright-mcp-canary.mjs'), 'contract']
++            proof = json.loads(subprocess.check_output(command, env={'PATH': '/usr/bin:/bin'}, timeout=5))
++            requests = proof['requests']
++        else:
++            # RED читает действительные literal requests, не исполняя browser ветку на host.
++            requests = []
++            for line in source.splitlines():
++                match = re.search(r"call\('(browser_click|browser_type|browser_take_screenshot)', \{(.*?)\}", line)
++                if match:
++                    arguments = {key: ('css' if key == 'scale' else 'png' if key == 'type' else 'synthetic') for key in re.findall(r'(\w+):', match.group(2))}
++                    requests.append({'name': match.group(1), 'arguments': arguments})
++        self.assertGreaterEqual(len(requests), 7)
++        for request in requests:
++            schema = SAVED_TOOL_SCHEMAS[request['name']]; args = request['arguments']
++            self.assertTrue(set(schema['required']) <= set(args), request)
++            self.assertTrue(set(args) <= set(schema['properties']), request)
++            for key, value in args.items():
++                self.assertIsInstance(value, str)
++                if 'enum' in schema['properties'][key]:
++                    self.assertIn(value, schema['properties'][key]['enum'])
++        self.assertEqual(proof['denials'], {'readonly': True, 'policy_path': True, 'schema_error': False,
++            'schema_with_errno': False, 'generic_failure': False, 'other_path': False, 'not_error': False})
+ 
+     def test_seccomp_exact_bytes(self):
+         self.assertEqual(hashlib.sha256((ROOT / 'playwright-seccomp.json').read_bytes()).hexdigest(),

@@ -1,0 +1,9 @@
+{
+  "inventory": {
+    "Dockerfile": "924b136f19ff9b4ebb7da612f6f981819e074b43906a7bc3e66f0ed667f8de09",
+    "playwright-mcp/package.json": "bc5f332d770e02e928bba6c83e50c9980aad60e71c3a4d574d2bd9a6663a70e3",
+    "playwright-mcp/package-lock.json": "0e823db84be42dcd8b82bad7ba34f8072d08ba47d35ad7d5f7a3e8f30358e6ff"
+  },
+  "context_sha256": "51801c5556ba47ec1d73625636855f9434167d769c17582f0975dd3e6e65b6fe",
+  "seccomp_static_verified": true
+}

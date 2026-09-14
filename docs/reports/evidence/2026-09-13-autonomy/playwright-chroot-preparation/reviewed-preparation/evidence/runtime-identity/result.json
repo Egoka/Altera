@@ -1,0 +1,79 @@
+{
+  "started_at": "2026-09-14T03:03:02.763610+00:00",
+  "commands_sha256": "3e61e70d2e0d5d5cac9caa14eb23acc4082087608bfbb14d1232493776740b79",
+  "image": "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+  "candidate_applied": false,
+  "syscall_probe_run": false,
+  "browser_run": false,
+  "accepted": true,
+  "commands": {
+    "pre_absence": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.015793584,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0
+    },
+    "create": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.05636624999999999,
+      "stdout_bytes": 65,
+      "stderr_bytes": 0
+    },
+    "inspect": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.013601083999999986,
+      "stdout_bytes": 6887,
+      "stderr_bytes": 0
+    },
+    "start_attach": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.159886041,
+      "stdout_bytes": 211,
+      "stderr_bytes": 0
+    },
+    "post_inspect": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.03445395899999998,
+      "stdout_bytes": 7433,
+      "stderr_bytes": 0
+    },
+    "remove": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.028679332999999974,
+      "stdout_bytes": 36,
+      "stderr_bytes": 0
+    },
+    "post_absence": {
+      "returncode": 0,
+      "signal": null,
+      "problem": null,
+      "elapsed_seconds": 0.012929666999999978,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0
+    }
+  },
+  "container_id": "6c07dc425e289e298c112568e66d68a857f6e64eded189fe1abf6909efa81e3c",
+  "identity": {
+    "path": "/usr/bin/perl",
+    "canonical": "/usr/bin/perl",
+    "regular": true,
+    "executable": true,
+    "sha256": "a87e4138d1e33d240bd31be3dd5ec59017f729b7aa9bd6b3dc012dfcab85d69b",
+    "elf": "7f454c460201010000000000000000000300b700"
+  },
+  "cleanup_confirmed": true,
+  "commands_unchanged": true,
+  "finished_at": "2026-09-14T03:03:03.088978+00:00"
+}

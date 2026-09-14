@@ -1,0 +1,10 @@
+{
+  "file": "scripts/agent-runtime/test_runtime.py",
+  "before": "4344cb784e93ed2ba10155e74626cefcf495016371808d3961f240b376e5769b",
+  "after": "3625ee4b52f2bf5af3586818a0ad3fd9fa37f32723143edf31e3dfe0ededd3bc",
+  "delta": "remove one trailing ASCII space on line132 only",
+  "behavior_changed": false,
+  "tests_rerun": false,
+  "reason": "git diff --check detected formatting; initial failure retained in root-playwright-chroot-recovery-integrity.json",
+  "browser_count": 3
+}
