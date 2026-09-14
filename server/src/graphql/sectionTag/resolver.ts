@@ -7,46 +7,31 @@ import {
   buildBaseWhereClause,
   buildOrderBy,
   calculatePagination,
-  getCacheKey,
-  getCachedOrFetch,
   handleAdminError,
   validateDateRange,
   validateSearchInput,
   validateBulkOperation,
   logAdminOperation,
-  ADMIN_CACHE_PREFIX,
   PaginationInput,
   SortInput,
   BaseFilters,
   SearchInput
 } from "../../utils/admin"
-
-const TAG_CACHE_PREFIX = "tag:"
-const TAG_ARTICLES_CACHE_PREFIX = "tag_articles:"
-const TAG_STATS_CACHE_PREFIX = "tag_stats:"
-const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
+import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
+import { readThroughPublicCache } from "../../cache/read-through"
 
 export default {
   Query: {
     tag: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${TAG_CACHE_PREFIX}slug:${args.slug}`
-      const cachedTag = await ctx.redis.get(cacheKey)
-
-      if (cachedTag) {
-        console.info("CACHE: Returning tag by slug from cache")
-        return JSON.parse(cachedTag)
-      }
-
-      console.info("DATABASE: Tag by slug not in cache, fetching from database")
-      const tag = await ctx.prisma.sectionTag.findUnique({
-        where: { slug: args.slug }
-      })
-
-      if (tag) {
-        await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(tag))
-      }
-
-      return tag
+      return readThroughPublicCache(
+        {
+          cache: ctx.cache,
+          key: buildCacheKey("query.tag", args),
+          tags: [`section-tag:${args.slug}`],
+          ttlSeconds: CACHE_TTL_SECONDS.publicList
+        },
+        () => ctx.prisma.sectionTag.findUnique({ where: { slug: args.slug } })
+      )
     },
 
     articlesByTag: async (
@@ -54,12 +39,12 @@ export default {
       { tagSlug, page = 1, limit = 10 }: { tagSlug: string; page: number; limit: number },
       ctx: GraphQLContext
     ) => {
-      const cacheKey = `${TAG_ARTICLES_CACHE_PREFIX}${tagSlug}:${page}:${limit}`
-      const cachedData = await ctx.redis.get(cacheKey)
+      const cacheKey = buildCacheKey("query.articlesByTag", { tagSlug, page, limit })
+      const cachedData = await ctx.cache.get(cacheKey)
 
       if (cachedData) {
         console.info("CACHE: Returning articles by tag from cache")
-        return JSON.parse(cachedData)
+        return cachedData
       }
 
       console.info("DATABASE: Articles by tag not in cache, fetching from database")
@@ -97,21 +82,14 @@ export default {
         currentPage: page
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(response))
+      await ctx.cache.set(cacheKey, response, {
+        ttlSeconds: CACHE_TTL_SECONDS.publicList,
+        tags: [`section-tag:${tagSlug}`]
+      })
       return response
     },
 
     tagStats: async (_parent: any, { tagSlug }: { tagSlug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${TAG_STATS_CACHE_PREFIX}${tagSlug}`
-      const cachedStats = await ctx.redis.get(cacheKey)
-
-      if (cachedStats) {
-        console.info("CACHE: Returning tag stats from cache")
-        return JSON.parse(cachedStats)
-      }
-
-      console.info("DATABASE: Tag stats not in cache, calculating from database")
-
       const tag = await ctx.prisma.sectionTag.findUnique({ where: { slug: tagSlug } })
       if (!tag) {
         throw new Error("Tag not found")
@@ -178,7 +156,6 @@ export default {
         popularAuthors
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(stats))
       return stats
     },
 
@@ -229,53 +206,38 @@ export default {
         }
       }
 
-      // Создаем ключ кеша
-      const cacheKey = getCacheKey("admin_tags", { pagination, sort, filters })
+      const total = await ctx.prisma.sectionTag.count({ where })
 
-      // Получаем данные с кешированием
-      const result = await getCachedOrFetch(ctx, cacheKey, async () => {
-        // Получаем общее количество
-        const total = await ctx.prisma.sectionTag.count({ where })
+      // Рассчитываем пагинацию
+      const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
 
-        // Рассчитываем пагинацию
-        const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
-
-        // Получаем данные
-        const tags = await ctx.prisma.sectionTag.findMany({
-          where,
-          skip,
-          take,
-          orderBy: buildOrderBy(sort),
-          include: {
-            _count: {
-              select: { articles: true }
-            }
+      // Получаем данные
+      const tags = await ctx.prisma.sectionTag.findMany({
+        where,
+        skip,
+        take,
+        orderBy: buildOrderBy(sort),
+        include: {
+          _count: {
+            select: { articles: true }
           }
-        })
-
-        return {
-          tags,
-          pagination: paginationInfo,
-          filters: {
-            base: {
-              status: filters.base.status,
-              createdAt: filters.base.createdAt,
-              updatedAt: filters.base.updatedAt
-            },
-            hasArticles: filters.hasArticles
-          },
-          sort: {
-            field: sort.field,
-            direction: sort.direction
-          },
-          search: search
-            ? {
-                query: search.query,
-                fields: search.fields
-              }
-            : null
         }
       })
+
+      const result = {
+        tags,
+        pagination: paginationInfo,
+        filters: {
+          base: {
+            status: filters.base.status,
+            createdAt: filters.base.createdAt,
+            updatedAt: filters.base.updatedAt
+          },
+          hasArticles: filters.hasArticles
+        },
+        sort: { field: sort.field, direction: sort.direction },
+        search: search ? { query: search.query, fields: search.fields } : null
+      }
 
       // Логируем операцию
       logAdminOperation("admin_tags", ctx.currentUser?.id || "unknown", {
@@ -304,12 +266,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `section-tag:${newTag.slug}`])
 
         // Логируем операцию
         logAdminOperation("create_tag", ctx.currentUser?.id || "unknown", {
@@ -328,6 +285,7 @@ export default {
       ensureHasRole(ctx.currentUser, "admin")
 
       try {
+        const previousTag = await ctx.prisma.sectionTag.findUnique({ where: { id }, select: { slug: true } })
         const updatedTag = await ctx.prisma.sectionTag.update({
           where: { id },
           data: input,
@@ -338,12 +296,11 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          `section-tag:${previousTag?.slug ?? updatedTag.slug}`,
+          `section-tag:${updatedTag.slug}`
+        ])
 
         // Логируем операцию
         logAdminOperation("update_tag", ctx.currentUser?.id || "unknown", {
@@ -393,12 +350,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `section-tag:${deletedTag.slug}`])
 
         // Логируем операцию
         logAdminOperation("delete_tag", ctx.currentUser?.id || "unknown", {
@@ -491,12 +443,11 @@ export default {
           })
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${TAG_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          ...sourceTags.map((tag) => `section-tag:${tag.slug}`),
+          `section-tag:${targetTag.slug}`
+        ])
 
         // Логируем операцию
         logAdminOperation("merge_tags", ctx.currentUser?.id || "unknown", {

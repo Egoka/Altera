@@ -5,12 +5,14 @@ import { useCSRFPrevention } from "@graphql-yoga/plugin-csrf-prevention"
 import { blockFieldSuggestionsPlugin } from "@escape.tech/graphql-armor-block-field-suggestions"
 import { schema } from "./graphql/schema"
 import { createContext, GraphQLContext } from "./prisma"
+import { createCache } from "./cache"
 
 const PORT = process.env.PORT || 4000
+const cache = createCache({ redisUrl: process.env.REDIS_URL })
 
 const yoga = createYoga<GraphQLContext>({
   schema,
-  context: (initialContext) => createContext(initialContext),
+  context: (initialContext) => createContext(initialContext, cache),
   cors: {
     origin: process.env.FRONTEND_URL,
     credentials: true,

@@ -1,10 +1,4 @@
 import { GraphQLError } from "graphql"
-import { GraphQLContext } from "../prisma"
-import crypto from "crypto"
-
-// Константы для админ кеширования
-export const ADMIN_CACHE_PREFIX = "admin:"
-export const ADMIN_CACHE_TTL = 21600 // 360 минуты
 
 // Типы для админ функций
 export interface PaginationInput {
@@ -129,26 +123,6 @@ export const calculatePagination = (page: number, limit: number, total: number) 
       hasPreviousPage: page > 1
     }
   }
-}
-
-// Утилиты для кеширования
-export const getCacheKey = (operation: string, params: any) => {
-  const hash = crypto.createHash("md5").update(JSON.stringify(params)).digest("hex")
-  return `${ADMIN_CACHE_PREFIX}${operation}:${hash}`
-}
-
-export const getCachedOrFetch = async (ctx: GraphQLContext, cacheKey: string, fetchFunction: () => Promise<any>) => {
-  const cached = await ctx.redis.get(cacheKey)
-  if (cached) {
-    console.info("CACHE: Returning admin data from cache")
-    return JSON.parse(cached)
-  }
-
-  console.info("DATABASE: Admin data not in cache, fetching from database")
-  const data = await fetchFunction()
-  await ctx.redis.setex(cacheKey, ADMIN_CACHE_TTL, JSON.stringify(data))
-
-  return data
 }
 
 // Утилиты для обработки ошибок

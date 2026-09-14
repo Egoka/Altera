@@ -7,45 +7,31 @@ import {
   buildBaseWhereClause,
   buildOrderBy,
   calculatePagination,
-  getCacheKey,
-  getCachedOrFetch,
   handleAdminError,
   validateDateRange,
   validateSearchInput,
   logAdminOperation,
-  ADMIN_CACHE_PREFIX,
   PaginationInput,
   SortInput,
   BaseFilters,
   SearchInput
 } from "../../utils/admin"
-
-const CONTENT_TYPE_CACHE_PREFIX = "content_type:"
-const CONTENT_TYPE_ARTICLES_CACHE_PREFIX = "content_type_articles:"
-const CONTENT_TYPE_STATS_CACHE_PREFIX = "content_type_stats:"
-const CACHE_TTL = parseInt(process.env.CACHE_TTL || "21600") // время жизни кэша в секундах (по умолчанию 6 часов)
+import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
+import { readThroughPublicCache } from "../../cache/read-through"
 
 export default {
   Query: {
     contentType: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${CONTENT_TYPE_CACHE_PREFIX}slug:${args.slug}`
-      const cachedContentType = await ctx.redis.get(cacheKey)
-
-      if (cachedContentType) {
-        console.info("CACHE: Returning content type by slug from cache")
-        return JSON.parse(cachedContentType)
-      }
-
-      console.info("DATABASE: Content type by slug not in cache, fetching from database")
-      const contentType = await ctx.prisma.contentType.findUnique({
-        where: { slug: args.slug }
-      })
-
-      if (contentType) {
-        await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(contentType))
-      }
-
-      return contentType
+      return readThroughPublicCache(
+        {
+          cache: ctx.cache,
+          key: buildCacheKey("query.contentType", args),
+          tags: [`content-type:${args.slug}`],
+          ttlSeconds: CACHE_TTL_SECONDS.publicList,
+          cacheWhen: (contentType) => contentType?.status === "active"
+        },
+        () => ctx.prisma.contentType.findUnique({ where: { slug: args.slug } })
+      )
     },
 
     articlesByContentType: async (
@@ -53,12 +39,12 @@ export default {
       { contentTypeSlug, page = 1, limit = 10 }: { contentTypeSlug: string; page: number; limit: number },
       ctx: GraphQLContext
     ) => {
-      const cacheKey = `${CONTENT_TYPE_ARTICLES_CACHE_PREFIX}${contentTypeSlug}:${page}:${limit}`
-      const cachedData = await ctx.redis.get(cacheKey)
+      const cacheKey = buildCacheKey("query.articlesByContentType", { contentTypeSlug, page, limit })
+      const cachedData = await ctx.cache.get(cacheKey)
 
       if (cachedData) {
         console.info("CACHE: Returning articles by content type from cache")
-        return JSON.parse(cachedData)
+        return cachedData
       }
 
       console.info("DATABASE: Articles by content type not in cache, fetching from database")
@@ -96,21 +82,14 @@ export default {
         currentPage: page
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(response))
+      await ctx.cache.set(cacheKey, response, {
+        ttlSeconds: CACHE_TTL_SECONDS.publicList,
+        tags: [`content-type:${contentTypeSlug}`]
+      })
       return response
     },
 
     contentTypeStats: async (_parent: any, { contentTypeSlug }: { contentTypeSlug: string }, ctx: GraphQLContext) => {
-      const cacheKey = `${CONTENT_TYPE_STATS_CACHE_PREFIX}${contentTypeSlug}`
-      const cachedStats = await ctx.redis.get(cacheKey)
-
-      if (cachedStats) {
-        console.info("CACHE: Returning content type stats from cache")
-        return JSON.parse(cachedStats)
-      }
-
-      console.info("DATABASE: Content type stats not in cache, calculating from database")
-
       const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
       if (!contentType) {
         throw new Error("Content type not found")
@@ -201,7 +180,6 @@ export default {
         topAuthors
       }
 
-      await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(stats))
       return stats
     },
 
@@ -257,54 +235,42 @@ export default {
         }
       }
 
-      // Создаем ключ кеша
-      const cacheKey = getCacheKey("admin_content_types", { pagination, sort, filters })
+      const total = await ctx.prisma.contentType.count({ where })
 
-      // Получаем данные с кешированием
-      const result = await getCachedOrFetch(ctx, cacheKey, async () => {
-        // Получаем общее количество
-        const total = await ctx.prisma.contentType.count({ where })
+      // Рассчитываем пагинацию
+      const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
 
-        // Рассчитываем пагинацию
-        const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
-
-        // Получаем данные
-        const contentTypes = await ctx.prisma.contentType.findMany({
-          where,
-          skip,
-          take,
-          orderBy: buildOrderBy(sort),
-          include: {
-            _count: {
-              select: { articles: true }
-            }
+      // Получаем данные
+      const contentTypes = await ctx.prisma.contentType.findMany({
+        where,
+        skip,
+        take,
+        orderBy: buildOrderBy(sort),
+        include: {
+          _count: {
+            select: { articles: true }
           }
-        })
-
-        return {
-          contentTypes,
-          pagination: paginationInfo,
-          filters: {
-            base: {
-              status: filters.base.status,
-              createdAt: filters.base.createdAt,
-              updatedAt: filters.base.updatedAt
-            },
-            status: filters.status,
-            hasArticles: filters.hasArticles
-          },
-          sort: {
-            field: sort.field,
-            direction: sort.direction
-          },
-          search: search
-            ? {
-                query: search.query,
-                fields: search.fields
-              }
-            : null
         }
       })
+
+      const result = {
+        contentTypes,
+        pagination: paginationInfo,
+        filters: {
+          base: {
+            status: filters.base.status,
+            createdAt: filters.base.createdAt,
+            updatedAt: filters.base.updatedAt
+          },
+          status: filters.status,
+          hasArticles: filters.hasArticles
+        },
+        sort: {
+          field: sort.field,
+          direction: sort.direction
+        },
+        search: search ? { query: search.query, fields: search.fields } : null
+      }
 
       // Логируем операцию
       logAdminOperation("admin_content_types", ctx.currentUser?.id || "unknown", {
@@ -333,12 +299,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `content-type:${newContentType.slug}`])
 
         // Логируем операцию
         logAdminOperation("create_content_type", ctx.currentUser?.id || "unknown", {
@@ -357,6 +318,7 @@ export default {
       ensureHasRole(ctx.currentUser, "admin")
 
       try {
+        const previousContentType = await ctx.prisma.contentType.findUnique({ where: { id }, select: { slug: true } })
         const updatedContentType = await ctx.prisma.contentType.update({
           where: { id },
           data: input,
@@ -367,12 +329,11 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          `content-type:${previousContentType?.slug ?? updatedContentType.slug}`,
+          `content-type:${updatedContentType.slug}`
+        ])
 
         // Логируем операцию
         logAdminOperation("update_content_type", ctx.currentUser?.id || "unknown", {
@@ -422,12 +383,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `content-type:${deletedContentType.slug}`])
 
         // Логируем операцию
         logAdminOperation("delete_content_type", ctx.currentUser?.id || "unknown", {
@@ -479,12 +435,10 @@ export default {
           return await Promise.all(updates)
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags([
+          "home",
+          ...updatedContentTypes.map((contentType) => `content-type:${contentType.slug}`)
+        ])
 
         // Логируем операцию
         logAdminOperation("reorder_content_types", ctx.currentUser?.id || "unknown", {
@@ -513,12 +467,7 @@ export default {
           }
         })
 
-        // Инвалидируем кеш
-        const keysToDelete = await ctx.redis.keys(`${CONTENT_TYPE_CACHE_PREFIX}*`)
-        keysToDelete.push(...(await ctx.redis.keys(`${ADMIN_CACHE_PREFIX}*`)))
-        if (keysToDelete.length > 0) {
-          await ctx.redis.del(keysToDelete)
-        }
+        await ctx.cache.delByTags(["home", `content-type:${archivedContentType.slug}`])
 
         // Логируем операцию
         logAdminOperation("archive_content_type", ctx.currentUser?.id || "unknown", {
