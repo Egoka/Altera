@@ -1,7 +1,7 @@
 # T-002: Тестовая инфраструктура: Vitest в server и web, Playwright smoke
 
 - **Эпик**: E-01 Инженерная база и честный CI
-- **Статус**: зависит: T-001
+- **Статус**: завершена
 - **Параллельность**: да: добавляет тестовую обвязку и первые тесты, продуктовый код не меняет
 - **Роль-исполнитель**: тестировщик
 - **Участники стадий**: архитектура — нет; разработка — разработчик (подключение); ревью — независимый ревьюер
@@ -40,7 +40,25 @@
 Остаток задачи — критерии 2 и 3.
 
 ## 6. Доказательство результата
-Вывод `pnpm test` обоих пакетов, прогон Playwright в CI, вердикт ревью. Отчёт по ритуалу проекта (`docs/reports/`) с разделом «Как проверено».
+
+Принято 2026-09-14. Source SHA `67e55c43d5b70a0e3939438e177bc282b6d36539`, merge SHA `467bde721ff853d7e9057d393ba2e3abbf6ae46f` (PR [#29](https://github.com/Egoka/Altera/pull/29) → `app`).
+
+### KG-2: контрактный тест SDL
+
+- Активный тест `assembles every SDL file into a valid schema` — загружает все `.graphql` из `server/src/graphql`, собирает схему через `buildASTSchema(mergeTypeDefs(...))` и валидирует. Синтаксическая или структурная поломка SDL сделает тест красным.
+- Privacy-тест (`test.todo(...)`) присутствует с полной реализацией; пометка `todo` обоснована scope T-027 (§ задачи 3). RED evidence подтверждает чувствительность: `expected [ 'email', 'role' ] to deeply equal []`.
+- `pnpm test`: server 20 passed | 1 todo, web 56 passed — на Node 24.12.0 / pnpm 10.18.3.
+
+### KG-3: Playwright smoke
+
+- 1 passed (homepage title `Altera`), 9 skipped. CI job `web-smoke` присутствует.
+
+### Независимая проверка (Node 24.12.0)
+
+- Тестировщик (5f18f628, run ALTE-12): `pnpm format` exit 0, `pnpm lint` exit 0, `pnpm test` exit 0, `pnpm --filter nuxt-app test:e2e` exit 0, `git diff --check` exit 0.
+- Независимый ревьюер (db94a617): KG-2 ✓, KG-3 ✓; вердикт — принято.
+
+Отчёт: `docs/reports/2026-09-14-t002-test-infrastructure-report.md`.
 
 ## 7. Пометки
 [ФАКТ: docs/reports/2026-09-09-honest-checks-report.md] критерий 1 выполнен: обвязка Vitest и
