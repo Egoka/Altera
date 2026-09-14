@@ -54,6 +54,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build web
         run: pnpm --filter nuxt-app run build
+      - name: Smoke check production web
+        run: pnpm --filter nuxt-app run smoke
       - name: Typecheck web
         run: pnpm --filter nuxt-app run typecheck
 
