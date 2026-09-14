@@ -122,7 +122,7 @@ Render показывал предыдущий successful commit `308206d5d14d44
 В 23:50:04 Prisma подключилась к direct development, нашла четыре миграции и сообщила
 `No pending migrations to apply`; build successful, сервер запущен на порту 4000.
 В 23:51:40 Render подтвердил `Deploy succeeded | Live`.
-После Live проверка `/` вернула HTTP200 за 0.413 секунды; проверяется безопасный GraphQL ответ.
+После Live проверка `/` вернула HTTP200 за 0.413 секунды: JSON `data.__typename=Query`, errors отсутствуют.
 Это подтверждает восстановление миграционного подключения и запуск API, а не всех зависимостей.
 
 В runtime log этого же deploy повторяется `ioredis ENOTFOUND` для

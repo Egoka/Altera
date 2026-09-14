@@ -9,7 +9,7 @@
 - **Actor / run**: Codex, local thread 01a09b13-a0f8-7e93-81c5-418a9272a26a
 - **Run outcome**: success для аудита и настройки; восстановление runtime pending
 - **Stage outcome**: документация и live instructions подготовлены
-- **Task acceptance**: docs/config принято независимым reviewer; восстановление deployment не проверено
+- **Task acceptance**: docs/config принято; deploy/Neon и HTTP проверены; полная runtime acceptance blocked из-за Redis
 - **Результат**: аудит и docs/config выполнены; новый deploy Live, Neon восстановлен; Redis blocked
 
 ## Сделано
