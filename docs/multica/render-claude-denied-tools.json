@@ -1,0 +1,14 @@
+[
+  "AskUserQuestion",
+  "mcp__plugin_render_render__create_cron_job",
+  "mcp__plugin_render_render__create_key_value",
+  "mcp__plugin_render_render__create_postgres",
+  "mcp__plugin_render_render__create_static_site",
+  "mcp__plugin_render_render__create_web_service",
+  "mcp__plugin_render_render__trigger_deploy",
+  "mcp__plugin_render_render__update_environment_variables",
+  "mcp__plugin_render_render__select_workspace",
+  "mcp__plugin_render_render__query_render_postgres",
+  "mcp__plugin_render_render__get_postgres",
+  "mcp__plugin_render_render__list_postgres_instances"
+]

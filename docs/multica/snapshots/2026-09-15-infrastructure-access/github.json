@@ -1,0 +1,103 @@
+{
+  "checked_at": "2026-09-14T22:48:04Z",
+  "result": {
+    "number": 36,
+    "url": "https://github.com/Egoka/Altera/pull/36",
+    "headRefOid": "38ab5434073b839349a6c3cd2a46775fdd18fe73",
+    "mergeCommit": {
+      "oid": "563e909819348127f71a54bd2c0fbaae35d6f7d9"
+    },
+    "mergedAt": "2026-09-14T22:32:00Z",
+    "state": "MERGED",
+    "checks": [
+      {
+        "name": "Формат, линт и тесты",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849415/job/104175831768",
+        "startedAt": "2026-09-14T22:23:22Z",
+        "completedAt": "2026-09-14T22:24:14Z"
+      },
+      {
+        "name": "Имя git-ветки",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849253/job/104175831347",
+        "startedAt": "2026-09-14T22:23:23Z",
+        "completedAt": "2026-09-14T22:23:27Z"
+      },
+      {
+        "name": "Имя git-ветки",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34904576206/job/104178144907",
+        "startedAt": "2026-09-14T22:32:06Z",
+        "completedAt": "2026-09-14T22:32:10Z"
+      },
+      {
+        "name": "Создать ветку Neon",
+        "status": "COMPLETED",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34904576206/job/104178178096",
+        "startedAt": "2026-09-14T22:32:11Z",
+        "completedAt": "2026-09-14T22:32:10Z"
+      },
+      {
+        "name": "Сборка и типизация веба",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849415/job/104175831583",
+        "startedAt": "2026-09-14T22:23:21Z",
+        "completedAt": "2026-09-14T22:24:48Z"
+      },
+      {
+        "name": "Создать ветку Neon",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849253/job/104175867600",
+        "startedAt": "2026-09-14T22:23:29Z",
+        "completedAt": "2026-09-14T22:23:41Z"
+      },
+      {
+        "name": "Удалить ветку Neon",
+        "status": "COMPLETED",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849253/job/104175869057",
+        "startedAt": "2026-09-14T22:23:28Z",
+        "completedAt": "2026-09-14T22:23:28Z"
+      },
+      {
+        "name": "Браузерная проверка веба",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849415/job/104175831687",
+        "startedAt": "2026-09-14T22:23:22Z",
+        "completedAt": "2026-09-14T22:24:37Z"
+      },
+      {
+        "name": "Удалить ветку Neon",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34904576206/job/104178176549",
+        "startedAt": "2026-09-14T22:32:12Z",
+        "completedAt": "2026-09-14T22:32:21Z"
+      },
+      {
+        "name": "Сборка сервера и дымовая проверка старта",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849415/job/104175831825",
+        "startedAt": "2026-09-14T22:23:21Z",
+        "completedAt": "2026-09-14T22:24:18Z"
+      },
+      {
+        "name": "test",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/Egoka/Altera/actions/runs/34903849415/job/104176223401",
+        "startedAt": "2026-09-14T22:24:51Z",
+        "completedAt": "2026-09-14T22:24:54Z"
+      }
+    ]
+  }
+}

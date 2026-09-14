@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "render": {
+      "type": "http",
+      "url": "https://mcp.render.com/mcp",
+      "oauth": {
+        "client_id": "codex"
+      },
+      "enabled_tools": [
+        "list_workspaces",
+        "list_services",
+        "get_service",
+        "list_deploys",
+        "get_deploy",
+        "list_log_label_values",
+        "list_logs",
+        "get_metrics",
+        "list_key_value",
+        "get_key_value"
+      ]
+    }
+  }
+}

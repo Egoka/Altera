@@ -1,7 +1,7 @@
 # Окружения Altera: Render и Neon
 
-Срез: 2026-09-14. Источники — живые консоли и конфигурация репозитория на
-`1a6ebdb99600bfd1c65f2d76a55563129cbfe43e`. Это карта текущей инфраструктуры,
+Обновлено 2026-09-15: MCP/CLI и исходный `origin/app`
+`563e909819348127f71a54bd2c0fbaae35d6f7d9`. Исторические инциденты 2026-09-14 сохранены ниже. Это карта инфраструктуры,
 инструкция диагностики и план её развития. Статус конкретного сервиса всегда читается заново.
 
 ## Текущее окружение
@@ -65,15 +65,15 @@ Production endpoint `ep-dry-sun-ad4uy1u8` зарезервирован для б
 `directUrl = env("DATABASE_URL_UNPOOLED")`. Поэтому отсутствие `-pooler` в логе миграции правильно.
 Не переносить инструкции Prisma 7 на установленную Prisma 6 без отдельной миграции.
 
-Текущий `server/build` выполняет:
+На проверенном `563e909…` `server/build` и `build:ci` выполняют:
 
 ```text
-prisma generate → prisma migrate deploy → tsc → copy-graphql → copy generated client
+prisma generate → tsc → copy-graphql → copy generated client
 ```
 
-Сборка Render изменяет schema целевой БД, если есть pending migrations. Даже последующая
-ошибка компиляции не откатывает уже применённую миграцию. `build:ci` миграции не выполняет.
-Нельзя «проверить сборку» через `build` с production credentials без понимания этого эффекта.
+Миграции выделены в `prisma:migrate:deploy`; текущая сборка их не запускает. Старые deploy ниже
+использовали build с миграциями, поэтому их результат не доказывает применение новых миграций.
+Перед диагностикой читать scripts конкретного SHA; не применять миграции ради проверки подключения.
 Не выполнять `migrate reset`, `db push`, seed или ручной destructive SQL для лечения P1001.
 
 Render также содержит `REDIS_URL`, `CACHE_TTL`, `PORT`, `FRONTEND_URL`, JWT и magic-link
@@ -114,7 +114,7 @@ Render показывал предыдущий successful commit `308206d5d14d44
 Пароли, уже попавшие в переписку, следует заменить согласованно во всех потребителях.
 Ротация отличается от исправления перепутанных строк; она не выполнена этим документом.
 
-### Проверенное восстановление Neon и новый Redis blocker
+### История: восстановление Neon и Redis blocker 2026-09-14
 
 Владелец исправил обе переменные и запустил
 [deploy dep-dak5rnad0e5s73b458a0](https://dashboard.render.com/web/srv-d1uk6b6mcj7s73ek25h0/deploys/dep-dak5rnad0e5s73b458a0)
@@ -126,7 +126,7 @@ Render показывал предыдущий successful commit `308206d5d14d44
 Это подтверждает восстановление миграционного подключения и запуск API, а не всех зависимостей.
 
 В runtime log этого же deploy повторяется `ioredis ENOTFOUND` для
-`redis-16002.c44.us-east-1-2.ec2.redns.redis-cloud.com`. **Redis остаётся неисправным**.
+`redis-16002.c44.us-east-1-2.ec2.redns.redis-cloud.com`. **В этом историческом deploy Redis был неисправен**; актуальное состояние приведено ниже.
 Не считать live статус полной release acceptance. Уточнить действующий Redis сервис,
 сверить host/port/TLS в `REDIS_URL`, затем выполнить ограниченный Redis PING из runtime
 и smoke зависящего от Redis сценария. Не создавать новый платный сервис и не менять данные
@@ -169,29 +169,34 @@ MCP не нужен внутри Actions: REST API/CLI проще воспрои
 Связанные задачи: [T-104](../backlog/tasks/T-104-deploy-pipeline-migrations.md),
 [T-103](../backlog/tasks/T-103-prod-environment-ru.md). Этот аудит не объявляет их выполненными. T-103 требует продуктивное окружение в РФ без Neon и зависит от Q-01; текущий development и намерение двух frontend не отменяют это решение молча. Итоговую production topology необходимо согласовать отдельно.
 
-## Доступ инструментов
+## Доступ инструментов и свежий срез 2026-09-15
 
-Render CLI `2.1.4` установлен, но `render whoami -o json` вернул `unauthorized` при аудите.
-Render/Neon MCP в текущем наборе tools отсутствуют; Neon CLI не найден в PATH.
-Браузерная сессия владельца не означает наличие доступа в фоне у Multica или в GitHub Actions.
-GitHub имеет Neon integration secrets; их наличие не даёт локальным агентам доступа автоматически.
+Render MCP подтвердил workspace `tea-d0q29c7diees738n0250`, Server и историю deploy.
+Последний наблюдавшийся Live — [dep-dak7bomk1f9s73c6dsbg](https://dashboard.render.com/web/srv-d1uk6b6mcj7s73ek25h0/deploys/dep-dak7bomk1f9s73c6dsbg),
+SHA `563e909819348127f71a54bd2c0fbaae35d6f7d9`, 2026-09-14 22:33:59 UTC (15 сентября 01:33:59 MSK).
+Build successful и старт на порту 4000 подтверждены логами именно этого checkout SHA.
+PR #36 merged; обязательный aggregate `test` и четыре prerequisite jobs — SUCCESS.
+GraphQL POST `__typename` вернул HTTP 200, Query, без errors (0.509s).
+Это датированный срез, а не бессрочное утверждение о текущем `app`.
 
-Для постоянного контроля нужен отдельный bootstrap runtime: аутентифицировать Render CLI либо
-подключить официальный Render MCP `https://mcp.render.com/mcp`, предоставить Neon доступ выбранному
-runtime и проверить read-only calls именно из Multica. Токены хранятся вне Git и не копируются в prompts.
-Не считать текст instructions техническим ограничением: Render MCP поддерживает и изменения env/deploy.
-Новые права/секреты выдаются отдельно, с минимальным необходимым scope.
+[Render Key Value](https://dashboard.render.com/r/red-dak61sjl550s73a1tao0)
+`red-dak61sjl550s73a1tao0`, имя Redis: `available`, Free/Oregon, Valkey 8.1.4,
+allkeys-lru, persistence off, внешний allowlist пуст. Это замена старому Redis Cloud;
+владелец сообщил об обновлении REDIS_URL. Метрики показывают CPU/память и одно подключение
+после текущего deploy. Это не подтверждает PING/cache-сценарий из Server.
+В ограниченном окне старта свежего deploy ENOTFOUND/ioredis ошибок не наблюдалось.
 
-Проверка имеющегося Render CLI после авторизации:
+Neon CLI подтвердил development `br-ancient-mode-adgmr3w1` в состоянии `ready`, endpoint
+`ep-dry-boat-ad0thetj` принадлежит этой ветке, state `idle`, host совпадает с ожидаемым direct.
+SQL authentication из Server в этой проверке не выполнялась. Значения credentials не читались.
+Render memory metrics доступны; CPU и HTTP metrics в первом выбранном окне были пустыми:
+это `no_data`, а не нулевая нагрузка. HTTP Health Check Path по-прежнему не задан.
 
-```bash
-render whoami -o json
-render deploys list srv-d1uk6b6mcj7s73ek25h0 -o json
-```
-
-Команды проверены по help установленной версии; successful authenticated read пока не получен.
-Если tools отсутствуют или возвращают unauthorized — `blocked_access`, а не «деплой прошёл».
-Полный порядок ролей: [Multica infrastructure checks](../multica/infrastructure-checks.md).
+Инвентарь инструментов, конфигурация профилей и диагностика доступа:
+[Multica infrastructure access](../multica/infrastructure-access.md).
+OAuth MCP не авторизует Render CLI или GitHub Actions. Render CLI был unauthorized в старом аудите;
+его авторизация здесь не утверждается. Новый deploy/restart, env update, миграции и изменения тарифов
+ради этой проверки не запускались.
 
 ## Что доказывает smoke
 
