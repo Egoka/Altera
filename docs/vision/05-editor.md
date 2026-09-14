@@ -98,8 +98,7 @@ stateDiagram-v2
   in_review --> rework: requestRework(reason) — закрепление снято
   in_review --> rework: rejectFinal() — признак «окончательный отказ»
   rework --> review: submit() автором (без нового AI)
-  review --> published: approve() ревьюером
-  review --> draft: reject(reason) / withdraw()
+  review --> draft: withdraw()
   published --> ai_check: submit() новой ревизии (читатель видит прежнюю)
   published --> archived: archive() автором / unpublish(reason) ревьюером
   published --> review: unpublish(reason) с возвратом на ручную проверку
