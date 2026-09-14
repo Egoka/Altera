@@ -1,0 +1,26 @@
+{
+  "total": 1,
+  "triggers": [
+    {
+      "autopilot_id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "created_at": "2026-09-05T16:34:37Z",
+      "cron_expression": "0 9 * * *",
+      "enabled": true,
+      "has_signing_secret": false,
+      "has_webhook_token": false,
+      "id": "83a5e8b3-e403-4431-a221-02caa783fab4",
+      "kind": "schedule",
+      "label": "Ежедневно в 09:00",
+      "last_fired_at": null,
+      "next_run_at": "2026-09-06T06:00:00Z",
+      "provider": null,
+      "signing_secret_hint": null,
+      "timezone": "Europe/Moscow",
+      "updated_at": "2026-09-09T20:11:47Z",
+      "webhook_path": null,
+      "webhook_token": null,
+      "webhook_token_hint": null,
+      "webhook_url": null
+    }
+  ]
+}

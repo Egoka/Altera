@@ -1,0 +1,14 @@
+{
+  "reason": "owner_selected_standard_runtime",
+  "invocation_id": "abf5a531f74340278eecac1ec5fb202b",
+  "native_run_id": "01a0a046-4f60-7288-bd40-af20cf56178e",
+  "native_outcome": "failed",
+  "task_acceptance": "not_checked",
+  "runtime_quiescence_receipt": "unavailable",
+  "active_native_runs": 0,
+  "active_altera_containers": 0,
+  "gate_response": {
+    "result": "released",
+    "stage_outcome": "not_completed"
+  }
+}
