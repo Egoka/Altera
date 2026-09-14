@@ -1,0 +1,63 @@
+{
+  "checked_at": "2026-09-14T23:11:09Z",
+  "binary": "/Applications/ChatGPT.app/Contents/Resources/codex",
+  "transport": "app-server stdio",
+  "render_auth": "oAuth",
+  "tool_names": [
+    "get_deploy",
+    "get_key_value",
+    "get_service",
+    "list_deploys",
+    "list_workspaces",
+    "list_key_value",
+    "list_services",
+    "list_logs",
+    "list_log_label_values",
+    "get_metrics"
+  ],
+  "results": {
+    "list_workspaces": {
+      "isError": true,
+      "summary": {
+        "response_keys": ["content", "isError"],
+        "text_excerpt": "unauthorized"
+      }
+    },
+    "get_service": {
+      "isError": true,
+      "summary": {
+        "response_keys": ["content", "isError"],
+        "text_excerpt": "service srv-d1uk6b6mcj7s73ek25h0: unauthorized"
+      }
+    },
+    "list_deploys": {
+      "isError": true,
+      "summary": {
+        "response_keys": ["content", "isError"],
+        "text_excerpt": "service srv-d1uk6b6mcj7s73ek25h0: unauthorized"
+      }
+    },
+    "get_deploy": {
+      "isError": true,
+      "summary": {
+        "response_keys": ["content", "isError"],
+        "text_excerpt": "service srv-d1uk6b6mcj7s73ek25h0: unauthorized"
+      }
+    },
+    "get_key_value": {
+      "isError": true,
+      "summary": {
+        "response_keys": ["content", "isError"],
+        "text_excerpt": "key value store red-dak61sjl550s73a1tao0: unauthorized"
+      }
+    },
+    "get_metrics": {
+      "isError": true,
+      "summary": {
+        "response_keys": ["content", "isError"],
+        "text_excerpt": "service srv-d1uk6b6mcj7s73ek25h0: unauthorized"
+      }
+    }
+  },
+  "scope": "native binary, new isolated CODEX_HOME with public Render config only; no credentials copied; no Multica dispatch"
+}

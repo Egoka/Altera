@@ -86,8 +86,9 @@ cd server && npx prisma migrate dev --name <имя>
 ```
 
 `pnpm format:fix` изменяет файлы; `pnpm format`, `pnpm lint` и `pnpm test` предназначены для
-проверки. `server`-скрипт `build` выполняет `prisma migrate deploy`; для проверки сборки без
-применения миграций используется `cd server && pnpm run build:ci`.
+проверки. `server`-скрипты `build` и `build:ci` на срезе 2026-09-15 не применяют миграции;
+они вынесены в `prisma:migrate:deploy`. Перед запуском проверяй scripts конкретного SHA.
+Для CI-сборки используется `cd server && pnpm run build:ci`.
 
 ## Git, формат и язык
 

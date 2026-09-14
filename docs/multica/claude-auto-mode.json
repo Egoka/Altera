@@ -7,14 +7,14 @@
       "**Ветка по умолчанию / защищённая**: app — прямые коммиты и push запрещены (CLAUDE.md «Правила работы»); работа ведётся в ветках server/*, web/*, docs/* через pull request",
       "**Управление секретами**: server/.env локально; переменные CI — в настройках GitHub Actions; секреты не попадают в репозиторий и в вывод (CLAUDE.md)",
       "**Расположение чувствительных данных**: server/.env, server/.env.* — строки подключения Neon (DATABASE_URL, DATABASE_URL_UNPOOLED), REDIS_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET; не пересказывать и не выводить их значения",
-      "**CI/CD**: GitHub Actions, .github/workflows/pull_request.yml на pull request в app; выкладки в прод нет",
-      "**Чувствительные удалённые цели**: продовая база Neon и продовый Redis; необратимые операции с данными — только решением владельца (docs/multica/operating-model.md §7, журнал #1, #49)",
+      "**CI/CD**: GitHub PR checks → review/merge app → Render Server для точного merge SHA → build/start/Live → HTTP/GraphQL и отдельные DB/Redis проверки. Render использует Neon development; порядок и доступ — docs/multica/infrastructure-checks.md и infrastructure-access.md.",
+      "**Чувствительные удалённые цели**: Render Server и Key Value, Neon development текущего Server и отдельная production/default. Read-only диагностика разрешена владельцем; миграции, env update, deploy/restart и тарифы не изменяются ради проверки доступа. Credentials не выводятся.",
       "**Порядок работ**: docs/multica/operating-model.md (стадии, evidence, единственный writer продуктового кода), docs/backlog/ (задачи), docs/plans + docs/reports (обязательный ритуал)",
       "**Продуктовые решения**: принимает только владелец; журнал docs/decisions/role-review-working-log-2026-09-08.md главнее ADR и спецификаций"
     ],
     "soft_deny": [
       "$defaults",
-      "Прямой коммит, push или слияние в ветку app — защищённая ветка, изменения идут через pull request (CLAUDE.md)",
+      "Прямой коммит/push в app запрещён. Обычный PR merge разрешён владельцем после независимого review текущего SHA и зелёных обязательных CI, по docs/multica/pr-auto-merge.md.",
       "Правка docs/decisions/role-review-working-log-2026-09-08.md и текста ADR — только по прямому поручению владельца (operating-model.md §7)",
       "Перевод задачи docs/backlog/tasks/*.md в статус «готова» и включение автопилотов — решение владельца (operating-model.md §4, §7)",
       "Запуск второй цепочки, меняющей продуктовый код в server/, web/ или packages/, пока активна первая (operating-model.md §5)",

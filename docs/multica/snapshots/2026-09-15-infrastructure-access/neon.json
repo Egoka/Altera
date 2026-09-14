@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-09-14T22:48:04Z",
+  "result": {
+    "id": "ep-dry-boat-ad0thetj",
+    "branch_id": "br-ancient-mode-adgmr3w1",
+    "current_state": "idle",
+    "pending_state": null,
+    "host": "ep-dry-boat-ad0thetj.c-2.us-east-1.aws.neon.tech",
+    "type": "read_write",
+    "region_id": "aws-us-east-1",
+    "updated_at": "2026-09-14T21:46:32Z",
+    "suspend_timeout_seconds": 0
+  }
+}

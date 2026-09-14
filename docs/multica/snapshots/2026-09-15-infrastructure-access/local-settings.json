@@ -1,0 +1,10 @@
+{
+  "checked_at": "2026-09-14T23:26:21.011522+00:00",
+  "path": "/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/claude-auto-mode.json",
+  "before_sha256": "fb2742a8e7166b4835b39e30283312e56a1e5470121b98e7ce00a25a57d76ec9",
+  "after_sha256": "62d86b3bbab2b2e078227ac32832be16dfe0950868e7a099e717ef83381e64c3",
+  "matched_reviewed_source": true,
+  "main_head_unchanged": "467bde721ff853d7e9057d393ba2e3abbf6ae46f",
+  "tracked_user_diff_unchanged": true,
+  "scope": "Only pinned claude-auto-mode.json; no checkout/reset, plugin or hook edit."
+}

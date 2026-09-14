@@ -4,6 +4,7 @@
 для прямых чатов владельца, даже когда запрос касается кода или самой Multica.
 
 При изменениях backend/shared build inputs обязательна [проверка Render и Neon](../multica/infrastructure-checks.md): CI, merge, deploy и health фиксируются отдельно.
+Доступ native runtime и конфигурации MCP проверяются по [infrastructure-access](infrastructure-access.md).
 
 Каждая новая задача начинается с успешного fetch `origin/app`: от полученного полного SHA
 создаются новая ветка и отдельный worktree, проверяются HEAD и чистота. Полный порядок и

@@ -1,0 +1,119 @@
+{
+  "checked_at": "2026-09-14T23:23:03.325726+00:00",
+  "agents": [
+    {
+      "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+      "provider": "codex",
+      "status_before": "idle",
+      "before_instructions_sha256": "a2235680367996017530183afb7b8c9b93bbf1485b0f18ae9342c4761295c773",
+      "after_instructions_sha256": "05e836413c419f6532d57d021fed8ef164b092d0f316230fc895cbe4c031abcb",
+      "previous_instructions_preserved": true,
+      "unmanaged_instructions_sha256": "e13940c854d25ad3928f96affbeefa3191ff3df550ae381f72247b169200d6ef",
+      "before_mcp_sha256": "849f8b41265efd0b05cd99a17ad279ba3c3a9ebdd1c7eba6c2b88c607f91274c",
+      "after_mcp_sha256": "849f8b41265efd0b05cd99a17ad279ba3c3a9ebdd1c7eba6c2b88c607f91274c",
+      "managed_server_names": ["render"],
+      "custom_args": [],
+      "read_only_tool_filter": "enabled_tools",
+      "custom_env_keys": ["PATH"],
+      "resolved_binaries": {
+        "codex": null,
+        "neon": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/neon",
+        "gh": "/opt/homebrew/bin/gh"
+      },
+      "native_binary_from_daemon": "/Applications/ChatGPT.app/Contents/Resources/codex",
+      "native_binary_probe": "absolute path; PATH is separately verified for gh/neon",
+      "other_fields_preserved": true,
+      "workspace_mcp_assignments_preserved": true,
+      "readback_verified": true
+    },
+    {
+      "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+      "provider": "codex",
+      "status_before": "idle",
+      "before_instructions_sha256": "2178bfd4e01c4d1fc495b8836fea8744b6771302014a09e29685a461d3bae57a",
+      "after_instructions_sha256": "bf41b91ede36987cfab13821cfd36f607ad325739da25fc0af895986c363ada7",
+      "previous_instructions_preserved": true,
+      "unmanaged_instructions_sha256": "34bcefcc8c85e94a3217b7e77743b240fcd1c33a06a0ddce714977209d0717ad",
+      "before_mcp_sha256": "849f8b41265efd0b05cd99a17ad279ba3c3a9ebdd1c7eba6c2b88c607f91274c",
+      "after_mcp_sha256": "849f8b41265efd0b05cd99a17ad279ba3c3a9ebdd1c7eba6c2b88c607f91274c",
+      "managed_server_names": ["render"],
+      "custom_args": [],
+      "read_only_tool_filter": "enabled_tools",
+      "custom_env_keys": ["PATH"],
+      "resolved_binaries": {
+        "codex": null,
+        "neon": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/neon",
+        "gh": "/opt/homebrew/bin/gh"
+      },
+      "native_binary_from_daemon": "/Applications/ChatGPT.app/Contents/Resources/codex",
+      "native_binary_probe": "absolute path; PATH is separately verified for gh/neon",
+      "other_fields_preserved": true,
+      "workspace_mcp_assignments_preserved": true,
+      "readback_verified": true
+    },
+    {
+      "id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+      "provider": "claude",
+      "status_before": "idle",
+      "before_instructions_sha256": "93089bff8f7365b87de146183fcc3d1769eb8edb6b4af61af4022d6837d7a9a2",
+      "after_instructions_sha256": "69655bcd761168c8f3d3e494caad369b334a2393cc07bee137d12e3314905b53",
+      "previous_instructions_preserved": true,
+      "unmanaged_instructions_sha256": "bc3f2c6f16b61965a77203dda0165028e439137827dc0f80cd289f7a3b7799ec",
+      "before_mcp_sha256": "c3540f2f6f492c11ee5c67c508ae6f69558ba963b6bbc84a6d649ac38f0bf778",
+      "after_mcp_sha256": "c3540f2f6f492c11ee5c67c508ae6f69558ba963b6bbc84a6d649ac38f0bf778",
+      "managed_server_names": ["plugin:render:render"],
+      "custom_args": [
+        "--plugin-dir",
+        "/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/claude-plugin",
+        "--settings",
+        "/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/claude-auto-mode.json",
+        "--disallowedTools",
+        "AskUserQuestion,mcp__plugin_render_render__create_cron_job,mcp__plugin_render_render__create_key_value,mcp__plugin_render_render__create_postgres,mcp__plugin_render_render__create_static_site,mcp__plugin_render_render__create_web_service,mcp__plugin_render_render__trigger_deploy,mcp__plugin_render_render__update_environment_variables,mcp__plugin_render_render__select_workspace,mcp__plugin_render_render__query_render_postgres,mcp__plugin_render_render__get_postgres,mcp__plugin_render_render__list_postgres_instances"
+      ],
+      "read_only_tool_filter": "disallowedTools for all non-diagnostic Render tools in observed inventory",
+      "custom_env_keys": ["PATH"],
+      "resolved_binaries": {
+        "claude": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/claude",
+        "neon": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/neon",
+        "gh": "/opt/homebrew/bin/gh"
+      },
+      "native_binary_from_daemon": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe",
+      "native_binary_probe": "absolute path; PATH is separately verified for gh/neon",
+      "other_fields_preserved": true,
+      "workspace_mcp_assignments_preserved": true,
+      "readback_verified": true
+    },
+    {
+      "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+      "provider": "claude",
+      "status_before": "idle",
+      "before_instructions_sha256": "b8d1d092518c8823cf4358079775689c3f21f9cbfab54835ff4dfd939e26d219",
+      "after_instructions_sha256": "d99ced53abc4f4c731f7730efade328327bb397dc254f26ba138284b0c4deb42",
+      "previous_instructions_preserved": true,
+      "unmanaged_instructions_sha256": "cd0418569ccbbaf51ad0f5a1e5161758a4cb314c4c3df2725dcbb5c7c590a78e",
+      "before_mcp_sha256": "c3540f2f6f492c11ee5c67c508ae6f69558ba963b6bbc84a6d649ac38f0bf778",
+      "after_mcp_sha256": "c3540f2f6f492c11ee5c67c508ae6f69558ba963b6bbc84a6d649ac38f0bf778",
+      "managed_server_names": ["plugin:render:render"],
+      "custom_args": [
+        "--plugin-dir",
+        "/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/claude-plugin",
+        "--settings",
+        "/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/claude-auto-mode.json",
+        "--disallowedTools",
+        "AskUserQuestion,mcp__plugin_render_render__create_cron_job,mcp__plugin_render_render__create_key_value,mcp__plugin_render_render__create_postgres,mcp__plugin_render_render__create_static_site,mcp__plugin_render_render__create_web_service,mcp__plugin_render_render__trigger_deploy,mcp__plugin_render_render__update_environment_variables,mcp__plugin_render_render__select_workspace,mcp__plugin_render_render__query_render_postgres,mcp__plugin_render_render__get_postgres,mcp__plugin_render_render__list_postgres_instances"
+      ],
+      "read_only_tool_filter": "disallowedTools for all non-diagnostic Render tools in observed inventory",
+      "custom_env_keys": ["PATH"],
+      "resolved_binaries": {
+        "claude": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/claude",
+        "neon": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin/neon",
+        "gh": "/opt/homebrew/bin/gh"
+      },
+      "native_binary_from_daemon": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe",
+      "native_binary_probe": "absolute path; PATH is separately verified for gh/neon",
+      "other_fields_preserved": true,
+      "workspace_mcp_assignments_preserved": true,
+      "readback_verified": true
+    }
+  ]
+}
