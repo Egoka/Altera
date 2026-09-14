@@ -1,0 +1,1 @@
+.option("--sandbox", "enable the sandbox for all process types that are normally not sandboxed.")

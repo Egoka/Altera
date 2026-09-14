@@ -1,0 +1,10 @@
+{
+  "source_spans_verified": 22,
+  "report_sha256": "b8ecc2e4e2aa01738d16aac209f4703a598f3bb687087b4e7a3c9c4894b7b1ca",
+  "report_bytes": 9528,
+  "registry_integrities_verified": true,
+  "packages_executed": false,
+  "browser_downloaded_or_run": false,
+  "image_built": false,
+  "source_index_or_head_changed": false
+}

@@ -1,0 +1,214 @@
+{
+  "state": "accepted_synthetic_mapper_after_cause_based_recovery",
+  "base": "86fec1eef63fd41d3864c22b44362c50a88617e7",
+  "initial_commit": "123d1e6f9c6c5199c8a4fe6bf16b451bfe11a084",
+  "fix1_commit": "ccadb408e22936ad00779778a7bbc5799cb87afa",
+  "files": [
+    {
+      "file": "task-5-codex-toml-mapping-independent-review.md",
+      "bytes": 10165,
+      "sha256": "0a6810a4da5974d7c2377563f73d74df2009e933d237422924d939dba26eb333"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-brief.md",
+      "bytes": 21286,
+      "sha256": "7fc0e1e87fe54f86460a4e25ea4224f4625696041aa94dffcf2ca541bf1e4bbb"
+    },
+    {
+      "file": "task-5-codex-mapper-dispatch-readiness.md",
+      "bytes": 5856,
+      "sha256": "5107a56c5d13c8b705e09eb432d7c60820d5ed4274572d2682867218a849295e"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-atomic-red.log",
+      "bytes": 1093,
+      "sha256": "1285f0eaaa2f3dc6f700e5986744ed99065c3fcfc0c404f032e5575fcad8c26a"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-final.log",
+      "bytes": 1388,
+      "sha256": "4239d4c5b38800847854498a90844a3579dea6cc69b663301bab18e0e689714e"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix1-final.log",
+      "bytes": 1707,
+      "sha256": "a118b00d287752d8367feeb139888b33dda4bd33709f378f82f72fff92989f53"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix1-green.log",
+      "bytes": 417,
+      "sha256": "9b42c94066428791af2101aacbb7638fe32d2a04c9eaa1e7201f93c32817e563"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix1-hook.log",
+      "bytes": 1050,
+      "sha256": "cdd58007deb8554f9154c02780a04b4f9830d7a77dbcfb24021741da287068c7"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix1-red.log",
+      "bytes": 6932,
+      "sha256": "a0c03a009926a2882923fe44e0c56bcec87623d3634a7f1ba8ff320d84bf7315"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-format.log",
+      "bytes": 66,
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-green-2.log",
+      "bytes": 1279,
+      "sha256": "98fa2274aa4adfa9477cfd36cdaaf608ac3d4b992e5b71e7995494a509436f2a"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-green-3.log",
+      "bytes": 1388,
+      "sha256": "687851269a64571f930ad78856008900a849a9ff53969f99c77417ef66eb785b"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-green.log",
+      "bytes": 241,
+      "sha256": "5093ed1ffe8b59848f27d250ea9b386dc1351bcec25d6de337e630e5ddb5ffff"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-line-ending-red.log",
+      "bytes": 899,
+      "sha256": "d732a9c2fb4df6b28dc0018ab4ee6ad18392496d337cd0e7f15e24518d815b5a"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-postcommit.log",
+      "bytes": 1388,
+      "sha256": "3fc60b4fcae2c32c34cb859059946a3fe865f9e290f5a942c652cd72b3703786"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-red.log",
+      "bytes": 241,
+      "sha256": "5093ed1ffe8b59848f27d250ea9b386dc1351bcec25d6de337e630e5ddb5ffff"
+    },
+    {
+      "file": "review/scoped.diff",
+      "bytes": 53317,
+      "sha256": "15f2f200beadb77f1c45173362af6c0fedcf87aa206944091cfc57ff3efa150e"
+    },
+    {
+      "file": "review/precommit.json",
+      "bytes": 1831,
+      "sha256": "1999efd9a09892671b66bbf664ba0b317dd9ad79c0202bb173306adcc217d8d6"
+    },
+    {
+      "file": "review/postcommit.json",
+      "bytes": 1926,
+      "sha256": "d31566a87de39275b4be77eca5c546e4c390a595b86b3c393ecb1f884bac71aa"
+    },
+    {
+      "file": "review/named-risk-probe.py",
+      "bytes": 4623,
+      "sha256": "f447fdb430f58825a80a2deb7927af507f7321070886a6a6202c59143aed4863"
+    },
+    {
+      "file": "review/named-risk-proof.json",
+      "bytes": 716,
+      "sha256": "3ac9ad62318fcf6c3503c141f4cf49045cac37b9003d83c5f957aa21c90a45c3"
+    },
+    {
+      "file": "review/fix1-scoped.diff",
+      "bytes": 27758,
+      "sha256": "2fd5ef665405080f9cbdedca6dcd1364dbe4c558f5fa07e7bd219fb33a9110e6"
+    },
+    {
+      "file": "review/fix1-precommit.json",
+      "bytes": 1611,
+      "sha256": "7eaa5fba76bda6803524e24c030a25f78ed16be333923f6fd709fc18582a1806"
+    },
+    {
+      "file": "review/fix1-postcommit.json",
+      "bytes": 1713,
+      "sha256": "49918fdf24a0588bf833e7db30164fe80c1fec737a0f269788bd0905a8454ce9"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix1-independent-review.md",
+      "bytes": 7216,
+      "sha256": "1e61ce7bc672be3c8f97349f46a90d00511d61e0137d650a1150687629ba1be1"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-review-stop.json",
+      "bytes": 502,
+      "sha256": "d3a786bf68770a005918ae45b20136d0869e3a0c36e9482e1de1f53133789d82"
+    },
+    {
+      "file": "review/fix1-reopen-probe.py",
+      "bytes": 2378,
+      "sha256": "f8661d442165683ecf4708ebe2b237831d8e0967357ef2546e95a3d560a60852"
+    },
+    {
+      "file": "review/fix1-reopen-proof.json",
+      "bytes": 281,
+      "sha256": "c5d9c06a28399b2878fd9f078d819d8401acf5aa2f5a1f6d46af1868fd6d4b9a"
+    },
+    {
+      "file": "historical/report-through-fix1.md",
+      "bytes": 11915,
+      "sha256": "d01f25eb8a8071a0fddde4bd3d27e86554bb1f9ad5a98e9eca8f774b037ba898"
+    },
+    {
+      "file": "historical/report-initial.md",
+      "bytes": 6875,
+      "sha256": "4e7c37856eb2d437e1b6c737f6126cf9f200334edf7db2754c1aaff7eaee14f0"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-report.md",
+      "bytes": 15831,
+      "sha256": "d415287affeda84da8ed55a185c95058ffecd050479483fea57e4e3b1e4ddc98"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix2-red.log",
+      "bytes": 1370,
+      "sha256": "b3d33f94d4cd9dfc42dad8248eec1ac5705ffd2052cc57737599758d3109614e"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix2-green.log",
+      "bytes": 300,
+      "sha256": "3ae4c428ef2a36262c7985594ad4e0ce0a7102e95909c3f0300b23fe1301f426"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix2-final.log",
+      "bytes": 1909,
+      "sha256": "82c5dca45730adf588861f4b5588f590efe177c7db0c32ac8779395a6c1aeb69"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix2-hook.log",
+      "bytes": 1059,
+      "sha256": "7c8d7b555d6e409a183a06cb3e8c0163c8fae86e1d8d5c943194f1fcddba4436"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-review-recovery-authorization.json",
+      "bytes": 1631,
+      "sha256": "d8f8a7e736a47d3c69da7310d870d549ff7d9bbb40c45e3fdc0315014cc7fda5"
+    },
+    {
+      "file": "review/fix2-scoped.diff",
+      "bytes": 6332,
+      "sha256": "c58be0b4e1a28656562b7f983946c1a551a86073d417fca4774c39f9e6746b11"
+    },
+    {
+      "file": "review/fix2-precommit.json",
+      "bytes": 1977,
+      "sha256": "961f1450db265b13802d13a144d0707dba2ab0fa7a15ae2c10174a0a85c880b5"
+    },
+    {
+      "file": "review/fix2-postcommit.json",
+      "bytes": 1951,
+      "sha256": "833eb628c3ec843a27007d0189cb588e59831813efb4c9f89cadfa694a74dd5f"
+    },
+    {
+      "file": "task-5-codex-toml-mapping-fix2-independent-review.md",
+      "bytes": 3825,
+      "sha256": "4cfdb396ca599829abeec295a8f196c9e3b455d3f03ce7d4657b550463186247"
+    }
+  ],
+  "initial_hook_raw_artifact": "not_saved_transcript_only_secondary_summary",
+  "actual_config_or_auth_read": false,
+  "review_consecutive_failures": 0,
+  "fix2_commit": "9ed8b88c11d802c6f9b5d89b89eeccff2e1bda1b",
+  "initial_report_prefix_verified_against_original_digest": true,
+  "historical_negative_reviews": 2
+}

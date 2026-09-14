@@ -1,0 +1,8 @@
+      async launch(progress2, options, protocolLogger) {
+        options = this._validateLaunchOptions(options);
+        const seleniumHubUrl = options.__testHookSeleniumRemoteURL || process.env.SELENIUM_REMOTE_URL;
+        if (seleniumHubUrl)
+          return this.launchWithSeleniumHub(progress2, seleniumHubUrl, options);
+        return this._innerLaunchWithRetries(progress2, options, void 0, helper.debugProtocolLogger(protocolLogger)).catch((e) => {
+          throw this._rewriteStartupLog(e);
+        });

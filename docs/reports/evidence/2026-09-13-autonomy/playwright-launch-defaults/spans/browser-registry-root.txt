@@ -1,0 +1,14 @@
+    registryDirectory = (() => {
+      let result2;
+      const envDefined = getFromENV("PLAYWRIGHT_BROWSERS_PATH");
+      if (envDefined === "0")
+        result2 = import_path20.default.join(packageRoot, ".local-browsers");
+      else if (envDefined)
+        result2 = envDefined;
+      else
+        result2 = defaultRegistryDirectory();
+      if (!import_path20.default.isAbsolute(result2)) {
+        result2 = import_path20.default.resolve(getFromENV("INIT_CWD") || process.cwd(), result2);
+      }
+      return result2;
+    })();

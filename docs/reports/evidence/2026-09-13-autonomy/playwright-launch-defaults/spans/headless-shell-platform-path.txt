@@ -1,0 +1,8 @@
+      "chromium-headless-shell": {
+        "<unknown>": void 0,
+        "linux-x64": ["chrome-headless-shell-linux64", "chrome-headless-shell"],
+        "linux-arm64": ["chrome-headless-shell-linux-arm64", "chrome-headless-shell"],
+        "mac-x64": ["chrome-headless-shell-mac-x64", "chrome-headless-shell"],
+        "mac-arm64": ["chrome-headless-shell-mac-arm64", "chrome-headless-shell"],
+        "win-x64": ["chrome-headless-shell-win64", "chrome-headless-shell.exe"]
+      },

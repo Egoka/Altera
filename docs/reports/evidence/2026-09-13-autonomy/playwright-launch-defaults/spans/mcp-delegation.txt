@@ -1,0 +1,15 @@
+const { program } = require('playwright-core/lib/utilsBundle');
+const { tools, libCli } = require('playwright-core/lib/coreBundle');
+
+if (process.argv.includes('install-browser')) {
+  const argv = process.argv.map(arg => arg === 'install-browser' ? 'install' : arg);
+  libCli.decorateProgram(program);
+  void program.parseAsync(argv);
+  return;
+}
+
+const packageJSON = require('./package.json');
+const p = program.version('Version ' + packageJSON.version).name('Playwright MCP');
+tools.decorateMCPCommand(p, packageJSON.version);
+
+void program.parseAsync(process.argv);

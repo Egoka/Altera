@@ -1,0 +1,53 @@
+{
+  "base": "ccadb408e22936ad00779778a7bbc5799cb87afa",
+  "head": "9ed8b88c11d802c6f9b5d89b89eeccff2e1bda1b",
+  "commit_subject": "fix(runtime): validate Codex final file before read",
+  "committed_scope": [
+    {
+      "blob": "df882caa4cc664049e12ab4dd2149503c7d133eb",
+      "mode": "100644",
+      "path": "scripts/agent-runtime/codex_toml_map.py",
+      "sha256": "a2da623a4a2ec46617dc2f8c697281bc042f0aaeb29798aaa7c4bcfd59afad09"
+    },
+    {
+      "blob": "5f7ca46b69e500fc77b41543dd099ad477b4ac38",
+      "mode": "100644",
+      "path": "scripts/agent-runtime/test_codex_toml_map.py",
+      "sha256": "f4638922fd8cdd8851dbb1a30b6ffcc0e19f315d26af460ee21e7ade7d2377b1"
+    }
+  ],
+  "diff_matches_precommit": true,
+  "focused_proof": {
+    "corrected_source_sha256": "a2da623a4a2ec46617dc2f8c697281bc042f0aaeb29798aaa7c4bcfd59afad09",
+    "fifo_foreign_read_bytes": 0,
+    "fifo_open_has_o_nonblock": true,
+    "fifo_refused_as_special_file": true,
+    "fifo_preserved_by_identity_cleanup": true,
+    "foreign_regular_read_bytes": 0,
+    "foreign_regular_refused_before_read": true,
+    "foreign_regular_preserved_by_identity_cleanup": true
+  },
+  "independent_review": {
+    "consecutive_failures_preserved": 2,
+    "recovery_review_run": false,
+    "state": "stopped"
+  },
+  "normal_hook": {
+    "command_environment": "login:false; PATH=/Users/egorbondarenko/.nvm/versions/node/v24.12.0/bin:$PATH",
+    "exit": 0,
+    "path": "task-5-codex-toml-mapping-fix2-hook.log",
+    "sha256": "7c8d7b555d6e409a183a06cb3e8c0163c8fae86e1d8d5c943194f1fcddba4436",
+    "summary": {
+      "eslint": "passed",
+      "prettier": "passed",
+      "server_tests": "19 passed, 1 todo",
+      "web_tests": "5 passed"
+    }
+  },
+  "owned_paths_clean": true,
+  "real_runtime_operations": false,
+  "scoped_diff": {
+    "path": "task-5-codex-toml-mapping-review/fix2-scoped.diff",
+    "sha256": "c58be0b4e1a28656562b7f983946c1a551a86073d417fca4774c39f9e6746b11"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "base": "86fec1eef63fd41d3864c22b44362c50a88617e7",
+  "changed_paths": [
+    "docs/development/runtime-isolation.md",
+    "scripts/agent-runtime/codex_toml_map.py",
+    "scripts/agent-runtime/test_codex_toml_map.py"
+  ],
+  "files": [
+    {
+      "bytes": 32535,
+      "git_mode": "100644",
+      "matches_precommit": true,
+      "path": "docs/development/runtime-isolation.md",
+      "sha256": "89d22c1c3fef3da99788c4ef287e2dc7954ca5a1dca48e3a781e7eabdfd12c16"
+    },
+    {
+      "bytes": 27373,
+      "git_mode": "100644",
+      "matches_precommit": true,
+      "path": "scripts/agent-runtime/codex_toml_map.py",
+      "sha256": "e26bb20479efd6c8e6033fa6832716c5530a673e753a87deb9d78304c2c93391"
+    },
+    {
+      "bytes": 20013,
+      "git_mode": "100644",
+      "matches_precommit": true,
+      "path": "scripts/agent-runtime/test_codex_toml_map.py",
+      "sha256": "80d9b5f34c6c2d4dba13e9e87823c7a07fdc7c450b38ceb89ca9591c618d2e6e"
+    }
+  ],
+  "head": "123d1e6f9c6c5199c8a4fe6bf16b451bfe11a084",
+  "own_paths_clean": true,
+  "owned_paths_exact": true,
+  "remaining_dirty_status": [
+    " M docs/reports/2026-09-13-autonomy-execution-report.md",
+    " M docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/archive-manifest.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-evidence-review.md",
+    "?? docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-explicit-authorization.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-postflight-proof.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-result.json",
+    "?? docs/reports/evidence/2026-09-13-autonomy/committed-integrity/final-audit.json"
+  ],
+  "scoped_diff_matches_precommit": true,
+  "scoped_diff_sha256": "15f2f200beadb77f1c45173362af6c0fedcf87aa206944091cfc57ff3efa150e"
+}

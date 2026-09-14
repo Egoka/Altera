@@ -1,0 +1,34 @@
+function resolveBrowserParam(browserOption) {
+  switch (browserOption) {
+    case "chrome":
+    case "chrome-beta":
+    case "chrome-canary":
+    case "chrome-dev":
+    case "msedge":
+    case "msedge-beta":
+    case "msedge-canary":
+    case "msedge-dev":
+      return { browserName: "chromium", channel: browserOption };
+    case "chromium":
+      return { browserName: "chromium", channel: "chrome-for-testing" };
+    case "firefox":
+      return { browserName: "firefox" };
+    case "moz-firefox":
+    case "moz-firefox-beta":
+    case "moz-firefox-nightly":
+      return { browserName: "firefox", channel: browserOption };
+    case "webkit":
+      return { browserName: "webkit" };
+    default:
+      return {};
+  }
+}
+function configFromCLIOptions(cliOptions) {
+  const { browserName, channel } = resolveBrowserParam(cliOptions.browser);
+  const launchOptions = {
+    channel,
+    executablePath: cliOptions.executablePath,
+    headless: cliOptions.headless
+  };
+  if (cliOptions.sandbox !== void 0)
+    launchOptions.chromiumSandbox = cliOptions.sandbox;

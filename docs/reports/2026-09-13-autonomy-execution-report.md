@@ -6,7 +6,7 @@
 - Изоляция: /private/tmp/altera-agent-loop-autonomy, ветка docs/agent-loop-autonomy.
 - Исходная рабочая папка и её незакоммиченные документы сохранены; подготовленный пакет скопирован в worktree.
 
-## Текущий срез: 2026-09-14, 04:00 МСК
+## Текущий срез: 2026-09-14, 05:02 МСК
 
 Полная автономия ещё не принята. Работа продолжается в отдельной ветке; исходный
 проект не переключался. Историческая сохранность 737 tracked/nonignored путей на `bc46e9b` подтверждена после native D2.
@@ -14,17 +14,17 @@
 внешних merge PR19/20. Перед интеграцией необходим новый preservation snapshot;
 контроллер исходную папку не переключал и не восстанавливал её прежнюю ветку.
 
-| Область | Подтверждено | Ещё требуется |
-| --- | --- | --- |
-| Правила и lifecycle | Карта R01–R45, сохранённые источники; минимальный gate 28/28, полный lifecycle 46/46 | Финальное совместное ревью и native передача стадий |
-| Изоляция runtime | Исправления приняты; Codex protocol 16 Python/7 JS; reviewer MCP 19/2/4 и реальная canary | Постоянные native adapters и проверка контекста/hooks |
-| Native диагностика | D1 Claude и D2 Codex завершены; D2 независимое review, 10/10 + 4/4 локальных проверок; cleanup подтверждён | Каноническая проверка и перенос фактической конфигурации Codex |
-| Claude auth | Первичный вход и свежий контейнер с Opus; refresh: исправления в 6e197f8, runtime 23/23, store 20/20, wrapper 4/4; реальный synthetic Docker cleanup/recovery | R1/R2 приняты независимым ревью; bootstrap выполнен; live exchange требует прямого разрешения после отказа auto-review |
-| Codex MCP | Trace/Context7 mapping спроектирован; рабочий путь среды найден; user namespace prerequisite проверен отдельно | Строгий TOML mapper, сборка Playwright/browser и реальная canary |
-| Продуктовые проверки | Причины Task 3 локализованы; предыдущие неуспехи сохранены | Исправления и разрешённая проверка после устранения причин |
-| Multica | 19 адресных правок подготовлены; модели/effort/max1 сохранены | Интеграция источников, применение/readback, сквозной пилот |
+| Область              | Подтверждено                                                                                                                                                                  | Ещё требуется                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Правила и lifecycle  | Карта R01–R45, сохранённые источники; минимальный gate 28/28, полный lifecycle 46/46                                                                                          | Финальное совместное ревью и native передача стадий                                 |
+| Изоляция runtime     | Исправления приняты; Codex protocol 16 Python/7 JS; reviewer MCP 19/2/4 и реальная canary                                                                                     | Постоянные native adapters и проверка контекста/hooks                               |
+| Native диагностика   | D1 Claude и D2 Codex завершены; D2 независимое review, 10/10 + 4/4 локальных проверок; cleanup подтверждён                                                                    | Каноническая проверка и перенос фактической конфигурации Codex                      |
+| Claude auth          | Первичный вход и свежий контейнер с Opus; refresh: исправления в 6e197f8, runtime 23/23, store 20/20; R1/R2 приняты; live exchange/status/Opus/publish и cleanup подтверждены | Подключение выбора поколения к постоянным native adapters                           |
+| Codex MCP            | Mapper принят на 9ed8b88: 18/18 tests, R1–R3 и N1 исправлены; независимое cause-based recovery PASS. Обе прежние отрицательные проверки сохранены                             | Первое чтение фактической конфигурации; сборка Playwright/browser и реальная canary |
+| Продуктовые проверки | Причины Task 3 локализованы; предыдущие неуспехи сохранены                                                                                                                    | Исправления и разрешённая проверка после устранения причин                          |
+| Multica              | 19 адресных правок подготовлены; модели/effort/max1 сохранены                                                                                                                 | Интеграция источников, применение/readback, сквозной пилот                          |
 
-Три автопилота остаются paused. Временные D1/D2 profiles и runtimes удалены;
+Свежий read-only снимок Multica в 04:25 МСК подтвердил: три автопилота paused, runtime profiles пусты, ALTE-11 в backlog без назначения и активных запусков. [Снимок настроек](evidence/2026-09-13-autonomy/post-refresh-multica/task-5-post-refresh-multica-readback.json), [история запусков](evidence/2026-09-13-autonomy/post-refresh-multica/task-5-post-refresh-native-idle-readback.json). Временные D1/D2 profiles и runtimes удалены;
 тестировщик и ревьюер восстановлены на исходных runtime. Успешная диагностика пути
 не выдаётся за выполнение модели или приёмку задачи. Все исторические результаты,
 неуспехи и решения ниже сохраняются.
@@ -584,3 +584,47 @@ exchange-claim и refresh journal отсутствуют; live failure count о�
 Claude CLI с сервисом авторизации Anthropic и одну фиксированную проверку модели.
 [Состояние блокировки](evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-approval-block.json).
 Обход отказа не выполнялся; bootstrap сам не доказывает успешный refresh.
+
+## Сохранность committed evidence после исправления архивирования
+
+Первый независимый аудит выявил ещё 38 игнорируемых `.log` из D2/MCP/Codex.
+Их исходные байты и хэши сохранены адресным добавлением в Git в `86fec1e`;
+обычные commit hooks прошли. Повторная проверка фактических HEAD blobs подтвердила
+588 ссылок записей manifests без отсутствующих файлов и несовпадений хэша/размера
+(это число проверенных записей, не утверждение о числе уникальных файлов).
+[Повторный аудит](evidence/2026-09-13-autonomy/committed-integrity/final-audit.json).
+Исторические пробелы в raw logs сохранены; общий whitespace check на этих raw bytes
+один раз отказал, отдельно проверены авторские документы. Ни один исходный тест
+для восстановления архива заново не запускался.
+
+## Claude refresh: разрешённая live операция выполнена
+
+После прямого «Да разрешаю» выполнена одна transaction с прежним check/attempt.
+14 сентября 2026, 01:04:30–01:04:39 UTC: exit0, stderr пуст, 9,814 секунды;
+свежее поколение опубликовано после отдельных exchange/status/model контейнеров.
+Фиксированный Opus4.6/medium ответ принят, generation_changed=true.
+[Фактический результат](evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-result.json).
+Повторного обмена и дополнительных model calls контроллер не выполнял.
+
+Postflight подтвердил pointer→candidate, worker quiescence=confirmed, отсутствие
+трёх temporary networks/proxies и последнего worker, неизменные source/policy hashes.
+Оригинальный файл, старое и новое поколения сохранены как private regular0600 single-link.
+Проверялись metadata, без чтения/хэширования credential values.
+[Postflight](evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-postflight-proof.json).
+Сохранение старого файла не означает повторную пригодность его refresh-токена после rotation.
+
+CLI сообщил list-price estimate $0.064879, включая auxiliary Haiku; это не verified billing.
+Этот milestone закрывает поддержанный refresh. Он не означает завершение native adapters,
+контекста/hooks/Playwright, полного пилота или включение автопилотов. Прежний отказ
+auto-review сохранён как история; после конкретного разрешения он больше не блокирует
+эту завершённую одноразовую операцию. Следующий source milestone — Codex TOML mapper.
+
+## Independent acceptance of the approved live refresh
+
+The [independent evidence review](evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-evidence-review.md) accepts the single authorized exchange, fresh status, fixed Opus validation, publication and cleanup. No additional exchange/model request was made. This closes the live success path only; selecting the published generation through the permanent native adapter and automatic refresh integration remain open.
+
+## Codex TOML mapper: независимая приёмка после исправлений
+
+Реализация `123d1e6`, исправления `ccadb40` и `9ed8b88` приняты по совокупности [первого review](evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-independent-review.md), [fix1 review](evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix1-independent-review.md) и [разрешённой проверки устранённой причины](evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-fix2-independent-review.md). 18/18 synthetic tests; Node24.12 normal hooks прошли. Только фактический PASS обнулил свой review counter 2→0; остановленные проверки продукта не возобновлялись.
+
+Исходный hook transcript для `123d1e6` не был сохранён отдельным raw-файлом, его Node24.3 warning и вторичная сводка сохранены как ограничение evidence. Последующие raw hook logs сохранены. [Полный отчёт mapper](evidence/2026-09-13-autonomy/codex-toml-mapping/task-5-codex-toml-mapping-report.md) содержит команды, исходные отказы и привязку к ревизиям. Реальная managed-конфигурация и native запуск этой приёмкой не подтверждаются.

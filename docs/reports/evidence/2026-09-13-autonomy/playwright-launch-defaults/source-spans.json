@@ -1,0 +1,242 @@
+[
+  {
+    "label": "mcp-delegation",
+    "source": "mcp/package/cli.js",
+    "source_sha256": "70dab09ab9a5bc1943fb78e2655f00af7349f9931073833919f19c5d7d786ad6",
+    "start_line": 18,
+    "end_line": 32,
+    "start_byte": 623,
+    "end_byte_exclusive": 1192,
+    "snippet": "spans/mcp-delegation.txt",
+    "snippet_sha256": "f5c5eefc83c02db4764d07c7a110328ae58f5c40774965812d1b8802ad630b16"
+  },
+  {
+    "label": "mcp-config-precedence",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 72218,
+    "end_line": 72232,
+    "start_byte": 3322676,
+    "end_byte_exclusive": 3323662,
+    "snippet": "spans/mcp-config-precedence.txt",
+    "snippet_sha256": "8908e6cc500f0eb02a105dc38eca8b39b3b86b5022551608cf9f0e2ecb683edd"
+  },
+  {
+    "label": "browser-sandbox-defaults",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 72292,
+    "end_line": 72305,
+    "start_byte": 3327032,
+    "end_byte_exclusive": 3327663,
+    "snippet": "spans/browser-sandbox-defaults.txt",
+    "snippet_sha256": "4094b87610e37945005f23fdee2cd0be5f8e58a79d266ebbac12b99261f80c11"
+  },
+  {
+    "label": "browser-option-and-launch-options",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 72332,
+    "end_line": 72365,
+    "start_byte": 3328671,
+    "end_byte_exclusive": 3329732,
+    "snippet": "spans/browser-option-and-launch-options.txt",
+    "snippet_sha256": "deb2526e4c4275f7186d0abc2d7c76927e942e7792602476ab957fdea7aca4f6"
+  },
+  {
+    "label": "default-config",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 72641,
+    "end_line": 72645,
+    "start_byte": 3340917,
+    "end_byte_exclusive": 3341019,
+    "snippet": "spans/default-config.txt",
+    "snippet_sha256": "c42932b5f23421d832de89d621e77c86532c1592620f48be1e02d5c79c066c27"
+  },
+  {
+    "label": "explicit-executable-precedence",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 39748,
+    "end_line": 39758,
+    "start_byte": 1989874,
+    "end_byte_exclusive": 1990608,
+    "snippet": "spans/explicit-executable-precedence.txt",
+    "snippet_sha256": "f35c198db8a1c1b415318a76449f72d13d6e9e3a6d01eccf3fa414e19fdc8be8"
+  },
+  {
+    "label": "explicit-path-existence",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 39894,
+    "end_line": 39900,
+    "start_byte": 1996558,
+    "end_byte_exclusive": 1996895,
+    "snippet": "spans/explicit-path-existence.txt",
+    "snippet_sha256": "1ab5f2475e016b8f5c00696dc18dee8cd02754757a1d4b399a3c7f91c21b3a39"
+  },
+  {
+    "label": "chromium-sandbox-argv",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 43307,
+    "end_line": 43316,
+    "start_byte": 2130684,
+    "end_byte_exclusive": 2131089,
+    "snippet": "spans/chromium-sandbox-argv.txt",
+    "snippet_sha256": "89efb5c679e5a49f029a9e748119d0de326020b3f4f19062587886111dcb47b4"
+  },
+  {
+    "label": "channel-versus-headless-shell",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 43339,
+    "end_line": 43344,
+    "start_byte": 2132194,
+    "end_byte_exclusive": 2132469,
+    "snippet": "spans/channel-versus-headless-shell.txt",
+    "snippet_sha256": "7bb169847a740d096d7b18a2629c5441ae755bb435c9b6a0b95987ab86b2ea42"
+  },
+  {
+    "label": "isolated-launch",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 73326,
+    "end_line": 73338,
+    "start_byte": 3368008,
+    "end_byte_exclusive": 3368475,
+    "snippet": "spans/isolated-launch.txt",
+    "snippet_sha256": "0b89c88a678be9c5438e3ae6e6fbb4ca63a9b7702467d0194a2f643c56bc9d5b"
+  },
+  {
+    "label": "registry-directory-name",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 32648,
+    "end_line": 32669,
+    "start_byte": 1618110,
+    "end_byte_exclusive": 1619333,
+    "snippet": "spans/registry-directory-name.txt",
+    "snippet_sha256": "2776db4458bc54e74cd36b38bd8a434ab802cd80ea99c949506cf9b1d68679a8"
+  },
+  {
+    "label": "headless-shell-platform-path",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 32793,
+    "end_line": 32800,
+    "start_byte": 1623937,
+    "end_byte_exclusive": 1624420,
+    "snippet": "spans/headless-shell-platform-path.txt",
+    "snippet_sha256": "c67281fbd705c0e1533274243c0e4d05d7e756bed4266af689a9b46ebe0e2ab7"
+  },
+  {
+    "label": "browser-registry-root",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 33081,
+    "end_line": 33094,
+    "start_byte": 1636537,
+    "end_byte_exclusive": 1637071,
+    "snippet": "spans/browser-registry-root.txt",
+    "snippet_sha256": "a4f6fa0d2dff526875ff8a095023e6db0d25f5b765ffccece3b88036adbd3e8f"
+  },
+  {
+    "label": "branded-chrome-path",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 33185,
+    "end_line": 33193,
+    "start_byte": 1642338,
+    "end_byte_exclusive": 1642838,
+    "snippet": "spans/branded-chrome-path.txt",
+    "snippet_sha256": "0e5cb37b150bfa99dfc267e3e16b3cbd08cb2945609f3bc0c9baa0d76bd84549"
+  },
+  {
+    "label": "mcp-env-inputs",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 72444,
+    "end_line": 72464,
+    "start_byte": 3332682,
+    "end_byte_exclusive": 3334111,
+    "snippet": "spans/mcp-env-inputs.txt",
+    "snippet_sha256": "74918f8b5ac0cb5b0954563689240b0b07889d8b30017dc6b014f31bf2651476"
+  },
+  {
+    "label": "mcp-env-sandbox-proxy",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 72475,
+    "end_line": 72485,
+    "start_byte": 3334625,
+    "end_byte_exclusive": 3335373,
+    "snippet": "spans/mcp-env-sandbox-proxy.txt",
+    "snippet_sha256": "729d6c3faa09089139aa735e0dd770dd56d4259c993c606cc92475834634d59c"
+  },
+  {
+    "label": "selenium-env-override",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 39636,
+    "end_line": 39643,
+    "start_byte": 1984223,
+    "end_byte_exclusive": 1984735,
+    "snippet": "spans/selenium-env-override.txt",
+    "snippet_sha256": "5e77864270d37c48efe062a50d1f4490fbf8a871331de481dac2ed614d38b55a"
+  },
+  {
+    "label": "debug-headless-override",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 39854,
+    "end_line": 39862,
+    "start_byte": 1994573,
+    "end_byte_exclusive": 1995087,
+    "snippet": "spans/debug-headless-override.txt",
+    "snippet_sha256": "d65a68a1396ce8dd05caaef80fa4a026461be3a814864bbee18bc3884f43ac86"
+  },
+  {
+    "label": "commander-paired-flag-default",
+    "source": "core/package/lib/utilsBundle.js",
+    "source_sha256": "2d1ccc01d21b7d54ca99a6305991d7fb6e072ea4e725d7fec5eb6184188c52c9",
+    "start_line": 53829,
+    "end_line": 53843,
+    "start_byte": 1936908,
+    "end_byte_exclusive": 1937457,
+    "snippet": "spans/commander-paired-flag-default.txt",
+    "snippet_sha256": "41b2319572bb3a13a34b66eadc03343f63c1a46a16c160244a0f3885016f314c"
+  },
+  {
+    "label": "commander-boolean-value",
+    "source": "core/package/lib/utilsBundle.js",
+    "source_sha256": "2d1ccc01d21b7d54ca99a6305991d7fb6e072ea4e725d7fec5eb6184188c52c9",
+    "start_line": 53469,
+    "end_line": 53478,
+    "start_byte": 1923413,
+    "end_byte_exclusive": 1923688,
+    "snippet": "spans/commander-boolean-value.txt",
+    "snippet_sha256": "45d63a1f7eb9c300290f68d9ba60ec803d1a6d936c16ae82e728b9aace635f5e"
+  },
+  {
+    "label": "sandbox-option",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 73489,
+    "start_byte": 3379617,
+    "end_byte_exclusive": 3379714,
+    "snippet": "spans/sandbox-option.txt",
+    "snippet_sha256": "7bde5ad982a339ece90f6409b30000b0d366f49f1a14d2cc31f19d4fe04ccbec"
+  },
+  {
+    "label": "executable-option",
+    "source": "core/package/lib/coreBundle.js",
+    "source_sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0",
+    "start_line": 73489,
+    "start_byte": 3377566,
+    "end_byte_exclusive": 3377636,
+    "snippet": "spans/executable-option.txt",
+    "snippet_sha256": "4dfd2e29825069e9de4cbf3ff0fd1678fa818fc34a008dd489cd176b506ee5ca"
+  }
+]

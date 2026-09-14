@@ -1,0 +1,14 @@
+async function validateBrowserConfig(browser) {
+  let browserName = browser.browserName;
+  if (!browserName) {
+    browserName = "chromium";
+    if (browser.launchOptions.channel === void 0)
+      browser.launchOptions.channel = "chrome";
+  }
+  if (browserName === "chromium" && browser.launchOptions.chromiumSandbox === void 0) {
+    if (process.platform === "linux")
+      browser.launchOptions.chromiumSandbox = browser.launchOptions.channel !== "chromium" && browser.launchOptions.channel !== "chrome-for-testing";
+    else
+      browser.launchOptions.chromiumSandbox = true;
+  }
+  if (browser.isolated && browser.userDataDir)

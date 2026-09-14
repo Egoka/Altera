@@ -1,0 +1,7 @@
+{
+  "head": "86fec1eef63fd41d3864c22b44362c50a88617e7",
+  "archive_inventories": 20,
+  "committed_hash_and_size_valid": 588,
+  "errors": [],
+  "method": "HEAD blobs, not filesystem presence; metadata-only excluded"
+}

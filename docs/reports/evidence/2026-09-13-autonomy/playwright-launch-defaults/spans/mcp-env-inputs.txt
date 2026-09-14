@@ -1,0 +1,21 @@
+function configFromEnv(env) {
+  const e = env ?? process.env;
+  const options = {};
+  options.allowedHosts = commaSeparatedList(e.PLAYWRIGHT_MCP_ALLOWED_HOSTS);
+  options.allowedOrigins = semicolonSeparatedList(e.PLAYWRIGHT_MCP_ALLOWED_ORIGINS);
+  options.allowUnrestrictedFileAccess = envToBoolean(e.PLAYWRIGHT_MCP_ALLOW_UNRESTRICTED_FILE_ACCESS);
+  options.blockedOrigins = semicolonSeparatedList(e.PLAYWRIGHT_MCP_BLOCKED_ORIGINS);
+  options.blockServiceWorkers = envToBoolean(e.PLAYWRIGHT_MCP_BLOCK_SERVICE_WORKERS);
+  options.browser = envToString(e.PLAYWRIGHT_MCP_BROWSER);
+  options.caps = commaSeparatedList(e.PLAYWRIGHT_MCP_CAPS);
+  options.cdpEndpoint = envToString(e.PLAYWRIGHT_MCP_CDP_ENDPOINT);
+  options.cdpHeader = headerParser(envToString(e.PLAYWRIGHT_MCP_CDP_HEADERS));
+  options.cdpTimeout = numberParser(e.PLAYWRIGHT_MCP_CDP_TIMEOUT);
+  if (e.PLAYWRIGHT_MCP_CODEGEN)
+    options.codegen = enumParser("--codegen", ["none", "typescript", "python", "java", "csharp"], e.PLAYWRIGHT_MCP_CODEGEN);
+  options.config = envToString(e.PLAYWRIGHT_MCP_CONFIG);
+  if (e.PLAYWRIGHT_MCP_CONSOLE_LEVEL)
+    options.consoleLevel = enumParser("--console-level", ["error", "warning", "info", "debug"], e.PLAYWRIGHT_MCP_CONSOLE_LEVEL);
+  options.device = envToString(e.PLAYWRIGHT_MCP_DEVICE);
+  options.executablePath = envToString(e.PLAYWRIGHT_MCP_EXECUTABLE_PATH);
+  options.extension = envToBoolean(e.PLAYWRIGHT_MCP_EXTENSION);

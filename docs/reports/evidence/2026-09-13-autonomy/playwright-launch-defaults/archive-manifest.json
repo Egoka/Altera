@@ -1,0 +1,157 @@
+{
+  "state": "source_preflight_only_no_build_browser_or_model",
+  "files": [
+    {
+      "file": "task-5-playwright-launch-defaults-preflight.md",
+      "bytes": 9528,
+      "sha256": "b8ecc2e4e2aa01738d16aac209f4703a598f3bb687087b4e7a3c9c4894b7b1ca"
+    },
+    {
+      "file": "registry-provenance.json",
+      "bytes": 1156,
+      "sha256": "1baf4b58e5551db1089b2a1d29443385810aa7dbf1f91f1f8917db574d31ee04"
+    },
+    {
+      "file": "source-hashes.json",
+      "bytes": 975,
+      "sha256": "1b6e588da88781cf341067043f854d9ac8a323fa4b00c01c0a51c2b2fd89103c"
+    },
+    {
+      "file": "source-spans.json",
+      "bytes": 9490,
+      "sha256": "06705dc8ef9e336bf6f69a7e982a77b0df450ee9c3305374447210206261c03e"
+    },
+    {
+      "file": "preflight-proof.json",
+      "bytes": 319,
+      "sha256": "7affa3d9be1f088891cd87ee9f2c994de9b7e30e18fc3f15efea62920b23be19"
+    },
+    {
+      "file": "spans/mcp-delegation.txt",
+      "bytes": 569,
+      "sha256": "f5c5eefc83c02db4764d07c7a110328ae58f5c40774965812d1b8802ad630b16"
+    },
+    {
+      "file": "spans/mcp-config-precedence.txt",
+      "bytes": 986,
+      "sha256": "8908e6cc500f0eb02a105dc38eca8b39b3b86b5022551608cf9f0e2ecb683edd"
+    },
+    {
+      "file": "spans/browser-sandbox-defaults.txt",
+      "bytes": 631,
+      "sha256": "4094b87610e37945005f23fdee2cd0be5f8e58a79d266ebbac12b99261f80c11"
+    },
+    {
+      "file": "spans/browser-option-and-launch-options.txt",
+      "bytes": 1061,
+      "sha256": "deb2526e4c4275f7186d0abc2d7c76927e942e7792602476ab957fdea7aca4f6"
+    },
+    {
+      "file": "spans/default-config.txt",
+      "bytes": 102,
+      "sha256": "c42932b5f23421d832de89d621e77c86532c1592620f48be1e02d5c79c066c27"
+    },
+    {
+      "file": "spans/explicit-executable-precedence.txt",
+      "bytes": 734,
+      "sha256": "f35c198db8a1c1b415318a76449f72d13d6e9e3a6d01eccf3fa414e19fdc8be8"
+    },
+    {
+      "file": "spans/explicit-path-existence.txt",
+      "bytes": 337,
+      "sha256": "1ab5f2475e016b8f5c00696dc18dee8cd02754757a1d4b399a3c7f91c21b3a39"
+    },
+    {
+      "file": "spans/chromium-sandbox-argv.txt",
+      "bytes": 405,
+      "sha256": "89efb5c679e5a49f029a9e748119d0de326020b3f4f19062587886111dcb47b4"
+    },
+    {
+      "file": "spans/channel-versus-headless-shell.txt",
+      "bytes": 275,
+      "sha256": "7bb169847a740d096d7b18a2629c5441ae755bb435c9b6a0b95987ab86b2ea42"
+    },
+    {
+      "file": "spans/isolated-launch.txt",
+      "bytes": 467,
+      "sha256": "0b89c88a678be9c5438e3ae6e6fbb4ca63a9b7702467d0194a2f643c56bc9d5b"
+    },
+    {
+      "file": "spans/registry-directory-name.txt",
+      "bytes": 1223,
+      "sha256": "2776db4458bc54e74cd36b38bd8a434ab802cd80ea99c949506cf9b1d68679a8"
+    },
+    {
+      "file": "spans/headless-shell-platform-path.txt",
+      "bytes": 483,
+      "sha256": "c67281fbd705c0e1533274243c0e4d05d7e756bed4266af689a9b46ebe0e2ab7"
+    },
+    {
+      "file": "spans/browser-registry-root.txt",
+      "bytes": 534,
+      "sha256": "a4f6fa0d2dff526875ff8a095023e6db0d25f5b765ffccece3b88036adbd3e8f"
+    },
+    {
+      "file": "spans/branded-chrome-path.txt",
+      "bytes": 500,
+      "sha256": "0e5cb37b150bfa99dfc267e3e16b3cbd08cb2945609f3bc0c9baa0d76bd84549"
+    },
+    {
+      "file": "spans/mcp-env-inputs.txt",
+      "bytes": 1429,
+      "sha256": "74918f8b5ac0cb5b0954563689240b0b07889d8b30017dc6b014f31bf2651476"
+    },
+    {
+      "file": "spans/mcp-env-sandbox-proxy.txt",
+      "bytes": 748,
+      "sha256": "729d6c3faa09089139aa735e0dd770dd56d4259c993c606cc92475834634d59c"
+    },
+    {
+      "file": "spans/selenium-env-override.txt",
+      "bytes": 512,
+      "sha256": "5e77864270d37c48efe062a50d1f4490fbf8a871331de481dac2ed614d38b55a"
+    },
+    {
+      "file": "spans/debug-headless-override.txt",
+      "bytes": 514,
+      "sha256": "d65a68a1396ce8dd05caaef80fa4a026461be3a814864bbee18bc3884f43ac86"
+    },
+    {
+      "file": "spans/commander-paired-flag-default.txt",
+      "bytes": 549,
+      "sha256": "41b2319572bb3a13a34b66eadc03343f63c1a46a16c160244a0f3885016f314c"
+    },
+    {
+      "file": "spans/commander-boolean-value.txt",
+      "bytes": 275,
+      "sha256": "45d63a1f7eb9c300290f68d9ba60ec803d1a6d936c16ae82e728b9aace635f5e"
+    },
+    {
+      "file": "spans/sandbox-option.txt",
+      "bytes": 97,
+      "sha256": "7bde5ad982a339ece90f6409b30000b0d366f49f1a14d2cc31f19d4fe04ccbec"
+    },
+    {
+      "file": "spans/executable-option.txt",
+      "bytes": 70,
+      "sha256": "4dfd2e29825069e9de4cbf3ff0fd1678fa818fc34a008dd489cd176b506ee5ca"
+    },
+    {
+      "file": "task-5-playwright-child-env-readiness.md",
+      "bytes": 7775,
+      "sha256": "bb695895bcb1f36411d4e0278b6b868fd74fe22e26b37effbd3b6b9155c60ed5"
+    },
+    {
+      "file": "task-5-playwright-child-env-source-proof.json",
+      "bytes": 5534,
+      "sha256": "38ca6791c52c00d490e2c917d22256ef2171a7150a7316e629694cad45f0cf8d"
+    },
+    {
+      "file": "task-5-playwright-launch-root-rulings.md",
+      "bytes": 4935,
+      "sha256": "7973e5757d1dbb60e5f4a9303c1d37141760a872f539b4b4b7da050798dd62c3"
+    }
+  ],
+  "full_vendor_sources_and_tarballs": "metadata_only_not_bundled",
+  "source_attribution": "Microsoft Playwright and Playwright MCP, Apache-2.0; exact public registry provenance retained"
+}

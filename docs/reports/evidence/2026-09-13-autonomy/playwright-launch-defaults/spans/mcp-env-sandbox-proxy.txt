@@ -1,0 +1,11 @@
+  options.isolated = envToBoolean(e.PLAYWRIGHT_MCP_ISOLATED);
+  if (e.PLAYWRIGHT_MCP_IMAGE_RESPONSES)
+    options.imageResponses = enumParser("--image-responses", ["allow", "omit"], e.PLAYWRIGHT_MCP_IMAGE_RESPONSES);
+  options.mobile = envToBoolean(e.PLAYWRIGHT_MCP_MOBILE);
+  options.sandbox = envToBoolean(e.PLAYWRIGHT_MCP_SANDBOX);
+  options.outputDir = envToString(e.PLAYWRIGHT_MCP_OUTPUT_DIR);
+  options.outputMaxSize = numberParser(e.PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE);
+  options.port = numberParser(e.PLAYWRIGHT_MCP_PORT);
+  options.proxyBypass = envToString(e.PLAYWRIGHT_MCP_PROXY_BYPASS);
+  options.proxyServer = envToString(e.PLAYWRIGHT_MCP_PROXY_SERVER);
+  options.remoteHeader = headerParser(envToString(e.PLAYWRIGHT_MCP_REMOTE_HEADERS));

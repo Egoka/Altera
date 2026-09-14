@@ -1,0 +1,9 @@
+      _validateLaunchOptions(options) {
+        let { headless = true, downloadsPath, proxy } = options;
+        if (debugMode() === "inspector")
+          headless = false;
+        if (downloadsPath && !import_path25.default.isAbsolute(downloadsPath))
+          downloadsPath = import_path25.default.join(process.cwd(), downloadsPath);
+        if (options.socksProxyPort)
+          proxy = { server: `socks5://127.0.0.1:${options.socksProxyPort}` };
+        return { ...options, headless, downloadsPath, proxy };

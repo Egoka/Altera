@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-09-14T01:25:45.976861+00:00",
+  "read_only": true,
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "issue_active": {
+    "exit": 0,
+    "stderr_bytes": 0,
+    "rows": []
+  },
+  "reviewer_tasks": {
+    "exit": 0,
+    "stderr_bytes": 0,
+    "rows": [
+      {
+        "id": "01a09cc3-7d1f-7c25-92c0-08a4b812e6ed",
+        "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+        "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+        "status": "failed"
+      },
+      {
+        "id": "01a09c79-1610-73a0-a665-a2fbd6687eeb",
+        "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+        "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+        "status": "completed"
+      },
+      {
+        "id": "01a09c2f-1cd9-7266-8595-e99adebef720",
+        "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+        "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+        "status": "failed"
+      },
+      {
+        "id": "01a072a3-69ae-791d-a1e6-cf73932f9bf8",
+        "issue_id": "01a07271-d0bc-780a-93f1-f9e669210347",
+        "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+        "status": "completed"
+      },
+      {
+        "id": "01a0728e-4e5e-7b09-a52b-d14120695580",
+        "issue_id": "01a07271-d0bc-780a-93f1-f9e669210347",
+        "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+        "status": "completed"
+      },
+      {
+        "id": "01a07280-5c6e-7826-ad42-b83957206a00",
+        "issue_id": "01a07271-d0bc-780a-93f1-f9e669210347",
+        "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+        "status": "completed"
+      }
+    ]
+  },
+  "tester_tasks": {
+    "exit": 0,
+    "stderr_bytes": 0,
+    "rows": [
+      {
+        "id": "01a09d1e-ab73-7dfe-8fbb-50862a0326df",
+        "issue_id": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+        "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+        "status": "failed"
+      },
+      {
+        "id": "01a0728d-2972-77d7-80b9-6719c9ebc8e1",
+        "issue_id": "01a07271-d0bc-780a-93f1-f9e669210347",
+        "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+        "status": "completed"
+      },
+      {
+        "id": "01a07281-8bdb-7b82-907b-0669d1923f9b",
+        "issue_id": "01a07271-d0bc-780a-93f1-f9e669210347",
+        "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+        "status": "completed"
+      },
+      {
+        "id": "01a0727c-36bb-7621-9848-a9ee1463f800",
+        "issue_id": "01a07271-d0bc-780a-93f1-f9e669210347",
+        "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+        "status": "completed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "check_id": "task5-codex-toml-independent-review",
+  "state": "stopped",
+  "consecutive_failures": 2,
+  "head": "ccadb408e22936ad00779778a7bbc5799cb87afa",
+  "cause": "N1 final reopen lacks O_NONBLOCK and reads before descriptor security/inode admission",
+  "first_findings": "R1-R3 addressed in fix1; N1 newly introduced",
+  "next_permitted_action": "cause correction and its focused tests only; independent recovery review not yet authorized",
+  "timestamp": "2026-09-14T01:52:18.662337+00:00"
+}

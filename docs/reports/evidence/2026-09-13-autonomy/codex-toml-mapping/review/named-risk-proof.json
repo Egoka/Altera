@@ -1,0 +1,28 @@
+{
+  "error_chain": {
+    "outer_code": "descriptor_invalid",
+    "outer_type": "MappingError",
+    "traceback_contains_task_component": true
+  },
+  "head": "123d1e6f9c6c5199c8a4fe6bf16b451bfe11a084",
+  "playwright_nested_args": {
+    "exception_type": "TypeError",
+    "is_fixed_mapping_error": false
+  },
+  "quoted_base_mcp": {
+    "catalog_explicit_empty": true,
+    "unmanaged_table_preserved": true,
+    "verified": true
+  },
+  "suite_rerun": false,
+  "synthetic_only": true,
+  "temp_replacement": {
+    "published_digest_matches_reported": false,
+    "replacement_observed": true,
+    "verified": true
+  },
+  "trace_command_array": {
+    "exception_type": "TypeError",
+    "is_fixed_mapping_error": false
+  }
+}

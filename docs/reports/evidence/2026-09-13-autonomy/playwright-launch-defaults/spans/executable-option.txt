@@ -1,0 +1,1 @@
+.option("--executable-path <path>", "path to the browser executable.")

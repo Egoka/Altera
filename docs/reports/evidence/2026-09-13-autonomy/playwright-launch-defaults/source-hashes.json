@@ -1,0 +1,30 @@
+{
+  "mcp/package/cli.js": {
+    "bytes": 1192,
+    "sha256": "70dab09ab9a5bc1943fb78e2655f00af7349f9931073833919f19c5d7d786ad6"
+  },
+  "mcp/package/package.json": {
+    "bytes": 1530,
+    "sha256": "4419e25dd95397dc7fb79771716f327bd9c186b0dc8013903ef197fb89d4c55d"
+  },
+  "mcp/package/README.md": {
+    "bytes": 62722,
+    "sha256": "b0b2f8812e78c48810bd6431b3dd77d4c80eaceca3eaa929553814a9646f0002"
+  },
+  "core/package/package.json": {
+    "bytes": 893,
+    "sha256": "82118e484cfd69f7422a3a85129da5d7a61068d4f8e8217800c511baa175d470"
+  },
+  "core/package/browsers.json": {
+    "bytes": 1137,
+    "sha256": "f1336b4be3fb71a7b9f2c7acf1bd37a43c154434ea719919a2805507094e4bbf"
+  },
+  "core/package/lib/coreBundle.js": {
+    "bytes": 3469825,
+    "sha256": "7aa0bf8b6b69d32065912e3d8f7e3c18c62de4d668f770a8e039811d3cf9c6a0"
+  },
+  "core/package/lib/utilsBundle.js": {
+    "bytes": 3048692,
+    "sha256": "2d1ccc01d21b7d54ca99a6305991d7fb6e072ea4e725d7fec5eb6184188c52c9"
+  }
+}

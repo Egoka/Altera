@@ -1,0 +1,15 @@
+async function resolveCLIConfigForMCP(cliOptions, env) {
+  const envOverrides = configFromEnv(env);
+  const cliOverrides = configFromCLIOptions(cliOptions);
+  const configFile = cliOverrides.configFile ?? envOverrides.configFile;
+  const configInFile = await loadConfig(configFile);
+  const configDir = configFile ? import_path59.default.dirname(import_path59.default.resolve(configFile)) : process.cwd();
+  let result2 = defaultConfig;
+  result2 = mergeConfig(result2, resolveConfigPaths(configInFile, configDir));
+  result2 = mergeConfig(result2, resolveConfigPaths(envOverrides, process.cwd()));
+  result2 = mergeConfig(result2, resolveConfigPaths(cliOverrides, process.cwd()));
+  const browser = await validateBrowserConfig(result2.browser);
+  if (browser.launchOptions.headless === void 0)
+    browser.launchOptions.headless = import_os26.default.platform() === "linux" && !process.env.DISPLAY;
+  validateOutputDir(result2.outputDir);
+  return { ...result2, browser, configFile };

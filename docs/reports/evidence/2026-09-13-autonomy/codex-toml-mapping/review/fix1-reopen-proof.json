@@ -1,0 +1,10 @@
+{
+  "final_open_nonblocking": false,
+  "foreign_entry_preserved": true,
+  "foreign_read_bytes": 29,
+  "foreign_replacement_before_reopen": true,
+  "head": "ccadb408e22936ad00779778a7bbc5799cb87afa",
+  "outcome": "output_invalid",
+  "suite_rerun": false,
+  "synthetic_only": true
+}

@@ -1,0 +1,30 @@
+{
+  "check_id": "task5-codex-toml-independent-review",
+  "attempt_id": "d28e1584897d4abcb19b93bdeb4199bd",
+  "state": "one_cause_based_recovery_authorized",
+  "failure_count_preserved": 2,
+  "head": "9ed8b88c11d802c6f9b5d89b89eeccff2e1bda1b",
+  "cause": "N1 final descriptor admission precedes reading; nonblocking special-file open",
+  "source_sha256": {
+    "scripts/agent-runtime/codex_toml_map.py": "a2da623a4a2ec46617dc2f8c697281bc042f0aaeb29798aaa7c4bcfd59afad09",
+    "scripts/agent-runtime/test_codex_toml_map.py": "f4638922fd8cdd8851dbb1a30b6ffcc0e19f315d26af460ee21e7ade7d2377b1"
+  },
+  "raw_logs": {
+    "task-5-codex-toml-mapping-fix2-green.log": "3ae4c428ef2a36262c7985594ad4e0ce0a7102e95909c3f0300b23fe1301f426",
+    "task-5-codex-toml-mapping-fix2-final.log": "82c5dca45730adf588861f4b5588f590efe177c7db0c32ac8779395a6c1aeb69",
+    "task-5-codex-toml-mapping-fix2-hook.log": "7c8d7b555d6e409a183a06cb3e8c0163c8fae86e1d8d5c943194f1fcddba4436"
+  },
+  "root_examined": "frozen fix2 diff, report, raw focused GREEN and final covering result; no tests repeated",
+  "corrected_behavior": {
+    "foreign_regular_read_bytes": 0,
+    "fifo_nonblocking": true,
+    "fifo_read_bytes": 0,
+    "foreign_entries_preserved": true
+  },
+  "no_active_duplicate": "collaboration.list_agents: writer and reviewer completed before dispatch",
+  "authority": "architecture A7 lines154-164; execution Task6 cause-based recovery",
+  "one_use": true,
+  "on_failure": "increment preserved count and stop same check immediately",
+  "acceptance": "pending independent scoped recovery review",
+  "timestamp": "2026-09-14T01:59:12.744036+00:00"
+}

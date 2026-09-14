@@ -1,0 +1,16 @@
+{
+  "state": "read_only_observation_2026_09_14_0125_UTC",
+  "mutations": false,
+  "files": [
+    {
+      "file": "task-5-post-refresh-multica-readback.json",
+      "bytes": 989,
+      "sha256": "cf8ec150898a41a82c5be3df63e0d1ab039f0484f835e27645546bc1c4000060"
+    },
+    {
+      "file": "task-5-post-refresh-native-idle-readback.json",
+      "bytes": 2578,
+      "sha256": "b12e7be23025c0478f4064225af90c6c9db2ee79b0506b85b85674dc055ee7ed"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+        let executable;
+        const customExecutablePath = await this.resolveExecutablePath(options);
+        if (customExecutablePath) {
+          executable = customExecutablePath;
+        } else {
+          const registryExecutable = registry.findExecutable(this.getExecutableName(options));
+          if (!registryExecutable || registryExecutable.browserName !== this._name)
+            throw new Error(`Unsupported ${this._name} channel "${options.channel}"`);
+          executable = registryExecutable.executablePathOrDie(this.attribution.playwright.options.sdkLanguage);
+          await registry.validateHostRequirementsForExecutablesIfNeeded([registryExecutable], this.attribution.playwright.options.sdkLanguage);
+        }
