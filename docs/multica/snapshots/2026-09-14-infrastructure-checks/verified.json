@@ -1,0 +1,145 @@
+[
+  {
+    "kind": "autopilot",
+    "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+    "name": null,
+    "field": "description",
+    "before_sha256": "51f27323b3d78161d16f64e8b3ddf5bebb28937715a98b97e7bdfd2f09287fcf",
+    "after_sha256": "2d3e619e7e9edab262b8de785b351b7ab69cbb270fe69af4172082a57f51da58",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:16.387535+00:00",
+    "schedule_status_preserved": true
+  },
+  {
+    "kind": "autopilot",
+    "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+    "name": null,
+    "field": "description",
+    "before_sha256": "e07ed73c18518673362fdda713d0c3f1def0f80acb42a4d1992b299f02aa2105",
+    "after_sha256": "5ac62722c8870ac4bf7a78ecf74113d40d662f386ea68a6fb9dc3d3d8047d56f",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:19.470916+00:00",
+    "schedule_status_preserved": true
+  },
+  {
+    "kind": "squad",
+    "id": "c6dd97bf-75c1-45cd-8d4a-3d00d26dd2f0",
+    "name": "Altera — автономная разработка",
+    "field": "instructions",
+    "before_sha256": "1a8bfc3e221ff9178a8b8340ebb1c3cccd4d35cc0a854d607da0374871a5a767",
+    "after_sha256": "716d4b2ff959c69e32356d5663865658d7fa94ecdaf87f2fbe98bc4c0243494f",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:22.626962+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "name": "Altera — оркестратор",
+    "field": "instructions",
+    "before_sha256": "454ba0030c465db2bd3b416918721a3738d9faaae21d997e2df8a31521d27a44",
+    "after_sha256": "553a7bc8dd4a31da05f5699b2d67db1f9fdd3711f7c2b103cca2324db5063258",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:25.678865+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "name": "Altera — релиз-инженер",
+    "field": "instructions",
+    "before_sha256": "28c6d511bc026e285c9b9eef7bdb64d5913cd9cfa86a34fa3c77649aac1ce91a",
+    "after_sha256": "86cbb72c347d9e469fcadaa891e3fb70e9d9ef8bd1713dcee7b5f83a69862064",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:28.686072+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "name": "Altera — независимый ревьюер",
+    "field": "instructions",
+    "before_sha256": "c69445eb4cb511945bf7454152b9a71527829763d5604bf3048b3d09eb7084c7",
+    "after_sha256": "89cca05f4c2e8a7ec1545cce7a034e843d398172bb09cd0f1f1c5476f2542409",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:31.791989+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "name": "Altera — разработчик",
+    "field": "instructions",
+    "before_sha256": "f54b844eb738c62061f662bcfe27c10c490db8e8a08bd53f258af6f036a0a45d",
+    "after_sha256": "ff49d106c350d5d19fbd6d5362ff96b22e4f428f8514a84a1f52b494e6c88967",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:34.822666+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "name": "Altera — тестировщик",
+    "field": "instructions",
+    "before_sha256": "4cb6d460529a63c2b6ffa38af4222684242f822ae1837d1c75d86ea9eaf3ab34",
+    "after_sha256": "3be2f6a3f4743b29931d4cac3aa06b036f87b2fd7a2c0052bcf5a2646d677178",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:37.983661+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+    "name": "Altera — дизайнер",
+    "field": "instructions",
+    "before_sha256": "9afec380a26853313515f1bf6290bf03f125e08c3dd36426e90c8981f376bdab",
+    "after_sha256": "7d0b94c2e2a135ad59d2af423e98cea1716f383d17b7acfdf86fad63713df3f3",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:41.014924+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "name": "Altera — хранитель документации",
+    "field": "instructions",
+    "before_sha256": "271a84881b7b1d8ee3274239e0d2fd9b6f13792e64d706007983cc075f55db2e",
+    "after_sha256": "8ce7cb19787f951d766b1fe91b9519e66d5577057e22861a0bca2cb4e674a0aa",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:44.086922+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "name": "Altera — архитектор",
+    "field": "instructions",
+    "before_sha256": "0698ac90d87281253d03145040b662affaf1f897d154f0e66a5ca89d75852ce8",
+    "after_sha256": "6e13dc3f91464f9b4aaf0c03237e7e07fb29c75b359f626a698dba4d2d13b510",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:47.085681+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "b7f90cba-518a-4130-993a-f047a4355f96",
+    "name": "Altera — редактор и бренд-стратег",
+    "field": "instructions",
+    "before_sha256": "c340cae79ea0cd7152d0f4349d5def6087302aaeff505f506c0928a31e9091bd",
+    "after_sha256": "1eb5ded25ae90cda5db52b91c3dad14eb8dafe1a0467a07a203c709967fef109",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:50.169224+00:00",
+    "schedule_status_preserved": null
+  },
+  {
+    "kind": "agent",
+    "id": "41f9ec44-b58b-48d3-bd24-30d3774d2b5e",
+    "name": "Altera — SEO-специалист",
+    "field": "instructions",
+    "before_sha256": "f46418c1f15c80f9698e85c225f47e6292eda3d3b82966205b85896263d74e4a",
+    "after_sha256": "31c1bf3b2996ca68e4fa590cface3ca3a167bed3a1e962abb28f22c336535a81",
+    "prefix_sha256": "cf9cd3ac3d6fc628683933a528cc134608216df9eecb9150c369c115af3b7c86",
+    "verified_at": "2026-09-14T20:47:53.262813+00:00",
+    "schedule_status_preserved": null
+  }
+]

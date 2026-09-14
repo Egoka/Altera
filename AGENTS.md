@@ -1,5 +1,7 @@
 # Altera — карта инструкций агентов
 
+При изменениях backend/shared build inputs обязательна [проверка Render и Neon](docs/multica/infrastructure-checks.md): CI, merge, deploy и health фиксируются отдельно.
+
 Каждая новая задача начинается с успешного fetch `origin/app`: от полученного полного SHA
 создаются новая ветка и отдельный worktree, проверяются HEAD и чистота. Полный порядок и
 отличие нового старта от продолжения — [fresh-task-worktree](docs/multica/fresh-task-worktree.md).
