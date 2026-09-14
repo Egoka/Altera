@@ -43,7 +43,8 @@ if (op === 'login') {
 }
 fs.writeFileSync('/runtime/cache/fake-proof.json', JSON.stringify(checks), {mode:0o600});
 const behavior = '__BEHAVIOR__';
-if (behavior === 'timeout') {
+if (behavior === 'timeout' || behavior === 'pending-timeout') {
+  if (behavior === 'pending-timeout') fs.writeFileSync('/runtime/output/claude/.credentials.json', JSON.stringify(data), {mode:0o600});
   spawn('/usr/local/bin/node', ['-e', 'setInterval(()=>{},1000)'], {stdio:'inherit'});
   setInterval(()=>{},1000);
 } else if (behavior === 'overflow') {
@@ -198,6 +199,65 @@ class DockerRefreshTests(unittest.TestCase):
         self.assertEqual(len(self.commands), 1, 'recovery retried exchange')
         self.assert_redacted({'status': 'manual_login_required'})
 
+    def test_unconfirmed_cleanup_recovery_removes_only_reserved_worker(self):
+        original_start, original_run = subprocess.Popen, subprocess.run
+        names = []; observations = []; old = self.fixture.pointer()
+        def start(command, **kwargs):
+            process = original_start(command, **kwargs)
+            if command[:2] == [self.module.runtime.DOCKER, 'run']:
+                names.append(command[command.index('--name') + 1])
+                process.terminate = process.kill  # SIGKILL клиента не проксируется в worker: моделируем abrupt disconnect.
+                def interrupt(**_kwargs):
+                    deadline = time.monotonic() + 10
+                    while not list((Path(self.manifest['store']) / 'generations').glob('*.pending/.credentials.json')):
+                        if process.poll() is not None or time.monotonic() >= deadline:
+                            raise AssertionError('synthetic candidate was not written')
+                        time.sleep(0.05)
+                    raise KeyboardInterrupt()
+                process.communicate = interrupt
+            return process
+        def failed_remove(command, **kwargs):
+            if command[:3] == [self.module.runtime.DOCKER, 'rm', '--force']:
+                self.assertEqual(command[3:], names)
+                return subprocess.CompletedProcess(command, 1)
+            result = original_run(command, **kwargs)
+            if command[1:4] == ['container', 'ls', '--all']:
+                self.assertEqual(result.returncode, 0)
+                self.assertIn('name=^/' + names[0] + '$', command)
+                self.assertEqual(result.stdout, (names[0] + '\n').encode())
+                observations.append('present')
+            return result
+        def actual_cleanup(command, **kwargs):
+            result = original_run(command, **kwargs)
+            if command[1:4] == ['container', 'ls', '--all'] and 'name=^/' + names[0] + '$' in command:
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, b'')
+                observations.append('absent')
+            return result
+        try:
+            with self.fake('pending-timeout'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')), \
+                 patch.object(self.module.subprocess, 'Popen', side_effect=start), \
+                 patch.object(self.module.subprocess, 'run', side_effect=failed_remove):
+                with self.assertRaises(KeyboardInterrupt): self.store.refresh()
+                self.assertEqual(self.store.state()['worker']['quiescence'], 'unconfirmed')
+                self.assertEqual(self.store.refresh()['status'], 'worker_cleanup_unconfirmed')
+                self.assertEqual(self.fixture.pointer(), old)
+                self.assertEqual(len(self.commands), 1)
+            with self.fake('success'), patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('none')), \
+                 patch.object(self.module.subprocess, 'run', side_effect=actual_cleanup):
+                result = self.store.refresh()
+            self.assertEqual(result['status'], 'published')
+            self.assertEqual(len(self.commands), 3, 'recovery exchanged the old token again')
+            self.assertEqual(self.store.state()['worker']['quiescence'], 'confirmed')
+            self.assert_redacted(result)
+            self.assertIn('present', observations); self.assertIn('absent', observations)
+            print(json.dumps({'exactFilterSeesLiveWorker': True, 'sameFilterProvesAbsenceAfterRemoval': True,
+                              'unknownCleanupBlockedPublication': True, 'exchangeCount': 1, 'syntheticOnly': True}))
+        finally:
+            for name in names:
+                original_run([self.module.runtime.DOCKER, 'rm', '--force', name], env=self.module.runtime.child_env(),
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+
 
 class PinnedCompatibilityTests(unittest.TestCase):
     setUp = DockerRefreshTests.setUp
@@ -205,8 +265,11 @@ class PinnedCompatibilityTests(unittest.TestCase):
     def test_pinned_cli_invalid_synthetic_token_uses_refresh_branch(self):
         with self.store.select_current() as selected:
             candidate = Path(self.manifest['store']) / 'generations' / (uuid.uuid4().hex + '.pending'); candidate.mkdir(mode=0o700)
+            state = {'stage': 'prepared', 'old': selected.path.parent.name, 'candidate': candidate.name.removesuffix('.pending'),
+                     'worker': None, **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')}}
+            self.store.write_state(state)
             start = time.monotonic()
-            result = self.store.container('exchange', selected.path, candidate)
+            result = self.store.run_operation(state, 'exchange', selected.path, candidate)
         self.assertLess(time.monotonic() - start, 75)
         self.assertEqual(result, {'status': 'exchange_failed', 'refreshBranchObserved': True, 'browserHandoffObserved': False})
         inspections = list(Path(self.manifest['run_root']).glob('*/network-inspect.json'))

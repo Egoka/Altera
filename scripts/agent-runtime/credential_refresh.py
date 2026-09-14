@@ -289,17 +289,60 @@ class Store:
     def state(self):
         value = self.read_json('refresh-state.json', optional=True)
         if value is None: return None
-        required = {'stage', 'old', 'candidate', 'attempt_id', 'check_id', 'image', 'policy_sha256'}
+        required = {'stage', 'old', 'candidate', 'attempt_id', 'check_id', 'image', 'policy_sha256', 'worker'}
         if (not isinstance(value, dict) or not required.issubset(value) or set(value) - required - {'model_result'} or
             value['stage'] not in STAGES or any(not isinstance(value[key], str) or not GENERATION.fullmatch(value[key]) for key in ('old', 'candidate', 'attempt_id')) or
             value['old'] == value['candidate']):
             raise ValueError('invalid_refresh_journal')
+        worker = value['worker']
+        if worker is None:
+            if value['stage'] != 'prepared': raise ValueError('worker_identity_missing')
+        elif (not isinstance(worker, dict) or set(worker) != {'name', 'operation', 'quiescence'} or
+              not isinstance(worker['name'], str) or not re.fullmatch(r'altera-refresh-[a-f0-9]{32}', worker['name']) or
+              worker['operation'] not in ('exchange', 'status', 'model') or worker['quiescence'] not in ('unconfirmed', 'confirmed')):
+            raise ValueError('invalid_worker_identity')
         for key in ('image', 'policy_sha256', 'check_id'):
             if value[key] != self.manifest[key]:
                 raise ValueError('refresh_identity_changed')
         if value['stage'] in ('candidate_accepted', 'published'):
             value['model_result'] = public_model_result(value.get('model_result', {}))
         return value
+
+    def quiesce(self, state):
+        """Только адресный cleanup; успешный пустой Docker listing доказывает отсутствие worker."""
+        worker = state['worker']
+        if worker is None: return state['stage'] == 'prepared'
+        if worker['quiescence'] == 'confirmed': return True
+        name = worker['name']
+        try:
+            subprocess.run([runtime.DOCKER, 'rm', '--force', name], env=runtime.child_env(),
+                           stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           timeout=15, check=False)
+        except (OSError, subprocess.SubprocessError):
+            pass
+        try:
+            proof = subprocess.run([runtime.DOCKER, 'container', 'ls', '--all', '--filter', 'name=^/' + name + '$',
+                                    '--format', '{{.Names}}'], env=runtime.child_env(), stdin=subprocess.DEVNULL,
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15, check=False)
+            if proof.returncode != 0 or proof.stdout != b'': return False
+        except (OSError, subprocess.SubprocessError):
+            return False
+        state['worker'] = {**worker, 'quiescence': 'confirmed'}
+        self.write_state(state)
+        return True
+
+    def run_operation(self, state, operation, credential, output):
+        if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
+        if operation == 'exchange': state['stage'] = 'exchange_started'
+        state['worker'] = {'name': 'altera-refresh-' + uuid.uuid4().hex,
+                           'operation': operation, 'quiescence': 'unconfirmed'}
+        self.write_state(state)
+        try:
+            result = self.runner(operation, credential, output)
+        finally:
+            # container уже проверяет cleanup до снятия proxy; после interruption перечитываем durable результат.
+            state.update(self.state())
+        return result if self.quiesce(state) else {'status': 'worker_cleanup_unconfirmed'}
 
     def candidate(self, state):
         pending, final = state['candidate'] + '.pending', state['candidate']
@@ -311,6 +354,7 @@ class Store:
     def publish(self, state):
         if state['stage'] != 'candidate_accepted':
             raise ValueError('unaccepted_candidate')
+        if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
         selected = self.candidate(state); os.close(selected.fd)
         if selected.path.parent.name.endswith('.pending'):
             os.rename(state['candidate'] + '.pending', state['candidate'], src_dir_fd=self.generations, dst_dir_fd=self.generations)
@@ -326,6 +370,7 @@ class Store:
             old = self.current()
             previous = self.credential(old); os.close(previous.fd)
             state = self.state()
+            if state and not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
             if state and state['stage'] == 'published':
                 if old != state['candidate']: raise ValueError('pointer_journal_mismatch')
                 if state['attempt_id'] == self.manifest['attempt_id']:
@@ -348,14 +393,14 @@ class Store:
             if state is None:
                 name = uuid.uuid4().hex
                 os.mkdir(name + '.pending', 0o700, dir_fd=self.generations); os.fsync(self.generations)
-                state = {'stage': 'prepared', 'old': old, 'candidate': name,
+                state = {'stage': 'prepared', 'old': old, 'candidate': name, 'worker': None,
                          **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')}}
                 self.write_state(state)
-                state = {**state, 'stage': 'exchange_started'}; self.write_state(state)
                 try:
-                    outcome = self.runner('exchange', previous.path, self.path / 'generations' / (name + '.pending'))
+                    outcome = self.run_operation(state, 'exchange', previous.path, self.path / 'generations' / (name + '.pending'))
                 except Exception:
                     outcome = {'status': 'child_failed'}
+                if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
                 if outcome.get('status') != 'exchange_succeeded':
                     try:
                         found = self.candidate(state); os.close(found.fd)
@@ -376,10 +421,12 @@ class Store:
                 return self.publish(state)
             state = {**state, 'stage': 'candidate_written'}; self.write_state(state)
             try:
-                if self.runner('status', selected.path, None).get('status') != 'authenticated':
+                if self.run_operation(state, 'status', selected.path, None).get('status') != 'authenticated':
+                    if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
                     return {'status': 'candidate_rejected'}
-                result = public_model_result(self.runner('model', selected.path, None))
+                result = public_model_result(self.run_operation(state, 'model', selected.path, None))
             except Exception:
+                if not self.quiesce(state): return {'status': 'worker_cleanup_unconfirmed'}
                 return {'status': 'candidate_rejected'}
             state = {**state, 'stage': 'candidate_accepted', 'model_result': result}; self.write_state(state)
             return self.publish(state)
@@ -389,7 +436,10 @@ class Store:
         run = base / (operation + '-' + uuid.uuid4().hex); run.mkdir(mode=0o700)
         manifest = {**self.manifest, 'run_root': str(run)}
         command = runtime.refresh_command(manifest, operation, credential, output)
-        name = 'altera-refresh-' + uuid.uuid4().hex
+        state = self.state()
+        if not state or not state['worker'] or state['worker']['operation'] != operation or state['worker']['quiescence'] != 'unconfirmed':
+            raise ValueError('worker_not_reserved')
+        name = state['worker']['name']
         command[2:2] = ['--name', name]
         with runtime.provider_network(manifest) as network:
             command[command.index('--network=none')] = '--network=' + network
@@ -403,13 +453,17 @@ class Store:
                     return {'status': 'timeout'}
             finally:
                 # Docker client exit не гарантирует остановку worker; cleanup предшествует снятию proxy.
-                subprocess.run([runtime.DOCKER, 'rm', '--force', name], env=runtime.child_env(),
-                               stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                               timeout=15, check=False)
-                if process is not None:
-                    try: process.wait(timeout=15)
-                    except subprocess.TimeoutExpired:
-                        process.kill(); process.wait(timeout=15)
+                try:
+                    if process is not None:
+                        if process.returncode is None: process.terminate()
+                        try: process.wait(timeout=15)
+                        except subprocess.TimeoutExpired:
+                            process.kill(); process.wait(timeout=15)
+                    self.quiesce(state)
+                finally:
+                    if process is not None:
+                        for stream in (getattr(process, 'stdout', None), getattr(process, 'stderr', None)):
+                            if stream is not None: stream.close()
         if len(stdout) + len(stderr) > 8192:
             return {'status': 'output_limit'}
         try:

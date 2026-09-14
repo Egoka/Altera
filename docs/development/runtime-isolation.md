@@ -186,7 +186,11 @@ credential JSON и не считает его digest. Пример manifest:
 Store, policy и run_root — отдельные absolute canonical directories mode0700 текущего UID.
 Policy содержит ровно reviewed `claude-refresh.mjs`, `provider-proxy.mjs`, `empty-mcp.json`
 с `{"mcpServers":{}}` и `claude-settings.json` с `{"disableAllHooks":true}`; hash связывает
-их содержимое с manifest. Используется только закреплённый image ID из example.
+их содержимое с manifest. Refresh проверяет metadata всех четырёх entries до чтения/hash:
+no-follow regular files, один link, текущий UID, отсутствие group/other write, размер1–65536 bytes.
+Validated fd удерживаются через bounded read; named/held identities повторно сверяются до digest/JSON
+и после них. Замена даже на файл с теми же байтами отвергается. General runtime tree hash не меняется.
+Используется только закреплённый image ID из example.
 
 Store содержит `refresh.lock`, `current.json`, `refresh-state.json` и `generations/`.
 Pointer — regular mode0600 JSON ровно `{"generation":"<32 lowercase hex>"}`. Поколение
@@ -221,6 +225,15 @@ Refresh exchange сам не вызывает модель; model acceptance —
 идемпотентно без нового CLI; уже опубликованный pointer завершает journal. Только proven-empty
 pending в `prepared` можно удалить. Смена attempt ID не обходит незавершённую recovery.
 Старый pointer не доказывает, что уже использованный refresh token ещё пригоден.
+
+До каждого worker launch journal сохраняет internally generated exact name, operation и
+`quiescence:unconfirmed`. `docker rm` сам по себе не доказывает остановку: только успешный
+пустой `docker container ls --all --filter name=^/NAME$ --format '{{.Names}}'` подтверждает
+отсутствие именно этого worker. После завершения/прерывания Docker client cleanup проверяется
+до снятия proxy и до status/model/publication. При неизвестном результате возвращается
+`worker_cleanup_unconfirmed`, journal и candidate сохраняются; следующий coordinator обязан
+повторно подтвердить quiescence до продолжения. Legacy journal без worker identity отвергается,
+автоматической миграции нет. Это адресная recovery, без broad cleanup и повторного exchange.
 
 Fixed bounds: JSON containers depth16, string16384 UTF-8 bytes, credential65536 bytes,
 combined child output8192 bytes; CLI exchange/status/model deadlines60/30/120 seconds.

@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent
 
@@ -77,8 +78,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertFalse((dest / '.git/objects/info/alternates').exists())
         self.assertEqual(state['head'], self.git('rev-parse', 'HEAD').decode().strip())
 
-    def test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env(self):
-        self.assertTrue(hasattr(self.runtime, 'refresh_command'), 'dedicated refresh command builder missing')
+    def refresh_inputs(self):
         policy = self.base / 'refresh-policy'
         policy.mkdir(mode=0o700)
         for filename in ['claude-refresh.mjs', 'provider-proxy.mjs']:
@@ -94,6 +94,11 @@ class RuntimeTests(unittest.TestCase):
             'policy_sha256': self.runtime.tree_hash(policy), 'run_root': str(self.run),
             'image': self.runtime.REFRESH_IMAGE, 'network': 'provider-proxy',
             'check_id': 'synthetic-refresh', 'attempt_id': 'c' * 32}
+        self.run.chmod(0o700)
+        return manifest, credential, pending
+
+    def test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env(self):
+        manifest, credential, pending = self.refresh_inputs()
         for operation in ['exchange', 'status', 'model']:
             run = self.base / ('refresh-' + operation); run.mkdir(mode=0o700)
             args = self.runtime.refresh_command({**manifest, 'run_root': str(run)}, operation, credential,
@@ -113,6 +118,47 @@ class RuntimeTests(unittest.TestCase):
         for changed in [{'image': 'sha256:' + '0' * 64}, {'network': 'bridge'}, {'prompt': 'arbitrary'}]:
             with self.assertRaises(ValueError):
                 self.runtime.refresh_command({**manifest, **changed}, 'exchange', credential, pending)
+
+    def test_refresh_policy_hardlink_is_rejected_before_read_or_digest(self):
+        manifest, credential, pending = self.refresh_inputs()
+        forbidden = self.base / 'synthetic-private'; forbidden.write_bytes(os.urandom(32)); forbidden.chmod(0o600)
+        target = Path(manifest['policy']) / 'claude-refresh.mjs'; target.unlink(); os.link(forbidden, target)
+        observed = {'read': False, 'digest': False}; identity = forbidden.stat().st_ino
+        original_bytes, original_read, original_digest = Path.read_bytes, os.read, self.runtime.digest
+        def path_read(path):
+            if path.stat().st_ino == identity: observed['read'] = True
+            return original_bytes(path)
+        def fd_read(fd, size):
+            if os.fstat(fd).st_ino == identity: observed['read'] = True
+            return original_read(fd, size)
+        def digest(data):
+            observed['digest'] = True
+            return original_digest(data)
+        with patch.object(Path, 'read_bytes', path_read), patch.object(os, 'read', side_effect=fd_read), \
+             patch.object(self.runtime, 'digest', side_effect=digest):
+            with self.assertRaises(ValueError): self.runtime.refresh_command(manifest, 'exchange', credential, pending)
+        self.assertEqual(observed, {'read': False, 'digest': False})
+
+    def test_refresh_policy_replacement_during_read_is_rejected_before_digest(self):
+        manifest, credential, pending = self.refresh_inputs()
+        policy = Path(manifest['policy']); target = policy / 'empty-mcp.json'
+        replacement = self.base / 'replacement'; replacement.write_bytes(target.read_bytes())
+        observed = {'replaced': False, 'digest': False}
+        first_inode = (policy / 'claude-refresh.mjs').stat().st_ino
+        original_bytes, original_read, original_digest = Path.read_bytes, os.read, self.runtime.digest
+        def replace(inode):
+            if inode == first_inode and not observed['replaced']:
+                os.replace(replacement, target); observed['replaced'] = True
+        def path_read(path):
+            replace(path.stat().st_ino); return original_bytes(path)
+        def fd_read(fd, size):
+            replace(os.fstat(fd).st_ino); return original_read(fd, size)
+        def digest(data):
+            observed['digest'] = True; return original_digest(data)
+        with patch.object(Path, 'read_bytes', path_read), patch.object(os, 'read', side_effect=fd_read), \
+             patch.object(self.runtime, 'digest', side_effect=digest):
+            with self.assertRaises(ValueError): self.runtime.refresh_command(manifest, 'exchange', credential, pending)
+        self.assertEqual(observed, {'replaced': True, 'digest': False})
 
     def test_external_symlink_and_ignored_explicit_input_are_rejected(self):
         (self.source / 'escape').symlink_to('/etc/passwd')

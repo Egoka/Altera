@@ -256,6 +256,60 @@ def private_reference(value, directory=False):
     return path
 
 
+def refresh_policy(policy, expected_hash):
+    """Сначала metadata всех exact entries, затем bounded fd reads и проверка замены до digest."""
+    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
+    directory_fd = os.open(policy, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    opened = {}
+    def identity(info):
+        return (info.st_dev, info.st_ino, info.st_mode, info.st_uid, info.st_gid,
+                info.st_nlink, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+    def file_metadata(info):
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or
+            info.st_mode & 0o022 or not 0 < info.st_size <= 65536):
+            raise ValueError('unsafe_refresh_policy')
+    try:
+        original_directory = os.fstat(directory_fd)
+        if (not stat.S_ISDIR(original_directory.st_mode) or original_directory.st_uid != os.getuid() or
+            stat.S_IMODE(original_directory.st_mode) != 0o700 or set(os.listdir(directory_fd)) != expected):
+            raise ValueError('unsafe_refresh_policy')
+        for name in sorted(expected):
+            fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory_fd)
+            opened[name] = (fd, os.fstat(fd))
+            file_metadata(opened[name][1])
+        def unchanged():
+            if (identity(os.fstat(directory_fd)) != identity(original_directory) or
+                identity(policy.lstat()) != identity(original_directory) or
+                set(os.listdir(directory_fd)) != expected):
+                raise ValueError('refresh_policy_replaced')
+            for name, (fd, before) in opened.items():
+                held, named = os.fstat(fd), os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+                file_metadata(held); file_metadata(named)
+                if identity(held) != identity(before) or identity(named) != identity(before):
+                    raise ValueError('refresh_policy_replaced')
+        unchanged()
+        content = {}
+        for name, (fd, before) in opened.items():
+            data = bytearray()
+            while len(data) <= 65536:
+                chunk = os.read(fd, 65537 - len(data))
+                if not chunk: break
+                data.extend(chunk)
+            if len(data) != before.st_size: raise ValueError('refresh_policy_replaced')
+            content[name] = bytes(data)
+        unchanged()
+        entries = [[name, digest(content[name])] for name in sorted(expected)]
+        if digest(json.dumps(entries, separators=(',', ':')).encode()) != expected_hash:
+            raise ValueError('refresh_policy_changed')
+        if (json.loads(content['empty-mcp.json']) != {'mcpServers': {}} or
+            json.loads(content['claude-settings.json']) != {'disableAllHooks': True}):
+            raise ValueError('invalid_refresh_policy')
+        unchanged()
+    finally:
+        for fd, _info in opened.values(): os.close(fd)
+        os.close(directory_fd)
+
+
 def refresh_command(manifest, operation, credential, output=None):
     """Фиксированная операция без source/MCP/stdin и без credential values в argv/env."""
     required = {'schema_version', 'store', 'policy', 'policy_sha256', 'run_root', 'image',
@@ -271,16 +325,7 @@ def refresh_command(manifest, operation, credential, output=None):
             raise ValueError('refresh_mount_overlap')
     if any(run.iterdir()):
         raise ValueError('refresh_run_not_fresh')
-    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
-    if {item.name for item in policy.iterdir()} != expected or tree_hash(policy) != manifest['policy_sha256']:
-        raise ValueError('refresh_policy_changed')
-    if (json.loads((policy / 'empty-mcp.json').read_text()) != {'mcpServers': {}} or
-        json.loads((policy / 'claude-settings.json').read_text()) != {'disableAllHooks': True}):
-        raise ValueError('invalid_refresh_policy')
-    for name in expected:
-        info = (policy / name).stat()
-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or info.st_mode & 0o022:
-            raise ValueError('unsafe_refresh_policy')
+    refresh_policy(policy, manifest['policy_sha256'])
     credential = private_reference(credential)
     generation = private_reference(credential.parent, directory=True)
     if (credential.name != '.credentials.json' or generation.parent != store / 'generations' or

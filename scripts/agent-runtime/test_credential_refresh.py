@@ -54,8 +54,22 @@ class RefreshTests(unittest.TestCase):
     def store(self, runner=None):
         self.assertIsNotNone(self.module, 'credential refresh coordinator missing')
         store = self.module.Store(self.manifest, runner=runner or self.runner)
+        def confirmed(state):
+            if state['worker'] and state['worker']['quiescence'] != 'confirmed':
+                state['worker'] = {**state['worker'], 'quiescence': 'confirmed'}
+                store.write_state(state)
+            return True
+        store.quiesce = confirmed  # Unit runner не создаёт Docker worker; transport проверяется отдельно.
         self.addCleanup(store.close)
         return store
+
+    def reserve_worker(self, store, operation):
+        state = {'stage': 'exchange_started' if operation == 'exchange' else 'candidate_written',
+                 'old': self.pointer(), 'candidate': uuid.uuid4().hex,
+                 **{key: self.manifest[key] for key in ('attempt_id', 'check_id', 'image', 'policy_sha256')},
+                 'worker': {'name': 'altera-refresh-' + uuid.uuid4().hex, 'operation': operation, 'quiescence': 'unconfirmed'}}
+        store.write_state(state)
+        return state
 
     def runner(self, operation, credential, output):
         self.calls.append(operation)
@@ -250,6 +264,7 @@ class RefreshTests(unittest.TestCase):
         from contextlib import nullcontext
         from types import SimpleNamespace
         store = self.initialized()
+        self.reserve_worker(store, 'model')
         process = SimpleNamespace(returncode=1, communicate=lambda **kwargs: (json.dumps(model_result()).encode(), b''), wait=lambda **kwargs: 1)
         with patch.object(self.module.runtime, 'refresh_command', return_value=['docker', '--network=none']), \
              patch.object(self.module.runtime, 'provider_network', return_value=nullcontext('synthetic')), \
@@ -288,6 +303,7 @@ class RefreshTests(unittest.TestCase):
         from contextlib import contextmanager
         from types import SimpleNamespace
         store = self.initialized(); events = []
+        store.quiesce = self.module.Store.quiesce.__get__(store)
         @contextmanager
         def network(_manifest):
             try: yield 'synthetic'
@@ -295,12 +311,17 @@ class RefreshTests(unittest.TestCase):
         process = SimpleNamespace(returncode=0, communicate=lambda **kwargs: (b'{"status":"authenticated"}', b''),
                                   wait=lambda **kwargs: 0)
         def remove(command, **kwargs):
+            if command[1:4] == ['container', 'ls', '--all']:
+                events.append('worker_absence')
+                return SimpleNamespace(returncode=0, stdout=b'')
             self.assertEqual(command[:3], [self.module.runtime.DOCKER, 'rm', '--force'])
             self.assertRegex(command[3], r'^altera-refresh-[a-f0-9]{32}$')
             events.append('worker_cleanup')
+            return SimpleNamespace(returncode=1, stdout=b'')
         for scenario in ('success', 'watchdog', 'exception'):
             with self.subTest(scenario=scenario):
                 events.clear()
+                self.reserve_worker(store, 'status')
                 def communicate(**kwargs):
                     if scenario == 'watchdog': raise subprocess.TimeoutExpired('synthetic', 45)
                     if scenario == 'exception': raise RuntimeError('synthetic_transport_failure')
@@ -315,7 +336,80 @@ class RefreshTests(unittest.TestCase):
                     else:
                         self.assertEqual(store.container('status', self.source, None),
                                          {'status': 'timeout' if scenario == 'watchdog' else 'authenticated'})
-                self.assertEqual(events, ['worker_cleanup', 'proxy_cleanup'])
+                self.assertEqual(events, ['worker_cleanup', 'worker_absence', 'proxy_cleanup'])
+
+    def test_failed_worker_removal_blocks_recovery_until_exact_absence_is_proven(self):
+        from contextlib import nullcontext
+        from types import SimpleNamespace
+        store = self.initialized(); old = self.pointer(); live = True; names = []
+        store.quiesce = self.module.Store.quiesce.__get__(store)
+        def start(command, **kwargs):
+            names.append(command[command.index('--name') + 1])
+            journal = store.state()
+            self.assertEqual(journal['worker'], {'name': names[-1], 'operation': 'exchange', 'quiescence': 'unconfirmed'})
+            def communicate(**kwargs): raise subprocess.TimeoutExpired('synthetic', 75)
+            return SimpleNamespace(returncode=1, communicate=communicate, wait=lambda **kwargs: 1)
+        def docker(command, **kwargs):
+            if command[1:3] == ['rm', '--force']:
+                return SimpleNamespace(returncode=1, stdout=b'')
+            self.assertEqual(command[1:4], ['container', 'ls', '--all'])
+            self.assertRegex(command[5], r'^name=\^/altera-refresh-[a-f0-9]{32}\$$')
+            if live: self.assertIn('name=^/' + names[0] + '$', command)
+            return SimpleNamespace(returncode=0, stdout=(names[0] + '\n').encode() if live else b'')
+        def runner(operation, credential, output):
+            result = self.runner(operation, credential, output)
+            return store.container(operation, credential, output) if operation == 'exchange' else result
+        store.runner = runner
+        with patch.object(self.module.runtime, 'refresh_command', return_value=[self.module.runtime.DOCKER, 'run', '--network=none']), \
+             patch.object(self.module.runtime, 'provider_network', side_effect=lambda _: nullcontext('synthetic')), \
+             patch.object(self.module.subprocess, 'Popen', side_effect=start), \
+             patch.object(self.module.subprocess, 'run', side_effect=docker):
+            for _ in range(2):
+                self.assertEqual(store.refresh()['status'], 'worker_cleanup_unconfirmed')
+                self.assertEqual(self.pointer(), old)
+                self.assertEqual(self.calls, ['exchange'])
+            journal = json.loads((Path(self.manifest['store']) / 'refresh-state.json').read_text())
+            self.assertEqual(journal['worker'], {'name': names[0], 'operation': 'exchange', 'quiescence': 'unconfirmed'})
+            live = False
+            self.assertEqual(store.refresh()['status'], 'published')
+        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
+        self.assertEqual(len(names), 1)
+
+    def test_unknown_cleanup_survives_reopen_and_legacy_journal_is_rejected(self):
+        from types import SimpleNamespace
+        store = self.initialized(); state = self.reserve_worker(store, 'exchange')
+        pending = Path(self.manifest['store']) / 'generations' / (state['candidate'] + '.pending')
+        pending.mkdir(mode=0o700); self.runner('exchange', self.source, pending); self.calls.clear()
+        store.close()
+        reopened = self.module.Store(self.manifest, runner=self.runner); self.addCleanup(reopened.close)
+        commands = []
+        def unknown(command, **kwargs):
+            commands.append(command)
+            if command[1] == 'rm': return SimpleNamespace(returncode=1, stdout=b'')
+            raise subprocess.TimeoutExpired('synthetic', 15)
+        with patch.object(self.module.subprocess, 'run', side_effect=unknown):
+            self.assertEqual(reopened.refresh()['status'], 'worker_cleanup_unconfirmed')
+        self.assertEqual(self.calls, [])
+        self.assertEqual(reopened.state()['worker'], state['worker'])
+        self.assertTrue(all(state['worker']['name'] in ' '.join(command) for command in commands))
+        legacy = dict(state); del legacy['worker']; reopened.write_state(legacy)
+        with patch.object(self.module.subprocess, 'run') as docker:
+            with self.assertRaises(ValueError): reopened.refresh()
+            docker.assert_not_called()
+
+
+    def test_model_worker_unknown_blocks_acceptance_and_publication(self):
+        store = self.initialized(); old = self.pointer(); confirmed = store.quiesce
+        def uncertain(state):
+            if state['worker'] and state['worker']['operation'] == 'model': return False
+            return confirmed(state)
+        store.quiesce = uncertain
+        for _ in range(2):
+            self.assertEqual(store.refresh()['status'], 'worker_cleanup_unconfirmed')
+            self.assertEqual(self.pointer(), old)
+        self.assertEqual(self.calls, ['exchange', 'status', 'model'])
+        self.assertEqual(store.state()['stage'], 'candidate_written')
+        self.assertEqual(store.state()['worker']['operation'], 'model')
 
 
 if __name__ == '__main__':
