@@ -33,11 +33,11 @@ export default {
       const cachedTag = await ctx.redis.get(cacheKey)
 
       if (cachedTag) {
-        console.log("CACHE: Returning tag by slug from cache")
+        console.info("CACHE: Returning tag by slug from cache")
         return JSON.parse(cachedTag)
       }
 
-      console.log("DATABASE: Tag by slug not in cache, fetching from database")
+      console.info("DATABASE: Tag by slug not in cache, fetching from database")
       const tag = await ctx.prisma.sectionTag.findUnique({
         where: { slug: args.slug }
       })
@@ -58,11 +58,11 @@ export default {
       const cachedData = await ctx.redis.get(cacheKey)
 
       if (cachedData) {
-        console.log("CACHE: Returning articles by tag from cache")
+        console.info("CACHE: Returning articles by tag from cache")
         return JSON.parse(cachedData)
       }
 
-      console.log("DATABASE: Articles by tag not in cache, fetching from database")
+      console.info("DATABASE: Articles by tag not in cache, fetching from database")
 
       const tag = await ctx.prisma.sectionTag.findUnique({ where: { slug: tagSlug } })
       if (!tag) {
@@ -106,11 +106,11 @@ export default {
       const cachedStats = await ctx.redis.get(cacheKey)
 
       if (cachedStats) {
-        console.log("CACHE: Returning tag stats from cache")
+        console.info("CACHE: Returning tag stats from cache")
         return JSON.parse(cachedStats)
       }
 
-      console.log("DATABASE: Tag stats not in cache, calculating from database")
+      console.info("DATABASE: Tag stats not in cache, calculating from database")
 
       const tag = await ctx.prisma.sectionTag.findUnique({ where: { slug: tagSlug } })
       if (!tag) {

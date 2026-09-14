@@ -32,11 +32,11 @@ export default {
       const cachedContentType = await ctx.redis.get(cacheKey)
 
       if (cachedContentType) {
-        console.log("CACHE: Returning content type by slug from cache")
+        console.info("CACHE: Returning content type by slug from cache")
         return JSON.parse(cachedContentType)
       }
 
-      console.log("DATABASE: Content type by slug not in cache, fetching from database")
+      console.info("DATABASE: Content type by slug not in cache, fetching from database")
       const contentType = await ctx.prisma.contentType.findUnique({
         where: { slug: args.slug }
       })
@@ -57,11 +57,11 @@ export default {
       const cachedData = await ctx.redis.get(cacheKey)
 
       if (cachedData) {
-        console.log("CACHE: Returning articles by content type from cache")
+        console.info("CACHE: Returning articles by content type from cache")
         return JSON.parse(cachedData)
       }
 
-      console.log("DATABASE: Articles by content type not in cache, fetching from database")
+      console.info("DATABASE: Articles by content type not in cache, fetching from database")
 
       const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
       if (!contentType) {
@@ -105,11 +105,11 @@ export default {
       const cachedStats = await ctx.redis.get(cacheKey)
 
       if (cachedStats) {
-        console.log("CACHE: Returning content type stats from cache")
+        console.info("CACHE: Returning content type stats from cache")
         return JSON.parse(cachedStats)
       }
 
-      console.log("DATABASE: Content type stats not in cache, calculating from database")
+      console.info("DATABASE: Content type stats not in cache, calculating from database")
 
       const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
       if (!contentType) {

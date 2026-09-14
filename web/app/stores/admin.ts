@@ -11,7 +11,7 @@ export const useAdminStore = defineStore("admin", {
     setIsMenuCollapsed(value: boolean) {
       this.isMenuCollapsed = value
       // Сохраняем в localStorage
-      if (process.client) {
+      if (import.meta.client) {
         localStorage.setItem("admin.menuCollapsed", JSON.stringify(value))
       }
     },
@@ -21,7 +21,7 @@ export const useAdminStore = defineStore("admin", {
     },
 
     initFromLocalStorage() {
-      if (process.client) {
+      if (import.meta.client) {
         const saved = localStorage.getItem("admin.menuCollapsed")
         if (saved !== null) {
           try {

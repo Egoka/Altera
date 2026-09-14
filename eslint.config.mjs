@@ -49,6 +49,13 @@ export default [
     }
   },
 
+  {
+    files: ["server/src/**/*.{ts,js}"],
+    rules: {
+      "no-console": ["error", { allow: ["info", "warn", "error"] }]
+    }
+  },
+
   // === Для Vue файлов (.vue) ===
   {
     files: ["**/*.vue"],

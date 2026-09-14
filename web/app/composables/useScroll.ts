@@ -69,7 +69,7 @@ export function useScroll() {
 
   const handleScroll = () => {
     // Проверяем, что мы на клиенте
-    if (process.client) {
+    if (import.meta.client) {
       const currentScrollY = window.scrollY
       const currentScrollX = window.scrollX
 
@@ -146,7 +146,7 @@ export function useScroll() {
    */
   const getScrollPercentage = (): number => {
     // Проверяем, что мы на клиенте и document доступен
-    if (process.client && typeof document !== "undefined") {
+    if (import.meta.client && typeof document !== "undefined") {
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       return docHeight > 0 ? (scrollY.value / docHeight) * 100 : 0
     }
@@ -154,7 +154,7 @@ export function useScroll() {
   }
 
   onMounted(() => {
-    if (process.client) {
+    if (import.meta.client) {
       window.addEventListener("scroll", handleScroll, { passive: true })
       // Инициализируем начальное состояние
       handleScroll()
@@ -162,7 +162,7 @@ export function useScroll() {
   })
 
   onUnmounted(() => {
-    if (process.client) {
+    if (import.meta.client) {
       window.removeEventListener("scroll", handleScroll)
     }
   })

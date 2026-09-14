@@ -30,11 +30,11 @@ export default {
       const cachedUser = await ctx.redis.get(cacheKey)
 
       if (cachedUser) {
-        console.log("CACHE: Returning user by slug from cache")
+        console.info("CACHE: Returning user by slug from cache")
         return JSON.parse(cachedUser)
       }
 
-      console.log("DATABASE: User by slug not in cache, fetching from database")
+      console.info("DATABASE: User by slug not in cache, fetching from database")
       const user = await ctx.prisma.user.findUnique({
         where: { slug: args.slug }
       })
@@ -51,11 +51,11 @@ export default {
       const cachedUser = await ctx.redis.get(cacheKey)
 
       if (cachedUser) {
-        console.log("CACHE: Returning author by slug from cache")
+        console.info("CACHE: Returning author by slug from cache")
         return JSON.parse(cachedUser)
       }
 
-      console.log("DATABASE: Author by slug not in cache, fetching from database")
+      console.info("DATABASE: Author by slug not in cache, fetching from database")
       const author = await ctx.prisma.user.findUnique({
         where: { slug: args.slug, role: "author" }
       })
@@ -76,11 +76,11 @@ export default {
       const cachedData = await ctx.redis.get(cacheKey)
 
       if (cachedData) {
-        console.log("CACHE: Returning articles by author from cache")
+        console.info("CACHE: Returning articles by author from cache")
         return JSON.parse(cachedData)
       }
 
-      console.log("DATABASE: Articles by author not in cache, fetching from database")
+      console.info("DATABASE: Articles by author not in cache, fetching from database")
 
       const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
       if (!author) {
@@ -112,11 +112,11 @@ export default {
       const cachedStats = await ctx.redis.get(cacheKey)
 
       if (cachedStats) {
-        console.log("CACHE: Returning author stats from cache")
+        console.info("CACHE: Returning author stats from cache")
         return JSON.parse(cachedStats)
       }
 
-      console.log("DATABASE: Author stats not in cache, calculating from database")
+      console.info("DATABASE: Author stats not in cache, calculating from database")
 
       const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
       if (!author) {
@@ -174,11 +174,11 @@ export default {
       const cachedUser = await ctx.redis.get(cacheKey)
 
       if (cachedUser) {
-        console.log("CACHE: Returning user from cache")
+        console.info("CACHE: Returning user from cache")
         return JSON.parse(cachedUser)
       }
 
-      console.log("DATABASE: User not in cache, fetching from context and setting cache")
+      console.info("DATABASE: User not in cache, fetching from context and setting cache")
       await ctx.redis.setex(cacheKey, CACHE_TTL, JSON.stringify(user))
 
       return user
@@ -191,11 +191,11 @@ export default {
       const cachedStats = await ctx.redis.get(cacheKey)
 
       if (cachedStats) {
-        console.log("CACHE: Returning user stats from cache")
+        console.info("CACHE: Returning user stats from cache")
         return JSON.parse(cachedStats)
       }
 
-      console.log("DATABASE: User stats not in cache, calculating from database")
+      console.info("DATABASE: User stats not in cache, calculating from database")
 
       // Получаем статистику по статьям пользователя
       const [total, published, draft, review, archived] = await Promise.all([

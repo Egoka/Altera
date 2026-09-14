@@ -54,7 +54,7 @@ export function useBreakpoint() {
    * Обновляет состояние breakpoint'ов на основе текущей ширины экрана
    */
   const updateBreakpoints = () => {
-    if (process.client) {
+    if (import.meta.client) {
       const width = window.innerWidth
 
       isSm.value = width >= BREAKPOINTS.sm
@@ -70,7 +70,7 @@ export function useBreakpoint() {
    * @returns {string} Текущий breakpoint ('sm', 'md', 'lg', 'xl', '2xl')
    */
   const getBreakpoint = (): string => {
-    if (process.client) {
+    if (import.meta.client) {
       const width = window.innerWidth
 
       if (width >= BREAKPOINTS["2xl"]) return "2xl"
@@ -84,7 +84,7 @@ export function useBreakpoint() {
   }
 
   onMounted(() => {
-    if (process.client) {
+    if (import.meta.client) {
       // Инициализируем начальное состояние
       updateBreakpoints()
 
@@ -94,7 +94,7 @@ export function useBreakpoint() {
   })
 
   onUnmounted(() => {
-    if (process.client) {
+    if (import.meta.client) {
       window.removeEventListener("resize", updateBreakpoints)
     }
   })

@@ -53,7 +53,7 @@ export default {
       // In a real app, you'd send an email here.
       // For now, we'll log the link to the console.
       const magicLink = `${MAGIC_LINK_BASE_URL}?token=${token}`
-      console.log(`✨ Magic Link for ${email}: ${magicLink}`)
+      console.info(`✨ Magic Link for ${email}: ${magicLink}`)
 
       return true
     },

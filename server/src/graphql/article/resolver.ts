@@ -40,11 +40,11 @@ export default {
       const cachedArticle = await ctx.redis.get(cacheKey)
 
       if (cachedArticle) {
-        console.log("CACHE: Returning article from cache")
+        console.info("CACHE: Returning article from cache")
         return JSON.parse(cachedArticle)
       }
 
-      console.log("DATABASE: Article not in cache, fetching from database")
+      console.info("DATABASE: Article not in cache, fetching from database")
       const article = await ctx.prisma.article.findUnique({
         where: { slug: args.slug },
         include: { author: true, contentType: true, sectionTags: true }
@@ -62,11 +62,11 @@ export default {
       const cachedDetail = await ctx.redis.get(cacheKey)
 
       if (cachedDetail) {
-        console.log("CACHE: Returning article detail from cache")
+        console.info("CACHE: Returning article detail from cache")
         return JSON.parse(cachedDetail)
       }
 
-      console.log("DATABASE: Article detail not in cache, fetching from database")
+      console.info("DATABASE: Article detail not in cache, fetching from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug: args.slug, status: "published" },
@@ -136,11 +136,11 @@ export default {
       const cachedArticles = await ctx.redis.get(cacheKey)
 
       if (cachedArticles) {
-        console.log("CACHE: Returning recommended articles from cache")
+        console.info("CACHE: Returning recommended articles from cache")
         return JSON.parse(cachedArticles)
       }
 
-      console.log("DATABASE: Recommended articles not in cache, fetching from database")
+      console.info("DATABASE: Recommended articles not in cache, fetching from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug: articleSlug, status: "published" },
@@ -179,11 +179,11 @@ export default {
       const cachedArticles = await ctx.redis.get(cacheKey)
 
       if (cachedArticles) {
-        console.log("CACHE: Returning related articles from cache")
+        console.info("CACHE: Returning related articles from cache")
         return JSON.parse(cachedArticles)
       }
 
-      console.log("DATABASE: Related articles not in cache, fetching from database")
+      console.info("DATABASE: Related articles not in cache, fetching from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug: articleSlug, status: "published" },
@@ -214,11 +214,11 @@ export default {
       const cachedStats = await ctx.redis.get(cacheKey)
 
       if (cachedStats) {
-        console.log("CACHE: Returning article stats from cache")
+        console.info("CACHE: Returning article stats from cache")
         return JSON.parse(cachedStats)
       }
 
-      console.log("DATABASE: Article stats not in cache, calculating from database")
+      console.info("DATABASE: Article stats not in cache, calculating from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug, status: "published" },
@@ -249,11 +249,11 @@ export default {
       const cachedArticles = await ctx.redis.get(cacheKey)
 
       if (cachedArticles) {
-        console.log("CACHE: Returning featured articles from cache")
+        console.info("CACHE: Returning featured articles from cache")
         return JSON.parse(cachedArticles)
       }
 
-      console.log("DATABASE: Featured articles not in cache, fetching from database")
+      console.info("DATABASE: Featured articles not in cache, fetching from database")
       // Получаем последние опубликованные статьи как "featured"
       // В будущем можно добавить поле isFeatured в модель Article
       const articles = await ctx.prisma.article.findMany({
@@ -274,11 +274,11 @@ export default {
       const cachedArticles = await ctx.redis.get(cacheKey)
 
       if (cachedArticles) {
-        console.log("CACHE: Returning latest articles from cache")
+        console.info("CACHE: Returning latest articles from cache")
         return JSON.parse(cachedArticles)
       }
 
-      console.log("DATABASE: Latest articles not in cache, fetching from database")
+      console.info("DATABASE: Latest articles not in cache, fetching from database")
 
       const where: any = { status: "published" }
 
@@ -314,11 +314,11 @@ export default {
       const cachedArticles = await ctx.redis.get(cacheKey)
 
       if (cachedArticles) {
-        console.log("CACHE: Returning popular articles from cache")
+        console.info("CACHE: Returning popular articles from cache")
         return JSON.parse(cachedArticles)
       }
 
-      console.log("DATABASE: Popular articles not in cache, fetching from database")
+      console.info("DATABASE: Popular articles not in cache, fetching from database")
 
       // Рассчитываем дату для фильтрации
       const now = new Date()
@@ -555,7 +555,7 @@ export default {
       })
 
       const cacheKey = `article:${updatedArticle.slug}`
-      console.log(`CACHE: Invalidating article cache for ${cacheKey}`)
+      console.info(`CACHE: Invalidating article cache for ${cacheKey}`)
       await ctx.redis.del(cacheKey)
 
       return updatedArticle
@@ -577,7 +577,7 @@ export default {
       })
 
       const articleCacheKey = `article:${updatedArticle.slug}`
-      console.log(`CACHE: Invalidating caches for archived article`)
+      console.info(`CACHE: Invalidating caches for archived article`)
       const keysToDelete = await ctx.redis.keys(`${FEATURED_ARTICLES_CACHE_KEY}:*`)
       keysToDelete.push(...(await ctx.redis.keys(`${LATEST_ARTICLES_CACHE_PREFIX}*`)))
       keysToDelete.push(...(await ctx.redis.keys(`${POPULAR_ARTICLES_CACHE_PREFIX}*`)))
@@ -645,7 +645,7 @@ export default {
       })
 
       const articleCacheKey = `article:${updatedArticle.slug}`
-      console.log(`CACHE: Invalidating all public caches for status change`)
+      console.info(`CACHE: Invalidating all public caches for status change`)
       const keysToDelete = await ctx.redis.keys(`${FEATURED_ARTICLES_CACHE_KEY}:*`)
       keysToDelete.push(...(await ctx.redis.keys(`${LATEST_ARTICLES_CACHE_PREFIX}*`)))
       keysToDelete.push(...(await ctx.redis.keys(`${POPULAR_ARTICLES_CACHE_PREFIX}*`)))

@@ -140,11 +140,11 @@ export const getCacheKey = (operation: string, params: any) => {
 export const getCachedOrFetch = async (ctx: GraphQLContext, cacheKey: string, fetchFunction: () => Promise<any>) => {
   const cached = await ctx.redis.get(cacheKey)
   if (cached) {
-    console.log("CACHE: Returning admin data from cache")
+    console.info("CACHE: Returning admin data from cache")
     return JSON.parse(cached)
   }
 
-  console.log("DATABASE: Admin data not in cache, fetching from database")
+  console.info("DATABASE: Admin data not in cache, fetching from database")
   const data = await fetchFunction()
   await ctx.redis.setex(cacheKey, ADMIN_CACHE_TTL, JSON.stringify(data))
 
@@ -222,7 +222,7 @@ export const validateBulkOperation = (ids: string[], maxItems: number = 100) => 
 
 // Утилиты для логирования админ операций
 export const logAdminOperation = (operation: string, userId: string, details: any) => {
-  console.log(`ADMIN OPERATION: ${operation}`, {
+  console.info(`ADMIN OPERATION: ${operation}`, {
     userId,
     timestamp: new Date().toISOString(),
     details
