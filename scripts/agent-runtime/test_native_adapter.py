@@ -61,7 +61,7 @@ class NativeAdapterTests(unittest.TestCase):
             'agent_id': 'reviewer-1', 'issue_id': 'issue-4', 'workspace_id': 'workspace-1',
             'passport_path': str(self.passport), 'passport_sha256': passport_sha,
             'gate': {'task': 'T-17', 'stage': 'review', 'run': 'run-8', 'lease': 'lease-4'},
-            'gate_input': {'revision_commit': 'c' * 40, 'dirty_fingerprint': 'd' * 64},
+            'gate_input': {'revision_commit': 'c' * 40, 'dirty_fingerprint': 'sha256:' + 'd' * 64},
             'check_ids': ['native-review'], 'criteria': ['AC-1'],
             'event_ids': {'claimed': self.invocation + ':claimed', 'observed': self.invocation + ':observed'},
             'runtime_manifest': str(self.runtime_manifest),
@@ -169,7 +169,7 @@ class NativeAdapterTests(unittest.TestCase):
             'gate': {'task': 'T-1', 'stage': 'review', 'run': 'run-1', 'lease': 'lease-1'},
             'gate_input': {'revision_commit': __import__('subprocess').check_output(
                 ['/usr/bin/git', '-C', str(source), 'rev-parse', 'HEAD']).decode().strip(),
-                'dirty_fingerprint': 'a' * 64}, 'check_ids': ['native'], 'criteria': ['AC-1'],
+                'dirty_fingerprint': 'sha256:' + 'a' * 64}, 'check_ids': ['native'], 'criteria': ['AC-1'],
             'event_ids': {'claimed': identity + ':claimed', 'observed': identity + ':observed'},
             'source': str(source), 'snapshot': str(self.base / (provider + '-snapshot')),
             'dirty_paths': [], 'policy': str(policy), 'run_root': str(self.base / (provider + '-run')),

@@ -154,7 +154,7 @@ def _validate_ticket(provider, ticket, environment):
             not isinstance(ticket['gate'], dict) or set(ticket['gate']) != {'task', 'stage', 'run', 'lease'} or
             not isinstance(ticket['gate_input'], dict) or set(ticket['gate_input']) != {'revision_commit', 'dirty_fingerprint'} or
             not re.fullmatch(r'[a-f0-9]{40}', ticket['gate_input']['revision_commit']) or
-            not re.fullmatch(r'[a-f0-9]{64}', ticket['gate_input']['dirty_fingerprint']) or
+            not re.fullmatch(r'(?:clean|sha256:[a-f0-9]{64})', ticket['gate_input']['dirty_fingerprint']) or
             not isinstance(ticket['check_ids'], list) or not ticket['check_ids'] or
             not isinstance(ticket['criteria'], list) or not ticket['criteria'] or
             not isinstance(ticket['event_ids'], dict) or set(ticket['event_ids']) != {'claimed', 'observed'}):

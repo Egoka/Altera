@@ -252,3 +252,82 @@ class CollectorLegacyVerificationRegression(unittest.TestCase):
             self.assertIn(stage,finished['after']['tasks']['T-fixture']['completed_stages'])
             self.assertEqual((self.root/self.plan).read_bytes(),original_passport)
         self.assertIsNone(self.cli('status')['parent'])
+
+
+class CollectorPermanentAdapterChain(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    start = CollectorIntegrationTests.start
+    record = CollectorIntegrationTests.record
+    request = CollectorIntegrationTests.request
+    row = CollectorIntegrationTests.row
+    command_runner = CollectorIntegrationTests.command_runner
+
+    def test_admitted_ticket_reaches_permanent_adapter_both_claims_and_gate_record(self):
+        import importlib.machinery
+        runtime_dir=Path(__file__).resolve().parent.parent/'agent-runtime'
+        adapter=self.c.module(runtime_dir/'native_adapter.py')
+        config={k:v for k,v in self.config.items() if k!='_reference'}
+        config['provider']='codex'
+        sources={'collector':Path(self.c.__file__), 'gate':Path(__file__).with_name('gate.py'),
+                 'runtime':runtime_dir/'runtime.py','adapter':runtime_dir/'native_adapter.py','prepare':runtime_dir/'prepare_native.py'}
+        config['modules']={k:self.c.sha(v.read_bytes()) for k,v in sources.items()}
+        cli=self.private_root/'multica-boundary';cli.write_text('#!/bin/sh\nexit 0\n');cli.chmod(0o700)
+        config['multica']={'path':str(cli),'sha256':self.c.sha(cli.read_bytes())}
+        config_path=self.private_root/'collector-config.json';config_sha=self.c.publish(config_path,config)
+        config=self.c.deployment(str(config_path),config_sha)
+        request=self.request('adapter-chain')
+        registry=self.private_root/'adapter-registry';registry.mkdir(mode=0o700)
+        request['prepare_request']['destination']=str(registry/'adapter-chain')
+        auth=self.private_root/'synthetic-auth.json';auth.write_text('{}');auth.chmod(0o600)
+        request['prepare_request']['provider_input'].update(probe='/synthetic/provider-probe',auth_file=str(auth))
+        admitted=self.c.admit(config,request)
+        pending=self.c.read(admitted['adapter_path'])
+        self.assertEqual(pending['gate_input']['dirty_fingerprint'],'clean')
+        hashes=lambda name:self.c.sha((runtime_dir/name).read_bytes())
+        stable={'schema_version':1,'provider':'codex','actor':'agent-1','agent_id':'agent-1',
+                'workspace_id':'workspace-1','registry':str(registry),
+                'claims':str(Path(pending['claim']).parent),'observations':str(Path(pending['observation']).parent),
+                'authority':{'native_adapter_sha256':hashes('native_adapter.py'),
+                    'provider_adapter_sha256':hashes('native_codex_adapter.py'),'prepare_native_sha256':hashes('prepare_native.py'),
+                    'runtime_sha256':hashes('runtime.py'),'credential_refresh_sha256':hashes('credential_refresh.py'),
+                    'codex_mapper_sha256':hashes('codex_toml_map.py'),'source':str(self.root)}}
+        stable_path=self.private_root/'adapter-config.json';stable_sha=self.c.publish(stable_path,stable)
+        original_exec=importlib.machinery.SourceFileLoader.exec_module
+        launched=[];command_runner=self.command_runner()
+        def boundary_loader(loader,loaded):
+            original_exec(loader,loaded)
+            path=Path(getattr(loaded,'__file__','')).name
+            if path=='native_adapter.py':
+                loaded.verify_provider=lambda ticket,argv:{'managed_mapping_verified':True}
+            elif path=='runtime.py':
+                def launch(manifest,incoming,outcome_sink,*,invocation_id):
+                    launched.append(list(incoming))
+                    outcome_sink({'invocation_id':invocation_id,'child_created':True,'child_reaped':True,
+                        'raw_wait':0,'worker_quiescence':'proven','container_removed':True,'provider_cleanup':'proven',
+                        'validation':'verified','source_before':manifest['state'],'source_after':manifest['state'],
+                        'policy_before':manifest['policy_sha256'],'policy_after':manifest['policy_sha256'],'runtime_status':0})
+                    return 0
+                loaded.launch=launch;loaded.check=command_runner
+            elif path=='native_collector.py':
+                original_bounded=loaded.bounded_process
+                def boundary(argv,environment,*args,**kwargs):
+                    if argv[0]==str(cli):
+                        self.assertEqual(set(environment),{'PATH','HOME','MULTICA_TOKEN'})
+                        return 0,json.dumps([self.row()]).encode(),b''
+                    return original_bounded(argv,environment,*args,**kwargs)
+                loaded.bounded_process=boundary
+        previous=os.getcwd()
+        try:
+            os.chdir(self.root)
+            with patch.object(importlib.machinery.SourceFileLoader,'exec_module',new=boundary_loader):
+                status=adapter.run_registered('codex',stable_path,stable_sha,['app-server','--listen','stdio://'],
+                    environment={**self.env,'MULTICA_TOKEN':'synthetic-opaque-token'})
+        finally:os.chdir(previous)
+        self.assertEqual(status,0)
+        self.assertEqual(launched,[['app-server','--listen','stdio://']])
+        self.assertTrue(Path(pending['claim']).exists())
+        self.assertTrue((Path(config['registry'])/'claimed/adapter-chain/binding.json').exists())
+        self.assertEqual(self.cli('status')['events']['adapter-chain-plan']['result'],'passed')
