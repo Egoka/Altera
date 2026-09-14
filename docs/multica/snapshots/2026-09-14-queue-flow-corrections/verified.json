@@ -1,0 +1,73 @@
+{
+  "agent-db94a617-807c-4eec-981f-51fd4b3217d4": {
+    "matches": true,
+    "sha256": "fa3b338225954beb0608b9930b78a3d5c690cfeb276e8881d8107f513885dd38"
+  },
+  "agent-4d98c007-0a6b-4254-85b1-1f57c99cb9ea": {
+    "matches": true,
+    "sha256": "758c7b2a60a3b169a539d7b7b5f28440cfe99bb89fb59421897b50fead0828cb"
+  },
+  "agent-49314ca0-8c53-44a9-a9de-15c3f297818a": {
+    "matches": true,
+    "sha256": "4e2afd92fde89469a04fa686f2c3ffb0caff8f7f15873510ce1ef73b8563b948"
+  },
+  "squad": {
+    "matches": true,
+    "sha256": "bce38b953dafaabc92674a0d3c48ac9774c5b9f89c7eb3c0b2bc5340af78c1c7"
+  },
+  "agent-e682f2d5-7541-475e-a0b4-ef0b8ae885f4": {
+    "matches": true,
+    "sha256": "98f8ad0f83d1d915616583496e2c4151c7942d1bcadea51241ff4f3dc7221472"
+  },
+  "agent-41f9ec44-b58b-48d3-bd24-30d3774d2b5e": {
+    "matches": true,
+    "sha256": "d710079cf6eb91a93d48b25fef765e224c33c177b99f308ac92944e55375ae4c"
+  },
+  "orchestrator": {
+    "matches": true,
+    "sha256": "d48d819d9b5fa221c979e12fd4dd72d45313a1d507d087b27405d8dc41c6fded"
+  },
+  "agent-5f18f628-67ca-491c-80ae-85ffed2c6687": {
+    "matches": true,
+    "sha256": "d481dcfb8ab2bfffdd307c3b67d69d7a35efd53e701ab530d0e5afe8a35af7ea"
+  },
+  "agent-8c80740a-ba6c-4ea2-8011-17a229e214e3": {
+    "matches": true,
+    "sha256": "c902f14d3aba8520cc498c75d43bc687b03dc047fa713ce0b673af28256411b9"
+  },
+  "agent-b0f3bc32-dd95-471e-b40e-517aaf83edf0": {
+    "matches": true,
+    "sha256": "aa416f6bdaa48678f13622834ff3e0b5c5d6a40fe64e82268bcf910ee496c918"
+  },
+  "agent-b7f90cba-518a-4130-993a-f047a4355f96": {
+    "matches": true,
+    "sha256": "1ec324734d79bfa90ac2f75ffc330335ed84173cc1b584f8296fe09d234b5a41"
+  },
+  "recovery": {
+    "matches": true,
+    "sha256": "23ec5c9c566fd07b372edf9e4247be9badde773a3911def2838322b2f6b1222a",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ee760de4-5d9d-469b-8895-bd21bee1663e",
+        "enabled": true,
+        "cron_expression": "15 */4 * * *",
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "queue": {
+    "matches": true,
+    "sha256": "c001d43badaaa11c67b727a27e3ba100114c61c4dbc0323052050cadb3d78a8a",
+    "status": "active",
+    "triggers": [
+      {
+        "id": "ea042b57-0793-444d-b7a1-740579482431",
+        "enabled": true,
+        "cron_expression": "0 * * * *",
+        "timezone": "Europe/Moscow"
+      }
+    ]
+  },
+  "checked_at": "2026-09-14T18:29:03.862483+00:00"
+}
