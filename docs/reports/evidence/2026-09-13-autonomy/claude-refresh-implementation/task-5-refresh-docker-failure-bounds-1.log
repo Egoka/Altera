@@ -1,0 +1,24 @@
+test_failure_retains_journal_without_second_exchange (__main__.DockerRefreshTests) ... ok
+test_output_limit_is_bounded_and_redacted (__main__.DockerRefreshTests) ... ERROR
+test_fixed_timeout_kills_child_group_with_inherited_pipes (__main__.DockerRefreshTests) ... ok
+
+======================================================================
+ERROR: test_output_limit_is_bounded_and_redacted (__main__.DockerRefreshTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_refresh_docker.py", line 154, in test_output_limit_is_bounded_and_redacted
+    self.assert_redacted(result)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_refresh_docker.py", line 106, in assert_redacted
+    proof = json.loads(path.read_text())
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+----------------------------------------------------------------------
+Ran 3 tests in 61.128s
+
+FAILED (errors=1)

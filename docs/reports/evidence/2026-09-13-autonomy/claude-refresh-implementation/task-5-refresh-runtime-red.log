@@ -1,0 +1,15 @@
+test_ordinary_commands_match_pre_refresh_boundary (__main__.RuntimeTests) ... ok
+test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env (__main__.RuntimeTests) ... FAIL
+
+======================================================================
+FAIL: test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 81, in test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env
+    self.assertTrue(hasattr(self.runtime, 'refresh_command'), 'dedicated refresh command builder missing')
+AssertionError: False is not true : dedicated refresh command builder missing
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.678s
+
+FAILED (failures=1)

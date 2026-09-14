@@ -1,0 +1,39 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  03:17:48
+web test:    Duration  100ms (transform 60%, import 24%, tests 9%, worker 7%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  03:17:48
+server test:    Duration  290ms (import 79%, transform 18%, worker 1%, tests 1%)
+server test: Done
+[docs/agent-loop-autonomy 40a43e8] feat(runtime): add isolated Claude credential refresh
+ 9 files changed, 1733 insertions(+), 3 deletions(-)
+ create mode 100644 scripts/agent-runtime/claude-refresh.mjs
+ create mode 100644 scripts/agent-runtime/credential_refresh.py
+ create mode 100644 scripts/agent-runtime/refresh-manifest.example.json
+ create mode 100644 scripts/agent-runtime/test_claude_refresh.mjs
+ create mode 100644 scripts/agent-runtime/test_credential_refresh.py
+ create mode 100644 scripts/agent-runtime/test_refresh_docker.py

@@ -1,0 +1,12 @@
+✔ exact pinned schema rejects aliases, empty scopes, normalization and bounds (2.962042ms)
+✔ only fixed exchange child receives refresh fields, later children are clean (0.869917ms)
+✔ captured output and timeout produce only fixed enums and kill the child group (0.736041ms)
+✔ status and fixed model acceptance expose only safe approved metadata (0.275583ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 55.327625

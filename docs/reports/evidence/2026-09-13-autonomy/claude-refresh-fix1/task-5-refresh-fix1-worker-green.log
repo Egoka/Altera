@@ -1,0 +1,7 @@
+test_failed_worker_removal_blocks_recovery_until_exact_absence_is_proven (__main__.RefreshTests) ... ok
+test_container_cleanup_removes_named_worker_before_proxy_cleanup (__main__.RefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.025s
+
+OK

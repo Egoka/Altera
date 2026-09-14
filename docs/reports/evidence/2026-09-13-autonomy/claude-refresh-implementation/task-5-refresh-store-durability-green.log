@@ -1,0 +1,8 @@
+test_generation_root_permissions_and_replacement_are_rechecked_under_lock (__main__.RefreshTests) ... ok
+test_candidate_file_and_directory_are_synced_before_written_journal (__main__.RefreshTests) ... ok
+test_prepared_recovery_removes_only_proven_empty_pending_directory (__main__.RefreshTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.031s
+
+OK

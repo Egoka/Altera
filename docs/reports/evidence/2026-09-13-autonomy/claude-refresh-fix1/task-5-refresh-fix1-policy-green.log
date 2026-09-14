@@ -1,0 +1,36 @@
+test_refresh_policy_hardlink_is_rejected_before_read_or_digest (__main__.RuntimeTests) ... ok
+test_refresh_policy_replacement_during_read_is_rejected_before_digest (__main__.RuntimeTests) ... ERROR
+test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env (__main__.RuntimeTests) ... ERROR
+
+======================================================================
+ERROR: test_refresh_policy_replacement_during_read_is_rejected_before_digest (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 160, in test_refresh_policy_replacement_during_read_is_rejected_before_digest
+    with self.assertRaises(ValueError): self.runtime.refresh_command(manifest, 'exchange', credential, pending)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 328, in refresh_command
+    refresh_policy(policy, manifest['policy_sha256'])
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 290, in refresh_policy
+    unchanged()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 282, in unchanged
+    identity(policy.stat(follow_symlinks=False)) != identity(original_directory) or
+TypeError: stat() got an unexpected keyword argument 'follow_symlinks'
+
+======================================================================
+ERROR: test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env (__main__.RuntimeTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 104, in test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env
+    args = self.runtime.refresh_command({**manifest, 'run_root': str(run)}, operation, credential,
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 328, in refresh_command
+    refresh_policy(policy, manifest['policy_sha256'])
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 290, in refresh_policy
+    unchanged()
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 282, in unchanged
+    identity(policy.stat(follow_symlinks=False)) != identity(original_directory) or
+TypeError: stat() got an unexpected keyword argument 'follow_symlinks'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.704s
+
+FAILED (errors=2)

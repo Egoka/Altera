@@ -1,0 +1,7 @@
+test_ordinary_commands_match_pre_refresh_boundary (__main__.RuntimeTests) ... ok
+test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env (__main__.RuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.618s
+
+OK

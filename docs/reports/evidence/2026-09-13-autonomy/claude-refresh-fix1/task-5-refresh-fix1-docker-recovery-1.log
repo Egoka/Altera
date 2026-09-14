@@ -1,0 +1,12 @@
+test_unconfirmed_cleanup_recovery_removes_only_reserved_worker (__main__.DockerRefreshTests) ... /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/mock.py:2059: ResourceWarning: unclosed file <_io.FileIO name=8 mode='rb' closefd=True>
+  setattr(_type, entry, MagicProxy(entry, self))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/mock.py:2059: ResourceWarning: unclosed file <_io.FileIO name=10 mode='rb' closefd=True>
+  setattr(_type, entry, MagicProxy(entry, self))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.147s
+
+OK

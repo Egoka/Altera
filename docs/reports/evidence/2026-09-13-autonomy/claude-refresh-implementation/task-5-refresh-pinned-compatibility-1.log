@@ -1,0 +1,7 @@
+test_pinned_cli_invalid_synthetic_token_uses_refresh_branch (__main__.PinnedCompatibilityTests) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.008s
+
+OK
+{"compatibility": {"status": "exchange_failed", "refreshBranchObserved": true, "browserHandoffObserved": false}, "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a", "syntheticOnly": true, "network": "provider-proxy", "internalIsolatedVerified": true, "proxyPolicyReadOnly": true}

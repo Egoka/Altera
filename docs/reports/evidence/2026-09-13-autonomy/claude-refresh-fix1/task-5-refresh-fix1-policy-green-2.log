@@ -1,0 +1,8 @@
+test_refresh_policy_hardlink_is_rejected_before_read_or_digest (__main__.RuntimeTests) ... ok
+test_refresh_policy_replacement_during_read_is_rejected_before_digest (__main__.RuntimeTests) ... ok
+test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env (__main__.RuntimeTests) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.705s
+
+OK

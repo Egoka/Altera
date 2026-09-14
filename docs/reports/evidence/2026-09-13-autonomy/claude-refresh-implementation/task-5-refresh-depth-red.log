@@ -1,0 +1,19 @@
+✖ exact pinned schema rejects aliases, empty scopes, normalization and bounds (1.089625ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37.14875
+
+✖ failing tests:
+
+test at scripts/agent-runtime/test_claude_refresh.mjs:15:1
+✖ exact pinned schema rejects aliases, empty scopes, normalization and bounds (1.089625ms)
+  Error: invalid_credential
+      at parseCredential (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/claude-refresh.mjs:60:19)
+      at TestContext.<anonymous> (file:///private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_claude_refresh.mjs:28:13)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)
