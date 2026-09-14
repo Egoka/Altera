@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/server.ts",
-    "build": "prisma generate && prisma migrate deploy && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
+    "build": "prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "build:ci": "prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "start": "node dist/server.js",
     "copy-graphql": "node scripts/copy-graphql.js",
@@ -27,7 +27,6 @@
     "@graphql-tools/load-files": "^7.0.1",
     "@graphql-tools/merge": "^9.1.0",
     "@graphql-yoga/plugin-csrf-prevention": "^3.15.1",
-    "@neondatabase/serverless": "^1.0.1",
     "@prisma/client": "6.12.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.0",

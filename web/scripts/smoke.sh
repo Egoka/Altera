@@ -52,7 +52,9 @@ for ((attempt = 1; attempt <= WAIT_SECONDS; attempt++)); do
   sleep 1
 done
 
-for ROUTE in / /en; do
+check_route() {
+  local ROUTE="$1"
+  local EXPECTED_STATUS="$2"
   STATUS="$(curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:${PORT}${ROUTE}")"
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
     echo "✗ production web завершился во время проверки $ROUTE. Вывод:"
@@ -60,11 +62,19 @@ for ROUTE in / /en; do
     exit 1
   fi
   echo "$ROUTE: $STATUS"
-  if [ "$STATUS" != "200" ]; then
-    echo "✗ ожидался HTTP 200 для $ROUTE. Вывод:"
+  if [ "$STATUS" != "$EXPECTED_STATUS" ]; then
+    echo "✗ ожидался HTTP $EXPECTED_STATUS для $ROUTE. Вывод:"
     cat "$LOG"
     exit 1
   fi
+}
+
+for ROUTE in / /en; do
+  check_route "$ROUTE" 200
 done
 
-echo "✓ production web отвечает на SSR-маршрутах"
+for ROUTE in /fonts-showcase /components-showcase /test-error; do
+  check_route "$ROUTE" 404
+done
+
+echo "✓ production web отвечает на SSR-маршрутах, dev-маршруты недоступны"

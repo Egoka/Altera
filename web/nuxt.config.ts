@@ -1,6 +1,26 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from "nuxt/config"
+import type { NuxtPage } from "@nuxt/schema"
 import tailwindcss from "@tailwindcss/vite"
+
+const DEV_ONLY_ROUTES = new Set(["/fonts-showcase", "/components-showcase", "/test-error"])
+
+const removeDevOnlyPages = (pages: NuxtPage[]) => {
+  for (let index = pages.length - 1; index >= 0; index -= 1) {
+    const page = pages[index]
+
+    if (!page) continue
+
+    if (DEV_ONLY_ROUTES.has(page.path)) {
+      pages.splice(index, 1)
+      continue
+    }
+
+    if (page.children) {
+      removeDevOnlyPages(page.children)
+    }
+  }
+}
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -20,6 +40,14 @@ export default defineNuxtConfig({
   ],
 
   css: ["~/assets/css/main.css"],
+
+  hooks: {
+    "pages:extend": (pages) => {
+      if (process.env.NODE_ENV === "production") {
+        removeDevOnlyPages(pages)
+      }
+    }
+  },
 
   vite: {
     plugins: [tailwindcss()]
