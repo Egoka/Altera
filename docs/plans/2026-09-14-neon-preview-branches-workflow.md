@@ -3,8 +3,8 @@
 - **Дата**: 2026-09-14
 - **Ветка**: docs/platform-design
 - **Базовый коммит**: d8638ce
-- **Отчёт**: docs/reports/2026-09-14-neon-preview-branches-workflow-report.md (заполняется по завершении)
-- **Статус**: выполняется
+- **Отчёт**: docs/reports/2026-09-14-neon-preview-branches-workflow-report.md
+- **Статус**: завершён
 
 ## Цель
 
