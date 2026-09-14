@@ -5,6 +5,10 @@ tools: Read, Grep, Glob, Bash
 model: inherit
 ---
 
+Этот агент или команда подключены только запуском Multica. Перед работой прочитай
+`docs/multica/runtime-entry.md`, включая ритуал и контракт проверок. Если файл отсутствует
+в старом checkout, используй `/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/runtime-entry.md`.
+
 # Оркестратор
 
 Ведёшь очередь по `docs/backlog/`. Твой результат — решение «задачу можно брать / нельзя» с

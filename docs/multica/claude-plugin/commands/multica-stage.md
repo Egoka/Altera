@@ -3,6 +3,10 @@ description: Запустить стадию задачи Multica с прове�
 argument-hint: <архитектура|разработка|тестирование|ревью|документация|релиз> T-NNN
 ---
 
+Этот агент или команда подключены только запуском Multica. Перед работой прочитай
+`docs/multica/runtime-entry.md`, включая ритуал и контракт проверок. Если файл отсутствует
+в старом checkout, используй `/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/runtime-entry.md`.
+
 Стадия: **$1**, задача: **$2**
 
 ## Шаг 1. Проверь вход стадии
@@ -25,17 +29,17 @@ argument-hint: <архитектура|разработка|тестирован
 
 ## Шаг 2. Запусти профильного субагента
 
-- архитектура → `multica-architect`
-- разработка → `multica-developer`
-- тестирование → `multica-tester`
-- ревью → `multica-reviewer`
-- документация → `multica-docs-keeper`
-- релиз → `multica-release`
+- архитектура → `altera-multica:multica-architect`
+- разработка → `altera-multica:multica-developer`
+- тестирование → `altera-multica:multica-tester`
+- ревью → `altera-multica:multica-reviewer`
+- документация → `altera-multica:multica-docs-keeper`
+- релиз → `altera-multica:multica-release`
 
-Стадии дизайна, текстов и SEO ведут `multica-designer`, `multica-editor`, `multica-seo` по
+Стадии дизайна, текстов и SEO ведут `altera-multica:multica-designer`, `altera-multica:multica-editor`, `altera-multica:multica-seo` по
 разделу «Участники стадий» файла задачи.
 
-Ревью запускается **только** отдельным субагентом `multica-reviewer` и только если он не
+Ревью запускается **только** отдельным субагентом `altera-multica:multica-reviewer` и только если он не
 выполнял реализацию этой же задачи в этой сессии. Самопроверка ревью не заменяет.
 
 ## Шаг 3. Зафиксируй выход

@@ -7,7 +7,8 @@
 
 ## Поддержанная граница
 
-- Claude Stop вызывает этот CLI через `.claude/hooks/ritual-check.sh`. Повторный Stop проверяет
+- Только Claude, запущенный Multica с plugin `docs/multica/claude-plugin`, вызывает
+  этот CLI на Stop через `.claude/hooks/ritual-check.sh`. Повторный Stop проверяет
   тот же контракт, не пропускает его и не освобождает slot. Неуспех возвращает exit `2`.
 - Codex этот Claude hook не запускает. Для него вызывающая сторона должна явно исполнить CLI.
   Завершение ответа, native outcome, окончание стадии и принятие задачи остаются разными фактами.
@@ -361,16 +362,27 @@ parent. Старое source evidence остаётся на S; source acceptance 
 
 ```json
 {
-  "task": "T-NNN", "stage": "review", "check_id": "review",
-  "stop_event": "CURRENT_STOP", "old_run": "STOPPED_RUN",
-  "actor": "controller", "run": "NEW_RUN", "failures": 2,
-  "baseline_commit": "FULL_BASELINE_SHA", "revision_commit": "ACTUAL_HEAD",
-  "dirty_fingerprint": "clean", "cause": "Наблюдавшаяся причина",
+  "task": "T-NNN",
+  "stage": "review",
+  "check_id": "review",
+  "stop_event": "CURRENT_STOP",
+  "old_run": "STOPPED_RUN",
+  "actor": "controller",
+  "run": "NEW_RUN",
+  "failures": 2,
+  "baseline_commit": "FULL_BASELINE_SHA",
+  "revision_commit": "ACTUAL_HEAD",
+  "dirty_fingerprint": "clean",
+  "cause": "Наблюдавшаяся причина",
   "condition": "Ранее объявленное условие",
   "remediation": "docs/reports/evidence/SLUG/new-conditions.txt",
-  "confirmer": "independent-operator", "condition_removed": true,
-  "old_run_stopped": true, "no_live_duplicate": true,
-  "q_resolved": true, "conflict_free": true, "next_operation": "review"
+  "confirmer": "independent-operator",
+  "condition_removed": true,
+  "old_run_stopped": true,
+  "no_live_duplicate": true,
+  "q_resolved": true,
+  "conflict_free": true,
+  "next_operation": "review"
 }
 ```
 

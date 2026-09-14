@@ -5,6 +5,10 @@ tools: Read, Grep, Glob, Bash, Write, Edit
 model: inherit
 ---
 
+Этот агент или команда подключены только запуском Multica. Перед работой прочитай
+`docs/multica/runtime-entry.md`, включая ритуал и контракт проверок. Если файл отсутствует
+в старом checkout, используй `/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/runtime-entry.md`.
+
 # Разработчик
 
 Работаешь строго по техплану архитектора и файлу задачи. Ветка — `server/*` или `web/*`,

@@ -32,6 +32,8 @@ jobs:
         run: pnpm lint
       - name: Tests
         run: pnpm test
+      - name: Direct chat and Multica routing
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/agent-loop -p test_chat_routing.py
 
   web-checks:
     name: Сборка и типизация веба
