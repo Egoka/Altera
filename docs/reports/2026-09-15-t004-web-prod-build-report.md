@@ -34,7 +34,10 @@ ESM-модуль Vue не экспортирует `default`, поэтому к�
 - `pnpm-lock.yaml`: добавлен только importer прямой зависимости Pinia; несвязанные transitive
   ререзолюции не включены.
 - `web/scripts/smoke.sh`: запуск production bundle, условное ожидание ответа, проверки `/` и `/en`,
-  диагностический лог и cleanup только созданного процесса.
+  диагностический лог, отказ при занятом порте, контроль живости дочернего PID и cleanup только
+  созданного процесса.
+- `web/tests/smoke-script.test.ts`: регрессия запускает посторонний HTTP-сервер и доказывает, что
+  smoke не может принять его ответы за результат production bundle.
 - `.github/workflows/pull_request.yml`: `web-checks` запускает production smoke сразу после build.
 
 `web/nuxt.config.ts` не менялся: отдельный transpile/noExternal workaround не нужен после исправления
@@ -69,24 +72,83 @@ SyntaxError: The requested module 'vue' does not provide an export named 'defaul
 ✓ production web отвечает на SSR-маршрутах
 ```
 
+### RED → GREEN — занятый порт
+
+Независимый review первой реализации `81b2be03be8533f706a12e7ece7f04d1433a9064` обнаружил, что
+при уже занятом `PORT` процесс Nitro завершался с `EADDRINUSE`, но curl мог получить два 200 от
+постороннего сервера. Воспроизведение до исправления завершало smoke с exit `0`.
+
+Добавлен тест `web/tests/smoke-script.test.ts`: он держит отдельный HTTP-сервер на случайном порте,
+запускает реальный `scripts/smoke.sh` и ожидает exit `1`, сообщение о занятом порте и сохранение
+живости постороннего процесса. На ревизии `ec64b105fc7156aba2cc22b7dcb5608d33699c5a` тест и полный
+web suite проходят.
+
 ## Как проверено
 
 Все итоговые команды выполнялись из
 `/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-004-web-prod-build` с Node `24.12.0`
 в `PATH`.
 
-| check_id | Команда | Exit | Существенный результат |
-| --- | --- | ---: | --- |
-| `t004-frozen-install` | `pnpm install --frozen-lockfile` | 0 | lockfile принят без изменения; postinstall завершены |
-| `t004-format` | `pnpm format` | 0 | оба workspace formatter-run завершились `All matched files use Prettier code style!` |
-| `t004-lint` | `pnpm lint` | 0 | ESLint обоих пакетов без diagnostics |
-| `t004-tests` | `pnpm test` | 0 | server: 3 files, 20 passed, 1 todo; web: 6 files, 56 passed |
-| `t004-web-typecheck` | `pnpm --filter nuxt-app run typecheck` | 0 | `nuxt prepare` и `vue-tsc -b --noEmit` завершились без diagnostics |
-| `t004-web-build` | `pnpm --filter nuxt-app run build` | 0 | Nuxt 4.0.0 / Nitro 2.12.0 создали `.output/server/index.mjs` |
-| `t004-direct-http` | `PORT=4318 node web/.output/server/index.mjs` + два `curl` | 0 | `/ 200` (211557 bytes), `/en 200` (171586 bytes) |
-| `t004-web-smoke` | `PORT=4319 pnpm --filter nuxt-app run smoke` | 0 | `/ 200`, `/en 200`, cleanup процесса выполнен |
-| `t004-shell-syntax` | `bash -n web/scripts/smoke.sh` | 0 | shell syntax корректен |
-| `t004-diff` | `git diff --check` | 0 | whitespace errors отсутствуют |
+| check_id              | Команда                                                                          | Exit | Существенный результат                                                               |
+| --------------------- | -------------------------------------------------------------------------------- | ---: | ------------------------------------------------------------------------------------ |
+| `t004-frozen-install` | `pnpm install --frozen-lockfile`                                                 |    0 | lockfile принят без изменения; postinstall завершены                                 |
+| `t004-format`         | `pnpm format`                                                                    |    0 | оба workspace formatter-run завершились `All matched files use Prettier code style!` |
+| `t004-lint`           | `pnpm lint`                                                                      |    0 | ESLint обоих пакетов без diagnostics                                                 |
+| `t004-tests`          | `pnpm test`                                                                      |    0 | server: 3 files, 20 passed, 1 todo; web: 7 files, 57 passed                          |
+| `t004-web-typecheck`  | `pnpm --filter nuxt-app run typecheck`                                           |    0 | `nuxt prepare` и `vue-tsc -b --noEmit` завершились без diagnostics                   |
+| `t004-web-build`      | `pnpm --filter nuxt-app run build`                                               |    0 | Nuxt 4.0.0 / Nitro 2.12.0 создали `.output/server/index.mjs`                         |
+| `t004-direct-http`    | `PORT=4322 node web/.output/server/index.mjs` + два `curl`                       |    0 | `/ 200` (211557 bytes), `/en 200` (171586 bytes)                                     |
+| `t004-web-smoke`      | `PORT=4321 pnpm --filter nuxt-app run smoke`                                     |    0 | `/ 200`, `/en 200`, cleanup процесса выполнен                                        |
+| `t004-shell-syntax`   | `bash -n web/scripts/smoke.sh`                                                   |    0 | shell syntax корректен                                                               |
+| `t004-workflow-yaml`  | `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/pull_request.yml")'` |    0 | workflow YAML разобран                                                               |
+| `t004-diff`           | `git diff --check`                                                               |    0 | whitespace errors отсутствуют                                                        |
+
+Финальный локальный прогон начат `2026-09-15T00:38:02+03:00` и завершён
+`2026-09-15T00:38:45+03:00`; непосредственный HTTP-запуск повторён после сборки на порту 4322.
+
+```yaml
+task: T-004
+stage: implementation-verification
+run: local-codex-run-2026-09-15-t004
+actor: Altera — разработчик
+criterion: AC-1 и локальная исполнимость AC-2
+check_id: t004-final-local-suite
+baseline_commit: 843b7d2c16a294adfc73eb7e1059731d6d11b247
+revision_commit: ec64b105fc7156aba2cc22b7dcb5608d33699c5a
+dirty_fingerprint: clean
+cwd: /Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-004-web-prod-build
+environment: macOS arm64; Node 24.12.0; pnpm 10.18.3
+command: pnpm install --frozen-lockfile; pnpm format; pnpm lint; pnpm test; pnpm --filter nuxt-app run typecheck; pnpm --filter nuxt-app run build; PORT=4321 pnpm --filter nuxt-app run smoke; bash -n web/scripts/smoke.sh; YAML parse; git diff --check
+started_at: 2026-09-15T00:38:02+03:00
+exit_code: 0
+executed: server 20 passed + 1 todo; web 57 passed; SSR routes 2/2 returned 200
+result: passed
+output: this report, section "Как проверено"
+trace_ref: sanitized command output in local Codex run and this report
+limits: GitHub CI и независимая приёмка текущего SHA на момент записи ещё не выполнены; optional sharp/IPX не проверяется
+```
+
+```yaml
+task: T-004
+stage: implementation-verification
+run: local-codex-run-2026-09-15-t004
+actor: Altera — разработчик
+criterion: AC-1
+check_id: t004-direct-http
+baseline_commit: 843b7d2c16a294adfc73eb7e1059731d6d11b247
+revision_commit: ec64b105fc7156aba2cc22b7dcb5608d33699c5a
+dirty_fingerprint: clean
+cwd: /Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-004-web-prod-build
+environment: macOS arm64; Node 24.12.0; pnpm 10.18.3; PORT=4322
+command: PORT=4322 node web/.output/server/index.mjs; curl /; curl /en
+started_at: 2026-09-15T00:38:45+03:00
+exit_code: 0
+executed: 2 HTTP routes
+result: passed
+output: / 200 211557 bytes; /en 200 171586 bytes
+trace_ref: sanitized command output in local Codex run and this report
+limits: локальный production bundle; не доказывает GitHub CI или внешний frontend deploy
+```
 
 Сборка печатает известное предупреждение об отсутствующем optional `sharp` binary для darwin-arm64.
 Это не влияет на проверяемые SSR-маршруты и явно исключено из T-004; `/_ipx/` не проверялся.
@@ -101,7 +163,7 @@ SyntaxError: The requested module 'vue' does not provide an export named 'defaul
 
 ## Ограничения и следующий шаг
 
-- Локально подтверждены AC-1 и исполняемый сценарий AC-2.
+- Локально подтверждены AC-1, защита smoke от занятого порта и исполняемый сценарий AC-2.
 - GitHub CI ещё не запускался до публикации PR; окончательный лог CI должен быть привязан к точному
   SHA реализации после push.
 - Следующий владелец: тестировщик и независимый ревьюер проверяют PR/SHA, затем релиз-инженер ведёт
