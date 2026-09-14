@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "smoke": "bash scripts/smoke.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "nuxt prepare && vue-tsc -b --noEmit",
@@ -28,6 +29,7 @@
     "eslint": "^9.31.0",
     "fishtvue": "^0.2.11",
     "nuxt": "^4.0.0",
+    "pinia": "3.0.3",
     "tailwindcss": "^4.1.11",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1"
