@@ -1,0 +1,24 @@
+ERROR
+
+======================================================================
+ERROR: setUpClass (__main__.CodexPathTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 34, in setUpClass
+    cls.build = cls.compile_probe(cls.binary, cls.workspace, str(cls.cwd))
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 44, in compile_probe
+    raise AssertionError('D2 build failed: ' + result.stderr.decode())
+AssertionError: D2 build failed: Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 58, in <module>
+    build(arguments.output, arguments.root, arguments.cwd, arguments.uid)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 23, in build
+    root, cwd = path_pin(root, 993), path_pin(cwd, 1024)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 18, in path_pin
+    raise ValueError('invalid_path_pin')
+ValueError: invalid_path_pin
+
+
+----------------------------------------------------------------------
+Ran 0 tests in 0.090s
+
+FAILED (errors=1)

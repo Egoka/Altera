@@ -1,0 +1,35 @@
+
+> altera@1.0.0 format
+> pnpm -r exec prettier --check .
+
+Checking formatting...
+Checking formatting...
+All matched files use Prettier code style!
+All matched files use Prettier code style!
+
+> altera@1.0.0 lint
+> pnpm -r exec eslint .
+
+
+> altera@1.0.0 test
+> pnpm -r test
+
+Scope: 2 of 3 workspace projects
+server test$ vitest run
+web test$ vitest run
+server test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/server
+web test:  RUN  v5.0.0 /private/tmp/altera-agent-loop-autonomy/web
+web test:  Test Files  1 passed (1)
+web test:       Tests  5 passed (5)
+web test:    Start at  01:57:15
+web test:    Duration  103ms (transform 66%, import 20%, worker 8%, tests 7%)
+web test: Done
+server test:  Test Files  2 passed | 1 skipped (3)
+server test:       Tests  19 passed | 1 todo (20)
+server test:    Start at  01:57:15
+server test:    Duration  284ms (import 78%, transform 19%, worker 2%, tests 1%)
+server test: Done
+[docs/agent-loop-autonomy 563844e] feat(runtime): verify reviewer MCP policy and isolated canary
+ 7 files changed, 561 insertions(+), 11 deletions(-)
+ create mode 100644 scripts/agent-runtime/reviewer-mcp-canary.mjs
+ create mode 100644 scripts/agent-runtime/test_mcp_canary.py

@@ -1,0 +1,42 @@
+test_native_codex_stdio_listener_is_forwarded_exactly (__main__.RuntimeTests) ... test_native_codex_listener_does_not_allow_alternate_transports_or_overrides (__main__.RuntimeTests) ... ok
+
+======================================================================
+ERROR: test_native_codex_stdio_listener_is_forwarded_exactly (__main__.RuntimeTests) (incoming=['app-server', '--listen', 'stdio://'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 203, in test_native_codex_stdio_listener_is_forwarded_exactly
+    args = self.runtime.command(self.manifest, incoming, {})
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 248, in command
+    final = effective_args(manifest, incoming)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 150, in effective_args
+    raise ValueError('unsupported_codex_argument')
+ValueError: unsupported_codex_argument
+
+======================================================================
+ERROR: test_native_codex_stdio_listener_is_forwarded_exactly (__main__.RuntimeTests) (incoming=['app-server', '--listen', 'stdio://', '-c', 'model="gpt-5.6-terra"'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 203, in test_native_codex_stdio_listener_is_forwarded_exactly
+    args = self.runtime.command(self.manifest, incoming, {})
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 248, in command
+    final = effective_args(manifest, incoming)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 150, in effective_args
+    raise ValueError('unsupported_codex_argument')
+ValueError: unsupported_codex_argument
+
+======================================================================
+ERROR: test_native_codex_stdio_listener_is_forwarded_exactly (__main__.RuntimeTests) (incoming=['app-server', '--config', 'model_reasoning_effort="medium"', '--listen', 'stdio://'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_runtime.py", line 203, in test_native_codex_stdio_listener_is_forwarded_exactly
+    args = self.runtime.command(self.manifest, incoming, {})
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 248, in command
+    final = effective_args(manifest, incoming)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/runtime.py", line 150, in effective_args
+    raise ValueError('unsupported_codex_argument')
+ValueError: unsupported_codex_argument
+
+----------------------------------------------------------------------
+Ran 2 tests in 1.287s
+
+FAILED (errors=3)

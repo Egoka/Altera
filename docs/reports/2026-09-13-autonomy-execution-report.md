@@ -6,7 +6,7 @@
 - Изоляция: /private/tmp/altera-agent-loop-autonomy, ветка docs/agent-loop-autonomy.
 - Исходная рабочая папка и её незакоммиченные документы сохранены; подготовленный пакет скопирован в worktree.
 
-## Текущий срез: 2026-09-14, 03:49 МСК
+## Текущий срез: 2026-09-14, 04:00 МСК
 
 Полная автономия ещё не принята. Работа продолжается в отдельной ветке; исходный
 проект не переключался. Историческая сохранность 737 tracked/nonignored путей на `bc46e9b` подтверждена после native D2.
@@ -19,7 +19,7 @@
 | Правила и lifecycle | Карта R01–R45, сохранённые источники; минимальный gate 28/28, полный lifecycle 46/46 | Финальное совместное ревью и native передача стадий |
 | Изоляция runtime | Исправления приняты; Codex protocol 16 Python/7 JS; reviewer MCP 19/2/4 и реальная canary | Постоянные native adapters и проверка контекста/hooks |
 | Native диагностика | D1 Claude и D2 Codex завершены; D2 независимое review, 10/10 + 4/4 локальных проверок; cleanup подтверждён | Каноническая проверка и перенос фактической конфигурации Codex |
-| Claude auth | Первичный вход и свежий контейнер с Opus; refresh: исправления в 6e197f8, runtime 23/23, store 20/20, wrapper 4/4; реальный synthetic Docker cleanup/recovery | Повторное независимое ревью R1/R2 выполняется; затем live refresh |
+| Claude auth | Первичный вход и свежий контейнер с Opus; refresh: исправления в 6e197f8, runtime 23/23, store 20/20, wrapper 4/4; реальный synthetic Docker cleanup/recovery | R1/R2 приняты независимым ревью; bootstrap выполнен; live exchange требует прямого разрешения после отказа auto-review |
 | Codex MCP | Trace/Context7 mapping спроектирован; рабочий путь среды найден; user namespace prerequisite проверен отдельно | Строгий TOML mapper, сборка Playwright/browser и реальная canary |
 | Продуктовые проверки | Причины Task 3 локализованы; предыдущие неуспехи сохранены | Исправления и разрешённая проверка после устранения причин |
 | Multica | 19 адресных правок подготовлены; модели/effort/max1 сохранены | Интеграция источников, применение/readback, сквозной пилот |
@@ -567,3 +567,20 @@ cleanup блокирует публикацию, exchangeCount=1. Последн
 [Отчёт исправлений](evidence/2026-09-13-autonomy/claude-refresh-fix1/task-5-refresh-implementation-report.md),
 [архив и хэши](evidence/2026-09-13-autonomy/claude-refresh-fix1/archive-manifest.json).
 Повторный независимый вердикт и live приёмка пока не получены.
+
+## Claude refresh: код принят, live обмен остановлен проверкой разрешений
+
+Независимое повторное ревью `6e197f8` подтвердило R1/R2 ADDRESSED, spec/quality PASS
+без новых блокеров. [Вердикт](evidence/2026-09-13-autonomy/claude-refresh-fix1/task-5-refresh-fix1-independent-review.md).
+В 00:55:11 UTC проверенный bootstrap создал постоянное поколение credentials
+непрозрачным копированием; исходный файл сохранён, exit0, stderr пуст.
+[Bootstrap proof](evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-bootstrap-proof.json).
+
+Попытка запустить live transaction была отклонена автоматической проверкой разрешений
+до создания процесса: общее поручение об автономии признано недостаточным разрешением
+на передачу refresh-токена конкретному внешнему провайдеру. Обмена и вызова модели не было,
+exchange-claim и refresh journal отсутствуют; live failure count остаётся 0.
+Требуется прямое подтверждение владельца на один обмен credentials через официальный
+Claude CLI с сервисом авторизации Anthropic и одну фиксированную проверку модели.
+[Состояние блокировки](evidence/2026-09-13-autonomy/claude-refresh-live/task-5-refresh-live-approval-block.json).
+Обход отказа не выполнялся; bootstrap сам не доказывает успешный refresh.

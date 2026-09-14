@@ -1,0 +1,29 @@
+**R1 — Preserve uncertain worker cleanup and block candidate acceptance until quiescence is established — ADDRESSED.** At `scripts/agent-runtime/credential_refresh.py:289`, the journal now validates and retains the exact worker name, operation and quiescence state; legacy state without that identity is refused. `run_operation` at line 334 durably reserves the name before the runner starts. `quiesce` at line 311 does not treat a failed removal, timeout or unavailable daemon as cleanup success: confirmation requires successful empty output from the exact-name `docker container ls --all` query. Recovery at line 373 and publication at line 357 require confirmation. An uncertain exchange/status/model worker cannot authorize candidate acceptance or pointer publication. Recovery retains the original exchange identity and candidate rather than exchanging the old token again.
+
+**R2 — Validate policy file metadata before hashing or parsing its contents — ADDRESSED.** `scripts/agent-runtime/runtime.py:259` opens the private policy directory and all four expected files using descriptor-relative, no-follow operations. It validates every file's type, link count, owner, permissions and size before reading any file. The identity checks at line 280 bind the held descriptors to the named directory entries before reading, after reading and after policy interpretation. Hashing and JSON parsing operate on the bounded bytes read through those validated descriptors. The old early `tree_hash(policy)` read was removed from the refresh command path. This closes the demonstrated hardlink-before-metadata defect and rejects the tested replacement before digesting content.
+
+## New Breakage in the Fix Diff
+
+None found. The fix preserves candidate recovery and the no-repeat-exchange rule, adds conservative rejection of legacy refresh journals, and confines the descriptor-based policy reader to the refresh path. The revised process cleanup closes captured streams and retains unconfirmed state when cleanup cannot be established. No new Critical or Important issue was identified in the six-file fix.
+
+## Out-of-Scope Observations
+
+None newly identified. This re-review does not reopen unchanged refresh code or other Task 5 components.
+
+## Checks and Evidence
+
+- Reviewed the fix brief, appended fix1 report, frozen source manifest and commit proof for base `40a43e874799e4be4701d4ef4441bd81809466b7` → head `6e197f8f42660da0fe7fd7c21c545f02ed156651`. The immutable diff is 38,216 bytes, SHA-256 `8fce0dfbe7e834fc90aa2ebe756758d03790440ef7a1b8433b9e13f600b2a10a`. Read its contents once in chunks; subsequently extracted only definition/line locations for this report. No mutable source crawl or git mutation was performed.
+- Inspected the regression assertions in `scripts/agent-runtime/test_credential_refresh.py:341`, `:378` and `:401`: failed removal blocks publication, unknown cleanup survives reopening, legacy journals refuse before Docker operations, and an uncertain model worker cannot accept a candidate. These checks exercise the coordinator's new state transitions; their unit runner's quiescence stub is explicitly limited to tests without a real Docker worker.
+- Read `task-5-refresh-fix1-worker-red.log`: the original defect returned `candidate_recovery_required` rather than the required cleanup block. Read `task-5-refresh-fix1-worker-recovery.log`: reopening/legacy-state regression passed, 1/1.
+- Read `task-5-refresh-fix1-docker-recovery-final.log` and inspected its test at `scripts/agent-runtime/test_refresh_docker.py:202`. The retained synthetic Docker case passed, 1/1, without warnings. It observes the reserved live worker through the same exact filter subsequently used to establish absence after removal, blocks publication while live, and finishes with `exchangeCount: 1`. The positive-name observation makes the later empty result meaningful; it is not solely an assertion that a potentially ineffective filter returned nothing.
+- Inspected `scripts/agent-runtime/test_runtime.py:122` and `:142`. The hardlink regression observes both reads and digests and requires neither to occur; the replacement regression requires rejection before digest. Read the original failing `task-5-refresh-fix1-policy-red.log`, the retained Python 3.9 `Path.stat(follow_symlinks=False)` failure in `task-5-refresh-fix1-policy-green.log`, and the corrected `task-5-refresh-fix1-policy-green-2.log`: 3/3 passed. The final diff uses `Path.lstat()` for that directory identity check.
+- Read the actual covering outputs: `task-5-refresh-fix1-store-covering.log` reports 20/20 passed; `task-5-refresh-fix1-runtime-covering.log` reports 23/23 passed. These include recovery, publication, metadata rejection, ordinary command equivalence, existing model/argument restrictions and mount/environment boundaries. Counts were not inferred from the implementation report.
+- No test, container, native invocation, provider call or model call was executed by this re-review. No credentials or live configuration were accessed. Existing retained evidence answered the scoped risks, so no additional synthetic probe was needed.
+
+## Verdict
+
+**Spec compliance: PASS for the scoped R1/R2 fix. Quality: PASS for the fix diff. Fix round: All findings addressed, no new Critical/Important breakage.**
+
+The initial independent negative verdict remains in history. This is the subsequent passing scoped independent verdict; passing source tests alone did not reset that review counter, and this report does not reset other stopped checks. Controller ledger changes remain with root.
+
+Acceptance is limited to this immutable fix. Synthetic exchange/cleanup proof does not establish successful refresh of real credentials or provider acceptance. Live refresh, exact accepted-source staging, native integration and whole-branch acceptance remain separate gates; this report does not mark them complete or authorize automatic retries after uncertain cleanup.

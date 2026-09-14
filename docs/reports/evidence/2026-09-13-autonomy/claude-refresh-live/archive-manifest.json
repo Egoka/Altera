@@ -1,0 +1,31 @@
+{
+  "state": "bootstrap_complete_live_exchange_blocked_by_automatic_approval_review",
+  "credential_values_or_hashes": false,
+  "files": [
+    {
+      "file": "task-5-refresh-live-reviewed-preparation.json",
+      "bytes": 1243,
+      "sha256": "d7fdbd3dc1eab998e583e6c0f60064bc47bb49987c4094c800621934f3e73235"
+    },
+    {
+      "file": "task-5-refresh-live-path-preflight.json",
+      "bytes": 1383,
+      "sha256": "0eb01fee4f9d242493894da12dab044e5ec66e58532f9c94a5acb7a5baf73df9"
+    },
+    {
+      "file": "task-5-refresh-live-bootstrap-proof.json",
+      "bytes": 372,
+      "sha256": "3285f247a980eaeb4a11472062e16630c8094101ecffa1ff4860068eae14a2b8"
+    },
+    {
+      "file": "task-5-refresh-live-approval-block.json",
+      "bytes": 510,
+      "sha256": "41f4982762ebf8c76e8bd3bec8faaf68c92e8479d53b4452a72c94c739c764b2"
+    },
+    {
+      "file": "task-5-refresh-live-runbook.md",
+      "bytes": 3913,
+      "sha256": "f435cb5d2e9fcbbe57716888f9a7e6756118614d65153044bbf4bfe23bb17f1e"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+test_required_catalog_and_durable_cwd_allow_embedded_dots_only (__main__.BuildPinTests) ... ERROR
+
+======================================================================
+ERROR: test_required_catalog_and_durable_cwd_allow_embedded_dots_only (__main__.BuildPinTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/test_codex_path_probe.py", line 26, in test_required_catalog_and_durable_cwd_allow_embedded_dots_only
+    self.assertEqual(builder.path_pin(path, 1024), path)
+  File "/private/tmp/altera-agent-loop-autonomy/scripts/agent-runtime/build_codex_path_probe.py", line 18, in path_pin
+    raise ValueError('invalid_path_pin')
+ValueError: invalid_path_pin
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

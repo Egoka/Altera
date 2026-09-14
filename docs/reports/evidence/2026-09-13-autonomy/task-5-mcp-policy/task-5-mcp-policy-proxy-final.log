@@ -1,0 +1,10 @@
+✔ proxy refuses host endpoints, ambiguous authorities and non-public DNS answers (40.042209ms)
+✔ proxy permits only the exact observed Context7 CONNECT authority (0.863875ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100.002125

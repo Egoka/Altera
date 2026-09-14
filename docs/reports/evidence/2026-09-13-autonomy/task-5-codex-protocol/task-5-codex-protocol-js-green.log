@@ -1,0 +1,15 @@
+✔ protocol accepts the declared cwd and refuses alternate cwd in nested RPC parameters (1.218125ms)
+✔ protocol rejects changes to preserved model, reasoning and service tier (0.163208ms)
+✔ pinned turn tier override permits only inherited or explicit standard speed (0.246667ms)
+✔ thread config and provider overrides cannot replace the pinned runtime settings (0.429375ms)
+✔ config mutation RPCs cannot hide overrides in keyPath values or imported files (0.095625ms)
+✔ native Codex start resume and turn default tier is accepted without rewriting bytes (0.565833ms)
+✔ native default tier allowance is confined to direct params of three Codex methods (0.864292ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 38.856542
