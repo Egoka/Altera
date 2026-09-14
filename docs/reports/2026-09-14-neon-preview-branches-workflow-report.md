@@ -3,8 +3,8 @@
 - **Дата**: 2026-09-14
 - **План**: docs/plans/2026-09-14-neon-preview-branches-workflow.md
 - **Ветка**: docs/platform-design
-- **Коммиты**: 910be1c (workflow и план); предпосылка — d8638ce (навыки `neon`, `neon-postgres`);
-  отчёт коммитится отдельно
+- **Коммиты**: 910be1c (workflow и план), 56e21a6 (отчёт); предпосылка — d8638ce (навыки
+  `neon`, `neon-postgres`). Pull request: https://github.com/Egoka/Altera/pull/19
 - **Результат**: выполнено полностью
 
 ## Что сделано
@@ -27,10 +27,8 @@
 
 ## Что не сделано и почему
 
-- Прогон на реальном pull request не выполнен: ветка `docs/platform-design` не отправлена в
-  origin, pull request не открыт. Первый прогон произойдёт при следующем pull request; тогда
-  в Neon Console → Branches должна появиться ветка `preview/pr-<номер>-<git-ветка>`, а после
-  закрытия — исчезнуть.
+- Удаление ветки Neon при закрытии pull request ещё не наблюдалось: pull request #19 открыт.
+  На событии opened джоб «Удалить ветку Neon» пропущен (skipping), как и задумано.
 - Миграции Prisma на ветке Neon и schema diff — вне плана, решение отдельное.
 
 ## Отклонения от плана
@@ -86,13 +84,37 @@ Pre-commit при коммите 910be1c: `pnpm format` — «All matched files 
 коммит принят. На предыдущем коммите d8638ce тот же хук показал: server — 2 файла, 19 тестов;
 web — 6 файлов, 56 тестов; все зелёные.
 
-Не проверено: фактическое создание и удаление ветки Neon на pull request — см. раздел выше.
+Прогон на pull request #19 (https://github.com/Egoka/Altera/pull/19), событие opened:
+
+```
+$ gh pr checks 19 --watch --interval 10
+test	pass	2s	https://github.com/Egoka/Altera/actions/runs/34792590306/job/103819618438
+Создать ветку Neon	pass	12s	https://github.com/Egoka/Altera/actions/runs/34792590335/job/103819496101
+Удалить ветку Neon	skipping	0	https://github.com/Egoka/Altera/actions/runs/34792590335/job/103819496842
+Имя git-ветки	pass	2s	https://github.com/Egoka/Altera/actions/runs/34792590335/job/103819485873
+Сборка сервера и дымовая проверка старта	pass	52s	https://github.com/Egoka/Altera/actions/runs/34792590306/job/103819485805
+Формат, линт и тесты	pass	44s	https://github.com/Egoka/Altera/actions/runs/34792590306/job/103819485709
+```
+
+Ветка Neon после прогона — символ `/` из имени git-ветки принят:
+
+```
+$ npx neon@latest branches list --project-id purple-salad-06550104
+Name                                Id                          Current State  Created At
+preview/pr-19-docs/platform-design  br-silent-glitter-ad8ge8iw  ready          2026-09-14T00:24:29Z
+[default] production                br-plain-grass-adrif7r3     ready          2025-07-20T12:25:19Z
+development                         br-ancient-mode-adgmr3w1    ready          2025-07-20T12:25:33Z
+```
+
+Попутное наблюдение: ветка `development` до прогона значилась `archived`, после — `ready`.
+Причина не выяснялась.
+
+Не проверено: удаление ветки при закрытии pull request.
 
 ## Что осталось
 
-- Отправить ветку в origin и открыть pull request в `app`; убедиться в Neon Console, что ветка
-  `preview/pr-<номер>-docs/platform-design` создана, а после закрытия pull request удалена.
-  Особое внимание — символу `/` в имени git-ветки.
+- После слияния или закрытия pull request #19 убедиться, что ветка
+  `preview/pr-19-docs/platform-design` удалена (`npx neon branches list`).
 - Решить, включать ли в workflow миграции Prisma и schema diff (заготовки закомментированы).
 - Возможное упрощение: `github.head_ref` вместо стороннего `tj-actions/branch-names` и джоба
   `setup`.
