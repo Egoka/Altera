@@ -121,3 +121,5 @@ docs/reports/ГГГГ-ММ-ДД-краткое-имя-report.md
 - [Автоматическое пополнение Todo](2026-09-14-backlog-autofill-report.md) — применённые настройки, readback и карта полезных документов.
 
 - [Автоматический PR и merge](2026-09-14-pr-auto-merge-report.md) — настройка пяти участников и проверка readback.
+
+- [Движение очереди и передача стадий](2026-09-14-queue-flow-corrections-report.md) — настройка 13 участников и проверка readback.
