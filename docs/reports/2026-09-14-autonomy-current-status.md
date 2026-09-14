@@ -3,7 +3,8 @@
 Полная автономия **не достигнута**. Этот checkpoint сохраняет подготовленные
 изменения и доказательства; он не является приёмкой автономного цикла.
 Рабочая ветка: `docs/agent-loop-autonomy`, worktree:
-`/private/tmp/altera-agent-loop-autonomy`. Интеграция в исходный проект не выполнена.
+`/Users/egorbondarenko/WebstormProjects/Altera`. Ветка перебазирована на `origin/app`
+и открыта в основном дереве. Слияния в `app` и приёмки автономии пока нет.
 
 ## Что подтверждено
 
@@ -79,3 +80,5 @@ Product auth **не является обязательным предшеств
 Независимый итоговый разбор: последнее offline-исправление — spec/quality PASS;
 общая приёмка runtime — FAIL / INCOMPLETE.
 [Финальный вердикт](evidence/2026-09-13-autonomy/playwright-empty-failed-launch-fix/task-closure-final-runtime-review.md).
+
+Перенос ветки в основное дерево: [отчёт rebase](2026-09-14-agent-loop-rebase-report.md).
