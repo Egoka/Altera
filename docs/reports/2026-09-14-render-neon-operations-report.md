@@ -5,11 +5,11 @@
 - **Задача / authorization**: прямое поручение владельца исследовать и описать Render/Neon, передать правила Multica; development сохранён по ответу владельца.
 - **Ветка**: codex/render-neon-operations
 - **Baseline**: 1a6ebdb99600bfd1c65f2d76a55563129cbfe43e, clean
-- **Проверенная revision**: исходники baseline; документы — diff этой ветки, точный commit фиксируется в PR/review.
+- **Проверенная revision**: 00c692f72cbdf954a051d57a507311a7356ecbdc; исходники аудита — baseline.
 - **Actor / run**: Codex, local thread 01a09b13-a0f8-7e93-81c5-418a9272a26a
 - **Run outcome**: success для аудита и настройки; восстановление runtime pending
 - **Stage outcome**: документация и live instructions подготовлены
-- **Task acceptance**: не проверено
+- **Task acceptance**: docs/config принято независимым reviewer; восстановление deployment не проверено
 - **Результат**: выполнено частично; новый successful deployment не подтверждён
 
 ## Сделано
@@ -50,6 +50,22 @@ Actor для строк таблицы — Codex/local thread выше; стад
 [prefix](../multica/snapshots/2026-09-14-infrastructure-checks/prefix.json).
 Отдельно проверены все 13 хэшей prefix + before и отсутствие шаблонов credentials в новых
 артефактах. Это подтверждает настройку, не выполненную canary из Multica.
+
+## Проверки документов и публикация
+
+Независимый actor `/root/render_neon_review` принял docs/config scope после устранения
+конфликта dispatch; Critical/Important/Minor не осталось. Проверены 11 файлов, все 13 hashes,
+сохранение старых инструкций и отсутствие credentials. Отчёт о ревью — trace этого thread.
+
+Для revision выше `git diff --cached --check` и scoped `pnpm exec prettier --check` по
+изменённым документам/JSON завершились с exit0. Обязательные hooks `format`, `lint`, `test`
+завершились с exit0: server 20 passed/1 todo, web 56 passed. Cwd всех проверок — worktree
+`.worktrees/render-neon-operations`, actor — Codex. Последующая правка этого отчёта фиксирует
+полученное evidence, не меняет live prefix или исходный проверенный контракт.
+
+[PR #32](https://github.com/Egoka/Altera/pull/32) содержит текущие GitHub checks и решение
+об интеграции. Для данного docs/config diff Render deploy не требуется; это не закрывает
+предыдущий infrastructure incident.
 
 ## Что осталось и почему
 
