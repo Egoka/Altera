@@ -277,3 +277,37 @@ D2 — отдельный [codex-path-probe.c](../../scripts/agent-runtime/codex
 `--help/--version` статичны и честно называют probe. UID — только build provenance;
 `canonical_identity` и `task_acceptance` всегда `not_checked`. Существование, symlinks, owner/mode
 и актуальность native path проверяет отдельный trusted coordinator; D2 этих свойств не доказывает.
+
+## Codex managed-TOML mapping
+
+[codex_toml_map.py](../../scripts/agent-runtime/codex_toml_map.py) принимает только pinned D2
+`lexical_candidate` и читает ровно его `config.toml` после проверки текущего cwd. Он идёт от `/`
+по удерживаемым directory descriptors с `O_NOFOLLOW`; правила UID501 и отсутствия group/world
+write начинаются на private workspace boundary, поэтому наблюдённые mode0755 допустимы. Финальный
+файл открывается с `O_NONBLOCK` до первого `fstat` и должен быть regular0600, UID501, nlink1 и
+≤64 KiB. После чтения mapper сравнивает device/inode/type/mode/owner/link/size/mtime_ns/ctime_ns,
+повторно открывает каждый компонент через удерживаемого родителя и отказывает при любой гонке.
+Это snapshot-проверка, а не защита от враждебного процесса с тем же UID после финальной проверки.
+
+В bounded UTF-8 parser допускается только однозначный append-at-EOF marker block deterministic
+Multica renderer: basic strings, booleans, finite decimal numbers, arrays и inline tables на одной
+строке, depth≤16 и decoded string≤16 KiB. Multiline/literal strings, CR/BOM/NUL, неоднозначное
+состояние, duplicate/dotted keys и неизвестный syntax fail closed. Отсутствующий marker означает
+refused inherited fallback; marker-only означает явный managed-empty и не добавляет MCP servers.
+
+Каталог всегда содержит только фиксированные строки `context7`, `playwright`, `trace` и
+presence/enum/boolean; raw TOML, path, неизвестные имена/значения и secret-bearing fields не
+выводятся и не хешируются. Public Context7 `/mcp` и два exact native trace identities с
+`args=["serve"]` материализуются в deterministic secret-free policy. Четыре признанные формы
+Playwright `npx` получают `playwright_dynamic_npx`, но `mapping_ready:false`, без path mapping и
+без policy publication до отдельной static Playwright acceptance. Roster check остаётся отдельным:
+структурно корректный empty или неполный набор не разрешает роль, которой нужны отсутствующие tools.
+
+Base policy принимается только с ожидаемым digest и без существующих `mcp_servers`/managed markers.
+Новые `codex-mcp-catalog.json` и `codex-config.toml` публикуются exclusive, mode0600, через fsync и
+атомарный hard-link в свежем private generation; partial publication удаляется при ошибке. Mapper
+не открывает `auth.json`/`AGENTS.md`, не перечисляет task home, не использует global HOME fallback,
+не запускает MCP/package/model и не меняет runtime launcher. Synthetic check:
+`/usr/bin/python3 -I scripts/agent-runtime/test_codex_toml_map.py`. Первый historical map и каждый
+следующий actual invocation выполняет trusted coordinator отдельно после review, с собственным
+fresh descriptor и source/AGENTS/run-record bindings.
