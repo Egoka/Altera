@@ -175,6 +175,64 @@ archives. Перед final finish коммитит только собствен
 Missing/stale evidence и сбой collector/record/finish оставляют стадию непринятой. Два
 последовательных реальных неуспеха одного check останавливают его; другой run не обнуляет счёт.
 
+## Поколения Claude credentials и refresh
+
+`credential_refresh.py MANIFEST bootstrap SOURCE` создаёт первоначальное поколение только
+в новом private store. SOURCE — явный существующий regular file, mode0600, текущего UID,
+без symlink/hardlink; оригинал сохраняется. Host копирует байты непрозрачно, не разбирает
+credential JSON и не считает его digest. Пример manifest:
+[refresh-manifest.example.json](../../scripts/agent-runtime/refresh-manifest.example.json).
+Перед использованием заменить placeholder policy hash и назначить неизменные check/attempt IDs.
+Store, policy и run_root — отдельные absolute canonical directories mode0700 текущего UID.
+Policy содержит ровно reviewed `claude-refresh.mjs`, `provider-proxy.mjs`, `empty-mcp.json`
+с `{"mcpServers":{}}` и `claude-settings.json` с `{"disableAllHooks":true}`; hash связывает
+их содержимое с manifest. Используется только закреплённый image ID из example.
+
+Store содержит `refresh.lock`, `current.json`, `refresh-state.json` и `generations/`.
+Pointer — regular mode0600 JSON ровно `{"generation":"<32 lowercase hex>"}`. Поколение
+`generations/ID/` и кандидат `generations/ID.pending/` имеют mode0700; выбранный
+`.credentials.json` — mode0600, один hardlink, ≤65536 bytes. Проверки fd/owner/mode и
+отсутствия symlink выполняются до использования. Checker выбирает поколение через
+`select_current()` под той же exclusive lock; CLI `select` возвращает только его путь.
+Cooperative store не удаляет и не заменяет опубликованные поколения. Это не защита от
+произвольного вредоносного процесса того же host UID, способного менять trusted code/store.
+
+`credential_refresh.py MANIFEST refresh` держит lock через exchange и приёмку. Journal
+проходит `prepared → exchange_started → candidate_written → candidate_accepted → published`;
+metadata, candidate и parent directories fsync перед следующей durable стадией. Exchange
+запускает только `/usr/local/bin/claude auth login` в контейнере: старый файл RO, новый
+config directory RW, reviewed wrapper RO, отдельные HOME/cache/tmp и provider proxy.
+Source, stdin, MCP, Multica token, host HOME и Docker socket отсутствуют. Только wrapper
+внутри контейнера читает exact `claudeAiOauth.refreshToken`, непустой массив `scopes` и
+optional `clientId`; только fixed CLI child получает их в environment. Docker argv/env,
+host journal и результат не содержат этих значений. Никаких browser/setup-token fallback.
+
+Отдельный свежий контейнер проверяет candidate RO через `claude auth status`. Следующая
+отдельная fixed operation вызывает explicit Opus4.6/medium с tools="", empty MCP, hooks
+disabled и `Reply exactly ALTERA_CLAUDE_AUTH_OK`. Требуются exit0, success/is_error=false,
+точный marker и Opus canonical modelUsage; разрешён observed auxiliary Haiku usage.
+В journal остаются только allowlisted numeric usage и list-price estimate, не billing proof.
+После обеих проверок coordinator атомарно публикует pointer, сохраняя старое поколение.
+Refresh exchange сам не вызывает модель; model acceptance — отдельная явная стадия.
+
+После `exchange_started` старый refresh token повторно не используется. Recovery продолжает
+приёмку существующего valid candidate; отсутствующий/небезопасный кандидат даёт
+`manual_login_required`, сохраняя journal и pending. `candidate_accepted` публикуется
+идемпотентно без нового CLI; уже опубликованный pointer завершает journal. Только proven-empty
+pending в `prepared` можно удалить. Смена attempt ID не обходит незавершённую recovery.
+Старый pointer не доказывает, что уже использованный refresh token ещё пригоден.
+
+Fixed bounds: JSON containers depth16, string16384 UTF-8 bytes, credential65536 bytes,
+combined child output8192 bytes; CLI exchange/status/model deadlines60/30/120 seconds.
+Timeout убивает process group. Raw child output и error strings не выходят из wrapper;
+совместимость headless branch показывает только fixed prefix booleans и enum.
+Synthetic tests: `test_credential_refresh.py`, `test_claude_refresh.mjs`; Docker fake fixtures
+запускаются явно как `test_refresh_docker.py DockerRefreshTests` без сети. Отдельный
+`PinnedCompatibilityTests` использует намеренно невалидный synthetic token через proxy.
+Эти проверки не подтверждают live refresh. Реальные bootstrap/exchange/status/fixed-model
+выполняет trusted coordinator после независимого review, с исходной check history и без
+credential hashes, account data или raw provider output в evidence.
+
 ## Проверки и D0
 
 Сборка image: `docker build -t altera-agent-runtime:task5 scripts/agent-runtime`; затем записать

@@ -233,6 +233,88 @@ def effective_args(manifest, incoming):
     return result
 
 
+def sandbox_arguments(interactive=True):
+    return [DOCKER, 'run', '--rm', '--init', *(['--interactive'] if interactive else []),
+            '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges',
+            '--pids-limit=128', '--memory=2g', '--cpus=2',
+            '--user=' + str(os.getuid()) + ':' + str(os.getgid())]
+
+
+REFRESH_IMAGE = 'sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a'
+
+
+def private_reference(value, directory=False):
+    path = Path(value)
+    if (not path.is_absolute() or path.is_symlink() or path.resolve(strict=True) != path or
+        re.search(r'[\x00-\x1f,=]', str(path))):
+        raise ValueError('unsafe_private_reference')
+    info = path.stat()
+    kind = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
+    if (not kind or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != (0o700 if directory else 0o600) or
+        (not directory and (info.st_nlink != 1 or not 0 < info.st_size <= 65536))):
+        raise ValueError('unsafe_private_metadata')
+    return path
+
+
+def refresh_command(manifest, operation, credential, output=None):
+    """Фиксированная операция без source/MCP/stdin и без credential values в argv/env."""
+    required = {'schema_version', 'store', 'policy', 'policy_sha256', 'run_root', 'image',
+                'network', 'check_id', 'attempt_id'}
+    if (set(manifest) != required or manifest['schema_version'] != 1 or manifest['image'] != REFRESH_IMAGE or
+        manifest['network'] != 'provider-proxy' or operation not in ('exchange', 'status', 'model') or
+        not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.-]{0,95}', manifest['check_id']) or
+        not re.fullmatch(r'[a-f0-9]{32}', manifest['attempt_id']) or os.getuid() == 0):
+        raise ValueError('invalid_refresh_manifest')
+    store, policy, run = [private_reference(manifest[key], directory=True) for key in ('store', 'policy', 'run_root')]
+    for left, right in ((store, policy), (store, run), (policy, run)):
+        if left.is_relative_to(right) or right.is_relative_to(left):
+            raise ValueError('refresh_mount_overlap')
+    if any(run.iterdir()):
+        raise ValueError('refresh_run_not_fresh')
+    expected = {'claude-refresh.mjs', 'provider-proxy.mjs', 'empty-mcp.json', 'claude-settings.json'}
+    if {item.name for item in policy.iterdir()} != expected or tree_hash(policy) != manifest['policy_sha256']:
+        raise ValueError('refresh_policy_changed')
+    if (json.loads((policy / 'empty-mcp.json').read_text()) != {'mcpServers': {}} or
+        json.loads((policy / 'claude-settings.json').read_text()) != {'disableAllHooks': True}):
+        raise ValueError('invalid_refresh_policy')
+    for name in expected:
+        info = (policy / name).stat()
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid() or info.st_mode & 0o022:
+            raise ValueError('unsafe_refresh_policy')
+    credential = private_reference(credential)
+    generation = private_reference(credential.parent, directory=True)
+    if (credential.name != '.credentials.json' or generation.parent != store / 'generations' or
+        not re.fullmatch(r'[a-f0-9]{32}(?:\.pending)?', generation.name)):
+        raise ValueError('unmapped_credential_generation')
+    private_reference(store / 'generations', directory=True)
+    if operation == 'exchange':
+        output = private_reference(output, directory=True)
+        if (generation.name.endswith('.pending') or output.parent != generation.parent or
+            not re.fullmatch(r'[a-f0-9]{32}\.pending', output.name) or any(output.iterdir())):
+            raise ValueError('invalid_candidate_directory')
+    elif output is not None:
+        raise ValueError('unexpected_candidate_write_mount')
+    args = sandbox_arguments(False) + ['--workdir=/runtime/cache/home',
+        '--mount=type=bind,src=' + str(policy / 'claude-refresh.mjs') + ',dst=/runtime/policy/claude-refresh.mjs,readonly']
+    for name in ('cache', 'tmp'):
+        path = run / name; path.mkdir(mode=0o700)
+        args.append('--mount=type=bind,src=' + str(path) + ',dst=/runtime/' + name)
+    for name in ('home', 'claude', 'xdg'):
+        (run / 'cache' / name).mkdir(mode=0o700)
+    destination = '/runtime/input/.credentials.json' if operation == 'exchange' else '/runtime/cache/claude/.credentials.json'
+    if operation != 'exchange':
+        (run / 'cache/claude/.credentials.json').touch(mode=0o600)
+    args.append('--mount=type=bind,src=' + str(credential) + ',dst=' + destination + ',readonly')
+    if operation == 'exchange':
+        args.append('--mount=type=bind,src=' + str(output) + ',dst=/runtime/output/claude')
+    if operation == 'model':
+        for name in ('empty-mcp.json', 'claude-settings.json'):
+            args.append('--mount=type=bind,src=' + str(policy / name) + ',dst=/runtime/policy/' + name + ',readonly')
+    for entry in ('HOME=/runtime/cache/home', 'TMPDIR=/runtime/tmp', 'TMP=/runtime/tmp', 'TEMP=/runtime/tmp'):
+        args.extend(['--env', entry])
+    return args + ['--entrypoint=/usr/local/bin/node', manifest['image'], '/runtime/policy/claude-refresh.mjs', operation]
+
+
 def command(manifest, incoming, environment):
     required = {'schema_version', 'family', 'source', 'snapshot', 'state', 'dirty_paths', 'policy',
                 'policy_sha256', 'run_root', 'image', 'model', 'effort', 'env_paths', 'path_map',
@@ -280,9 +362,7 @@ def command(manifest, incoming, environment):
     network = manifest.get('network', 'none')
     if network not in ('none', 'provider-proxy'):
         raise ValueError('unsupported_network')
-    args = [DOCKER, 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none',
-            '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128',
-            '--memory=2g', '--cpus=2', '--user=' + str(os.getuid()) + ':' + str(os.getgid()), '--workdir=' + str(source),
+    args = sandbox_arguments() + ['--workdir=' + str(source),
             '--mount=type=bind,src=' + str(snap) + ',dst=' + str(source) + ',readonly',
             '--mount=type=bind,src=' + str(policy) + ',dst=/runtime/policy,readonly']
     for name in ('evidence', 'cache', 'tmp'):

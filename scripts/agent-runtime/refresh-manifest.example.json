@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "store": "/private/tmp/claude-refresh/credential-store",
+  "policy": "/private/tmp/claude-refresh/policy",
+  "policy_sha256": "REPLACE_WITH_REVIEWED_POLICY_SHA256",
+  "run_root": "/private/tmp/claude-refresh/runs",
+  "image": "sha256:0baed89d66accc9338e938d6c0a81924014836561890d12005063b0b7bdb409a",
+  "network": "provider-proxy",
+  "check_id": "claude-refresh",
+  "attempt_id": "00000000000000000000000000000000"
+}

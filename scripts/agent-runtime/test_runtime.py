@@ -54,6 +54,17 @@ class RuntimeTests(unittest.TestCase):
     def git(self, *args):
         return subprocess.check_output(['/usr/bin/git', '-C', str(self.source), *args], stderr=subprocess.DEVNULL)
 
+    def test_ordinary_commands_match_pre_refresh_boundary(self):
+        expected = {'claude': ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '$USER', '--workdir=$BASE/source', '--mount=type=bind,src=$BASE/snapshot,dst=$BASE/source,readonly', '--mount=type=bind,src=$BASE/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=$BASE/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=$BASE/run/cache,dst=/runtime/cache', '--mount=type=bind,src=$BASE/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/node', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '/runtime/policy/fixture.mjs', '--model', 'claude-opus-4-6', '--effort', 'medium', '--settings', '/runtime/policy/claude-settings.json', '--strict-mcp-config'], 'codex': ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '$USER', '--workdir=$BASE/source', '--mount=type=bind,src=$BASE/snapshot,dst=$BASE/source,readonly', '--mount=type=bind,src=$BASE/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=$BASE/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=$BASE/run/cache,dst=/runtime/cache', '--mount=type=bind,src=$BASE/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/node', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '/runtime/policy/fixture.mjs', 'app-server', '--listen', 'stdio://', '-c', 'model="gpt-5.6-terra"', '-c', 'model_reasoning_effort="medium"'], 'claude-login': ['/usr/local/bin/docker', 'run', '--rm', '--init', '--interactive', '--read-only', '--network=none', '--cap-drop=ALL', '--security-opt=no-new-privileges', '--pids-limit=128', '--memory=2g', '--cpus=2', '$USER', '--workdir=$BASE/source', '--mount=type=bind,src=$BASE/snapshot,dst=$BASE/source,readonly', '--mount=type=bind,src=$BASE/policy,dst=/runtime/policy,readonly', '--mount=type=bind,src=$BASE/run/evidence,dst=/runtime/evidence', '--mount=type=bind,src=$BASE/run/cache,dst=/runtime/cache', '--mount=type=bind,src=$BASE/run/tmp,dst=/runtime/tmp', '--env', 'HOME=/runtime/cache/home', '--env', 'CODEX_HOME=/runtime/cache/codex', '--env', 'CLAUDE_CONFIG_DIR=/runtime/cache/claude', '--env', 'TMPDIR=/runtime/tmp', '--env', 'TMP=/runtime/tmp', '--env', 'TEMP=/runtime/tmp', '--env', 'XDG_CACHE_HOME=/runtime/cache/xdg', '--env', 'TRACE_MCP_TELEMETRY=off', '--entrypoint=/usr/local/bin/claude', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'auth', 'login']}
+        for mode, incoming in [("claude", ["--model", "claude-opus-4-6"]), ("codex", ["app-server", "--listen", "stdio://"]), ("claude-login", [])]:
+            manifest = dict(self.manifest)
+            if mode == "codex":
+                manifest.update(family="codex", model="gpt-5.6-terra")
+            if mode == "claude-login":
+                manifest["operation"] = "claude-login"
+            actual = [value.replace(str(self.base), "$BASE").replace("--user=" + str(os.getuid()) + ":" + str(os.getgid()), "$USER") for value in self.runtime.command(manifest, incoming, {})]
+            self.assertEqual(actual, expected[mode])
+
     def test_snapshot_preserves_revision_and_dirty_without_ignored_secrets(self):
         (self.source / 'code.txt').write_text('modified\n')
         (self.source / 'new-test.txt').write_text('new\n')
@@ -65,6 +76,43 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue((dest / '.git').is_dir())
         self.assertFalse((dest / '.git/objects/info/alternates').exists())
         self.assertEqual(state['head'], self.git('rev-parse', 'HEAD').decode().strip())
+
+    def test_refresh_command_has_no_source_model_mcp_stdin_or_secret_docker_env(self):
+        self.assertTrue(hasattr(self.runtime, 'refresh_command'), 'dedicated refresh command builder missing')
+        policy = self.base / 'refresh-policy'
+        policy.mkdir(mode=0o700)
+        for filename in ['claude-refresh.mjs', 'provider-proxy.mjs']:
+            (policy / filename).write_bytes((ROOT / filename).read_bytes())
+        (policy / 'empty-mcp.json').write_text('{"mcpServers":{}}')
+        (policy / 'claude-settings.json').write_text('{"disableAllHooks":true}')
+        store = self.base / 'store'; store.mkdir(mode=0o700)
+        generations = store / 'generations'; generations.mkdir(mode=0o700)
+        old = generations / ('a' * 32); old.mkdir(mode=0o700)
+        credential = old / '.credentials.json'; credential.write_text('SYNTHETIC_PRIVATE'); credential.chmod(0o600)
+        pending = generations / ('b' * 32 + '.pending'); pending.mkdir(mode=0o700)
+        manifest = {'schema_version': 1, 'store': str(store), 'policy': str(policy),
+            'policy_sha256': self.runtime.tree_hash(policy), 'run_root': str(self.run),
+            'image': self.runtime.REFRESH_IMAGE, 'network': 'provider-proxy',
+            'check_id': 'synthetic-refresh', 'attempt_id': 'c' * 32}
+        for operation in ['exchange', 'status', 'model']:
+            run = self.base / ('refresh-' + operation); run.mkdir(mode=0o700)
+            args = self.runtime.refresh_command({**manifest, 'run_root': str(run)}, operation, credential,
+                                                pending if operation == 'exchange' else None)
+            encoded = ' '.join(args)
+            for forbidden in [str(self.source), str(self.snapshot), 'MULTICA_TOKEN', 'REFRESH_TOKEN', 'OAUTH_SCOPES', 'CODEX_HOME', 'docker.sock', 'SYNTHETIC_PRIVATE', '--interactive']:
+                self.assertNotIn(forbidden, encoded)
+            self.assertIn('--read-only', args)
+            self.assertIn('--cap-drop=ALL', args)
+            self.assertEqual(args[-1], operation)
+            mounts = [arg for arg in args if arg.startswith('--mount=')]
+            self.assertTrue(any(str(credential) in arg and arg.endswith(',readonly') for arg in mounts))
+            self.assertFalse(any('dst=/runtime/policy,' in arg for arg in mounts))
+            if operation != 'model':
+                self.assertFalse(any('mcp' in arg or 'settings' in arg for arg in mounts))
+            self.assertEqual(any('dst=/runtime/output/claude' in arg for arg in mounts), operation == 'exchange')
+        for changed in [{'image': 'sha256:' + '0' * 64}, {'network': 'bridge'}, {'prompt': 'arbitrary'}]:
+            with self.assertRaises(ValueError):
+                self.runtime.refresh_command({**manifest, **changed}, 'exchange', credential, pending)
 
     def test_external_symlink_and_ignored_explicit_input_are_rejected(self):
         (self.source / 'escape').symlink_to('/etc/passwd')
