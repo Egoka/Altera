@@ -1,39 +1,45 @@
 # Модель данных: целевая схема и путь от текущей
 
-> **Расхождения с журналом решений Г1–Г9 (2026-09-08/09).** Документ стоит на ревизии 2 (2026-09-06) и не синхронизирован с рабочим журналом `docs/decisions/role-review-working-log-2026-09-08.md`; при расхождении главнее журнал и действующие спецификации `docs/spec/`. Полная ревизия — задача T-109 (`docs/backlog/`); номера строк ниже — по тексту ревизии 2 до этой врезки. Не действуют:
-- `alt` «узел документа может переопределить» (строка 271) — единое `alt` только у медиафайла, автор не редактирует, исправляет только `admin` с аудитом (журнал §29.11, §29.13);
-- `ArticleStatus { draft ai_review review published archived }` (строка 361) — по спецификациям: `draft`, `ai_check`, `review`, `in_review`, `rework`, `published`, `archived` и признак `rejected` (журнал §26.5, `10-flows/moderation.md`);
-- `ArticleBoost` на 24 часа (строка 465), балл `COALESCE(overriddenScore, score)` (строка 335), `ArticleAiReview.score` — отменены (журнал #41, §21.15–16);
-- `ReadSalt`/`ReadEvent` — заменены событиями вовлечённости с `visitorId` (журнал §23, `60-ranking/engagement-tracking.md`);
-- `blocked*` у пользователя — блокировка равна архивированию с актором и режимом (журнал #4, #30, #48);
-- отсутствуют: предыдущая версия аватара (§29.5), переписка по проверке и заметки к блокам (§25.6), записи ошибок со статусами (§27.7), история писем (§27.6), исключения владельца со сроком (#54).
-
-
-- **Ревизия**: 2 (2026-09-06), точечная: §1.1 (User, Article, ArticleTranslation, Bookmark,
-  ArticleAiReview, PlanGrant, enum), §1.2–1.7, §2, §3.1–3.4, §4.4–4.7, §5; остальное —
-  ревизия 1 (коммит `636538c`).
-- **Статус**: принято владельцем 2026-09-06 (ADR-0034…0046 поверх ADR-0001…ADR-0010,
-  ADR-0027).
+- **Ревизия**: 3 (2026-09-14), заменяет ревизию 2 (2026-09-06).
+- **Статус**: синхронизировано с журналом Г1–Г9 (T-109).
 - **Основание**: `server/prisma/schema.prisma` и четыре миграции июля 2025
   [ФАКТ: `docs/vision/00-reality-check.md` §2]; содержимое прод-базы не проверялось
-  [НЕ ПРОВЕРЕНО].
+  [НЕ ПРОВЕРЕНО]; ADR-0034…0046 поверх ADR-0001…ADR-0010, ADR-0027; журнал §21.15–16,
+  §25.6, §26.5, §27.6, §27.7, §29.5, §29.11, §29.13, #41.
 - Этот документ владеет сущностями, полями, enum, индексами, инвариантами и миграциями.
   Права — в `04-roles-and-access.md`, процесс редактирования — в `05-editor.md`.
 - Формат: таблицы полей для центральных сущностей, псевдо-схема Prisma для остальных, SQL
   бэкфилла там, где он нетривиален. Это проект, а не миграции: миграции создаются на этапах
   роадмапа и только с именем.
 
-## Что изменилось относительно ревизии 1
+## История ревизий
+
+### Ревизия 2 → 3 (2026-09-14, T-109, журнал Г5b–Г9)
+
+| Было (ревизия 2) | Стало (ревизия 3) | Источник |
+|---|---|---|
+| `alt` у узла `figure` может переопределить `alt` медиафайла | `alt` хранится только в `MediaAsset.alt`; узел `figure` не содержит `alt`; исправляет только `admin` с аудитом | журнал §29.11, §29.13 |
+| `ArticleStatus { draft ai_review review published archived }` | `ArticleStatus { draft ai_check review in_review rework published archived }` + признак `rejectedFinal` | журнал §26.5 |
+| `ArticleAiReview.score`, `ArticleBoost` (24-часовой), `COALESCE(overriddenScore, score)` | Удалены; AI даёт только вердикт с причинами; надбавка Pro — в `AuthorScore`/`RankingConfig` (постоянная) | журнал #41, §21.15–16 |
+| `ReadSalt` + `ReadEvent` | События вовлечённости с `visitorId` (см. `60-ranking/engagement-tracking.md`) | журнал §23 |
+| `User.blockedAt`, `User.blockedById`, `User.blockReason` | Блокировка = архивирование с `archivedByActorId`, `archiveReason`, `archiveMode`; отдельных полей `blocked*` нет | журнал #4, #30, #48 |
+| Нет `ReviewMessage`, `ReviewNote`, `ReviewDecision` | Добавлены: переписка по проверке и заметки к блокам (§25.6) | журнал §25.6 |
+| Нет `ErrorRecord` | Добавлены записи ошибок со статусами `new / in_progress / resolved` (§27.7) | журнал §27.7 |
+| Нет `SentEmail` | Добавлена история писем с адресом, темой, статусом доставки (§27.6) | журнал §27.6 |
+| Нет предыдущей версии аватара | `User.prevAvatarId` — ссылка на прежний `MediaAsset` для возможного отката (§29.5) | журнал §29.5 |
+| Нет `OwnerException` | `OwnerException(userId, expiresAt, reason)` — исключения владельца со сроком (#54) | журнал #54 |
+
+### Ревизия 1 → 2 (2026-09-06, ADR-0034…0046)
 
 | Было | Стало | Решение |
 |---|---|---|
 | `Article.contour`, `Commission`, `EditorialPick`, `Collection`, CHECK контуров | Удалены; `Article.access` зарезервирован | ADR-0036 |
 | `User.trustLevel`, `trustChanged*`, `needsReview` | `User.planTier`, `planUntil`; грейд вычисляется из плана | ADR-0035, ADR-0037 |
 | `PlanKind { author_support showcase }`, `Plan.authorId`, донаты, `PayoutProfile`, `Payout` | `PlanTier { free standard pro }`, `PlanGrant`; биллинг на этапе 1 | ADR-0035 |
-| Прочтения — этап 3 | Прочтения, `ArticleScore`, `AuthorScore`, `RankingConfig`, `ArticleBoost` — этап 2 | ADR-0034, ADR-0038, ADR-0040 |
-| — | `ArticleAiReview` (этап 1), `TranslationJob` (этап 3), `Bookmark` (этап 1) | ADR-0039, ADR-0046, ADR-0041 |
+| Прочтения — этап 3 | Прочтения, `ArticleScore`, `AuthorScore`, `RankingConfig` — этап 2 | ADR-0034, ADR-0038 |
+| — | `ArticleAiCheck` (этап 1), `TranslationJob` (этап 3), `Bookmark` (этап 1) | ADR-0039, ADR-0046, ADR-0041 |
 | `Role` из шести значений; `audit_log` с этапа 2 | `analyst`; `audit_log` с этапа 1 | ADR-0042 |
-| `ArticleStatus` из четырёх значений | + `ai_review` | ADR-0045 |
+| `ArticleStatus` из четырёх значений | + `ai_check` | ADR-0045 |
 | Миграции M9, M10, M12, M13, M15 | Перекроены: M9 — биллинг, жалобы, закладки, AI, аудит (1); M12 — прочтения и рейтинг (2); M13 — подписка на автора и переводы (3); M10 — замечания (4); M15 удалена | — |
 
 ---
@@ -43,7 +49,7 @@
 | Правило | Почему |
 |---|---|
 | `id String @id @default(uuid())` → `TEXT`, как в существующих таблицах; `@db.Uuid` не вводим | Смешение типов в внешних ключах дороже 20 байт на строку |
-| Исключение — append-only таблицы (`read_events`, `audit_log`): `BigInt @id @default(autoincrement())` | Дешёвая вставка, естественный порядок |
+| Исключение — append-only таблицы (`engagement_events`, `audit_log`): `BigInt @id @default(autoincrement())` | Дешёвая вставка, естественный порядок |
 | Таблицы — snake_case через `@@map`; колонки — camelCase без `@map` (как сейчас: `"publishedAt"`) | Один стиль; полусмешанная схема хуже любой из чистых |
 | `createdAt @default(now())`, `updatedAt @updatedAt` везде, кроме append-only | Как сейчас |
 | Enum Prisma = тип PostgreSQL. Добавление значения — `ALTER TYPE … ADD VALUE` в **отдельной** миграции; использовать новое значение в той же транзакции нельзя | Ограничение PostgreSQL |
@@ -83,13 +89,15 @@
 | planTier | PlanTier | нет | free | Кэш активного плана (ADR-0035); истина — `subscriptions` и `plan_grants`; чинится планировщиком; грейд автора вычисляется отсюда (ADR-0037) |
 | planUntil | DateTime? | да | — | Конец оплаченного периода или гранта; NULL для `free` |
 | socialLinks | Json? | да | — | Как сейчас |
-| blockedAt | DateTime? | да | — | ADR-0014: заморозка; сессии отозваны, вход запрещён |
-| blockedById | String? → User | да | — | |
-| blockReason | String? | да | — | |
+| archivedAt | DateTime? | да | — | Блокировка или удаление = архивирование (журнал #4, #30, #48) |
+| archivedByActorId | String? → User | да | — | Кто выполнил архивирование |
+| archiveReason | String? | да | — | Причина: блокировка, самостоятельное удаление и т. д. |
+| archiveMode | ArchiveMode? | да | — | `block / delete`; определяет правила восстановления |
 | deletedAt | DateTime? | да | — | Аккаунт анонимизирован; запись остаётся как «надгробие» |
 | lastLoginAt | DateTime? | да | — | |
 | consentVersion | String? | да | — | Версия оферты и политики ПД, с которой согласился (ADR-0028) |
 | consentAt | DateTime? | да | — | |
+| prevAvatarId | String? → MediaAsset | да | — | Предыдущий аватар для отката рецензентом (журнал §29.5) |
 | locale | Locale | нет | ru | **Этап 3**: язык писем |
 | createdAt, updatedAt | DateTime | нет | | |
 
@@ -206,10 +214,10 @@ model Tag {                         // бывший SectionTag; свободны
 | excerpt | String? | да | — | Для карточек; пусто → первый абзац при рендере |
 | body | Json | нет | — | Документ ProseMirror (ADR-0001); изображения по `assetId` |
 | legacyBody | String? | да | — | Исходная строка `articles.body`; до M11 |
-| status | ArticleStatus | нет | draft | `draft/ai_review/review/published/archived` — тот же тип PostgreSQL; `ai_review` добавляется `ADD VALUE` (ADR-0045) |
+| status | ArticleStatus | нет | draft | `draft/ai_check/review/in_review/rework/published/archived`; признак `rejectedFinal`; `ai_check` добавляется `ADD VALUE` (ADR-0045) |
 | publishedAt | DateTime? | да | — | Первая публикация версии; при повторной публикации **не** сбрасывается. CHECK: `status <> 'published' OR publishedAt IS NOT NULL` |
 | reviewRequestedAt | DateTime? | да | — | Порядок очереди ревьюера (ставится при переходе в `review`) |
-| submittedAt | DateTime? | да | — | Момент отправки в `ai_review`; SLA считается отсюда |
+| submittedAt | DateTime? | да | — | Момент отправки в `ai_check`; SLA считается отсюда |
 | appealedAt | DateTime? | да | — | Оспаривание отказа AI (ADR-0045) |
 | unpublishedAt, unpublishedById, unpublishReason | DateTime? / String? / String? | да | — | Снятие модератором; авторский архив их не заполняет |
 | translatorId | String? → User | да | — | Подпись «перевод: …» |
@@ -277,7 +285,7 @@ model ArticleSlugHistory {
 | sha256 | String | нет | — | Дедупликация загрузок владельца (индекс) |
 | variants | Json | нет | [] | `[{name:"w480", key, width, height, bytes, format:"webp"}, …]` (ADR-0030) |
 | focalX, focalY | Float? | да | — | Фокусная точка для обрезки вариантов |
-| alt | String? | да | — | Значение по умолчанию; узел документа может переопределить |
+| alt | String? | да | — | Формируется AI при загрузке (§29.11); единственный источник для вывода; узел документа не переопределяет; исправляет только `admin` с аудитом (§29.13) |
 | caption | String? | да | — | |
 | attribution | String | нет | — | Обязательна |
 | license | MediaLicense | нет | — | Обязательна |
@@ -317,32 +325,28 @@ model Bookmark {                    // закладка читателя; при
 
 `@@index([status, createdAt])`, `@@index([translationId])`.
 
-#### ArticleAiReview (`article_ai_reviews`) — ADR-0039
+#### ArticleAiCheck (`article_ai_checks`) — ADR-0039
+
+Переименовано из `ArticleAiReview` в ревизии 3 (журнал #41). Балла нет; AI даёт только
+бинарный вердикт с категориями причин.
 
 ```prisma
-model ArticleAiReview {             // одна запись на публикуемую ревизию; история сохраняется
+model ArticleAiCheck {              // одна запись на публикуемую ревизию; история сохраняется
   id               String    @id @default(uuid())
   translationId    String                        // → ArticleTranslation, Cascade
   revisionId       String                        // → ArticleRevision, Restrict
   verdict          AiVerdict                     // pass / fail / uncertain
-  score            Int?                          // 0–100; NULL — провайдер недоступен
-  criteria         Json?                         // { criterion: score, … }
+  reasons          Json?                         // категории причин отказа (журнал §24.3)
   explanations     Json?                         // пояснения автору, без ПДн
   model            String
   promptVersion    String                        // версия промта; включает версию правил публикации
   costMinor        Int       @default(0)
-  overriddenScore  Int?                          // переопределение ревьюером
-  overriddenById   String?                       // → User
-  overrideReason   String?
   createdAt        DateTime  @default(now())
   @@index([translationId, createdAt(sort: Desc)])
   @@unique([revisionId])
-  @@map("article_ai_reviews")
+  @@map("article_ai_checks")
 }
 ```
-
-Действующий балл = `COALESCE(overriddenScore, score)` последней записи версии; переопределение
-пишется в `audit_log` (`ai.score.override`).
 
 #### PlanGrant (`plan_grants`) — ADR-0035
 
@@ -367,7 +371,7 @@ model PlanGrant {                   // ручной грант плана: ре�
 ```prisma
 enum Role             { reader author editor moderator analyst admin owner }
 enum SectionStatus    { active archived }                       // переименованный ContentTypeStatus
-enum ArticleStatus    { draft ai_review review published archived }   // ai_review — ADD VALUE (ADR-0045)
+enum ArticleStatus    { draft ai_check review in_review rework published archived }  // ai_check — ADD VALUE (ADR-0045); in_review, rework — §26.5
 enum Locale           { ru en }
 enum PlanTier         { free standard pro }
 enum AiVerdict        { pass fail uncertain }
@@ -376,6 +380,7 @@ enum MediaKind        { image }
 enum MediaLicense     { own cc_by cc_by_sa cc_by_nc cc0 public_domain permission }
 enum ReportReason     { copyright illegal spam personal_data other }
 enum ReportStatus     { open resolved dismissed }
+enum ArchiveMode      { block delete }                          // журнал #4, #30, #48
 ```
 
 ### 1.2. Аудит (этап 1) и замечания (этап 4)
@@ -398,7 +403,7 @@ model AuditLog {                    // append-only, без FK: лог не за�
   id         BigInt   @id @default(autoincrement())
   actorId    String?
   actorRole  Role?                                   // снимок роли на момент действия
-  action     String                                  // "user.role.change", "plan.grant", "translation.approve", "translation.unpublish", "ai.score.override", "ranking.config.change", "revision.restore", "report.resolve", "owner.transfer" (список — 04-roles §5)
+  action     String                                  // "user.role.change", "plan.grant", "translation.approve", "translation.unpublish", "ranking.config.change", "revision.restore", "report.resolve", "owner.transfer", "user.pii.view", "media.alt.edit" (список — 04-roles §5)
   targetType String                                  // "user" | "article_translation" | "article" | "report" | …
   targetId   String
   diff       Json?                                   // { before, after } только изменённые поля
@@ -418,20 +423,16 @@ model AuditLog {                    // append-only, без FK: лог не за�
 ### 1.3. Этап 2: прочтения и рейтинг; этап 3: подписка на автора, переводы, поиск
 
 ```prisma
-model ReadSalt {                    // суточная соль; строки старше 2 дней удаляются → старые хэши необратимы
-  day  DateTime @id @db.Date
-  salt Bytes
-  @@map("read_salts")
-}
-
-model ReadEvent {                   // сырые дедуплицированные события; хранятся 8 дней
+// Прочтения: события вовлечённости с visitorId (журнал §23; детали — 60-ranking/engagement-tracking.md)
+model EngagementEvent {             // события; хранятся ограниченное время
   id          BigInt   @id @default(autoincrement())
   articleId   String                       // → Article, Cascade
+  visitorId   String                       // анонимный идентификатор, без IP
   day         DateTime @db.Date
-  visitorHash Bytes                        // sha256(salt(day) ‖ ip ‖ userAgent), 32 байта
+  kind        String                       // read / scroll / share и т. д.
   createdAt   DateTime @default(now())
-  @@unique([day, articleId, visitorHash])  // INSERT … ON CONFLICT DO NOTHING = дедупликация в базе
-  @@map("read_events")
+  @@unique([day, articleId, visitorId, kind])
+  @@map("engagement_events")
 }
 
 model ArticleReadDaily {            // агрегат; бессрочно
@@ -446,7 +447,7 @@ model ArticleReadDaily {            // агрегат; бессрочно
 model ArticleScore {                // материализованный рейтинг статьи (ADR-0034); пересчёт по расписанию и событиям
   articleId     String   @id                     // → Article, Cascade
   score         Float
-  components    Json                             // { topic, freshness, author, views, ai, boost } — разложение
+  components    Json                             // { topic, freshness, author, views } — разложение (журнал §21.15–16)
   configVersion Int                              // → RankingConfig.version
   computedAt    DateTime
   @@index([score(sort: Desc)])
@@ -471,20 +472,10 @@ model RankingConfig {               // веса и окна как версио�
   @@map("ranking_configs")
 }
 
-model ArticleBoost {                // pro-буст на 24 часа с первой публикации версии (ADR-0040)
-  id             String   @id @default(uuid())
-  articleId      String                           // → Article, Cascade
-  translationId  String                           // → ArticleTranslation, Cascade
-  subscriptionId String                           // → Subscription, Restrict
-  startsAt       DateTime
-  endsAt         DateTime
-  endedEarlyAt   DateTime?                        // снятие, блокировка, истечение подписки
-  @@unique([translationId])                       // один буст на языковую версию
-  @@index([endsAt])
-  @@map("article_boosts")
-}
+// ArticleBoost (ADR-0040) удалён в ревизии 3: временного 24-часового буста нет (журнал §21.15–16).
+// Pro-надбавка является постоянным компонентом AuthorScore.
 
-model ReadExclusion {               // исключение подозрительных прочтений из рейтинга (антинакрутка)
+model ReadExclusion {               // исключение подозрительных событий из рейтинга (антинакрутка)
   articleId   String                              // → Article, Cascade
   day         DateTime @db.Date
   reason      String
@@ -520,9 +511,8 @@ model AuthorFollow {
 }
 ```
 
-Запись прочтения — одна транзакция: `INSERT INTO read_events … ON CONFLICT DO NOTHING
-RETURNING` и при успехе `INSERT INTO article_read_daily … ON CONFLICT DO UPDATE uniqueReads + 1`.
-Вход рейтинга «просмотры» — `sum(uniqueReads)` за окно из `RankingConfig` минус дни из
+Запись события вовлечённости — дедуплицированная: `INSERT INTO engagement_events … ON CONFLICT DO NOTHING`.
+Агрегат за окно из `RankingConfig` используется как вход рейтинга «просмотры» минус дни из
 `read_exclusions` (ADR-0038). Ленты — `SELECT … FROM article_scores s JOIN article_translations t
 … WHERE t.locale = $1 AND t.status = 'published' ORDER BY s.score DESC`; формула пересчёта —
 `docs/spec/60-ranking/`.
@@ -532,7 +522,7 @@ RETURNING` и при успехе `INSERT INTO article_read_daily … ON CONFLIC
 ### 1.4. Этап 1: биллинг — ADR-0010, ADR-0035
 
 ```prisma
-enum PspProvider         { yookassa tkassa }
+enum PspProvider         { tkassa yookassa }    // Т-Касса первой (журнал §8.14)
 enum PlanInterval        { month year }
 enum PlanStatus          { active archived }
 enum SubscriptionStatus  { active past_due canceled expired }
@@ -690,8 +680,63 @@ model Template {                    // шаблон материала: карк
 }
 ```
 
-`MediaKind` получает `video`, `audio`, `file` отдельной миграцией. Доставка писем по
-адресатам (логи, bounce) — на стороне провайдера; своей таблицы нет.
+`MediaKind` получает `video`, `audio`, `file` отдельной миграцией.
+
+Добавляются сущности, отсутствовавшие в ревизии 2 (журнал §25.6, §27.6, §27.7, #54):
+
+```prisma
+// Переписка по проверке (§25.6) — этап 1
+model ReviewMessage {
+  id             String   @id @default(uuid())
+  translationId  String                       // → ArticleTranslation, Cascade
+  authorId       String                       // → User: кто написал
+  role           Role                         // снимок роли на момент сообщения
+  body           String
+  createdAt      DateTime @default(now())
+  @@index([translationId, createdAt])
+  @@map("review_messages")
+}
+
+// Записи ошибок со статусами (§27.7) — этап 1
+enum ErrorStatus { new in_progress resolved }
+model ErrorRecord {
+  id          String      @id @default(uuid())
+  code        String
+  message     String
+  context     Json?
+  status      ErrorStatus @default(new)
+  resolvedById String?
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  @@index([status, createdAt(sort: Desc)])
+  @@map("error_records")
+}
+
+// История отправленных писем (§27.6) — этап 3
+model SentEmail {
+  id         BigInt   @id @default(autoincrement())
+  toEmail    String
+  subject    String
+  body       String?
+  status     String                           // delivered / bounced / failed
+  sentAt     DateTime @default(now())
+  @@index([toEmail, sentAt(sort: Desc)])
+  @@map("sent_emails")
+}
+
+// Исключения владельца со сроком (#54) — этап 1
+model OwnerException {
+  id        String   @id @default(uuid())
+  userId    String                            // → User, Cascade
+  expiresAt DateTime
+  reason    String
+  grantedById String                         // → User
+  createdAt DateTime @default(now())
+  @@index([userId, expiresAt])
+  @@map("owner_exceptions")
+}
+```
 
 ### 1.6. Инварианты, которые держит приложение
 
@@ -699,14 +744,13 @@ model Template {                    // шаблон материала: карк
 |---|---|
 | У материала всегда есть версия с `locale = sourceLocale` | Создание материала и версии — одна транзакция |
 | Слаг не занят ни версией, ни историей другого материала; не из списка зарезервированных | Один хелпер `assignSlug(locale, base, articleId)` |
-| `role = author` ⇔ активная подписка standard/pro ∨ действующий грант | Планировщик истечения + вебхук провайдера; хелпер `ensureActiveAuthor`; тест (ADR-0035, ADR-0044) |
+| Базовые авторские возможности открыты ∨ активная подписка standard/pro ∨ действующий грант | Планировщик; хелпер `ensureAuthor`/`ensureExtendedAuthor`; тест (журнал §25.1, ADR-0035) |
 | Редактор правит чужой текст только при `status = review`, всегда с ревизией `editorial` | Один хелпер `assertCanEditTranslation(user, translation)` (ADR-0036) |
-| Любая отправка к публикации проходит `ai_review`, затем `review`; публикует только человек | `submitTranslation` и `approveTranslation`; прямого `draft → published` нет (ADR-0045) |
-| `ArticleBoost` создаётся только при активном `pro` и не более N на автора в сутки; один на языковую версию | Резолвер публикации; `@@unique([translationId])`; тест (ADR-0040) |
+| Любая отправка к публикации проходит `ai_check`, затем `review`/`in_review`; публикует только человек | `submitTranslation` и `publishManual`/`approveTranslation`; прямого `draft → published` нет (ADR-0045) |
 | `analyst` не имеет ни одной мутации | Контрактный тест по SDL (ADR-0042) |
 | Пересчёт `ArticleScore` детерминирован; закладки в него не входят | Тест на фикстуре (ADR-0034, ADR-0041) |
 | Гость и `reader` видят только `status = published` в нужной локали | Один `where`-конструктор для публичных резолверов |
-| Ровно один `owner` | Транзакция передачи владения + тест |
+| Не ноль `owner`; нельзя снять последнего владельца | Транзакция передачи владения + тест (журнал §26.7) |
 | `Article.access` всегда `free`, пока paywall не включён отдельным ADR | Тест: публичные резолверы поле не читают (ADR-0036) |
 
 ### 1.7. Индексы под известные запросы
@@ -726,7 +770,7 @@ model Template {                    // шаблон материала: карк
 | Автор `/authors/{handle}` | `users (handle)`; промах → `handle_history (handle)` |
 | Медиа автора | `media_assets (ownerId, createdAt DESC)` |
 | Закладки пользователя | `bookmarks (userId, createdAt DESC)` |
-| AI-вердикт версии, активные бусты | `article_ai_reviews (translationId, createdAt DESC)`; `article_boosts (endsAt)` |
+| AI-вердикт версии | `article_ai_checks (translationId, createdAt DESC)` |
 | Истечение подписок и грантов | `subscriptions (status, currentPeriodEnd)`; `plan_grants (userId, endsAt)` |
 | Поиск (этап 3) | GIN по `article_translations.searchVector` |
 
@@ -740,7 +784,7 @@ model Template {                    // шаблон материала: карк
 | `ArticleStatus` | Переезжает с `articles.status` на `article_translations.status` | Тип не меняется: новая колонка того же типа, бэкфилл, удаление старой | Нет |
 | `ContentTypeStatus` | → `SectionStatus` | `ALTER TYPE … RENAME TO` — метаданные, мгновенно. Prisma при переименовании генерирует DROP/CREATE — миграцию править руками (раздел 3.2) | Нет |
 | Новые enum | `CREATE TYPE` | Можно сразу использовать в `ADD COLUMN … DEFAULT` | Нет |
-| `ArticleStatus` | + `ai_review` (M9a) | `ADD VALUE` отдельной миграцией перед M9 | Использовать только из кода этапа 1 |
+| `ArticleStatus` | + `ai_check`, `in_review`, `rework` (M9a) | `ADD VALUE` отдельными миграциями перед M9 | Использовать только из кода этапа 1 |
 | `MediaKind` | Будущие `ADD VALUE` | Отдельная миграция на добавление, следующая — на использование | То же правило |
 
 Безопасный порядок при данных:
@@ -785,18 +829,18 @@ Prisma не имеет down-миграций: «откат» — либо нов
 |---|---|---|---|---|---|
 | M1 | `role_add_moderator_owner_analyst` | 0 | 3 значения `Role` | нет | практически — оставить |
 | M2 | `sessions_and_magic_link_hash` | 0 | `sessions`; `magic_link_tokens.token → tokenHash` | `DELETE FROM magic_link_tokens` (живут 15 минут) | `DROP TABLE sessions`, rename обратно |
-| M3 | `users_handle_plan_block_consent` | 1 | `slug → handle` + нормализация; `PlanTier`, `planTier`, `planUntil`, `blocked*`, `deletedAt`, `lastLoginAt`, `consentVersion`, `consentAt`; временная таблица `_v2_legacy_authors` | список авторов с опубликованным (для гранта в M9) | rename обратно, drop колонок и таблицы |
+| M3 | `users_handle_plan_block_consent` | 1 | `slug → handle` + нормализация; `PlanTier`, `planTier`, `planUntil`, `archivedAt/archivedByActorId/archiveReason/archiveMode` (заменяют `blocked*`), `deletedAt`, `lastLoginAt`, `consentVersion`, `consentAt`, `prevAvatarId`; временная таблица `_v2_legacy_authors` | список авторов с опубликованным (для гранта в M9) | rename обратно, drop колонок и таблицы |
 | M4 | `taxonomy_sections_formats_tags` | 1 | rename `content_types → sections`, `ContentTypeStatus → SectionStatus`, `typeId → sectionId`, `section_tags → tags`, `_ArticleToSectionTag → _ArticleToTag`; `nameEn/descriptionEn`; `formats`; `articles.formatId`; индекс `sectionId` | нет (форматы — сидом) | обратные rename, drop `formats` |
 | M5 | `article_translations` | 1 | `Locale`; `articles.sourceLocale/firstPublishedAt`, `featuredImage → legacyFeaturedImage`; таблица версий; **перенос строк**; **конверсия body → JSON**; удаление перенесённых колонок; индексы; CHECK | да, SQL в 3.2 | forward-миграция «обратно» (3.2) или дамп |
 | — | скрипт `verify:legacy-bodies` | 1 | не миграция: валидация JSON схемой + сверка текста | — | — |
 | M6 | `article_revisions` | 1 | таблица; `article_translations.sourceRevisionId` | базовая ревизия на каждую версию | `DROP TABLE` |
 | M7 | `slug_and_handle_history` | 1 | `article_slug_history`, `handle_history` | нет | `DROP` ×2 |
 | M8 | `media_assets` | 1 | `MediaKind`, `MediaLicense`, таблица; `articles.coverAssetId`, `users.avatarAssetId` | нет (обложки — dev-скрипт импорта, если есть реальные) | drop колонок и таблицы |
-| M9a | `article_status_add_ai_review` | 1 | значение `ai_review` | нет | оставить |
-| M9 | `billing_reports_bookmarks_ai_audit` | 1 | биллинг раздела 1.4, `plan_grants`, `reports`, `bookmarks`, `article_ai_reviews`, `audit_log`, `articles.access`, `submittedAt`/`appealedAt`; enum | грант `standard` для `_v2_legacy_authors`, `planTier`/`planUntil` | `DROP` (до первого платежа) |
+| M9a | `article_status_add_ai_check` | 1 | значения `ai_check`, `in_review`, `rework` | нет | оставить |
+| M9 | `billing_reports_bookmarks_ai_audit` | 1 | биллинг раздела 1.4, `plan_grants`, `reports`, `bookmarks`, `article_ai_checks`, `audit_log`, `articles.access`, `submittedAt`/`appealedAt`; enum | грант `standard` для `_v2_legacy_authors`, `planTier`/`planUntil` | `DROP` (до первого платежа) |
 | M10 | `review_notes` | 4 | 1 таблица | нет | `DROP` |
 | M11 | `drop_legacy_columns` | конец 1 | `DROP COLUMN legacyBody, legacyFeaturedImage` | нет; **только после** `verify:legacy-bodies` = 0 расхождений и импорта обложек | только дамп |
-| M12 | `reads_and_ranking` | 2 | `read_salts`, `read_events`, `article_read_daily`, `read_exclusions`, `article_scores`, `author_scores`, `ranking_configs`, `article_boosts` | конфигурация рейтинга по умолчанию (версия 1) | `DROP` |
+| M12 | `reads_and_ranking` | 2 | `engagement_events`, `article_read_daily`, `read_exclusions`, `article_scores`, `author_scores`, `ranking_configs` | конфигурация рейтинга по умолчанию (версия 1) | `DROP` |
 | M13 | `follows_user_locale_translation_jobs` | 3 | `author_follows`, `translation_jobs`, `User.locale`, `ArticleTranslation.followersNotifiedAt` | нет | `DROP`, drop колонок |
 | M14 | `search_vector` | 3 | `bodyText`; generated `searchVector` + GIN (raw SQL) | скрипт заполняет `bodyText` из `body` | drop колонок |
 | M16 | `newsletter` | 4 | 2 таблицы | нет | `DROP` |
@@ -896,8 +940,8 @@ WHERE t."legacyBody" IS NOT NULL AND t."body" = '{"type":"doc","content":[]}'::j
 `to_tsvector(CASE locale WHEN 'ru' THEN 'russian' ELSE 'english' END, title ‖ dek ‖ bodyText)`
 и GIN через raw SQL; в `schema.prisma` — `Unsupported("tsvector")?` и `@@index(..., type: Gin)`.
 
-**M9 — биллинг, жалобы, закладки, AI, аудит.** После M9a (`ADD VALUE 'ai_review'`). Таблицы
-раздела 1.4, `plan_grants`, `reports`, `bookmarks`, `article_ai_reviews`, `audit_log`;
+**M9 — биллинг, жалобы, закладки, AI, аудит.** После M9a (`ADD VALUE 'ai_check'`). Таблицы
+раздела 1.4, `plan_grants`, `reports`, `bookmarks`, `article_ai_checks`, `audit_log`;
 `articles.access` (зарезервировано, default `free`); `article_translations.submittedAt`,
 `appealedAt`; CHECK `plans_tier_is_paid`. Бэкфилл: `INSERT INTO plan_grants (userId, tier,
 endsAt, grantedById, reason) SELECT userId, 'standard', <дата> [ДОПУЩЕНИЕ], <owner>, 'import:
@@ -983,11 +1027,11 @@ RU и EN версии могут иметь одинаковый латинск�
 
 ### 4.6. AI-записи и ревизии
 
-`article_ai_reviews` привязаны к ревизии (`@@unique([revisionId])`): у каждой публикуемой
-ревизии — свой вердикт и балл; история не перезаписывается. Действующий балл версии — из
-последней записи с учётом `overriddenScore`. Смена промта или модели не пересчитывает старые
-записи; повторная оценка — новая ревизия или ручной повтор из админки. Текст ревизии
-провайдеру уходит без ПДн; в записи хранятся только структурированный ответ и стоимость.
+`article_ai_checks` привязаны к ревизии (`@@unique([revisionId])`): у каждой публикуемой
+ревизии — свой вердикт с причинами; история не перезаписывается. Смена промта или модели не
+пересчитывает старые записи; повторная проверка — новая ревизия или ручной повтор из админки.
+Текст ревизии провайдеру уходит без ПДн; в записи хранятся только структурированный ответ и
+стоимость. Балла нет (журнал #41).
 
 ### 4.7. Политика удаления по сущностям
 
@@ -996,7 +1040,7 @@ RU и EN версии могут иметь одинаковый латинск�
 | Материал | `deletedAt` **нет**. Никогда не публиковавшийся (`firstPublishedAt IS NULL`) — hard delete с каскадом. Публиковавшийся — удалить нельзя, только архив каждой версии; адрес отвечает «снято» (410) |
 | Пользователь | Только анонимизация («надгробие»): `deletedAt`, e-mail → технический, имя → «удалённый автор», хэндл → случайный (старый в историю не пишется), профиль очищен, сессии и ссылки для входа удалены. Материалы — по умолчанию все версии в `archived`; выбор «оставить с подписью» применяется в момент удаления; активная подписка отменяется; закладки удаляются каскадом |
 | Медиа | `deletedAt` (единственный soft delete этапа 1); физическая чистка — этап 5 |
-| Сессии, magic link, `read_events`, `read_salts` | Hard delete по сроку в housekeeping |
+| Сессии, magic link, `engagement_events` | Hard delete по сроку в housekeeping |
 | Ревизии | Прореживание по 4.9 |
 | Платежи, подписки, гранты, аудит | Никогда не удаляются; FK `Restrict` |
 | AI-записи, бусты, рейтинг | Каскад с материалом (удаляется только никогда не публиковавшийся); `article_scores` пересчитываются |
@@ -1019,18 +1063,14 @@ RU и EN версии могут иметь одинаковый латинск�
 последние 20 на версию, лишние удаляются в той же транзакции, что вставка. Оценка объёма —
 ADR-0007.
 
-### 4.10. Прочтения без профилирования
+### 4.10. Вовлечённость без профилирования
 
-Суточная соль: `visitorHash = sha256(salt(day) ‖ ip ‖ userAgent)`; уникальность в пределах
-(день, материал). «Уникальные прочтения за 7 дней» — сумма суточных уникальных читателей за
-последние 7 дней; читатель, вернувшийся на третий день, считается дважды — это честно и
-объяснимо в подписи. Соль хранится в `read_salts` (не в памяти процесса — перезапуск не должен
-ломать дедупликацию) и удаляется через 2 дня: после этого хэши необратимы. Аккаунт в хэш не
-подмешивается. Housekeeping (один скрипт по расписанию): `read_events` старше 8 дней,
-`read_salts` старше 2 дней, сессии старше 30 дней после истечения, использованные magic
-link, прореживание `autosave`. Что считать прочтением — решение клиента (маяк после ~10
-секунд или прокрутки до середины); боты отсекаются по user-agent. Redis для HyperLogLog не
-используется (ADR-0019).
+`visitorId` — анонимный идентификатор без IP; уникальность событий в пределах (день,
+материал, visitorId, kind). Детальная модель `visitorId`, виды событий и окна хранения
+определяются в `60-ranking/engagement-tracking.md` (журнал §23). Housekeeping (один скрипт по
+расписанию): `engagement_events` старше установленного срока, сессии старше 30 дней после
+истечения, использованные magic link, прореживание `autosave`. Боты отсекаются по user-agent.
+Redis для HyperLogLog не используется (ADR-0019).
 
 ### 4.11. Локализация справочников
 
