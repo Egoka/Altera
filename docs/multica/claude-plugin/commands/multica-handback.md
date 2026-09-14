@@ -3,6 +3,10 @@ description: Оформить остановку работы и возврат 
 argument-hint: T-NNN <причина>
 ---
 
+Этот агент или команда подключены только запуском Multica. Перед работой прочитай
+`docs/multica/runtime-entry.md`, включая ритуал и контракт проверок. Если файл отсутствует
+в старом checkout, используй `/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/runtime-entry.md`.
+
 Задача: **$1**. Причина остановки: **$2**
 
 По `docs/multica/operating-model.md` §5 и §7 работа останавливается, а вопрос уходит владельцу

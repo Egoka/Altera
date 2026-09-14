@@ -1,0 +1,8 @@
+{
+  "name": "altera-multica",
+  "version": "1.0.0",
+  "description": "Роли, команды и Stop gate только для запусков Multica",
+  "author": {
+    "name": "Altera"
+  }
+}

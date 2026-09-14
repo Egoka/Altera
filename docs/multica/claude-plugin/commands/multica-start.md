@@ -3,11 +3,15 @@ description: Зафиксировать authorization и контракт пер
 argument-hint: <T-NNN|путь-к-плану>
 ---
 
+Этот агент или команда подключены только запуском Multica. Перед работой прочитай
+`docs/multica/runtime-entry.md`, включая ритуал и контракт проверок. Если файл отсутствует
+в старом checkout, используй `/Users/egorbondarenko/WebstormProjects/Altera/docs/multica/runtime-entry.md`.
+
 Источник работы: **$1**
 
 Сначала определи источник authorization:
 
-- для `T-NNN` запусти субагента `multica-orchestrator` и проверь готовность по
+- для `T-NNN` запусти субагента `altera-multica:multica-orchestrator` и проверь готовность по
   `docs/multica/operating-model.md` §4 и единственного writer по §5;
 - для прямого письменного поручения владельца проверь, что план содержит ссылку/цитату
   поручения, точный scope и критерии. Не создавай задачу и не ставь фиктивный статус `готова`.
