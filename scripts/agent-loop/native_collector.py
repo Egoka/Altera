@@ -155,13 +155,15 @@ def current(claim, runner=None, *, gate_validates_artifacts=False):
     config, ticket = claim['deployment'], claim['ticket']
     state = gate_call(config, ['status'], runner)
     slot = state.get('slot')
-    require(slot is not None and all(slot.get(k) == ticket['slot'].get(k) for k in
-        ('root', 'task', 'stage', 'actor', 'run', 'passport', 'passport_hash', 'input', 'iteration', 'lease')), 'gate_slot_changed')
+    fields = set(ticket['slot']) - {'evidence'}
+    require(slot is not None and set(slot) - {'evidence'} == fields and
+            all(slot[k] == ticket['slot'][k] for k in fields), 'gate_slot_changed')
+    require('input' not in slot or slot['input'] == ticket['gate_input'], 'gate_input_changed')
     gate = module(HERE / 'gate.py'); root = Path(config['source'])
     passport = gate.load_passport(root, ticket['slot']['passport'])
     require(sha(regular(root / slot['passport'])) == ticket['passport_sha256'], 'gate_input_changed')
     if not gate_validates_artifacts:
-        require(gate.snapshot(root, passport['scope']) == slot['input'], 'gate_input_changed')
+        require(gate.snapshot(root, passport['scope']) == ticket['gate_input'], 'gate_input_changed')
     return state
 
 
@@ -193,13 +195,15 @@ def admit(config, request, gate_runner=None):
                           '--actor', config['actor'], '--run', request['run']], gate_runner)
         slot = gate_call(config, ['status'], gate_runner)['slot']
         require(slot['run'] == request['run'] and slot['actor'] == config['actor'], 'gate_acquisition_uncertain')
+        gate_input = gate.snapshot(root, passport['scope'])
+        require('input' not in slot or slot['input'] == gate_input, 'gate_acquisition_uncertain')
         preparation = dict(request['prepare_request'])
         preparation.update(invocation_id=invocation, native_task_id=request['native_task_id'],
             native_run_id=request['run'], actor=config['actor'], agent_id=config['agent_id'],
             workspace_id=config['workspace_id'], issue_id=request['issue_id'], source=config['source'],
             passport_path=str(root / request['passport']), passport_sha256=sha(regular(root / request['passport'])),
             gate={'task': slot['task'], 'stage': slot['stage'], 'run': slot['run'], 'lease': slot['lease']},
-            gate_input=slot['input'], check_ids=[c['check_id'] for c in checks],
+            gate_input=gate_input, check_ids=[c['check_id'] for c in checks],
             criteria=[c['criterion'] for c in checks], event_ids={'claimed': invocation + ':claimed', 'observed': invocation + ':observed'})
         destination = Path(preparation.pop('destination'))
         result = module(RUNTIME / 'prepare_native.py').prepare(config['provider'], preparation, destination)
@@ -208,7 +212,7 @@ def admit(config, request, gate_runner=None):
         os.replace(temporary, result['pending_path'])
         ticket = {'schema_version': 1, 'invocation_id': invocation, 'native_task_id': request['native_task_id'],
             'issue_id': request['issue_id'], 'provider': config['provider'], 'workspace_id': config['workspace_id'],
-            'agent_id': config['agent_id'], 'actor': config['actor'], 'slot': slot,
+            'agent_id': config['agent_id'], 'actor': config['actor'], 'slot': slot, 'gate_input': gate_input,
             'passport_sha256': preparation['passport_sha256'], 'checks': checks,
             'allowed_transitions': request['allowed_transitions'], 'adapter_path': result['pending_path'],
             'adapter_sha256': sha(regular(result['pending_path'], private=True)), 'adapter_ticket': adapter_ticket}
@@ -349,7 +353,7 @@ def check(claim, check_id, runtime_check_runner=None, gate_runner=None):
             with os.fdopen(fd, 'wb') as stream: stream.write(data); stream.flush(); os.fsync(stream.fileno())
         passport = module(HERE / 'gate.py').load_passport(root, ticket['slot']['passport'])
         proof = {**{k: ticket['slot'][k] for k in ('task', 'stage', 'actor', 'run')},
-            **ticket['slot']['input'], 'baseline_commit': passport['baseline_commit'], 'cwd': str(root),
+            **ticket['gate_input'], 'baseline_commit': passport['baseline_commit'], 'cwd': str(root),
             'environment': 'accepted isolated fixed command', 'command': json.dumps(outcome['command']),
             'started_at': outcome['started_at'], 'exit_code': outcome['exit_code'], 'executed': outcome['executed'],
             'result': 'passed' if outcome['exit_code'] == 0 else 'failed', 'criterion': spec['criterion'],

@@ -213,3 +213,42 @@ class CollectorFinishRegression(unittest.TestCase):
         self.assertEqual(proc.returncode, 2)
         self.assertIn('invalid choice', proc.stderr)
         self.assertEqual(self.cli('status')['events'], {})
+
+
+class CollectorLegacyVerificationRegression(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    start = CollectorIntegrationTests.start
+    record = CollectorIntegrationTests.record
+    request = CollectorIntegrationTests.request
+    collect = CollectorIntegrationTests.collect
+    row = CollectorIntegrationTests.row
+    command_runner = CollectorIntegrationTests.command_runner
+    snapshot = fixtures.LifecycleTests.snapshot
+
+    def test_two_legacy_verification_stages_admit_collect_record_and_finish(self):
+        self.passport['stages'] = [{'name':stage, 'checks':[{'check_id':'plan','criterion':'AC-1'}]}
+                                   for stage in ('test','review')]
+        self.write(self.plan,self.passport)
+        self.git('add','docs/plans');self.git('commit','-qm','legacy verification passport')
+        original_passport = (self.root / self.plan).read_bytes()
+        for stage in ('test','review'):
+            invocation = 'legacy-' + stage
+            request = self.request(invocation);request['stage']=stage
+            self.c.admit(self.config,request)
+            claim=self.c.bind(self.config,self.env)
+            slot=self.cli('status')['slot']
+            self.assertNotIn('input',slot);self.assertNotIn('iteration',slot)
+            self.assertEqual(claim['ticket']['gate_input'],self.snapshot())
+            self.collect(claim)
+            recorded=self.c.check(claim,'plan',self.command_runner())
+            self.assertEqual(recorded['stored_event']['result'],'passed')
+            self.c.reconcile(self.config,invocation,lambda _:[self.row('completed')])
+            fixtures.LifecycleTests.report_pair(self)
+            finished=self.c.transition(claim,{'operation':'finish','artifact':self.report,'event_id':None})
+            self.assertIsNone(finished['after']['slot'])
+            self.assertIn(stage,finished['after']['tasks']['T-fixture']['completed_stages'])
+            self.assertEqual((self.root/self.plan).read_bytes(),original_passport)
+        self.assertIsNone(self.cli('status')['parent'])

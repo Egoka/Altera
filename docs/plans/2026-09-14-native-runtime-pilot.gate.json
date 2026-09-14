@@ -1,0 +1,44 @@
+{
+  "task": "T-native-runtime-20260914",
+  "multica_issue": "01a09bb3-96bf-7532-8d34-e384d9ac5ed2",
+  "goal": "Validate permanent Codex and Claude native profiles with trusted process receipts and fixed infrastructure checks",
+  "contract_sources": [
+    "docs/development/runtime-isolation.md",
+    "docs/development/agent-loop-gate.md"
+  ],
+  "baseline_commit": "8c5adedf447b1fd06d686c47d07a7254ff0aa201",
+  "baseline_tree": "clean",
+  "scope": [
+    "scripts/agent-runtime",
+    "scripts/agent-loop"
+  ],
+  "preserved_contract": "Read-only source and policy; original Claude/Codex models; no product edits; existing task description retained.",
+  "dependencies": [],
+  "authorization": "Owner explicitly requested permanent adapters and collector, then asked to launch and finish; bounded native diagnostics already specified in ALTE-11.",
+  "acceptance": {
+    "AC-1": "Actual native identity and completed process match the admitted profile; fixed isolated infrastructure command executes five assertions successfully. Native context/trace limitations remain separately reviewed."
+  },
+  "unknowns": [],
+  "plan": "docs/plans/2026-09-14-native-runtime-pilot.md",
+  "report": "docs/reports/2026-09-14-native-runtime-pilot-report.gate.json",
+  "stages": [
+    {
+      "name": "test",
+      "checks": [
+        {
+          "check_id": "runtime-isolation",
+          "criterion": "AC-1"
+        }
+      ]
+    },
+    {
+      "name": "review",
+      "checks": [
+        {
+          "check_id": "runtime-isolation",
+          "criterion": "AC-1"
+        }
+      ]
+    }
+  ]
+}

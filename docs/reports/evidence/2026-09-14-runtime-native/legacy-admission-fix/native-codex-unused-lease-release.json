@@ -1,0 +1,8 @@
+{
+  "invocation_id": "afc26f91969a4e08be50561c418a2d28",
+  "prepared_paths_absent": true,
+  "model_started": false,
+  "exit": 0,
+  "stdout": "{\"result\": \"released\", \"stage_outcome\": \"not_completed\"}\n",
+  "stderr": ""
+}

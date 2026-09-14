@@ -1,0 +1,7 @@
+{
+  "invocation_id": "afc26f91969a4e08be50561c418a2d28",
+  "request": "/Users/egorbondarenko/Library/Application Support/Altera/agent-runtime/state/codex/invocations/afc26f91969a4e08be50561c418a2d28/admission.json",
+  "exit": 78,
+  "stdout": "",
+  "stderr": "ALTERA_COLLECTOR refused; retained claim requires reconciliation\n"
+}
