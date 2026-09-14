@@ -373,18 +373,32 @@ def check(claim, check_id, runtime_check_runner=None, gate_runner=None):
 
 
 def reconcile(config, invocation_id, multica_runner=None, gate_runner=None, *, token=None):
-    claim = retained(config, invocation_id)
-    process = read(Path(claim['directory']) / 'observations' / 'process.json')
-    row, authority = multica_rows(claim, False, multica_runner, token)
-    if row['status'] in ('running', 'in_progress', 'pending', 'queued'):
-        return {'result': 'pending', 'invocation_id': invocation_id}
-    require(row['status'] in ('completed', 'failed') and row['completed_at'], 'terminal_mapping_unverified')
-    receipt = {'kind': 'terminal_receipt', 'native': row, 'authority': authority,
-        'process_sha256': sha(encoded(process)), 'native_outcome': 'success' if row['status'] == 'completed' else 'failed',
-        'task_acceptance': 'not_checked'}
-    target = directory(Path(config['registry']) / 'reconciled' / invocation_id)
-    publish(target / 'terminal.json', receipt)
-    return receipt
+    # Та же блокировка не позволяет принять незавершённый bind за отказ до запуска.
+    with pair_lock(config):
+        claim = retained(config, invocation_id)
+        row, authority = multica_rows(claim, False, multica_runner, token)
+        if row['status'] in ('running', 'in_progress', 'pending', 'queued'):
+            return {'result': 'pending', 'invocation_id': invocation_id}
+        require(row['status'] in ('completed', 'failed') and row['completed_at'], 'terminal_mapping_unverified')
+        path = Path(claim['directory']); process_path = path / 'observations/process.json'
+        prelaunch = not os.path.lexists(process_path)
+        if prelaunch:
+            require(row['status'] == 'failed', 'prelaunch_terminal_not_failed')
+            adapter = claim['ticket']['adapter_ticket']
+            markers = [path / 'journal/01-bound.json', path / 'observations/runtime.json',
+                       Path(adapter['claim']), Path(adapter['observation'])]
+            require(not any(os.path.lexists(p) for p in markers), 'process_receipt_missing_after_admission')
+        receipt = {'kind': 'terminal_receipt', 'native': row, 'authority': authority,
+            'process_sha256': None if prelaunch else sha(encoded(read(process_path))),
+            'native_outcome': 'success' if row['status'] == 'completed' else 'failed',
+            'task_acceptance': 'not_checked'}
+        if prelaunch:
+            receipt.update(process_outcome='not_started', reason='bind_incomplete',
+                           binding_sha256=sha(regular(path / 'binding.json', private=True)),
+                           ticket_sha256=claim['ticket_sha256'])
+        target = directory(Path(config['registry']) / 'reconciled' / invocation_id)
+        publish(target / 'terminal.json', receipt)
+        return receipt
 
 
 def transition(claim, decision, gate_runner=None):

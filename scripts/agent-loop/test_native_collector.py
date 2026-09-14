@@ -170,6 +170,62 @@ class CollectorIntegrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'gate_input_changed'):self.c.current(claim)
 
 
+class CollectorPrelaunchRecovery(unittest.TestCase):
+    setUp = CollectorIntegrationTests.setUp
+    write = CollectorIntegrationTests.write
+    git = CollectorIntegrationTests.git
+    cli = CollectorIntegrationTests.cli
+    request = CollectorIntegrationTests.request
+    row = CollectorIntegrationTests.row
+
+    def interrupted_bind(self):
+        self.c.admit(self.config, self.request())
+        self.cli('release', '--actor', 'agent-1', '--run', 'invocation-1')
+        with self.assertRaisesRegex(ValueError, 'gate_slot_changed'):
+            self.c.bind(self.config, self.env)
+        return self.c.retained(self.config, 'invocation-1')
+
+    def test_failed_bind_reconciles_without_inventing_process_success(self):
+        claim = self.interrupted_bind()
+        before = (Path(claim['directory']) / 'ticket.json').read_bytes()
+        try:
+            terminal = self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+        except FileNotFoundError:
+            self.fail('prelaunch failure cannot be reconciled without a nonexistent process receipt')
+        self.assertEqual(terminal['native_outcome'], 'failed')
+        self.assertEqual(terminal['process_outcome'], 'not_started')
+        self.assertIsNone(terminal['process_sha256'])
+        self.assertEqual(terminal['task_acceptance'], 'not_checked')
+        self.assertEqual((Path(claim['directory']) / 'ticket.json').read_bytes(), before)
+        self.c.admit(self.config, self.request('invocation-2'))
+
+    def test_active_or_successful_native_run_cannot_retire_missing_process(self):
+        self.interrupted_bind()
+        try:
+            result = self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row()])
+        except FileNotFoundError:
+            self.fail('active prelaunch run must remain pending')
+        self.assertEqual(result['result'], 'pending')
+        with self.assertRaisesRegex(ValueError, 'prelaunch_terminal_not_failed'):
+            self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('completed')])
+
+    def test_launch_evidence_or_identity_mismatch_refuses_prelaunch_recovery(self):
+        claim = self.interrupted_bind()
+        wrong = {**self.row('failed'), 'agent_id':'another-agent'}
+        with self.assertRaisesRegex(ValueError, 'native_row_mismatch'):
+            self.c.reconcile(self.config, 'invocation-1', lambda _:[wrong])
+        paths = [Path(claim['directory']) / 'journal/01-bound.json',
+                 Path(claim['directory']) / 'observations/runtime.json',
+                 Path(claim['ticket']['adapter_ticket']['claim']),
+                 Path(claim['ticket']['adapter_ticket']['observation'])]
+        for path in paths:
+            with self.subTest(path=path):
+                self.c.publish(path, {})
+                with self.assertRaisesRegex(ValueError, 'process_receipt_missing_after_admission'):
+                    self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+                path.unlink()
+
+
 class CollectorFinishRegression(unittest.TestCase):
     setUp = CollectorIntegrationTests.setUp
     write = CollectorIntegrationTests.write

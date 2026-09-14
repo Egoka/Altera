@@ -1,0 +1,14 @@
+{
+  "codex": {
+    "collector_config": "/Users/egorbondarenko/Library/Application Support/Altera/agent-runtime/deployments/20260914-native-v3/codex-collector.json",
+    "collector_sha256": "682750abf88f78ddbf7feae66ff38d88d8a052e3613bab9930eb40af6664e59c",
+    "bootstrap_sha256": "69be7294274272371f401e7d9d56e1951be466beab9bee58d47fc371e8ce2f26",
+    "adapter_sha256": "8bd529653a837e29d5a5a2a652fea165610bd3b1e1e2cdb9468f507bfed8ef34"
+  },
+  "claude": {
+    "collector_config": "/Users/egorbondarenko/Library/Application Support/Altera/agent-runtime/deployments/20260914-native-v3/claude-collector.json",
+    "collector_sha256": "e41ef567e8f3ade4a2d44680f1b312e9aa03adcce75d24e95d35ce5feeca4327",
+    "bootstrap_sha256": "a6add97714f0c8072cc694e7be6381608ea3376cee88cf25142dc1b8147083a0",
+    "adapter_sha256": "35564b33f85fac362ebeed06a3cfe4d123bd88df9f33b0b259f32295f070fe49"
+  }
+}
