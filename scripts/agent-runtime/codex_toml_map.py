@@ -857,14 +857,26 @@ def _write_atomic(directory, directory_fd, directory_identity, name, data, expec
             _fail("output_invalid")
         os.fsync(directory_fd)
         _check_output_directory(directory, directory_fd, directory_identity, expected_uid)
-        final_fd = os.open(name, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=directory_fd)
+        final_fd = os.open(
+            name, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
+            dir_fd=directory_fd)
         try:
             final_before_read = os.fstat(final_fd)
+            held_before_read = os.fstat(fd)
+            if (not stat.S_ISREG(final_before_read.st_mode) or
+                    final_before_read.st_uid != expected_uid or
+                    stat.S_IMODE(final_before_read.st_mode) != 0o600 or
+                    final_before_read.st_nlink != 1 or final_before_read.st_size != len(data) or
+                    _inode_identity(final_before_read) != linked_inode or
+                    _identity(final_before_read) != _identity(held_before_read)):
+                _fail("output_invalid")
             published = _read_published(final_fd, len(data))
             final_after_read = os.fstat(final_fd)
+            held_after_read = os.fstat(fd)
             named_final = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
             if (_inode_identity(final_before_read) != linked_inode or
                     _identity(final_before_read) != _identity(final_after_read) or
+                    _identity(final_after_read) != _identity(held_after_read) or
                     _identity(final_after_read) != _identity(named_final) or
                     final_after_read.st_nlink != 1 or published != data):
                 _fail("output_invalid")

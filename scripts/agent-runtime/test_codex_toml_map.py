@@ -420,6 +420,82 @@ class CodexTomlMappingTests(unittest.TestCase):
         self.assertEqual(remaining[0].name, replaced[0])
         self.assertIn(b'high  ', remaining[0].read_bytes())
 
+    def test_final_reopen_rejects_foreign_regular_file_before_any_read(self):
+        foreign = self.fixture.root / "synthetic-private-canary"
+        foreign.write_bytes(b"PRIVATE_SYNTHETIC_CANARY_ONLY")
+        os.chmod(foreign, 0o600)
+        foreign_inode = foreign.stat().st_ino
+        directory_fd, identity = mapper._open_output_directory(
+            str(self.fixture.output), self.fixture.uid)
+        real_open = mapper.os.open
+        real_read = mapper.os.read
+        foreign_read_bytes = []
+
+        def replace_before_reopen(name, flags, *args, **kwargs):
+            if name == "codex-config.toml" and kwargs.get("dir_fd") == directory_fd:
+                os.replace(foreign, self.fixture.output / name)
+            return real_open(name, flags, *args, **kwargs)
+
+        def record_foreign_read(fd, size):
+            value = real_read(fd, size)
+            if os.fstat(fd).st_ino == foreign_inode:
+                foreign_read_bytes.append(len(value))
+            return value
+
+        try:
+            with mock.patch.object(mapper.os, "open", replace_before_reopen), \
+                    mock.patch.object(mapper.os, "read", record_foreign_read):
+                with self.assertRaisesRegex(mapper.MappingError, "^output_invalid$"):
+                    mapper._write_atomic(
+                        str(self.fixture.output), directory_fd, identity, "codex-config.toml",
+                        BASE_POLICY, self.fixture.uid)
+        finally:
+            os.close(directory_fd)
+
+        self.assertEqual(sum(foreign_read_bytes), 0)
+        self.assertEqual((self.fixture.output / "codex-config.toml").read_bytes(),
+                         b"PRIVATE_SYNTHETIC_CANARY_ONLY")
+
+    def test_final_reopen_refuses_fifo_nonblocking_before_any_read(self):
+        foreign = self.fixture.root / "synthetic-private-fifo"
+        os.mkfifo(foreign, 0o600)
+        foreign_inode = foreign.stat().st_ino
+        directory_fd, identity = mapper._open_output_directory(
+            str(self.fixture.output), self.fixture.uid)
+        real_open = mapper.os.open
+        real_read = mapper.os.read
+        final_flags = []
+        foreign_reads = []
+
+        def replace_before_reopen(name, flags, *args, **kwargs):
+            if name == "codex-config.toml" and kwargs.get("dir_fd") == directory_fd:
+                os.replace(foreign, self.fixture.output / name)
+                final_flags.append(flags)
+                if not flags & os.O_NONBLOCK:
+                    raise BlockingIOError("synthetic refusal instead of blocking")
+            return real_open(name, flags, *args, **kwargs)
+
+        def record_foreign_read(fd, size):
+            value = real_read(fd, size)
+            if os.fstat(fd).st_ino == foreign_inode:
+                foreign_reads.append(len(value))
+            return value
+
+        try:
+            with mock.patch.object(mapper.os, "open", replace_before_reopen), \
+                    mock.patch.object(mapper.os, "read", record_foreign_read):
+                with self.assertRaisesRegex(mapper.MappingError, "^output_invalid$"):
+                    mapper._write_atomic(
+                        str(self.fixture.output), directory_fd, identity, "codex-config.toml",
+                        BASE_POLICY, self.fixture.uid)
+        finally:
+            os.close(directory_fd)
+
+        self.assertEqual(len(final_flags), 1)
+        self.assertTrue(final_flags[0] & os.O_NONBLOCK)
+        self.assertEqual(sum(foreign_reads), 0)
+        self.assertTrue(stat.S_ISFIFO((self.fixture.output / "codex-config.toml").lstat().st_mode))
+
     def test_public_errors_suppress_causes_and_validate_semantic_types(self):
         missing_home = self.fixture.workspace / "alte-9-abcdef012345" / "codex-home"
         with self.assertRaisesRegex(mapper.MappingError, "^descriptor_invalid$") as caught:
