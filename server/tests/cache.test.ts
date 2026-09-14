@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest"
+import type { YogaInitialContext } from "graphql-yoga"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { buildCacheKey, createCache } from "../src/cache"
 import { RedisCache, type CacheRedisClient, type CacheRedisTransaction } from "../src/cache/redis"
 
@@ -166,6 +167,24 @@ describe("createCache", () => {
     await expect(cache.del("key")).resolves.toBeUndefined()
     await expect(cache.delByTags(["home"])).resolves.toBeUndefined()
     await expect(cache.close()).resolves.toBeUndefined()
+  })
+})
+
+describe("GraphQL context cache", () => {
+  afterEach(() => {
+    vi.resetModules()
+  })
+
+  it("импортируется и получает noop cache без REDIS_URL", async () => {
+    delete process.env.REDIS_URL
+    process.env.JWT_ACCESS_SECRET = "test-access-secret"
+    const cache = createCache({})
+    const { createContext } = await import("../src/prisma")
+    const initialContext = { request: new Request("http://localhost/") } as YogaInitialContext
+
+    const context = await createContext(initialContext, cache)
+
+    expect(context.cache.mode).toBe("noop")
   })
 })
 
