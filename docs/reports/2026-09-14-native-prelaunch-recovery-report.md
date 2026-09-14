@@ -4,7 +4,7 @@
 - **План**: [native-prelaunch-recovery](../plans/2026-09-14-native-prelaunch-recovery.md)
 - **Ветка**: `docs/agent-loop-autonomy`
 - **Baseline**: `a869fc15358bb75530bc9be50f19b9344f322bd9`
-- **Статус**: исправление и восстановление выполнены; live-проверка новой попытки ожидается
+- **Статус**: блокер незавершённого bind закрыт; live-проверка выявила несовместимость mapper с конфигурацией Multica
 
 ## Результат
 
@@ -36,7 +36,7 @@ Revision: baseline выше плюс diff collector и его тестов. Sour
   неверный agent и четыре вида следов запуска.
 - AC-3, `collector-regression`: команда
   `PYTHONPATH=scripts/agent-loop:scripts/agent-runtime python3 -m unittest test_native_collector`:
-  14 tests passed, exit 0, 38.647 s. [Вывод](evidence/2026-09-14-native-prelaunch-recovery/collector-tests.log).
+  14 tests passed, exit 0, 38.647 s. [Вывод](evidence/2026-09-14-native-prelaunch-recovery/collector-tests.txt).
   Тесты используют настоящий Git/gate и подменяют внешний native boundary; live provider ими не принят.
 - AC-4, `native-prelaunch-reconcile`: explicit controller runner выполнил свежий read-only
   `multica issue runs` с явными server/workspace, сверил точный run и отсутствие активных
@@ -48,8 +48,30 @@ Revision: baseline выше плюс diff collector и его тестов. Sour
 v2 сохранена. Autopilot остаются на паузе. Полная автономия и приёмка native runtime этим отчётом
 пока не объявляются.
 
-## Следующий шаг
+## Контрольный live-запуск и оставшаяся проблема
 
-Свежий admission на зафиксированной ревизии и ограниченный запуск ALTE-11. История неудачных
-попыток и gate counters сохраняются. Исправление восстановило зависшую запись; успешность
-нового provider run будет зафиксирована отдельно.
+Исправление зафиксировано `abb0c4e8367b2a86037aaa003057d63faace90dc`. Pre-commit:
+format и lint passed; server 19 passed (1 todo), web 56 passed. Новый admission
+`7a71652c7ded4fcb91d038f3399c57b6` успешно создан на этой ревизии со scoped fingerprint `clean`.
+Предварительный admission отказал из-за прав request-файла; после установки `0600` прошёл.
+
+Контрольный native run `01a09ffd-a1e0-7ef6-a66b-7c4d499692da` прошёл collector bind и adapter claim,
+затем остановился с `provider_input_refused`. Daemon подтвердил cleanup/reaped, tools=0;
+runtime child не был запущен. [Native результат](evidence/2026-09-14-native-prelaunch-recovery/live-result.json),
+[наблюдение adapter](evidence/2026-09-14-native-prelaunch-recovery/adapter-observation.json).
+Поле `worker_quiescence: unknown` сохранено как есть: новая попытка не получает выдуманную process receipt.
+Её claim и gate-slot оставлены для явного восстановления после исправления provider.
+
+Локальный replay только provider-verifier на конфигурации этого завершённого run воспроизвёл
+`managed_block_ambiguous`. Реальная конфигурация содержит многострочный массив `notify`,
+а `_lexical_markers` требует закрыть все скобки на каждой строке. Дополнительная read-only
+проверка только managed-блока даёт `managed_block_invalid`: в нём пять серверов
+(`computer-use`, `context7`, `node_repl`, `playwright`, `trace`), а `_parse_managed` допускает
+не более трёх. Это две подтверждённые несовместимости входного формата, отдельные от восстановленного bind.
+Назначения MCP тестировщика через CLI: context7 и playwright; прочие записи присутствуют в
+сгенерированной конфигурации, поэтому одного изменения назначений агента недостаточно.
+
+Следующая работа — согласовать mapper с действительной конфигурацией Multica, сохранив
+явный список допускаемых инструментов и проверку путей, затем закрыть provider-refusal по
+доверенным доказательствам и повторить bounded native acceptance. Эта работа не выполнена
+в рамках исправления незавершённого bind. Старый блокер закрыт, полная автономия не принята.
