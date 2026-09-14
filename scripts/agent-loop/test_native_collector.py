@@ -178,6 +178,32 @@ class CollectorPrelaunchRecovery(unittest.TestCase):
     request = CollectorIntegrationTests.request
     row = CollectorIntegrationTests.row
 
+    def test_provider_refusal_reconciles_exact_observation_and_releases_own_slot(self):
+        self.c.admit(self.config, self.request())
+        claim = self.c.bind(self.config, self.env)
+        ticket = claim['ticket']['adapter_ticket']
+        adapter = self.c.module(self.c.RUNTIME / 'native_adapter.py')
+        bound_ticket = {**ticket, 'native_task_id': 'native-1'}
+        adapter._claim(bound_ticket)
+        adapter._write_observation(bound_ticket, claim['ticket']['adapter_sha256'], 1,
+                                   refusal='provider_input_refused')
+        observation = Path(ticket['observation'])
+        original = observation.read_bytes()
+        for field, value in [('native_task_id', 'foreign'), ('ticket_sha256', '0'*64),
+                             ('runtime_status', 0), ('refusal', 'adapter_refused')]:
+            bad = json.loads(original); bad[field] = value
+            observation.write_text(json.dumps(bad))
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+        observation.write_bytes(original)
+        terminal = self.c.reconcile(self.config, 'invocation-1', lambda _:[self.row('failed')])
+        self.assertEqual(terminal['reason'], 'provider_input_refused')
+        self.assertEqual(terminal['process_outcome'], 'not_started')
+        self.assertEqual(terminal['task_acceptance'], 'not_checked')
+        self.assertFalse(self.cli('status')['slot'])
+        self.assertEqual(observation.read_bytes(), original)
+        self.c.admit(self.config, self.request('invocation-2'))
+
     def interrupted_bind(self):
         self.c.admit(self.config, self.request())
         self.cli('release', '--actor', 'agent-1', '--run', 'invocation-1')

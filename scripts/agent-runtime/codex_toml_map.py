@@ -151,20 +151,22 @@ def _decode_config(data):
     return text
 
 
-def _lexical_markers(text):
+def _lexical_markers(text, *, multiline_prefix=False):
     if '\"\"\"' in text or "'''" in text:
         _fail("managed_block_ambiguous")
 
     recognized = []
     lines = text.splitlines()
+    square = 0
+    curly = 0
     for line_number, line in enumerate(lines):
         if line in (BEGIN_MARKER, END_MARKER):
+            if square or curly:
+                _fail("managed_block_ambiguous")
             recognized.append((line_number, line))
             continue
         state = "normal"
         escaped = False
-        square = 0
-        curly = 0
         for character in line:
             if state == "comment":
                 break
@@ -196,8 +198,12 @@ def _lexical_markers(text):
                 curly -= 1
             if square < 0 or curly < 0:
                 _fail("managed_block_ambiguous")
-        if state in ("basic", "literal") or escaped or square or curly:
+        if (state in ("basic", "literal") or escaped or curly or
+                (square and (not multiline_prefix or recognized))):
             _fail("managed_block_ambiguous")
+
+    if square or curly:
+        _fail("managed_block_ambiguous")
 
     raw_begin = text.count(BEGIN_MARKER)
     raw_end = text.count(END_MARKER)
@@ -361,9 +367,9 @@ class _ValueParser:
                 _fail("managed_value_invalid")
 
 
-def _parse_managed(data):
+def _parse_managed(data, *, selected_policy=False):
     text = _decode_config(data)
-    lines = _lexical_markers(text)
+    lines = _lexical_markers(text, multiline_prefix=selected_policy)
     if lines is None:
         return None
     tables = {}
@@ -374,7 +380,7 @@ def _parse_managed(data):
         table = re.fullmatch(r"\[mcp_servers\.([A-Za-z0-9_-]+)\]", line)
         if table:
             current = table.group(1)
-            if current in tables or len(tables) >= 3:
+            if current in tables or len(tables) >= (32 if selected_policy else 3):
                 _fail("managed_block_invalid")
             tables[current] = {}
             continue
@@ -431,8 +437,11 @@ def build_mapping(data, mapping_policy_version, required_servers=(), *, playwrig
             len(required_servers) != len(set(required_servers))):
         _fail("required_roster_invalid")
 
+    selected_policy = mapping_policy_version == "codex-mcp-map-selected-v2"
+    if selected_policy and not required_servers:
+        _fail("required_roster_invalid")
     attestation = read_playwright_attestation(playwright) if playwright is not None else None
-    tables = _parse_managed(data)
+    tables = _parse_managed(data, selected_policy=selected_policy)
     rows = _server_rows()
     catalog = {
         "schema": SCHEMA,
@@ -445,6 +454,8 @@ def build_mapping(data, mapping_policy_version, required_servers=(), *, playwrig
         "managed_mapping_verified": False,
     }
     failure = None
+    if selected_policy:
+        catalog.update(selection=sorted(required_servers), excluded_server_count=0)
     path_map = {}
     ready = set()
     if tables is None:
@@ -452,6 +463,9 @@ def build_mapping(data, mapping_policy_version, required_servers=(), *, playwrig
     else:
         by_name = {row["name"]: row for row in rows}
         for name, fields in tables.items():
+            if selected_policy and name not in required_servers:
+                catalog["excluded_server_count"] += 1
+                continue
             if name not in by_name:
                 catalog["unknown_servers_present"] = True
                 catalog["unknown_fields_present"] = bool(fields) or catalog["unknown_fields_present"]

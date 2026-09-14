@@ -382,22 +382,49 @@ def reconcile(config, invocation_id, multica_runner=None, gate_runner=None, *, t
         require(row['status'] in ('completed', 'failed') and row['completed_at'], 'terminal_mapping_unverified')
         path = Path(claim['directory']); process_path = path / 'observations/process.json'
         prelaunch = not os.path.lexists(process_path)
+        prelaunch_reason = 'bind_incomplete'
+        refusal_sha256 = None
         if prelaunch:
             require(row['status'] == 'failed', 'prelaunch_terminal_not_failed')
             adapter = claim['ticket']['adapter_ticket']
             markers = [path / 'journal/01-bound.json', path / 'observations/runtime.json',
                        Path(adapter['claim']), Path(adapter['observation'])]
-            require(not any(os.path.lexists(p) for p in markers), 'process_receipt_missing_after_admission')
+            if any(os.path.lexists(p) for p in markers):
+                require(all(os.path.lexists(p) for p in (markers[0], markers[2], markers[3])) and
+                        not os.path.lexists(markers[1]), 'process_receipt_missing_after_admission')
+                observed = read(adapter['observation']); adapter_claim = read(adapter['claim'])
+                expected = {key: adapter[key] for key in ('invocation_id', 'provider', 'workspace_id',
+                    'agent_id', 'actor', 'issue_id', 'native_run_id', 'gate', 'gate_input')}
+                expected.update(native_task_id=claim['native_task_id'],
+                                ticket_sha256=claim['ticket']['adapter_sha256'])
+                require(all(observed.get(k) == v for k, v in expected.items()) and
+                        adapter_claim.get('invocation_id') == invocation_id and
+                        adapter_claim.get('native_task_id') == claim['native_task_id'] and
+                        observed.get('refusal') == 'provider_input_refused' and
+                        all(k in observed and observed[k] is None for k in
+                            ('runtime_status', 'raw_child_exit', 'signal', 'container_id')) and
+                        observed.get('evidence_inventory') == [], 'prelaunch_refusal_unverified')
+                # This exact adapter refusal is emitted before the launcher is invoked.
+                prelaunch_reason = 'provider_input_refused'
+                refusal_sha256 = sha(regular(adapter['observation'], private=True))
         receipt = {'kind': 'terminal_receipt', 'native': row, 'authority': authority,
             'process_sha256': None if prelaunch else sha(encoded(read(process_path))),
             'native_outcome': 'success' if row['status'] == 'completed' else 'failed',
             'task_acceptance': 'not_checked'}
         if prelaunch:
-            receipt.update(process_outcome='not_started', reason='bind_incomplete',
+            receipt.update(process_outcome='not_started', reason=prelaunch_reason,
+                           adapter_refusal_sha256=refusal_sha256,
                            binding_sha256=sha(regular(path / 'binding.json', private=True)),
                            ticket_sha256=claim['ticket_sha256'])
         target = directory(Path(config['registry']) / 'reconciled' / invocation_id)
         publish(target / 'terminal.json', receipt)
+        if prelaunch:
+            slot = gate_call(config, ['status'], gate_runner)['slot']
+            expected_slot = claim['ticket']['slot']
+            if slot and all(slot.get(k) == expected_slot.get(k) for k in ('task', 'stage', 'run', 'actor', 'lease')):
+                release = gate_call(config, ['release', '--actor', claim['ticket']['actor'],
+                                           '--run', expected_slot['run']], gate_runner)
+                publish(target / 'prelaunch-release.json', release)
         return receipt
 
 

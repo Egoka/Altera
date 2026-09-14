@@ -86,6 +86,46 @@ class CodexTomlMappingTests(unittest.TestCase):
         self.fixture = MappingFixture()
         self.addCleanup(self.fixture.close)
 
+    def test_selected_policy_projects_multica_desktop_config_without_host_tools(self):
+        selected = managed(
+            '[mcp_servers.context7]', 'experimental_use_rmcp_client = true',
+            'url = "https://mcp.context7.com/mcp"',
+            '[mcp_servers.trace]', 'args = ["serve"]',
+            'command = "/Users/egorbondarenko/.trace/bin/trace"')
+        extra = (
+            '[mcp_servers.computer-use]\ncommand = "PRIVATE_HOST_TOOL"\n'
+            '[mcp_servers.node_repl]\nenv = {TOKEN = "PRIVATE_TOKEN"}\n'
+            '[mcp_servers.playwright]\ncommand = "npx"\nargs = ["@playwright/mcp@latest"]\n'
+        ).encode()
+        data = b'notify = [\n "PRIVATE_NOTIFY",\n "argument",\n]\n' + selected.replace(
+            END.encode(), extra + END.encode())
+        plan = mapper.build_mapping(data, "codex-mcp-map-selected-v2", ("context7", "trace"))
+        self.assertIsNone(plan["failure"])
+        self.assertEqual(plan["policy_block"], mapper.build_mapping(
+            selected, "codex-mcp-map-v1", ("context7", "trace"))["policy_block"])
+        self.assertEqual(plan["catalog"]["excluded_server_count"], 3)
+        self.assertEqual(plan["catalog"]["selection"], ["context7", "trace"])
+        for value in (b"PRIVATE_HOST_TOOL", b"PRIVATE_TOKEN", b"PRIVATE_NOTIFY", b"node_repl"):
+            self.assertNotIn(value, plan["catalog_json"] + plan["policy_block"])
+
+    def test_selected_policy_preserves_validation_and_marker_boundaries(self):
+        version = "codex-mcp-map-selected-v2"
+        with self.assertRaisesRegex(mapper.MappingError, "^required_roster_invalid$"):
+            mapper.build_mapping(managed(), version)
+        invalid = [b'value = [\n' + managed() + b']\n',
+                   b'value = [\n1\n' + managed(),
+                   b'value = "unterminated\n' + managed(),
+                   b'value = [\n' + BEGIN.encode() + b'\n]\n' + managed(),
+                   b'value = """\n' + managed() + b'"""\n']
+        for data in invalid:
+            with self.subTest(data=data[:24]), self.assertRaises(mapper.MappingError):
+                mapper.build_mapping(data, version, ("trace",))
+        bad_trace = managed('[mcp_servers.trace]', 'command = "UNTRUSTED"', 'args = ["serve"]')
+        self.assertEqual(mapper.build_mapping(bad_trace, version, ("trace",))["failure"],
+                         "unverified_managed_config")
+        self.assertEqual(mapper.build_mapping(managed(), version, ("trace",))["failure"],
+                         "required_server_missing")
+
     def test_context7_and_trace_materialize_exact_redacted_outputs(self):
         native_trace = "/Users/egorbondarenko/.trace/bin/trace"
         data = b'[mcp_servers.inherited]\ncommand = "DO_NOT_COPY"\n\n' + managed(
