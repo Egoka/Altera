@@ -43,7 +43,7 @@
     ...article,
     id: `author-${index + 1}`,
     publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
-    author: { name: mockUser.name, slug: mockUser.slug, photoUrl: mockUser.photoUrl }
+    author: { name: mockUser.name, slug: mockUser.slug, photoUrl: mockUser.photoUrl ?? "" }
   }))
 
   const { locale } = useI18n()

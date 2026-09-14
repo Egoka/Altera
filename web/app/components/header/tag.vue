@@ -2,7 +2,7 @@
   import type SectionTag from "~/types/sectionTag"
 
   interface Props {
-    tag: SectionTag
+    tag: Pick<SectionTag, "name">
   }
   defineProps<Props>()
 </script>
