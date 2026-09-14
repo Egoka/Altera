@@ -392,3 +392,22 @@ Source repair вне предусмотренной реализации не о
 Поэтому некоторые остановы требуют отдельно авторизованного remediation workflow; этот
 профиль не обещает автоматически исправить любую причину. Текущий Task 3 typecheck остаётся
 остановленным после двух неуспехов, его третий запуск этим lifecycle не разрешён.
+
+## Native collector (minimal runtime pilot)
+
+`native_collector.py` exposes `admit`, `bind`, `collect`, `check`, `reconcile`, and
+`transition` through its Python API; all except the trusted in-process `collect` callback also have CLI operations. Admission acquires the existing gate
+before publishing a fresh adapter ticket. The permanent adapter claims once and
+uses the runtime observer; the native task ID is bound from the daemon at claim.
+Checks come from a pinned coordinator catalog and produce actual command output,
+counts and immutable gate evidence. A missing receipt, zero executed count,
+truncated output or uncertain quiescence cannot produce a passing proof.
+
+A running-native process receipt, command-check receipt and later controller
+transition are distinct records. The wrapper does not wait for its own terminal
+callback. The controller later reconciles the exact issue/task/agent/workspace
+row and may explicitly finish with the existing paired gate report. Two check
+failures remain stopped across runs; there is no automatic stage acceptance,
+lease expiry, scheduler or credential fallback. The current pilot admits no
+model-authored evidence files. Installation and exact private JSON examples are
+in `.superpowers/sdd/2026-09-13-autonomy-execution/task-9-collector-install.md`.

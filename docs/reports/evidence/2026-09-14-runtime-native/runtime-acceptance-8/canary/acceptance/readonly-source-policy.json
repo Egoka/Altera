@@ -1,0 +1,10 @@
+{
+  "policy": {
+    "poison.cjs": "0e5d0ca4b92c1b12d5a86381c9e1964e96bad736bd63c85a3cc5087932688194",
+    "canary.mjs": "6d90fc348b6be0d7970e4883db1dc1fdad4b45635e9f086a224f494cc298b030",
+    "vector.json": "214f23b126e0afa3cf15aee9e079d6cb6b04a7d588dfef3d1a72dff725650264"
+  },
+  "source": {
+    "input.txt": "95460896c80fd6a87b824bb081b3743da9abfdf8ccddc9b80ab8309fce9c65cf"
+  }
+}

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 import unittest
 import uuid
 from unittest.mock import patch
@@ -396,6 +397,24 @@ class RefreshTests(unittest.TestCase):
         with patch.object(self.module.subprocess, 'run') as docker:
             with self.assertRaises(ValueError): reopened.refresh()
             docker.assert_not_called()
+
+    def test_bounded_selection_refuses_lock_contention_and_then_recovers(self):
+        store = self.initialized()
+        holder = subprocess.Popen(['/usr/bin/python3', '-c',
+            'import fcntl,sys,time; f=open(sys.argv[1], "a+"); '
+            'fcntl.flock(f, fcntl.LOCK_EX); print("locked", flush=True); time.sleep(2)',
+            str(Path(self.manifest['store']) / 'refresh.lock')], stdout=subprocess.PIPE, text=True)
+        self.addCleanup(lambda: holder.poll() is None and holder.kill())
+        self.assertEqual(holder.stdout.readline().strip(), 'locked')
+        started = time.monotonic()
+        with self.assertRaisesRegex(ValueError, '^admission_lock_timeout$'):
+            with store.select_current(timeout=0.05):
+                self.fail('selection entered while refresh lock was held')
+        self.assertLess(time.monotonic() - started, 0.5)
+        holder.terminate(); holder.wait(timeout=1)
+        holder.stdout.close()
+        with store.select_current(timeout=0.2) as selected:
+            self.assertGreater(os.fstat(selected.fd).st_size, 0)
 
 
     def test_model_worker_unknown_blocks_acceptance_and_publication(self):

@@ -317,3 +317,53 @@ Synthetic check:
 `/usr/bin/python3 -I scripts/agent-runtime/test_codex_toml_map.py`. Первый historical map и каждый
 следующий actual invocation выполняет trusted coordinator отдельно после review, с собственным
 fresh descriptor и source/AGENTS/run-record bindings.
+
+## Постоянные native adapters
+
+Профили Claude и Codex вызывают стабильные `native_claude_adapter.py` и
+`native_codex_adapter.py` с путём и SHA-256 неизменяемого deployment config. Adapter находит в
+его private registry ровно один pending ticket по native workspace, agent, task и run IDs;
+нулевой или неоднозначный результат отклоняется. Ticket отдельно связывает issue, passport,
+gate task/stage/run, revision/dirty fingerprint, checks, criteria и детерминированные event IDs.
+`prepare_native.py` создаёт новый source snapshot, run root, отдельные runtime/store manifests и
+один ticket. Постоянный профиль не закрепляет меняющийся ticket path и не переиспользует старый
+manifest.
+
+Перед provider-проверкой adapter атомарно создаёт one-use claim. Отказ после claim не разрешает
+повторный запуск: coordinator выпускает новый ticket с новым invocation ID. Claude в каждом
+вызове запускает hash-pinned D1 на фактическом opaque argv, требует diagnostic exit 78, пустой
+stdout и точный descriptor Context7/trace без неизвестных полей. Codex в каждом вызове повторно
+вызывает managed-TOML materializer на свежем D2 descriptor и публикует новую policy generation.
+Provider input не становится runtime manifest: в него переходят только проверенные policy hash и
+path map.
+
+Claude credential generation выбирается в процессе. Adapter удерживает `refresh.lock` в режиме
+`LOCK_EX` через синхронный `runtime.launch`; это исключает cooperative refresh на время run.
+Admission ограничен пятью секундами через optional timeout `Store.locked(timeout=...)`;
+старые callers без timeout сохраняют blocking contract. Открытый credential descriptor сам по
+себе lease не является, а от враждебного процесса того же UID этот контракт не защищает.
+
+Trusted observation содержит ticket SHA, IDs, pinned gate input, wrapper timestamps и возвращённый
+`runtime_status`. Evidence перечисляется как untrusted output. Текущий `runtime.launch` не даёт
+raw child exit/signal, container identity или доказательство quiescence, поэтому эти поля остаются
+`null`/`unknown`; model prose их не заполняет. Adapter не вызывает gate record/finish/release и не
+утверждает принятие стадии. Collector получает outcome через отдельный optional callback, который
+не попадает в native argv или model environment.
+
+## Trusted native observation and fixed checks
+
+`runtime.launch(manifest, incoming)` keeps its integer return and protocol streams.
+A trusted in-process caller may supply `outcome_sink` and `invocation_id`. This
+mode names one container, retains its CID, records raw Docker-client wait status
+separately from normalized status and container exit, inspects only that resource,
+removes it and verifies absence. Exit 137 alone is not evidence of a signal.
+The final observer runs after provider cleanup and source/policy revalidation;
+unknown cleanup or changed input remains incomplete.
+
+`runtime.check(manifest, spec_path, spec_sha256, invocation_id=...)` executes the
+pinned Node test argv in the accepted read-only source/policy mounts with network
+`none`, bounded output and a 120-second maximum. It parses actual TAP test/skip
+counts; zero executed tests and truncation are incomplete. The five assertions
+in `runtime-check.test.mjs` cover the existing UID501, read-only source/policy,
+writable evidence/tmp and absence of credential environment variables. Their
+execution is infrastructure evidence and does not establish product acceptance.

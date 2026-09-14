@@ -84,3 +84,41 @@ evidence не переписывается. История хранит обе �
 причины, затем продолжает ту же проверку с прежним счётом; второй неуспешный запуск recovery
 по тому же доказательству невозможен. Сохранять исходный дизайн и отдельное дополнение как
 исторические источники; не выдавать fixtures за принятие runtime и native pilot.
+
+## Task 8: Постоянные native adapters (продолжение 2026-09-14)
+
+После rebase на app работать в основном дереве на `docs/agent-loop-autonomy`.
+Постоянные entrypoints Claude/Codex закрепляют deployment config и доверенный
+registry, а каждое разрешённое выполнение получает fresh ticket/snapshot/run.
+Повтор consumed ticket запрещён. Native run ID присваивается daemon при старте:
+первоначально он может быть не связан, затем закрепляется атомарно один раз;
+issue/agent/workspace берутся из trusted ticket/config и проверяются readback.
+Digest ticket хранится снаружи его неизменяемых bytes, без самоссылки.
+
+Сохранить исходные модели/medium/max1, конечный parser opaque argv, accepted
+D1/D2/managed mapper, project context, запрет hooks проверяющих и RO boundary.
+Claude выбирает текущее поколение credentials без чтения содержимого и повторного
+login; bounded lock не выдаётся за доказательство cleanup погибшего контейнера.
+Проверить два новых ticket через неизменный entrypoint, отказы на подмену/повтор,
+затем независимое ревью и фактическое подключение к двум агентам Multica.
+
+## Task 9: Trusted сборщик результатов и приёмка runtime
+
+Связать adapters с существующим gate через `admit/bind/collect/check/transition/reconcile`.
+Gate остаётся владельцем стадий и счётчиков. Добавить в runtime наблюдение raw
+Docker-client exit, identity/terminal/cleanup своего контейнера и provider resources,
+сохранив публичный integer exit и native stdin/stdout/stderr. Unknown остаётся unknown.
+Trusted fixed command runner выдаёт отдельный check receipt; модель не пишет
+авторитетный passed. Process receipt, результат проверки и решение приёмки различны.
+
+После выхода child и до выхода wrapper подтверждать exact active native row по
+четырём ID. После wrapper exit controller отдельно сверяет terminal того же run;
+не ждать собственного terminal callback внутри wrapper. При недоставленном событии
+reconciliation не запускает модель повторно. Нет нового scheduler и обхода two-failure stop.
+
+Приёмка: реальные gate CLI/filesystem integration fixtures, независимое ревью,
+no-model observer canary, затем реальные постоянные профили с context/MCP и
+точной атрибуцией результата. Product auth и включение автопилотов не предшествуют
+этому runtime-пилоту без auth. Успешная браузерная canary8 и её независимое ревью
+сохранены отдельно; окончательная runtime аттестация должна соответствовать
+замороженной версии после observer integration.

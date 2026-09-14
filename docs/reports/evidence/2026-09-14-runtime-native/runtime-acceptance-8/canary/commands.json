@@ -1,0 +1,394 @@
+[
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "image",
+      "inspect",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "create",
+      "--internal",
+      "--opt",
+      "com.docker.network.bridge.gateway_mode_ipv4=isolated",
+      "altera-pw-8c635f99284c474198546019f714a980"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "run",
+      "--detach",
+      "--name",
+      "altera-pw-8c635f99284c474198546019f714a980-web",
+      "--network=altera-pw-8c635f99284c474198546019f714a980",
+      "--network-alias=altera-web",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/policy/canary.mjs,dst=/fixture.mjs,readonly",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/fixture.mjs",
+      "web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-8c635f99284c474198546019f714a980-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-8c635f99284c474198546019f714a980-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-8c635f99284c474198546019f714a980-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "run",
+      "--detach",
+      "--name",
+      "altera-pw-8c635f99284c474198546019f714a980-sink",
+      "--network=altera-pw-8c635f99284c474198546019f714a980",
+      "--network-alias=forbidden-sink",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/policy/canary.mjs,dst=/fixture.mjs,readonly",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/fixture.mjs",
+      "sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-8c635f99284c474198546019f714a980-sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-8c635f99284c474198546019f714a980-sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "create",
+      "--init",
+      "--name",
+      "altera-pw-8c635f99284c474198546019f714a980-runner",
+      "--network=altera-pw-8c635f99284c474198546019f714a980",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--security-opt=seccomp=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/seccomp.json",
+      "--workdir=/source",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/policy,dst=/runtime/policy,readonly",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/source,dst=/source,readonly",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/evidence,dst=/runtime/evidence",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/cache,dst=/runtime/cache",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/control/tmp,dst=/runtime/tmp",
+      "--env=HOME=/runtime/cache/home",
+      "--env=TMPDIR=/runtime/tmp",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/runtime/policy/canary.mjs",
+      "control",
+      "51414"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-pw-8c635f99284c474198546019f714a980-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-8c635f99284c474198546019f714a980"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "start",
+      "--attach",
+      "altera-pw-8c635f99284c474198546019f714a980-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-8c635f99284c474198546019f714a980"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-pw-8c635f99284c474198546019f714a980-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-8c635f99284c474198546019f714a980-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-8c635f99284c474198546019f714a980-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-8c635f99284c474198546019f714a980-sink"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-8c635f99284c474198546019f714a980"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "rm",
+      "altera-pw-8c635f99284c474198546019f714a980"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "create",
+      "--internal",
+      "--opt",
+      "com.docker.network.bridge.gateway_mode_ipv4=isolated",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "run",
+      "--detach",
+      "--name",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-web",
+      "--network=altera-pw-5662e1377ab14af784e5bdad716fa1c8",
+      "--network-alias=altera-web",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/acceptance/policy/canary.mjs,dst=/fixture.mjs,readonly",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/fixture.mjs",
+      "web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "logs",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "create",
+      "--init",
+      "--name",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-runner",
+      "--network=altera-pw-5662e1377ab14af784e5bdad716fa1c8",
+      "--read-only",
+      "--cap-drop=ALL",
+      "--security-opt=no-new-privileges",
+      "--user=1000:1000",
+      "--pids-limit=128",
+      "--memory=2g",
+      "--cpus=2",
+      "--security-opt=seccomp=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/seccomp.json",
+      "--workdir=/source",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/acceptance/policy,dst=/runtime/policy,readonly",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/acceptance/source,dst=/source,readonly",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/acceptance/evidence,dst=/runtime/evidence",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/acceptance/cache,dst=/runtime/cache",
+      "--mount=type=bind,src=/Users/egorbondarenko/WebstormProjects/Altera/.superpowers/sdd/2026-09-13-autonomy-execution/runtime-acceptance-8/canary/acceptance/tmp,dst=/runtime/tmp",
+      "--env=HOME=/runtime/cache/home",
+      "--env=TMPDIR=/runtime/tmp",
+      "--entrypoint=/usr/local/bin/node",
+      "sha256:97bd451e71779dbd6527814023f16dd952e792ba633132fc7da297aed10b1426",
+      "/runtime/policy/canary.mjs",
+      "acceptance",
+      "51414"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "start",
+      "--attach",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "inspect",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-web"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "rm",
+      "--force",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8-runner"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "inspect",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8"
+    ],
+    "exit": 0
+  },
+  {
+    "argv": [
+      "/usr/local/bin/docker",
+      "network",
+      "rm",
+      "altera-pw-5662e1377ab14af784e5bdad716fa1c8"
+    ],
+    "exit": 0
+  }
+]

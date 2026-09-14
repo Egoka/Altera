@@ -1,0 +1,31 @@
+{
+  "classification": "real_Docker_fixed_infrastructure_check_no_model",
+  "runtime_sha256": "3f104d127949a68f57040be35916be4a14dd999b71918a7c33d81611dc69183c",
+  "artifacts": [
+    {
+      "path": "result.json",
+      "sha256": "1b10c0101a85a58c6c2d597474a7ad5e0010b997128d3fbd9dea4155dfd526f8",
+      "bytes": 2077
+    },
+    {
+      "path": "check.json",
+      "sha256": "3cf95e0850a4b8659353f8a594879215e47186f8f313c252c851e2b120a83026",
+      "bytes": 262
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "77433c99b1faa0a6e2b28b06045e8d17dba11ff3c9de9a3363da5e2bade8a0be",
+      "bytes": 45225
+    },
+    {
+      "path": "runtime-check.test.mjs",
+      "sha256": "45214742cf4426559244382b25608fee639c6d615af3387a0ff16c8fd1b162ee",
+      "bytes": 1207
+    },
+    {
+      "path": "canary.py",
+      "sha256": "f4c9cd57afccbdff2f283c87bef5c1eb2054940776a9c76ca47bcc2926530deb",
+      "bytes": 2381
+    }
+  ]
+}

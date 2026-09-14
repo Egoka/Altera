@@ -1,0 +1,35 @@
+{
+  "status": "local_tests_only_final_collector_review_pending",
+  "artifacts": [
+    {
+      "path": "task-8-adapters-report.md",
+      "sha256": "0fc1f49cf8c7d03f09b86042cf20ec92d65a1c138afb3aab23dc086a94e69f21",
+      "bytes": 6353
+    },
+    {
+      "path": "task-8-adapters-review.md",
+      "sha256": "8b8cb317912741dbc4d4d57186637d540ccec488c4c2021c3eb644c7d6c813e7",
+      "bytes": 13221
+    },
+    {
+      "path": "task-8-adapters-fix-round1.md",
+      "sha256": "3c85ed677dc15ff3d37ec71bfa3452766defaf9400ce4aa29ad9c6361e67b4dc",
+      "bytes": 2741
+    },
+    {
+      "path": "task-8-fix-green.log",
+      "sha256": "0aea198038711c56f56d2845ae91ebc6a64f48f33e3fba5dc3410613edeeb7c8",
+      "bytes": 6393
+    },
+    {
+      "path": "task-8-fix-green2.log",
+      "sha256": "cd6ba6823210743608fb8ad1cab4cae4b79a67ef332601173aee2a8f45c12d84",
+      "bytes": 7344
+    },
+    {
+      "path": "task-8-adapters-fix1-review-notes.md",
+      "sha256": "59710a3811e2746a88c5db2ffe6fa834776b88f8b97a36d0e23ce11c6094d5d1",
+      "bytes": 6173
+    }
+  ]
+}

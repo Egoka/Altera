@@ -1,6 +1,7 @@
 #!/usr/bin/python3 -I
 """Trusted coordinator: opaque credential generations, shared lock и durable publication."""
 from contextlib import contextmanager
+import errno
 import fcntl
 import importlib.util
 import json
@@ -10,6 +11,7 @@ import re
 import stat
 import subprocess
 import sys
+import time
 from types import SimpleNamespace
 import uuid
 
@@ -133,12 +135,27 @@ class Store:
             raise
 
     @contextmanager
-    def locked(self):
+    def locked(self, timeout=None):
+        if timeout is not None and (type(timeout) not in (int, float) or timeout < 0):
+            raise ValueError('invalid_lock_timeout')
         metadata(os.fstat(self.fd), True)
         lock = os.open('refresh.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600, dir_fd=self.fd)
         try:
             metadata(os.fstat(lock), allow_empty=True)
-            fcntl.flock(lock, fcntl.LOCK_EX)
+            if timeout is None:
+                fcntl.flock(lock, fcntl.LOCK_EX)
+            else:
+                deadline = time.monotonic() + timeout
+                while True:
+                    try:
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError as error:
+                        if error.errno not in (errno.EACCES, errno.EAGAIN):
+                            raise
+                        if time.monotonic() >= deadline:
+                            raise ValueError('admission_lock_timeout') from None
+                        time.sleep(min(0.01, max(0, deadline - time.monotonic())))
             metadata(os.fstat(self.fd), True)
             metadata(os.fstat(lock), allow_empty=True)
             metadata(os.fstat(self.generations), True)
@@ -234,8 +251,8 @@ class Store:
         return SimpleNamespace(path=self.path / 'generations' / name / '.credentials.json', fd=fd)
 
     @contextmanager
-    def select_current(self):
-        with self.locked():
+    def select_current(self, timeout=None):
+        with self.locked(timeout=timeout):
             selected = self.credential(self.current())
         try:
             yield selected

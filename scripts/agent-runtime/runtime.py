@@ -608,10 +608,11 @@ def command(manifest, incoming, environment):
 
 
 @contextmanager
-def provider_network(manifest):
+def provider_network(manifest, observation=None):
     """Отдельная internal сеть без адреса host bridge, плюс HTTPS-only proxy."""
     if manifest.get('network', 'none') == 'none':
         yield None
+        if observation is not None: observation['provider_cleanup'] = 'proven'
         return
     if manifest.get('network') == 'playwright-fixture':
         with playwright_fixture_network(manifest) as network:
@@ -644,50 +645,218 @@ def provider_network(manifest):
         else:
             raise ValueError('proxy_not_ready')
         Path(manifest['run_root'], 'network-inspect.json').write_text(json.dumps(inspection, indent=2))
-        Path(manifest['run_root'], 'proxy-inspect.json').write_bytes(docker('inspect', proxy))
+        if observation is None:
+            Path(manifest['run_root'], 'proxy-inspect.json').write_bytes(docker('inspect', proxy))
         yield name
     finally:
         if created:
             docker('rm', '--force', proxy, check=False)
             docker('network', 'rm', name, check=False)
+            if observation is not None:
+                try:
+                    if _absent('container', proxy) and _absent('network', name):
+                        observation['provider_cleanup'] = 'proven'
+                except (ValueError, OSError, subprocess.SubprocessError):
+                    pass
 
 
-def execute(args):
-    process = subprocess.Popen(args, env=child_env(), stdin=sys.stdin.buffer,
-                               stdout=sys.stdout.buffer, stderr=sys.stderr.buffer)
+def _docker_observe(*args):
+    result = subprocess.run([DOCKER, *args], env=child_env(), stdin=subprocess.DEVNULL,
+                            capture_output=True, timeout=15)
+    if len(result.stdout) + len(result.stderr) > 4096:
+        raise ValueError('docker_observation_oversize')
+    return result.returncode, result.stdout.decode(), result.stderr.decode()
+
+
+def _absent(kind, identity):
+    code, output, error = _docker_observe(kind, 'inspect', '--format={{.Id}}', identity)
+    return code == 1 and not output.strip() and ('No such ' + kind in error or 'No such object' in error)
+
+
+def drain_container(observation, cidfile):
+    """Inspect and remove exactly our invocation, retaining uncertainty on any failure."""
+    observation['worker_quiescence'] = 'unknown'
+    observation['container_removed'] = False
+    try:
+        cid = None
+        if cidfile.exists():
+            info = cidfile.lstat()
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 65:
+                return
+            cid = cidfile.read_text().strip()
+            if not re.fullmatch('[a-f0-9]{64}', cid): return
+        target = cid or observation['container_name']
+        projection = '{"Id":{{json .Id}},"Name":{{json .Name}},"Running":{{json .State.Running}},"ExitCode":{{json .State.ExitCode}},"OOMKilled":{{json .State.OOMKilled}}}'
+        code, output, _ = _docker_observe('container', 'inspect', '--format=' + projection, target)
+        if code:
+            if cid is None and _absent('container', target):
+                observation.update(container_created=False, container_removed=True,
+                                   worker_quiescence='proven')
+            return
+        row = json.loads(output)
+        if (set(row) != {'Id', 'Name', 'Running', 'ExitCode', 'OOMKilled'} or
+                row['Name'] != '/' + observation['container_name'] or
+                not re.fullmatch('[a-f0-9]{64}', row['Id']) or (cid and cid != row['Id'])):
+            return
+        observation.update(container_id=row['Id'], container_created=True,
+            container_running=row['Running'], container_exit_code=row['ExitCode'],
+            container_oom_killed=row['OOMKilled'])
+        # A live container is removed to drain it, but cannot yield a successful receipt.
+        code, _, _ = _docker_observe('container', 'rm', '--force', row['Id'])
+        absent = code == 0 and _absent('container', row['Id'])
+        observation['container_removed'] = absent
+        if row['Running'] is False and absent:
+            observation['worker_quiescence'] = 'proven'
+    except (ValueError, KeyError, OSError, subprocess.SubprocessError):
+        pass
+
+
+def execute(args, observation=None, *, capture=None, timeout=None, maximum_output=None):
+    """Raw wait and bounded capture are trusted in-process options, never native argv."""
+    process = subprocess.Popen(args, env=child_env(),
+        stdin=sys.stdin.buffer if capture is None else subprocess.DEVNULL,
+        stdout=sys.stdout.buffer if capture is None else subprocess.PIPE,
+        stderr=sys.stderr.buffer if capture is None else subprocess.STDOUT)
+    if observation is not None:
+        observation.update(child_created=True, client_pid=process.pid, client_executable=args[0],
+                           client_sha256=digest(Path(args[0]).read_bytes()))
+    previous = {}
     def forward(signum, _frame):
-        if process.poll() is None:
-            process.send_signal(signum)
+        if process.poll() is None: process.send_signal(signum)
     for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
-        signal.signal(signum, forward)
-    code = process.wait()
-    return 128 - code if code < 0 else code
+        previous[signum] = signal.signal(signum, forward)
+    try:
+        if capture is None:
+            code = process.wait()
+        else:
+            import selectors
+            selector = selectors.DefaultSelector()
+            selector.register(process.stdout, selectors.EVENT_READ)
+            start = time.monotonic(); output = bytearray(); truncated = False; timed_out = False
+            try:
+                while selector.get_map():
+                    if time.monotonic() - start > timeout:
+                        timed_out = True; process.kill(); break
+                    for key, _ in selector.select(0.1):
+                        chunk = os.read(key.fd, 65536)
+                        if not chunk:
+                            selector.unregister(key.fileobj); continue
+                        remaining = maximum_output - len(output)
+                        output.extend(chunk[:remaining])
+                        if len(chunk) > remaining:
+                            truncated = True; process.kill(); break
+                    if truncated: break
+                code = process.wait(timeout=15)
+            finally:
+                selector.close(); process.stdout.close()
+            capture.update(output=bytes(output), truncated=truncated, timed_out=timed_out)
+        if observation is not None:
+            observation.update(raw_wait=code, normalized_exit=128-code if code < 0 else code,
+                               signal=-code if code < 0 else None, child_reaped=True)
+        return 128 - code if code < 0 else code
+    finally:
+        for signum, handler in previous.items(): signal.signal(signum, handler)
 
 
-def launch(manifest, incoming):
+def observed_execute(args, observation, *, capture=None, timeout=None, maximum_output=None):
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix='altera-observer-') as directory:
+        cidfile = Path(directory) / 'container.cid'
+        name = 'altera-native-' + observation['invocation_id'] + '-' + uuid.uuid4().hex[:12]
+        observation.update(container_name=name, container_id=None, child_created=False,
+            child_reaped=False, raw_wait=None, signal=None, worker_quiescence='unknown')
+        args = [arg for arg in args if arg != '--rm']
+        args[2:2] = ['--name=' + name, '--cidfile=' + str(cidfile)]
+        try:
+            return execute(args, observation, capture=capture, timeout=timeout,
+                           maximum_output=maximum_output)
+        finally:
+            drain_container(observation, cidfile)
+
+
+def launch(manifest, incoming, outcome_sink=None, *, invocation_id=None):
     evidence = Path(manifest['run_root']) / 'evidence'
     if evidence.exists() and any(evidence.iterdir()):
         raise ValueError('evidence_directory_not_fresh')
-    args = command(manifest, incoming, os.environ)
-    playwright_before = playwright_policy(manifest)
-    with provider_network(manifest) as network:
-        if network:
-            args[args.index('--network=none')] = '--network=' + network
-        if manifest.get('network') == 'provider-proxy':
-            args[2:2] = ['--env', 'HTTPS_PROXY=http://egress-proxy:8080',
-                          '--env', 'HTTP_PROXY=http://egress-proxy:8080',
-                          '--env', 'ALL_PROXY=http://egress-proxy:8080',
-                          '--env', 'NO_PROXY=', '--env', 'NODE_USE_ENV_PROXY=1']
-        code = execute(args)
-    if playwright_policy(manifest) != playwright_before:
-        raise ValueError('playwright_policy_changed')
-    if fingerprint(manifest['source'], manifest['dirty_paths']) != manifest['state']:
-        print('ALTERA_RUNTIME source_changed_after_run', file=sys.stderr)
-        return 78
-    if tree_hash(manifest['policy']) != manifest['policy_sha256']:
-        print('ALTERA_RUNTIME policy_changed_after_run', file=sys.stderr)
-        return 78
-    return code
+    observation = None
+    if outcome_sink is not None:
+        if not isinstance(invocation_id, str) or not re.fullmatch('[A-Za-z0-9_-]{1,64}', invocation_id):
+            raise ValueError('invalid_observer_invocation')
+        observation = {'schema_version': 1, 'invocation_id': invocation_id,
+            'provider_cleanup': 'unknown', 'validation': 'unknown', 'runtime_status': None,
+            'source_before': manifest['state'], 'policy_before': manifest['policy_sha256']}
+    try:
+        args = command(manifest, incoming, os.environ)
+        playwright_before = playwright_policy(manifest)
+        context = provider_network(manifest) if observation is None else provider_network(manifest, observation)
+        with context as network:
+            if network: args[args.index('--network=none')] = '--network=' + network
+            if manifest.get('network') == 'provider-proxy':
+                args[2:2] = ['--env', 'HTTPS_PROXY=http://egress-proxy:8080',
+                              '--env', 'HTTP_PROXY=http://egress-proxy:8080',
+                              '--env', 'ALL_PROXY=http://egress-proxy:8080',
+                              '--env', 'NO_PROXY=', '--env', 'NODE_USE_ENV_PROXY=1']
+            code = execute(args) if observation is None else observed_execute(args, observation)
+        source_after = fingerprint(manifest['source'], manifest['dirty_paths'])
+        policy_after = tree_hash(manifest['policy'])
+        valid = (playwright_policy(manifest) == playwright_before and
+                 source_after == manifest['state'] and policy_after == manifest['policy_sha256'])
+        code = code if valid else 78
+        if observation is not None:
+            observation.update(source_after=source_after, policy_after=policy_after,
+                validation='verified' if valid else 'changed', runtime_status=code)
+        return code
+    finally:
+        if observation is not None: outcome_sink(observation)
+
+
+def check(manifest, spec_path, spec_sha256, *, invocation_id):
+    """Execute one pinned production command in the accepted RO runtime, network disabled."""
+    from datetime import datetime, timezone
+    path = private_reference(spec_path)
+    raw = path.read_bytes()
+    if len(raw) > 65536 or digest(raw) != spec_sha256: raise ValueError('check_spec_changed')
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            if key in value: raise ValueError('invalid_check_spec')
+            value[key] = item
+        return value
+    spec = json.loads(raw, object_pairs_hook=unique)
+    if (set(spec) != {'schema_version', 'argv', 'cwd', 'network', 'parser', 'timeout_seconds', 'maximum_output'} or
+            spec['schema_version'] != 1 or spec['network'] != 'none' or spec['parser'] != 'node-tap' or
+            spec['cwd'] != manifest['source'] or not isinstance(spec['argv'], list) or not spec['argv'] or
+            any(not isinstance(a, str) or '\x00' in a for a in spec['argv']) or
+            spec['argv'][0] != '/usr/local/bin/node' or '--test' not in spec['argv'] or
+            '--test-reporter=tap' not in spec['argv'] or
+            type(spec['timeout_seconds']) is not int or not 0 < spec['timeout_seconds'] <= 120 or
+            type(spec['maximum_output']) is not int or not 0 < spec['maximum_output'] <= 1048576):
+        raise ValueError('invalid_check_spec')
+    # command() supplies the existing root, fingerprint, policy and mount validation.
+    safe = {**manifest, 'network': 'none', 'managed_mapping_verified': True}
+    safe.pop('auth_file', None); safe.pop('playwright', None)
+    incoming = [] if safe['family'] == 'claude' else ['app-server', '--listen', 'stdio://']
+    args = command(safe, incoming, {})
+    image_index = args.index(safe['image'])
+    args = args[:image_index + 1] + spec['argv'][1:]
+    args = [arg for arg in args if arg != '--interactive']
+    observation = {'schema_version': 1, 'invocation_id': invocation_id,
+        'started_at': datetime.now(timezone.utc).isoformat(), 'command': spec['argv'],
+        'check_spec_sha256': spec_sha256, 'provider_cleanup': 'proven'}
+    capture = {}
+    code = observed_execute(args, observation, capture=capture,
+        timeout=spec['timeout_seconds'], maximum_output=spec['maximum_output'])
+    text = capture['output'].decode('utf-8', errors='replace')
+    counts = re.findall(r'^# tests ([0-9]+)\s*$', text, re.MULTILINE)
+    skipped = re.findall(r'^# skipped ([0-9]+)\s*$', text, re.MULTILINE)
+    executed = max(0, int(counts[0]) - int(skipped[0])) if len(counts) == len(skipped) == 1 else 0
+    valid = (fingerprint(manifest['source'], manifest['dirty_paths']) == manifest['state'] and
+             tree_hash(manifest['policy']) == manifest['policy_sha256'])
+    observation.update(exit_code=code, executed=executed, output=text,
+        truncated=capture['truncated'], timed_out=capture['timed_out'], validation='verified' if valid else 'changed')
+    observation['complete'] = (executed > 0 and valid and observation['worker_quiescence'] == 'proven' and
+                               not capture['truncated'] and not capture['timed_out'])
+    return observation
 
 
 if __name__ == '__main__':

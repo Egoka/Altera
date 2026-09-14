@@ -441,3 +441,83 @@ class RuntimeTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+
+
+class ObserverTests(unittest.TestCase):
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location('observer_runtime', ROOT / 'runtime.py')
+        self.runtime = importlib.util.module_from_spec(spec); spec.loader.exec_module(self.runtime)
+
+    def test_raw_wait_preserves_signal_and_does_not_infer_from_137(self):
+        from unittest.mock import Mock
+        for raw, expected in [(-9, 9), (137, None), (0, None)]:
+            observation = {}
+            process = Mock(pid=123); process.wait.return_value = raw
+            with patch.object(self.runtime.subprocess, 'Popen', return_value=process), \
+                    patch.object(self.runtime.signal, 'signal'):
+                code = self.runtime.execute(['/usr/bin/true'], observation=observation)
+            self.assertEqual(code, 137 if raw == -9 else raw)
+            self.assertEqual(observation['raw_wait'], raw)
+            self.assertEqual(observation['signal'], expected)
+            self.assertTrue(observation['child_reaped'])
+
+    def test_owned_cleanup_never_accepts_unknown_or_live_container(self):
+        for running in (True, None):
+            observation = {'container_name': 'altera-native-fixture', 'container_id': None}
+            with tempfile.TemporaryDirectory() as temporary:
+                cidfile = Path(temporary) / 'cid'
+                cidfile.write_text('a' * 64)
+                row = {'Id': 'a' * 64, 'Name': '/altera-native-fixture',
+                       'Running': running, 'ExitCode': 0, 'OOMKilled': False}
+                with patch.object(self.runtime, '_docker_observe', return_value=(0, json.dumps(row), '')):
+                    self.runtime.drain_container(observation, cidfile)
+            self.assertNotEqual(observation['worker_quiescence'], 'proven')
+
+    def test_check_requires_pinned_spec_and_actual_positive_count(self):
+        self.assertTrue(callable(getattr(self.runtime, 'check', None)), 'trusted runtime check operation missing')
+
+
+class FixedCheckTests(unittest.TestCase):
+    setUpClass = classmethod(RuntimeTests.setUpClass.__func__)
+    setUp = RuntimeTests.setUp
+    git = RuntimeTests.git
+
+    def test_production_check_runs_real_node_and_rejects_zero_count_and_truncation(self):
+        import shutil
+        import sys
+        script = self.policy / 'check.test.mjs'
+        state = self.base / 'docker-state'
+        docker = self.base / 'docker-boundary'
+        docker.write_text('#!' + sys.executable + '\n' +
+            "import os,sys\nfrom pathlib import Path\n" +
+            "args=sys.argv[1:]\nassert args[0]=='run'\nassert '--network=none' in args\n" +
+            "assert sum(arg.endswith(',readonly') for arg in args)==2\n" +
+            "Path(next(a.split('=',1)[1] for a in args if a.startswith('--cidfile='))).write_text('a'*64)\n" +
+            "Path(" + repr(str(state)) + ").write_text(next(a.split('=',1)[1] for a in args if a.startswith('--name=')))\n" +
+            "os.execv(" + repr(shutil.which('node')) + ",[" + repr(shutil.which('node')) +
+            ",'--test','--test-reporter=tap'," + repr(str(script)) + "])\n")
+        docker.chmod(0o700)
+        spec_path = self.base / 'check.json'; spec_path.touch(mode=0o600)
+        cases = [("import test from 'node:test';test('positive',()=>{});", 1048576, True, 0, 1),
+                 ("import test from 'node:test';test('failure',()=>{throw Error('actual assertion')});",1048576,True,1,1),
+                 ("import test from 'node:test';test('skip',{skip:true},()=>{});",1048576,False,0,0),
+                 ("import test from 'node:test';test('output',()=>console.log('x'.repeat(1000)));",8,False,None,None)]
+        for content, cap, complete, exit_code, count in cases:
+            script.write_text(content); self.manifest['policy_sha256']=self.runtime.tree_hash(self.policy)
+            spec={'schema_version':1,'argv':['/usr/local/bin/node','--test','--test-reporter=tap','/runtime/policy/check.test.mjs'],
+                  'cwd':str(self.source),'network':'none','parser':'node-tap','timeout_seconds':120,'maximum_output':cap}
+            spec_path.write_text(json.dumps(spec)); removed=[]
+            def inspect(*args):
+                if args[1]=='rm': removed.append(True); return (0,'','')
+                if removed:return (1,'','Error: No such container')
+                return (0,json.dumps({'Id':'a'*64,'Name':'/'+state.read_text(),
+                                      'Running':False,'ExitCode':exit_code or 0,'OOMKilled':False}),'')
+            with patch.object(self.runtime,'DOCKER',str(docker)),patch.object(self.runtime,'_docker_observe',side_effect=inspect):
+                result=self.runtime.check(self.manifest,str(spec_path),hashlib.sha256(spec_path.read_bytes()).hexdigest(),invocation_id='fixed-check')
+            self.assertEqual(result['complete'],complete,result)
+            if count is not None:self.assertEqual(result['executed'],count)
+            if exit_code is not None:self.assertEqual(result['exit_code'],exit_code)
+            self.assertTrue(result['container_removed'])
+            self.assertEqual(result['provider_cleanup'],'proven')
+        with self.assertRaisesRegex(ValueError,'check_spec_changed'):
+            self.runtime.check(self.manifest,str(spec_path),'0'*64,invocation_id='fixed-check')

@@ -1,0 +1,50 @@
+{
+  "status": "local_code_review_pass_native_not_run",
+  "artifacts": [
+    {
+      "path": "task-9-collector-report.md",
+      "sha256": "a38dc53a245f860b041d004b733e350a966fe6813f8d5e887cbe870eb59ae6d1",
+      "bytes": 6134
+    },
+    {
+      "path": "task-9-collector-install.md",
+      "sha256": "0a97bf539e0b98fc363f6b42b450297323d3ee12c2a0cc4e19b06a4f6248730a",
+      "bytes": 8015
+    },
+    {
+      "path": "task-9-frozen-modules.json",
+      "sha256": "ec70017fcd617ff966eab5435b2b3360981c4c60a40db62a68e91341e86eb152",
+      "bytes": 1037
+    },
+    {
+      "path": "task-9-collector-green.log",
+      "sha256": "1da513a2da63a261667d2e0cad2ce21752cc0c8f86e357f3ef0ce7462d1d84da",
+      "bytes": 905
+    },
+    {
+      "path": "task-9-runtime-green.log",
+      "sha256": "784123bc3da212dcf9b53232d0b2ea2cfaf9ac2010fc839d1b2b7ddfb9baf527",
+      "bytes": 2921
+    },
+    {
+      "path": "task-9-adapter-green.log",
+      "sha256": "75b94b4168e09b64dcd919636d5b385e5be31e9bbba160d408c2081757887d19",
+      "bytes": 2098
+    },
+    {
+      "path": "task-9-finalfix-green.log",
+      "sha256": "fb92ad1d5e8ce0ee62d90097d637bc5e08df3b1dd1baaae919d5a0cb44226daa",
+      "bytes": 1149
+    },
+    {
+      "path": "task-9-combined-review.md",
+      "sha256": "fcf18ab7cbc4343dee0dc98c5dfe066129bb29b9931cd9d07d14ffd07e7b9631",
+      "bytes": 11720
+    },
+    {
+      "path": "task-9-finalfix-review.md",
+      "sha256": "c640a9ca885cee6ef49e222943d0fec65812d77ff6a4b9a74a1507de983b21c2",
+      "bytes": 4157
+    }
+  ]
+}
