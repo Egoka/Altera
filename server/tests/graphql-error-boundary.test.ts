@@ -10,6 +10,7 @@ interface GraphQLResponse {
 }
 
 const lines: string[] = []
+let expansiveReads = 0
 const logger = createAppLogger({
   service: "api",
   environment: "test",
@@ -27,6 +28,7 @@ const yoga = createYoga({
         nested: String
         caused: String
         cyclic: String
+        expansive: String
         mutated: String
       }
     `,
@@ -63,6 +65,17 @@ const yoga = createYoga({
           first.cause = second
           throw first
         },
+        expansive: () => {
+          expansiveReads = 0
+          const createNode = (): Error =>
+            Object.defineProperty(new Error("generated wrapper"), "cause", {
+              get: () => {
+                expansiveReads += 1
+                return expansiveReads < 100 ? createNode() : undefined
+              }
+            })
+          throw createNode()
+        },
         mutated: () => {
           const known = createApiError("NOT_FOUND", { requestId: "mutation-request", entity: "article" })
           known.extensions.code = "FORBIDDEN"
@@ -79,7 +92,16 @@ const yoga = createYoga({
   }
 })
 
-type QueryField = "unknown" | "known" | "malformed" | "forged" | "nested" | "caused" | "cyclic" | "mutated"
+type QueryField =
+  | "unknown"
+  | "known"
+  | "malformed"
+  | "forged"
+  | "nested"
+  | "caused"
+  | "cyclic"
+  | "expansive"
+  | "mutated"
 
 async function execute(field: QueryField): Promise<GraphQLResponse> {
   const response = await yoga.fetch("http://localhost/graphql", {
@@ -176,6 +198,14 @@ describe("GraphQL Yoga error boundary", () => {
 
     expect(result.errors?.[0]?.extensions).toEqual({ code: "INTERNAL_ERROR", requestId: "fallback-request" })
     expect(lines).toHaveLength(1)
+  })
+
+  it("bounds traversal when getters generate fresh wrapper objects", async () => {
+    const result = await execute("expansive")
+
+    expect(result.errors?.[0]?.extensions).toEqual({ code: "INTERNAL_ERROR", requestId: "fallback-request" })
+    expect(lines).toHaveLength(1)
+    expect(expansiveReads).toBeLessThanOrEqual(64)
   })
 
   it("uses the immutable factory snapshot after public extensions are mutated", async () => {

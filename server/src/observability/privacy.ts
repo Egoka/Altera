@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto"
+import { isIP } from "node:net"
 
 export interface PiiHasher {
   email(value: string): string
@@ -17,18 +18,26 @@ const blockedKeys = new Set([
   "body",
   "content",
   "text",
-  "name"
+  "name",
+  "clientip",
+  "remoteaddress",
+  "x-forwarded-for",
+  "forwarded"
 ])
 const emailPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi
 const magicLinkPattern = /https?:\/\/[^\s]*(?:\/(?:login|auth|verify)|[?&](?:token|code)=)[^\s]*/gi
+const magicTokenPattern = /\b[a-f0-9]{64}\b/gi
 const bearerPattern = /Bearer\s+[^\s"']+/gi
 const jwtPattern = /\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g
+const ipCandidatePattern = /[A-F0-9:.]+/gi
 
 function sanitizeString(value: string): string {
   return value
     .replace(magicLinkPattern, redacted)
+    .replace(magicTokenPattern, redacted)
     .replace(bearerPattern, redacted)
     .replace(jwtPattern, redacted)
+    .replace(ipCandidatePattern, (candidate) => (isIP(candidate) ? redacted : candidate))
     .replace(emailPattern, redacted)
 }
 

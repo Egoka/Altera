@@ -111,6 +111,15 @@ describe("structured logger", () => {
     expect(() => logger.log({ level: "info", event: "http.request", message: "bad" } as unknown as LogEntry)).toThrow(
       "exactly one correlation"
     )
+    expect(() =>
+      logger.log({
+        level: "info",
+        event: "http.request",
+        message: "bad",
+        requestId: "",
+        jobId: "job-1"
+      } as unknown as LogEntry)
+    ).toThrow("exactly one correlation")
   })
 
   it("redacts personal data and credentials before writing any log bytes", () => {
@@ -118,17 +127,20 @@ describe("structured logger", () => {
     const logger = createAppLogger({ service: "api", environment: "test", destination })
     const email = "person@example.com"
     const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.signature"
+    const ip = "203.0.113.42"
+    const ipv6 = "2001:db8::42"
+    const magicToken = "a".repeat(64)
     const error = new Error(`delivery failed for ${email}`)
-    error.cause = { authorization: `Bearer ${jwt}`, nested: { email } }
+    error.cause = { authorization: `Bearer ${jwt}`, nested: { email, clientIp: ip } }
 
     logger.log({
       level: "error",
       event: "error.unhandled",
       requestId: "req-2",
-      message: `Failed for ${email} with Bearer ${jwt}`,
+      message: `Failed for ${email} from ${ip} or ${ipv6} with Bearer ${jwt} token ${magicToken}`,
       data: {
         email,
-        nested: { note: email, token: jwt },
+        nested: { note: `${email} from ${ip}`, token: jwt, remoteAddress: ip },
         magicLink: `https://example.test/login?token=${jwt}`
       },
       error
@@ -139,6 +151,9 @@ describe("structured logger", () => {
     expect(output).not.toContain(jwt)
     expect(output).not.toContain("Bearer")
     expect(output).not.toContain("https://example.test/login")
+    expect(output).not.toContain(ip)
+    expect(output).not.toContain(ipv6)
+    expect(output).not.toContain(magicToken)
     expect(output).toContain("[REDACTED]")
     expect(JSON.parse(output).error.stack).toContain("Error:")
   })

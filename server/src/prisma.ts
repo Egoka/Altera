@@ -10,6 +10,7 @@ if (!process.env.JWT_ACCESS_SECRET) {
   throw new Error("JWT_ACCESS_SECRET must be defined in environment variables.")
 }
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
+const expectedJwtErrorNames = new Set(["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"])
 
 const prisma = new PrismaClient()
 
@@ -42,8 +43,8 @@ export async function createContext(
         })
       }
     } catch (error: unknown) {
-      // We only want to log unexpected errors, not expected ones like token expiration.
-      if (!(error instanceof Error && error.name === "TokenExpiredError")) {
+      // Invalid, expired and not-yet-active credentials are expected authentication outcomes.
+      if (!(error instanceof Error && expectedJwtErrorNames.has(error.name))) {
         logger.log({
           level: "error",
           event: "error.unhandled",

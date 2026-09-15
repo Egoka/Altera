@@ -42,9 +42,13 @@ export function createAppLogger(options: AppLoggerOptions): AppLogger {
     log(entry) {
       if (!isLogEventCode(entry.event)) throw new Error("Unknown log event")
 
-      const hasRequestId = typeof entry.requestId === "string" && entry.requestId.length > 0
-      const hasJobId = typeof entry.jobId === "string" && entry.jobId.length > 0
-      if (hasRequestId === hasJobId) throw new Error("Log entry must have exactly one correlation key")
+      const hasRequestId = "requestId" in entry
+      const hasJobId = "jobId" in entry
+      const requestIdIsValid = !hasRequestId || (typeof entry.requestId === "string" && entry.requestId.length > 0)
+      const jobIdIsValid = !hasJobId || (typeof entry.jobId === "string" && entry.jobId.length > 0)
+      if (hasRequestId === hasJobId || !requestIdIsValid || !jobIdIsValid) {
+        throw new Error("Log entry must have exactly one correlation key")
+      }
 
       const { level, message, ...fields } = entry
       const safeFields = sanitizeLogValue(fields) as Record<string, unknown>

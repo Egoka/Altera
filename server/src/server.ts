@@ -6,7 +6,7 @@ import { blockFieldSuggestionsPlugin } from "@escape.tech/graphql-armor-block-fi
 import { schema } from "./graphql/schema"
 import { createContext, GraphQLContext } from "./prisma"
 import { createCache } from "./cache"
-import { createErrorMasker } from "./errors/graphql-error.js"
+import { createErrorMasker } from "./errors/graphql-error"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
 

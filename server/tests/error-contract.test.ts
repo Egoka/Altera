@@ -41,4 +41,10 @@ describe("server error source contract", () => {
     }
     expect(violations).toEqual([])
   })
+
+  it("uses a source-resolvable canonical error-boundary import", () => {
+    const serverSource = readFileSync(resolve(repositoryRoot, "server/src/server.ts"), "utf8")
+    expect(serverSource).toContain('from "./errors/graphql-error"')
+    expect(serverSource).not.toContain('from "./errors/graphql-error.js"')
+  })
 })

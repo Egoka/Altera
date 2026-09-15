@@ -9,6 +9,7 @@ interface PublicErrorSnapshot {
 }
 
 const knownErrors = new WeakMap<object, Readonly<PublicErrorSnapshot>>()
+const MAX_ERROR_TRAVERSAL_NODES = 64
 
 function freezeExtensionValue(value: unknown): unknown {
   return Array.isArray(value) ? Object.freeze([...value]) : value
@@ -36,11 +37,13 @@ function readLink(value: object, key: "originalError" | "cause"): unknown {
 function findKnownError(error: unknown): Readonly<PublicErrorSnapshot> | null {
   const queue: unknown[] = [error]
   const visited = new WeakSet<object>()
+  let visitedCount = 0
 
-  for (let index = 0; index < queue.length; index += 1) {
+  for (let index = 0; index < queue.length && visitedCount < MAX_ERROR_TRAVERSAL_NODES; index += 1) {
     const current = queue[index]
     if (!isWeakKey(current) || visited.has(current)) continue
     visited.add(current)
+    visitedCount += 1
 
     const snapshot = knownErrors.get(current)
     if (snapshot) return snapshot
