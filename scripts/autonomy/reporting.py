@@ -468,6 +468,31 @@ def content_digest(report):
             return sorted((stable(item) for item in value), key=encoded)
         return value
 
+    def fields(row, names):
+        return {key: row[key] for key in names if key in row}
+
+    def pr_evidence(row):
+        # REST head/base.repo отражает весь репозиторий сейчас, а не evidence PR.
+        result = fields(row, ("id", "number", "state", "draft", "created_at", "createdAt", "closed_at",
+                              "merged_at", "mergedAt", "merge_commit_sha", "headRefOid", "baseRefOid",
+                              "headRefName", "baseRefName", "reviewDecision", "merged"))
+        for branch in ("head", "base"):
+            if isinstance(row.get(branch), dict):
+                result[branch] = fields(row[branch], ("sha", "ref"))
+        if isinstance(row.get("reviews"), list):
+            result["reviews"] = []
+            for review in row["reviews"]:
+                evidence = fields(review, ("id", "state", "commit_id", "submitted_at", "submittedAt", "actor_id"))
+                if isinstance(review.get("user"), dict):
+                    evidence["actor_id"] = review["user"].get("id")
+                result["reviews"].append(evidence)
+        return result
+
+    def ci_evidence(row):
+        return fields(row, ("id", "databaseId", "workflow_id", "name", "path", "event", "status", "conclusion",
+                            "head_sha", "headSha", "head_branch", "headBranch", "created_at", "createdAt",
+                            "run_started_at", "startedAt", "completed_at", "completedAt", "run_attempt", "run_number"))
+
     receipt_prs = {str(row["pr"].get("number")) for row in accepted if isinstance(row.get("pr"), dict)}
     prs = [row for row in report.get("pull_requests", [])
            if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt", "merged_at", "mergedAt"))
@@ -495,7 +520,8 @@ def content_digest(report):
         "period_task_ids": sorted(set(task_ids)),
         "accepted_evidence": [{key: value for key, value in row.items()
                                if key not in {"title", "status", "identifier", "issue_id"}} for row in accepted],
-        "pull_requests": prs, "ci_runs": ci, "source_coverage": coverage,
+        "pull_requests": [pr_evidence(row) for row in prs],
+        "ci_runs": [ci_evidence(row) for row in ci], "source_coverage": coverage,
     })
     semantic = stable(semantic)
     return hashlib.sha256(encoded(semantic).encode()).hexdigest()
