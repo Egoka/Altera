@@ -26,6 +26,10 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: false },
 
+  runtimeConfig: {
+    graphqlApiUrl: "http://127.0.0.1:4000/"
+  },
+
   modules: [
     "@nuxt/eslint",
     "@nuxt/fonts",
