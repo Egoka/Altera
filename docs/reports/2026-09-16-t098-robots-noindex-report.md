@@ -3,7 +3,7 @@
 **Задача:** T-098 / ALTE-24  
 **PR:** #59 (`web/t-098-robots-noindex`)  
 **Tested SHA:** `add175d44f03108589d01bce46a2f5ad4db206d9`  
-**Merge SHA:** определяется при слиянии  
+**Merge SHA:** `fd8d703fa07df9a8489febbe60e3e8ef244eb68c`  
 **Дата:** 2026-09-16
 
 ## Что сделано
