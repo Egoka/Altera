@@ -85,6 +85,8 @@ baseline и проверяемая revision. Разделы: 1 результа�
   Playwright 3/3, Vitest 14/14, bundle grep PASS; CI SUCCESS. Render deploy: not_applicable (diff только `web/`).
   Отчёт: `docs/reports/2026-09-15-t009-bff-proxy-report.md`. T-010, T-053 разблокированы.
 
+- Обновление 2026-09-15: T-010 — ревью принято. Source SHA `a1af2e749c69baa4eddfdbd170fee5c5b7ebc36b` (ветка `web/t010-graphql-operations`). Независимое ревью принято (ALTE-21). AC-1: Vitest 75 tests passed, negative probe подтверждён; AC-2: grep — строковых операций нет. 28 операций перенесены в `web/app/graphql/operations/**/*.graphql`; 7 удалены; 13 TS-файлов из `web/app/query/**` удалены. Merge в `app` ожидается от релиз-инженера. ADR-0012 статус не меняется — ADR остаётся «принято» как реализованный архитектурный контракт.
+
 ## 6. Эпики
 
 | ID                                          | Эпик                               | Стадия            | Задач | Блокеры    |
@@ -124,7 +126,7 @@ baseline и проверяемая revision. Разделы: 1 результа�
 | [T-112](tasks/T-112-launch-e2e-scenarios.md)                      | Подготовка e2e-сценариев запуска по flow-спецификациям                                                                                                       | E-01 | кандидат                     |
 | [T-008](tasks/T-008-graphql-codegen.md)                           | GraphQL-кодоген из SDL сервера и `codegen --check` в CI                                                                                                      | E-02 | завершена                    |
 | [T-009](tasks/T-009-bff-proxy-runtime-config.md)                  | BFF-прокси `POST /api/graphql` и адрес API в `runtimeConfig`                                                                                                 | E-02 | завершена                    |
-| [T-010](tasks/T-010-frontend-operations-graphql-files.md)         | Операции фронта в `.graphql` и их валидация против схемы в CI                                                                                                | E-02 | кандидат                     |
+| [T-010](tasks/T-010-frontend-operations-graphql-files.md)         | Операции фронта в `.graphql` и их валидация против схемы в CI                                                                                                | E-02 | ревью принято (commit a1af2e749c, 2026-09-15) |
 | [T-011](tasks/T-011-migration-roles-account-states.md)            | Миграция: `Role` из семи значений и состояния учётной записи                                                                                                 | E-03 | кандидат                     |
 | [T-012](tasks/T-012-migration-sessions-magic-link.md)             | Миграция: сессии с хэшем токена и хэшированные magic-link-токены                                                                                             | E-03 | зависит: T-011               |
 | [T-013](tasks/T-013-migration-profile-handle-locale.md)           | Миграция: имя, хэндл, аватар, основной язык аккаунта; уникальность хэндла навсегда                                                                           | E-03 | зависит: T-011               |
