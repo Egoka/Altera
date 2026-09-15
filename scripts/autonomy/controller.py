@@ -12,6 +12,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from deploy_evidence import health, render_deploy
 
 
@@ -127,12 +128,38 @@ def lock(path):
             fcntl.flock(stream, fcntl.LOCK_UN)
 
 
+class ExternalCommandError(RuntimeError):
+    """Безопасная ошибка границы процесса: без stderr и аргументов с credentials."""
+    def __init__(self, args, exit_code, reason="exit"):
+        self.source = Path(args[0]).name
+        self.exit_code = exit_code
+        self.reason = reason
+        super().__init__(f"{self.source}: {reason} {exit_code}")
+
+
 def command(args, cwd=None, as_json=True):
     result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, timeout=120, check=False)
     if result.returncode:
         # Вывод внешнего процесса может содержать credentials; только безопасный код.
-        raise RuntimeError(f"{Path(args[0]).name}: exit {result.returncode}")
-    return json.loads(result.stdout) if as_json else result.stdout.strip()
+        raise ExternalCommandError(args, result.returncode)
+    if not as_json:
+        return result.stdout.strip()
+    try:
+        return json.loads(result.stdout)
+    except ValueError as error:
+        raise ExternalCommandError(args, 0, "invalid_json") from error
+
+
+def read_command(args, cwd=None, as_json=True, attempts=3, pause=0.25):
+    """Повторяет только идемпотентное чтение; вызывающий явно выбирает этот путь."""
+    for attempt in range(attempts):
+        try:
+            return command(args, cwd, as_json)
+        except (RuntimeError, OSError, subprocess.TimeoutExpired):
+            if attempt + 1 == attempts:
+                raise
+            if pause:
+                time.sleep(pause * (attempt + 1))
 
 
 class Live:
@@ -144,8 +171,11 @@ class Live:
     def multica(self, *args):
         return command([self.config["multica"], *args, "--server-url", self.config["server_url"], "--workspace-id", self.config["workspace_id"], "--output", "json"])
 
+    def multica_read(self, *args):
+        return read_command([self.config["multica"], *args, "--server-url", self.config["server_url"], "--workspace-id", self.config["workspace_id"], "--output", "json"])
+
     def gh(self, endpoint):
-        return command(["gh", "api", endpoint])
+        return read_command(["gh", "api", endpoint])
 
     def fetch_matches(self, ref, sha):
         """Получить ровно ref, не обновляя named refs; сверить наблюдённый GitHub SHA."""

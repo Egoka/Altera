@@ -10,6 +10,21 @@ from pathlib import Path
 import controller as c
 
 
+class ReadCommandTests(unittest.TestCase):
+    def test_read_command_retries_transient_runtime_errors(self):
+        with patch.object(c, "command", side_effect=[RuntimeError("temporary"), {"ok": True}]) as source:
+            self.assertEqual(c.read_command(["multica", "issue", "list"], pause=0), {"ok": True})
+        self.assertEqual(source.call_count, 2)
+
+    def test_mutating_multica_command_is_not_retried(self):
+        live = c.Live({"multica": "multica", "server_url": "https://example.invalid",
+                       "workspace_id": "workspace", "repo": "/unused"})
+        with patch.object(c, "command", side_effect=RuntimeError("failed")) as source:
+            with self.assertRaises(RuntimeError):
+                live.multica("issue", "status", "issue", "done")
+        self.assertEqual(source.call_count, 1)
+
+
 class CompletionTests(unittest.TestCase):
     def setUp(self):
         self.receipt = {

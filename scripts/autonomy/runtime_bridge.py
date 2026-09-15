@@ -11,7 +11,7 @@ import subprocess
 import sys
 import threading
 
-from controller import Ledger, Live, command, fingerprint, lock
+from controller import ExternalCommandError, Ledger, Live, fingerprint, lock, read_command
 
 
 PR_QUERY = """query($owner: String!, $name: String!, $endCursor: String) {
@@ -40,8 +40,8 @@ def pull_requests(live):
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", live.gh_repo):
         raise RuntimeError("invalid GitHub repository")
     owner, name = live.gh_repo.split("/")
-    pages = command(["gh", "api", "graphql", "--paginate", "--slurp", "-f", "query=" + PR_QUERY,
-                     "-F", "owner=" + owner, "-F", "name=" + name])
+    pages = read_command(["gh", "api", "graphql", "--paginate", "--slurp", "-f", "query=" + PR_QUERY,
+                          "-F", "owner=" + owner, "-F", "name=" + name])
     if not isinstance(pages, list) or not pages:
         raise RuntimeError("incomplete pull request inventory")
     result, numbers, cursors = [], set(), set()
@@ -116,7 +116,7 @@ def emit(result, stream=sys.stdout):
 def snapshot(live):
     issues = []
     for offset in range(0, 10000, 100):
-        page = live.multica("issue", "list", "--project", live.config["project_id"], "--limit", "100", "--offset", str(offset))
+        page = live.multica_read("issue", "list", "--project", live.config["project_id"], "--limit", "100", "--offset", str(offset))
         issues.extend(page["issues"])
         if not page.get("has_more"):
             break
@@ -125,13 +125,17 @@ def snapshot(live):
     state = []
     for issue in issues:
         # Обновления служебных статусов, heartbeat и комментарии лидера не входят в ключ.
-        item = {k: issue.get(k) for k in ("id", "identifier", "title", "status", "assignee_id", "parent_issue_id", "priority")}
+        item = {k: issue.get(k) for k in ("id", "identifier", "title", "status", "status_category", "assignee_id", "parent_issue_id", "priority")}
         item["description_hash"] = fingerprint(issue.get("description", ""))
-        runs = live.multica("issue", "runs", issue["id"])
+        if issue.get("status") == "done" or issue.get("status_category") in ("done", "completed"):
+            item.update(runs=[], comment_cursor=[], comment_edit_coverage="not_applicable")
+            state.append(item)
+            continue
+        runs = live.multica_read("issue", "runs", issue["id"])
         item["runs"] = sorted((x["id"], x.get("status"), fingerprint(x.get("result"))) for x in runs if x.get("agent_id") not in live.config.get("controller_agent_ids", []))
         # --since фильтрует created_at и теряет правки старых комментариев.
         # --full сохраняет также сообщения свёрнутых resolved threads; тела не идут в delta.
-        comments = live.multica("issue", "comment", "list", issue["id"], "--full", "--summary")
+        comments = live.multica_read("issue", "comment", "list", issue["id"], "--full", "--summary")
         if isinstance(comments, dict):
             comments = comments.get("comments", [])
         comments = [x for x in comments if x.get("author_id") not in live.config.get("controller_agent_ids", [])]
@@ -175,6 +179,20 @@ def native_model(config, args, message):
     return child.wait()
 
 
+def failure_details(error):
+    details = {"error_type": type(error).__name__}
+    if isinstance(error, ExternalCommandError):
+        details.update(error_code="external_command_failed", error_source=error.source,
+                       exit_code=error.exit_code)
+    elif isinstance(error, subprocess.TimeoutExpired):
+        details.update(error_code="external_command_timeout", error_source=Path(error.cmd[0]).name)
+    elif isinstance(error, RuntimeError):
+        details["error_code"] = "runtime_invariant"
+    else:
+        details["error_code"] = "unexpected_error"
+    return details
+
+
 def main():
     if sys.argv[1:] == ["--version"]:
         print("altera-autonomy-controller 1.0.0")
@@ -209,5 +227,5 @@ if __name__ == "__main__":
         sys.exit(main())
     except Exception as error:
         # Ошибка инфраструктуры не превращается в успешный no_action.
-        emit({"status": "failed", "model_called": False, "error_type": type(error).__name__})
+        emit({"status": "failed", "model_called": False, **failure_details(error)})
         sys.exit(2)
