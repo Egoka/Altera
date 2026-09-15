@@ -1,0 +1,36 @@
+fragment ArticleCard on Article {
+  id
+  title
+  slug
+  dek
+  excerpt
+  featuredImage
+  publishedAt
+  author {
+    name
+    slug
+    photoUrl
+  }
+  contentType {
+    name
+    slug
+  }
+}
+
+fragment ArticleStatusValue on Article {
+  status
+}
+
+fragment PopularArticle on Article {
+  id
+  title
+  slug
+  author {
+    name
+    slug
+  }
+  contentType {
+    name
+    slug
+  }
+}

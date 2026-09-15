@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
   import type { CardMeta } from "~/types/layout"
 
   // Служебная строка карточки: части в заданном порядке через точку-разделитель.
   // Один атом вместо трёх одинаковых блоков в карточках base, large и small.
   const props = withDefaults(
     defineProps<{
-      article: ArticleResponse
+      article: ArticleCardFragment
       parts?: CardMeta
     }>(),
     { parts: () => ["author", "type"] }
@@ -23,6 +23,6 @@
     >
     <ShowAuthor v-if="part === 'author'" :link="authorLink" :name="article.author.name" />
     <ShowType v-else-if="part === 'type'" :link="typeLink" :name="article.contentType.name" />
-    <ShowDate v-else :time="article.publishedAt" />
+    <ShowDate v-else-if="article.publishedAt" :time="article.publishedAt" />
   </template>
 </template>

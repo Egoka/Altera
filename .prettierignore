@@ -9,3 +9,4 @@ node_modules
 .nuxt
 .output
 pnpm-lock.yaml
+web/app/graphql/generated/

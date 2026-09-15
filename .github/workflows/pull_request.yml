@@ -26,6 +26,8 @@ jobs:
         run: node -v
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: GraphQL codegen drift
+        run: pnpm codegen --check
       - name: Format
         run: pnpm format
       - name: Lint

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
 
   const props = defineProps<{
-    article: ArticleResponse
+    article: ArticleCardFragment
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
   const author = computed(() => `/authors/${props.article.author.slug}`)
@@ -26,7 +26,7 @@
         <figure class="relative">
           <NuxtLink :to="slug" class="block group">
             <NuxtImg
-              :src="article.featuredImage"
+              :src="article.featuredImage ?? undefined"
               :alt="article.title"
               class="w-full min-w-28 h-auto max-h-48 rounded-sm object-cover transition-transform duration-300" />
           </NuxtLink>
