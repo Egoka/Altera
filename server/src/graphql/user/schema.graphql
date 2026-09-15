@@ -9,20 +9,49 @@ enum Role {
   owner
 }
 
+enum Locale {
+  ru
+  en
+}
+
+enum ProfileCheckStatus {
+  ok
+  pending
+  rejected
+}
+
 type User {
   id: ID!
   name: String!
-  email: String!
   bio: String
   photoUrl: String
-  role: Role!
-  slug: String!
+  handle: String!
   socialLinks: JSON
   createdAt: String!
   updatedAt: String!
   # Для страницы автора
   articles: [Article!]
   # Количество статей (для админ панели)
+  _count: UserCount
+}
+
+type AccountUser {
+  id: ID!
+  name: String!
+  email: String!
+  bio: String
+  photoUrl: String
+  role: Role!
+  handle: String!
+  locale: Locale!
+  avatarAssetId: ID
+  prevAvatarId: ID
+  nameCheckStatus: ProfileCheckStatus!
+  avatarCheckStatus: ProfileCheckStatus!
+  socialLinks: JSON
+  createdAt: String!
+  updatedAt: String!
+  articles: [Article!]
   _count: UserCount
 }
 
@@ -40,7 +69,7 @@ input UserFiltersInput {
 }
 
 type UsersResponse {
-  users: [User!]!
+  users: [AccountUser!]!
   pagination: PaginationInfo!
   filters: UserFilters!
   sort: SortInfo!
@@ -75,14 +104,14 @@ type ArticlesByAuthorResponse {
 }
 
 extend type Query {
-  user(slug: String!): User
-  me: User
+  user(handle: String!): User
+  me: AccountUser
   myArticlesStats: UserArticleStats
 
   # Запросы для страницы автора
-  author(slug: String!): User
-  articlesByAuthor(authorSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByAuthorResponse!
-  authorStats(authorSlug: String!): AuthorStats
+  author(handle: String!): User
+  articlesByAuthor(authorHandle: String!, page: Int = 1, limit: Int = 10): ArticlesByAuthorResponse!
+  authorStats(authorHandle: String!): AuthorStats
 
   # Запросы для управления пользователями (требуют права admin)
   users(pagination: PaginationInput!, sort: SortInput!, filters: UserFiltersInput!, search: SearchInput): UsersResponse!

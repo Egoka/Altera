@@ -16,7 +16,7 @@ query GetTagPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
       publishedAt
       author {
         name
-        slug
+        slug: handle
         photoUrl
       }
       contentType {

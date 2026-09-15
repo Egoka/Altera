@@ -61,7 +61,7 @@ describe("magic-link persistence", () => {
       requestId: "request-1"
     } as never
 
-    await authMutations.requestMagicLink(null, { email: "reader@example.test" }, ctx)
+    await authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx)
 
     const payload = upsert.mock.calls[0][0]
     const expectedHash = "271a413bd339c5709fdceaec41f14f11e9fbfb5042d72d331c65f32b284cd09a"

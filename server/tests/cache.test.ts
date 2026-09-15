@@ -92,7 +92,7 @@ class FakeRedisClient implements CacheRedisClient {
   }
 
   private reverseKey(dataKey: string): string {
-    return `cache:v1:key-tags:${dataKey.slice(dataKey.lastIndexOf(":") + 1)}`
+    return `cache:v2:key-tags:${dataKey.slice(dataKey.lastIndexOf(":") + 1)}`
   }
 
   private deleteDataKey(dataKey: string, reverseKey: string): void {
@@ -115,7 +115,7 @@ describe("buildCacheKey", () => {
     })
 
     expect(first).toBe(second)
-    expect(first).toMatch(/^cache:v1:data:query\.latestArticles:[a-f0-9]{64}$/)
+    expect(first).toMatch(/^cache:v2:data:query\.latestArticles:[a-f0-9]{64}$/)
   })
 
   it("различает изменение вложенного аргумента", () => {
@@ -189,6 +189,23 @@ describe("GraphQL context cache", () => {
 })
 
 describe("RedisCache", () => {
+  it("does not read pre-profile-migration article or list payloads", async () => {
+    const client = new FakeRedisClient()
+    const cache = new RedisCache(client, 3600, () => undefined)
+    const legacyAuthor = { id: "user-1", slug: "legacy-author", name: "Reader" }
+
+    for (const [namespace, args] of [
+      ["query.article", { slug: "hello" }],
+      ["query.latestArticles", { pagination: { page: 1, limit: 20 } }]
+    ] as const) {
+      const currentKey = buildCacheKey(namespace, args)
+      const legacyKey = currentKey.replace("cache:v2:", "cache:v1:")
+      client.values.set(legacyKey, JSON.stringify({ author: legacyAuthor }))
+
+      await expect(cache.get(currentKey)).resolves.toBeNull()
+    }
+  })
+
   it("записывает значение, tag sets и обратный индекс с ограниченным TTL", async () => {
     const client = new FakeRedisClient()
     const cache = new RedisCache(client, 3600, () => undefined)

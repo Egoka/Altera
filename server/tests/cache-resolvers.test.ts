@@ -102,13 +102,13 @@ describe("domain cache tags", () => {
     const tags = buildArticleCacheTags(
       {
         slug: "old-slug",
-        author: { slug: "old-author" },
+        author: { handle: "old-author" },
         contentType: { slug: "essay" },
         sectionTags: [{ slug: "art" }, { slug: "music" }]
       },
       {
         slug: "new-slug",
-        author: { slug: "new-author" },
+        author: { handle: "new-author" },
         contentType: { slug: "essay" },
         sectionTags: [{ slug: "music" }, { slug: "travel" }]
       }
@@ -133,14 +133,14 @@ describe("domain cache tags", () => {
       id: "a1",
       slug: "old-slug",
       authorId: "u1",
-      author: { slug: "old-author" },
+      author: { handle: "old-author" },
       contentType: { slug: "essay" },
       sectionTags: [{ slug: "art" }]
     }
     const updated = {
       ...previous,
       slug: "new-slug",
-      author: { slug: "new-author" },
+      author: { handle: "new-author" },
       sectionTags: [{ slug: "travel" }]
     }
     const prisma = {

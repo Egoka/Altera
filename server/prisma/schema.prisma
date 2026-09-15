@@ -16,7 +16,12 @@ model User {
   bio                String?
   photoUrl           String?
   role               Role                @default(reader)
-  slug               String              @unique
+  handle             String              @unique
+  locale             Locale              @default(ru)
+  avatarAssetId      String?
+  prevAvatarId       String?
+  nameCheckStatus    ProfileCheckStatus  @default(ok)
+  avatarCheckStatus  ProfileCheckStatus  @default(ok)
   socialLinks        Json?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -30,8 +35,24 @@ model User {
   magicLink          MagicLinkToken?
   sessions           Session[]
   emailChangeRequest EmailChangeRequest?
+  currentHandle      HandleHistory       @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
+  handleHistory      HandleHistory[]     @relation("HandleOwner")
 
+  @@index([nameCheckStatus])
+  @@index([avatarCheckStatus])
   @@map("users")
+}
+
+/// Append-only registry: issued handles are never deleted or reused.
+model HandleHistory {
+  handle      String   @id
+  userId      String?
+  user        User?    @relation("HandleOwner", fields: [userId], references: [id], onDelete: SetNull)
+  currentUser User?    @relation("CurrentUserHandle")
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("handle_history")
 }
 
 model MagicLinkToken {
@@ -137,6 +158,17 @@ enum AccountArchiveMode {
   self
   admin
   emergency
+}
+
+enum Locale {
+  ru
+  en
+}
+
+enum ProfileCheckStatus {
+  ok
+  pending
+  rejected
 }
 
 enum ContentTypeStatus {

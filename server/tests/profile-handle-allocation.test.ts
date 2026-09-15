@@ -1,0 +1,164 @@
+import crypto from "node:crypto"
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import { changeUserHandle, createUserWithReservedHandle } from "../src/auth/handle"
+
+let authMutations: typeof import("../src/graphql/auth/resolver").default.Mutation
+
+beforeAll(async () => {
+  vi.stubEnv("JWT_ACCESS_SECRET", "test-access-secret")
+  vi.stubEnv("JWT_REFRESH_SECRET", "test-refresh-secret")
+  ;({ Mutation: authMutations } = (await import("../src/graphql/auth/resolver")).default)
+})
+
+beforeEach(() => {
+  vi.restoreAllMocks()
+})
+
+const uniqueError = (target: string[]) => ({
+  code: "P2002",
+  meta: { modelName: target.includes("handle") ? "HandleHistory" : "User", target }
+})
+
+const context = (overrides: Record<string, unknown> = {}) => ({
+  prisma: {
+    user: { findUnique: vi.fn().mockResolvedValue(null) },
+    magicLinkToken: { upsert: vi.fn().mockResolvedValue({}) },
+    ...overrides
+  },
+  logger: { log: vi.fn() },
+  piiHasher: { email: vi.fn().mockReturnValue("email-hash") },
+  requestId: "request-1"
+})
+
+describe("profile handle allocation", () => {
+  it("normalizes, reserves, and assigns a changed handle in one transaction", async () => {
+    const reserve = vi.fn().mockResolvedValue({})
+    const updateUser = vi.fn().mockResolvedValue({ id: "user-1", handle: "new-handle" })
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({ handleHistory: { create: reserve }, user: { update: updateUser } })
+    )
+
+    await expect(
+      changeUserHandle({ $transaction: transaction } as never, {
+        userId: "user-1",
+        handle: "  NEW-HANDLE  ",
+        requestId: "request-1"
+      })
+    ).resolves.toEqual({ id: "user-1", handle: "new-handle" })
+    expect(reserve).toHaveBeenCalledWith({ data: { handle: "new-handle", userId: "user-1" } })
+    expect(updateUser).toHaveBeenCalledWith({ where: { id: "user-1" }, data: { handle: "new-handle" } })
+  })
+
+  it.each(["same owner's historical handle", "another owner's reserved handle"])(
+    "returns CONFLICT for %s",
+    async () => {
+      const transaction = vi.fn().mockRejectedValue(uniqueError(["handle"]))
+
+      await expect(
+        changeUserHandle({ $transaction: transaction } as never, {
+          userId: "user-1",
+          handle: "reserved-handle",
+          requestId: "request-1"
+        })
+      ).rejects.toMatchObject({ extensions: { code: "CONFLICT", entity: "handle" } })
+    }
+  )
+
+  it("rejects an invalid changed handle before opening a transaction", async () => {
+    const transaction = vi.fn()
+
+    await expect(
+      changeUserHandle({ $transaction: transaction } as never, {
+        userId: "user-1",
+        handle: "not valid!",
+        requestId: "request-1"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "VALIDATION_ERROR", field: "handle" } })
+    expect(transaction).not.toHaveBeenCalled()
+  })
+
+  it("does not retry a unique conflict outside the handle registry", async () => {
+    const emailConflict = uniqueError(["email"])
+    const prisma = { $transaction: vi.fn().mockRejectedValue(emailConflict) }
+
+    await expect(
+      createUserWithReservedHandle(prisma as never, {
+        email: "reader@example.test",
+        name: "Reader",
+        locale: "ru"
+      })
+    ).rejects.toBe(emailConflict)
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+  })
+
+  it("retries a reserved random handle and completes magic-link registration", async () => {
+    const candidates = [Buffer.from("11111111", "hex"), Buffer.from("22222222", "hex")]
+    vi.spyOn(crypto, "randomBytes").mockImplementation(((size: number) => {
+      if (size === 4) return candidates.shift() ?? Buffer.from("33333333", "hex")
+      return Buffer.alloc(size, 0xab)
+    }) as typeof crypto.randomBytes)
+
+    const reserve = vi
+      .fn()
+      .mockRejectedValueOnce(uniqueError(["handle"]))
+      .mockResolvedValue({})
+    const createUser = vi.fn().mockResolvedValue({
+      id: "user-1",
+      email: "reader@example.test",
+      name: "reader",
+      handle: "u-22222222",
+      locale: "en"
+    })
+    const assignOwner = vi.fn().mockResolvedValue({})
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        handleHistory: { create: reserve, update: assignOwner },
+        user: { create: createUser }
+      })
+    )
+    const ctx = context({
+      user: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockRejectedValue(uniqueError(["handle"]))
+      },
+      $transaction: transaction
+    })
+
+    await expect(
+      authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "en" }, ctx as never)
+    ).resolves.toBe(true)
+
+    expect(reserve).toHaveBeenCalledTimes(2)
+    expect(createUser).toHaveBeenCalledWith({
+      data: {
+        email: "reader@example.test",
+        name: "reader",
+        handle: "u-22222222",
+        locale: "en"
+      }
+    })
+    expect(assignOwner).toHaveBeenCalledWith({
+      where: { handle: "u-22222222" },
+      data: { userId: "user-1" }
+    })
+  })
+
+  it("continues with the existing user when concurrent registration wins the email", async () => {
+    const existingUser = { id: "user-existing", email: "reader@example.test" }
+    const findUnique = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(existingUser)
+    const transaction = vi.fn().mockRejectedValue(uniqueError(["email"]))
+    const upsert = vi.fn().mockResolvedValue({})
+    const ctx = context({
+      findUnique,
+      $transaction: transaction,
+      user: { findUnique, create: vi.fn().mockRejectedValue(uniqueError(["email"])) },
+      magicLinkToken: { upsert }
+    })
+
+    await expect(
+      authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx as never)
+    ).resolves.toBe(true)
+
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: "user-existing" } }))
+  })
+})

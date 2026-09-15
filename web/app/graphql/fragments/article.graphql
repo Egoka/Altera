@@ -8,7 +8,7 @@ fragment ArticleCard on Article {
   publishedAt
   author {
     name
-    slug
+    slug: handle
     photoUrl
   }
   contentType {
@@ -27,7 +27,7 @@ fragment PopularArticle on Article {
   slug
   author {
     name
-    slug
+    slug: handle
   }
   contentType {
     name

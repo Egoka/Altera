@@ -6,7 +6,12 @@ query GetMyProfile {
     bio
     photoUrl
     role
-    slug
+    handle
+    locale
+    avatarAssetId
+    prevAvatarId
+    nameCheckStatus
+    avatarCheckStatus
     socialLinks
     createdAt
   }

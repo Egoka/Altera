@@ -19,35 +19,35 @@ import { readThroughPublicCache } from "../../cache/read-through"
 
 export default {
   Query: {
-    user: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
+    user: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
       return ctx.prisma.user.findUnique({
-        where: { slug: args.slug }
+        where: { handle: args.handle }
       })
     },
 
-    author: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
+    author: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
       return ctx.prisma.user.findUnique({
-        where: { slug: args.slug, role: "author" }
+        where: { handle: args.handle, role: "author" }
       })
     },
 
     articlesByAuthor: async (
       _parent: any,
-      { authorSlug, page = 1, limit = 10 }: { authorSlug: string; page: number; limit: number },
+      { authorHandle, page = 1, limit = 10 }: { authorHandle: string; page: number; limit: number },
       ctx: GraphQLContext
     ) => {
-      const effectiveArgs = { authorSlug, page, limit }
+      const effectiveArgs = { authorHandle, page, limit }
       const cacheKey = buildCacheKey("query.articlesByAuthor", effectiveArgs)
 
       return readThroughPublicCache(
         {
           cache: ctx.cache,
           key: cacheKey,
-          tags: [`author:${authorSlug}`],
+          tags: [`author:${authorHandle}`],
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
+          const author = await ctx.prisma.user.findUnique({ where: { handle: authorHandle } })
           if (!author) {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
@@ -73,17 +73,17 @@ export default {
       )
     },
 
-    authorStats: async (_parent: any, { authorSlug }: { authorSlug: string }, ctx: GraphQLContext) => {
-      const cacheKey = buildCacheKey("query.authorStats", { authorSlug })
+    authorStats: async (_parent: unknown, { authorHandle }: { authorHandle: string }, ctx: GraphQLContext) => {
+      const cacheKey = buildCacheKey("query.authorStats", { authorHandle })
       return readThroughPublicCache(
         {
           cache: ctx.cache,
           key: cacheKey,
-          tags: [`author:${authorSlug}`],
+          tags: [`author:${authorHandle}`],
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
+          const author = await ctx.prisma.user.findUnique({ where: { handle: authorHandle } })
           if (!author) {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
@@ -194,12 +194,12 @@ export default {
       validatePagination(pagination, ctx.requestId)
       validateSort(
         sort,
-        ["id", "name", "email", "role", "slug", "createdAt", "updatedAt", "_count.articles"],
+        ["id", "name", "email", "role", "handle", "createdAt", "updatedAt", "_count.articles"],
         ctx.requestId
       )
 
       if (search) {
-        validateSearchInput(search, ["name", "email", "bio", "slug"], ctx.requestId)
+        validateSearchInput(search, ["name", "email", "bio", "handle"], ctx.requestId)
       }
 
       if (filters.base.createdAt) {

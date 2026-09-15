@@ -1,3 +1,23 @@
+type AccountUser {
+  _count: UserCount
+  articles: [Article!]
+  avatarAssetId: ID
+  avatarCheckStatus: ProfileCheckStatus!
+  bio: String
+  createdAt: String!
+  email: String!
+  handle: String!
+  id: ID!
+  locale: Locale!
+  name: String!
+  nameCheckStatus: ProfileCheckStatus!
+  photoUrl: String
+  prevAvatarId: ID
+  role: Role!
+  socialLinks: JSON
+  updatedAt: String!
+}
+
 type Article {
   author: User!
   body: String!
@@ -86,7 +106,7 @@ type ArticlesResponse {
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
-  user: User!
+  user: AccountUser!
 }
 
 type AuthorStats {
@@ -192,6 +212,11 @@ input DateRangeInput {
 
 scalar JSON
 
+enum Locale {
+  en
+  ru
+}
+
 input MergeTagsInput {
   sourceTagIds: [ID!]!
   targetTagId: ID!
@@ -210,7 +235,7 @@ type Mutation {
   deleteTag(id: ID!): SectionTag!
   mergeTags(input: MergeTagsInput!): SectionTag!
   reorderContentTypes(input: ReorderContentTypesInput!): [ContentType!]!
-  requestMagicLink(email: String!): Boolean!
+  requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
   revertToDraft(id: ID!): Article!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
@@ -235,23 +260,29 @@ input PaginationInput {
   page: Int! = 1
 }
 
+enum ProfileCheckStatus {
+  ok
+  pending
+  rejected
+}
+
 type Query {
   _empty: String
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
   articles(filters: ArticleFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): ArticlesResponse!
-  articlesByAuthor(authorSlug: String!, limit: Int = 10, page: Int = 1): ArticlesByAuthorResponse!
+  articlesByAuthor(authorHandle: String!, limit: Int = 10, page: Int = 1): ArticlesByAuthorResponse!
   articlesByContentType(contentTypeSlug: String!, limit: Int = 10, page: Int = 1): ArticlesByContentTypeResponse!
   articlesByTag(limit: Int = 10, page: Int = 1, tagSlug: String!): ArticlesByTagResponse!
-  author(slug: String!): User
-  authorStats(authorSlug: String!): AuthorStats
+  author(handle: String!): User
+  authorStats(authorHandle: String!): AuthorStats
   contentType(slug: String!): ContentType
   contentTypeStats(contentTypeSlug: String!): ContentTypeStats
   contentTypes(filters: ContentTypeFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): ContentTypesResponse!
   featuredArticles(limit: Int = 5): [Article!]!
   latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
-  me: User
+  me: AccountUser
   myArticlesStats: UserArticleStats
   popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
@@ -259,7 +290,7 @@ type Query {
   sectionTags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
   tag(slug: String!): SectionTag
   tagStats(tagSlug: String!): TagStats
-  user(slug: String!): User
+  user(handle: String!): User
   users(filters: UserFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): UsersResponse!
 }
 
@@ -382,12 +413,10 @@ type User {
   articles: [Article!]
   bio: String
   createdAt: String!
-  email: String!
+  handle: String!
   id: ID!
   name: String!
   photoUrl: String
-  role: Role!
-  slug: String!
   socialLinks: JSON
   updatedAt: String!
 }
@@ -421,5 +450,5 @@ type UsersResponse {
   pagination: PaginationInfo!
   search: SearchInfo
   sort: SortInfo!
-  users: [User!]!
+  users: [AccountUser!]!
 }

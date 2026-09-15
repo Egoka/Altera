@@ -1,10 +1,10 @@
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
-  user: User!
+  user: AccountUser!
 }
 
 extend type Mutation {
-  requestMagicLink(email: String!): Boolean!
+  requestMagicLink(email: String!, locale: Locale!): Boolean!
   verifyMagicLink(token: String!): AuthPayload!
 }

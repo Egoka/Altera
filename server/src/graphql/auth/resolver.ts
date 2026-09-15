@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken"
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
+import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
+import type { Locale, User } from "../../generated/prisma"
 
 if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
   throw new Error("JWT secrets must be defined in environment variables.")
@@ -16,20 +18,24 @@ const JWT_REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_TOKEN_EXPIRY || "7d"
 const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
 export default {
   Mutation: {
-    requestMagicLink: async (_: unknown, { email }: { email: string }, ctx: GraphQLContext) => {
+    requestMagicLink: async (_: unknown, { email, locale }: { email: string; locale: Locale }, ctx: GraphQLContext) => {
       const { prisma, logger, piiHasher, requestId } = ctx
       const user = await prisma.user.findUnique({ where: { email } })
 
-      let targetUser: any
+      let targetUser: User
       if (!user) {
         const username = email.split("@")[0]
-        targetUser = await prisma.user.create({
-          data: {
-            email,
-            name: username,
-            slug: username // Consider a more robust slug generation
+        try {
+          targetUser = await createUserWithReservedHandle(prisma, { email, name: username, locale })
+        } catch (error: unknown) {
+          if (!isPrismaUniqueConstraint(error, "email")) throw error
+
+          const concurrentUser = await prisma.user.findUnique({ where: { email } })
+          if (!concurrentUser) {
+            throw error
           }
-        })
+          targetUser = concurrentUser
+        }
       } else {
         targetUser = user
       }
