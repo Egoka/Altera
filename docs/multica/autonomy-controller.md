@@ -1,0 +1,95 @@
+# Контроллер автономии
+
+Этот контракт применяется только к явно запущенной Multica. Обычный чат не читает очередь,
+не приобретает слот и не завершает чужие задачи. Общие AGENTS.md/CLAUDE.md не подключают этот процесс.
+
+## Текущие гарантии
+
+`scripts/autonomy/controller.py` проверяет цепочку CI → независимое review → merge →
+необходимый deploy/health → финализация в `app`. JSON задачи сам по себе не является доказательством:
+GitHub, история native runs и файлы `app` перечитываются перед действием.
+
+Граница — управляемый путь выполнения. У native агентов остаются прежние локальные CLI-доступы:
+запрет прямого `gh pr merge`/`multica issue status done` в инструкции не является серверным ACL.
+Пока отдельное разграничение прав не подтверждено, отчёт обязан писать `managed_path_only`.
+Без live deployment verifier серверные задачи блокируются, а не закрываются по тексту агента.
+
+## Один итог задачи
+
+Хранить канонический JSON в `docs/reports/tasks/<T-ID>.json` и короткий итог в соседнем Markdown.
+Исторические планы/отчёты не удалять; сослаться на них. Минимальный пример:
+
+```json
+{
+  "schema_version": 1,
+  "task_id": "T-123",
+  "issue_id": "native-issue-uuid",
+  "work_class": "product",
+  "source": { "path": "docs/backlog/tasks/T-123.md", "sha": "full-source-sha" },
+  "baseline_sha": "full-app-baseline-sha",
+  "tested_sha": "full-pr-head-sha",
+  "implementer_id": "native-agent-uuid",
+  "implementer_run_id": "native-execution-uuid",
+  "criteria": [{ "id": "AC-1", "status": "passed", "evidence": "https://github.com/Egoka/Altera/actions/runs/123" }],
+  "pr": {
+    "number": 123,
+    "head_sha": "full-pr-head-sha",
+    "base_sha": "full-base-sha",
+    "base_ref": "app",
+    "merge_sha": "full-merge-sha"
+  },
+  "review": {
+    "actor_id": "reviewer-uuid",
+    "run_id": "review-execution-uuid",
+    "sha": "full-pr-head-sha",
+    "verdict": "approved"
+  },
+  "deployment": { "required": false, "reason": "Только документация" },
+  "finalization": { "path": "docs/reports/tasks/T-123.md", "sha256": "sha256-of-markdown-bytes" },
+  "usage": null
+}
+```
+
+UUID и SHA в примере — placeholders, не готовое evidence. Поля `verified`/`accepted_at` создаёт
+контроллер после проверки; агент не назначает их сам. Финальный Markdown включает Task ID,
+полный tested SHA, результат критериев и ссылки. Собственный hash/commit внутрь Markdown не записывать.
+
+Ревьюер — другой actor из настроенного allowlist. Его завершённый native run заканчивается
+строкой `ALTERA_REVIEW_V1 {"sha": "<полный SHA>", "verdict": "approved"}` только при одобрении.
+Отклонённое review не печатает эту строку. CI и review нового SHA обязательны после изменения кода.
+Разработчик и reviewer фиксируют настоящие execution IDs, не Issue ID.
+
+Вызовы: `python3 scripts/autonomy/controller.py verify|merge|done --config <installed-config> --receipt <json>`.
+Не вызывать merge/Done напрямую. При отказе исправить конкретное недостающее evidence.
+Потеря доступа фиксируется один раз; ручное Done владельца не требуется.
+
+## Оркестрация
+
+`runtime_bridge.py` — отдельный Claude stream-json профиль **только оркестратора**.
+Он сравнивает содержательные состояния задач, комментариев других участников, native runs,
+PR/CI и `app`. Heartbeat и собственные комментарии лидера не являются новой работой.
+Повторный снимок завершает программный `no_action` с нулевыми токенами, без вызова Claude.
+Реальному Claude сохраняются managed MCP/config параметры; передаётся только изменившаяся часть снимка.
+
+SQLite journal хранится в установленном state directory вне worktree. Захват события атомарен;
+успешный повтор не выполняется. Неопределённый `running` после сбоя требует сверки внешнего результата,
+а не повторного merge. Первичная попытка + максимум два повтора неизменившейся ошибки.
+Новая ревизия или содержательное событие получают новый ключ. Версия инструкций входит в ключ.
+
+Освободившийся слот сразу передаётся готовой задаче; поддерживать три готовых задачи из бэклога.
+Количество готовых задач не меняет лимит одного product writer. Новая работа начинается с fetch
+и отдельного worktree свежего `origin/app`. При выборе учитывать возраст очереди и зависимости.
+
+## Проверки и ресурсы
+
+Перед server work выполнить preflight из `scripts/autonomy/preflight.py`; проверить новые env,
+версии, GH и реальные MCP tool results того же runtime/run. Inventory/Connected не заменяет tools/call.
+Development Neon остаётся текущей средой. Production не выбирать автоматически.
+CI использует отдельные PostgreSQL 17 и Redis; миграции допускаются только на изолированной CI БД.
+
+Уборка — [безопасная очистка](autonomy-cleanup.md). Без подтверждённого ограничения новых запусков
+применение очистки запрещено; dry-run показывает кандидатов и причины. Штатный daemon GC сохраняет
+свои сроки до отдельной проверки его гарантий относительно канонического Done.
+
+Отчёт и метрики — [ежедневный аудит](daily-audit.md). Нельзя объявлять отсутствие данных нулём,
+считать служебные задачи продуктовым результатом или восстанавливать потерянные доказательства догадкой.

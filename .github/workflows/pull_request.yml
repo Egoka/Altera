@@ -36,6 +36,10 @@ jobs:
         run: pnpm test
       - name: Direct chat and Multica routing
         run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/agent-loop -p test_chat_routing.py
+      - name: Autonomy controller tests
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/autonomy -p 'test_*.py'
+      - name: Dependency probe safety tests
+        run: node --test scripts/autonomy/infra_probe.test.mjs
 
   web-checks:
     name: Сборка и типизация веба
@@ -89,11 +93,22 @@ jobs:
     name: Сборка сервера и дымовая проверка старта
     runs-on: ubuntu-latest
 
-    # Redis нужен, потому что server/src/redis.ts создаёт подключение на импорте и бросает
-    # исключение без REDIS_URL. Оговорка: дымовая проверка подтверждает запуск и ответ
-    # GraphQL, но не связность с Redis — запрос `{__typename}` кеша не касается, а ioredis
-    # с maxRetriesPerRequest: null переподключается в фоне. Проверено локально 2026-09-09.
+    # Сервисы принадлежат только этому job. Миграции и реальные SELECT 1/PING
+    # проверяются отдельно: GraphQL __typename сам не обращается к зависимостям.
     services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: altera_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d altera_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:7-alpine
         ports:
@@ -107,10 +122,11 @@ jobs:
     env:
       PORT: 4000
       NODE_ENV: test
+      ALTERA_ISOLATED_CI: "1"
       FRONTEND_URL: http://localhost:3000
-      DATABASE_URL: "postgresql://test:test@localhost:5432/test"
-      DATABASE_URL_UNPOOLED: "postgresql://test:test@localhost:5432/test"
-      REDIS_URL: "redis://localhost:6379"
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
+      DATABASE_URL_UNPOOLED: "postgresql://test:test@127.0.0.1:5432/altera_ci"
+      REDIS_URL: "redis://127.0.0.1:6379/0"
       CACHE_TTL: 21600
       JWT_ACCESS_SECRET: "test-access-secret"
       JWT_REFRESH_SECRET: "test-refresh-secret"
@@ -140,6 +156,10 @@ jobs:
         run: cd server && pnpm run build:ci
       - name: Check build output
         run: test -f server/dist/server.js
+      - name: Deploy migrations to isolated CI database
+        run: node scripts/autonomy/infra_probe.mjs --migrate
+      - name: Require PostgreSQL 17 and Redis readiness
+        run: node scripts/autonomy/infra_probe.mjs
       # Раньше здесь стояло `timeout 2s pnpm start || true`: падение старта не делало
       # проверку красной. Скрипт smoke.sh ошибки не глушит и печатает вывод сервера.
       - name: Smoke check server start

@@ -1,0 +1,224 @@
+"""Проверка доказательств и журнал идемпотентности. Только stdlib."""
+import argparse
+import contextlib
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import sqlite3
+import subprocess
+import sys
+
+
+def fingerprint(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()).hexdigest()
+
+
+def review_approved(content, sha):
+    lines = content.strip().splitlines()
+    prefix = "ALTERA_REVIEW_V1 "
+    if not lines or not lines[-1].startswith(prefix):
+        return False
+    try:
+        return json.loads(lines[-1][len(prefix):]) == {"sha": sha, "verdict": "approved"}
+    except ValueError:
+        return False
+
+
+def validate(receipt, facts, phase="done"):
+    """facts поступают от live-провайдера, не из текста агента."""
+    errors = []
+    sha = receipt.get("tested_sha")
+    pr = receipt.get("pr", {})
+    live_pr = facts.get("pr", {})
+    review = receipt.get("review", {})
+    if receipt.get("schema_version") != 1 or not re.fullmatch(r"[0-9a-f]{40}", sha or ""):
+        errors.append("schema")
+    if not receipt.get("task_id") or not receipt.get("source", {}).get("path") or not receipt.get("baseline_sha"):
+        errors.append("source")
+    criteria = receipt.get("criteria", [])
+    if not criteria or any(x.get("status") != "passed" or not x.get("id") or not x.get("evidence") for x in criteria):
+        errors.append("criteria")
+    if not pr.get("number") or pr.get("base_ref") != "app" or pr.get("head_sha") != sha or any(pr.get(k) != live_pr.get(k) for k in ("number", "head_sha", "base_ref", "base_sha")):
+        errors.append("pr")
+    if facts.get("ci", {}).get("sha") != sha or facts.get("ci", {}).get("passed") is not True:
+        errors.append("ci")
+    if not receipt.get("implementer_run_id") or facts.get("implementer_trusted") is not True or not review.get("actor_id") or review.get("actor_id") == receipt.get("implementer_id") or review.get("sha") != sha or review.get("verdict") != "approved" or not review.get("run_id") or facts.get("review") != review or facts.get("review_completed") is not True or facts.get("review_trusted") is not True:
+        errors.append("review")
+    if facts.get("files_complete") is not True:
+        errors.append("pr_files")
+    if phase == "merge":
+        if facts.get("state") != "OPEN" or facts.get("base_current") is not True:
+            errors.append("base")
+        return errors
+    if facts.get("state") != "MERGED" or not pr.get("merge_sha") or pr.get("merge_sha") != live_pr.get("merge_sha") or facts.get("merge_in_app") is not True:
+        errors.append("merge")
+    deployment = receipt.get("deployment", {})
+    if facts.get("requires_deploy") is not False or deployment.get("required") is not False:
+        dep = facts.get("deployment", {})
+        if dep.get("status") != "live" or dep.get("sha") != pr.get("merge_sha") or dep.get("health") is not True:
+            errors.append("deployment")
+    elif not deployment.get("reason"):
+        errors.append("deployment")
+    finalization = receipt.get("finalization", {})
+    if not finalization.get("path") or not re.fullmatch(r"[0-9a-f]{64}", finalization.get("sha256", "")) or facts.get("finalization_sha256") != finalization.get("sha256"):
+        errors.append("finalization")
+    return errors
+
+
+class Ledger:
+    """Running без результата требует reconciliation, не слепого повторения."""
+    def __init__(self, path):
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.db = sqlite3.connect(path, timeout=30)
+        self.db.execute("PRAGMA journal_mode=WAL")
+        self.db.execute("CREATE TABLE IF NOT EXISTS events (key TEXT PRIMARY KEY, state TEXT NOT NULL, attempts INTEGER NOT NULL, updated TEXT NOT NULL)")
+        self.db.execute("CREATE TABLE IF NOT EXISTS cursors (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+        self.db.commit()
+
+    def claim(self, key):
+        with self.db:
+            self.db.execute("BEGIN IMMEDIATE")
+            row = self.db.execute("SELECT state, attempts FROM events WHERE key=?", (key,)).fetchone()
+            if row and (row[0] in ("running", "done") or row[1] >= 3):
+                return False
+            attempts = row[1] + 1 if row else 1
+            self.db.execute("INSERT OR REPLACE INTO events VALUES (?, 'running', ?, ?)", (key, attempts, dt.datetime.now(dt.timezone.utc).isoformat()))
+        return True
+
+    def finish(self, key, success):
+        with self.db:
+            self.db.execute("UPDATE events SET state=?, updated=? WHERE key=? AND state='running'", ("done" if success else "failed", dt.datetime.now(dt.timezone.utc).isoformat(), key))
+
+    def cursor(self, key):
+        row = self.db.execute("SELECT value FROM cursors WHERE key=?", (key,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    def set_cursor(self, key, value):
+        with self.db:
+            self.db.execute("INSERT OR REPLACE INTO cursors VALUES (?, ?)", (key, json.dumps(value)))
+
+
+@contextlib.contextmanager
+def lock(path):
+    path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(stream, fcntl.LOCK_UN)
+
+
+def command(args, cwd=None, as_json=True):
+    result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, timeout=120, check=False)
+    if result.returncode:
+        # Вывод внешнего процесса может содержать credentials; только безопасный код.
+        raise RuntimeError(f"{Path(args[0]).name}: exit {result.returncode}")
+    return json.loads(result.stdout) if as_json else result.stdout.strip()
+
+
+class Live:
+    def __init__(self, config):
+        self.config = config
+        self.repo = Path(config["repo"])
+        self.gh_repo = config.get("github_repo", "Egoka/Altera")
+
+    def multica(self, *args):
+        return command([self.config["multica"], *args, "--server-url", self.config["server_url"], "--workspace-id", self.config["workspace_id"], "--output", "json"])
+
+    def gh(self, endpoint):
+        return command(["gh", "api", endpoint])
+
+    def facts(self, receipt):
+        number = int(receipt["pr"]["number"])
+        pr = self.gh(f"repos/{self.gh_repo}/pulls/{number}")
+        sha = pr["head"]["sha"]
+        checks = self.gh(f"repos/{self.gh_repo}/commits/{sha}/check-runs?per_page=100")
+        aggregate = [x for x in checks.get("check_runs", []) if x["name"] == "test" and x.get("app", {}).get("slug") == "github-actions"]
+        aggregate.sort(key=lambda x: x["id"], reverse=True)
+        base = self.gh(f"repos/{self.gh_repo}/git/ref/heads/app")["object"]["sha"]
+        review = receipt.get("review", {})
+        runs = self.multica("issue", "runs", receipt["issue_id"])
+        selected = next((x for x in runs if x.get("id") == review.get("run_id")), {})
+        result = selected.get("result") or {}
+        content = result.get("output", "") if isinstance(result, dict) else ""
+        implementer = next((x for x in runs if x.get("id") == receipt.get("implementer_run_id")), {})
+        actor = selected.get("agent_id")
+        path = receipt.get("finalization", {}).get("path", "")
+        final_hash = None
+        command(["git", "fetch", "origin", "app"], self.repo, False)
+        if path.startswith("docs/reports/") and ".." not in Path(path).parts:
+            p = subprocess.run(["git", "show", f"{base}:{path}"], cwd=self.repo, capture_output=True, check=False)
+            if p.returncode == 0 and receipt["task_id"].encode() in p.stdout and sha.encode() in p.stdout:
+                final_hash = hashlib.sha256(p.stdout).hexdigest()
+        merge_sha = pr.get("merge_commit_sha") if pr.get("merged") else None
+        merged = bool(merge_sha and subprocess.run(["git", "merge-base", "--is-ancestor", merge_sha, base], cwd=self.repo, capture_output=True).returncode == 0)
+        files = command(["gh", "api", "--paginate", "--slurp", f"repos/{self.gh_repo}/pulls/{number}/files?per_page=100"])
+        names = [x["filename"] for page in files for x in page]
+        requires_deploy = any(x.startswith(("server/", "packages/")) or x in ("pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json", ".nvmrc", "render.yaml") for x in names)
+        facts = {"pr": {"number": number, "head_sha": sha, "base_ref": pr["base"]["ref"], "base_sha": pr["base"]["sha"], "merge_sha": merge_sha},
+                 "state": "MERGED" if pr.get("merged") else pr["state"].upper(), "ci": {"sha": sha, "passed": bool(aggregate and aggregate[0].get("conclusion") == "success")},
+                 "review": review, "review_completed": selected.get("status") == "completed", "review_trusted": actor == review.get("actor_id") and actor in self.config.get("reviewer_ids", []) and review_approved(content, sha),
+                 "implementer_trusted": implementer.get("status") == "completed" and bool(receipt.get("implementer_id")) and implementer.get("agent_id") == receipt.get("implementer_id"),
+                 "files_complete": len(names) == pr.get("changed_files"),
+                 "base_current": base == receipt["pr"].get("base_sha"), "merge_in_app": merged,
+                 "requires_deploy": requires_deploy, "finalization_sha256": final_hash}
+        # Deploy без live verifier остаётся unknown. Файл агента не заменяет live probe.
+        if requires_deploy and self.config.get("deployment_probe"):
+            facts["deployment"] = command([*self.config["deployment_probe"], "--sha", str(merge_sha)])
+        return facts
+
+    def transition(self, receipt, phase, state_dir):
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", receipt.get("task_id", "")):
+            raise ValueError("invalid task_id")
+        with lock(Path(state_dir) / "dispatch.lock"):
+            facts = self.facts(receipt)
+            errors = validate(receipt, facts, phase)
+            if errors:
+                return {"ok": False, "blocked": errors}
+            ledger = Ledger(Path(state_dir) / "ledger.sqlite3")
+            key = fingerprint({"phase": phase, "task": receipt["task_id"], "sha": receipt["tested_sha"]})
+            if not ledger.claim(key):
+                return {"ok": False, "blocked": ["duplicate_or_reconciliation_required"]}
+            # До внешнего вызова запись running. Неопределённый сбой оставляет её для сверки.
+            if phase == "merge":
+                command(["gh", "pr", "merge", str(receipt["pr"]["number"]), "--repo", self.gh_repo, "--squash", "--match-head-commit", receipt["tested_sha"]], as_json=False)
+            else:
+                self.multica("issue", "status", receipt["issue_id"], "done", "--no-start")
+            ledger.finish(key, True)
+            verified = {**receipt, "verified": phase == "done", "accepted_at": dt.datetime.now(dt.timezone.utc).isoformat(), "enforcement": "managed_path_only"}
+            target = Path(state_dir) / "verified" / (receipt["task_id"] + ".json")
+            target.parent.mkdir(exist_ok=True)
+            target.write_text(json.dumps(verified, ensure_ascii=False, indent=2) + "\n")
+            return {"ok": True, "phase": phase, "task_id": receipt["task_id"]}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", choices=["verify", "merge", "done"])
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--receipt", required=True)
+    args = parser.parse_args()
+    config = json.loads(Path(args.config).read_text())
+    receipt = json.loads(Path(args.receipt).read_text())
+    live = Live(config)
+    if args.action == "verify":
+        errors = validate(receipt, live.facts(receipt))
+        result = {"ok": not errors, "blocked": errors}
+    else:
+        result = live.transition(receipt, args.action, config["state_dir"])
+    print(json.dumps(result, ensure_ascii=False))
+    return 0 if result["ok"] else 2
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (ValueError, KeyError, OSError, RuntimeError) as error:
+        print(json.dumps({"ok": False, "error_type": type(error).__name__}))
+        sys.exit(2)

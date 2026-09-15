@@ -1,0 +1,236 @@
+[
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera",
+    "HEAD": "467bde721ff853d7e9057d393ba2e3abbf6ae46f",
+    "detached": true,
+    "changes": [
+      " D .claude/agents/multica-architect.md",
+      " D .claude/agents/multica-designer.md",
+      " D .claude/agents/multica-developer.md",
+      " D .claude/agents/multica-docs-keeper.md",
+      " D .claude/agents/multica-editor.md",
+      " D .claude/agents/multica-orchestrator.md",
+      " D .claude/agents/multica-release.md",
+      " D .claude/agents/multica-reviewer.md",
+      " D .claude/agents/multica-seo.md",
+      " D .claude/agents/multica-tester.md",
+      " D .claude/commands/multica-handback.md",
+      " D .claude/commands/multica-stage.md",
+      " D .claude/commands/multica-start.md",
+      " D .claude/commands/multica-status.md",
+      " M .claude/settings.json",
+      " M .gitignore",
+      " M AGENTS.md",
+      " M CLAUDE.md",
+      " M docs/backlog/owner-blockers.md",
+      " M docs/development/agent-loop-gate.md",
+      " M docs/development/project-rules.md",
+      " M docs/development/testing.md",
+      "?? docs/multica/claude-auto-mode.json",
+      "?? docs/multica/claude-plugin/",
+      "?? docs/multica/runtime-entry.md",
+      "?? docs/multica/task-ritual.md",
+      "?? docs/multica/testing-contract.md"
+    ],
+    "ancestor_app": true,
+    "disk_kib": 17889664
+  },
+  {
+    "worktree": "/private/tmp/altera-agent-loop-autonomy",
+    "HEAD": "657f47ae9b389053c63be035195a2a269302ffec",
+    "detached": true,
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 983916
+  },
+  {
+    "worktree": "/Users/egorbondarenko/.codex/worktrees/b581/Altera",
+    "HEAD": "126cc3d522a8906609ffe0a3a7995303109d5502",
+    "branch": "refs/heads/codex/multica-infra-access",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 759660
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+    "HEAD": "065d858ea6a6754e0a4342d22707ecb487906bb8",
+    "branch": "refs/heads/docs/adr-0047-plus",
+    "changes": [
+      " M CLAUDE.md"
+    ],
+    "ancestor_app": false,
+    "disk_kib": 957652
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/direct-chat-mode",
+    "HEAD": "f486b134d62f8dba92d3ef727cd20b05518a990b",
+    "branch": "refs/heads/codex/direct-chat-mode",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 763144
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/fresh-app-worktrees",
+    "HEAD": "638b7ee2672357179bcd30c5a91a44af817a4c6a",
+    "branch": "refs/heads/codex/fresh-app-worktrees",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 842940
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/render-neon-operations",
+    "HEAD": "f78c6106b01a6a8cac17d987b79e5caaebff65ba",
+    "branch": "refs/heads/codex/render-neon-operations",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 843052
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-002-test-infrastructure",
+    "HEAD": "67e55c43d5b70a0e3939438e177bc282b6d36539",
+    "branch": "refs/heads/test/t-002-test-infrastructure",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 851428
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-004-web-prod-build",
+    "HEAD": "428acc0fa97a03a38702ed5e13b461ec255f58b7",
+    "branch": "refs/heads/web/t-004-prod-build",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 901524
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-005-lint-hygiene",
+    "HEAD": "38ab5434073b839349a6c3cd2a46775fdd18fe73",
+    "branch": "refs/heads/lint/t-005-lint-hygiene",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 922036
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t-112-e2e-flow-scenarios",
+    "HEAD": "c395f987f743dd096c4516d47c0e8931f315d17d",
+    "branch": "refs/heads/docs/t-112-e2e-flow-scenarios",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 870040
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t002-finalization",
+    "HEAD": "7e3d85b2c4f1c3d16833be5fc6fedc35dbdf8d20",
+    "branch": "refs/heads/docs/t002-finalization",
+    "changes": [
+      "?? reply.md"
+    ],
+    "ancestor_app": true,
+    "disk_kib": 31228
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t006-cache-wrapper",
+    "HEAD": "316277d2cf3784efe89ba226d0404564134c12e9",
+    "branch": "refs/heads/server/t006-cache-wrapper",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 860344
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t008-graphql-codegen",
+    "HEAD": "e64a76141de55cfd23cdb35f77e60506aa0e439b",
+    "branch": "refs/heads/web/t008-graphql-codegen",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 925584
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t009-bff-proxy",
+    "HEAD": "eff46a6efa9dad8c11bc6126c4c21d593e27ea4d",
+    "branch": "refs/heads/web/t009-bff-proxy",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 931056
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t010-graphql-operations",
+    "HEAD": "a1af2e749c69baa4eddfdbd170fee5c5b7ebc36b",
+    "branch": "refs/heads/web/t010-graphql-operations",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 928100
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t011-migration-roles",
+    "HEAD": "7e5d48d8754f2ae955ca1120addcc23c38dccc38",
+    "branch": "refs/heads/server/t-011-migration-roles-account-states",
+    "changes": [],
+    "ancestor_app": false,
+    "disk_kib": 899004
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t086-error-dictionary",
+    "HEAD": "74eaa41c9d55f42008e24dc1dc695fa455b14e71",
+    "branch": "refs/heads/server/t086-error-dictionary",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 899308
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t087-request-id",
+    "HEAD": "2b94df6534ccb2c6e346bae542eadc1c94646528",
+    "branch": "refs/heads/server/t087-request-id",
+    "changes": [],
+    "ancestor_app": false,
+    "disk_kib": 899672
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t091-finalize",
+    "HEAD": "2c4dd855d5de4e16a33765b34215099a31854ba7",
+    "branch": "refs/heads/docs/t091-finalize",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 32104
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t091-typed-event-codes",
+    "HEAD": "138e7e306c3d9dcad0edd9415dfcc87d9099e3f4",
+    "detached": true,
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 870076
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t092-design-tokens",
+    "HEAD": "b1d396e3ff8e1c364a16278488b30f441eede9c9",
+    "branch": "refs/heads/web/t-092-design-tokens-theme",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 878960
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t092-finalization",
+    "HEAD": "10a503f09c8b4390f5839fd1a3d34761071c5962",
+    "branch": "refs/heads/docs/t092-finalization",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 32084
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t092-fix-playwright",
+    "HEAD": "c35f6b4bcd5a232bbda4e4c24ede96e0fe6696bc",
+    "branch": "refs/heads/web/t092-fix-epipe-theme-goto",
+    "changes": [
+      "?? reply.md"
+    ],
+    "ancestor_app": true,
+    "disk_kib": 878824
+  },
+  {
+    "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t108-adr-integration",
+    "HEAD": "49ecabd5289e831d2f2be8b611e0bede6b391888",
+    "branch": "refs/heads/docs/t108-adr-0047-integration",
+    "changes": [],
+    "ancestor_app": true,
+    "disk_kib": 841976
+  }
+]

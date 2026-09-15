@@ -1,0 +1,14 @@
+{
+  "repo": "/Users/egorbondarenko/WebstormProjects/Altera",
+  "github_repo": "Egoka/Altera",
+  "multica": "/Applications/Multica.app/Contents/Resources/app.asar.unpacked/resources/bin/multica",
+  "server_url": "https://api.multica.ai",
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "project_id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+  "claude_binary": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe",
+  "instructions_version": "autonomy-controller-v1",
+  "state_dir": "/Users/egorbondarenko/WebstormProjects/Altera/.git/autonomy-state",
+  "controller_agent_ids": ["d08ef989-e4d4-4772-bc33-335127a85f0f"],
+  "reviewer_ids": ["db94a617-807c-4eec-981f-51fd4b3217d4"],
+  "deployment_probe": null
+}

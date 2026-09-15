@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "progress",
+      "title": "Реальный выход автономии",
+      "queries": [
+        {
+          "id": "progress-snapshot",
+          "source": {
+            "label": "Аудит Altera: Multica, GitHub и git",
+            "files": [
+              {
+                "label": "metrics.json"
+              },
+              {
+                "label": "tasks-reviewed.json"
+              }
+            ],
+            "metricDefinitions": [
+              {
+                "label": "Реальный выход автономии",
+                "definition": "Новые parent отделены от стадий; ручные PR отделены от PR Multica."
+              }
+            ],
+            "filters": [
+              "Проект Altera",
+              "Baseline 467bde72; app 2c4dd855"
+            ],
+            "caveats": [
+              "Количество PR не измеряет пользовательскую ценность. Три ручных PR исключены из результата Multica."
+            ]
+          },
+          "reportingPeriod": "14.09.2026 23:17:50 — 15.09.2026 16:30:47 МСК",
+          "columns": [
+            "показатель",
+            "значение"
+          ],
+          "rows": [
+            {
+              "показатель": "Созданные задачи",
+              "значение": 18
+            },
+            {
+              "показатель": "Самостоятельные задачи",
+              "значение": 11
+            },
+            {
+              "показатель": "Слитые PR Multica",
+              "значение": 16
+            },
+            {
+              "показатель": "Первые результаты в app",
+              "значение": 11
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Проверенные агрегаты полного снимка; не отдельные события."
+          }
+        }
+      ]
+    },
+    {
+      "id": "quality",
+      "title": "Проверки и достоверность завершения",
+      "queries": [
+        {
+          "id": "quality-snapshot",
+          "source": {
+            "label": "Аудит Altera: Multica, GitHub и git",
+            "files": [
+              {
+                "label": "metrics.json"
+              },
+              {
+                "label": "audit.md"
+              }
+            ],
+            "metricDefinitions": [
+              {
+                "label": "Проверки и достоверность завершения",
+                "definition": "Достоверность финализации требует merge, обоснованного release и синхронизации task-файла в app."
+              }
+            ],
+            "filters": [
+              "Проект Altera",
+              "Baseline 467bde72; app 2c4dd855"
+            ],
+            "caveats": [
+              "Это контроль процесса, не общий процент качества кода. Render recovery не был подтверждён закрывающим запуском для двух parent. Свежий Render status не проверялся."
+            ]
+          },
+          "reportingPeriod": "14.09.2026 23:17:50 — 15.09.2026 16:30:47 МСК",
+          "columns": [
+            "показатель",
+            "успех",
+            "всего"
+          ],
+          "rows": [
+            {
+              "показатель": "Минимальная сквозная сверка Done",
+              "успех": 4,
+              "всего": 10
+            },
+            {
+              "показатель": "Согласованный task status",
+              "успех": 5,
+              "всего": 10
+            },
+            {
+              "показатель": "Successful Checks для Multica",
+              "успех": 21,
+              "всего": 30
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Проверенные агрегаты полного снимка; не отдельные события."
+          }
+        }
+      ]
+    },
+    {
+      "id": "tokens",
+      "title": "Токены по телеметрии Multica",
+      "queries": [
+        {
+          "id": "tokens-snapshot",
+          "source": {
+            "label": "Аудит Altera: Multica, GitHub и git",
+            "files": [
+              {
+                "label": "runs.json"
+              },
+              {
+                "label": "metrics.json"
+              }
+            ],
+            "metricDefinitions": [
+              {
+                "label": "Токены по телеметрии Multica",
+                "definition": "Сумма полей usage уникальных native run IDs; autopilot и дочерние стадии учитываются однократно."
+              }
+            ],
+            "filters": [
+              "Проект Altera",
+              "Baseline 467bde72; app 2c4dd855"
+            ],
+            "caveats": [
+              "Учтены 247 завершённых runs; один активный без usage. Это когорта по времени создания, не точный биллинговый интервал. Денежная стоимость не рассчитана. Cache read не приравнивается к обычному input."
+            ]
+          },
+          "reportingPeriod": "14.09.2026 23:17:50 — 15.09.2026 16:30:47 МСК",
+          "columns": [
+            "поле",
+            "токены"
+          ],
+          "rows": [
+            {
+              "поле": "input_tokens",
+              "токены": 8055370
+            },
+            {
+              "поле": "output_tokens",
+              "токены": 2074540
+            },
+            {
+              "поле": "cache_read_tokens",
+              "токены": 398686141
+            },
+            {
+              "поле": "cache_write_tokens",
+              "токены": 5355513
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Проверенные агрегаты полного снимка; не отдельные события."
+          }
+        }
+      ]
+    },
+    {
+      "id": "cleanup",
+      "title": "Диск и неубранные ветви",
+      "queries": [
+        {
+          "id": "cleanup-snapshot",
+          "source": {
+            "label": "Аудит Altera: Multica, GitHub и git",
+            "files": [
+              {
+                "label": "worktrees.json"
+              },
+              {
+                "label": "metrics.json"
+              }
+            ],
+            "metricDefinitions": [
+              {
+                "label": "Диск и неубранные ветви",
+                "definition": "Размер каталогов измерен du; наличие remote branches проверено через GitHub."
+              }
+            ],
+            "filters": [
+              "Проект Altera",
+              "Baseline 467bde72; app 2c4dd855"
+            ],
+            "caveats": [
+              "Размеры включают старую историю и ручную работу. Снимок диска сделан во время сбора. APFS/hardlinks не позволяют обещать точно такой объём освобождения. Удаление не выполнялось."
+            ]
+          },
+          "reportingPeriod": "14.09.2026 23:17:50 — 15.09.2026 16:30:47 МСК",
+          "columns": [
+            "показатель",
+            "значение"
+          ],
+          "rows": [
+            {
+              "показатель": "Project worktrees, GiB",
+              "значение": 16.08
+            },
+            {
+              "показатель": "Multica runtime dirs, GiB",
+              "значение": 4.85
+            },
+            {
+              "показатель": "Сохранены head-ветви merged PR",
+              "значение": 19
+            }
+          ],
+          "preview": {
+            "kind": "aggregate",
+            "note": "Проверенные агрегаты полного снимка; не отдельные события."
+          }
+        }
+      ]
+    }
+  ]
+}
