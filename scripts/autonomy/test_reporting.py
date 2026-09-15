@@ -32,6 +32,24 @@ def run(identifier="r1", **extra):
 
 
 class ReportingTests(unittest.TestCase):
+    def test_nested_github_repository_and_user_observations_do_not_change_closed_day(self):
+        data = snapshot()
+        repository = {"id": 42, "open_issues": 3, "open_issues_count": 3, "pushed_at": "2026-09-15T19:15:21Z"}
+        user = {"id": 7, "login": "reviewer", "avatar_url": "https://example.test/before.png"}
+        data["pull_requests"] = [{"number": 1, "created_at": "2026-09-14T08:00:00Z", "state": "closed",
+                                 "head": {"sha": "product-sha", "ref": "product", "repo": repository, "user": user},
+                                 "base": {"sha": "base-sha", "ref": "app", "repo": repository, "user": user},
+                                 "user": user, "reviews": [{"id": 5, "state": "APPROVED", "commit_id": "product-sha", "user": user}]}]
+        data["ci_runs"] = [{"id": 2, "created_at": "2026-09-15T09:00:00Z", "head_sha": "product-sha",
+                            "conclusion": "failure", "repository": repository, "head_repository": repository,
+                            "actor": user, "triggering_actor": user}]
+        before = reporting.content_digest(reporting.build_report(data, "2026-09-15"))
+        repository.update(open_issues=2, open_issues_count=2, pushed_at="2026-09-15T19:18:58Z")
+        user["avatar_url"] = "https://example.test/after.png"
+        self.assertEqual(before, reporting.content_digest(reporting.build_report(data, "2026-09-15")))
+        data["ci_runs"][0]["conclusion"] = "success"
+        self.assertNotEqual(before, reporting.content_digest(reporting.build_report(data, "2026-09-15")))
+
     def test_missing_receipts_are_observed_sample_not_actual_zero_and_tasks_link(self):
         data = snapshot()
         data["coverage"]["receipts"] = {"status": "partial", "reason": "controller_verified_directory_missing"}
