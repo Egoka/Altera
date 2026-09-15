@@ -32,6 +32,7 @@
     </div>
 
     <p
+      v-if="article.dek"
       class="lede-dek mt-1 font-garamond-libre text-dek-compact xs:text-card md:text-card-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-3xl mx-auto line-clamp-2">
       {{ article.dek }}
     </p>
