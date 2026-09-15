@@ -2,6 +2,30 @@
   import type { IColumn } from "#fishtvue/table"
   import type { Panel } from "#fishtvue/split"
   import type { FormStructure } from "#fishtvue/form"
+  import type { Role } from "~/graphql/generated/graphql"
+
+  interface UserRow {
+    id: number
+    name: string
+    email: string
+    role: Role
+    slug: string
+    bio: string
+    photoUrl: string | null
+    articlesCount: number
+    createdAt: string
+    updatedAt: string
+  }
+
+  const roleOptions: Array<{ id: Role; value: string }> = [
+    { id: "reader", value: "Читатель" },
+    { id: "author", value: "Автор" },
+    { id: "editor", value: "Редактор" },
+    { id: "moderator", value: "Модератор" },
+    { id: "analyst", value: "Аналитик" },
+    { id: "admin", value: "Администратор" },
+    { id: "owner", value: "Владелец" }
+  ]
 
   const { isSm, isMd } = useBreakpoint()
   const tableHeight = ref(47)
@@ -44,12 +68,12 @@
     }
   ])
   // Моковые данные для пользователей
-  const data = shallowRef<Array<any>>([
+  const data = shallowRef<UserRow[]>([
     {
       id: 1,
       name: "Александр Иванов",
       email: "alex.ivanov@example.com",
-      role: "ADMIN",
+      role: "admin",
       slug: "alex-ivanov",
       bio: "Администратор системы, эксперт по веб-разработке и управлению контентом",
       photoUrl: "/avatars/William_Taylor.jpg",
@@ -61,7 +85,7 @@
       id: 2,
       name: "Мария Петрова",
       email: "maria.petrova@example.com",
-      role: "AUTHOR",
+      role: "author",
       slug: "maria-petrova",
       bio: "Автор статей о дизайне и UX/UI, специалист по созданию пользовательских интерфейсов",
       photoUrl: null,
@@ -73,7 +97,7 @@
       id: 3,
       name: "Дмитрий Сидоров",
       email: "dmitry.sidorov@example.com",
-      role: "AUTHOR",
+      role: "author",
       slug: "dmitry-sidorov",
       bio: "Технический писатель, эксперт по программированию и современным технологиям",
       photoUrl: null,
@@ -85,7 +109,7 @@
       id: 4,
       name: "Елена Козлова",
       email: "elena.kozlova@example.com",
-      role: "AUTHOR",
+      role: "author",
       slug: "elena-kozlova",
       bio: "Контент-менеджер, специалист по маркетингу и созданию образовательного контента",
       photoUrl: null,
@@ -97,7 +121,7 @@
       id: 5,
       name: "Анна Смирнова",
       email: "anna.smirnova@example.com",
-      role: "READER",
+      role: "reader",
       slug: "anna-smirnova",
       bio: "Активный читатель, интересуется технологиями и дизайном",
       photoUrl: null,
@@ -109,7 +133,7 @@
       id: 6,
       name: "Владимир Новиков",
       email: "vladimir.novikov@example.com",
-      role: "READER",
+      role: "reader",
       slug: "vladimir-novikov",
       bio: "Энтузиаст программирования, изучает новые технологии",
       photoUrl: null,
@@ -121,7 +145,7 @@
       id: 7,
       name: "Ольга Волкова",
       email: "olga.volkova@example.com",
-      role: "AUTHOR",
+      role: "author",
       slug: "olga-volkova",
       bio: "Дизайнер и иллюстратор, создает визуальный контент для статей",
       photoUrl: null,
@@ -133,7 +157,7 @@
       id: 8,
       name: "Сергей Морозов",
       email: "sergey.morozov@example.com",
-      role: "ADMIN",
+      role: "admin",
       slug: "sergey-morozov",
       bio: "Системный администратор, отвечает за техническую поддержку и безопасность",
       photoUrl: null,
@@ -183,20 +207,7 @@
       isSort: true,
       cellTemplate: "role",
       paramsFilter: {
-        dataSelect: [
-          {
-            id: "ADMIN",
-            value: "Администратор"
-          },
-          {
-            id: "AUTHOR",
-            value: "Автор"
-          },
-          {
-            id: "READER",
-            value: "Читатель"
-          }
-        ]
+        dataSelect: roleOptions
       }
     },
     {
@@ -254,13 +265,15 @@
     "bg-yellow-50 text-yellow-700 ring-yellow-600/10 dark:bg-yellow-950 dark:text-yellow-300 dark:ring-yellow-400/10"
 
   // Функция для получения стилей роли
-  const getRoleStyle = (role: string) => {
+  const getRoleStyle = (role: Role) => {
     switch (role) {
-      case "ADMIN":
+      case "admin":
+      case "owner":
         return red
-      case "AUTHOR":
+      case "author":
+      case "editor":
         return green
-      case "READER":
+      case "reader":
         return blue
       default:
         return yellow
@@ -268,18 +281,7 @@
   }
 
   // Функция для получения текста роли
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return "Администратор"
-      case "AUTHOR":
-        return "Автор"
-      case "READER":
-        return "Читатель"
-      default:
-        return "Неизвестно"
-    }
-  }
+  const getRoleText = (role: Role) => roleOptions.find(({ id }) => id === role)?.value ?? "Неизвестно"
   const activeRow = ref<string>()
 
   // Данные формы редактирования
@@ -318,20 +320,7 @@
           rules: { required: true },
           label: "Роль",
           classCol: "sm:col-span-6",
-          dataSelect: [
-            {
-              id: "ADMIN",
-              value: "Администратор"
-            },
-            {
-              id: "AUTHOR",
-              value: "Автор"
-            },
-            {
-              id: "READER",
-              value: "Читатель"
-            }
-          ]
+          dataSelect: roleOptions
         },
         {
           typeComponent: "Input",

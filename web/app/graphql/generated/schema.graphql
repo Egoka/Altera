@@ -279,8 +279,11 @@ input ReorderItemInput {
 
 enum Role {
   admin
+  analyst
   author
   editor
+  moderator
+  owner
   reader
 }
 

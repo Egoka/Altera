@@ -10,30 +10,36 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(uuid())
-  name        String
-  email       String    @unique
-  bio         String?
-  photoUrl    String?
-  role        Role      @default(reader)
-  slug        String    @unique
-  socialLinks Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  articles    Article[]
-  magicLink   MagicLinkToken?
+  id                String              @id @default(uuid())
+  name              String
+  email             String              @unique
+  bio               String?
+  photoUrl          String?
+  role              Role                @default(reader)
+  slug              String              @unique
+  socialLinks       Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  archivedAt        DateTime?
+  archiveMode       AccountArchiveMode?
+  archivedByActorId String?
+  archivedByRole    Role?
+  archiveReason     String?
+  isServiceAccount  Boolean             @default(false)
+  articles          Article[]
+  magicLink         MagicLinkToken?
 
   @@map("users")
 }
 
 model MagicLinkToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([token])
   @@map("magic_link_tokens")
@@ -90,7 +96,16 @@ enum Role {
   reader
   author
   editor
+  moderator
+  analyst
   admin
+  owner
+}
+
+enum AccountArchiveMode {
+  self
+  admin
+  emergency
 }
 
 enum ContentTypeStatus {

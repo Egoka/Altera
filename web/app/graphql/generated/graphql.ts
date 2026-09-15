@@ -86,8 +86,11 @@ export type ReorderItemInput = {
 
 export type Role =
   | 'admin'
+  | 'analyst'
   | 'author'
   | 'editor'
+  | 'moderator'
+  | 'owner'
   | 'reader';
 
 export type SortDirection =
