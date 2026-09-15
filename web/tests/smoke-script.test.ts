@@ -1,8 +1,23 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process"
 import { once } from "node:events"
+import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 describe("production smoke script", () => {
+  it("checks the canonical Russian redirect without following it", () => {
+    const script = readFileSync("scripts/smoke.sh", "utf8")
+
+    expect(script).toContain('check_redirect "/ru" 301 "/"')
+    expect(script).toContain("%{redirect_url}")
+  })
+
+  it("checks both server-rendered language-switch links", () => {
+    const script = readFileSync("scripts/smoke.sh", "utf8")
+
+    expect(script).toContain(`check_content "/" 'aria-label="Switch language to English"'`)
+    expect(script).toContain(`check_content "/en" 'aria-label="Switch language to Русский"'`)
+  })
+
   it("fails before launch when the requested port is already serving HTTP", async () => {
     const server = spawn(
       process.execPath,

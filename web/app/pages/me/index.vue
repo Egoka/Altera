@@ -1,5 +1,6 @@
 <script setup lang="ts">
   definePageMeta({
+    i18n: false,
     layout: "auth",
     requiresAuth: true
   })

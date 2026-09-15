@@ -69,6 +69,38 @@ check_route() {
   fi
 }
 
+check_redirect() {
+  local ROUTE="$1"
+  local EXPECTED_STATUS="$2"
+  local EXPECTED_PATH="$3"
+  local RESULT
+  local LOCATION
+
+  RESULT="$(curl -sS -o /dev/null -w $'%{http_code}\n%{redirect_url}' "http://127.0.0.1:${PORT}${ROUTE}")"
+  STATUS="${RESULT%%$'\n'*}"
+  LOCATION="${RESULT#*$'\n'}"
+
+  echo "$ROUTE: $STATUS → $LOCATION"
+  if [ "$STATUS" != "$EXPECTED_STATUS" ] || [ "$LOCATION" != "http://127.0.0.1:${PORT}${EXPECTED_PATH}" ]; then
+    echo "✗ ожидался HTTP $EXPECTED_STATUS с Location: $EXPECTED_PATH для $ROUTE. Вывод:"
+    cat "$LOG"
+    exit 1
+  fi
+}
+
+check_content() {
+  local ROUTE="$1"
+  local EXPECTED_CONTENT="$2"
+  local BODY
+
+  BODY="$(curl -sS "http://127.0.0.1:${PORT}${ROUTE}")"
+  if [[ "$BODY" != *"$EXPECTED_CONTENT"* ]]; then
+    echo "✗ SSR-ответ $ROUTE не содержит ожидаемый language switch. Вывод:"
+    cat "$LOG"
+    exit 1
+  fi
+}
+
 for ROUTE in / /en; do
   check_route "$ROUTE" 200
 done
@@ -76,5 +108,9 @@ done
 for ROUTE in /fonts-showcase /components-showcase /test-error; do
   check_route "$ROUTE" 404
 done
+
+check_redirect "/ru" 301 "/"
+check_content "/" 'aria-label="Switch language to English"'
+check_content "/en" 'aria-label="Switch language to Русский"'
 
 echo "✓ production web отвечает на SSR-маршрутах, dev-маршруты недоступны"
