@@ -13,8 +13,7 @@ query GetAdminArticles(
       updatedAt
       author {
         name
-        slug
-        email
+        slug: handle
       }
       contentType {
         name

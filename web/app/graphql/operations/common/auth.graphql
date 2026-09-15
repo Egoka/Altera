@@ -1,5 +1,5 @@
-mutation RequestMagicLink($email: String!) {
-  requestMagicLink(email: $email)
+mutation RequestMagicLink($email: String!, $locale: Locale!) {
+  requestMagicLink(email: $email, locale: $locale)
 }
 
 mutation VerifyMagicLink($token: String!) {
@@ -11,7 +11,7 @@ mutation VerifyMagicLink($token: String!) {
       name
       email
       role
-      slug
+      handle
     }
   }
 }

@@ -12,6 +12,23 @@ function model(name: string): string {
 }
 
 describe("auth persistence schema", () => {
+  it("models the current profile handle and append-only handle registry", () => {
+    const user = model("User")
+    const history = model("HandleHistory")
+
+    expect(user).toMatch(/^\s*handle\s+String\s+@unique$/m)
+    expect(user).toMatch(/^\s*locale\s+Locale\s+@default\(ru\)$/m)
+    expect(user).toMatch(/^\s*avatarAssetId\s+String\?$/m)
+    expect(user).toMatch(/^\s*prevAvatarId\s+String\?$/m)
+    expect(user).toMatch(/^\s*nameCheckStatus\s+ProfileCheckStatus\s+@default\(ok\)$/m)
+    expect(user).toMatch(/^\s*avatarCheckStatus\s+ProfileCheckStatus\s+@default\(ok\)$/m)
+    expect(user).not.toMatch(/^\s*slug\s+/m)
+    expect(history).toMatch(/^\s*handle\s+String\s+@id$/m)
+    expect(history).toMatch(/^\s*userId\s+String\?$/m)
+    expect(history).toContain("onDelete: SetNull")
+    expect(history).toContain("@@index([userId])")
+  })
+
   it("defines hash-only magic-link storage without a duplicate index", () => {
     const magicLink = model("MagicLinkToken")
 

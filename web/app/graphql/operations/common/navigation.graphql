@@ -27,7 +27,7 @@ query GetUserMenu {
   me {
     id
     name
-    slug
+    handle
     photoUrl
     role
   }

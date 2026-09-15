@@ -1,5 +1,7 @@
 import crypto from "crypto"
 
+export const CACHE_KEY_VERSION = "v2"
+
 const canonicalize = (value: unknown): string => {
   if (value === undefined) return '["undefined"]'
   if (value === null) return '["null"]'
@@ -20,12 +22,12 @@ const canonicalize = (value: unknown): string => {
 
 export const buildCacheKey = (namespace: string, args: Readonly<Record<string, unknown>>): string => {
   const digest = crypto.createHash("sha256").update(canonicalize(args)).digest("hex")
-  return `cache:v1:data:${namespace}:${digest}`
+  return `cache:${CACHE_KEY_VERSION}:data:${namespace}:${digest}`
 }
 
 interface ArticleCacheIdentity {
   slug: string
-  author?: { slug: string } | null
+  author?: { handle: string } | null
   contentType?: { slug: string } | null
   sectionTags?: readonly { slug: string }[]
 }
@@ -35,7 +37,7 @@ export const buildArticleCacheTags = (...articles: readonly ArticleCacheIdentity
 
   for (const article of articles) {
     tags.add(`article:${article.slug}`)
-    if (article.author) tags.add(`author:${article.author.slug}`)
+    if (article.author) tags.add(`author:${article.author.handle}`)
     if (article.contentType) tags.add(`content-type:${article.contentType.slug}`)
     article.sectionTags?.forEach((tag) => tags.add(`section-tag:${tag.slug}`))
   }

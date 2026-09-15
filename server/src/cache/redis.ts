@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import Redis from "ioredis"
+import { CACHE_KEY_VERSION } from "./key"
 import type { Cache, CacheSetOptions } from "./types"
 
 export interface CacheRedisTransaction {
@@ -40,7 +41,7 @@ for _, tag_key in ipairs(KEYS) do
 end
 for data_key, _ in pairs(data_keys) do
   local digest = string.match(data_key, "([0-9a-f]+)$")
-  local reverse_key = "cache:v1:key-tags:" .. digest
+  local reverse_key = "cache:${CACHE_KEY_VERSION}:key-tags:" .. digest
   local related_tags = redis.call("SMEMBERS", reverse_key)
   for _, related_tag in ipairs(related_tags) do
     redis.call("SREM", related_tag, data_key)
@@ -54,11 +55,11 @@ return 1
 `
 
 const digest = (value: string): string => crypto.createHash("sha256").update(value).digest("hex")
-const tagKey = (tag: string): string => `cache:v1:tag:${digest(tag)}`
+const tagKey = (tag: string): string => `cache:${CACHE_KEY_VERSION}:tag:${digest(tag)}`
 
 const reverseKey = (dataKey: string): string => {
   const keyDigest = dataKey.slice(dataKey.lastIndexOf(":") + 1)
-  return `cache:v1:key-tags:${keyDigest}`
+  return `cache:${CACHE_KEY_VERSION}:key-tags:${keyDigest}`
 }
 
 class IoredisCacheClient implements CacheRedisClient {
