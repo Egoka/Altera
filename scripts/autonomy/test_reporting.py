@@ -32,6 +32,30 @@ def run(identifier="r1", **extra):
 
 
 class ReportingTests(unittest.TestCase):
+    def test_missing_receipts_are_observed_sample_not_actual_zero_and_tasks_link(self):
+        data = snapshot()
+        data["coverage"]["receipts"] = {"status": "partial", "reason": "controller_verified_directory_missing"}
+        data["issues"] = [{"id": "8f557d19-a6ab-40b7-90bb-2805efa83fa3", "identifier": "ALT-42",
+                           "title": "T-123: Проверка", "created_at": "2026-09-14T08:00:00Z"}]
+        report = reporting.build_report(data, "2026-09-15")
+        daily = reporting.render_report(report)
+        progress = reporting.render_progress([report])
+        self.assertIn("[ALT-42](https://multica.ai/altera/issues/8f557d19-a6ab-40b7-90bb-2805efa83fa3)", daily)
+        self.assertIn("Фактическое принятие неизвестно", daily)
+        self.assertIn("Фактическое принятие неизвестно", progress)
+        self.assertIn("подтверждённых повторов: 0; полнота классификации неизвестна", daily)
+        self.assertIn("n/a", daily)
+        self.assertNotIn("review принятого результата: 0 / 0", progress)
+
+    def test_receipt_accepted_after_window_does_not_replace_closed_cohort_identity(self):
+        data = snapshot()
+        data["issues"] = [{"id": "issue", "metadata": {"task_id": "T-1"},
+                           "created_at": "2026-09-14T08:00:00Z"}]
+        before = reporting.build_report(data, "2026-09-15")
+        data["receipts"] = [{"task_id": "T-1", "issue_id": "issue", "verified": True,
+                             "accepted_at": "2026-09-15T09:00:00Z", "work_class": "product"}]
+        self.assertEqual(reporting.content_digest(before), reporting.content_digest(reporting.build_report(data, "2026-09-15")))
+
     def test_collector_pages_all_issue_states_and_links_autopilot_native_usage(self):
         def command(args):
             if "issue" in args and "list" in args:
@@ -336,6 +360,49 @@ class ReportingTests(unittest.TestCase):
             self.assertEqual(len(saved["executions"]), 1)
             self.assertEqual(saved["coverage"]["receipts"]["status"], "partial")
             self.assertEqual(saved["coverage"]["receipts"]["reason"], "controller_verified_directory_missing")
+
+    def test_closed_day_digest_ignores_own_later_audit_pr_ci_and_current_inventory(self):
+        data = snapshot()
+        data["issues"] = [{"id": "product", "created_at": "2026-09-14T08:00:00Z", "status_category": "started"}]
+        data["executions"] = [run(issue_id="product")]
+        data["coverage"]["autopilot_runs:daily"] = {"status": "complete", "records": 1}
+        data["coverage"]["pull_requests"] = {"status": "complete", "records": 1}
+        changed = copy.deepcopy(data)
+        changed["executions"].append(run("audit-after-window", created_at="2026-09-15T07:00:01Z", kind="autopilot"))
+        changed["coverage"]["autopilot_runs:daily"]["records"] = 2
+        changed["coverage"]["pull_requests"]["records"] = 2
+        changed["coverage"]["pr_reviews:57"] = {"status": "complete"}
+        changed["pull_requests"] = [{"number": 57, "created_at": "2026-09-15T08:00:00Z",
+                                     "head": {"ref": "codex/autonomy-report-2026-09-15", "sha": "own-sha"}}]
+        changed["ci_runs"] = [{"id": 900, "created_at": "2026-09-15T08:01:00Z", "head_sha": "own-sha"}]
+        changed["issues"][0].update(status_category="completed", updated_at="2026-09-15T08:00:00Z")
+        changed["issues"].append({"id": "future", "created_at": "2026-09-15T09:00:00Z", "status_category": "completed"})
+        before = reporting.build_report(data, "2026-09-15")
+        after = reporting.build_report(changed, "2026-09-15")
+        self.assertNotEqual(before["tasks"]["claimed_done_inventory"], after["tasks"]["claimed_done_inventory"])
+        self.assertEqual(reporting.content_digest(before), reporting.content_digest(after))
+
+    def test_late_usage_and_acceptance_inside_closed_cohort_change_digest(self):
+        data = snapshot()
+        data["executions"] = [run(usage=None)]
+        first = reporting.content_digest(reporting.build_report(data, "2026-09-15"))
+        data["executions"] = [run()]
+        metered = reporting.content_digest(reporting.build_report(data, "2026-09-15"))
+        self.assertNotEqual(first, metered)
+        data["receipts"] = [{"task_id": "T-1", "verified": True, "accepted_at": "2026-09-14T12:00:00Z",
+                             "work_class": "product", "acceptance": {"passed": 1, "total": 1}}]
+        accepted = reporting.content_digest(reporting.build_report(data, "2026-09-15"))
+        self.assertNotEqual(metered, accepted)
+
+    def test_late_ci_result_for_in_window_pr_remains_a_correction(self):
+        data = snapshot()
+        data["pull_requests"] = [{"number": 1, "created_at": "2026-09-14T08:00:00Z",
+                                  "head": {"sha": "product-sha"}}]
+        data["ci_runs"] = [{"id": 2, "created_at": "2026-09-15T09:00:00Z", "head_sha": "product-sha",
+                            "conclusion": "failure"}]
+        first = reporting.content_digest(reporting.build_report(data, "2026-09-15"))
+        data["ci_runs"][0]["conclusion"] = "success"
+        self.assertNotEqual(first, reporting.content_digest(reporting.build_report(data, "2026-09-15")))
 
 
 if __name__ == "__main__":

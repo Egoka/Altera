@@ -1,6 +1,7 @@
 """Проверки контракта завершения и подавления повторных событий."""
 import copy
 import json
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -200,6 +201,90 @@ class ReconciliationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
             self.assertEqual(live.transition(self.receipt, "done", root)["blocked"], ["issue_scope"])
+
+
+class FreshBaseTests(unittest.TestCase):
+    def setUp(self):
+        CompletionTests.setUp(self)
+        del self.facts
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.repo = Path(self.temporary.name) / "repo"
+        self.remote = Path(self.temporary.name) / "remote.git"
+        subprocess.run(["git", "init", "--bare", str(self.remote)], capture_output=True, check=True)
+        subprocess.run(["git", "init", "-b", "app", str(self.repo)], capture_output=True, check=True)
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.invalid")
+        self.git("remote", "add", "origin", str(self.remote))
+        self.git("commit", "--allow-empty", "-m", "initial")
+        self.git("checkout", "-b", "feature")
+        self.git("commit", "--allow-empty", "-m", "tested change")
+        self.head = self.git("rev-parse", "HEAD")
+        self.git("checkout", "app")
+        self.git("commit", "--allow-empty", "-m", "app advanced independently")
+        self.base = self.git("rev-parse", "HEAD")
+        self.git("push", "origin", "app", "feature:refs/pull/123/head")
+        self.receipt["pr"].update(base_sha=self.base, head_sha=self.head)
+        self.receipt["tested_sha"] = self.head
+        self.receipt["review"]["sha"] = self.head
+        self.live = c.Live({"repo": str(self.repo), "workspace_id": "ws", "project_id": "project", "reviewer_ids": ["reviewer"]})
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.repo, capture_output=True, text=True, check=True).stdout.strip()
+
+    def facts(self):
+        def gh(endpoint):
+            if endpoint.endswith("/pulls/123"):
+                return {"head": {"sha": self.head}, "base": {"ref": "app", "sha": self.base}, "state": "open", "mergeable_state": "clean", "changed_files": 1}
+            if "/check-runs?" in endpoint:
+                return {"check_runs": [{"name": "test", "app": {"slug": "github-actions"}, "id": 1, "conclusion": "success"}]}
+            if endpoint.endswith("/git/ref/heads/app"):
+                return {"object": {"sha": self.base}}
+            raise AssertionError(endpoint)
+        def multica(*args):
+            if args[:2] == ("issue", "get"):
+                return {"id": "issue-123", "workspace_id": "ws", "project_id": "project", "metadata": {"task_id": "T-123"}}
+            if args[:2] == ("issue", "runs"):
+                marker = "ALTERA_REVIEW_V1 " + json.dumps({"sha": self.head, "verdict": "approved"})
+                return [{"id": "run-d", "agent_id": "developer", "status": "completed"},
+                        {"id": "run-r", "agent_id": "reviewer", "status": "completed", "result": {"output": marker}}]
+            raise AssertionError(args)
+        original = c.command
+        def command(args, cwd=None, as_json=True):
+            if args[:2] == ["gh", "api"]:
+                return [[{"filename": "docs/example.md"}]]
+            return original(args, cwd, as_json)
+        with patch.object(self.live, "gh", side_effect=gh), patch.object(self.live, "multica", side_effect=multica), patch.object(c, "command", side_effect=command):
+            return self.live.facts(self.receipt)
+
+    def test_advanced_base_blocks_old_green_head_and_updated_head_passes(self):
+        refs = self.git("show-ref")
+        facts = self.facts()
+        self.assertIs(facts["ci"]["passed"], True)
+        self.assertIs(facts["base_current"], False)
+        self.assertEqual(c.validate(self.receipt, facts, "merge"), ["base"])
+        self.assertEqual(self.git("show-ref"), refs)
+        self.git("checkout", "feature")
+        self.git("merge", "--no-edit", "app")
+        self.head = self.git("rev-parse", "HEAD")
+        self.git("push", "origin", "feature:refs/pull/123/head")
+        self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.receipt["review"]["sha"] = self.head
+        refs = self.git("show-ref")
+        self.assertEqual(c.validate(self.receipt, self.facts(), "merge"), [])
+        self.assertEqual(self.git("show-ref"), refs)
+
+    def test_mismatched_or_missing_pr_ref_fails_closed(self):
+        # GitHub reports a compatible head, but the fetched PR ref remains the old commit.
+        self.head = self.base
+        self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.receipt["review"]["sha"] = self.head
+        self.assertIs(self.facts()["base_current"], False)
+        self.git("push", "origin", ":refs/pull/123/head")
+        self.assertIs(self.facts()["base_current"], False)
+
+    def test_done_validation_does_not_require_current_base_ancestry(self):
+        CompletionTests.setUp(self)
+        self.facts["base_current"] = False
+        self.assertEqual(c.validate(self.receipt, self.facts, "done"), [])
 
 
 if __name__ == "__main__":

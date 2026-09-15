@@ -1,5 +1,6 @@
 {
   "repo": "/Users/egorbondarenko/WebstormProjects/Altera",
+  "runtime_workspace_root": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6",
   "github_repo": "Egoka/Altera",
   "multica": "/Applications/Multica.app/Contents/Resources/app.asar.unpacked/resources/bin/multica",
   "server_url": "https://api.multica.ai",

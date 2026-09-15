@@ -206,6 +206,8 @@ def build_report(snapshot, report_date):
         if issue:
             represented_issues.add(issue["id"])
         evidence["title"] = issue.get("title")
+        evidence["issue_id"] = issue.get("id") or issue_id
+        evidence["identifier"] = issue.get("identifier")
         evidence["status"] = issue.get("status_name") or issue.get("status_category") or issue.get("status")
         criteria = receipt.get("criteria")
         if evidence["acceptance"] is None and isinstance(criteria, list):
@@ -216,6 +218,7 @@ def build_report(snapshot, report_date):
     for identifier in sorted(value for value in cohort_issue_ids if value and value not in represented_issues):
         issue = issues_by_id.get(identifier, {})
         receipt_evidence.append({"task_id": (issue.get("metadata") or {}).get("task_id") or identifier,
+                                 "issue_id": identifier, "identifier": issue.get("identifier"),
                                  "title": issue.get("title"), "verified": False,
                                  "status": issue.get("status_name") or issue.get("status_category") or issue.get("status"),
                                  "acceptance": None, "tested_sha": None, "pr": None,
@@ -224,6 +227,9 @@ def build_report(snapshot, report_date):
         "schema_version": 1, "date": report_date,
         "window": {"start": iso(start), "end": iso(end), "timezone": "Europe/Moscow", "half_open": True},
         "collected_at": snapshot.get("collected_at"),
+        "period_task_ids": sorted({(issues_by_id.get(identifier, {}).get("metadata") or {}).get("task_id") or identifier
+                                   for identifier in cohort_issue_ids if identifier} |
+                                  {row["task_id"] for row in accepted}),
         "source_coverage": snapshot.get("coverage", {}),
         "executions": {"count": len(runs), "ids": [row["id"] for row in runs],
                        "autopilot": sum(row.get("kind") == "autopilot" or bool(row.get("autopilot_id")) for row in runs),
@@ -301,15 +307,45 @@ def markdown_cell(value):
     return display(value).replace("|", "\\|").replace("\n", " ").replace("\r", " ")
 
 
+def receipt_availability(report):
+    source = report.get("source_coverage", {}).get("receipts")
+    return (source.get("status") if isinstance(source, dict) else source) == "complete"
+
+
+def review_ratio(report):
+    quality = report["quality"]
+    if not quality["accepted_receipts"]:
+        return "n/a (нет доступной выборки принятых receipt)"
+    return f"{quality['independent_review_verified']} / {quality['accepted_receipts']} доступных принятых receipt"
+
+
+def evidence_task_link(row, report):
+    source = row.get("source") or {}
+    identifier = row.get("issue_id") or (source.get("issue_id") if isinstance(source, dict) else None)
+    issue = next((item for item in report.get("issue_metadata", [])
+                  if item.get("id") == (identifier or row.get("task_id"))
+                  or (item.get("metadata") or {}).get("task_id") == row.get("task_id")), {})
+    identifier = identifier or issue.get("id")
+    parsed = re.search(r"\bT-\d+\b", row.get("title") or "")
+    label = markdown_cell(row.get("identifier") or issue.get("identifier") or
+                          (parsed.group() if parsed else None) or row.get("task_id"))
+    label = label.replace("[", "\\[").replace("]", "\\]")
+    if identifier and re.fullmatch(r"[A-Za-z0-9-]+", identifier):
+        return f"[{label}](https://multica.ai/altera/issues/{identifier})"
+    return label
+
+
 def render_report(report):
     tasks, executions = report["tasks"], report["executions"]
     lines = [f"# Суточный аудит — {report['date']}", "",
              f"Окно: [{report['window']['start']}, {report['window']['end']}) — 10:00→10:00 Europe/Moscow.", "",
              f"Срез: {display(report['collected_at'])}. Ревизия: {report.get('revision', 1)}.", "",
-             f"- Новый controller подтвердил принятие {tasks['verified_accepted']} задач; legacy-результаты без receipt ещё не оценены.",
+             f"- Подтверждено доступными receipt: {tasks['verified_accepted']} задач; legacy-результаты без receipt ещё не оценены.",
              f"- Наблюдено {executions['count']} уникальных попыток, включая {executions['autopilot']} autopilot.",
              f"- Done без нового verified receipt в инвентаре: {tasks['done_without_verified_receipt']}; это пробел подтверждения, а не доказанный дефект результата.", "",
-             "## Принятый результат", "",
+             "## Результат по доступным receipt", "",
+             "Фактическое принятие неизвестно: источник receipt недоступен или неполон." if not receipt_availability(report)
+             else "Числа описывают только результаты, подтверждённые доступными controller receipt.", "",
              "| Метрика | Значение |", "| --- | ---: |",
              f"| Подтверждено принятых задач | {tasks['verified_accepted']} |",
              f"| Продуктовый результат, подтверждённый новым controller | {tasks['useful_accepted']} |",
@@ -317,7 +353,7 @@ def render_report(report):
              f"| Новых задач: родители / стадии | {tasks['created_parents']} / {tasks['created_stages']} |",
              f"| Done без подтверждённого receipt во всём инвентаре | {tasks['done_without_verified_receipt']} |",
              "", "## Работа и затраты", "",
-             f"Уникальных попыток: {executions['count']}; autopilot: {executions['autopilot']}; повторных попыток: {executions['retries']}.", "",
+             f"Уникальных попыток: {executions['count']}; autopilot: {executions['autopilot']}; подтверждённых повторов: {executions['retries']}; полнота классификации неизвестна.", "",
              f"No-op: {executions['noops']} при известном исходе у {executions['noop_known_runs']} попыток. Завершились после окна: {executions['late_completed']}.", "",
              "| Телеметрия | Наблюдённая сумма | Полные записи попыток |", "| --- | ---: | ---: |"]
     for field in TOKEN_FIELDS:
@@ -334,7 +370,7 @@ def render_report(report):
         lines.append(f"| {key} | {display(metric['median'])} | {display(metric['p90'])} | {metric['count']} |")
     quality = report["quality"]
     lines += ["", "## Качество и доставка", "",
-              f"Независимый review подтверждён: {quality['independent_review_verified']} / {quality['accepted_receipts']} принятых результатов.", "",
+              f"Независимый review подтверждён: {review_ratio(report)}.", "",
               f"Наблюдённые регрессии: {display(quality['regressions_observed'])}; receipt с измерением: {quality['regressions_known_receipts']}.", "",
               "| Тесты | Наблюдённое число | Receipt с измерением |", "| --- | ---: | ---: |"]
     for field in ("passed", "failed", "skipped", "todo"):
@@ -346,8 +382,9 @@ def render_report(report):
               "## Evidence по задачам", "",
               "| Задача | Название | Статус источника | Новый receipt | AC | PR |", "| --- | --- | --- | --- | --- | --- |"]
     for row in report["task_evidence"]:
-        lines.append("| " + " | ".join(markdown_cell(row.get(field)) for field in
-                                      ("task_id", "title", "status", "verified", "acceptance", "pr")) + " |")
+        lines.append("| " + " | ".join([evidence_task_link(row, report)] +
+                                      [markdown_cell(row.get(field)) for field in
+                                       ("title", "status", "verified", "acceptance", "pr")]) + " |")
     coverage = report["source_coverage"]
     statuses = {key: value.get("status", "unknown") if isinstance(value, dict) else value for key, value in coverage.items()}
     gaps = [key for key, status in statuses.items() if status != "complete"]
@@ -377,8 +414,9 @@ def render_report(report):
 def render_progress(reports):
     latest = max(reports, key=lambda row: row["date"])
     lines = ["# Прогресс Altera", "", f"Последний отчёт: [{latest['date']}](docs/reports/autonomy/{latest['date']}.md).", "",
-             "Данные обновляет детерминированный аудит. Принятые результаты требуют проверенного controller receipt.", "",
-             "| Период | Суток с данными | Принято | Продукт | Обслуживание | Самоисправления | Попытки |",
+             "Данные обновляет детерминированный аудит. Таблица показывает только подтверждённое доступными receipt; legacy-результаты без receipt ещё не оценены.", "",
+             "Фактическое принятие неизвестно для суток с недоступным или неполным источником receipt; наблюдённый ноль не означает отсутствие полезного результата.", "",
+             "| Период | Суток с данными | Подтверждено receipt | Продукт по receipt | Обслуживание по receipt | Самоисправления по receipt | Попытки |",
              "| --- | ---: | ---: | ---: | ---: | ---: | ---: |"]
     for days in (7, 30):
         period = aggregate_period(reports, latest["date"], days)
@@ -397,7 +435,7 @@ def render_progress(reports):
         lines.append("| " + " | ".join([f"{days} суток"] +
                                       [f"{display(period['timings'][key]['median'])} / {display(period['timings'][key]['p90'])} (n={period['timings'][key]['count']})"
                                        for key in ("execution_seconds", "lead_seconds")]) + " |")
-    lines += ["", f"В последнем срезе Done без verified receipt: {latest['tasks']['done_without_verified_receipt']}; независимый review принятого результата: {latest['quality']['independent_review_verified']} / {latest['quality']['accepted_receipts']}.", "",
+    lines += ["", f"В последнем срезе Done без verified receipt во всём инвентаре: {latest['tasks']['done_without_verified_receipt']}; независимый review: {review_ratio(latest)}.", "",
               "Пропущенные сутки не считаются нулевыми. Полнота источников, неизвестное покрытие тестами, доставка и cleanup — в суточном аудите. Периодные суммы могут включать частичные срезы.", "",
               "[Машинные агрегаты 7/30 суток](docs/reports/autonomy/periods.json)", "",
               "## Суточные отчёты", ""]
@@ -411,8 +449,55 @@ def encoded(value):
 
 
 def content_digest(report):
-    semantic = {key: value for key, value in report.items()
-                if key not in {"collected_at", "content_sha256", "revision"}}
+    """Ключ закрытой когорты; текущий инвентарь не является событием этих суток."""
+    start, end = day_window(report["date"])
+    accepted = [row for row in report.get("task_evidence", [])
+                if row.get("verified") is True and in_window(row.get("accepted_at"), start, end)]
+    task_ids = report.get("period_task_ids")
+    if task_ids is None:  # Совместимость с уже опубликованными отчётами schema_version=1.
+        task_ids = [row["task_id"] for row in report.get("task_evidence", [])
+                    if not row.get("accepted_at") or row in accepted]
+    issue_ids = {row.get("issue_id") or row.get("task_id") for row in report.get("task_evidence", [])
+                 if row.get("task_id") in task_ids}
+
+    def stable(value):
+        if isinstance(value, dict):
+            return {key: stable(item) for key, item in value.items()
+                    if key not in {"updated_at", "updatedAt", "observed_at", "collected_at"}}
+        if isinstance(value, list):
+            return sorted((stable(item) for item in value), key=encoded)
+        return value
+
+    receipt_prs = {str(row["pr"].get("number")) for row in accepted if isinstance(row.get("pr"), dict)}
+    prs = [row for row in report.get("pull_requests", [])
+           if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt", "merged_at", "mergedAt"))
+           or str(row.get("number")) in receipt_prs]
+    pr_numbers = {str(row.get("number")) for row in prs}
+    pr_shas = {row.get("headRefOid") or (row.get("head") or {}).get("sha") for row in prs}
+    pr_shas.discard(None)
+    ci = [row for row in report.get("ci_runs", [])
+          if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt"))
+          or (row.get("head_sha") or row.get("headSha")) in pr_shas]
+    coverage = {}
+    for key, value in report.get("source_coverage", {}).items():
+        if ":" in key:
+            prefix, identifier = key.split(":", 1)
+            if not ((prefix == "issue_runs" and identifier in issue_ids)
+                    or (prefix == "pr_reviews" and identifier in pr_numbers)):
+                continue
+        coverage[key] = {field: value.get(field) for field in ("status", "reason")} if isinstance(value, dict) else value
+    semantic = {key: report[key] for key in ("schema_version", "date", "window", "tokens", "tokens_by_role_model", "timings", "quality")}
+    semantic.update({
+        "tasks": {key: value for key, value in report["tasks"].items()
+                  if key not in {"inventory", "claimed_done_inventory", "done_without_verified_receipt"}},
+        "executions": {key: value for key, value in report["executions"].items()
+                       if key not in {"unknown_created_at", "missing_ids"}},
+        "period_task_ids": sorted(set(task_ids)),
+        "accepted_evidence": [{key: value for key, value in row.items()
+                               if key not in {"title", "status", "identifier", "issue_id"}} for row in accepted],
+        "pull_requests": prs, "ci_runs": ci, "source_coverage": coverage,
+    })
+    semantic = stable(semantic)
     return hashlib.sha256(encoded(semantic).encode()).hexdigest()
 
 

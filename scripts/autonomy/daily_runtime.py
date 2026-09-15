@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from controller import Ledger, fingerprint, lock
 from daily_publish import run as publish_report
+from resource_probe import measure_resources
 import reporting
 from runtime_bridge import emit, native_model
 
@@ -28,6 +29,10 @@ def collect_snapshot(config):
     )
     receipts = Path(config.get("receipts_dir", Path(config["state_dir"]) / "verified"))
     reporting.attach_controller_receipts(snapshot, receipts)
+    roots = [Path(config["repo"]) / ".worktrees"]
+    if config.get("runtime_workspace_root"):
+        roots.append(Path(config["runtime_workspace_root"]))
+    snapshot["disk"] = measure_resources(roots, max_entries=1_000_000, timeout_seconds=30)
     return snapshot
 
 

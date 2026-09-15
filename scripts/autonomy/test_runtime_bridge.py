@@ -21,7 +21,41 @@ class BridgeTests(unittest.TestCase):
             second = r.dispatch(config, snapshot, "other delivery wrapper", model)
             self.assertEqual(first["model_called"], True)
             self.assertEqual(second["model_called"], False)
+            self.assertEqual(second["status"], "no_action")
+            self.assertEqual(second["exit_code"], 0)
             self.assertEqual(len(calls), 1)
+
+    def test_interrupted_event_requires_reconciliation_without_repeating_model(self):
+        with tempfile.TemporaryDirectory() as root:
+            config = {"state_dir": root}
+            calls = []
+            def interrupted(message):
+                calls.append(message)
+                raise RuntimeError("native process interrupted")
+            with self.assertRaises(RuntimeError):
+                r.dispatch(config, {}, "prompt", interrupted)
+            result = r.dispatch(config, {}, "prompt", interrupted)
+            self.assertEqual(result["status"], "failed")
+            self.assertEqual(result["reason"], "reconciliation_required")
+            self.assertEqual(result["exit_code"], 2)
+            self.assertFalse(result["model_called"])
+            self.assertEqual(len(calls), 1)
+            output = io.StringIO()
+            r.emit(result, output)
+            self.assertTrue(json.loads(output.getvalue())["is_error"])
+
+    def test_exhausted_attempts_remain_failed_without_repeating_model(self):
+        with tempfile.TemporaryDirectory() as root:
+            calls = []
+            def failed(message):
+                calls.append(message)
+                return 1
+            results = [r.dispatch({"state_dir": root}, {}, "prompt", failed) for _ in range(4)]
+            self.assertEqual([result["status"] for result in results], ["failed"] * 4)
+            self.assertEqual(results[-1]["reason"], "reconciliation_required")
+            self.assertEqual(results[-1]["exit_code"], 2)
+            self.assertFalse(results[-1]["model_called"])
+            self.assertEqual(len(calls), 3)
 
     def test_new_data_dispatches_once(self):
         with tempfile.TemporaryDirectory() as root:
@@ -34,9 +68,34 @@ class BridgeTests(unittest.TestCase):
     def test_change_of_instruction_invalidates_snapshot(self):
         with tempfile.TemporaryDirectory() as root:
             calls = []
+            snapshot = {"issues": [{"id": "i", "status": "todo"}], "prs": []}
             for version in ["v1", "v2"]:
-                r.dispatch({"state_dir": root, "instructions_version": version}, {}, "p", lambda p: calls.append(p) or 0)
+                r.dispatch({"state_dir": root, "instructions_version": version}, snapshot, "p", lambda p: calls.append(p) or 0)
             self.assertEqual(len(calls), 2)
+            for message in calls:
+                self.assertEqual(json.loads(message.split("ALTERA_CONTROLLER_DELTA_V1\n")[1]), snapshot)
+
+    def test_allowed_agents_have_separate_events_and_snapshot_cursors(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "config.json"
+            path.write_text(json.dumps({"state_dir": root, "controller_agent_ids": ["diagnostic", "real"],
+                                        "event_namespace": "must_be_overridden"}))
+            snapshot = {"issues": [{"id": "i", "status": "todo"}], "prs": []}
+            calls = []
+            emitted = []
+            def native(config, args, message):
+                calls.append((config["event_namespace"], json.loads(message.split("ALTERA_CONTROLLER_DELTA_V1\n")[1])))
+                return 0
+            with patch.object(r, "Live"), patch.object(r, "snapshot", return_value=snapshot), \
+                    patch.object(r, "native_model", side_effect=native), patch.object(r, "emit", side_effect=emitted.append), \
+                    patch.object(r.sys, "argv", ["runtime_bridge.py"]):
+                for actor in ["diagnostic", "real", "diagnostic", "real"]:
+                    with patch.dict(r.os.environ, {"ALTERA_AUTONOMY_CONFIG": str(path), "MULTICA_AGENT_ID": actor}), \
+                            patch.object(r.sys, "stdin", io.StringIO(json.dumps({"message": {"content": "prompt"}}) + "\n")):
+                        self.assertEqual(r.main(), 0)
+            self.assertEqual(calls, [("diagnostic", snapshot), ("real", snapshot)])
+            self.assertEqual([result["status"] for result in emitted], ["no_action", "no_action"])
+            self.assertTrue(all(result["model_called"] is False for result in emitted))
 
     def test_protocol_result_truthfully_identifies_controller(self):
         output = io.StringIO()

@@ -147,6 +147,16 @@ class Live:
     def gh(self, endpoint):
         return command(["gh", "api", endpoint])
 
+    def fetch_matches(self, ref, sha):
+        """Получить ровно ref, не обновляя named refs; сверить наблюдённый GitHub SHA."""
+        if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
+            return False
+        try:
+            command(["git", "fetch", "--no-tags", "--refmap=", "origin", ref], self.repo, False)
+            return command(["git", "rev-parse", "FETCH_HEAD"], self.repo, False) == sha
+        except (RuntimeError, OSError, subprocess.TimeoutExpired):
+            return False
+
     def issue_scope(self, receipt, issue):
         metadata = issue.get("metadata") if isinstance(issue, dict) else None
         return bool(
@@ -221,7 +231,14 @@ class Live:
         actor = selected.get("agent_id")
         path = receipt.get("finalization", {}).get("path", "")
         final_hash = None
-        command(["git", "fetch", "origin", "app"], self.repo, False)
+        base_fetched = self.fetch_matches("refs/heads/app", base)
+        base_current = False
+        if base_fetched and not pr.get("merged") and pr.get("state") == "open" and self.fetch_matches(f"refs/pull/{number}/head", sha):
+            try:
+                command(["git", "merge-base", "--is-ancestor", base, sha], self.repo, False)
+                base_current = True
+            except (RuntimeError, OSError, subprocess.TimeoutExpired):
+                pass
         if path.startswith("docs/reports/") and ".." not in Path(path).parts:
             p = subprocess.run(["git", "show", f"{base}:{path}"], cwd=self.repo, capture_output=True, check=False)
             if p.returncode == 0 and receipt["task_id"].encode() in p.stdout and sha.encode() in p.stdout:
@@ -236,7 +253,7 @@ class Live:
                  "review": review, "review_completed": selected.get("status") == "completed", "review_trusted": actor == review.get("actor_id") and actor in self.config.get("reviewer_ids", []) and review_approved(content, sha),
                  "implementer_trusted": implementer.get("status") == "completed" and bool(receipt.get("implementer_id")) and implementer.get("agent_id") == receipt.get("implementer_id"),
                  "files_complete": len(names) == pr.get("changed_files"),
-                 "base_current": base == receipt["pr"].get("base_sha"), "merge_in_app": merged,
+                 "base_current": base_current and base == receipt["pr"].get("base_sha"), "merge_in_app": merged,
                  "requires_deploy": requires_deploy, "finalization_sha256": final_hash}
         # Native tool-result связывается с trusted actor/run; HTTP проверяется здесь.
         if requires_deploy:

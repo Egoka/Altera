@@ -80,10 +80,16 @@ def dispatch(config, snapshot, prompt, model):
     root = Path(config["state_dir"])
     with lock(root / "coordinator.lock"):
         ledger = Ledger(root / "ledger.sqlite3")
-        key = fingerprint({"snapshot": snapshot, "instructions": config.get("instructions_version", "v1")})
+        context = {"namespace": config.get("event_namespace", "coordinator"),
+                   "instructions": config.get("instructions_version", "v1")}
+        key = fingerprint({"snapshot": snapshot, **context})
+        cursor_key = "snapshot:" + fingerprint(context)
         if not ledger.claim(key):
-            return {"status": "no_action", "model_called": False, "event_key": key}
-        previous = ledger.cursor("snapshot") or {}
+            done = ledger.completed_at(key) is not None
+            return {"status": "no_action" if done else "failed", "model_called": False,
+                    "event_key": key, "reason": "unchanged_snapshot" if done else "reconciliation_required",
+                    "exit_code": 0 if done else 2}
+        previous = ledger.cursor(cursor_key) or {}
         delta = {}
         for category, values in snapshot.items():
             if isinstance(values, list):
@@ -95,7 +101,7 @@ def dispatch(config, snapshot, prompt, model):
         outcome = model(handoff)
         ledger.finish(key, outcome == 0)
         if outcome == 0:
-            ledger.set_cursor("snapshot", snapshot)
+            ledger.set_cursor(cursor_key, snapshot)
         return {"status": "completed" if outcome == 0 else "failed", "model_called": True, "event_key": key, "exit_code": outcome}
 
 
@@ -177,8 +183,10 @@ def main():
     if not config_path:
         raise RuntimeError("missing ALTERA_AUTONOMY_CONFIG")
     config = json.loads(Path(config_path).read_text())
-    if os.environ.get("MULTICA_AGENT_ID") not in config.get("controller_agent_ids", []):
+    actor = os.environ.get("MULTICA_AGENT_ID")
+    if not actor or actor not in config.get("controller_agent_ids", []):
         raise RuntimeError("coordinator profile used by unexpected agent")
+    config["event_namespace"] = actor
     initial = json.loads(sys.stdin.readline())
     content = initial.get("message", {}).get("content", "")
     if isinstance(content, list):

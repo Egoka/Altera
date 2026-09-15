@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import daily_runtime
 
@@ -16,6 +17,21 @@ def snapshot():
 
 
 class DailyRuntimeTests(unittest.TestCase):
+    def test_collect_snapshot_attaches_bounded_partial_resource_measurement(self):
+        config = {"multica": "multica", "server_url": "https://example.test", "workspace_id": "workspace",
+                  "project_id": "project", "github_repo": "owner/repo", "repo": "/public/repo",
+                  "state_dir": "/public/state", "runtime_workspace_root": "/public/native"}
+        measured = {"status": "partial", "logical_bytes": None, "measured_at": "2026-09-15T08:00:00Z",
+                    "reclaimed_bytes": None, "files": 10, "errors": ["entry_limit"]}
+        with patch.object(daily_runtime.reporting, "collect_live", return_value=snapshot()), \
+                patch.object(daily_runtime.reporting, "attach_controller_receipts"), \
+                patch.object(daily_runtime, "measure_resources", return_value=measured, create=True) as measure:
+            collected = daily_runtime.collect_snapshot(config)
+        measure.assert_called_once_with([Path("/public/repo/.worktrees"), Path("/public/native")],
+                                        max_entries=1_000_000, timeout_seconds=30)
+        self.assertEqual(collected["disk"], measured)
+        self.assertIsNone(collected["disk"]["logical_bytes"])
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
@@ -109,6 +125,21 @@ class DailyRuntimeTests(unittest.TestCase):
                                    now=self.now)
         self.assertEqual(result["status"], "no_action")
         self.assertEqual(self.calls, [])
+
+    def test_own_after_window_audit_feedback_does_not_publish_or_call_model_again(self):
+        data = snapshot()
+        data["coverage"]["autopilot_runs:daily"] = {"status": "complete", "records": 1}
+        first = self.run_daily(lambda _: data)
+        changed = json.loads(json.dumps(data))
+        changed["coverage"]["autopilot_runs:daily"]["records"] = 2
+        changed["pull_requests"] = [{"number": 57, "created_at": "2026-09-15T08:00:00Z"}]
+        changed["ci_runs"] = [{"id": 901, "created_at": "2026-09-15T08:01:00Z"}]
+        changed["disk"] = {"status": "ok", "logical_bytes": 9999, "measured_at": "2026-09-15T08:02:00Z"}
+        second = self.run_daily(lambda _: changed)
+        self.assertEqual(first["status"], "completed")
+        self.assertEqual(second["status"], "no_action")
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(len(self.publications), 1)
 
     def test_last_closed_day_changes_exactly_at_ten_moscow(self):
         before = daily_runtime.closed_date(dt.datetime(2026, 9, 15, 6, 59, 59, tzinfo=dt.timezone.utc))
