@@ -63,6 +63,7 @@ export default defineNuxtConfig({
   },
   fishtvue: {
     prefix: "",
+    componentsStyle: "outlined",
     theme: {
       semantic: {
         customThemeColor: 150,
@@ -72,11 +73,22 @@ export default defineNuxtConfig({
     componentsOptions: {
       Button: {
         class: "font-semibold"
+      },
+      Table: {
+        class: "app-table__component"
+      },
+      Form: {
+        class: "app-form__component"
+      },
+      Dialog: {
+        class: "app-dialog",
+        classBody: "app-dialog__body"
       }
     },
     optionsTheme: {
       isNotMinifyCSS: true,
-      darkModeSelector: "html.dark"
+      darkModeSelector: "html.dark",
+      layers: "theme, base, fishtvue, components, utilities"
     }
   },
 

@@ -295,7 +295,7 @@
 </script>
 
 <template>
-  <Table
+  <AppTable
     :dataSource="data"
     :columns="columns"
     search
@@ -338,7 +338,7 @@
         </Badge>
       </div>
     </template>
-  </Table>
+  </AppTable>
 </template>
 
 <style scoped></style>
