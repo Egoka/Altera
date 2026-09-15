@@ -114,8 +114,10 @@ class SnapshotTests(unittest.TestCase):
             gh_repo = "owner/repo"
             comments = [{"id": "c1", "author_id": "human", "content": "first comment"}]
             runs = [{"id": "run1", "agent_id": "developer", "status": "running", "result": None}]
+            reads = []
 
-            def multica(inner, *args):
+            def multica_read(inner, *args):
+                inner.reads.append(args)
                 if args[:2] == ("issue", "list"):
                     return {"issues": [{"id": "i1", "status": "todo"}], "has_more": False}
                 if args[:2] == ("issue", "runs"):
@@ -131,7 +133,7 @@ class SnapshotTests(unittest.TestCase):
         self.live = FixtureLive()
 
     def snapshot(self, prs=None):
-        with patch.object(r, "command", return_value=prs if prs is not None else [self.page([], False)]):
+        with patch.object(r, "read_command", return_value=prs if prs is not None else [self.page([], False)]):
             return r.snapshot(self.live)
 
     @staticmethod
@@ -183,7 +185,7 @@ class SnapshotTests(unittest.TestCase):
                   {"__typename": "StatusContext", "context": "external", "state": "SUCCESS"}]
         pages = [self.page([self.pr(number) for number in range(1, 101)], True, "cursor-100"),
                  self.page([self.pr(101, checks)], False, "cursor-101")]
-        with patch.object(r, "command", return_value=pages) as source:
+        with patch.object(r, "read_command", return_value=pages) as source:
             result = r.snapshot(self.live)
         self.assertEqual(len(result["prs"]), 101)
         self.assertEqual(result["prs"][-1]["checks"], [("external", "SUCCESS", ""), ("test", "SUCCESS", "COMPLETED")])
@@ -200,6 +202,32 @@ class SnapshotTests(unittest.TestCase):
     def test_truncated_summary_without_edit_metadata_is_explicitly_partial(self):
         self.live.comments[0]["content_truncated"] = True
         self.assertEqual(self.snapshot()["issues"][0]["comment_edit_coverage"], "partial")
+
+    def test_done_issues_do_not_trigger_deep_run_or_comment_reads(self):
+        original = self.live.multica_read
+        def multica_read(*args):
+            if args[:2] == ("issue", "list"):
+                return {"issues": [
+                    {"id": "done", "status": "done", "status_category": "done"},
+                    {"id": "todo", "status": "todo", "status_category": "todo"},
+                ], "has_more": False}
+            return original(*args)
+        self.live.multica_read = multica_read
+        result = self.snapshot()
+        deep_ids = [args[2] if args[:2] == ("issue", "runs") else args[3]
+                    for args in self.live.reads
+                    if args[:2] == ("issue", "runs") or args[:3] == ("issue", "comment", "list")]
+        self.assertEqual(deep_ids, ["todo", "todo"])
+        self.assertEqual([item["id"] for item in result["issues"]], ["done", "todo"])
+
+
+class FailureReportingTests(unittest.TestCase):
+    def test_command_failure_reports_safe_source_without_stderr(self):
+        error = r.ExternalCommandError(["/secret/path/multica", "issue", "list"], 17)
+        details = r.failure_details(error)
+        self.assertEqual(details, {"error_type": "ExternalCommandError", "error_code": "external_command_failed",
+                                   "error_source": "multica", "exit_code": 17})
+        self.assertNotIn("secret", json.dumps(details))
 
 
 if __name__ == "__main__":
