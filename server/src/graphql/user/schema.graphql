@@ -3,7 +3,10 @@ enum Role {
   reader
   author
   editor
+  moderator
+  analyst
   admin
+  owner
 }
 
 type User {
