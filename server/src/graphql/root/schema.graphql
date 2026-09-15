@@ -64,7 +64,6 @@ type SortInfo {
 
 type Query {
   _empty: String
-  _codegenDriftProbe: Boolean
 }
 
 type Mutation {
