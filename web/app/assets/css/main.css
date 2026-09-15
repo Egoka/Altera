@@ -375,3 +375,45 @@
     --color-surface: #1a1a1a;
   }
 }
+
+@layer components {
+  .app-table,
+  .app-form,
+  .app-dialog,
+  .app-dialog__body {
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  .app-table,
+  .app-table :where(.classTableBody, .classTable, thead, tbody, tr, th, td),
+  .app-form,
+  .app-dialog,
+  .app-dialog__body {
+    background-color: var(--color-surface);
+  }
+
+  .app-table .classPagination,
+  .app-form :where(input, textarea, select, fieldset),
+  .app-dialog,
+  .app-dialog__body {
+    border-color: var(--color-rule);
+  }
+
+  .app-form :where(input, textarea, select, label) {
+    color: var(--color-ink);
+  }
+
+  .app-form :where(input, textarea, select)::placeholder {
+    color: var(--color-ink-muted);
+  }
+
+  /* FishtVue injects table utility styles at runtime; token bindings must
+     remain authoritative when those styles are appended after the app CSS. */
+  .app-table .ColumnClassTd,
+  .app-table th {
+    background-color: var(--color-surface) !important;
+    border-color: var(--color-rule) !important;
+    color: var(--color-ink) !important;
+  }
+}

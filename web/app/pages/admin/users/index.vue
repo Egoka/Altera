@@ -445,7 +445,7 @@
     }">
     <template #table>
       <div class="p-3">
-        <Table
+        <AppTable
           :dataSource="data"
           :columns="columns"
           search
@@ -484,7 +484,7 @@
               {{ getRoleText(rowData.role) }}
             </Badge>
           </template>
-        </Table>
+        </AppTable>
       </div>
     </template>
     <template #item>

@@ -161,7 +161,7 @@
 </script>
 
 <template>
-  <Table
+  <AppTable
     :dataSource="data"
     :columns="columns"
     search
@@ -191,7 +191,7 @@
         {{ rowData.isActive ? "Активен" : "Неактивен" }}
       </Badge>
     </template>
-  </Table>
+  </AppTable>
 </template>
 
 <style scoped></style>
