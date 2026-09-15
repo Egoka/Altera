@@ -3,13 +3,13 @@ import { expect, test } from "@playwright/test"
 test("theme switches through Nuxt color mode and semantic tokens", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" })
 
-  await page.goto("/components-showcase")
+  await page.goto("/")
 
   const root = page.locator("html")
   await expect(root).not.toHaveClass(/\bdark\b/)
   await expect(root).toHaveCSS("background-color", "rgb(250, 249, 247)")
 
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
     localStorage.setItem("nuxt-color-mode", "dark")
     localStorage.setItem("theme", "light")
   })
