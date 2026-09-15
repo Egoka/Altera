@@ -1,17 +1,25 @@
-type SectionTag {
+type Tag {
   id: ID!
   name: String!
+  nameEn: String
   slug: String!
   description: String
+  status: TaxonomyStatus!
+  mergedInto: Tag
+  createdByActorId: ID
+  createdByRole: Role
+  archivedAt: String
+  archivedByActorId: ID
+  archivedByRole: Role
   createdAt: String!
   updatedAt: String!
   # Связь со статьями
   articles: [Article!]
   # Количество статей (для админ панели)
-  _count: SectionTagCount
+  _count: TagCount
 }
 
-type SectionTagCount {
+type TagCount {
   articles: Int!
 }
 
@@ -24,7 +32,7 @@ input TagFiltersInput {
 }
 
 type TagsResponse {
-  tags: [SectionTag!]!
+  tags: [Tag!]!
   pagination: PaginationInfo!
   filters: TagFilters!
   sort: SortInfo!
@@ -52,28 +60,25 @@ type ArticlesByTagResponse {
 
 extend type Query {
   # Запросы для страницы тега
-  tag(slug: String!): SectionTag
+  tag(slug: String!): Tag
   articlesByTag(tagSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByTagResponse!
   tagStats(tagSlug: String!): TagStats
 
   # Запросы для управления тегами (требуют права admin)
-  sectionTags(
-    pagination: PaginationInput!
-    sort: SortInput!
-    filters: TagFiltersInput!
-    search: SearchInput
-  ): TagsResponse!
+  tags(pagination: PaginationInput!, sort: SortInput!, filters: TagFiltersInput!, search: SearchInput): TagsResponse!
 }
 
 # Input типы для мутаций
 input CreateTagInput {
   name: String!
+  nameEn: String
   slug: String!
   description: String
 }
 
 input UpdateTagInput {
   name: String
+  nameEn: String
   slug: String
   description: String
 }
@@ -85,8 +90,10 @@ input MergeTagsInput {
 
 extend type Mutation {
   # Админ мутации для управления тегами
-  createTag(input: CreateTagInput!): SectionTag!
-  updateTag(id: ID!, input: UpdateTagInput!): SectionTag!
-  deleteTag(id: ID!): SectionTag!
-  mergeTags(input: MergeTagsInput!): SectionTag!
+  createTag(input: CreateTagInput!): Tag!
+  updateTag(id: ID!, input: UpdateTagInput!): Tag!
+  deleteTag(id: ID!): Tag!
+  mergeTags(input: MergeTagsInput!): Tag!
+  archiveTag(id: ID!): Tag!
+  restoreTag(id: ID!): Tag!
 }

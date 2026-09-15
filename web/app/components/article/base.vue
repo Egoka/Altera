@@ -17,7 +17,7 @@
     /** Служебная строка: части по порядку, по умолчанию автор · рубрика. */
     meta?: CardMeta
   }>()
-  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
+  const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
   const titleScale = computed(() => {
     if (props.scale === "lead") return "text-card md:text-title"
     // Обрезка третьей строкой — страховка от единичного длинного заголовка:
@@ -28,7 +28,7 @@
 </script>
 
 <template>
-  <article>
+  <article v-if="slug">
     <figure class="mb-4">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg

@@ -4,8 +4,8 @@
   const props = defineProps<{
     article: ArticleCardFragment
   }>()
-  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
-  const contentType = computed(() => `/${props.article.contentType.slug}`)
+  const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
+  const section = computed(() => (props.article.section ? `/${props.article.section.slug}` : ""))
 
   // Refs для composable
   const containerRef = ref<HTMLElement>()
@@ -43,7 +43,7 @@
           {{ article.dek }}
         </div>
         <div ref="bottomRef" class="mt-auto flex justify-between flex-wrap gap-x-3 flex-row items-start">
-          <ShowType :link="contentType" :name="article.contentType.name" />
+          <ShowType v-if="article.section" :link="section" :name="article.section.name" />
           <ShowTime v-if="props.article.publishedAt" :time="props.article.publishedAt" />
         </div>
       </div>

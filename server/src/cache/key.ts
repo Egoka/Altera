@@ -28,8 +28,8 @@ export const buildCacheKey = (namespace: string, args: Readonly<Record<string, u
 interface ArticleCacheIdentity {
   slug: string
   author?: { handle: string } | null
-  contentType?: { slug: string } | null
-  sectionTags?: readonly { slug: string }[]
+  section?: { slug: string } | null
+  tags?: readonly { slug: string }[]
 }
 
 export const buildArticleCacheTags = (...articles: readonly ArticleCacheIdentity[]): string[] => {
@@ -38,8 +38,8 @@ export const buildArticleCacheTags = (...articles: readonly ArticleCacheIdentity
   for (const article of articles) {
     tags.add(`article:${article.slug}`)
     if (article.author) tags.add(`author:${article.author.handle}`)
-    if (article.contentType) tags.add(`content-type:${article.contentType.slug}`)
-    article.sectionTags?.forEach((tag) => tags.add(`section-tag:${tag.slug}`))
+    if (article.section) tags.add(`section:${article.section.slug}`)
+    article.tags?.forEach((tag) => tags.add(`tag:${tag.slug}`))
   }
 
   return [...tags].sort()

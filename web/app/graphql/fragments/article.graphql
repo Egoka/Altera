@@ -11,7 +11,7 @@ fragment ArticleCard on Article {
     slug: handle
     photoUrl
   }
-  contentType {
+  section {
     name
     slug
   }
@@ -29,7 +29,7 @@ fragment PopularArticle on Article {
     name
     slug: handle
   }
-  contentType {
+  section {
     name
     slug
   }

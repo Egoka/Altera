@@ -33,7 +33,7 @@
     featuredImage: `https://picsum.photos/900/600?random=${i + 40}`,
     publishedAt: "2026-09-13",
     author: { name: authors[i % authors.length]!, slug: `demo-author-${i}`, photoUrl: "" },
-    contentType: sections[i % sections.length]!
+    section: sections[i % sections.length]!
   })
 
   const demoFor = (count: number) => Array.from({ length: count }, (_, i) => makeArticle(i))

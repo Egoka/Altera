@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import type { ContentTypeSummaryFragment } from "~/graphql/generated/graphql"
+  import type { SectionSummaryFragment } from "~/graphql/generated/graphql"
 
-  type ContentTypeNavItem = ContentTypeSummaryFragment & { iconUrl?: string }
+  type SectionNavItem = SectionSummaryFragment & { iconUrl?: string }
 
   // Моковые данные для типов контента
-  const mockContentTypes: ContentTypeNavItem[] = [
+  const mockSections: SectionNavItem[] = [
     {
       id: "1",
       name: "Статьи",
@@ -104,14 +104,14 @@
   ]
 
   // Реактивные данные
-  const contentTypes = ref<ContentTypeNavItem[]>(mockContentTypes)
+  const sections = ref<SectionNavItem[]>(mockSections)
   const searchQuery = ref("")
 
   // Фильтрация типов контента
-  const filteredContentTypes = computed(() => {
-    if (!searchQuery.value) return contentTypes.value
+  const filteredSections = computed(() => {
+    if (!searchQuery.value) return sections.value
 
-    return contentTypes.value.filter(
+    return sections.value.filter(
       (type) =>
         type.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         type.description?.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -121,12 +121,8 @@
 
 <template>
   <div>
-    <NuxtLink
-      v-for="contentType in filteredContentTypes"
-      :key="contentType.id"
-      :to="`/${contentType.slug}`"
-      class="block">
-      <HeaderType :contentType="contentType" />
+    <NuxtLink v-for="section in filteredSections" :key="section.id" :to="`/${section.slug}`" class="block">
+      <HeaderType :section="section" />
     </NuxtLink>
   </div>
 </template>

@@ -3,9 +3,9 @@ query GetAdminTags(
   $sort: SortInput! = { field: "createdAt", direction: DESC }
   $filters: TagFiltersInput! = { base: {} }
 ) {
-  sectionTags(pagination: $pagination, sort: $sort, filters: $filters) {
+  tags(pagination: $pagination, sort: $sort, filters: $filters) {
     tags {
-      ...SectionTagSummary
+      ...TagSummary
       _count {
         articles
       }

@@ -103,14 +103,14 @@ describe("domain cache tags", () => {
       {
         slug: "old-slug",
         author: { handle: "old-author" },
-        contentType: { slug: "essay" },
-        sectionTags: [{ slug: "art" }, { slug: "music" }]
+        section: { slug: "essay" },
+        tags: [{ slug: "art" }, { slug: "music" }]
       },
       {
         slug: "new-slug",
         author: { handle: "new-author" },
-        contentType: { slug: "essay" },
-        sectionTags: [{ slug: "music" }, { slug: "travel" }]
+        section: { slug: "essay" },
+        tags: [{ slug: "music" }, { slug: "travel" }]
       }
     )
 
@@ -119,11 +119,11 @@ describe("domain cache tags", () => {
       "article:old-slug",
       "author:new-author",
       "author:old-author",
-      "content-type:essay",
       "home",
-      "section-tag:art",
-      "section-tag:music",
-      "section-tag:travel"
+      "section:essay",
+      "tag:art",
+      "tag:music",
+      "tag:travel"
     ])
   })
 
@@ -134,14 +134,14 @@ describe("domain cache tags", () => {
       slug: "old-slug",
       authorId: "u1",
       author: { handle: "old-author" },
-      contentType: { slug: "essay" },
-      sectionTags: [{ slug: "art" }]
+      section: { slug: "essay" },
+      tags: [{ slug: "art" }]
     }
     const updated = {
       ...previous,
       slug: "new-slug",
       author: { handle: "new-author" },
-      sectionTags: [{ slug: "travel" }]
+      tags: [{ slug: "travel" }]
     }
     const prisma = {
       article: {
@@ -163,10 +163,10 @@ describe("domain cache tags", () => {
         "article:old-slug",
         "author:new-author",
         "author:old-author",
-        "content-type:essay",
         "home",
-        "section-tag:art",
-        "section-tag:travel"
+        "section:essay",
+        "tag:art",
+        "tag:travel"
       ]
     ])
   })

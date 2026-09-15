@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import type { ContentTypeSummaryFragment } from "~/graphql/generated/graphql"
+  import type { SectionSummaryFragment } from "~/graphql/generated/graphql"
 
-  type ContentTypeNavItem = ContentTypeSummaryFragment & { iconUrl?: string }
+  type SectionNavItem = SectionSummaryFragment & { iconUrl?: string }
 
   interface Props {
-    contentType: ContentTypeNavItem
+    section: SectionNavItem
   }
 
   const props = defineProps<Props>()
@@ -73,14 +73,14 @@
   // Вычисляем высоту при загрузке компонента
   onMounted(() => {
     nextTick(() => {
-      if (props.contentType.description && props.contentType.description.trim()) {
+      if (props.section.description && props.section.description.trim()) {
         calculateBioHeight()
       }
     })
 
     // Добавляем обработчик изменения размера окна
     window.addEventListener("resize", () => {
-      if (props.contentType.description && props.contentType.description.trim()) {
+      if (props.section.description && props.section.description.trim()) {
         calculateBioHeight()
       }
     })
@@ -94,25 +94,25 @@
 
 <template>
   <header
-    v-if="contentType"
+    v-if="section"
     class="w-full border-b border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-400 transition-colors duration-500">
     <div class="w-full pb-8 pt-12 sm:pb-6 sm:pt-10 md:pb-10 md:pt-14">
       <div class="max-w-7xl mx-auto px-8 sm:px-10">
         <div class="flex flex-col items-center gap-6">
-          <div v-if="contentType.iconUrl" class="relative mb-6">
+          <div v-if="section.iconUrl" class="relative mb-6">
             <NuxtImg
-              :alt="contentType.name + ' Icon'"
+              :alt="section.name + ' Icon'"
               class="block mx-auto mb-6 md:mb-6 sm:mb-4 w-30 h-30 object-contain dark:invert-100"
-              :src="contentType.iconUrl"
+              :src="section.iconUrl"
               width="120"
               height="120" />
           </div>
           <h1
             class="font-waterway tracking-widest text-center text-5xl md:text-4xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-            {{ contentType.name }}
+            {{ section.name }}
           </h1>
 
-          <div v-if="contentType.description && contentType.description.trim()" class="max-w-3xl text-center">
+          <div v-if="section.description && section.description.trim()" class="max-w-3xl text-center">
             <div
               ref="bioContent"
               :class="[
@@ -124,7 +124,7 @@
               }">
               <div
                 class="font-garamond-libre text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed"
-                v-html="contentType.description"></div>
+                v-html="section.description"></div>
             </div>
 
             <button

@@ -37,6 +37,7 @@ model User {
   emailChangeRequest EmailChangeRequest?
   currentHandle      HandleHistory       @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
   handleHistory      HandleHistory[]     @relation("HandleOwner")
+  createdTags        Tag[]                @relation("TagCreator")
 
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
@@ -97,30 +98,111 @@ model EmailChangeRequest {
   @@map("email_change_requests")
 }
 
-model ContentType {
-  id          String            @id @default(uuid())
-  name        String
-  slug        String            @unique
-  description String?
-  order       Int
-  status      ContentTypeStatus @default(active)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  articles    Article[]
+model Section {
+  id                    String               @id @default(uuid())
+  name                  String
+  nameEn                String?
+  slug                  String               @unique
+  description           String?
+  descriptionEn         String?
+  seoTitle              String?
+  seoTitleEn            String?
+  seoDescription        String?
+  seoDescriptionEn      String?
+  order                 Int
+  status                TaxonomyStatus       @default(active)
+  successorId           String?
+  archivedAt            DateTime?
+  archivedByActorId     String?
+  archivedByRole        Role?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  articles              Article[]
+  successor             Section?             @relation("SectionSuccessor", fields: [successorId], references: [id], onDelete: Restrict)
+  predecessors          Section[]            @relation("SectionSuccessor")
+  currentSlug           SectionSlugHistory   @relation("CurrentSectionSlug", fields: [slug], references: [slug], onDelete: Restrict, onUpdate: Restrict)
+  slugHistory           SectionSlugHistory[] @relation("SectionSlugOwner")
+  redirectedSlugHistory SectionSlugHistory[] @relation("SectionSlugRedirect")
 
-  @@map("content_types")
+  @@index([status, order])
+  @@index([successorId])
+  @@map("sections")
 }
 
-model SectionTag {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  articles    Article[] @relation("ArticleToSectionTag")
+/// Append-only registry: issued section slugs are never deleted or reused.
+model SectionSlugHistory {
+  slug                String   @id
+  ownerSectionId      String?
+  redirectToSectionId String?
+  createdAt           DateTime @default(now())
+  ownerSection        Section? @relation("SectionSlugOwner", fields: [ownerSectionId], references: [id], onDelete: SetNull)
+  redirectToSection   Section? @relation("SectionSlugRedirect", fields: [redirectToSectionId], references: [id], onDelete: SetNull)
+  currentSection      Section? @relation("CurrentSectionSlug")
 
-  @@map("section_tags")
+  @@index([ownerSectionId])
+  @@index([redirectToSectionId])
+  @@map("section_slug_history")
+}
+
+model Format {
+  id            String         @id @default(uuid())
+  name          String
+  nameEn        String?
+  slug          String         @unique
+  description   String?
+  descriptionEn String?
+  status        TaxonomyStatus @default(active)
+  archivedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  articles      Article[]
+
+  @@index([status])
+  @@map("formats")
+}
+
+model Tag {
+  id                    String           @id @default(uuid())
+  name                  String
+  nameEn                String?
+  slug                  String           @unique
+  description           String?
+  status                TaxonomyStatus   @default(active)
+  mergedIntoId          String?
+  createdByActorId      String?
+  createdByRole         Role?
+  archivedAt            DateTime?
+  archivedByActorId     String?
+  archivedByRole        Role?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  articles              Article[]        @relation("ArticleToTag")
+  creator               User?            @relation("TagCreator", fields: [createdByActorId], references: [id], onDelete: SetNull)
+  mergedInto            Tag?             @relation("TagMerge", fields: [mergedIntoId], references: [id], onDelete: Restrict)
+  mergedFrom            Tag[]            @relation("TagMerge")
+  currentSlug           TagSlugHistory   @relation("CurrentTagSlug", fields: [slug], references: [slug], onDelete: Restrict, onUpdate: Restrict)
+  slugHistory           TagSlugHistory[] @relation("TagSlugOwner")
+  redirectedSlugHistory TagSlugHistory[] @relation("TagSlugRedirect")
+
+  @@index([status])
+  @@index([mergedIntoId])
+  @@index([createdByActorId])
+  @@map("tags")
+}
+
+/// Append-only registry: issued tag slugs are never deleted or reused.
+model TagSlugHistory {
+  slug            String   @id
+  ownerTagId      String?
+  redirectToTagId String?
+  createdAt       DateTime @default(now())
+  ownerTag        Tag?     @relation("TagSlugOwner", fields: [ownerTagId], references: [id], onDelete: SetNull)
+  redirectToTag   Tag?     @relation("TagSlugRedirect", fields: [redirectToTagId], references: [id], onDelete: SetNull)
+  currentTag      Tag?     @relation("CurrentTagSlug")
+
+  @@index([ownerTagId])
+  @@index([redirectToTagId])
+  @@map("tag_slug_history")
 }
 
 model Article {
@@ -136,11 +218,15 @@ model Article {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   authorId      String
-  typeId        String
+  sectionId     String?
+  formatId      String?
   author        User          @relation(fields: [authorId], references: [id])
-  contentType   ContentType   @relation(fields: [typeId], references: [id])
-  sectionTags   SectionTag[]  @relation("ArticleToSectionTag")
+  section       Section?      @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  format        Format?       @relation(fields: [formatId], references: [id], onDelete: SetNull)
+  tags          Tag[]         @relation("ArticleToTag")
 
+  @@index([sectionId])
+  @@index([formatId])
   @@map("articles")
 }
 
@@ -171,7 +257,7 @@ enum ProfileCheckStatus {
   rejected
 }
 
-enum ContentTypeStatus {
+enum TaxonomyStatus {
   active
   archived
 }

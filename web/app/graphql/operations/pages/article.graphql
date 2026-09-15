@@ -19,11 +19,11 @@ query GetArticle($slug: String!) {
       photoUrl
       socialLinks
     }
-    contentType {
+    section {
       name
       slug
     }
-    sectionTags {
+    tags {
       name
       slug
     }

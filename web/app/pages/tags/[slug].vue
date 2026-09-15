@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment, SectionTagSummaryFragment } from "~/graphql/generated/graphql"
+  import type { ArticleCardFragment, TagSummaryFragment } from "~/graphql/generated/graphql"
   import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
   import { findDemoTag } from "~/utils/demoTags"
 
@@ -14,7 +14,7 @@
    * показывала «Технологии» из собственного мока, и `/tags/economics` врал в
    * заголовке. Описания у тега нет по ADR-0005, поэтому поле не заполняется.
    */
-  const tag = computed<SectionTagSummaryFragment>(() => {
+  const tag = computed<TagSummaryFragment>(() => {
     const demo = findDemoTag(String(route.params.slug ?? ""))
     return {
       id: demo.slug,

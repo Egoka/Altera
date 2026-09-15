@@ -1,17 +1,17 @@
 query GetNavigation {
-  contentTypes(
+  sections(
     pagination: { page: 1, limit: 100 }
     sort: { field: "order", direction: ASC }
     filters: { base: {}, status: [active] }
   ) {
-    contentTypes {
+    sections {
       id
       name
       slug
       order
     }
   }
-  popularTags: sectionTags(
+  popularTags: tags(
     pagination: { page: 1, limit: 10 }
     sort: { field: "createdAt", direction: DESC }
     filters: { base: {}, hasArticles: true }

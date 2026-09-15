@@ -4,7 +4,7 @@
     index: number
     article: PopularArticleFragment
   }>()
-  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
+  const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
   const author = computed(() => `/authors/${props.article.author.slug}`)
 
   const router = useRouter()
