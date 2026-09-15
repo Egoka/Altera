@@ -3,15 +3,18 @@ import { expect, test } from "@playwright/test"
 test("flow #12 exports data, self-archives, and restores articles separately", async ({ page }) => {
   test.skip(true, "Requires T-021, T-034, T-035, and T-045 with export and mail fixtures")
 
-  await test.step("request and download the account export", async () => {
+  await test.step("Шаг 1: запросить и скачать выгрузку аккаунта", async () => {
     await page.goto("/me/export")
     await page.getByRole("button", { name: /запросить выгрузку|request export/i }).click()
     await expect(page.getByRole("link", { name: /скачать|download/i })).toBeVisible()
   })
 
-  await test.step("confirm self-archive by email", async () => {
+  await test.step("Шаг 2: запросить письмо для самостоятельного архивирования", async () => {
     await page.goto("/me/delete")
     await page.getByRole("button", { name: /отправить письмо|send.*e-mail/i }).click()
+  })
+
+  await test.step("Шаг 3: подтвердить архивирование ссылкой из письма", async () => {
     await page.goto("/me/delete/confirm?token=fake-self-archive-token")
     await expect(page).toHaveURL(/\/$/)
 
@@ -21,16 +24,19 @@ test("flow #12 exports data, self-archives, and restores articles separately", a
     expect(articleResponse.status()).toBe(410)
   })
 
-  await test.step("enter a limited session and restore only the account", async () => {
+  await test.step("Шаг 4: войти в ограниченную сессию архивированного аккаунта", async () => {
     await page.goto("/auth/verify?token=fake-self-archived-login-token")
     await expect(page).toHaveURL(/\/me\/archived$/)
+  })
+
+  await test.step("Шаг 5: восстановить аккаунт, не восстанавливая статьи", async () => {
     await page.getByRole("button", { name: /восстановить аккаунт|restore account/i }).click()
     await expect(page).toHaveURL(/\/me(?:\?|$)/)
     await page.goto("/me/articles?status=archived")
     await expect(page.getByText(/self-archive fixture/i)).toBeVisible()
   })
 
-  await test.step("restore archived articles one at a time", async () => {
+  await test.step("Шаг 6: восстановить архивные статьи по одной", async () => {
     await page.goto("/me/articles?status=archived")
     await page
       .getByRole("button", { name: /восстановить|restore/i })
