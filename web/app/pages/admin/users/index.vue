@@ -285,10 +285,10 @@
   const activeRow = ref<string>()
 
   // Данные формы редактирования
-  const formValues = ref({
+  const formValues = ref<Pick<UserRow, "name" | "email" | "role" | "slug" | "bio">>({
     name: "",
     email: "",
-    role: "reader" as Role,
+    role: "reader",
     slug: "",
     bio: ""
   })
