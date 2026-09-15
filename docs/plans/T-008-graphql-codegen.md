@@ -1,7 +1,7 @@
 # T-008: GraphQL Code Generator из SDL сервера
 
 - **Дата**: 2026-09-15
-- **Ветка**: `docs/t008-graphql-codegen`
+- **Ветка**: `web/t008-graphql-codegen`
 - **Задача**: T-008 / ALTE-16
 - **Authorization**: допуск очереди из `docs/backlog/tasks/T-008-graphql-codegen.md`, native issue
   `01a0a189-0e9a-7422-bada-d6469e52b08f`, поручение архитектурной стадии
