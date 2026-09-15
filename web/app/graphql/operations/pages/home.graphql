@@ -1,0 +1,15 @@
+query GetHomePageArticles {
+  featuredArticles(limit: 5) {
+    ...ArticleCard
+  }
+  latestArticles(limit: 20, excludeFeatured: true) {
+    ...ArticleCard
+    sectionTags {
+      name
+      slug
+    }
+  }
+  popularArticles(timeRange: "week", limit: 10) {
+    ...PopularArticle
+  }
+}

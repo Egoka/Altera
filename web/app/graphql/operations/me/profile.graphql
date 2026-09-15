@@ -1,0 +1,20 @@
+query GetMyProfile {
+  me {
+    id
+    name
+    email
+    bio
+    photoUrl
+    role
+    slug
+    socialLinks
+    createdAt
+  }
+  myArticlesStats {
+    total
+    published
+    draft
+    review
+    archived
+  }
+}
