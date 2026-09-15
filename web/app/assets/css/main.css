@@ -200,17 +200,13 @@
   --color-primary-800: #8a2c0d;
   --color-primary-900: #771d1d;
 
-  /* Secondary - Акцентная палитра */
-  --color-secondary-50: #fff8f1;
-  --color-secondary-100: #feecdc;
-  --color-secondary-200: #fcd9bd;
-  --color-secondary-300: #fdba8c;
-  --color-secondary-400: #ff8a4c;
-  --color-secondary-500: #ff5a1f;
-  --color-secondary-600: #d03801;
-  --color-secondary-700: #b43403;
-  --color-secondary-800: #8a2c0d;
-  --color-secondary-900: #771d1d;
+  /* Семантическая палитра */
+  --color-paper: #faf9f7;
+  --color-ink: #111111;
+  --color-ink-muted: #6b6b6b;
+  --color-accent: var(--color-primary-500);
+  --color-rule: #e5e3de;
+  --color-surface: #ffffff;
 
   /* Accent */
   --color-accent-50: #fff7ed;
@@ -230,7 +226,7 @@
   --color-success-200: #bbf7d0;
   --color-success-300: #86efac;
   --color-success-400: #4ade80;
-  --color-success-500: #22d3ee;
+  --color-success-500: #22c55e;
   --color-success-600: #16a34a;
   --color-success-700: #15803d;
   --color-success-800: #166534;
@@ -277,10 +273,13 @@
   --font-waterway: "Waterway", serif;
   --font-garamond-libre: "Garamond Libre", serif;
   --font-cormorant: "Cormorant SC", serif;
-  --font-inter: "Inter", system-ui, sans-serif;
-  --font-poppins: "Poppins", system-ui, sans-serif;
-  --font-roboto: "Roboto", system-ui, sans-serif;
-  --font-open-sans: "Open Sans", system-ui, sans-serif;
+
+  /* Контейнеры и горизонтальные отступы */
+  --container-max: 80rem;
+  --container-prose: 48rem;
+  --spacing-page-x: 1rem;
+  --spacing-page-x-sm: 1.5rem;
+  --spacing-page-x-lg: 2rem;
 
   /* Типографическая шкала карточек: модульная 1,25 от базовых 20.
      Ступени объявлены токенами намеренно — в шкале Tailwind этих кеглей нет,
@@ -334,108 +333,45 @@
   --tracking-meta: 0.06em;
 }
 
-/* Типографика - вдохновлена The Atlantic */
-/*@layer base {*/
-/*  !* Основные шрифты *!*/
-/*  html {*/
-/*    !*font-family: var(--font-inter);*!*/
-/*    line-height: 1.6;*/
-/*    color: var(--color-primary-900);*/
-/*  }*/
-
-/*  !* Заголовки *!*/
-/*  h1,*/
-/*  h2,*/
-/*  h3,*/
-/*  h4,*/
-/*  h5,*/
-/*  h6 {*/
-/*    !*font-family: var(--font-bergamasco);*!*/
-/*    font-weight: 700;*/
-/*    line-height: 1.2;*/
-/*    color: var(--color-primary-900);*/
-/*  }*/
-
-/*  h1 {*/
-/*    font-size: 2.5rem;*/
-/*    margin-bottom: 1rem;*/
-/*  }*/
-
-/*  h2 {*/
-/*    font-size: 2rem;*/
-/*    margin-bottom: 0.875rem;*/
-/*  }*/
-
-/*  h3 {*/
-/*    font-size: 1.5rem;*/
-/*    margin-bottom: 0.75rem;*/
-/*  }*/
-
-/*  !* Параграфы *!*/
-/*  p {*/
-/*    font-size: 1.125rem;*/
-/*    line-height: 1.7;*/
-/*    !*margin-bottom: 1.5rem;*!*/
-/*    color: var(--color-primary-700);*/
-/*  }*/
-
-/*  !* Ссылки *!*/
-/*  a {*/
-/*    color: var(--color-secondary-600);*/
-/*    text-decoration: none;*/
-/*    transition: color 0.2s ease;*/
-/*  }*/
-
-/*  a:hover {*/
-/*    color: var(--color-secondary-800);*/
-/*  }*/
-
-/*  !* Кнопки *!*/
-/*  button {*/
-/*    !*font-family: var(--font-inter);*!*/
-/*    font-weight: 600;*/
-/*  }*/
-
-/*  !* Навигация *!*/
-/*  nav a {*/
-/*    font-weight: 500;*/
-/*    font-size: 1rem;*/
-/*  }*/
-
-/*  !* Анимации для header *!*/
-/*  header {*/
-/*    will-change: transform;*/
-/*    transform: translateZ(0);*/
-/*  }*/
-/*}*/
-
-/* Dark mode настройки */
 @custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
-  body.dark {
-    --color-primary: #f8f9fa;
-    --color-primary-50: #1a1a1a;
-    --color-primary-100: #212529;
-    --color-primary-200: #343a40;
-    --color-primary-300: #495057;
-    --color-primary-400: #6c757d;
-    --color-primary-500: #adb5bd;
-    --color-primary-600: #ced4da;
-    --color-primary-700: #dee2e6;
-    --color-primary-800: #e9ecef;
-    --color-primary-900: #f8f9fa;
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
   }
 
-  /*body.dark h1,*/
-  /*body.dark h2,*/
-  /*body.dark h3,*/
-  /*body.dark h4,*/
-  /*body.dark h5,*/
-  /*body.dark h6 {*/
-  /*  color: var(--color-primary-50);*/
-  /*}*/
+  h1,
+  h2 {
+    font-family: var(--font-waterway);
+    font-weight: 700;
+    line-height: 1.2;
+  }
 
-  /*body.dark p {*/
-  /*  color: var(--color-primary-200);*/
-  /*}*/
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-garamond-libre);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .prose {
+    max-width: 65ch;
+    font-family: var(--font-garamond-libre);
+    font-size: 1.125rem;
+    line-height: 1.7;
+  }
+
+  html.dark {
+    --color-paper: #111111;
+    --color-ink: #f5f4f0;
+    --color-ink-muted: #9ca3af;
+    --color-accent: #ff7847;
+    --color-rule: #2a2a2a;
+    --color-surface: #1a1a1a;
+  }
 }
