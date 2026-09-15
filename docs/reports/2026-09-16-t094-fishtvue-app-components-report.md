@@ -8,7 +8,7 @@
 - **Ревизия реализации**: `8bb96a8bbf629cdbb63ddcd76d5fc597ef8123a8`
 - **Ветка**: `agent/altera/06e901ab4f79`
 - **Исполнитель**: Altera — разработчик (`b0f3bc32-dd95-471e-b40e-517aaf83edf0`)
-- **Native execution ID**: неизвестен — runtime context содержит только agent ID и issue ID
+- **Native execution ID**: `01a0a71d-d9d6-74b3-8dc7-06e901ab4f79`
 
 ## Результат
 
