@@ -94,3 +94,26 @@ git diff --check: exit 0
 Реализация не применялась к Neon development и не выпускалась. Следующая стадия должна проверить
 закоммиченную ревизию по AC-1…AC-4, затем передать её независимому ревьюеру. Render/Neon release
 проверяется отдельно после merge в `app`.
+
+## Выпуск: коррекция CI
+
+PR #43 на ревизии `6aab217ac715f4f92c84092d8baed0e614d06316` выявил ошибку typecheck в двух
+страницах admin: строковое значение формы присваивалось полю, ограниченному `Role`. Это
+воспроизводится командой `pnpm --filter nuxt-app run typecheck` (exit 2, TS2322 на строках 240 и
+417). Исправление ограничено приведением значения к типу целевого поля в обоих присваиваниях;
+никаких миграций, GraphQL-контрактов или данных оно не изменяет.
+
+После исправления на той же ветке выполнены:
+
+```text
+pnpm --filter nuxt-app run typecheck: exit 0
+pnpm format: exit 0, All matched files use Prettier code style
+pnpm lint: exit 0
+pnpm test: exit 0
+server: 11 files passed; 70 tests passed, 1 todo
+web: 11 files passed; 75 tests passed
+pnpm --filter server build:ci: exit 0
+git diff --check: exit 0
+```
+
+Для merge требуется новый commit, повторный CI и независимая проверка изменённой ревизии.

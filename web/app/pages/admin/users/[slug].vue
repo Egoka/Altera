@@ -237,7 +237,7 @@
       // Обновляем данные пользователя
       user.name = formValues.value.name
       user.email = formValues.value.email
-      user.role = formValues.value.role
+      user.role = formValues.value.role as typeof user.role
       user.slug = formValues.value.slug
       user.bio = formValues.value.bio
       user.updatedAt = new Date().toISOString()
