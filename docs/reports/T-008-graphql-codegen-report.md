@@ -130,8 +130,8 @@ fragment types; `ArticleCardFragment` содержит SDL-nullability для `d
   `failure`. Job `GraphQL codegen drift` выполнил `pnpm codegen --check`, нашёл stale
   `generated/schema.graphql` и завершился exit 1. Web build/typecheck, browser smoke и server smoke
   в этом run прошли; aggregate `test` корректно завершился failure из-за `checks`.
-- **Final green**: revert commit `dae97849f611c45b9e4a597d4d22a021adb6a7cd`,
-  [Checks run 34913939659](https://github.com/Egoka/Altera/actions/runs/34913939659) — conclusion
+- **Final green**: accepted source commit `c810cab9bc1f03cc5da7eb4256de3026fb9de77d`,
+  [Checks run 34914310359](https://github.com/Egoka/Altera/actions/runs/34914310359) — conclusion
   `success`. Jobs `Формат, линт и тесты`, `Сборка и типизация веба`, `Браузерная проверка веба`,
   `Сборка сервера и дымовая проверка старта` и aggregate `test` завершились success.
 
