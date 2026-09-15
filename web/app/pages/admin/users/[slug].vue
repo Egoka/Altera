@@ -138,7 +138,7 @@
   const formValues = ref({
     name: "",
     email: "",
-    role: "",
+    role: "reader" as Role,
     slug: "",
     bio: ""
   })
@@ -220,7 +220,7 @@
       formValues.value = {
         name: user.name || "",
         email: user.email || "",
-        role: user.role || "",
+        role: user.role,
         slug: user.slug || "",
         bio: user.bio || ""
       }
@@ -237,7 +237,7 @@
       // Обновляем данные пользователя
       user.name = formValues.value.name
       user.email = formValues.value.email
-      user.role = formValues.value.role as typeof user.role
+      user.role = formValues.value.role
       user.slug = formValues.value.slug
       user.bio = formValues.value.bio
       user.updatedAt = new Date().toISOString()
