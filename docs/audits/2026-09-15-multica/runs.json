@@ -1,0 +1,5537 @@
+[
+  {
+    "id": "01a0a397-7709-7a85-9d6b-5d21b0c0f776",
+    "issue_id": "01a0a397-76eb-70b8-afb7-decda4915ece",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T05:43:27Z",
+    "started_at": "2026-09-15T05:46:50Z",
+    "completed_at": "2026-09-15T05:52:01Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1678848,
+        "cache_write_tokens": 0,
+        "input_tokens": 105547,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 15698,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a542-bbf1-7162-9a81-8ec3c83dfefb",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T13:30:09Z",
+    "started_at": "2026-09-15T13:30:09Z",
+    "completed_at": null,
+    "status": "running",
+    "usage": [],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a542-7361-7a66-a0d2-df1cd0e7fefe",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:29:50Z",
+    "started_at": "2026-09-15T13:30:19Z",
+    "completed_at": "2026-09-15T13:30:34Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 189647,
+        "cache_write_tokens": 1172,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 302,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a542-2fe6-7db4-9045-259674d8afb3",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:29:33Z",
+    "started_at": "2026-09-15T13:29:34Z",
+    "completed_at": "2026-09-15T13:30:19Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 372852,
+        "cache_write_tokens": 2637,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1538,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a53e-2193-76a4-97df-b44f098dc933",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:25:07Z",
+    "started_at": "2026-09-15T13:25:17Z",
+    "completed_at": "2026-09-15T13:25:36Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 181404,
+        "cache_write_tokens": 1672,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 526,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a53e-1459-737f-83e7-f0beed8753a2",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T13:25:04Z",
+    "started_at": "2026-09-15T13:25:11Z",
+    "completed_at": "2026-09-15T13:29:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 864000,
+        "cache_write_tokens": 0,
+        "input_tokens": 51996,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 5496,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a53d-799b-7b79-a983-5d4e2c42de72",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:24:24Z",
+    "started_at": "2026-09-15T13:24:25Z",
+    "completed_at": "2026-09-15T13:25:16Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 355340,
+        "cache_write_tokens": 3058,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1416,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a53b-afbc-7519-963c-49bc9e4dacf1",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T13:22:27Z",
+    "started_at": "2026-09-15T13:24:34Z",
+    "completed_at": "2026-09-15T13:25:11Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 306833,
+        "cache_write_tokens": 5961,
+        "input_tokens": 5,
+        "model": "claude-opus-4-6",
+        "output_tokens": 1516,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a53a-ef69-7628-bb45-c732984e24a4",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T13:21:38Z",
+    "started_at": "2026-09-15T13:21:46Z",
+    "completed_at": "2026-09-15T13:24:33Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2039,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 21,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 828695,
+        "cache_write_tokens": 53096,
+        "input_tokens": 15,
+        "model": "claude-opus-4-6",
+        "output_tokens": 8242,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a539-7981-7be9-a6d8-281119b52cd8",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:20:02Z",
+    "started_at": "2026-09-15T13:21:47Z",
+    "completed_at": "2026-09-15T13:22:37Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 428448,
+        "cache_write_tokens": 3304,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1367,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a531-eaeb-7a5c-b54d-f4b004283892",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T13:11:47Z",
+    "started_at": "2026-09-15T13:11:47Z",
+    "completed_at": "2026-09-15T13:20:22Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 2870912,
+        "cache_write_tokens": 0,
+        "input_tokens": 89074,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 12935,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a52e-885a-7a70-805e-eafe50213309",
+    "issue_id": "01a0a48f-7b05-789f-be8e-cd4ecb111fa9",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:08:05Z",
+    "started_at": "2026-09-15T13:08:21Z",
+    "completed_at": "2026-09-15T13:12:04Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1096,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 35,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1582170,
+        "cache_write_tokens": 65468,
+        "input_tokens": 27,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 9374,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a199-04f1-7017-b2f3-851159ba549a",
+    "issue_id": "01a0a138-ecf3-76de-9451-86c8cf06340c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T20:25:55Z",
+    "started_at": "2026-09-14T20:25:56Z",
+    "completed_at": "2026-09-14T20:26:47Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 588451,
+        "cache_write_tokens": 3884,
+        "input_tokens": 7,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2224,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a198-4a2b-7c37-826c-6660517fffff",
+    "issue_id": "01a0a138-ecf3-76de-9451-86c8cf06340c",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-14T20:25:07Z",
+    "started_at": "2026-09-14T20:25:07Z",
+    "completed_at": "2026-09-14T20:25:59Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 241408,
+        "cache_write_tokens": 0,
+        "input_tokens": 20232,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 2002,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a197-b966-7e3c-9b60-2dd1c0333801",
+    "issue_id": "01a0a138-ecf3-76de-9451-86c8cf06340c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T20:24:30Z",
+    "started_at": "2026-09-14T20:24:31Z",
+    "completed_at": "2026-09-14T20:25:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 468823,
+        "cache_write_tokens": 4222,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1786,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a196-4e3a-7a77-a7a5-4a4a0cf26a50",
+    "issue_id": "01a0a138-ecf3-76de-9451-86c8cf06340c",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-14T20:22:57Z",
+    "started_at": "2026-09-14T20:23:06Z",
+    "completed_at": "2026-09-14T20:24:36Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 869575,
+        "cache_write_tokens": 21872,
+        "input_tokens": 12,
+        "model": "claude-opus-4-6",
+        "output_tokens": 4033,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a192-5e3c-71cc-a380-61f63ec3fede",
+    "issue_id": "01a0a138-ecf3-76de-9451-86c8cf06340c",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-14T20:18:39Z",
+    "started_at": "2026-09-14T20:18:39Z",
+    "completed_at": "2026-09-14T20:23:05Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1726,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2463599,
+        "cache_write_tokens": 66848,
+        "input_tokens": 41,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 14522,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a191-df2a-753b-bfda-dd59ec4e3e5a",
+    "issue_id": "01a0a138-ecf3-76de-9451-86c8cf06340c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T20:18:06Z",
+    "started_at": "2026-09-14T20:18:07Z",
+    "completed_at": "2026-09-14T20:18:49Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 358831,
+        "cache_write_tokens": 3500,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1646,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3bd-07e2-7c97-a23b-e7bd128f7355",
+    "issue_id": "01a0a261-c813-7d5c-8a6a-44908a0801a0",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T06:24:29Z",
+    "started_at": "2026-09-15T06:41:00Z",
+    "completed_at": "2026-09-15T06:45:58Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1829504,
+        "cache_write_tokens": 0,
+        "input_tokens": 76062,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 14320,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3b9-6fff-7671-9741-61c5f05b1f41",
+    "issue_id": "01a0a261-c813-7d5c-8a6a-44908a0801a0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:20:34Z",
+    "started_at": "2026-09-15T06:39:17Z",
+    "completed_at": "2026-09-15T06:40:59Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1138802,
+        "cache_write_tokens": 23147,
+        "input_tokens": 12,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 4253,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a39f-3246-7aaa-8077-61150f2bc1e2",
+    "issue_id": "01a0a261-c813-7d5c-8a6a-44908a0801a0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T05:51:54Z",
+    "started_at": "2026-09-15T06:20:42Z",
+    "completed_at": "2026-09-15T06:24:44Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1675022,
+        "cache_write_tokens": 84814,
+        "input_tokens": 24,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 10683,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a371-a2e3-74ce-8ddd-a2135c4fc377",
+    "issue_id": "01a0a261-c813-7d5c-8a6a-44908a0801a0",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T05:02:08Z",
+    "started_at": "2026-09-15T05:17:43Z",
+    "completed_at": "2026-09-15T05:21:25Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1892608,
+        "cache_write_tokens": 0,
+        "input_tokens": 109809,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 10585,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a36e-1fa6-762f-81ec-e4939ea60b18",
+    "issue_id": "01a0a261-c813-7d5c-8a6a-44908a0801a0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:58:18Z",
+    "started_at": "2026-09-15T04:58:34Z",
+    "completed_at": "2026-09-15T05:02:26Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1507,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1406787,
+        "cache_write_tokens": 49812,
+        "input_tokens": 29,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 9739,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a250-03f3-7c24-8ba2-74becc146dee",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:45:48Z",
+    "started_at": "2026-09-14T23:45:48Z",
+    "completed_at": "2026-09-14T23:48:26Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1360623,
+        "cache_write_tokens": 13651,
+        "input_tokens": 15,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 6361,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a24e-d91c-73c2-9341-53d1c4db0a77",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-14T23:44:31Z",
+    "started_at": "2026-09-14T23:44:32Z",
+    "completed_at": "2026-09-14T23:45:51Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 661760,
+        "cache_write_tokens": 0,
+        "input_tokens": 29113,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 3123,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a24e-2fe3-7e07-ad64-c8100350ed51",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:43:48Z",
+    "started_at": "2026-09-14T23:43:48Z",
+    "completed_at": "2026-09-14T23:44:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 510053,
+        "cache_write_tokens": 3900,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1848,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a24c-8782-747f-b74f-a41a3e7441ef",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-14T23:41:59Z",
+    "started_at": "2026-09-14T23:42:00Z",
+    "completed_at": "2026-09-14T23:43:53Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 483072,
+        "cache_write_tokens": 0,
+        "input_tokens": 44899,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 5333,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a24b-f0e6-751d-8090-c5f7bae33adb",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:41:20Z",
+    "started_at": "2026-09-14T23:41:21Z",
+    "completed_at": "2026-09-14T23:42:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 492789,
+        "cache_write_tokens": 5514,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1835,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a247-8e44-7a9a-9230-2f152eef1c25",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-14T23:36:33Z",
+    "started_at": "2026-09-14T23:36:34Z",
+    "completed_at": "2026-09-14T23:41:39Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1875,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 21,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1180294,
+        "cache_write_tokens": 105403,
+        "input_tokens": 19,
+        "model": "claude-opus-4-6",
+        "output_tokens": 13008,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a247-11dc-750f-ab30-f0166fc3f49a",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:36:01Z",
+    "started_at": "2026-09-14T23:36:02Z",
+    "completed_at": "2026-09-14T23:36:45Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 472021,
+        "cache_write_tokens": 4283,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1414,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a243-ed78-7311-83f1-7d3fa0c899bb",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-14T23:32:35Z",
+    "started_at": "2026-09-14T23:32:36Z",
+    "completed_at": "2026-09-14T23:36:07Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1197824,
+        "cache_write_tokens": 0,
+        "input_tokens": 79924,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 12763,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a243-74bc-7ece-b0a2-b3800d784187",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:32:04Z",
+    "started_at": "2026-09-14T23:32:05Z",
+    "completed_at": "2026-09-14T23:32:48Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 428883,
+        "cache_write_tokens": 30209,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1371,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a234-181a-7a0f-85b6-732bd972763f",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:15:18Z",
+    "started_at": "2026-09-14T23:15:18Z",
+    "completed_at": "2026-09-14T23:15:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 254569,
+        "cache_write_tokens": 1571,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 716,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a232-c5fc-74dc-bbde-78e020d177ef",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-14T23:13:51Z",
+    "started_at": "2026-09-14T23:13:52Z",
+    "completed_at": "2026-09-14T23:32:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 12397056,
+        "cache_write_tokens": 0,
+        "input_tokens": 191810,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 54158,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a232-5744-7eef-b2ec-b96022ea9062",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:13:23Z",
+    "started_at": "2026-09-14T23:13:24Z",
+    "completed_at": "2026-09-14T23:14:02Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 302898,
+        "cache_write_tokens": 29883,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1145,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a22a-aeba-784d-9f4b-bfbcbda6a3fe",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-14T23:05:01Z",
+    "started_at": "2026-09-14T23:05:01Z",
+    "completed_at": "2026-09-14T23:13:34Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 3955584,
+        "cache_write_tokens": 0,
+        "input_tokens": 170786,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 30311,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a229-7cd3-7730-9b65-3a735b7d9a59",
+    "issue_id": "01a0a174-09c1-757f-99ed-8dc3065ccb17",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:03:43Z",
+    "started_at": "2026-09-14T23:04:01Z",
+    "completed_at": "2026-09-14T23:05:18Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1090,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 514814,
+        "cache_write_tokens": 41808,
+        "input_tokens": 14,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2562,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a36c-288b-7006-8db2-b91721503100",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:56:09Z",
+    "started_at": "2026-09-15T04:56:10Z",
+    "completed_at": "2026-09-15T04:58:34Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1233586,
+        "cache_write_tokens": 7910,
+        "input_tokens": 13,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5603,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a36b-8d4c-7dbb-9066-844c88b9cab8",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T04:55:29Z",
+    "started_at": "2026-09-15T04:55:30Z",
+    "completed_at": "2026-09-15T04:56:16Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 615680,
+        "cache_write_tokens": 0,
+        "input_tokens": 17075,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 1244,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a36b-4d28-7f13-a77b-fb446d78b087",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:55:13Z",
+    "started_at": "2026-09-15T04:55:13Z",
+    "completed_at": "2026-09-15T04:55:39Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 294225,
+        "cache_write_tokens": 2155,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 699,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a369-e7fc-7823-92a7-a00da9346f31",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:53:42Z",
+    "started_at": "2026-09-15T04:53:42Z",
+    "completed_at": "2026-09-15T04:54:01Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 191930,
+        "cache_write_tokens": 1585,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 540,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a369-5be3-7093-8714-d8484a0cf9d5",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T04:53:06Z",
+    "started_at": "2026-09-15T04:53:51Z",
+    "completed_at": "2026-09-15T04:55:27Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 950004,
+        "cache_write_tokens": 16523,
+        "input_tokens": 10,
+        "model": "claude-opus-4-6",
+        "output_tokens": 3009,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a369-06a3-7802-bf9d-2b15174eda44",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:52:44Z",
+    "started_at": "2026-09-15T04:52:44Z",
+    "completed_at": "2026-09-15T04:53:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 282867,
+        "cache_write_tokens": 2261,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 973,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a363-e213-71b2-83cf-f0c26b73852d",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T04:47:07Z",
+    "started_at": "2026-09-15T04:52:54Z",
+    "completed_at": "2026-09-15T04:53:50Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1165531,
+        "cache_write_tokens": 4663,
+        "input_tokens": 10,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2166,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a363-49e8-75ef-b90d-5cf34d9f8898",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:46:28Z",
+    "started_at": "2026-09-15T04:46:28Z",
+    "completed_at": "2026-09-15T04:47:18Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 276219,
+        "cache_write_tokens": 2169,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 906,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a362-3bd5-7544-9af3-bec248b917f9",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T04:45:19Z",
+    "started_at": "2026-09-15T04:46:35Z",
+    "completed_at": "2026-09-15T04:52:54Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 5190777,
+        "cache_write_tokens": 38501,
+        "input_tokens": 48,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 18850,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a362-3bcb-73c4-b112-d762b3580267",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T04:45:19Z",
+    "started_at": "2026-09-15T04:45:19Z",
+    "completed_at": "2026-09-15T04:46:35Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 753152,
+        "cache_write_tokens": 0,
+        "input_tokens": 21806,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 3631,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a361-d994-7cae-aa33-60412e1ebe96",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:44:54Z",
+    "started_at": "2026-09-15T04:44:54Z",
+    "completed_at": "2026-09-15T04:45:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 269167,
+        "cache_write_tokens": 2484,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1130,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a360-04d7-7435-b6bd-0dfeda3b1a72",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T04:42:54Z",
+    "started_at": "2026-09-15T04:42:54Z",
+    "completed_at": "2026-09-15T04:45:05Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 899867,
+        "cache_write_tokens": 16169,
+        "input_tokens": 11,
+        "model": "claude-opus-4-6",
+        "output_tokens": 3436,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a35f-67a9-7cbb-a916-d061939b6a5f",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:42:13Z",
+    "started_at": "2026-09-15T04:42:14Z",
+    "completed_at": "2026-09-15T04:43:03Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 260126,
+        "cache_write_tokens": 3356,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1839,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a35a-2c16-7d5f-8bfc-aa0194b7f5fc",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T04:36:30Z",
+    "started_at": "2026-09-15T04:36:31Z",
+    "completed_at": "2026-09-15T04:42:22Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1245952,
+        "cache_write_tokens": 0,
+        "input_tokens": 71956,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 9494,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a359-d611-7330-897e-496ab19fcb29",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:36:08Z",
+    "started_at": "2026-09-15T04:36:09Z",
+    "completed_at": "2026-09-15T04:36:41Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 252013,
+        "cache_write_tokens": 2273,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 960,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a352-d076-72a9-9805-a7ccfd5823b4",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T04:28:28Z",
+    "started_at": "2026-09-15T04:28:29Z",
+    "completed_at": "2026-09-15T04:36:20Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1644,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 3988547,
+        "cache_write_tokens": 74648,
+        "input_tokens": 65,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 21969,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a352-7f97-7bf7-809a-a16ea24bf603",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:28:07Z",
+    "started_at": "2026-09-15T04:28:08Z",
+    "completed_at": "2026-09-15T04:28:37Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 244404,
+        "cache_write_tokens": 3010,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 825,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a34f-9a67-798c-be48-d4c0c5ac49bc",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T04:24:58Z",
+    "started_at": "2026-09-15T04:24:58Z",
+    "completed_at": "2026-09-15T04:28:27Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1807,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 19,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1037743,
+        "cache_write_tokens": 66940,
+        "input_tokens": 18,
+        "model": "claude-opus-4-6",
+        "output_tokens": 10889,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a34f-3f9a-76fe-a631-cd86a484646f",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:24:34Z",
+    "started_at": "2026-09-15T04:24:35Z",
+    "completed_at": "2026-09-15T04:25:08Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 235775,
+        "cache_write_tokens": 2607,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1012,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a34d-8713-7e34-88bf-639372433d15",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T04:22:42Z",
+    "started_at": "2026-09-15T04:22:42Z",
+    "completed_at": "2026-09-15T04:24:38Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 826112,
+        "cache_write_tokens": 0,
+        "input_tokens": 63413,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 5617,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a34c-f29a-7049-bfd3-7b3268b2ed9c",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:22:04Z",
+    "started_at": "2026-09-15T04:22:04Z",
+    "completed_at": "2026-09-15T04:22:53Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 450503,
+        "cache_write_tokens": 4808,
+        "input_tokens": 7,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1515,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a341-8593-700a-b784-116924ac97d0",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T04:09:35Z",
+    "started_at": "2026-09-15T04:09:35Z",
+    "completed_at": "2026-09-15T04:22:21Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 12724992,
+        "cache_write_tokens": 0,
+        "input_tokens": 206995,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 37264,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a33d-38ac-71d7-b994-a48f60e19db3",
+    "issue_id": "01a0a2e6-e081-7e89-ab77-2466989f4502",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:04:53Z",
+    "started_at": "2026-09-15T04:05:57Z",
+    "completed_at": "2026-09-15T04:10:00Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1093,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 37,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2174462,
+        "cache_write_tokens": 60151,
+        "input_tokens": 40,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 8964,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a52f-c1ed-7ea2-9556-4a85de4de33c",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:09:25Z",
+    "started_at": "2026-09-15T13:12:04Z",
+    "completed_at": "2026-09-15T13:12:56Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 467621,
+        "cache_write_tokens": 30341,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2055,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a52e-5f49-76a3-ae15-79c1b9ff7cf4",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T13:07:54Z",
+    "started_at": "2026-09-15T13:08:21Z",
+    "completed_at": "2026-09-15T13:09:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 634880,
+        "cache_write_tokens": 0,
+        "input_tokens": 20374,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 2223,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a519-f769-7133-a595-0bbf5c937f29",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T12:45:37Z",
+    "started_at": "2026-09-15T12:45:38Z",
+    "completed_at": "2026-09-15T12:46:45Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 460317,
+        "cache_write_tokens": 6039,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3091,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a518-12a8-7029-a2be-b285df7b9634",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T12:43:33Z",
+    "started_at": "2026-09-15T12:43:33Z",
+    "completed_at": "2026-09-15T12:45:45Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 778496,
+        "cache_write_tokens": 0,
+        "input_tokens": 68590,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 5696,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a517-aabf-7935-9bad-a392d95f7828",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T12:43:06Z",
+    "started_at": "2026-09-15T12:43:07Z",
+    "completed_at": "2026-09-15T12:43:41Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 434278,
+        "cache_write_tokens": 4394,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1241,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a514-e9ab-78a5-ba32-4b6e1599b277",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T12:40:06Z",
+    "started_at": "2026-09-15T12:40:06Z",
+    "completed_at": "2026-09-15T12:43:13Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1747,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1066524,
+        "cache_write_tokens": 94432,
+        "input_tokens": 18,
+        "model": "claude-opus-4-6",
+        "output_tokens": 9181,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a514-9468-7d85-ba52-a96607947b98",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T12:39:44Z",
+    "started_at": "2026-09-15T12:39:45Z",
+    "completed_at": "2026-09-15T12:40:13Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 330721,
+        "cache_write_tokens": 3731,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1200,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a511-db48-7749-a5f5-97fb78fe1078",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T12:36:46Z",
+    "started_at": "2026-09-15T12:36:46Z",
+    "completed_at": "2026-09-15T12:39:49Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 819712,
+        "cache_write_tokens": 0,
+        "input_tokens": 64328,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 8511,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a511-689d-7d1a-ac43-dd543d140f74",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T12:36:16Z",
+    "started_at": "2026-09-15T12:36:17Z",
+    "completed_at": "2026-09-15T12:36:54Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 393504,
+        "cache_write_tokens": 4378,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1582,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4f4-b58f-7943-a4f7-04c171647ac6",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T12:04:55Z",
+    "started_at": "2026-09-15T12:04:56Z",
+    "completed_at": "2026-09-15T12:36:33Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 18356352,
+        "cache_write_tokens": 0,
+        "input_tokens": 227279,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 67540,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4f1-fd24-7cbd-b476-4bbdddcefe64",
+    "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T12:01:57Z",
+    "started_at": "2026-09-15T12:02:08Z",
+    "completed_at": "2026-09-15T12:05:13Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1091,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 37,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1135493,
+        "cache_write_tokens": 58108,
+        "input_tokens": 20,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 9496,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3a3-510d-76d3-818b-21196b439d1a",
+    "issue_id": "01a0a38a-165c-75e1-99da-7d3bf4896784",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T05:56:24Z",
+    "started_at": "2026-09-15T06:08:18Z",
+    "completed_at": "2026-09-15T06:09:33Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1634,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 289996,
+        "cache_write_tokens": 41848,
+        "input_tokens": 7,
+        "model": "claude-opus-4-6",
+        "output_tokens": 2238,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a395-7870-775e-8054-9ad421ffef1a",
+    "issue_id": "01a0a38a-165c-75e1-99da-7d3bf4896784",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T05:41:17Z",
+    "started_at": "2026-09-15T05:52:01Z",
+    "completed_at": "2026-09-15T05:56:33Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1875,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 16,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2070743,
+        "cache_write_tokens": 58518,
+        "input_tokens": 34,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 12969,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a38a-1677-795a-8b0c-597a2fcbd11f",
+    "issue_id": "01a0a38a-165c-75e1-99da-7d3bf4896784",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T05:28:51Z",
+    "started_at": "2026-09-15T05:29:16Z",
+    "completed_at": "2026-09-15T05:41:40Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 6637824,
+        "cache_write_tokens": 0,
+        "input_tokens": 128716,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 33926,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1e8-5a98-777f-adc8-0a159d596d6f",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:52:34Z",
+    "started_at": "2026-09-14T21:52:35Z",
+    "completed_at": "2026-09-14T21:53:33Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 446644,
+        "cache_write_tokens": 4646,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2558,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1e5-6eb9-75c1-bd52-eb0f9e628192",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-14T21:49:23Z",
+    "started_at": "2026-09-14T21:49:23Z",
+    "completed_at": "2026-09-14T21:52:47Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1706,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 21,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1489594,
+        "cache_write_tokens": 57260,
+        "input_tokens": 27,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 10752,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1e4-bbfd-7b37-b9a8-7d8c732e3128",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:48:37Z",
+    "started_at": "2026-09-14T21:48:37Z",
+    "completed_at": "2026-09-14T21:49:29Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 422085,
+        "cache_write_tokens": 4702,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2104,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1e3-5986-7dbe-9078-dc88713905a1",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-14T21:47:06Z",
+    "started_at": "2026-09-14T21:47:06Z",
+    "completed_at": "2026-09-14T21:48:49Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 303872,
+        "cache_write_tokens": 0,
+        "input_tokens": 41466,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 5570,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1e2-c106-7e4b-adb2-621d5f6f1ef6",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:46:27Z",
+    "started_at": "2026-09-14T21:46:28Z",
+    "completed_at": "2026-09-14T21:47:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 293562,
+        "cache_write_tokens": 30414,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1856,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1c8-1ffb-796b-90a3-5e29239aecbd",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-14T21:17:22Z",
+    "started_at": "2026-09-14T21:17:36Z",
+    "completed_at": "2026-09-14T21:46:34Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 14665344,
+        "cache_write_tokens": 0,
+        "input_tokens": 611976,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 44065,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1be-57b9-7d4e-a847-72cbd77bf5ff",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:06:41Z",
+    "started_at": "2026-09-14T21:06:41Z",
+    "completed_at": "2026-09-14T21:07:05Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 200192,
+        "cache_write_tokens": 3031,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 914,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1bb-fb3c-7da1-a359-5588942483e6",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-14T21:04:06Z",
+    "started_at": "2026-09-14T21:04:07Z",
+    "completed_at": "2026-09-14T21:06:50Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 952576,
+        "cache_write_tokens": 0,
+        "input_tokens": 73990,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 7664,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1bb-3f52-74ca-90d2-cb2005a249b8",
+    "issue_id": "01a0a173-d5b6-7a70-b8b6-d7103fc2e1b0",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:03:18Z",
+    "started_at": "2026-09-14T21:03:33Z",
+    "completed_at": "2026-09-14T21:04:23Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 291949,
+        "cache_write_tokens": 36164,
+        "input_tokens": 8,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1704,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2f7-2495-77ce-b01d-07335b8729b0",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:48:20Z",
+    "started_at": "2026-09-15T02:48:21Z",
+    "completed_at": "2026-09-15T02:48:41Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 197876,
+        "cache_write_tokens": 1440,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 395,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2ea-4466-7b69-8a3a-7f49f2354009",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:34:17Z",
+    "started_at": "2026-09-15T02:34:17Z",
+    "completed_at": "2026-09-15T02:35:32Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 385530,
+        "cache_write_tokens": 4168,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2803,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2e9-9d1e-7dbc-abd8-25812dcb9e24",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T02:33:34Z",
+    "started_at": "2026-09-15T02:47:40Z",
+    "completed_at": "2026-09-15T02:48:25Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 439296,
+        "cache_write_tokens": 0,
+        "input_tokens": 9583,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 963,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2e9-4511-77c7-990b-69bc022cac97",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:33:11Z",
+    "started_at": "2026-09-15T02:33:12Z",
+    "completed_at": "2026-09-15T02:33:44Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 371889,
+        "cache_write_tokens": 2973,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 996,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2e3-0562-730f-b445-3d8204b997f0",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T02:26:22Z",
+    "started_at": "2026-09-15T02:33:24Z",
+    "completed_at": "2026-09-15T02:34:21Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 578048,
+        "cache_write_tokens": 0,
+        "input_tokens": 26186,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 2475,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2e3-0553-7c02-bb1b-51f4088cd986",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T02:26:22Z",
+    "started_at": "2026-09-15T02:30:58Z",
+    "completed_at": "2026-09-15T02:33:23Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 2307254,
+        "cache_write_tokens": 46746,
+        "input_tokens": 18,
+        "model": "claude-opus-4-6",
+        "output_tokens": 4391,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2cc-7983-7d71-b983-05a6fcfe98f4",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T02:01:44Z",
+    "started_at": "2026-09-15T02:15:31Z",
+    "completed_at": "2026-09-15T02:26:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 6721492,
+        "cache_write_tokens": 74199,
+        "input_tokens": 56,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 28661,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c9-793f-7390-88bf-fd8cb55ec2fc",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:58:27Z",
+    "started_at": "2026-09-15T02:01:02Z",
+    "completed_at": "2026-09-15T02:01:57Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 358604,
+        "cache_write_tokens": 3432,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1940,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c8-24d6-7344-ba93-ddfd71d7bc32",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T01:57:00Z",
+    "started_at": "2026-09-15T01:57:01Z",
+    "completed_at": "2026-09-15T01:58:31Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 464128,
+        "cache_write_tokens": 0,
+        "input_tokens": 74887,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 4977,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c6-5476-7053-8cbe-496e58e06bab",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:55:01Z",
+    "started_at": "2026-09-15T01:55:02Z",
+    "completed_at": "2026-09-15T01:58:28Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1065379,
+        "cache_write_tokens": 14243,
+        "input_tokens": 14,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 8900,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c4-76d3-77fa-bd14-87b0f78c64cc",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T01:52:59Z",
+    "started_at": "2026-09-15T01:53:09Z",
+    "completed_at": "2026-09-15T01:55:12Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1099462,
+        "cache_write_tokens": 25572,
+        "input_tokens": 13,
+        "model": "claude-opus-4-6",
+        "output_tokens": 4207,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c0-ca07-721a-b42a-5635aa26ce02",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T01:48:58Z",
+    "started_at": "2026-09-15T01:48:59Z",
+    "completed_at": "2026-09-15T01:53:09Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1792,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2611184,
+        "cache_write_tokens": 70254,
+        "input_tokens": 39,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 14837,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c0-5055-7168-9508-991a6ff0f3e7",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:48:27Z",
+    "started_at": "2026-09-15T01:48:28Z",
+    "completed_at": "2026-09-15T01:49:11Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 286585,
+        "cache_write_tokens": 3979,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1455,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2bc-aa24-7214-9bd7-ab190b20d7fc",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T01:44:28Z",
+    "started_at": "2026-09-15T01:44:29Z",
+    "completed_at": "2026-09-15T01:48:34Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 895232,
+        "cache_write_tokens": 0,
+        "input_tokens": 65309,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 9023,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2bc-3882-7733-9ab5-33d3fec715d7",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:43:59Z",
+    "started_at": "2026-09-15T01:44:00Z",
+    "completed_at": "2026-09-15T01:44:41Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 270618,
+        "cache_write_tokens": 4275,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1305,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2b8-a75e-74c2-a7f0-e6d1a928b9c5",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:40:05Z",
+    "started_at": "2026-09-15T01:40:06Z",
+    "completed_at": "2026-09-15T01:40:25Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 194238,
+        "cache_write_tokens": 1440,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 420,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2b8-0456-7594-b4d8-30f1bfde1d43",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T01:39:23Z",
+    "started_at": "2026-09-15T01:40:14Z",
+    "completed_at": "2026-09-15T01:44:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1764,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 23,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 973206,
+        "cache_write_tokens": 65858,
+        "input_tokens": 17,
+        "model": "claude-opus-4-6",
+        "output_tokens": 8843,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2b7-a0d8-75c8-a523-327575f10cb0",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:38:58Z",
+    "started_at": "2026-09-15T01:38:59Z",
+    "completed_at": "2026-09-15T01:39:35Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 248325,
+        "cache_write_tokens": 3677,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1318,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2b4-ef60-7dce-a773-2e0119890419",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T01:36:01Z",
+    "started_at": "2026-09-15T01:36:26Z",
+    "completed_at": "2026-09-15T01:39:03Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 765952,
+        "cache_write_tokens": 0,
+        "input_tokens": 81696,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 6769,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2a6-07f5-74b9-b79f-7bca66dd138a",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T01:19:45Z",
+    "started_at": "2026-09-15T01:39:03Z",
+    "completed_at": "2026-09-15T01:40:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1141248,
+        "cache_write_tokens": 0,
+        "input_tokens": 182579,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 2226,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2a5-6eb0-7eba-ac09-7466eddf95cb",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T01:19:05Z",
+    "started_at": "2026-09-15T01:19:18Z",
+    "completed_at": "2026-09-15T01:36:26Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 10235520,
+        "cache_write_tokens": 0,
+        "input_tokens": 194044,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 37917,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2a3-5c40-7842-ae2a-2e9279d2dfc1",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:16:50Z",
+    "started_at": "2026-09-15T01:19:20Z",
+    "completed_at": "2026-09-15T01:20:06Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 233992,
+        "cache_write_tokens": 3525,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1237,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a29c-3af1-760a-9b51-42d2b121cfe6",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:09:02Z",
+    "started_at": "2026-09-15T01:09:03Z",
+    "completed_at": "2026-09-15T01:09:28Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 168251,
+        "cache_write_tokens": 1376,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 634,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a299-89b6-75fe-ab45-02fd4ff904b4",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T01:06:06Z",
+    "started_at": "2026-09-15T01:06:06Z",
+    "completed_at": "2026-09-15T01:17:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 4356608,
+        "cache_write_tokens": 0,
+        "input_tokens": 130733,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 33401,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a298-2505-7e79-a371-82d370341fc9",
+    "issue_id": "01a0a229-4cb0-7411-825e-0cfca06ab26e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:04:35Z",
+    "started_at": "2026-09-15T01:04:46Z",
+    "completed_at": "2026-09-15T01:06:32Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1088,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 36,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 630411,
+        "cache_write_tokens": 42985,
+        "input_tokens": 14,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3908,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a339-a877-7da0-b052-607eb0152df6",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:01:00Z",
+    "started_at": "2026-09-15T04:05:12Z",
+    "completed_at": "2026-09-15T04:05:56Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 634511,
+        "cache_write_tokens": 4267,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1840,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a338-8ae1-76d5-b334-25ade9c63c8e",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T03:59:46Z",
+    "started_at": "2026-09-15T03:59:47Z",
+    "completed_at": "2026-09-15T04:01:04Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1202944,
+        "cache_write_tokens": 0,
+        "input_tokens": 153754,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 3602,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a336-fd03-7d71-b3cc-272ccdef1e60",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:58:05Z",
+    "started_at": "2026-09-15T03:58:05Z",
+    "completed_at": "2026-09-15T03:59:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1149593,
+        "cache_write_tokens": 19695,
+        "input_tokens": 13,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5737,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a32d-9141-7ad8-8f37-8d642d1645c4",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T03:47:47Z",
+    "started_at": "2026-09-15T03:47:48Z",
+    "completed_at": "2026-09-15T03:58:10Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 5230848,
+        "cache_write_tokens": 0,
+        "input_tokens": 178436,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 24842,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a32d-1af4-7b62-b0d8-901f145ec164",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:47:17Z",
+    "started_at": "2026-09-15T03:47:17Z",
+    "completed_at": "2026-09-15T03:47:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 412477,
+        "cache_write_tokens": 3772,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1415,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a32a-1d3a-7ba0-861d-09c4d8e2aca1",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T03:44:01Z",
+    "started_at": "2026-09-15T03:44:01Z",
+    "completed_at": "2026-09-15T03:47:23Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1933,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1909562,
+        "cache_write_tokens": 48624,
+        "input_tokens": 39,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 9601,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a329-8c1b-70fb-a39e-6d0b5f539ca5",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:43:24Z",
+    "started_at": "2026-09-15T03:43:24Z",
+    "completed_at": "2026-09-15T03:44:08Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 494047,
+        "cache_write_tokens": 5557,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1784,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a325-67fc-71bf-8427-8584f29ad75a",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:38:52Z",
+    "started_at": "2026-09-15T03:38:53Z",
+    "completed_at": "2026-09-15T03:39:08Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 189135,
+        "cache_write_tokens": 2010,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 410,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a323-7efa-7dd1-8bb1-a69187af33e4",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T03:36:47Z",
+    "started_at": "2026-09-15T03:38:58Z",
+    "completed_at": "2026-09-15T03:43:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2041,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 15,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 3242520,
+        "cache_write_tokens": 109298,
+        "input_tokens": 41,
+        "model": "claude-opus-4-6",
+        "output_tokens": 12964,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a323-0b68-7ac3-8b20-c53b99b2ec6a",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:36:18Z",
+    "started_at": "2026-09-15T03:36:18Z",
+    "completed_at": "2026-09-15T03:36:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 365896,
+        "cache_write_tokens": 4628,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1478,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a320-9360-7b16-be13-dfd38efdde03",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T03:33:36Z",
+    "started_at": "2026-09-15T03:36:23Z",
+    "completed_at": "2026-09-15T03:38:58Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1451264,
+        "cache_write_tokens": 0,
+        "input_tokens": 108184,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 7020,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a31f-f6ec-7178-bb57-c68f097f6482",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T03:32:56Z",
+    "started_at": "2026-09-15T03:33:11Z",
+    "completed_at": "2026-09-15T03:36:23Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1275648,
+        "cache_write_tokens": 0,
+        "input_tokens": 95567,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 10684,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a31e-865d-71d2-bc2b-9a7317621a73",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:31:21Z",
+    "started_at": "2026-09-15T03:33:11Z",
+    "completed_at": "2026-09-15T03:33:43Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 347512,
+        "cache_write_tokens": 4428,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1480,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a302-8b4c-7c38-92d0-75d061724ef8",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T03:00:48Z",
+    "started_at": "2026-09-15T03:00:48Z",
+    "completed_at": "2026-09-15T03:31:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 12308992,
+        "cache_write_tokens": 0,
+        "input_tokens": 208545,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 64788,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a301-ea16-76ff-8adf-2c8a951e6b70",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:00:06Z",
+    "started_at": "2026-09-15T03:00:07Z",
+    "completed_at": "2026-09-15T03:00:56Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 328629,
+        "cache_write_tokens": 5067,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2224,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2f8-061e-7346-82ca-5c05ff77dc5a",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:49:18Z",
+    "started_at": "2026-09-15T02:49:19Z",
+    "completed_at": "2026-09-15T02:49:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 156660,
+        "cache_write_tokens": 1893,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 747,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2f6-de64-7700-87e3-07c96e7960e1",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T02:48:02Z",
+    "started_at": "2026-09-15T02:49:22Z",
+    "completed_at": "2026-09-15T03:00:18Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 5195776,
+        "cache_write_tokens": 0,
+        "input_tokens": 127662,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 29288,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2f6-5958-739b-89a7-d923f666c2e6",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:47:28Z",
+    "started_at": "2026-09-15T02:47:29Z",
+    "completed_at": "2026-09-15T02:48:12Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 301207,
+        "cache_write_tokens": 4614,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1796,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2e7-9d2e-7677-b45d-2e40e61daf7d",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T02:31:23Z",
+    "started_at": "2026-09-15T02:48:25Z",
+    "completed_at": "2026-09-15T02:49:22Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 580608,
+        "cache_write_tokens": 0,
+        "input_tokens": 137562,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 2414,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2e6-767a-7661-a9ef-98a3de5456ff",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T02:30:07Z",
+    "started_at": "2026-09-15T02:34:21Z",
+    "completed_at": "2026-09-15T02:47:40Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 7798272,
+        "cache_write_tokens": 0,
+        "input_tokens": 136016,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 31808,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2d8-d187-7cde-8e03-99afb3014321",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:15:13Z",
+    "started_at": "2026-09-15T02:30:59Z",
+    "completed_at": "2026-09-15T02:31:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 354901,
+        "cache_write_tokens": 4396,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1357,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2cb-94fd-7aaa-b879-71cef1b94736",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T02:00:46Z",
+    "started_at": "2026-09-15T02:00:46Z",
+    "completed_at": "2026-09-15T02:15:31Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 5940608,
+        "cache_write_tokens": 0,
+        "input_tokens": 182292,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 39720,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a2c9-424e-7e65-a175-59f95d7ab151",
+    "issue_id": "01a0a297-e719-78ad-85d8-20a08cc4878c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:58:13Z",
+    "started_at": "2026-09-15T01:58:29Z",
+    "completed_at": "2026-09-15T02:01:01Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1088,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 36,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1256393,
+        "cache_write_tokens": 56426,
+        "input_tokens": 24,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 7710,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3a3-26ea-762c-af7e-39da10267271",
+    "issue_id": "01a0a3a3-26d5-7a3a-95b4-52f2253c149d",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T05:56:13Z",
+    "started_at": "2026-09-15T05:56:33Z",
+    "completed_at": "2026-09-15T06:02:20Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1103,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 41,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1547027,
+        "cache_write_tokens": 65261,
+        "input_tokens": 25,
+        "model": "claude-opus-4-6",
+        "output_tokens": 11215,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a42c-1d22-7795-b08e-f4c6b3c9e256",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:25:49Z",
+    "started_at": "2026-09-15T08:25:50Z",
+    "completed_at": "2026-09-15T08:26:48Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 548060,
+        "cache_write_tokens": 3776,
+        "input_tokens": 8,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2031,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a42a-113e-70cb-b142-a56e0029fd00",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T08:23:35Z",
+    "started_at": "2026-09-15T08:23:35Z",
+    "completed_at": "2026-09-15T08:26:00Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1757,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1388404,
+        "cache_write_tokens": 59934,
+        "input_tokens": 22,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 4939,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a429-61b6-76a1-a2f5-dea285ff21ee",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:22:50Z",
+    "started_at": "2026-09-15T08:22:51Z",
+    "completed_at": "2026-09-15T08:23:47Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 370448,
+        "cache_write_tokens": 3762,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1854,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a428-562c-77fa-bddb-ceb15b481a7d",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T08:21:42Z",
+    "started_at": "2026-09-15T08:21:42Z",
+    "completed_at": "2026-09-15T08:23:00Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 291584,
+        "cache_write_tokens": 0,
+        "input_tokens": 37151,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 3591,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a427-c4a6-7306-9912-3c1bdf62d31e",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:21:04Z",
+    "started_at": "2026-09-15T08:21:05Z",
+    "completed_at": "2026-09-15T08:21:53Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 282245,
+        "cache_write_tokens": 3243,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1651,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a425-f50f-7a28-a679-860cfd0ae441",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T08:19:06Z",
+    "started_at": "2026-09-15T08:19:06Z",
+    "completed_at": "2026-09-15T08:21:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 2165760,
+        "cache_write_tokens": 0,
+        "input_tokens": 29382,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 4707,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a425-5fa7-7b3f-a141-50fbd304c75b",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:18:27Z",
+    "started_at": "2026-09-15T08:18:28Z",
+    "completed_at": "2026-09-15T08:19:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 267024,
+        "cache_write_tokens": 5036,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1754,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a420-f733-70f0-933e-83677ddd5608",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T08:13:38Z",
+    "started_at": "2026-09-15T08:13:39Z",
+    "completed_at": "2026-09-15T08:18:43Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1896,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1365949,
+        "cache_write_tokens": 184010,
+        "input_tokens": 54,
+        "model": "claude-opus-4-6",
+        "output_tokens": 27736,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a41f-e421-7af4-93d4-e663c1ff9265",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:12:28Z",
+    "started_at": "2026-09-15T08:12:29Z",
+    "completed_at": "2026-09-15T08:13:50Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 305685,
+        "cache_write_tokens": 5820,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3576,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a418-3cb1-770a-9735-829da9d7ebde",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T08:04:06Z",
+    "started_at": "2026-09-15T08:04:07Z",
+    "completed_at": "2026-09-15T08:12:39Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 3880704,
+        "cache_write_tokens": 0,
+        "input_tokens": 137124,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 25383,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a417-3c21-7b62-9c48-e68eb8e11efc",
+    "issue_id": "01a0a37f-9645-7470-91ac-062ae12607d7",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:03:01Z",
+    "started_at": "2026-09-15T08:03:10Z",
+    "completed_at": "2026-09-15T08:04:21Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1087,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 35,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 413190,
+        "cache_write_tokens": 39931,
+        "input_tokens": 9,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1848,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3cb-b22a-75f6-a5b8-b2df345d7084",
+    "issue_id": "01a0a3cb-b219-7d6f-957a-9546e7f9b7e5",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T06:40:30Z",
+    "started_at": "2026-09-15T06:45:58Z",
+    "completed_at": "2026-09-15T06:48:51Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1105,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 38,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1308309,
+        "cache_write_tokens": 37621,
+        "input_tokens": 27,
+        "model": "claude-opus-4-6",
+        "output_tokens": 5479,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3dd-eede-7203-9dd4-6324f8589cc5",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T07:00:25Z",
+    "started_at": "2026-09-15T07:00:36Z",
+    "completed_at": "2026-09-15T07:02:20Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 2447653,
+        "cache_write_tokens": 10156,
+        "input_tokens": 20,
+        "model": "claude-opus-4-6",
+        "output_tokens": 4245,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3da-dfc1-70b2-9035-885618bef91e",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:57:05Z",
+    "started_at": "2026-09-15T06:59:54Z",
+    "completed_at": "2026-09-15T07:00:35Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 389945,
+        "cache_write_tokens": 2598,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1254,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3d9-cd07-7328-9c09-646aff3e585a",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T06:55:55Z",
+    "started_at": "2026-09-15T06:56:02Z",
+    "completed_at": "2026-09-15T06:57:09Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 383744,
+        "cache_write_tokens": 0,
+        "input_tokens": 93318,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 3067,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3d3-c454-70dd-b517-f86456bde822",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:49:19Z",
+    "started_at": "2026-09-15T06:54:57Z",
+    "completed_at": "2026-09-15T06:56:02Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 657361,
+        "cache_write_tokens": 4902,
+        "input_tokens": 8,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2538,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3d3-c449-7268-908a-8a7e9cab9046",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T06:49:19Z",
+    "started_at": "2026-09-15T06:49:28Z",
+    "completed_at": "2026-09-15T06:51:12Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1925921,
+        "cache_write_tokens": 102347,
+        "input_tokens": 18,
+        "model": "claude-opus-4-6",
+        "output_tokens": 4298,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3c1-4d99-75ca-b771-d7322d2f6d43",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:29:09Z",
+    "started_at": "2026-09-15T06:48:51Z",
+    "completed_at": "2026-09-15T06:49:28Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 344552,
+        "cache_write_tokens": 18050,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1183,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3aa-ee4b-756b-a39a-867611ba3705",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T06:04:43Z",
+    "started_at": "2026-09-15T06:24:44Z",
+    "completed_at": "2026-09-15T06:29:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 793856,
+        "cache_write_tokens": 0,
+        "input_tokens": 82194,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 9626,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a39a-6b00-7a18-8c47-030f68ef9920",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T05:46:41Z",
+    "started_at": "2026-09-15T06:02:20Z",
+    "completed_at": "2026-09-15T06:04:52Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1023494,
+        "cache_write_tokens": 11555,
+        "input_tokens": 16,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5505,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a38a-5aac-72a1-a4d7-6c8ce34905c7",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T05:29:08Z",
+    "started_at": "2026-09-15T05:43:49Z",
+    "completed_at": "2026-09-15T05:46:50Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1284864,
+        "cache_write_tokens": 0,
+        "input_tokens": 73813,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 8585,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a37e-d071-72e8-b690-4c8b39198f3a",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T05:16:32Z",
+    "started_at": "2026-09-15T05:21:25Z",
+    "completed_at": "2026-09-15T05:27:12Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1091,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 34,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2551795,
+        "cache_write_tokens": 94813,
+        "input_tokens": 37,
+        "model": "claude-opus-4-6",
+        "output_tokens": 12041,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a37b-12dd-71a7-9b2d-7ba4bc0fc877",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T05:12:27Z",
+    "started_at": "2026-09-15T05:27:12Z",
+    "completed_at": "2026-09-15T05:29:16Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1846,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 20,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 684043,
+        "cache_write_tokens": 41222,
+        "input_tokens": 14,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 4692,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a371-33e1-7d39-aa10-2445a3149fdb",
+    "issue_id": "01a0a371-33c8-7cdd-a360-3dd07b53781e",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T05:01:40Z",
+    "started_at": "2026-09-15T05:02:26Z",
+    "completed_at": "2026-09-15T05:12:43Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 4402304,
+        "cache_write_tokens": 0,
+        "input_tokens": 130421,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 35394,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a292-676c-7454-b90d-0123d9f6cb2c",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:58:18Z",
+    "started_at": "2026-09-15T00:58:19Z",
+    "completed_at": "2026-09-15T00:58:53Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 459714,
+        "cache_write_tokens": 3379,
+        "input_tokens": 7,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1408,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a290-67b5-7acd-ad94-40fb1c13abc8",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T00:56:07Z",
+    "started_at": "2026-09-15T00:56:08Z",
+    "completed_at": "2026-09-15T00:58:25Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1774,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1375286,
+        "cache_write_tokens": 43172,
+        "input_tokens": 30,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 7333,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a28f-c3df-721f-b4d3-37b5789aa9b4",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:55:25Z",
+    "started_at": "2026-09-15T00:55:26Z",
+    "completed_at": "2026-09-15T00:56:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 289336,
+        "cache_write_tokens": 4394,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2222,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a28e-3743-716f-9a52-0b585740482e",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T00:53:44Z",
+    "started_at": "2026-09-15T00:53:44Z",
+    "completed_at": "2026-09-15T00:56:05Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 518912,
+        "cache_write_tokens": 0,
+        "input_tokens": 47834,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 6459,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a28d-eaef-7ac0-8817-da37ae9a1f23",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:53:24Z",
+    "started_at": "2026-09-15T00:53:25Z",
+    "completed_at": "2026-09-15T00:53:51Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 274558,
+        "cache_write_tokens": 3013,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1039,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a28c-0f33-7bf8-91ea-522212dfde87",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T00:51:23Z",
+    "started_at": "2026-09-15T00:51:23Z",
+    "completed_at": "2026-09-15T00:53:40Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1349888,
+        "cache_write_tokens": 0,
+        "input_tokens": 28079,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 6092,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a28b-c1ae-7e82-8ded-052b0cfe8360",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:51:03Z",
+    "started_at": "2026-09-15T00:51:03Z",
+    "completed_at": "2026-09-15T00:51:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 262032,
+        "cache_write_tokens": 3618,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1054,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a289-66cf-7451-bf2e-a596dd25c20a",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T00:48:28Z",
+    "started_at": "2026-09-15T00:48:29Z",
+    "completed_at": "2026-09-15T00:51:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1848,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1051791,
+        "cache_write_tokens": 83910,
+        "input_tokens": 18,
+        "model": "claude-opus-4-6",
+        "output_tokens": 8661,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a289-16bb-71eb-a5b7-5b82389bacdf",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:48:08Z",
+    "started_at": "2026-09-15T00:48:08Z",
+    "completed_at": "2026-09-15T00:48:37Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 246538,
+        "cache_write_tokens": 3824,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1155,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a286-ed7e-7044-ac64-a7fb7290a760",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T00:45:46Z",
+    "started_at": "2026-09-15T00:45:47Z",
+    "completed_at": "2026-09-15T00:48:12Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 596736,
+        "cache_write_tokens": 0,
+        "input_tokens": 68656,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 8396,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a286-9be8-7171-822a-b71ea57bc1c2",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:45:25Z",
+    "started_at": "2026-09-15T00:45:26Z",
+    "completed_at": "2026-09-15T00:45:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 232028,
+        "cache_write_tokens": 3670,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1052,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a26e-3173-78d2-80d0-81feb70c695c",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T00:18:45Z",
+    "started_at": "2026-09-15T00:18:46Z",
+    "completed_at": "2026-09-15T00:45:43Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 20039552,
+        "cache_write_tokens": 0,
+        "input_tokens": 288771,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 50516,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a26d-e49b-7b31-9da6-20aea56a66b7",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:18:26Z",
+    "started_at": "2026-09-15T00:18:26Z",
+    "completed_at": "2026-09-15T00:18:52Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 217741,
+        "cache_write_tokens": 3243,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1033,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a265-05f3-7f15-a70c-fb90a7216aaa",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:08:44Z",
+    "started_at": "2026-09-15T00:08:45Z",
+    "completed_at": "2026-09-15T00:09:05Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 103240,
+        "cache_write_tokens": 1656,
+        "input_tokens": 3,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 779,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a262-c018-7f2d-9b59-ec1e2928e844",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T00:06:15Z",
+    "started_at": "2026-09-15T00:06:16Z",
+    "completed_at": "2026-09-15T00:18:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 7469184,
+        "cache_write_tokens": 0,
+        "input_tokens": 144869,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 37459,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a261-f757-7b5a-8995-de35b99e5695",
+    "issue_id": "01a0a189-0e9a-7422-bada-d6469e52b08f",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:05:24Z",
+    "started_at": "2026-09-15T00:05:42Z",
+    "completed_at": "2026-09-15T00:06:23Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1094,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 308237,
+        "cache_write_tokens": 38839,
+        "input_tokens": 8,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1731,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3df-648e-76e0-a791-979a889a59e7",
+    "issue_id": "01a0a3aa-b006-76cf-87ea-78cdca82717c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T07:02:01Z",
+    "started_at": "2026-09-15T07:04:56Z",
+    "completed_at": "2026-09-15T07:05:57Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 627992,
+        "cache_write_tokens": 4598,
+        "input_tokens": 11,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2362,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3d5-317b-7747-abc6-df0e88b20152",
+    "issue_id": "01a0a3aa-b006-76cf-87ea-78cdca82717c",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:50:53Z",
+    "started_at": "2026-09-15T06:57:09Z",
+    "completed_at": "2026-09-15T06:59:53Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2038,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 15,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 652356,
+        "cache_write_tokens": 39915,
+        "input_tokens": 14,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 8394,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3aa-b01c-7cdb-87cc-a3af880b3501",
+    "issue_id": "01a0a3aa-b006-76cf-87ea-78cdca82717c",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T06:04:27Z",
+    "started_at": "2026-09-15T06:09:33Z",
+    "completed_at": "2026-09-15T06:20:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 4128768,
+        "cache_write_tokens": 0,
+        "input_tokens": 286200,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 24926,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3d6-b5a0-7ba4-8064-69c14f49515b",
+    "issue_id": "01a0a3bc-a169-7799-87a7-63974935c452",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T06:52:32Z",
+    "started_at": "2026-09-15T06:52:41Z",
+    "completed_at": "2026-09-15T06:54:56Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1994,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 617005,
+        "cache_write_tokens": 39757,
+        "input_tokens": 13,
+        "model": "claude-opus-4-6",
+        "output_tokens": 6399,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3c9-60d0-769e-80a4-1d4e3497264f",
+    "issue_id": "01a0a3bc-a169-7799-87a7-63974935c452",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:37:58Z",
+    "started_at": "2026-09-15T06:51:13Z",
+    "completed_at": "2026-09-15T06:52:40Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2160,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 14,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 474161,
+        "cache_write_tokens": 33989,
+        "input_tokens": 11,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2803,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a3bc-a17e-710f-9d7c-d16a6d541f5c",
+    "issue_id": "01a0a3bc-a169-7799-87a7-63974935c452",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T06:24:03Z",
+    "started_at": "2026-09-15T06:29:14Z",
+    "completed_at": "2026-09-15T06:39:16Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 3677056,
+        "cache_write_tokens": 0,
+        "input_tokens": 119489,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 22535,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4c4-0640-7cff-a9a2-3926f514a1b6",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T11:11:45Z",
+    "started_at": "2026-09-15T11:14:00Z",
+    "completed_at": "2026-09-15T11:15:13Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1785,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 22,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 368401,
+        "cache_write_tokens": 47524,
+        "input_tokens": 9,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2501,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4bf-4340-79f5-8e79-76161c6c5f8b",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T11:06:33Z",
+    "started_at": "2026-09-15T11:07:48Z",
+    "completed_at": "2026-09-15T11:11:50Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 2726912,
+        "cache_write_tokens": 0,
+        "input_tokens": 25675,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 3212,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4bf-4338-78d0-884d-860ac3c8375e",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T11:06:33Z",
+    "started_at": "2026-09-15T11:11:50Z",
+    "completed_at": "2026-09-15T11:14:00Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2251,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 20,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 351125,
+        "cache_write_tokens": 43702,
+        "input_tokens": 8,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 6702,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4ba-f311-7bc1-8711-19dea8630bdf",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T11:01:50Z",
+    "started_at": "2026-09-15T11:01:51Z",
+    "completed_at": "2026-09-15T11:06:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 3353728,
+        "cache_write_tokens": 0,
+        "input_tokens": 32710,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 5706,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4b9-88ad-7d2b-9d17-2274419d925d",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T11:00:17Z",
+    "started_at": "2026-09-15T11:02:02Z",
+    "completed_at": "2026-09-15T11:02:38Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 229087,
+        "cache_write_tokens": 2912,
+        "input_tokens": 4,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1206,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4b9-0179-722c-b091-0f53b1b7e166",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T10:59:43Z",
+    "started_at": "2026-09-15T11:00:24Z",
+    "completed_at": "2026-09-15T11:01:05Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 625664,
+        "cache_write_tokens": 0,
+        "input_tokens": 10239,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 747,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4b2-50f4-7028-afc8-ffc87e6d1a9d",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:52:24Z",
+    "started_at": "2026-09-15T10:59:52Z",
+    "completed_at": "2026-09-15T11:02:01Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1781,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 16,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 829256,
+        "cache_write_tokens": 56831,
+        "input_tokens": 17,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 6920,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4b1-c169-7751-ad60-a28a7848fc3c",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:51:47Z",
+    "started_at": "2026-09-15T10:52:28Z",
+    "completed_at": "2026-09-15T10:59:51Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2558,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 23,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 630028,
+        "cache_write_tokens": 62144,
+        "input_tokens": 12,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 25563,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4ad-3938-74e5-a491-4f1615b5482c",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T10:46:50Z",
+    "started_at": "2026-09-15T10:59:51Z",
+    "completed_at": "2026-09-15T11:00:24Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 461824,
+        "cache_write_tokens": 0,
+        "input_tokens": 143850,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 761,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4ac-254f-750b-95c3-8db7a9caceb7",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:45:40Z",
+    "started_at": "2026-09-15T10:46:09Z",
+    "completed_at": "2026-09-15T10:47:13Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 375666,
+        "cache_write_tokens": 4839,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2907,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4ab-6f59-755d-865d-b030824ce1aa",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T10:44:53Z",
+    "started_at": "2026-09-15T10:51:54Z",
+    "completed_at": "2026-09-15T10:52:27Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 561152,
+        "cache_write_tokens": 0,
+        "input_tokens": 10212,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 875,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4ab-6f51-72bb-811c-0734fe01bdcd",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T10:44:53Z",
+    "started_at": "2026-09-15T10:45:43Z",
+    "completed_at": "2026-09-15T10:51:54Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 3104384,
+        "cache_write_tokens": 0,
+        "input_tokens": 140783,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 9352,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4aa-5f93-7b34-a7b5-fd288fe25c1c",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:43:44Z",
+    "started_at": "2026-09-15T10:45:02Z",
+    "completed_at": "2026-09-15T10:46:08Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1821,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 26,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 500654,
+        "cache_write_tokens": 54278,
+        "input_tokens": 12,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3285,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4a9-83b3-7384-a19a-df16c60cea5d",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T10:42:47Z",
+    "started_at": "2026-09-15T10:45:02Z",
+    "completed_at": "2026-09-15T10:45:43Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 529408,
+        "cache_write_tokens": 0,
+        "input_tokens": 10853,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 776,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a4a9-83aa-7b6d-889d-743aa6986873",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:42:47Z",
+    "started_at": "2026-09-15T10:43:47Z",
+    "completed_at": "2026-09-15T10:45:01Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 259663,
+        "cache_write_tokens": 7382,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3728,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a49d-3d47-7374-802c-54a93a3e34ed",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T10:29:23Z",
+    "started_at": "2026-09-15T10:43:04Z",
+    "completed_at": "2026-09-15T10:43:47Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 384000,
+        "cache_write_tokens": 0,
+        "input_tokens": 118995,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 1153,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a49d-3d3f-799a-b7f5-77ffbf3311fc",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T10:29:23Z",
+    "started_at": "2026-09-15T10:29:30Z",
+    "completed_at": "2026-09-15T10:42:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 5830656,
+        "cache_write_tokens": 0,
+        "input_tokens": 131532,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 16176,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a49b-f58b-791a-a05a-509525e7f81f",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:27:59Z",
+    "started_at": "2026-09-15T10:28:10Z",
+    "completed_at": "2026-09-15T10:29:30Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 3004,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 499138,
+        "cache_write_tokens": 41072,
+        "input_tokens": 11,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3678,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a491-5419-7336-96d3-678edcfc575c",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+    "created_at": "2026-09-15T10:16:22Z",
+    "started_at": "2026-09-15T10:16:23Z",
+    "completed_at": "2026-09-15T10:28:09Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 6974720,
+        "cache_write_tokens": 0,
+        "input_tokens": 167464,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 24520,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a488-8f34-7525-831d-60babb29aecb",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:06:48Z",
+    "started_at": "2026-09-15T10:14:57Z",
+    "completed_at": "2026-09-15T10:16:34Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 369765,
+        "cache_write_tokens": 7064,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 4038,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a485-fb56-7ee5-9240-74c8defc6702",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T10:03:59Z",
+    "started_at": "2026-09-15T10:04:10Z",
+    "completed_at": "2026-09-15T10:06:52Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1064448,
+        "cache_write_tokens": 0,
+        "input_tokens": 24023,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 2184,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a484-3d2e-724a-b7a2-b1e4a8b08abc",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:02:04Z",
+    "started_at": "2026-09-15T10:04:10Z",
+    "completed_at": "2026-09-15T10:05:52Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1995,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 22,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 439727,
+        "cache_write_tokens": 52088,
+        "input_tokens": 10,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 4944,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a480-c289-76a9-b994-67520e1e4140",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:58:16Z",
+    "started_at": "2026-09-15T10:02:13Z",
+    "completed_at": "2026-09-15T10:04:10Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2457,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 20,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 392055,
+        "cache_write_tokens": 39595,
+        "input_tokens": 9,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5111,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a480-c282-727e-afc4-7aebd92cf787",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T09:58:16Z",
+    "started_at": "2026-09-15T09:58:32Z",
+    "completed_at": "2026-09-15T10:02:12Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1036288,
+        "cache_write_tokens": 0,
+        "input_tokens": 32356,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 4303,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a473-e2ce-73bc-ab5a-a3a2cf9cd489",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T09:44:13Z",
+    "started_at": "2026-09-15T09:44:13Z",
+    "completed_at": "2026-09-15T09:58:32Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 7126784,
+        "cache_write_tokens": 0,
+        "input_tokens": 77176,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 21304,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a473-1aa4-732e-877b-1b5f0c5a7e61",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:43:22Z",
+    "started_at": "2026-09-15T09:43:22Z",
+    "completed_at": "2026-09-15T09:44:21Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 395117,
+        "cache_write_tokens": 4616,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2547,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a471-9ec7-7acc-98c1-8090d1bad359",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T09:41:44Z",
+    "started_at": "2026-09-15T09:41:45Z",
+    "completed_at": "2026-09-15T09:43:26Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 478208,
+        "cache_write_tokens": 0,
+        "input_tokens": 67370,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 2877,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a471-1035-76bc-ba92-e6b7db520ae6",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:41:08Z",
+    "started_at": "2026-09-15T09:41:08Z",
+    "completed_at": "2026-09-15T09:41:52Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 299729,
+        "cache_write_tokens": 3413,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1739,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a46f-94f3-7d57-b72a-03260aba5b87",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T09:39:31Z",
+    "started_at": "2026-09-15T09:39:31Z",
+    "completed_at": "2026-09-15T09:41:11Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1690,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 15,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1140249,
+        "cache_write_tokens": 39642,
+        "input_tokens": 23,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5734,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a46f-35d5-7c67-879a-dc884b35157f",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:39:06Z",
+    "started_at": "2026-09-15T09:39:07Z",
+    "completed_at": "2026-09-15T09:39:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 287349,
+        "cache_write_tokens": 2989,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1001,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a46a-1d5a-7dab-b5c8-7c2ae538e738",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-15T09:33:32Z",
+    "started_at": "2026-09-15T09:33:33Z",
+    "completed_at": "2026-09-15T09:39:14Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 845056,
+        "cache_write_tokens": 0,
+        "input_tokens": 56405,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 7589,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a469-86c7-783d-b703-8dc87ce0d738",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:32:54Z",
+    "started_at": "2026-09-15T09:32:54Z",
+    "completed_at": "2026-09-15T09:33:41Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 271415,
+        "cache_write_tokens": 5276,
+        "input_tokens": 5,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1989,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a466-b8ef-753f-b5d6-d4243ed0330c",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-15T09:29:50Z",
+    "started_at": "2026-09-15T09:29:57Z",
+    "completed_at": "2026-09-15T09:33:02Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1972,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 21,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 881526,
+        "cache_write_tokens": 85047,
+        "input_tokens": 15,
+        "model": "claude-opus-4-6",
+        "output_tokens": 8243,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a465-96b9-7b53-afc0-0517ebf57d68",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:28:36Z",
+    "started_at": "2026-09-15T09:29:57Z",
+    "completed_at": "2026-09-15T09:30:48Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2319,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 251052,
+        "cache_write_tokens": 46795,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1905,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a463-b09c-7494-9c92-aea897c7d68d",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "5f18f628-67ca-491c-80ae-85ffed2c6687",
+    "created_at": "2026-09-15T09:26:31Z",
+    "started_at": "2026-09-15T09:26:40Z",
+    "completed_at": "2026-09-15T09:28:44Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 559872,
+        "cache_write_tokens": 0,
+        "input_tokens": 55390,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 5369,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a462-b8b5-723b-ac07-c3cbff58b030",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:25:28Z",
+    "started_at": "2026-09-15T09:28:44Z",
+    "completed_at": "2026-09-15T09:29:56Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2306,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 25,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 340020,
+        "cache_write_tokens": 38524,
+        "input_tokens": 8,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3826,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a457-6c0f-7b47-b7bc-0557aed730fa",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-15T09:13:07Z",
+    "started_at": "2026-09-15T09:13:08Z",
+    "completed_at": "2026-09-15T09:25:39Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 3905408,
+        "cache_write_tokens": 0,
+        "input_tokens": 113656,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 25790,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a457-11fb-7165-b0b7-9ed3fdb6da33",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:12:44Z",
+    "started_at": "2026-09-15T09:12:45Z",
+    "completed_at": "2026-09-15T09:13:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 428990,
+        "cache_write_tokens": 3134,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1196,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a455-29bf-7465-8031-1431566f746f",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+    "created_at": "2026-09-15T09:10:39Z",
+    "started_at": "2026-09-15T09:10:40Z",
+    "completed_at": "2026-09-15T09:12:57Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2899,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 831401,
+        "cache_write_tokens": 55044,
+        "input_tokens": 15,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 7027,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a451-3d92-7b57-a481-bc5acc97db73",
+    "issue_id": "01a0a2e6-f06b-73fd-8e79-659a7402ee42",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:06:22Z",
+    "started_at": "2026-09-15T09:06:49Z",
+    "completed_at": "2026-09-15T09:11:10Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1096,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 38,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2784685,
+        "cache_write_tokens": 65676,
+        "input_tokens": 44,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 12827,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a20e-6501-7747-aba3-a20854b1cc04",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T22:34:07Z",
+    "started_at": "2026-09-14T22:34:07Z",
+    "completed_at": "2026-09-14T22:35:06Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 341369,
+        "cache_write_tokens": 4895,
+        "input_tokens": 7,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2453,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a20b-6ef8-7b87-8ff5-ad7241ac62bd",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+    "created_at": "2026-09-14T22:30:53Z",
+    "started_at": "2026-09-14T22:30:53Z",
+    "completed_at": "2026-09-14T22:34:13Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 628992,
+        "cache_write_tokens": 0,
+        "input_tokens": 69294,
+        "model": "gpt-5.6-terra",
+        "output_tokens": 7529,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a20a-ce22-7d7c-a14a-7bd419d5fdd3",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T22:30:12Z",
+    "started_at": "2026-09-14T22:30:12Z",
+    "completed_at": "2026-09-14T22:31:01Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 3414,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 16,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 359242,
+        "cache_write_tokens": 54206,
+        "input_tokens": 9,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 2091,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a206-25bd-75ee-92b7-c8caebe424d0",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "created_at": "2026-09-14T22:25:07Z",
+    "started_at": "2026-09-14T22:25:15Z",
+    "completed_at": "2026-09-14T22:30:29Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2063,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 15,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1900064,
+        "cache_write_tokens": 77641,
+        "input_tokens": 32,
+        "model": "claude-opus-4-6",
+        "output_tokens": 10037,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a205-3da0-7e7a-ac14-3a78ec015b61",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T22:24:07Z",
+    "started_at": "2026-09-14T22:24:31Z",
+    "completed_at": "2026-09-14T22:25:15Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 2573,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 16,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 322896,
+        "cache_write_tokens": 33222,
+        "input_tokens": 9,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 1852,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1f7-1c30-7018-9d6c-857426bb34d9",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+    "created_at": "2026-09-14T22:08:41Z",
+    "started_at": "2026-09-14T22:08:42Z",
+    "completed_at": "2026-09-14T22:24:31Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 15873408,
+        "cache_write_tokens": 0,
+        "input_tokens": 238061,
+        "model": "gpt-5.6-sol",
+        "output_tokens": 42568,
+        "provider": "codex"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1f4-5749-7a2e-89d2-168cb2a934b4",
+    "issue_id": "01a0a1f4-024a-73fd-8bcb-2c46e9473c61",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T22:05:40Z",
+    "started_at": "2026-09-14T22:06:04Z",
+    "completed_at": "2026-09-14T22:09:04Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 1608104,
+        "cache_write_tokens": 53989,
+        "input_tokens": 31,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 8086,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": false
+  },
+  {
+    "id": "01a0a1ef-a1e1-7148-9884-3a4da828bc2a",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T22:00:31Z",
+    "started_at": "2026-09-14T22:00:31Z",
+    "completed_at": "2026-09-14T22:06:04Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8698,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1603001,
+        "cache_write_tokens": 66617,
+        "input_tokens": 29,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 16797,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a25d-83b3-7473-8c68-db4a505d786c",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T00:00:32Z",
+    "started_at": "2026-09-15T00:00:33Z",
+    "completed_at": "2026-09-15T00:05:41Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8695,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 2268819,
+        "cache_write_tokens": 66345,
+        "input_tokens": 39,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 17791,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a294-b210-7c34-9438-5f1e5de3079e",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:00:49Z",
+    "started_at": "2026-09-15T01:00:50Z",
+    "completed_at": "2026-09-15T01:04:45Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8694,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 13,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1069568,
+        "cache_write_tokens": 60028,
+        "input_tokens": 19,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 11978,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a527-5f8a-76a3-9243-9bf90415b0ff",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:00:16Z",
+    "started_at": "2026-09-15T13:00:17Z",
+    "completed_at": "2026-09-15T13:08:20Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8693,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1447988,
+        "cache_write_tokens": 71363,
+        "input_tokens": 22,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 27004,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a44b-e2dc-7506-984f-b1bced925307",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:00:31Z",
+    "started_at": "2026-09-15T09:00:33Z",
+    "completed_at": "2026-09-15T09:06:48Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8695,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1781419,
+        "cache_write_tokens": 69834,
+        "input_tokens": 26,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 17243,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a534-faea-73c3-a0e5-a3d4215c9fc1",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T13:15:07Z",
+    "started_at": "2026-09-15T13:20:22Z",
+    "completed_at": "2026-09-15T13:21:46Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 7851,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 685593,
+        "cache_write_tokens": 39604,
+        "input_tokens": 14,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3769,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a226-9043-776f-99c1-d6ac183534f6",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T23:00:31Z",
+    "started_at": "2026-09-14T23:00:32Z",
+    "completed_at": "2026-09-14T23:04:00Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8689,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1152238,
+        "cache_write_tokens": 62193,
+        "input_tokens": 20,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 8562,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a1b8-b1bd-7021-8acc-499eb72ae2bb",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:00:31Z",
+    "started_at": "2026-09-14T21:00:32Z",
+    "completed_at": "2026-09-14T21:03:32Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8696,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1074354,
+        "cache_write_tokens": 47183,
+        "input_tokens": 23,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 8244,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a370-26ee-7561-a929-40841b022f64",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T05:00:31Z",
+    "started_at": "2026-09-15T05:12:44Z",
+    "completed_at": "2026-09-15T05:17:42Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8693,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1471425,
+        "cache_write_tokens": 92970,
+        "input_tokens": 22,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 14438,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a37d-cbda-7ee5-af8e-81bc1f7c4676",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T05:15:25Z",
+    "started_at": "2026-09-15T05:41:40Z",
+    "completed_at": "2026-09-15T05:43:49Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 7853,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 910847,
+        "cache_write_tokens": 47186,
+        "input_tokens": 17,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 7190,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a1c6-5a41-7920-b7b2-b100606ddd70",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-14T21:15:26Z",
+    "started_at": "2026-09-14T21:15:27Z",
+    "completed_at": "2026-09-14T21:17:36Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 7858,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 760165,
+        "cache_write_tokens": 40854,
+        "input_tokens": 17,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5556,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a414-f1e8-7529-8f6f-4b3ca94f4118",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T08:00:31Z",
+    "started_at": "2026-09-15T08:00:32Z",
+    "completed_at": "2026-09-15T08:03:09Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8695,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 327353,
+        "cache_write_tokens": 56938,
+        "input_tokens": 7,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 7687,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a339-3c38-7f2f-aee7-ff3ce4b38648",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T04:00:32Z",
+    "started_at": "2026-09-15T04:01:04Z",
+    "completed_at": "2026-09-15T04:05:11Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8692,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 13,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1394851,
+        "cache_write_tokens": 62263,
+        "input_tokens": 24,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 11026,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a3a7-04e8-7815-a0d5-477245c20d3a",
+    "issue_id": "",
+    "agent_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+    "created_at": "2026-09-15T06:00:27Z",
+    "started_at": "2026-09-15T06:04:52Z",
+    "completed_at": "2026-09-15T06:08:18Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 1995,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 19,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 531761,
+        "cache_write_tokens": 49856,
+        "input_tokens": 11,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 12848,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a2cb-6c98-760d-aeeb-50cdf5bfc28a",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T02:00:35Z",
+    "started_at": "2026-09-15T02:26:30Z",
+    "completed_at": "2026-09-15T02:30:58Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8694,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1279381,
+        "cache_write_tokens": 67266,
+        "input_tokens": 22,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 16675,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a302-5dcf-7659-95de-2ac523395c37",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T03:00:36Z",
+    "started_at": "2026-09-15T03:31:30Z",
+    "completed_at": "2026-09-15T03:33:10Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8696,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 500840,
+        "cache_write_tokens": 52069,
+        "input_tokens": 11,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5385,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a4b9-7c2d-7cd5-9e79-3714672fdbff",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T11:00:14Z",
+    "started_at": "2026-09-15T11:06:42Z",
+    "completed_at": "2026-09-15T11:07:48Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8695,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 256393,
+        "cache_write_tokens": 43667,
+        "input_tokens": 6,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3025,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a482-d48a-7078-bd92-fad74c2b5a9a",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T10:00:32Z",
+    "started_at": "2026-09-15T10:06:52Z",
+    "completed_at": "2026-09-15T10:14:57Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8691,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 14,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1941275,
+        "cache_write_tokens": 73485,
+        "input_tokens": 27,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 23223,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a3de-0f9c-735b-ab26-4027d2bdd935",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T07:00:34Z",
+    "started_at": "2026-09-15T07:05:58Z",
+    "completed_at": "2026-09-15T07:10:54Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8695,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1157478,
+        "cache_write_tokens": 65811,
+        "input_tokens": 25,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 13381,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a4f0-6eed-7738-b983-bcc6b40f3e86",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T12:00:15Z",
+    "started_at": "2026-09-15T12:00:16Z",
+    "completed_at": "2026-09-15T12:02:08Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8694,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 494037,
+        "cache_write_tokens": 45065,
+        "input_tokens": 10,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5832,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a3a7-1a57-71b1-9ce2-65a1d790e6a5",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T06:00:32Z",
+    "started_at": "2026-09-15T07:02:20Z",
+    "completed_at": "2026-09-15T07:04:55Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 8698,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 17,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 791527,
+        "cache_write_tokens": 63824,
+        "input_tokens": 13,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 9619,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a2a2-10a7-7208-8b66-5477e39a23f7",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T01:15:25Z",
+    "started_at": "2026-09-15T01:17:16Z",
+    "completed_at": "2026-09-15T01:19:18Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 7852,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 13,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 1009214,
+        "cache_write_tokens": 45116,
+        "input_tokens": 21,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 5127,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  },
+  {
+    "id": "01a0a459-62f4-7a74-9107-e4c55b9db628",
+    "issue_id": "",
+    "agent_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "created_at": "2026-09-15T09:15:16Z",
+    "started_at": "2026-09-15T09:25:39Z",
+    "completed_at": "2026-09-15T09:26:40Z",
+    "status": "completed",
+    "usage": [
+      {
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 0,
+        "input_tokens": 7850,
+        "model": "claude-haiku-4-5-20251001",
+        "output_tokens": 18,
+        "provider": "claude"
+      },
+      {
+        "cache_read_tokens": 582854,
+        "cache_write_tokens": 41697,
+        "input_tokens": 12,
+        "model": "claude-sonnet-4-6",
+        "output_tokens": 3185,
+        "provider": "claude"
+      }
+    ],
+    "is_autopilot": true
+  }
+]

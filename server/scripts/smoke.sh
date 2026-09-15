@@ -5,7 +5,7 @@
 # Скрипт намеренно не глушит ошибки: любое падение старта — ненулевой код выхода.
 # Используется и в CI, и локально, чтобы проверялось одно и то же.
 #
-# Требует: собранный dist (pnpm run build:ci) и доступный Redis по REDIS_URL.
+# Требует: собранный dist (pnpm run build:ci), PostgreSQL и Redis.
 
 set -euo pipefail
 
@@ -59,3 +59,17 @@ if ! printf '%s' "$RESPONSE" | grep -q '"__typename":"Query"'; then
 fi
 
 echo "✓ сервер поднялся и ответил на GraphQL-запрос"
+
+echo "→ проверка HTTP readiness, PostgreSQL, Redis, миграций и deployment revision"
+HEALTH="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 --max-time 5 \
+  "http://127.0.0.1:${PORT}/health")"
+printf '%s' "$HEALTH" | node -e '
+let input = ""
+process.stdin.on("data", (chunk) => { input += chunk })
+process.stdin.on("end", () => {
+  const health = JSON.parse(input)
+  const expected = /^[0-9a-f]{40}$/.test(process.env.RENDER_GIT_COMMIT || "") ? process.env.RENDER_GIT_COMMIT : null
+  if (health.status !== "ok" || health.checks?.postgres !== true || health.checks?.redis !== true || health.checks?.migrations !== true || health.revision !== expected) process.exit(1)
+})
+'
+echo "✓ HTTP readiness подтвердил зависимости и revision"

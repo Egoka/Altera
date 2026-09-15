@@ -12,7 +12,7 @@ if (!process.env.JWT_ACCESS_SECRET) {
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
 const expectedJwtErrorNames = new Set(["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"])
 
-const prisma = new PrismaClient()
+export const prisma = new PrismaClient()
 
 export interface GraphQLContext {
   prisma: PrismaClient

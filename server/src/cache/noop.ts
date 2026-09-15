@@ -3,6 +3,10 @@ import type { Cache, CacheSetOptions } from "./types"
 export class NoopCache implements Cache {
   readonly mode = "noop" as const
 
+  async isReady(): Promise<boolean> {
+    return false
+  }
+
   async get<T>(key: string): Promise<T | null> {
     void key
     return null
