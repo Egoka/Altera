@@ -20,6 +20,9 @@ importers:
       '@graphql-codegen/client-preset':
         specifier: 6.2.0
         version: 6.2.0(graphql@16.11.0)
+      '@graphql-codegen/schema-ast':
+        specifier: 6.1.0
+        version: 6.1.0(graphql@16.11.0)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.37.0
         version: 8.37.0(@typescript-eslint/parser@8.37.0(eslint@9.31.0(jiti@2.5.1))(typescript@5.8.3))(eslint@9.31.0(jiti@2.5.1))(typescript@5.8.3)
