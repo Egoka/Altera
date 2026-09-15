@@ -1,10 +1,10 @@
-import { randomUUID } from "node:crypto"
 import { PrismaClient, User } from "./generated/prisma"
 import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
 import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
+import { getRequestId, setRequestUserSnapshot } from "./observability/request-tracing"
 
 if (!process.env.JWT_ACCESS_SECRET) {
   throw new Error("JWT_ACCESS_SECRET must be defined in environment variables.")
@@ -29,7 +29,7 @@ export async function createContext(
   logger: AppLogger,
   piiHasher: PiiHasher
 ): Promise<GraphQLContext> {
-  const requestId = randomUUID()
+  const requestId = getRequestId()
   const authorization = initialContext.request.headers.get("authorization")
   let currentUser: User | null = null
 
@@ -57,5 +57,6 @@ export async function createContext(
     }
   }
 
+  setRequestUserSnapshot(currentUser ? { id: currentUser.id, role: currentUser.role } : null)
   return { prisma, currentUser, cache, requestId, logger, piiHasher }
 }

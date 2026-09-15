@@ -109,7 +109,7 @@ describe("structured logger", () => {
       } as unknown as LogEntry)
     ).toThrow("exactly one correlation")
     expect(() => logger.log({ level: "info", event: "http.request", message: "bad" } as unknown as LogEntry)).toThrow(
-      "exactly one correlation"
+      "http.request requires requestId"
     )
     expect(() =>
       logger.log({
@@ -120,6 +120,52 @@ describe("structured logger", () => {
         jobId: "job-1"
       } as unknown as LogEntry)
     ).toThrow("exactly one correlation")
+  })
+
+  it("keeps originRequestId only on logs correlated by jobId", () => {
+    const destination = createDestination()
+    const logger = createAppLogger({ service: "worker", environment: "test", destination })
+
+    logger.log({
+      level: "info",
+      event: "ai.job.started",
+      message: "AI job started",
+      jobId: "job-1",
+      originRequestId: "req-1"
+    } as LogEntry)
+
+    expect(JSON.parse(destination.lines[0] ?? "")).toMatchObject({
+      event: "ai.job.started",
+      jobId: "job-1",
+      originRequestId: "req-1"
+    })
+    expect(() =>
+      logger.log({
+        level: "info",
+        event: "ai.job.started",
+        message: "bad correlation",
+        requestId: "req-1",
+        originRequestId: "req-2"
+      } as unknown as LogEntry)
+    ).toThrow("originRequestId requires jobId")
+  })
+
+  it("requires requestId correlation for http.request", () => {
+    const logger = createAppLogger({ service: "api", environment: "test", destination: createDestination() })
+
+    expect(() =>
+      logger.log({
+        level: "info",
+        event: "http.request",
+        message: "bad correlation",
+        jobId: "job-1",
+        route: "/",
+        status: 200,
+        durationMs: 10,
+        userId: null,
+        role: null
+      } as unknown as LogEntry)
+    ).toThrow("http.request requires requestId")
   })
 
   it("redacts personal data and credentials before writing any log bytes", () => {

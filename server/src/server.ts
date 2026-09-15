@@ -10,12 +10,15 @@ import { createCache } from "./cache"
 import { createErrorMasker } from "./errors/graphql-error"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
+import { createRequestTracingPlugin, getRequestId } from "./observability/request-tracing"
 
 const PORT = process.env.PORT || 4000
 const cache = createCache({ redisUrl: process.env.REDIS_URL })
 const logger = createAppLogger({ service: "api", environment: process.env.NODE_ENV ?? "development" })
 const piiHasher = createPiiHasher(process.env.LOG_HASH_SECRET)
-const maskError = createErrorMasker({ logger })
+const forwardedRequestSecret = process.env.REQUEST_ID_FORWARD_SECRET
+if (!forwardedRequestSecret) throw new Error("REQUEST_ID_FORWARD_SECRET must be defined")
+const maskError = createErrorMasker({ logger, requestIdFactory: getRequestId })
 
 const yoga = createYoga<GraphQLContext>({
   schema,
@@ -28,7 +31,11 @@ const yoga = createYoga<GraphQLContext>({
     methods: ["POST"]
   },
   graphqlEndpoint: "/",
-  plugins: [useCSRFPrevention(), process.env.NODE_ENV === "production" && blockFieldSuggestionsPlugin()].filter(Boolean)
+  plugins: [
+    createRequestTracingPlugin({ logger, forwardedRequestSecret }),
+    useCSRFPrevention(),
+    process.env.NODE_ENV === "production" && blockFieldSuggestionsPlugin()
+  ].filter(Boolean)
 })
 
 const health = createHealthCheck(

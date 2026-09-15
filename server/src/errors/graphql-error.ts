@@ -10,6 +10,7 @@ interface PublicErrorSnapshot {
 
 const knownErrors = new WeakMap<object, Readonly<PublicErrorSnapshot>>()
 const MAX_ERROR_TRAVERSAL_NODES = 64
+const requestIdPublicErrorCodes = new Set<ErrorCode>(["INTERNAL_ERROR", "PROVIDER_UNAVAILABLE"])
 
 function freezeExtensionValue(value: unknown): unknown {
   return Array.isArray(value) ? Object.freeze([...value]) : value
@@ -54,6 +55,12 @@ function findKnownError(error: unknown): Readonly<PublicErrorSnapshot> | null {
   return null
 }
 
+function createPublicExtensions(extensions: Readonly<Record<string, unknown>>): Record<string, unknown> {
+  if (requestIdPublicErrorCodes.has(extensions.code as ErrorCode)) return { ...extensions }
+
+  return Object.fromEntries(Object.entries(extensions).filter(([key]) => key !== "requestId"))
+}
+
 export function createApiError<C extends ErrorCode>(
   code: C,
   fields: ApiErrorFields<C> & { requestId: string }
@@ -81,7 +88,7 @@ export function createErrorMasker(options: {
   return (error) => {
     const snapshot = findKnownError(error)
     if (snapshot) {
-      return new GraphQLError(snapshot.message, { extensions: { ...snapshot.extensions } })
+      return new GraphQLError(snapshot.message, { extensions: createPublicExtensions(snapshot.extensions) })
     }
 
     const requestId = requestIdFactory()

@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto"
+
 interface GraphQLRequestBody {
   query: string
   operationName?: string | null
@@ -23,7 +25,21 @@ interface ProxyGraphQLRequestOptions {
   graphqlApiUrl: string
   body: unknown
   authorization?: string
+  requestId: string
+  requestIdForwardSecret: string
   fetchRaw: FetchRaw
+}
+
+interface GraphQLRouteError {
+  statusCode: number
+  statusMessage: string
+  message: string
+  data?: { requestId: string }
+}
+
+interface HttpClientError {
+  statusCode: number
+  statusMessage?: string
 }
 
 export class GraphQLProxyError extends Error {
@@ -33,6 +49,35 @@ export class GraphQLProxyError extends Error {
   ) {
     super(message)
     this.name = "GraphQLProxyError"
+  }
+}
+
+function isHttpClientError(error: unknown): error is HttpClientError {
+  if (!error || typeof error !== "object") return false
+  const statusCode = Reflect.get(error, "statusCode")
+  return typeof statusCode === "number" && statusCode >= 400 && statusCode < 500
+}
+
+export function getGraphQLRouteError(error: unknown, requestId: string): GraphQLRouteError {
+  if (error instanceof GraphQLProxyError) {
+    return {
+      statusCode: error.statusCode,
+      statusMessage: error.message,
+      message: error.message,
+      ...(error.statusCode >= 500 ? { data: { requestId } } : {})
+    }
+  }
+
+  if (isHttpClientError(error)) {
+    const message = typeof error.statusMessage === "string" ? error.statusMessage : "Invalid request"
+    return { statusCode: error.statusCode, statusMessage: message, message }
+  }
+
+  return {
+    statusCode: 500,
+    statusMessage: "Internal server error",
+    message: "Internal server error",
+    data: { requestId }
   }
 }
 
@@ -79,14 +124,20 @@ export const proxyGraphQLRequest = async ({
   graphqlApiUrl,
   body,
   authorization,
+  requestId,
+  requestIdForwardSecret,
   fetchRaw
 }: ProxyGraphQLRequestOptions) => {
+  if (!requestIdForwardSecret) throw new GraphQLProxyError(500, "Request tracing is not configured")
+
   const url = parseGraphQLApiUrl(graphqlApiUrl)
   const requestBody = parseGraphQLRequestBody(body)
   const headers: Record<string, string> = {
     accept: "application/graphql-response+json, application/json",
     "content-type": "application/json",
-    "x-graphql-yoga-csrf": "bff"
+    "x-graphql-yoga-csrf": "bff",
+    "x-request-id": requestId,
+    "x-request-id-signature": createHmac("sha256", requestIdForwardSecret).update(requestId).digest("hex")
   }
 
   if (authorization) {
