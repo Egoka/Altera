@@ -3,18 +3,20 @@ import { expect, test } from "@playwright/test"
 test("theme switches through Nuxt color mode and semantic tokens", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" })
 
-  await page.goto("/components-showcase")
+  await page.goto("/")
 
-  const root = page.locator("html")
-  await expect(root).not.toHaveClass(/\bdark\b/)
-  await expect(root).toHaveCSS("background-color", "rgb(250, 249, 247)")
+  const lightRoot = page.locator("html")
+  await expect(lightRoot).not.toHaveClass(/\bdark\b/)
+  await expect(lightRoot).toHaveCSS("background-color", "rgb(250, 249, 247)")
 
-  await page.evaluate(() => {
+  const darkPage = await page.context().newPage()
+  await darkPage.addInitScript(() => {
     localStorage.setItem("nuxt-color-mode", "dark")
     localStorage.setItem("theme", "light")
   })
-  await page.reload()
+  await darkPage.goto("/")
 
-  await expect(root).toHaveClass(/\bdark\b/)
-  await expect(root).toHaveCSS("background-color", "rgb(17, 17, 17)")
+  const darkRoot = darkPage.locator("html")
+  await expect(darkRoot).toHaveClass(/\bdark\b/)
+  await expect(darkRoot).toHaveCSS("background-color", "rgb(17, 17, 17)")
 })
