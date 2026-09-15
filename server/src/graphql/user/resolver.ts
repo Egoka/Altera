@@ -1,5 +1,6 @@
 import { GraphQLContext } from "../../prisma"
 import { ensureAuthenticated, ensureHasRole } from "../../exceptions/permissions"
+import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
   validateSort,
@@ -8,7 +9,6 @@ import {
   calculatePagination,
   validateDateRange,
   validateSearchInput,
-  logAdminOperation,
   PaginationInput,
   SortInput,
   BaseFilters,
@@ -49,7 +49,7 @@ export default {
         async () => {
           const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
           if (!author) {
-            throw new Error("Author not found")
+            throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
 
           const totalCount = await ctx.prisma.article.count({ where: { authorId: author.id, status: "published" } })
@@ -85,7 +85,7 @@ export default {
         async () => {
           const author = await ctx.prisma.user.findUnique({ where: { slug: authorSlug } })
           if (!author) {
-            throw new Error("Author not found")
+            throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
 
           const totalArticles = await ctx.prisma.article.count({
@@ -134,11 +134,11 @@ export default {
     },
 
     me: async (_parent: any, _args: any, ctx: GraphQLContext) => {
-      return ensureAuthenticated(ctx.currentUser)
+      return ensureAuthenticated(ctx.currentUser, ctx.requestId)
     },
 
     myArticlesStats: async (_parent: any, _args: any, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser)
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
       // Получаем статистику по статьям пользователя
       const [total, published, draft, review, archived] = await Promise.all([
@@ -186,24 +186,28 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "admin.users.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
       // Валидация входных параметров
-      validatePagination(pagination)
-      validateSort(sort, ["id", "name", "email", "role", "slug", "createdAt", "updatedAt", "_count.articles"])
+      validatePagination(pagination, ctx.requestId)
+      validateSort(
+        sort,
+        ["id", "name", "email", "role", "slug", "createdAt", "updatedAt", "_count.articles"],
+        ctx.requestId
+      )
 
       if (search) {
-        validateSearchInput(search, ["name", "email", "bio", "slug"])
+        validateSearchInput(search, ["name", "email", "bio", "slug"], ctx.requestId)
       }
 
       if (filters.base.createdAt) {
-        validateDateRange(filters.base.createdAt)
+        validateDateRange(filters.base.createdAt, ctx.requestId)
       }
 
       if (filters.base.updatedAt) {
-        validateDateRange(filters.base.updatedAt)
+        validateDateRange(filters.base.updatedAt, ctx.requestId)
       }
 
       // Строим WHERE условие
@@ -263,13 +267,6 @@ export default {
             }
           : null
       }
-
-      // Логируем операцию
-      logAdminOperation("admin_users", ctx.currentUser?.id || "unknown", {
-        pagination,
-        sort,
-        filters
-      })
 
       return result
     }

@@ -1,0 +1,25 @@
+query GetAuthorPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
+  user(slug: $slug) {
+    ...AuthorSummary
+  }
+  articlesByAuthor(authorSlug: $slug, page: $page, limit: $limit) {
+    articles {
+      ...ArticleCard
+      sectionTags {
+        name
+        slug
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+  }
+  authorStats(authorSlug: $slug) {
+    totalArticles
+    articlesThisMonth
+    popularTags {
+      name
+      slug
+    }
+  }
+}

@@ -1,0 +1,51 @@
+query GetAdminTags(
+  $pagination: PaginationInput! = { page: 1, limit: 50 }
+  $sort: SortInput! = { field: "createdAt", direction: DESC }
+  $filters: TagFiltersInput! = { base: {} }
+) {
+  sectionTags(pagination: $pagination, sort: $sort, filters: $filters) {
+    tags {
+      ...SectionTagSummary
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+    }
+  }
+}
+
+mutation CreateTag($input: CreateTagInput!) {
+  createTag(input: $input) {
+    id
+    name
+    slug
+    description
+  }
+}
+
+mutation UpdateTag($id: ID!, $input: UpdateTagInput!) {
+  updateTag(id: $id, input: $input) {
+    id
+    name
+    slug
+    description
+  }
+}
+
+mutation DeleteTag($id: ID!) {
+  deleteTag(id: $id) {
+    id
+  }
+}
+
+mutation MergeTags($input: MergeTagsInput!) {
+  mergeTags(input: $input) {
+    id
+    name
+    slug
+  }
+}

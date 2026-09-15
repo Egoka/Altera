@@ -10,33 +10,42 @@ const user = (role: string) => ({ id: "u1", role }) as never
 describe("ensureAuthenticated", () => {
   it("возвращает пользователя, когда он есть", () => {
     const current = user("reader")
-    expect(ensureAuthenticated(current)).toBe(current)
+    expect(ensureAuthenticated(current, "req-1")).toBe(current)
   })
 
   it("бросает UNAUTHENTICATED, когда пользователя нет", () => {
-    expect(() => ensureAuthenticated(null)).toThrow(GraphQLError)
+    expect(() => ensureAuthenticated(null, "req-1")).toThrow(GraphQLError)
     try {
-      ensureAuthenticated(null)
+      ensureAuthenticated(null, "req-1")
     } catch (error) {
-      expect((error as GraphQLError).extensions.code).toBe("UNAUTHENTICATED")
+      expect((error as GraphQLError).extensions).toEqual({ code: "UNAUTHENTICATED", requestId: "req-1" })
     }
   })
 })
 
 describe("ensureHasRole", () => {
   it("пропускает пользователя с требуемой ролью", () => {
-    expect(() => ensureHasRole(user("admin"), "admin" as never)).not.toThrow()
+    expect(() => ensureHasRole(user("admin"), "admin" as never, "admin.read", "req-1")).not.toThrow()
   })
 
   it("пропускает пользователя, если его роль есть в списке", () => {
-    expect(() => ensureHasRole(user("editor"), ["admin", "editor"] as never)).not.toThrow()
+    expect(() => ensureHasRole(user("editor"), ["admin", "editor"] as never, "article.edit", "req-1")).not.toThrow()
   })
 
   it("отказывает, когда роль не подходит", () => {
-    expect(() => ensureHasRole(user("reader"), "admin" as never)).toThrow(/Permission denied/)
+    expect(() => ensureHasRole(user("reader"), "admin" as never, "admin.read", "req-1")).toThrow(GraphQLError)
+    try {
+      ensureHasRole(user("reader"), "admin" as never, "admin.read", "req-1")
+    } catch (error) {
+      expect((error as GraphQLError).extensions).toEqual({
+        code: "FORBIDDEN",
+        requestId: "req-1",
+        action: "admin.read"
+      })
+    }
   })
 
   it("отказывает неаутентифицированному раньше проверки роли", () => {
-    expect(() => ensureHasRole(null, "reader" as never)).toThrow(/Authentication required/)
+    expect(() => ensureHasRole(null, "reader" as never, "profile.read", "req-1")).toThrow(GraphQLError)
   })
 })

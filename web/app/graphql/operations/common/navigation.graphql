@@ -1,0 +1,34 @@
+query GetNavigation {
+  contentTypes(
+    pagination: { page: 1, limit: 100 }
+    sort: { field: "order", direction: ASC }
+    filters: { base: {}, status: [active] }
+  ) {
+    contentTypes {
+      id
+      name
+      slug
+      order
+    }
+  }
+  popularTags: sectionTags(
+    pagination: { page: 1, limit: 10 }
+    sort: { field: "createdAt", direction: DESC }
+    filters: { base: {}, hasArticles: true }
+  ) {
+    tags {
+      name
+      slug
+    }
+  }
+}
+
+query GetUserMenu {
+  me {
+    id
+    name
+    slug
+    photoUrl
+    role
+  }
+}
