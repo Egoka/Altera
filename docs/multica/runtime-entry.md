@@ -1,38 +1,21 @@
 # Инструкции запуска Multica
 
-Этот документ подключает только профиль запуска Multica. Он не является инструкцией
-для прямых чатов владельца, даже когда запрос касается кода или самой Multica.
+Только для явно запущенной Multica. Обычный чат владельца не запускает очередь,
+ритуалы, hooks и продолжение чужих задач.
 
-При изменениях backend/shared build inputs обязательна [проверка Render и Neon](../multica/infrastructure-checks.md): CI, merge, deploy и health фиксируются отдельно.
-Доступ native runtime и конфигурации MCP проверяются по [infrastructure-access](infrastructure-access.md).
+Текущий процесс — [контроллер автономии](autonomy-controller.md). Читать свой task,
+короткий handoff и изменившиеся evidence. Технические правила —
+[project-rules](../development/project-rules.md), проверки —
+[testing](../development/testing.md). Полную историю и весь бэклог не перечитывать.
 
-Каждая новая задача начинается с успешного fetch `origin/app`: от полученного полного SHA
-создаются новая ветка и отдельный worktree, проверяются HEAD и чистота. Полный порядок и
-отличие нового старта от продолжения — [fresh-task-worktree](../multica/fresh-task-worktree.md).
+Начало новой задачи: успешный fetch свежего `origin/app`, отдельная ветка/worktree,
+[preflight инфраструктуры](infrastructure-checks.md). Не менять чужой checkout.
+Development Neon сохраняется. Один product writer.
 
-Перед планированием или исполнением прочитай:
+Итог — канонический JSON задачи и короткий Markdown. CI и независимый verdict
+привязаны к текущему SHA. Merge и Done — только через установленный controller.py.
+Отказы сохранять с конкретным условием восстановления; не ждать формального Done владельца.
+Исторические gate/adapters и ALTE-11 не активировать.
 
-- [операционную модель](../multica/operating-model.md) — полномочия, стадии, один writer,
-  остановка и выпуск;
-- [контракты артефактов](../development/artifact-contracts.md) — задача, evidence, handoff и
-  независимая приёмка;
-- [правила проекта](../development/project-rules.md) — источники, технические соглашения;
-- [проверки](../development/testing.md) — актуальные команды и ограничения;
-- [бэклог](../backlog/README.md) и файл задачи — когда работа идёт из очереди.
-
-Прямое письменное поручение владельца может быть самостоятельным источником полномочий для
-точно названного scope: ему не требуется выдуманный статус `готова` в бэклоге. Завершение ответа,
-run, стадии и приёмка задачи — разные события. Новые ограничения runtime появятся только после
-M4; описанные здесь контракты сами по себе их не обеспечивают.
-
-## Ритуал и runtime
-
-Прочитай `docs/multica/task-ritual.md` и `docs/multica/testing-contract.md`. Все пути в этом документе и профилях считаются
-от корня репозитория. Общие AGENTS.md и CLAUDE.md не активируют этот процесс.
-
-Claude: runtime загружает `docs/multica/claude-plugin` через `--plugin-dir`;
-его Stop hook сохраняет прежний gate, роли и команды. Не устанавливать plugin
-в user/project scope: это вернёт его в прямые диалоги. Команды plugin имеют namespace
-`altera-multica`, например `/altera-multica:multica-status`.
-Codex: отдельный Claude plugin не нужен; используется прежний явный gate/collector.
-Linux checker: прежняя внешняя приёмка и запрет hooks сохраняются.
+Прежний текст сохранён в `history/2026-09-15-before-controller/runtime-entry.md`
+для аудита; он не является инструкцией текущего запуска.

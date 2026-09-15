@@ -1,0 +1,74 @@
+{
+  "autopilot": {
+    "id": "9beb69d3-b639-41a5-866f-465508975651",
+    "title": "Altera — ежедневный аудит автономии",
+    "status": "active",
+    "project_id": null,
+    "execution_mode": "run_only",
+    "assignee_id": "b1c275c8-c97d-4b3c-a671-0a908d5fbdc7",
+    "last_run_at": "2026-09-15T18:43:57Z",
+    "last_run_status": "completed",
+    "next_run_at": null
+  },
+  "agent": {
+    "id": "b1c275c8-c97d-4b3c-a671-0a908d5fbdc7",
+    "name": "Altera — суточный аудитор",
+    "model": "claude-sonnet-4-6",
+    "runtime_id": "1516fc67-2b7f-4915-adb9-39bb64563835",
+    "runtime_mode": "local",
+    "permission_mode": "private",
+    "thinking_level": "medium",
+    "max_concurrent_tasks": 1,
+    "custom_args": []
+  },
+  "agent_instructions_chars": 458,
+  "triggers": [
+    {
+      "id": "e3a21ed3-7738-4f46-86c4-42242ed0557c",
+      "autopilot_id": "9beb69d3-b639-41a5-866f-465508975651",
+      "kind": "schedule",
+      "cron_expression": "0 10 * * *",
+      "timezone": "Europe/Moscow",
+      "enabled": true,
+      "next_run_at": "2026-09-16T07:00:00Z"
+    }
+  ],
+  "latest_runs": [
+    {
+      "id": "01a0a662-0890-73b8-9668-786a8f441356",
+      "task_id": "01a0a662-0893-7351-b337-33f73998e382",
+      "status": "completed",
+      "created_at": "2026-09-15T18:43:57Z",
+      "completed_at": "2026-09-15T18:46:43Z"
+    }
+  ],
+  "observed_at": "2026-09-15T19:10:00Z",
+  "runtime_profile": {
+    "id": "ac778036-5bc4-4e7f-a1b7-3450040c9f50",
+    "instance_id": "1516fc67-2b7f-4915-adb9-39bb64563835",
+    "installed_release": "bbcfb97c15e20ded",
+    "installation_source": "controller installation handoff; instance assignment verified via Multica agent readback",
+    "public_readback": {
+      "id": "ac778036-5bc4-4e7f-a1b7-3450040c9f50",
+      "display_name": "Altera daily audit",
+      "protocol_family": "claude"
+    },
+    "profile_list_verified": true
+  },
+  "activation": "active_pilot_completed",
+  "prompt_path": "docs/multica/autonomy/daily-audit-prompt.md",
+  "boundary": "Native pilot completed; program published PR #57 before Claude analysis. Repeat after final runtime fixes still requires live verification.",
+  "pilot": {
+    "status": "completed",
+    "autopilot_run_id": "01a0a662-0890-73b8-9668-786a8f441356",
+    "native_task_id": "01a0a662-0893-7351-b337-33f73998e382",
+    "phases": {
+      "source_collection": "completed",
+      "aggregation": "completed",
+      "publication": "completed",
+      "native_analysis": "completed"
+    },
+    "result_confirmed": true,
+    "report_pr": "https://github.com/Egoka/Altera/pull/57"
+  }
+}

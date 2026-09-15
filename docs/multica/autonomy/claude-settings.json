@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint)",
+      "Bash(pnpm format)",
+      "Bash(pnpm test)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git worktree list)"
+    ],
+    "ask": ["Bash(npx prisma migrate:*)", "Bash(npx prisma db push:*)"],
+    "deny": [
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(git checkout --:*)",
+      "Bash(git checkout -f:*)",
+      "Bash(git switch -f:*)",
+      "Bash(git switch --discard-changes:*)",
+      "Bash(git restore:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git branch -D:*)",
+      "Read(./server/.env)",
+      "Read(./web/.env)"
+    ]
+  },
+  "autoMode": {
+    "environment": [
+      "Altera: приватный репозиторий Egoka/Altera, pnpm workspace web/server. Технические правила: docs/development/project-rules.md; проверки: docs/development/testing.md. Версии сверять по текущему checkout.",
+      "Только явный запуск Multica использует docs/multica/autonomy-controller.md и короткий prompt назначенной роли. Прямой чат не запускает очередь или чужие задачи; legacy ritual/plugin/Stop-gate не подключаются.",
+      "Один product writer. Новая задача: успешный fetch origin/app, отдельные ветка/worktree, зафиксированный baseline SHA. Продолжение сохраняет существующие изменения и handoff.",
+      "Merge и Done выполняются установленным контроллером после проверки реальных CI, независимого review текущего SHA, требуемого deploy/health и финализации в app. Сам факт текста в prompt не является runtime ACL.",
+      "Render/Neon диагностика read-only. Текущий Render Server использует development Neon; production/default не выбирать автоматически. Секреты, токены и строки подключения не включать в репозиторий, prompts, trace или вывод."
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Прямой commit/push в app и прямые merge/Done вне установленного контроллера запрещены; обычные commit/push своей ветки и PR в рамках поручения разрешены.",
+      "Продуктовые решения, открытые Q и новые цены/сроки/лимиты/провайдеры не выдумывать. Журнал решений и ADR изменять только по прямому поручению владельца.",
+      "Не запускать второго product writer, не сбрасывать/чистить чужой checkout и не удалять worktree без проверенного безопасного cleanup.",
+      "Не выполнять миграции, deploy/restart, env update, переключение среды или платные операции ради проверки доступа; требуются применимые полномочия и подтверждённая цель."
+    ]
+  }
+}

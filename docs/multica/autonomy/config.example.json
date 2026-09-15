@@ -1,0 +1,19 @@
+{
+  "repo": "/Users/egorbondarenko/WebstormProjects/Altera",
+  "runtime_workspace_root": "/Users/egorbondarenko/multica_workspaces_desktop-api.multica.ai/altera-fd1da0aa3ec6",
+  "github_repo": "Egoka/Altera",
+  "multica": "/Applications/Multica.app/Contents/Resources/app.asar.unpacked/resources/bin/multica",
+  "server_url": "https://api.multica.ai",
+  "workspace_id": "c5a721ae-7e4f-41cf-92b9-fd1da0aa3ec6",
+  "project_id": "1ff3917d-4c10-4303-a671-406c1fda9613",
+  "claude_binary": "/Users/egorbondarenko/.nvm/versions/node/v24.12.0/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe",
+  "instructions_version": "autonomy-controller-v1",
+  "state_dir": "/Users/egorbondarenko/WebstormProjects/Altera/.git/autonomy-state",
+  "controller_agent_ids": ["d08ef989-e4d4-4772-bc33-335127a85f0f"],
+  "daily_agent_ids": ["b1c275c8-c97d-4b3c-a671-0a908d5fbdc7"],
+  "reviewer_ids": ["db94a617-807c-4eec-981f-51fd4b3217d4"],
+  "release_agent_ids": ["49314ca0-8c53-44a9-a9de-15c3f297818a", "db94a617-807c-4eec-981f-51fd4b3217d4"],
+  "render_service_id": "srv-d1uk6b6mcj7s73ek25h0",
+  "render_workspace_id": "tea-d0q29c7diees738n0250",
+  "health_url": "https://altera-m4po.onrender.com/health"
+}
