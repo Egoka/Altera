@@ -10,39 +10,70 @@ datasource db {
 }
 
 model User {
-  id                String              @id @default(uuid())
-  name              String
-  email             String              @unique
-  bio               String?
-  photoUrl          String?
-  role              Role                @default(reader)
-  slug              String              @unique
-  socialLinks       Json?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  archivedAt        DateTime?
-  archiveMode       AccountArchiveMode?
-  archivedByActorId String?
-  archivedByRole    Role?
-  archiveReason     String?
-  isServiceAccount  Boolean             @default(false)
-  articles          Article[]
-  magicLink         MagicLinkToken?
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  bio                String?
+  photoUrl           String?
+  role               Role                @default(reader)
+  slug               String              @unique
+  socialLinks        Json?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  archivedAt         DateTime?
+  archiveMode        AccountArchiveMode?
+  archivedByActorId  String?
+  archivedByRole     Role?
+  archiveReason      String?
+  isServiceAccount   Boolean             @default(false)
+  articles           Article[]
+  magicLink          MagicLinkToken?
+  sessions           Session[]
+  emailChangeRequest EmailChangeRequest?
 
   @@map("users")
 }
 
 model MagicLinkToken {
   id        String    @id @default(cuid())
-  token     String    @unique
+  tokenHash String    @unique @db.VarChar(64)
   userId    String    @unique
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([token])
   @@map("magic_link_tokens")
+}
+
+model Session {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash         String    @unique @db.VarChar(64)
+  previousTokenHash String?   @db.VarChar(64)
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  userAgent         String?
+  ip                String?
+  createdAt         DateTime  @default(now())
+  lastUsedAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([previousTokenHash])
+  @@map("sessions")
+}
+
+model EmailChangeRequest {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newEmail  String
+  codeHash  String   @db.VarChar(64)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("email_change_requests")
 }
 
 model ContentType {

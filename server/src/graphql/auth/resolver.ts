@@ -3,6 +3,7 @@ import crypto from "crypto"
 import jwt from "jsonwebtoken"
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
+import { hashOpaqueToken } from "../../auth/token-hash"
 
 if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
   throw new Error("JWT secrets must be defined in environment variables.")
@@ -34,17 +35,18 @@ export default {
       }
 
       const token = crypto.randomBytes(32).toString("hex")
+      const tokenHash = hashOpaqueToken(token)
       const expiresAt = addMinutes(new Date(), MAGIC_LINK_EXPIRY_MINUTES)
 
       await prisma.magicLinkToken.upsert({
         where: { userId: targetUser.id },
         update: {
-          token,
+          tokenHash,
           expiresAt,
           usedAt: null // Ensure the token is marked as not used on update
         },
         create: {
-          token,
+          tokenHash,
           userId: targetUser.id,
           expiresAt
         }
@@ -62,8 +64,9 @@ export default {
     },
     verifyMagicLink: async (_: unknown, { token }: { token: string }, ctx: GraphQLContext) => {
       const { prisma, requestId } = ctx
+      const tokenHash = hashOpaqueToken(token)
       const magicLinkToken = await prisma.magicLinkToken.findUnique({
-        where: { token },
+        where: { tokenHash },
         include: { user: true }
       })
 
