@@ -1,7 +1,9 @@
 """Проверки контракта завершения и подавления повторных событий."""
 import copy
+import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import controller as c
@@ -11,6 +13,7 @@ class CompletionTests(unittest.TestCase):
     def setUp(self):
         self.receipt = {
             "schema_version": 1, "task_id": "T-123", "source": {"path": "docs/backlog/tasks/T-123.md", "sha": "a" * 40},
+            "issue_id": "issue-123",
             "baseline_sha": "a" * 40, "tested_sha": "b" * 40, "implementer_id": "developer", "implementer_run_id": "run-d",
             "criteria": [{"id": "AC1", "status": "passed", "evidence": "ci:123"}],
             "pr": {"number": 123, "head_sha": "b" * 40, "base_sha": "a" * 40, "base_ref": "app", "merge_sha": "c" * 40},
@@ -20,7 +23,7 @@ class CompletionTests(unittest.TestCase):
         self.facts = {"pr": copy.deepcopy(self.receipt["pr"]), "state": "MERGED", "ci": {"sha": "b" * 40, "passed": True},
                       "review": copy.deepcopy(self.receipt["review"]), "review_completed": True, "review_trusted": True,
                       "merge_in_app": True, "finalization_sha256": "d" * 64, "requires_deploy": False,
-                      "base_current": True, "implementer_trusted": True, "files_complete": True}
+                      "base_current": True, "implementer_trusted": True, "files_complete": True, "issue_scope_valid": True}
 
     def test_missing_implementer_and_incomplete_diff_reject(self):
         self.facts["implementer_trusted"] = False
@@ -35,6 +38,12 @@ class CompletionTests(unittest.TestCase):
 
     def test_complete_chain_accepted(self):
         self.assertEqual(c.validate(self.receipt, self.facts), [])
+
+    def test_unknown_or_wrong_issue_scope_blocks_merge_and_done(self):
+        for phase in ("merge", "done"):
+            with self.subTest(phase=phase):
+                facts = {**self.facts, "issue_scope_valid": False}
+                self.assertIn("issue_scope", c.validate(self.receipt, facts, phase))
 
     def test_wrong_sha_missing_review_and_unsynced_report_block(self):
         for key, value, expected in [("ci", {"sha": "a" * 40, "passed": True}, "ci"),
@@ -88,11 +97,109 @@ class LedgerTests(unittest.TestCase):
                 self.assertTrue(db.claim("event")); db.finish("event", False)
             self.assertFalse(c.Ledger(path).claim("event"))
 
+
+class ReconciliationTests(unittest.TestCase):
+    setUp = CompletionTests.setUp
+    def test_already_merged_is_reconciled_without_second_merge(self):
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt):
+                return self.facts
+        with tempfile.TemporaryDirectory() as root:
+            live = VerifiedLive({"repo": root})
+            with patch.object(c, "command", side_effect=AssertionError("must not merge again")):
+                result = live.transition(self.receipt, "merge", root)
+            self.assertTrue(result["ok"])
+            self.assertTrue(result["reconciled"])
+
     def test_unconfirmed_running_action_is_not_replayed_after_restart(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ledger.sqlite3"
             self.assertTrue(c.Ledger(path).claim("event"))
             self.assertFalse(c.Ledger(path).claim("event"))
+
+    def test_done_reconciliation_repairs_missing_verified_file_without_status_write(self):
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt):
+                return self.facts
+
+            def multica(inner, *args):
+                self.assertEqual(args, ("issue", "get", "issue-123"))
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, "status": "custom_finished", "status_category": "completed"}
+
+        with tempfile.TemporaryDirectory() as root:
+            key = c.fingerprint({"phase": "done", "task": "T-123", "sha": "b" * 40})
+            ledger = c.Ledger(Path(root) / "ledger.sqlite3")
+            ledger.claim(key)
+            ledger.finish(key, True)
+            live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
+            result = live.transition(self.receipt, "done", root)
+            self.assertTrue(result["ok"])
+            self.assertTrue(result["reconciled"])
+            path = Path(root) / "verified/T-123.json"
+            value = json.loads(path.read_text())
+            self.assertIs(value["verified"], True)
+            self.assertEqual(value["tested_sha"], "b" * 40)
+            # Повторное чтение не переносит принятие на новые сутки.
+            live.transition(self.receipt, "done", root)
+            self.assertEqual(json.loads(path.read_text())["accepted_at"], value["accepted_at"])
+
+    def test_live_facts_rejects_issue_outside_project_before_other_sources(self):
+        for changed in ({"project_id": "other"}, {"workspace_id": "other"}, {"metadata": {"task_id": "T-999"}}, {"id": "other"}):
+            issue = {"id": "issue-123", "workspace_id": "workspace", "project_id": "project", "metadata": {"task_id": "T-123"}, **changed}
+            live = c.Live({"repo": "/unused", "workspace_id": "workspace", "project_id": "project"})
+            with patch.object(live, "multica", return_value=issue), patch.object(live, "gh", side_effect=AssertionError("must stop before other evidence")):
+                facts = live.facts(self.receipt)
+                self.assertIs(facts.get("issue_scope_valid"), False)
+
+    def test_crash_after_native_done_restores_receipt_and_preserves_ledger_acceptance(self):
+        state = {"status": "in_review", "status_category": "started", "writes": 0}
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt): return self.facts
+            def multica(inner, *args):
+                if args[:2] == ("issue", "status"):
+                    state.update(status="done", status_category="completed", writes=state["writes"] + 1)
+                else:
+                    self.assertEqual(args, ("issue", "get", "issue-123"))
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, **state}
+
+        with tempfile.TemporaryDirectory() as root:
+            live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
+            with patch.object(c.os, "replace", side_effect=OSError("simulated disk failure")):
+                with self.assertRaises(OSError):
+                    live.transition(self.receipt, "done", root)
+            key = c.fingerprint({"phase": "done", "task": "T-123", "sha": "b" * 40})
+            accepted = c.Ledger(Path(root) / "ledger.sqlite3").completed_at(key)
+            self.assertIsNotNone(accepted)
+            self.assertTrue(live.transition(self.receipt, "done", root)["ok"])
+            verified = json.loads((Path(root) / "verified/T-123.json").read_text())
+            self.assertEqual(verified["accepted_at"], accepted)
+            self.assertEqual(state["writes"], 1)
+
+    def test_successful_status_command_without_native_readback_cannot_publish_receipt(self):
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt): return self.facts
+            def multica(inner, *args):
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, "status": "in_review", "status_category": "started"}
+
+        with tempfile.TemporaryDirectory() as root:
+            live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
+            with self.assertRaises(RuntimeError):
+                live.transition(self.receipt, "done", root)
+            self.assertFalse((Path(root) / "verified/T-123.json").exists())
+
+    def test_native_project_change_before_transition_blocks_status_mutation(self):
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt): return self.facts
+            def multica(inner, *args):
+                self.assertEqual(args, ("issue", "get", "issue-123"))
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "other",
+                        "metadata": {"task_id": "T-123"}, "status": "in_review"}
+        with tempfile.TemporaryDirectory() as root:
+            live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
+            self.assertEqual(live.transition(self.receipt, "done", root)["blocked"], ["issue_scope"])
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ export default {
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { publishedAt: "desc" },
-            include: { contentType: true }
+            include: { section: true }
           })
 
           const response = {
@@ -105,12 +105,12 @@ export default {
 
           const articlesWithTags = await ctx.prisma.article.findMany({
             where: { authorId: author.id, status: "published" },
-            select: { sectionTags: { select: { name: true, slug: true } } }
+            select: { tags: { select: { name: true, slug: true } } }
           })
 
           const tagCounts: { [slug: string]: { name: string; slug: string; count: number } } = {}
           articlesWithTags
-            .flatMap((a) => a.sectionTags)
+            .flatMap((a) => a.tags)
             .forEach((tag) => {
               if (!tagCounts[tag.slug]) {
                 tagCounts[tag.slug] = { ...tag, count: 0 }

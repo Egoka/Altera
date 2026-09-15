@@ -17,48 +17,49 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
+import { archiveSection, createSection, restoreSection, updateSection } from "../../taxonomy/service"
 
 export default {
   Query: {
-    contentType: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
+    section: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
       return readThroughPublicCache(
         {
           cache: ctx.cache,
-          key: buildCacheKey("query.contentType", args),
-          tags: [`content-type:${args.slug}`],
+          key: buildCacheKey("query.section", args),
+          tags: [`section:${args.slug}`],
           ttlSeconds: CACHE_TTL_SECONDS.publicList,
-          cacheWhen: (contentType) => contentType?.status === "active"
+          cacheWhen: (section) => section?.status === "active"
         },
-        () => ctx.prisma.contentType.findUnique({ where: { slug: args.slug } })
+        () => ctx.prisma.section.findUnique({ where: { slug: args.slug } })
       )
     },
 
-    articlesByContentType: async (
+    articlesBySection: async (
       _parent: any,
-      { contentTypeSlug, page = 1, limit = 10 }: { contentTypeSlug: string; page: number; limit: number },
+      { sectionSlug, page = 1, limit = 10 }: { sectionSlug: string; page: number; limit: number },
       ctx: GraphQLContext
     ) => {
-      const cacheKey = buildCacheKey("query.articlesByContentType", { contentTypeSlug, page, limit })
+      const cacheKey = buildCacheKey("query.articlesBySection", { sectionSlug, page, limit })
       const cachedData = await ctx.cache.get(cacheKey)
 
       if (cachedData) {
         return cachedData
       }
 
-      const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
-      if (!contentType) {
-        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "contentType" })
+      const section = await ctx.prisma.section.findUnique({ where: { slug: sectionSlug } })
+      if (!section) {
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "section" })
       }
 
       const totalCount = await ctx.prisma.article.count({
         where: {
-          contentType: { slug: contentTypeSlug },
+          section: { slug: sectionSlug },
           status: "published"
         }
       })
       const articles = await ctx.prisma.article.findMany({
         where: {
-          contentType: { slug: contentTypeSlug },
+          section: { slug: sectionSlug },
           status: "published"
         },
         skip: (page - 1) * limit,
@@ -66,8 +67,8 @@ export default {
         orderBy: { publishedAt: "desc" },
         include: {
           author: true,
-          contentType: true,
-          sectionTags: true
+          section: true,
+          tags: true
         }
       })
 
@@ -80,20 +81,20 @@ export default {
 
       await ctx.cache.set(cacheKey, response, {
         ttlSeconds: CACHE_TTL_SECONDS.publicList,
-        tags: [`content-type:${contentTypeSlug}`]
+        tags: [`section:${sectionSlug}`]
       })
       return response
     },
 
-    contentTypeStats: async (_parent: any, { contentTypeSlug }: { contentTypeSlug: string }, ctx: GraphQLContext) => {
-      const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
-      if (!contentType) {
-        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "contentType" })
+    sectionStats: async (_parent: any, { sectionSlug }: { sectionSlug: string }, ctx: GraphQLContext) => {
+      const section = await ctx.prisma.section.findUnique({ where: { slug: sectionSlug } })
+      if (!section) {
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "section" })
       }
 
       const totalArticles = await ctx.prisma.article.count({
         where: {
-          contentType: { slug: contentTypeSlug },
+          section: { slug: sectionSlug },
           status: "published"
         }
       })
@@ -103,7 +104,7 @@ export default {
 
       const articlesThisMonth = await ctx.prisma.article.count({
         where: {
-          contentType: { slug: contentTypeSlug },
+          section: { slug: sectionSlug },
           status: "published",
           publishedAt: { gte: oneMonthAgo }
         }
@@ -112,15 +113,15 @@ export default {
       // Получаем популярные теги для этого типа контента
       const articlesWithTags = await ctx.prisma.article.findMany({
         where: {
-          contentType: { slug: contentTypeSlug },
+          section: { slug: sectionSlug },
           status: "published"
         },
-        select: { sectionTags: { select: { name: true, slug: true } } }
+        select: { tags: { select: { name: true, slug: true } } }
       })
 
       const tagCounts: { [slug: string]: { name: string; slug: string; count: number } } = {}
       articlesWithTags
-        .flatMap((a) => a.sectionTags)
+        .flatMap((a) => a.tags)
         .forEach((tag) => {
           if (!tagCounts[tag.slug]) {
             tagCounts[tag.slug] = { ...tag, count: 0 }
@@ -137,7 +138,7 @@ export default {
         where: {
           articles: {
             some: {
-              contentType: { slug: contentTypeSlug },
+              section: { slug: sectionSlug },
               status: "published"
             }
           }
@@ -153,7 +154,7 @@ export default {
       // Рассчитываем среднее время чтения
       const articlesWithBody = await ctx.prisma.article.findMany({
         where: {
-          contentType: { slug: contentTypeSlug },
+          section: { slug: sectionSlug },
           status: "published"
         },
         select: { body: true }
@@ -180,7 +181,7 @@ export default {
     },
 
     // Запрос для управления типами контента (требует права admin)
-    contentTypes: async (
+    sections: async (
       _parent: any,
       args: {
         pagination: PaginationInput
@@ -195,7 +196,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "admin.contentTypes.read", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "admin.sections.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
@@ -235,13 +236,13 @@ export default {
         }
       }
 
-      const total = await ctx.prisma.contentType.count({ where })
+      const total = await ctx.prisma.section.count({ where })
 
       // Рассчитываем пагинацию
       const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
 
       // Получаем данные
-      const contentTypes = await ctx.prisma.contentType.findMany({
+      const sections = await ctx.prisma.section.findMany({
         where,
         skip,
         take,
@@ -254,7 +255,7 @@ export default {
       })
 
       const result = {
-        contentTypes,
+        sections,
         pagination: paginationInfo,
         filters: {
           base: {
@@ -278,63 +279,57 @@ export default {
 
   Mutation: {
     // Админ мутации для управления типами контента
-    createContentType: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
+    createSection: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "contentType.create", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.create", ctx.requestId)
 
       try {
-        const newContentType = await ctx.prisma.contentType.create({
-          data: input,
-          include: {
-            _count: {
-              select: { articles: true }
-            }
-          }
+        const newSection = await createSection(ctx.prisma, {
+          input,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
         })
 
-        await ctx.cache.delByTags(["home", `content-type:${newContentType.slug}`])
+        await ctx.cache.delByTags(["home", `section:${newSection.slug}`])
 
-        return newContentType
+        return newSection
       } catch (error) {
-        handleAdminError(error, ctx.requestId, "contentType")
+        handleAdminError(error, ctx.requestId, "section")
       }
     },
 
-    updateContentType: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
+    updateSection: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "contentType.update", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.update", ctx.requestId)
 
       try {
-        const previousContentType = await ctx.prisma.contentType.findUnique({ where: { id }, select: { slug: true } })
-        const updatedContentType = await ctx.prisma.contentType.update({
-          where: { id },
-          data: input,
-          include: {
-            _count: {
-              select: { articles: true }
-            }
-          }
+        const previousSection = await ctx.prisma.section.findUnique({ where: { id }, select: { slug: true } })
+        const updatedSection = await updateSection(ctx.prisma, {
+          sectionId: id,
+          input,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
         })
 
         await ctx.cache.delByTags([
           "home",
-          `content-type:${previousContentType?.slug ?? updatedContentType.slug}`,
-          `content-type:${updatedContentType.slug}`
+          `section:${previousSection?.slug ?? updatedSection.slug}`,
+          `section:${updatedSection.slug}`
         ])
 
-        return updatedContentType
+        return updatedSection
       } catch (error) {
-        handleAdminError(error, ctx.requestId, "contentType")
+        handleAdminError(error, ctx.requestId, "section")
       }
     },
 
-    deleteContentType: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+    deleteSection: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "contentType.delete", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.delete", ctx.requestId)
 
       try {
         // Проверяем, есть ли статьи с этим типом контента
-        const contentTypeWithArticles = await ctx.prisma.contentType.findUnique({
+        const sectionWithArticles = await ctx.prisma.section.findUnique({
           where: { id },
           include: {
             articles: true,
@@ -344,20 +339,20 @@ export default {
           }
         })
 
-        if (!contentTypeWithArticles) {
-          throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "contentType" })
+        if (!sectionWithArticles) {
+          throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "section" })
         }
 
-        if (contentTypeWithArticles._count.articles > 0) {
+        if (sectionWithArticles._count.articles > 0) {
           throw createApiError("CONFLICT", {
             requestId: ctx.requestId,
-            entity: "contentType",
+            entity: "section",
             expected: "no articles",
-            actual: `${contentTypeWithArticles._count.articles} articles`
+            actual: `${sectionWithArticles._count.articles} articles`
           })
         }
 
-        const deletedContentType = await ctx.prisma.contentType.delete({
+        const deletedSection = await ctx.prisma.section.delete({
           where: { id },
           include: {
             _count: {
@@ -366,17 +361,17 @@ export default {
           }
         })
 
-        await ctx.cache.delByTags(["home", `content-type:${deletedContentType.slug}`])
+        await ctx.cache.delByTags(["home", `section:${deletedSection.slug}`])
 
-        return deletedContentType
+        return deletedSection
       } catch (error) {
-        handleAdminError(error, ctx.requestId, "contentType")
+        handleAdminError(error, ctx.requestId, "section")
       }
     },
 
-    reorderContentTypes: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
+    reorderSections: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "contentType.reorder", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.reorder", ctx.requestId)
 
       const { items } = input
 
@@ -391,11 +386,11 @@ export default {
 
       try {
         // Начинаем транзакцию
-        const updatedContentTypes = await ctx.prisma.$transaction(async (tx) => {
+        const updatedSections = await ctx.prisma.$transaction(async (tx) => {
           const updates = []
 
           for (const item of items) {
-            const update = tx.contentType.update({
+            const update = tx.section.update({
               where: { id: item.id },
               data: { order: item.order },
               include: {
@@ -410,38 +405,47 @@ export default {
           return await Promise.all(updates)
         })
 
-        await ctx.cache.delByTags([
-          "home",
-          ...updatedContentTypes.map((contentType) => `content-type:${contentType.slug}`)
-        ])
+        await ctx.cache.delByTags(["home", ...updatedSections.map((section) => `section:${section.slug}`)])
 
-        return updatedContentTypes
+        return updatedSections
       } catch (error) {
-        handleAdminError(error, ctx.requestId, "contentType")
+        handleAdminError(error, ctx.requestId, "section")
       }
     },
 
-    archiveContentType: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+    archiveSection: async (
+      _parent: any,
+      { id, successorId }: { id: string; successorId: string },
+      ctx: GraphQLContext
+    ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "contentType.archive", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.archive", ctx.requestId)
 
       try {
-        const archivedContentType = await ctx.prisma.contentType.update({
-          where: { id },
-          data: { status: "archived" },
-          include: {
-            _count: {
-              select: { articles: true }
-            }
-          }
+        const archivedSection = await archiveSection(ctx.prisma, {
+          sectionId: id,
+          successorId,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
         })
 
-        await ctx.cache.delByTags(["home", `content-type:${archivedContentType.slug}`])
+        await ctx.cache.delByTags(["home", `section:${archivedSection.slug}`])
 
-        return archivedContentType
+        return archivedSection
       } catch (error) {
-        handleAdminError(error, ctx.requestId, "contentType")
+        handleAdminError(error, ctx.requestId, "section")
       }
+    },
+
+    restoreSection: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.restore", ctx.requestId)
+      const section = await restoreSection(ctx.prisma, {
+        sectionId: id,
+        actor: ctx.currentUser!,
+        requestId: ctx.requestId
+      })
+      await ctx.cache.delByTags(["home", `section:${section.slug}`])
+      return section
     }
   }
 }

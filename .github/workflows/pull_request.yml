@@ -123,6 +123,7 @@ jobs:
       PORT: 4000
       NODE_ENV: test
       ALTERA_ISOLATED_CI: "1"
+      RENDER_GIT_COMMIT: ${{ github.sha }}
       FRONTEND_URL: http://localhost:3000
       DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
       DATABASE_URL_UNPOOLED: "postgresql://test:test@127.0.0.1:5432/altera_ci"

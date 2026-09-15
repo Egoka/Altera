@@ -93,7 +93,7 @@ type UserArticleStats {
 type AuthorStats {
   totalArticles: Int!
   articlesThisMonth: Int!
-  popularTags: [SectionTag!]
+  popularTags: [Tag!]
 }
 
 type ArticlesByAuthorResponse {

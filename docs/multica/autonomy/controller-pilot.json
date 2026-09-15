@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "release": "82ea5d5c53c79039",
+  "verified_at": "2026-09-15",
+  "scope": "read-only native event/model protocol; not a full product lifecycle",
+  "autopilot_id": "1263dfd0-2b43-402d-a6f9-81ab81bfb93d",
+  "runs": [
+    {
+      "id": "01a0a651-8696-7d39-a51d-99d63b0f3043",
+      "task_id": "01a0a651-8699-7c27-8b9f-b5334d8bed5c",
+      "status": "completed",
+      "output": "snapshot_received"
+    },
+    {
+      "id": "01a0a654-20fe-701e-b840-619babe0c114",
+      "task_id": "01a0a654-2100-7d61-8123-bddc48372d09",
+      "status": "completed",
+      "output": "ALTERA_CONTROLLER_V1 {\"executor\": \"controller\", \"status\": \"no_action\", \"model_called\": false, \"event_key\": \"31fb05f6dee67e0cf697c4f3452596582832ef4906f0a003d10ee402d4ebc22a\"}"
+    }
+  ],
+  "provider_usage": "not used as proof of zero; zero usage may be stored as null",
+  "remaining": [
+    "full task/review/merge/deploy/finalization cycle",
+    "live cleanup admission fence",
+    "technical restriction of direct native CLI transitions"
+  ]
+}

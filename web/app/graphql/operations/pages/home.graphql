@@ -4,7 +4,7 @@ query GetHomePageArticles {
   }
   latestArticles(limit: 20, excludeFeatured: true) {
     ...ArticleCard
-    sectionTags {
+    tags {
       name
       slug
     }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment, ContentTypeSummaryFragment } from "~/graphql/generated/graphql"
+  import type { ArticleCardFragment, SectionSummaryFragment } from "~/graphql/generated/graphql"
   import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
   import { buildFeedGroups } from "~/utils/feedGroups"
   import { SECTION_RHYTHM } from "~/utils/feedRhythm"
@@ -9,9 +9,9 @@
   })
 
   // Моковые данные для демонстрации
-  type ContentTypeNavItem = ContentTypeSummaryFragment & { iconUrl?: string }
+  type SectionNavItem = SectionSummaryFragment & { iconUrl?: string }
 
-  const contentType: ContentTypeNavItem = {
+  const section: SectionNavItem = {
     id: "1",
     name: "National Security",
     slug: "national-security",
@@ -41,14 +41,14 @@
       ...article,
       id: `section-${index + 1}`,
       publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
-      contentType: { name: contentType.name, slug: contentType.slug }
+      section: { name: section.name, slug: section.slug }
     }))
   const groups = buildFeedGroups(articles, SECTION_RHYTHM)
 </script>
 
 <template>
   <div>
-    <HeaderType :contentType="contentType" />
+    <HeaderType :section="section" />
     <!-- Список рубрики — группы реестра раскладок во всю ширину контейнера, служебная
          строка карточек показывает дату: рубрика и так в шапке. -->
     <section class="pt-4 pb-16">

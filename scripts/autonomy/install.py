@@ -15,11 +15,16 @@ def install(repo, config_path):
     root = Path(common) / "autonomy-runtime"
     source = Path(__file__).resolve().parent
     files = sorted(p for p in source.iterdir() if p.suffix in (".py", ".mjs") and not p.name.startswith("test_") and ".test." not in p.name)
-    digest = hashlib.sha256(b"".join(p.name.encode() + p.read_bytes() for p in files)).hexdigest()[:16]
+    docs = source.parent.parent / "docs" / "multica"
+    policies = sorted([docs / name for name in ("autonomy-controller.md", "autonomy-cleanup.md", "daily-audit.md")] + list((docs / "autonomy").glob("*-prompt.md")) + [docs / "autonomy" / "claude-settings.json"])
+    digest = hashlib.sha256(b"".join(p.name.encode() + p.read_bytes() for p in files + policies)).hexdigest()[:16]
     release = root / "releases" / digest
     release.mkdir(parents=True, exist_ok=True)
     for file in files:
         shutil.copy2(file, release / file.name)
+    (release / "contracts").mkdir(exist_ok=True)
+    for file in policies:
+        shutil.copy2(file, release / "contracts" / file.name)
     config = json.loads(Path(config_path).read_text())
     state = Path(config["state_dir"])
     state.mkdir(parents=True, exist_ok=True)

@@ -12,6 +12,7 @@ export interface CacheRedisTransaction {
 
 export interface CacheRedisClient {
   on(event: "error", listener: (error: unknown) => void): this
+  ping(): Promise<string>
   get(key: string): Promise<string | null>
   multi(): CacheRedisTransaction
   eval(script: string, keyCount: number, ...args: string[]): Promise<unknown>
@@ -81,6 +82,10 @@ class IoredisCacheClient implements CacheRedisClient {
     return this.client.get(key)
   }
 
+  ping(): Promise<string> {
+    return this.client.ping()
+  }
+
   multi(): CacheRedisTransaction {
     return this.client.multi()
   }
@@ -103,6 +108,14 @@ export class RedisCache implements Cache {
     private readonly warn: (message: string) => void = () => undefined
   ) {
     this.client.on("error", () => this.warn("Redis cache connection error"))
+  }
+
+  async isReady(): Promise<boolean> {
+    try {
+      return (await this.client.ping()) === "PONG"
+    } catch {
+      return false
+    }
   }
 
   async get<T>(key: string): Promise<T | null> {

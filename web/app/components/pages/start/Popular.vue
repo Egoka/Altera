@@ -16,7 +16,7 @@
       id: "1",
       title: "Микросервисная архитектура: от теории к практике",
       slug: "microservices-architecture-practice",
-      contentType: {
+      section: {
         name: "Технологии",
         slug: "technology"
       },
@@ -29,7 +29,7 @@
       id: "2",
       title: "React 18: новые возможности и лучшие практики",
       slug: "react-18-new-features",
-      contentType: {
+      section: {
         name: "Технологии",
         slug: "technology"
       },
@@ -42,7 +42,7 @@
       id: "3",
       title: "DevOps культура: как построить эффективную команду",
       slug: "devops-culture-effective-team",
-      contentType: {
+      section: {
         name: "Бизнес",
         slug: "business"
       },
@@ -55,7 +55,7 @@
       id: "4",
       title: "Безопасность веб-приложений в 2024 году",
       slug: "web-security-2024",
-      contentType: {
+      section: {
         name: "Безопасность",
         slug: "security"
       },
@@ -68,7 +68,7 @@
       id: "5",
       title: "Искусственный интеллект в современной разработке",
       slug: "ai-in-modern-development",
-      contentType: {
+      section: {
         name: "ИИ и Машинное обучение",
         slug: "ai-ml"
       },
@@ -81,7 +81,7 @@
       id: "6",
       title: "Kubernetes в production: опыт внедрения",
       slug: "kubernetes-production-experience",
-      contentType: {
+      section: {
         name: "DevOps",
         slug: "devops"
       },
@@ -94,7 +94,7 @@
       id: "7",
       title: "GraphQL vs REST: когда использовать каждый подход",
       slug: "graphql-vs-rest-comparison",
-      contentType: {
+      section: {
         name: "API",
         slug: "api"
       },
@@ -107,7 +107,7 @@
       id: "8",
       title: "TypeScript 5.0: что нового в последней версии",
       slug: "typescript-5-new-features",
-      contentType: {
+      section: {
         name: "Технологии",
         slug: "technology"
       },
@@ -120,7 +120,7 @@
       id: "9",
       title: "Мониторинг и логирование в Node.js приложениях",
       slug: "nodejs-monitoring-logging",
-      contentType: {
+      section: {
         name: "Backend",
         slug: "backend"
       },
@@ -133,7 +133,7 @@
       id: "10",
       title: "Frontend архитектура для крупных проектов",
       slug: "frontend-architecture-large-projects",
-      contentType: {
+      section: {
         name: "Frontend",
         slug: "frontend"
       },
