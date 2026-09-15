@@ -15,7 +15,7 @@
         slug: "anna-petrova",
         photoUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
       },
-      contentType: {
+      section: {
         name: "Технологии",
         slug: "technology"
       }
@@ -34,7 +34,7 @@
         slug: "dmitry-sokolov",
         photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
       },
-      contentType: {
+      section: {
         name: "Архитектура",
         slug: "architecture"
       }
@@ -53,7 +53,7 @@
         slug: "maria-ivanova",
         photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
       },
-      contentType: {
+      section: {
         name: "Frontend",
         slug: "frontend"
       }
@@ -72,7 +72,7 @@
         slug: "sergey-kozlov",
         photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
       },
-      contentType: {
+      section: {
         name: "DevOps",
         slug: "devops"
       }
@@ -90,7 +90,7 @@
         slug: "elena-sidorova",
         photoUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face"
       },
-      contentType: {
+      section: {
         name: "Безопасность",
         slug: "security"
       }

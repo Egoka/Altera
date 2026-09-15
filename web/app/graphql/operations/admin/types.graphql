@@ -1,11 +1,11 @@
-query GetAdminContentTypes(
+query GetAdminSections(
   $pagination: PaginationInput! = { page: 1, limit: 50 }
   $sort: SortInput! = { field: "order", direction: ASC }
-  $filters: ContentTypeFiltersInput! = { base: {} }
+  $filters: SectionFiltersInput! = { base: {} }
 ) {
-  contentTypes(pagination: $pagination, sort: $sort, filters: $filters) {
-    contentTypes {
-      ...ContentTypeSummary
+  sections(pagination: $pagination, sort: $sort, filters: $filters) {
+    sections {
+      ...SectionSummary
       _count {
         articles
       }
@@ -18,8 +18,8 @@ query GetAdminContentTypes(
   }
 }
 
-mutation CreateContentType($input: CreateContentTypeInput!) {
-  createContentType(input: $input) {
+mutation CreateSection($input: CreateSectionInput!) {
+  createSection(input: $input) {
     id
     name
     slug
@@ -29,8 +29,8 @@ mutation CreateContentType($input: CreateContentTypeInput!) {
   }
 }
 
-mutation UpdateContentType($id: ID!, $input: UpdateContentTypeInput!) {
-  updateContentType(id: $id, input: $input) {
+mutation UpdateSection($id: ID!, $input: UpdateSectionInput!) {
+  updateSection(id: $id, input: $input) {
     id
     name
     slug
@@ -40,21 +40,21 @@ mutation UpdateContentType($id: ID!, $input: UpdateContentTypeInput!) {
   }
 }
 
-mutation DeleteContentType($id: ID!) {
-  deleteContentType(id: $id) {
+mutation DeleteSection($id: ID!) {
+  deleteSection(id: $id) {
     id
   }
 }
 
-mutation ReorderContentTypes($input: ReorderContentTypesInput!) {
-  reorderContentTypes(input: $input) {
+mutation ReorderSections($input: ReorderSectionsInput!) {
+  reorderSections(input: $input) {
     id
     order
   }
 }
 
-mutation ArchiveContentType($id: ID!) {
-  archiveContentType(id: $id) {
+mutation ArchiveSection($id: ID!, $successorId: ID!) {
+  archiveSection(id: $id, successorId: $successorId) {
     id
     status
   }

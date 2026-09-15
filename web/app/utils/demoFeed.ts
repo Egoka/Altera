@@ -24,7 +24,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "alexey-volkov",
       photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -42,7 +42,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "olga-morozova",
       photoUrl: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "DevOps",
       slug: "devops"
     }
@@ -60,7 +60,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "igor-smirnov",
       photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -78,7 +78,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "ekaterina-novikova",
       photoUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -96,7 +96,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "denis-lebedev",
       photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "DevOps",
       slug: "devops"
     }
@@ -114,7 +114,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "andrey-kozlov",
       photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -132,7 +132,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "natalya-sokolova",
       photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -150,7 +150,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "mikhail-petrov",
       photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Базы данных",
       slug: "databases"
     }
@@ -168,7 +168,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "tatyana-ivanova",
       photoUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Инструменты",
       slug: "tools"
     }
@@ -186,7 +186,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "sergey-morozov",
       photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Инструменты",
       slug: "tools"
     }
@@ -204,7 +204,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "anna-sidorova",
       photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -222,7 +222,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "dmitry-volkov",
       photoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Базы данных",
       slug: "databases"
     }
@@ -240,7 +240,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "elena-kozlova",
       photoUrl: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Тестирование",
       slug: "testing"
     }
@@ -258,7 +258,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "igor-morozov",
       photoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -276,7 +276,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
       slug: "maria-lebedeva",
       photoUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face"
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -298,7 +298,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "irina-dorohova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Архитектура",
       slug: "architecture"
     }
@@ -316,7 +316,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "pavel-remizov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "DevOps",
       slug: "devops"
     }
@@ -334,7 +334,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "olga-morozova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -352,7 +352,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "mikhail-petrov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Базы данных",
       slug: "databases"
     }
@@ -370,7 +370,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "igor-smirnov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -388,7 +388,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "tatyana-ivanova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Инструменты",
       slug: "tools"
     }
@@ -406,7 +406,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "andrey-kozlov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -424,7 +424,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "natalya-sokolova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -442,7 +442,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "denis-lebedev",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Базы данных",
       slug: "databases"
     }
@@ -460,7 +460,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "ekaterina-novikova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "DevOps",
       slug: "devops"
     }
@@ -478,7 +478,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "sergey-kozlov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }
@@ -496,7 +496,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "maria-ivanova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Инструменты",
       slug: "tools"
     }
@@ -514,7 +514,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "alexey-volkov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Frontend",
       slug: "frontend"
     }
@@ -532,7 +532,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "olga-morozova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "DevOps",
       slug: "devops"
     }
@@ -550,7 +550,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "irina-dorohova",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Архитектура",
       slug: "architecture"
     }
@@ -568,7 +568,7 @@ export const DEMO_DEMANDED: ArticleCardFragment[] = [
       slug: "pavel-remizov",
       photoUrl: ""
     },
-    contentType: {
+    section: {
       name: "Backend",
       slug: "backend"
     }

@@ -1,4 +1,4 @@
-fragment ContentTypeSummary on ContentType {
+fragment SectionSummary on Section {
   id
   name
   slug
@@ -9,7 +9,7 @@ fragment ContentTypeSummary on ContentType {
   updatedAt
 }
 
-fragment SectionTagSummary on SectionTag {
+fragment TagSummary on Tag {
   id
   name
   slug

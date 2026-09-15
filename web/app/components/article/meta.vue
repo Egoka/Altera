@@ -13,7 +13,7 @@
   )
 
   const authorLink = computed(() => `/authors/${props.article.author.slug}`)
-  const typeLink = computed(() => `/${props.article.contentType.slug}`)
+  const typeLink = computed(() => (props.article.section ? `/${props.article.section.slug}` : ""))
 </script>
 
 <template>
@@ -22,7 +22,7 @@
       >·</span
     >
     <ShowAuthor v-if="part === 'author'" :link="authorLink" :name="article.author.name" />
-    <ShowType v-else-if="part === 'type'" :link="typeLink" :name="article.contentType.name" />
+    <ShowType v-else-if="part === 'type' && article.section" :link="typeLink" :name="article.section.name" />
     <ShowDate v-else-if="article.publishedAt" :time="article.publishedAt" />
   </template>
 </template>

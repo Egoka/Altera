@@ -15,7 +15,7 @@ query GetAdminArticles(
         name
         slug: handle
       }
-      contentType {
+      section {
         name
         slug
       }

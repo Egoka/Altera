@@ -4,8 +4,8 @@
   const props = defineProps<{
     article: ArticleCardFragment
   }>()
-  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
-  const contentType = computed(() => `/${props.article.contentType.slug}`)
+  const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
+  const section = computed(() => (props.article.section ? `/${props.article.section.slug}` : ""))
   const author = computed(() => `/authors/${props.article.author.slug}`)
 </script>
 
@@ -40,7 +40,7 @@
     <div class="mt-5 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
       <ShowAuthor :link="author" :name="article.author.name" />
       <span class="font-sans text-xs/6 font-bold text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
-      <ShowType :link="contentType" :name="article.contentType.name" />
+      <ShowType v-if="article.section" :link="section" :name="article.section.name" />
     </div>
   </article>
 </template>

@@ -1,5 +1,5 @@
-query GetContentTypePage($slug: String!, $page: Int = 1, $limit: Int = 20) {
-  contentType(slug: $slug) {
+query GetSectionPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
+  section(slug: $slug) {
     id
     name
     slug
@@ -7,7 +7,7 @@ query GetContentTypePage($slug: String!, $page: Int = 1, $limit: Int = 20) {
     order
     status
   }
-  articlesByContentType(contentTypeSlug: $slug, page: $page, limit: $limit) {
+  articlesBySection(sectionSlug: $slug, page: $page, limit: $limit) {
     articles {
       id
       title
@@ -21,7 +21,7 @@ query GetContentTypePage($slug: String!, $page: Int = 1, $limit: Int = 20) {
         slug: handle
         photoUrl
       }
-      sectionTags {
+      tags {
         name
         slug
       }

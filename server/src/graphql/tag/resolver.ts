@@ -18,6 +18,7 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
+import { archiveTag, createTag, mergeTags, restoreTag, updateTag } from "../../taxonomy/service"
 
 export default {
   Query: {
@@ -26,10 +27,10 @@ export default {
         {
           cache: ctx.cache,
           key: buildCacheKey("query.tag", args),
-          tags: [`section-tag:${args.slug}`],
+          tags: [`tag:${args.slug}`],
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
-        () => ctx.prisma.sectionTag.findUnique({ where: { slug: args.slug } })
+        () => ctx.prisma.tag.findUnique({ where: { slug: args.slug } })
       )
     },
 
@@ -45,20 +46,20 @@ export default {
         return cachedData
       }
 
-      const tag = await ctx.prisma.sectionTag.findUnique({ where: { slug: tagSlug } })
+      const tag = await ctx.prisma.tag.findUnique({ where: { slug: tagSlug } })
       if (!tag) {
         throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "tag" })
       }
 
       const totalCount = await ctx.prisma.article.count({
         where: {
-          sectionTags: { some: { slug: tagSlug } },
+          tags: { some: { slug: tagSlug } },
           status: "published"
         }
       })
       const articles = await ctx.prisma.article.findMany({
         where: {
-          sectionTags: { some: { slug: tagSlug } },
+          tags: { some: { slug: tagSlug } },
           status: "published"
         },
         skip: (page - 1) * limit,
@@ -66,8 +67,8 @@ export default {
         orderBy: { publishedAt: "desc" },
         include: {
           author: true,
-          contentType: true,
-          sectionTags: true
+          section: true,
+          tags: true
         }
       })
 
@@ -80,20 +81,20 @@ export default {
 
       await ctx.cache.set(cacheKey, response, {
         ttlSeconds: CACHE_TTL_SECONDS.publicList,
-        tags: [`section-tag:${tagSlug}`]
+        tags: [`tag:${tagSlug}`]
       })
       return response
     },
 
     tagStats: async (_parent: any, { tagSlug }: { tagSlug: string }, ctx: GraphQLContext) => {
-      const tag = await ctx.prisma.sectionTag.findUnique({ where: { slug: tagSlug } })
+      const tag = await ctx.prisma.tag.findUnique({ where: { slug: tagSlug } })
       if (!tag) {
         throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "tag" })
       }
 
       const totalArticles = await ctx.prisma.article.count({
         where: {
-          sectionTags: { some: { slug: tagSlug } },
+          tags: { some: { slug: tagSlug } },
           status: "published"
         }
       })
@@ -103,7 +104,7 @@ export default {
 
       const articlesThisMonth = await ctx.prisma.article.count({
         where: {
-          sectionTags: { some: { slug: tagSlug } },
+          tags: { some: { slug: tagSlug } },
           status: "published",
           publishedAt: { gte: oneMonthAgo }
         }
@@ -114,7 +115,7 @@ export default {
         where: {
           articles: {
             some: {
-              sectionTags: { some: { slug: tagSlug } },
+              tags: { some: { slug: tagSlug } },
               status: "published"
             }
           }
@@ -130,7 +131,7 @@ export default {
       // Рассчитываем среднее время чтения (примерная оценка)
       const articlesWithBody = await ctx.prisma.article.findMany({
         where: {
-          sectionTags: { some: { slug: tagSlug } },
+          tags: { some: { slug: tagSlug } },
           status: "published"
         },
         select: { body: true }
@@ -156,7 +157,7 @@ export default {
     },
 
     // Запрос для управления тегами (требует права admin)
-    sectionTags: async (
+    tags: async (
       _parent: any,
       args: {
         pagination: PaginationInput
@@ -170,7 +171,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "admin.tags.read", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "admin.tags.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
@@ -202,13 +203,13 @@ export default {
         }
       }
 
-      const total = await ctx.prisma.sectionTag.count({ where })
+      const total = await ctx.prisma.tag.count({ where })
 
       // Рассчитываем пагинацию
       const { skip, take, pagination: paginationInfo } = calculatePagination(pagination.page, pagination.limit, total)
 
       // Получаем данные
-      const tags = await ctx.prisma.sectionTag.findMany({
+      const tags = await ctx.prisma.tag.findMany({
         where,
         skip,
         take,
@@ -243,19 +244,16 @@ export default {
     // Админ мутации для управления тегами
     createTag: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "tag.create", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["author", "admin", "owner"], "tag.create", ctx.requestId)
 
       try {
-        const newTag = await ctx.prisma.sectionTag.create({
-          data: input,
-          include: {
-            _count: {
-              select: { articles: true }
-            }
-          }
+        const newTag = await createTag(ctx.prisma, {
+          input,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
         })
 
-        await ctx.cache.delByTags(["home", `section-tag:${newTag.slug}`])
+        await ctx.cache.delByTags(["home", `tag:${newTag.slug}`])
 
         return newTag
       } catch (error) {
@@ -265,25 +263,18 @@ export default {
 
     updateTag: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "tag.update", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "tag.update", ctx.requestId)
 
       try {
-        const previousTag = await ctx.prisma.sectionTag.findUnique({ where: { id }, select: { slug: true } })
-        const updatedTag = await ctx.prisma.sectionTag.update({
-          where: { id },
-          data: input,
-          include: {
-            _count: {
-              select: { articles: true }
-            }
-          }
+        const previousTag = await ctx.prisma.tag.findUnique({ where: { id }, select: { slug: true } })
+        const updatedTag = await updateTag(ctx.prisma, {
+          tagId: id,
+          input,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
         })
 
-        await ctx.cache.delByTags([
-          "home",
-          `section-tag:${previousTag?.slug ?? updatedTag.slug}`,
-          `section-tag:${updatedTag.slug}`
-        ])
+        await ctx.cache.delByTags(["home", `tag:${previousTag?.slug ?? updatedTag.slug}`, `tag:${updatedTag.slug}`])
 
         return updatedTag
       } catch (error) {
@@ -293,11 +284,11 @@ export default {
 
     deleteTag: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "tag.delete", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "tag.delete", ctx.requestId)
 
       try {
         // Проверяем, есть ли статьи с этим тегом
-        const tagWithArticles = await ctx.prisma.sectionTag.findUnique({
+        const tagWithArticles = await ctx.prisma.tag.findUnique({
           where: { id },
           include: {
             articles: true,
@@ -320,7 +311,7 @@ export default {
           })
         }
 
-        const deletedTag = await ctx.prisma.sectionTag.delete({
+        const deletedTag = await ctx.prisma.tag.delete({
           where: { id },
           include: {
             _count: {
@@ -329,7 +320,7 @@ export default {
           }
         })
 
-        await ctx.cache.delByTags(["home", `section-tag:${deletedTag.slug}`])
+        await ctx.cache.delByTags(["home", `tag:${deletedTag.slug}`])
 
         return deletedTag
       } catch (error) {
@@ -339,7 +330,7 @@ export default {
 
     mergeTags: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "tag.merge", ctx.requestId)
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "tag.merge", ctx.requestId)
 
       const { sourceTagIds, targetTagId } = input
 
@@ -355,81 +346,42 @@ export default {
       }
 
       try {
-        // Проверяем существование всех тегов
-        const sourceTags = await ctx.prisma.sectionTag.findMany({
+        const sourceTags = await ctx.prisma.tag.findMany({
           where: { id: { in: sourceTagIds } }
         })
-
-        const targetTag = await ctx.prisma.sectionTag.findUnique({
+        const targetTag = await ctx.prisma.tag.findUnique({
           where: { id: targetTagId }
         })
-
-        if (sourceTags.length !== sourceTagIds.length) {
-          throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "tag" })
-        }
-
         if (!targetTag) {
           throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "tag" })
         }
-
-        // Получаем все статьи, которые используют исходные теги
-        const articlesToUpdate = await ctx.prisma.article.findMany({
-          where: {
-            sectionTags: {
-              some: { id: { in: sourceTagIds } }
-            }
-          },
-          include: { sectionTags: true }
+        const result = await mergeTags(ctx.prisma, {
+          sourceTagIds,
+          targetTagId,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
         })
 
-        // Начинаем транзакцию
-        const result = await ctx.prisma.$transaction(async (tx) => {
-          // Обновляем статьи: добавляем целевой тег и удаляем исходные
-          for (const article of articlesToUpdate) {
-            const currentTagIds = article.sectionTags.map((tag) => tag.id)
-            const newTagIds = currentTagIds.filter((id) => !sourceTagIds.includes(id))
-
-            // Добавляем целевой тег, если его еще нет
-            if (!newTagIds.includes(targetTagId)) {
-              newTagIds.push(targetTagId)
-            }
-
-            await tx.article.update({
-              where: { id: article.id },
-              data: {
-                sectionTags: {
-                  set: newTagIds.map((id) => ({ id }))
-                }
-              }
-            })
-          }
-
-          // Удаляем исходные теги
-          await tx.sectionTag.deleteMany({
-            where: { id: { in: sourceTagIds } }
-          })
-
-          // Возвращаем обновленный целевой тег
-          return await tx.sectionTag.findUnique({
-            where: { id: targetTagId },
-            include: {
-              _count: {
-                select: { articles: true }
-              }
-            }
-          })
-        })
-
-        await ctx.cache.delByTags([
-          "home",
-          ...sourceTags.map((tag) => `section-tag:${tag.slug}`),
-          `section-tag:${targetTag.slug}`
-        ])
+        await ctx.cache.delByTags(["home", ...sourceTags.map((tag) => `tag:${tag.slug}`), `tag:${targetTag.slug}`])
 
         return result
       } catch (error) {
         handleAdminError(error, ctx.requestId, "tag")
       }
+    },
+
+    archiveTag: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "tag.archive", ctx.requestId)
+      const tag = await archiveTag(ctx.prisma, { tagId: id, actor: ctx.currentUser!, requestId: ctx.requestId })
+      await ctx.cache.delByTags(["home", `tag:${tag.slug}`])
+      return tag
+    },
+
+    restoreTag: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+      ensureHasRole(ctx.currentUser, ["admin", "owner"], "tag.restore", ctx.requestId)
+      const tag = await restoreTag(ctx.prisma, { tagId: id, actor: ctx.currentUser!, requestId: ctx.requestId })
+      await ctx.cache.delByTags(["home", `tag:${tag.slug}`])
+      return tag
     }
   }
 }

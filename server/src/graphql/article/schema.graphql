@@ -18,8 +18,9 @@ type Article {
   createdAt: String!
   updatedAt: String!
   author: User!
-  contentType: ContentType!
-  sectionTags: [SectionTag!]!
+  section: Section
+  format: Format
+  tags: [Tag!]!
 }
 
 # Специфичные для статей фильтры
@@ -32,7 +33,7 @@ input ArticleFiltersInput {
 
   # Специфичные для статей
   authorId: [ID!]
-  typeId: [ID!]
+  sectionId: [ID!]
   tagIds: [ID!]
   publishedAt: DateRangeInput
 }
@@ -49,7 +50,7 @@ type ArticleFilters {
   base: BaseFiltersInfo
   status: [ArticleStatus!]
   authorId: [ID!]
-  typeId: [ID!]
+  sectionId: [ID!]
   tagIds: [ID!]
   publishedAt: DateRangeInfo
 }
@@ -106,8 +107,9 @@ input CreateArticleInput {
   dek: String
   excerpt: String
   featuredImage: String
-  typeId: ID!
-  sectionTags: [ID!]
+  sectionId: ID
+  formatId: ID
+  tags: [ID!]
 }
 
 input UpdateArticleInput {
@@ -117,8 +119,22 @@ input UpdateArticleInput {
   dek: String
   excerpt: String
   featuredImage: String
-  typeId: ID
-  sectionTags: [ID!]
+  sectionId: ID
+  formatId: ID
+  tags: [ID!]
+}
+
+type Format {
+  id: ID!
+  name: String!
+  nameEn: String
+  slug: String!
+  description: String
+  descriptionEn: String
+  status: TaxonomyStatus!
+  archivedAt: String
+  createdAt: String!
+  updatedAt: String!
 }
 
 extend type Mutation {

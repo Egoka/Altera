@@ -23,12 +23,12 @@
         name: "Александр Иванов",
         email: "alex.ivanov@example.com"
       },
-      contentType: {
+      section: {
         id: 1,
         name: "Статья",
         slug: "article"
       },
-      sectionTags: [
+      tags: [
         { id: 1, name: "Технологии", slug: "tehnologii" },
         { id: 2, name: "Программирование", slug: "programmirovanie" }
       ]
@@ -47,12 +47,12 @@
         name: "Мария Петрова",
         email: "maria.petrova@example.com"
       },
-      contentType: {
+      section: {
         id: 2,
         name: "Блог",
         slug: "blog"
       },
-      sectionTags: [
+      tags: [
         { id: 2, name: "Дизайн", slug: "dizajn" },
         { id: 3, name: "UX/UI", slug: "ux-ui" }
       ]
@@ -71,12 +71,12 @@
         name: "Дмитрий Сидоров",
         email: "dmitry.sidorov@example.com"
       },
-      contentType: {
+      section: {
         id: 1,
         name: "Статья",
         slug: "article"
       },
-      sectionTags: [
+      tags: [
         { id: 1, name: "Технологии", slug: "tehnologii" },
         { id: 4, name: "JavaScript", slug: "javascript" }
       ]
@@ -95,12 +95,12 @@
         name: "Александр Иванов",
         email: "alex.ivanov@example.com"
       },
-      contentType: {
+      section: {
         id: 3,
         name: "Обзор",
         slug: "review"
       },
-      sectionTags: [
+      tags: [
         { id: 1, name: "Технологии", slug: "tehnologii" },
         { id: 5, name: "Vue.js", slug: "vue-js" }
       ]
@@ -119,12 +119,12 @@
         name: "Елена Козлова",
         email: "elena.kozlova@example.com"
       },
-      contentType: {
+      section: {
         id: 4,
         name: "Руководство",
         slug: "guide"
       },
-      sectionTags: [
+      tags: [
         { id: 6, name: "DevOps", slug: "devops" },
         { id: 7, name: "Автоматизация", slug: "avtomatizaciya" }
       ]
@@ -143,12 +143,12 @@
         name: "Мария Петрова",
         email: "maria.petrova@example.com"
       },
-      contentType: {
+      section: {
         id: 2,
         name: "Блог",
         slug: "blog"
       },
-      sectionTags: [
+      tags: [
         { id: 1, name: "Технологии", slug: "tehnologii" },
         { id: 8, name: "Будущее", slug: "buduschee" }
       ]
@@ -161,9 +161,9 @@
       ...item,
       authorName: item.author?.name || "",
       authorEmail: item.author?.email || "",
-      contentTypeName: item.contentType?.name || "",
-      contentTypeSlug: item.contentType?.slug || "",
-      tagsString: item.sectionTags?.map((tag: any) => tag.name).join(", ") || ""
+      sectionName: item.section?.name || "",
+      sectionSlug: item.section?.slug || "",
+      tagsString: item.tags?.map((tag: any) => tag.name).join(", ") || ""
     }))
   )
 
@@ -205,8 +205,8 @@
       isSort: true
     },
     {
-      dataField: "contentTypeName",
-      name: "contentTypeName",
+      dataField: "sectionName",
+      name: "sectionName",
       type: "string",
       caption: "Тип",
       visible: true,
@@ -327,7 +327,7 @@
     <template #tags="{ rowData }">
       <div class="flex flex-wrap gap-1">
         <Badge
-          v-for="tag in rowData.sectionTags"
+          v-for="tag in rowData.tags"
           :key="tag.id"
           class="bg-zinc-100 text-zinc-700 text-xs dark:bg-zinc-900 dark:text-zinc-400">
           {{ tag.name }}

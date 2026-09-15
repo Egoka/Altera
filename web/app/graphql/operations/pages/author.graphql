@@ -5,7 +5,7 @@ query GetAuthorPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
   articlesByAuthor(authorHandle: $slug, page: $page, limit: $limit) {
     articles {
       ...ArticleCard
-      sectionTags {
+      tags {
         name
         slug
       }

@@ -7,7 +7,7 @@
     /** Служебная строка: части по порядку, по умолчанию автор · рубрика. */
     meta?: CardMeta
   }>()
-  const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
+  const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
 </script>
 
 <template>

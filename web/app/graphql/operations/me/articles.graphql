@@ -8,25 +8,25 @@ query GetArticleForEdit($slug: String!) {
     excerpt
     featuredImage
     status
-    contentType {
+    section {
       id
       name
       slug
     }
-    sectionTags {
-      id
-      name
-      slug
-    }
-  }
-  contentTypes(pagination: { page: 1, limit: 100 }, sort: { field: "order", direction: ASC }, filters: { base: {} }) {
-    contentTypes {
+    tags {
       id
       name
       slug
     }
   }
-  sectionTags(pagination: { page: 1, limit: 100 }, sort: { field: "name", direction: ASC }, filters: { base: {} }) {
+  sections(pagination: { page: 1, limit: 100 }, sort: { field: "order", direction: ASC }, filters: { base: {} }) {
+    sections {
+      id
+      name
+      slug
+    }
+  }
+  tags(pagination: { page: 1, limit: 100 }, sort: { field: "name", direction: ASC }, filters: { base: {} }) {
     tags {
       id
       name

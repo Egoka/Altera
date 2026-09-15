@@ -1,0 +1,132 @@
+enum TaxonomyStatus {
+  active
+  archived
+}
+
+type Section {
+  id: ID!
+  name: String!
+  nameEn: String
+  slug: String!
+  description: String
+  descriptionEn: String
+  seoTitle: String
+  seoTitleEn: String
+  seoDescription: String
+  seoDescriptionEn: String
+  order: Int!
+  status: TaxonomyStatus!
+  successor: Section
+  archivedAt: String
+  archivedByActorId: ID
+  archivedByRole: Role
+  createdAt: String!
+  updatedAt: String!
+  # Связь со статьями
+  articles: [Article!]
+  # Количество статей (для админ панели)
+  _count: SectionCount
+}
+
+type SectionCount {
+  articles: Int!
+}
+
+# Специфичные для типов контента фильтры
+input SectionFiltersInput {
+  base: BaseFiltersInput
+
+  # Специфичные для типов контента
+  status: [TaxonomyStatus!]
+  hasArticles: Boolean
+}
+
+type SectionsResponse {
+  sections: [Section!]!
+  pagination: PaginationInfo!
+  filters: SectionFilters!
+  sort: SortInfo!
+  search: SearchInfo
+}
+
+type SectionFilters {
+  base: BaseFiltersInfo
+  status: [TaxonomyStatus!]
+  hasArticles: Boolean
+}
+
+type SectionStats {
+  totalArticles: Int!
+  articlesThisMonth: Int!
+  averageReadTime: Float
+  popularTags: [Tag!]
+  topAuthors: [User!]
+}
+
+type ArticlesBySectionResponse {
+  articles: [Article!]!
+  totalCount: Int!
+  totalPages: Int!
+  currentPage: Int!
+}
+
+extend type Query {
+  # Запросы для страницы типа контента
+  section(slug: String!): Section
+  articlesBySection(sectionSlug: String!, page: Int = 1, limit: Int = 10): ArticlesBySectionResponse!
+  sectionStats(sectionSlug: String!): SectionStats
+
+  # Запросы для управления типами контента (требуют права admin)
+  sections(
+    pagination: PaginationInput!
+    sort: SortInput!
+    filters: SectionFiltersInput!
+    search: SearchInput
+  ): SectionsResponse!
+}
+
+# Input типы для мутаций
+input CreateSectionInput {
+  name: String!
+  nameEn: String!
+  slug: String!
+  description: String
+  descriptionEn: String
+  seoTitle: String
+  seoTitleEn: String
+  seoDescription: String
+  seoDescriptionEn: String
+  order: Int!
+}
+
+input UpdateSectionInput {
+  name: String
+  nameEn: String
+  slug: String
+  description: String
+  descriptionEn: String
+  seoTitle: String
+  seoTitleEn: String
+  seoDescription: String
+  seoDescriptionEn: String
+  order: Int
+}
+
+input ReorderSectionsInput {
+  items: [ReorderItemInput!]!
+}
+
+input ReorderItemInput {
+  id: ID!
+  order: Int!
+}
+
+extend type Mutation {
+  # Админ мутации для управления типами контента
+  createSection(input: CreateSectionInput!): Section!
+  updateSection(id: ID!, input: UpdateSectionInput!): Section!
+  deleteSection(id: ID!): Section!
+  reorderSections(input: ReorderSectionsInput!): [Section!]!
+  archiveSection(id: ID!, successorId: ID!): Section!
+  restoreSection(id: ID!): Section!
+}
