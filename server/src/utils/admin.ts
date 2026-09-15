@@ -1,4 +1,4 @@
-import { GraphQLError } from "graphql"
+import { createApiError } from "../errors/graphql-error"
 
 // Типы для админ функций
 export interface PaginationInput {
@@ -38,28 +38,24 @@ export interface PaginationInfo {
 }
 
 // Утилиты для валидации
-export const validatePagination = (pagination: PaginationInput) => {
+export const validatePagination = (pagination: PaginationInput, requestId: string) => {
   if (pagination.page < 1) {
-    throw new GraphQLError("Page must be >= 1", { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "page", rule: "min:1" })
   }
   if (pagination.limit < 1) {
-    throw new GraphQLError("Limit must be >= 1", { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "limit", rule: "min:1" })
   }
   if (pagination.limit > 100) {
-    throw new GraphQLError("Limit cannot exceed 100", { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "limit", rule: "max:100" })
   }
 }
 
-export const validateSort = (sort: SortInput, allowedFields: string[]) => {
+export const validateSort = (sort: SortInput, allowedFields: string[], requestId: string) => {
   if (!allowedFields.includes(sort.field)) {
-    throw new GraphQLError(`Invalid sort field: ${sort.field}`, {
-      extensions: { code: "VALIDATION_ERROR" }
-    })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "sort.field", rule: "allowed" })
   }
   if (!["ASC", "DESC"].includes(sort.direction)) {
-    throw new GraphQLError(`Invalid sort direction: ${sort.direction}`, {
-      extensions: { code: "VALIDATION_ERROR" }
-    })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "sort.direction", rule: "enum:ASC,DESC" })
   }
 }
 
@@ -126,63 +122,74 @@ export const calculatePagination = (page: number, limit: number, total: number) 
 }
 
 // Утилиты для обработки ошибок
-export const handleAdminError = (error: any) => {
-  if (error.code === "P2002") {
-    throw new GraphQLError("Duplicate entry", { extensions: { code: "DUPLICATE" } })
+function getPrismaError(error: unknown): { code?: unknown; meta?: unknown } | null {
+  if (typeof error !== "object" || error === null) return null
+  return {
+    code: "code" in error ? error.code : undefined,
+    meta: "meta" in error ? error.meta : undefined
   }
-  if (error.code === "P2025") {
-    throw new GraphQLError("Record not found", { extensions: { code: "NOT_FOUND" } })
+}
+
+function getDuplicateField(meta: unknown): string {
+  if (typeof meta !== "object" || meta === null || !("target" in meta)) return "unknown"
+  const { target } = meta
+  return Array.isArray(target) && typeof target[0] === "string" ? target[0] : "unknown"
+}
+
+export const handleAdminError = (error: unknown, requestId: string, entity: string): never => {
+  const prismaError = getPrismaError(error)
+  if (prismaError?.code === "P2002") {
+    throw createApiError("DUPLICATE", { requestId, entity, field: getDuplicateField(prismaError.meta) })
   }
-  if (error.code === "P2003") {
-    throw new GraphQLError("Foreign key constraint failed", { extensions: { code: "FOREIGN_KEY_ERROR" } })
+  if (prismaError?.code === "P2025") {
+    throw createApiError("NOT_FOUND", { requestId, entity })
   }
-  throw new GraphQLError("Internal server error", { extensions: { code: "INTERNAL_ERROR" } })
+  if (prismaError?.code === "P2003") {
+    throw createApiError("CONFLICT", { requestId, entity, expected: "unreferenced", actual: "referenced" })
+  }
+  throw error
 }
 
 // Утилиты для валидации дат
-export const validateDateRange = (dateRange: DateRangeInput) => {
+export const validateDateRange = (dateRange: DateRangeInput, requestId: string) => {
   if (dateRange.from && dateRange.to) {
     const fromDate = new Date(dateRange.from)
     const toDate = new Date(dateRange.to)
 
     if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-      throw new GraphQLError("Invalid date format", { extensions: { code: "VALIDATION_ERROR" } })
+      throw createApiError("VALIDATION_ERROR", { requestId, field: "dateRange", rule: "iso-date" })
     }
 
     if (fromDate > toDate) {
-      throw new GraphQLError("From date cannot be after to date", { extensions: { code: "VALIDATION_ERROR" } })
+      throw createApiError("VALIDATION_ERROR", { requestId, field: "dateRange", rule: "from-before-to" })
     }
   }
 }
 
 // Утилиты для поиска
-export const validateSearchInput = (search: SearchInput, allowedFields: string[]) => {
+export const validateSearchInput = (search: SearchInput, allowedFields: string[], requestId: string) => {
   if (!search.query.trim()) {
-    throw new GraphQLError("Search query cannot be empty", { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "search.query", rule: "required" })
   }
 
   if (search.query.length < 2) {
-    throw new GraphQLError("Search query must be at least 2 characters", { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "search.query", rule: "minLength:2" })
   }
 
   const invalidFields = search.fields.filter((field) => !allowedFields.includes(field))
   if (invalidFields.length > 0) {
-    throw new GraphQLError(`Invalid search fields: ${invalidFields.join(", ")}`, {
-      extensions: { code: "VALIDATION_ERROR" }
-    })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "search.fields", rule: "allowed" })
   }
 }
 
 // Утилиты для массовых операций
-export const validateBulkOperation = (ids: string[], maxItems: number = 100) => {
+export const validateBulkOperation = (ids: string[], requestId: string, maxItems: number = 100) => {
   if (!ids.length) {
-    throw new GraphQLError("No items selected", { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "ids", rule: "required" })
   }
 
   if (ids.length > maxItems) {
-    throw new GraphQLError(`Cannot process more than ${maxItems} items at once`, {
-      extensions: { code: "VALIDATION_ERROR" }
-    })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "ids", rule: `maxItems:${maxItems}` })
   }
 
   // Проверяем, что все ID являются валидными UUID
@@ -190,15 +197,6 @@ export const validateBulkOperation = (ids: string[], maxItems: number = 100) => 
   const invalidIds = ids.filter((id) => !uuidRegex.test(id))
 
   if (invalidIds.length > 0) {
-    throw new GraphQLError(`Invalid IDs: ${invalidIds.join(", ")}`, { extensions: { code: "VALIDATION_ERROR" } })
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "ids", rule: "uuid" })
   }
-}
-
-// Утилиты для логирования админ операций
-export const logAdminOperation = (operation: string, userId: string, details: any) => {
-  console.info(`ADMIN OPERATION: ${operation}`, {
-    userId,
-    timestamp: new Date().toISOString(),
-    details
-  })
 }

@@ -6,6 +6,12 @@ import { readThroughPublicCache } from "../src/cache/read-through"
 import userResolver from "../src/graphql/user/resolver"
 import articleResolver from "../src/graphql/article/resolver"
 
+const requestContext = {
+  requestId: "req-cache",
+  logger: { log: () => undefined },
+  piiHasher: { email: () => "email-hash", ip: () => "ip-hash" }
+}
+
 class MemoryCache implements Cache {
   readonly mode = "noop" as const
   readonly values = new Map<string, unknown>()
@@ -85,7 +91,7 @@ describe("private resolver cache policy", () => {
       }
     ) as Cache
 
-    const result = await userResolver.Query.me({}, {}, { currentUser, cache } as never)
+    const result = await userResolver.Query.me({}, {}, { currentUser, cache, ...requestContext } as never)
 
     expect(result).toBe(currentUser)
   })
@@ -147,7 +153,8 @@ describe("domain cache tags", () => {
     await articleResolver.Mutation.updateArticle({}, { id: "a1", input: { slug: "new-slug" } }, {
       currentUser: { id: "u1", role: "author" },
       prisma,
-      cache
+      cache,
+      ...requestContext
     } as never)
 
     expect(cache.invalidations).toEqual([

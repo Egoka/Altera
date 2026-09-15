@@ -99,7 +99,7 @@ export class RedisCache implements Cache {
   constructor(
     private readonly client: CacheRedisClient,
     private readonly maxCacheTtlSeconds: number,
-    private readonly warn: (message: string) => void = console.warn
+    private readonly warn: (message: string) => void = () => undefined
   ) {
     this.client.on("error", () => this.warn("Redis cache connection error"))
   }

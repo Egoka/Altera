@@ -1,16 +1,14 @@
-import { GraphQLError } from "graphql"
 import { User, Role } from "../generated/prisma"
+import { createApiError } from "../errors/graphql-error"
 
 /**
  * Ensures that a user is authenticated.
  * Throws a GraphQLError if the user is not logged in.
  * @param currentUser - The user object from the GraphQL context.
  */
-export function ensureAuthenticated(currentUser: User | null): User {
+export function ensureAuthenticated(currentUser: User | null, requestId: string): User {
   if (!currentUser) {
-    throw new GraphQLError("Authentication required. Please log in.", {
-      extensions: { code: "UNAUTHENTICATED" }
-    })
+    throw createApiError("UNAUTHENTICATED", { requestId })
   }
   return currentUser
 }
@@ -21,12 +19,17 @@ export function ensureAuthenticated(currentUser: User | null): User {
  * @param currentUser - The user object from the GraphQL context.
  * @param requiredRole - The role or array of roles required to pass the check.
  */
-export function ensureHasRole(currentUser: User | null, requiredRole: Role | Role[]): void {
-  ensureAuthenticated(currentUser)
+export function ensureHasRole(
+  currentUser: User | null,
+  requiredRole: Role | Role[],
+  action: string,
+  requestId: string
+): void {
+  const user = ensureAuthenticated(currentUser, requestId)
 
   const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
 
-  if (!roles.includes(currentUser!.role)) {
-    throw new GraphQLError("Permission denied. You don't have the required permissions.")
+  if (!roles.includes(user.role)) {
+    throw createApiError("FORBIDDEN", { requestId, action })
   }
 }
