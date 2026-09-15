@@ -3,7 +3,7 @@
 > **Для агентных исполнителей:** выполнять план по шагам с TDD и отдельной проверкой каждого изменения. До первого изменения продуктового кода прочитать все источники из раздела 1; generated Prisma client вручную не редактировать.
 
 - **Дата**: 2026-09-15
-- **Ветка**: `docs/t-014-taxonomy-plan`
+- **Ветка**: `server/t-014-taxonomy`
 - **Задача**: T-014 / ALTE-37
 - **Authorization**: native issue `01a0a5d1-d512-7db4-bd2e-452640728155`, поручение оркестратора в треде `01a0a60f-38c4-7cdf-8190-27e0eb1d4fb6`
 - **Базовый коммит**: `96ef15c06f3596b8eea2f9421d0915f9b6f31c4a`
@@ -311,7 +311,7 @@ Raw SQL дополнительно создаёт:
 ## 11. Стадии и handoff
 
 - **Архитектура**: actor `Altera — архитектор`; вход — ALTE-37, triggering thread и pinned sources; выход — этот план на baseline `96ef15c…`. Окончание run означает готовность архитектурного evidence, не реализацию AC.
-- **Разработка**: продолжает выделенный T-014 worktree/ветку либо создаёт отдельную implementation-ветку по решению оркестратора, не переносит чужие dirty changes; выход — schema, migration, сервисы, tests и парный отчёт.
+- **Разработка**: продолжает выделенные T-014 worktree `/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t014-taxonomy-plan` и ветку `server/t-014-taxonomy`, не переносит чужие dirty changes; выход — schema, migration, сервисы, tests и парный отчёт.
 - **Тестирование**: проверяет актуальный implementation SHA; обязательны отдельные evidence по `t014-section-archive-successor-db` и `t014-taxonomy-migration-preserves-data`.
 - **Независимое ревью**: сверяет источники, отсутствие data-copy/drop, nullable draft taxonomy, active-successor transaction, role matrix и append-only registry.
 - **Релиз**: backend/schema change; после merge отдельно фиксируются CI, merge SHA, Render deploy, HTTP smoke, DB и Redis checks. Migration сначала репетируется на копии; destructive rollback schema запрещён.
