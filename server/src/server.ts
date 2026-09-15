@@ -5,7 +5,7 @@ import { useCSRFPrevention } from "@graphql-yoga/plugin-csrf-prevention"
 import { blockFieldSuggestionsPlugin } from "@escape.tech/graphql-armor-block-field-suggestions"
 import { schema } from "./graphql/schema"
 import { createContext, GraphQLContext, prisma } from "./prisma"
-import { createHealthCheck, withHealth } from "./health"
+import { checkMigrations, createHealthCheck, withHealth } from "./health"
 import { createCache } from "./cache"
 import { createErrorMasker } from "./errors/graphql-error"
 import { createAppLogger } from "./observability/logger"
@@ -34,6 +34,10 @@ const yoga = createYoga<GraphQLContext>({
 const health = createHealthCheck(
   {
     postgres: () => prisma.$queryRaw`SELECT 1 AS ok`,
+    migrations: () =>
+      checkMigrations(
+        () => prisma.$queryRaw`SELECT migration_name, finished_at, rolled_back_at FROM "_prisma_migrations"`
+      ),
     redis: () => cache.isReady()
   },
   process.env.RENDER_GIT_COMMIT

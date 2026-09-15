@@ -3,7 +3,6 @@
 import argparse
 from contextlib import contextmanager
 import fcntl
-import hashlib
 import json
 from pathlib import Path
 import re
@@ -107,7 +106,7 @@ def read_report_at(repo, revision, report_date):
     return json.loads(result.stdout)
 
 
-def prepare_worktree(repo, worktrees_root, branch, base_sha, remote, initial_remote_head):
+def prepare_worktree(repo, worktrees_root, branch, base_sha, remote, initial_remote_head, bypass_hooks=False):
     worktrees_root.mkdir(parents=True, exist_ok=True)
     path = worktrees_root / branch.removeprefix("codex/")
     if not path.resolve().is_relative_to(worktrees_root.resolve()):
@@ -134,6 +133,8 @@ def prepare_worktree(repo, worktrees_root, branch, base_sha, remote, initial_rem
             git(repo, "worktree", "add", "-b", branch, str(path), start)
     if git(path, "branch", "--show-current").stdout.strip() != branch:
         raise PublishError("Unexpected report worktree branch")
+    if git(path, "rev-parse", "--verify", "MERGE_HEAD", check=False).returncode == 0:
+        raise PublishError("Report worktree has an unfinished merge; preserved for reconciliation")
     ensure_owned_changes(path)
     if initial_remote_head:
         git(repo, "fetch", remote, f"refs/heads/{branch}")
@@ -143,6 +144,22 @@ def prepare_worktree(repo, worktrees_root, branch, base_sha, remote, initial_rem
     committed = git(path, "diff", "--name-only", "-z", f"{ancestor}..HEAD").stdout.split("\0")
     if any(name and not owned(name) for name in committed):
         raise PublishError("Report branch contains unrelated committed changes")
+    if git(path, "merge-base", "--is-ancestor", base_sha, "HEAD", check=False).returncode:
+        if changed_paths(path):
+            raise PublishError("App advanced while report worktree has uncommitted changes; preserved without merge")
+        merged = git(path, "merge", "--no-commit", "--no-ff", base_sha, check=False)
+        if merged.returncode:
+            conflicts = [name for name in git(path, "diff", "--name-only", "--diff-filter=U", "-z").stdout.split("\0") if name]
+            derived = {"PROGRESS.md", "docs/reports/autonomy/periods.json"}
+            if not conflicts or any(name not in derived for name in conflicts):
+                git(path, "merge", "--abort", check=False)
+                raise PublishError("App merge conflicts with source reports; merge aborted, changes preserved")
+            # Оба индекса будут пересчитаны из объединённых канонических суточных JSON.
+            git(path, "checkout", "--theirs", "--", *conflicts)
+            git(path, "add", "--", *conflicts)
+        git(path, "diff", "--cached", "--check")
+        hook_args = ["-c", "core.hooksPath=/dev/null"] if bypass_hooks else []
+        git(path, *hook_args, "commit", "-m", "chore(autonomy): sync app for daily report")
     return path
 
 
@@ -154,6 +171,9 @@ def run(config, report_date, snapshot=None, *, github=None):
     if state == worktrees_root or state.is_relative_to(worktrees_root):
         raise PublishError("Controller state and publisher lock must be outside report worktrees")
     remote, base = config.get("remote", "origin"), "app"
+    formatter = config.get("report_formatter")
+    if formatter and (not isinstance(formatter, list) or not all(isinstance(arg, str) for arg in formatter)):
+        raise PublishError("report_formatter must be an argv array")
     if not re.fullmatch(r"[A-Za-z0-9_.-]+", remote):
         raise PublishError("Invalid git remote name")
     github = github or Github(config["github_repo"], base)
@@ -166,41 +186,43 @@ def run(config, report_date, snapshot=None, *, github=None):
             if receipts_dir.exists():
                 snapshot["receipts"] = reporting.load_controller_receipts(receipts_dir)
         desired = reporting.build_report(snapshot, report_date)
-        digest = hashlib.sha256(reporting.encoded(desired).encode()).hexdigest()
+        digest = reporting.content_digest(desired)
         git(repo, "fetch", remote, f"refs/heads/{base}")
         base_sha = git(repo, "rev-parse", "FETCH_HEAD").stdout.strip()
         branch = f"codex/autonomy-report-{report_date}"
         existing = github.find(branch)
         if existing and existing["state"] == "MERGED":
             current = read_report_at(repo, base_sha, report_date)
-            if current and current.get("content_sha256") == digest:
+            if current and reporting.content_digest(current) == digest:
                 return {"status": "unchanged", "branch": branch, "pr": existing}
             branch += f"-correction-{digest[:12]}"
             correction = github.find(branch)
             if correction and correction["state"] == "MERGED":
                 current = read_report_at(repo, base_sha, report_date)
-                if current and current.get("content_sha256") == digest:
+                if current and reporting.content_digest(current) == digest:
                     return {"status": "unchanged", "branch": branch, "pr": correction}
                 raise PublishError("Merged correction differs from current app; explicit reconciliation required")
         elif existing and existing["state"] != "OPEN":
             raise PublishError("Daily PR was closed without merge; refusing a duplicate")
         initial_remote_head = remote_head(repo, remote, branch)
-        worktree = prepare_worktree(repo, worktrees_root, branch, base_sha, remote, initial_remote_head)
+        worktree = prepare_worktree(repo, worktrees_root, branch, base_sha, remote, initial_remote_head,
+                                    bypass_hooks=bool(formatter))
         reporting.publish(snapshot, report_date, worktree)
         ensure_owned_changes(worktree)
         files = changed_paths(worktree)
-        formatter = config.get("report_formatter")
         if formatter and files:
-            if not isinstance(formatter, list) or not all(isinstance(arg, str) for arg in formatter):
-                raise PublishError("report_formatter must be an argv array")
             existing_files = [str(worktree / name) for name in files if (worktree / name).is_file()]
             if existing_files:
                 command([*formatter, *existing_files], cwd=worktree)
         ensure_owned_changes(worktree)
         files = changed_paths(worktree)
         if files:
+            git(worktree, "diff", "--check")
             git(worktree, "add", "--", *files)
-            git(worktree, "commit", "-m", f"docs(autonomy): report {report_date}")
+            git(worktree, "diff", "--cached", "--check")
+            # Только локальный docs commit после scoped formatter; общий config hooks не меняется.
+            hook_args = ["-c", "core.hooksPath=/dev/null"] if formatter else []
+            git(worktree, *hook_args, "commit", "-m", f"docs(autonomy): report {report_date}")
         current_remote_head = remote_head(repo, remote, branch)
         if current_remote_head != initial_remote_head:
             raise PublishError("Remote report head changed during publication; local commit preserved")
@@ -210,7 +232,10 @@ def run(config, report_date, snapshot=None, *, github=None):
         title = f"docs(autonomy): report {report_date}"
         body = (f"Суточный аудит за {report_date}: подтверждённые результаты, качество, delivery и usage с полнотой источников.\n\n"
                 f"Обновлены PROGRESS, машинный отчёт и агрегаты 7/30 суток. Content SHA-256: `{digest}`.\n\n"
-                "Срез собран read-only; неизвестные значения и ограничения сохранены в отчёте. Исправленные версии находятся в .history.\n")
+                "Срез собран read-only; неизвестные значения и ограничения сохранены в отчёте. Исправленные версии находятся в .history.\n\n"
+                "Локально проверены scope PROGRESS/docs/reports/autonomy и git diff --check. "
+                + ("Применён configured report_formatter; repo-wide hooks обойдены только для этого docs commit. " if formatter else "")
+                + "Полные проверки CI остаются обязательными перед merge.\n")
         pr = github.publish(branch, title, body)
         return {"status": "published", "branch": branch, "worktree": str(worktree), "head": head, "pr": pr}
 

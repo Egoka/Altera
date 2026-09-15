@@ -6,11 +6,74 @@ import datetime as dt
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import threading
 
 from controller import Ledger, Live, command, fingerprint, lock
+
+
+PR_QUERY = """query($owner: String!, $name: String!, $endCursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequests(first: 100, after: $endCursor, orderBy: {field: CREATED_AT, direction: ASC}) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        number state headRefOid baseRefName
+        commits(last: 1) { nodes { commit { statusCheckRollup {
+          contexts(first: 100) {
+            pageInfo { hasNextPage }
+            nodes {
+              __typename
+              ... on CheckRun { name conclusion status }
+              ... on StatusContext { context state }
+            }
+          }
+        } } } }
+      }
+    }
+  }
+}"""
+
+
+def pull_requests(live):
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", live.gh_repo):
+        raise RuntimeError("invalid GitHub repository")
+    owner, name = live.gh_repo.split("/")
+    pages = command(["gh", "api", "graphql", "--paginate", "--slurp", "-f", "query=" + PR_QUERY,
+                     "-F", "owner=" + owner, "-F", "name=" + name])
+    if not isinstance(pages, list) or not pages:
+        raise RuntimeError("incomplete pull request inventory")
+    result, numbers, cursors = [], set(), set()
+    try:
+        for index, page in enumerate(pages):
+            if page.get("errors"):
+                raise ValueError()
+            connection = page["data"]["repository"]["pullRequests"]
+            info = connection["pageInfo"]
+            if info["hasNextPage"] is not (index < len(pages) - 1) or not isinstance(connection["nodes"], list):
+                raise ValueError()
+            if info["hasNextPage"]:
+                cursor = info.get("endCursor")
+                if not isinstance(cursor, str) or not cursor or cursor in cursors:
+                    raise ValueError()
+                cursors.add(cursor)
+            for pr in connection["nodes"]:
+                if pr["number"] in numbers:
+                    raise ValueError()
+                numbers.add(pr["number"])
+                commits = pr["commits"]["nodes"]
+                rollup = commits[-1]["commit"]["statusCheckRollup"] if commits else None
+                checks = []
+                if rollup is not None:
+                    contexts = rollup["contexts"]
+                    if contexts["pageInfo"]["hasNextPage"] is not False or not isinstance(contexts["nodes"], list):
+                        raise RuntimeError("incomplete check context inventory")
+                    checks = contexts["nodes"]
+                result.append({**pr, "statusCheckRollup": checks})
+    except (KeyError, TypeError, AttributeError, ValueError) as error:
+        raise RuntimeError("incomplete pull request inventory") from error
+    return result
 
 
 def dispatch(config, snapshot, prompt, model):
@@ -60,12 +123,23 @@ def snapshot(live):
         item["description_hash"] = fingerprint(issue.get("description", ""))
         runs = live.multica("issue", "runs", issue["id"])
         item["runs"] = sorted((x["id"], x.get("status"), fingerprint(x.get("result"))) for x in runs if x.get("agent_id") not in live.config.get("controller_agent_ids", []))
-        comments = live.multica("issue", "comment", "list", issue["id"], "--summary")
+        # --since фильтрует created_at и теряет правки старых комментариев.
+        # --full сохраняет также сообщения свёрнутых resolved threads; тела не идут в delta.
+        comments = live.multica("issue", "comment", "list", issue["id"], "--full", "--summary")
         if isinstance(comments, dict):
             comments = comments.get("comments", [])
-        item["comment_cursor"] = sorted((x.get("id"), x.get("revision", 1)) for x in comments if x.get("author_id") not in live.config.get("controller_agent_ids", []))
+        comments = [x for x in comments if x.get("author_id") not in live.config.get("controller_agent_ids", [])]
+        item["comment_cursor"] = sorted(
+            (x.get("id"), x.get("revision"), x.get("updated_at"), fingerprint(x.get("content", x.get("summary"))))
+            for x in comments
+        )
+        # Без revision/updated_at нельзя доказать отсутствие правки за границей preview.
+        item["comment_edit_coverage"] = "partial" if any(
+            x.get("content_truncated") is True and x.get("revision") is None and not x.get("updated_at")
+            for x in comments
+        ) else "complete"
         state.append(item)
-    prs = command(["gh", "pr", "list", "--repo", live.gh_repo, "--state", "all", "--limit", "100", "--json", "number,state,headRefOid,baseRefName,mergedAt,statusCheckRollup"])
+    prs = pull_requests(live)
     projected = []
     for pr in prs:
         projected.append({"id": pr["number"], "state": pr["state"], "head": pr["headRefOid"], "base": pr["baseRefName"],

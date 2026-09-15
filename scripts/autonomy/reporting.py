@@ -187,7 +187,7 @@ def build_report(snapshot, report_date):
         bound_review = (bool(review.get("actor_id")) and bool(row.get("implementer_id"))
                         and review["actor_id"] != row["implementer_id"]
                         and review.get("verdict") == "approved" and bool(row.get("tested_sha"))
-                        and review.get("tested_sha") == row["tested_sha"])
+                        and review.get("sha", review.get("tested_sha")) == row["tested_sha"])
         if explicit or bound_review:
             independent.append(row)
     regressions = [row for row in accepted if numeric(row.get("regressions"))]
@@ -410,6 +410,12 @@ def encoded(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
+def content_digest(report):
+    semantic = {key: value for key, value in report.items()
+                if key not in {"collected_at", "content_sha256", "revision"}}
+    return hashlib.sha256(encoded(semantic).encode()).hexdigest()
+
+
 def atomic_write(path, content):
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as handle:
@@ -430,14 +436,14 @@ def publish(snapshot, report_date, root):
         atomic_write(contained(path), content)
 
     report = build_report(snapshot, report_date)
-    digest = hashlib.sha256(encoded(report).encode()).hexdigest()
+    digest = content_digest(report)
     directory = root / "docs/reports/autonomy"
     output = contained(directory / f"{report_date}.json")
     contained(root / "PROGRESS.md")
     contained(directory / "periods.json")
     contained(directory / f"{report_date}.md")
     previous = json.loads(output.read_text()) if output.exists() else None
-    if previous and previous.get("content_sha256") == digest:
+    if previous and content_digest(previous) == digest:
         report = previous
     else:
         if previous:
@@ -525,6 +531,22 @@ def load_controller_receipts(directory):
         raise ValueError("controller verified receipts directory does not exist")
     receipts = [json.loads(path.read_text()) for path in sorted(directory.glob("*.json"))]
     return [sanitize(row) for row in receipts if isinstance(row, dict) and row.get("verified") is True]
+
+
+def attach_controller_receipts(snapshot, directory):
+    directory = Path(directory)
+    coverage = snapshot.setdefault("coverage", {})
+    if not directory.is_dir():
+        snapshot["receipts"] = []
+        coverage["receipts"] = {"status": "partial", "reason": "controller_verified_directory_missing"}
+        return snapshot
+    try:
+        snapshot["receipts"] = load_controller_receipts(directory)
+        coverage["receipts"] = {"status": "complete", "records": len(snapshot["receipts"])}
+    except (OSError, ValueError):
+        snapshot["receipts"] = []
+        coverage["receipts"] = {"status": "partial", "reason": "controller_verified_receipts_unavailable"}
+    return snapshot
 
 
 def collect_live(multica, server_url, workspace, project, repository, *,
@@ -705,7 +727,7 @@ def main(argv=None):
                                 args.repo, max_pages=args.max_pages,
                                 maintenance_autopilot_ids=args.maintenance_autopilot_id)
         if args.receipts_dir:
-            snapshot["receipts"] = load_controller_receipts(args.receipts_dir)
+            attach_controller_receipts(snapshot, args.receipts_dir)
         atomic_write(args.output, encoded(sanitize(snapshot)))
         print(f"Snapshot: {args.output}")
         return 0

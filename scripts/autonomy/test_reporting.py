@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import sys
+from unittest.mock import patch
 
 try:
     from . import reporting
@@ -312,6 +313,29 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(reporting.build_report(data, "2026-09-15")["quality"]["independent_review_verified"], 1)
         data["receipts"][0]["review"]["actor_id"] = "builder"
         self.assertEqual(reporting.build_report(data, "2026-09-15")["quality"]["independent_review_verified"], 0)
+
+    def test_actual_controller_verified_receipt_uses_review_sha(self):
+        data = snapshot()
+        data["receipts"] = [{"task_id": "T-1", "verified": True, "implementer_id": "builder",
+                             "accepted_at": "2026-09-14T12:00:00Z", "tested_sha": "abc",
+                             "review": {"actor_id": "reviewer", "verdict": "approved", "sha": "abc"}}]
+        self.assertEqual(reporting.build_report(data, "2026-09-15")["quality"]["independent_review_verified"], 1)
+
+    def test_missing_receipt_directory_does_not_discard_collected_snapshot(self):
+        data = snapshot()
+        data["executions"] = [run()]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "snapshot.json"
+            with patch.object(reporting, "collect_live", return_value=data):
+                result = reporting.main(["collect", "--server-url", "https://example.test", "--workspace-id", "ws",
+                                         "--project-id", "project", "--repo", "owner/repo",
+                                         "--receipts-dir", str(root / "not-created"), "--output", str(output)])
+            saved = json.loads(output.read_text())
+            self.assertEqual(result, 0)
+            self.assertEqual(len(saved["executions"]), 1)
+            self.assertEqual(saved["coverage"]["receipts"]["status"], "partial")
+            self.assertEqual(saved["coverage"]["receipts"]["reason"], "controller_verified_directory_missing")
 
 
 if __name__ == "__main__":

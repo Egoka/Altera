@@ -1,0 +1,41 @@
+{
+  "autopilot": {
+    "id": "9beb69d3-b639-41a5-866f-465508975651",
+    "title": "Altera — ежедневный аудит автономии",
+    "status": "paused",
+    "project_id": null,
+    "execution_mode": "run_only",
+    "assignee_id": "b1c275c8-c97d-4b3c-a671-0a908d5fbdc7"
+  },
+  "triggers": [
+    {
+      "id": "e3a21ed3-7738-4f46-86c4-42242ed0557c",
+      "autopilot_id": "9beb69d3-b639-41a5-866f-465508975651",
+      "kind": "schedule",
+      "cron_expression": "0 10 * * *",
+      "timezone": "Europe/Moscow",
+      "enabled": true,
+      "next_run_at": "2026-09-16T07:00:00Z"
+    }
+  ],
+  "prompt_matches": true,
+  "agent": {
+    "id": "b1c275c8-c97d-4b3c-a671-0a908d5fbdc7",
+    "name": "Altera — суточный аудитор",
+    "model": "claude-sonnet-4-6",
+    "runtime_mode": "local",
+    "runtime_id": "fd14b334-b79c-47ae-aad9-a98340bbb7d4",
+    "runtime_bound": true,
+    "permission_mode": "private",
+    "thinking_level": "medium",
+    "max_concurrent_tasks": 1,
+    "custom_args": [],
+    "has_custom_env": false,
+    "custom_env_key_count": 0
+  },
+  "activation": "paused_pending_successful_pilot",
+  "prompt_path": "docs/multica/autonomy/daily-audit-prompt.md",
+  "boundary": "Deterministic publisher runs before model analysis; the native model still starts before this prompt command. Pre-model wrapper installation is handled separately.",
+  "agent_instructions_chars": 489,
+  "agent_instructions_match": true
+}

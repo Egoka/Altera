@@ -9,6 +9,10 @@
   "instructions_version": "autonomy-controller-v1",
   "state_dir": "/Users/egorbondarenko/WebstormProjects/Altera/.git/autonomy-state",
   "controller_agent_ids": ["d08ef989-e4d4-4772-bc33-335127a85f0f"],
+  "daily_agent_ids": ["b1c275c8-c97d-4b3c-a671-0a908d5fbdc7"],
   "reviewer_ids": ["db94a617-807c-4eec-981f-51fd4b3217d4"],
-  "deployment_probe": null
+  "release_agent_ids": ["49314ca0-8c53-44a9-a9de-15c3f297818a", "db94a617-807c-4eec-981f-51fd4b3217d4"],
+  "render_service_id": "srv-d1uk6b6mcj7s73ek25h0",
+  "render_workspace_id": "tea-d0q29c7diees738n0250",
+  "health_url": "https://altera-m4po.onrender.com/health"
 }

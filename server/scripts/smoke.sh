@@ -60,7 +60,7 @@ fi
 
 echo "✓ сервер поднялся и ответил на GraphQL-запрос"
 
-echo "→ проверка HTTP readiness, PostgreSQL, Redis и deployment revision"
+echo "→ проверка HTTP readiness, PostgreSQL, Redis, миграций и deployment revision"
 HEALTH="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 --max-time 5 \
   "http://127.0.0.1:${PORT}/health")"
 printf '%s' "$HEALTH" | node -e '
@@ -69,7 +69,7 @@ process.stdin.on("data", (chunk) => { input += chunk })
 process.stdin.on("end", () => {
   const health = JSON.parse(input)
   const expected = /^[0-9a-f]{40}$/.test(process.env.RENDER_GIT_COMMIT || "") ? process.env.RENDER_GIT_COMMIT : null
-  if (health.status !== "ok" || health.checks?.postgres !== true || health.checks?.redis !== true || health.revision !== expected) process.exit(1)
+  if (health.status !== "ok" || health.checks?.postgres !== true || health.checks?.redis !== true || health.checks?.migrations !== true || health.revision !== expected) process.exit(1)
 })
 '
 echo "✓ HTTP readiness подтвердил зависимости и revision"

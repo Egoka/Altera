@@ -60,6 +60,16 @@ class DeployEvidenceTests(unittest.TestCase):
             def geturl(self): return "https://example.test/health"
             def read(self, size): return json.dumps(self.payload).encode()
 
+        valid = {"status": "ok", "revision": "a" * 40, "checks": {"postgres": True, "redis": True, "migrations": True}}
+        with patch.object(d.urllib.request, "urlopen", return_value=Response(valid)):
+            self.assertIs(d.health("https://example.test/health", "a" * 40), True)
+            self.assertIs(d.health("https://example.test/health", "b" * 40), False)
+        for migration in (None, False, 1):
+            payload = copy.deepcopy(valid)
+            if migration is None: del payload["checks"]["migrations"]
+            else: payload["checks"]["migrations"] = migration
+            with patch.object(d.urllib.request, "urlopen", return_value=Response(payload)):
+                self.assertIs(d.health("https://example.test/health", "a" * 40), False)
         for payload in ([], {"status": "ok", "revision": "a" * 40, "checks": {"postgres": 1, "redis": 1}}):
             with patch.object(d.urllib.request, "urlopen", return_value=Response(payload)):
                 self.assertIs(d.health("https://example.test/health", "a" * 40), False)

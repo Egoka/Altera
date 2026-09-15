@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+import sys
 
 try:
     from . import daily_publish
@@ -101,12 +102,57 @@ class DailyPublishTests(unittest.TestCase):
         self.gh.prs[first["branch"]]["state"] = "MERGED"
         same = daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh)
         self.assertEqual(same["status"], "unchanged")
-        corrected = {**self.snapshot, "collected_at": "2026-09-15T09:00:00Z"}
+        corrected = {**self.snapshot, "collected_at": "2026-09-15T09:00:00Z",
+                     "executions": [{"id": "late", "created_at": "2026-09-14T09:00:00Z"}]}
         second = daily_publish.run(self.config, "2026-09-15", corrected, github=self.gh)
-        again = daily_publish.run(self.config, "2026-09-15", corrected, github=self.gh)
+        again = daily_publish.run(self.config, "2026-09-15",
+                                  {**corrected, "collected_at": "2026-09-15T09:01:00Z"}, github=self.gh)
         self.assertIn("-correction-", second["branch"])
         self.assertEqual(second["branch"], again["branch"])
         self.assertEqual(self.gh.created, 2)
+
+    def test_collection_timestamp_only_does_not_create_correction_pr(self):
+        first = daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh)
+        git(self.repo, "merge", "--ff-only", first["branch"])
+        git(self.repo, "push", "origin", "app")
+        self.gh.prs[first["branch"]]["state"] = "MERGED"
+        for observed_at in ("2026-09-15T09:00:00Z", "2026-09-15T09:01:00Z"):
+            result = daily_publish.run(self.config, "2026-09-15",
+                                       {**self.snapshot, "collected_at": observed_at}, github=self.gh)
+            self.assertEqual(result["status"], "unchanged")
+        self.assertEqual(self.gh.created, 1)
+
+    def test_open_report_retry_preserves_newer_app_reports_and_rebuilds_index(self):
+        first = daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh)
+        daily_publish.reporting.publish(self.snapshot, "2026-09-16", self.repo)
+        git(self.repo, "add", "PROGRESS.md", "docs/reports/autonomy")
+        git(self.repo, "commit", "-m", "docs(autonomy): report next day")
+        git(self.repo, "push", "origin", "app")
+        current_app = git(self.repo, "rev-parse", "HEAD")
+        second = daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh)
+        worktree = Path(second["worktree"])
+        self.assertTrue((worktree / "docs/reports/autonomy/2026-09-16.json").exists())
+        progress = (worktree / "PROGRESS.md").read_text()
+        self.assertIn("2026-09-15", progress)
+        self.assertIn("2026-09-16", progress)
+        self.assertEqual(json.loads((worktree / "docs/reports/autonomy/periods.json").read_text())["7"]["covered_days"], 2)
+        git(worktree, "merge-base", "--is-ancestor", current_app, "HEAD")
+        self.assertEqual(first["branch"], second["branch"])
+        self.assertEqual(self.gh.created, 1)
+
+    def test_scoped_formatted_report_commit_does_not_run_repo_wide_hooks(self):
+        hooks = self.root / "hooks"
+        hooks.mkdir()
+        hook = hooks / "pre-commit"
+        hook.write_text("#!/bin/sh\nexit 91\n")
+        hook.chmod(0o755)
+        git(self.repo, "config", "core.hooksPath", str(hooks))
+        self.config["report_formatter"] = [sys.executable, "-c", "import sys; assert all(p.endswith(('.md','.json')) for p in sys.argv[1:])"]
+        result = daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh)
+        self.assertEqual(result["status"], "published")
+        self.assertEqual(git(self.repo, "config", "--get", "core.hooksPath"), str(hooks))
+        changed = git(Path(result["worktree"]), "diff", "--name-only", "app..HEAD").splitlines()
+        self.assertTrue(all(path == "PROGRESS.md" or path.startswith("docs/reports/autonomy/") for path in changed))
 
 
 if __name__ == "__main__":

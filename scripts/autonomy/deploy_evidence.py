@@ -61,6 +61,6 @@ def health(url, expected_sha):
             if not isinstance(value, dict) or not isinstance(value.get("checks"), dict):
                 return False
             checks = value["checks"]
-            return value.get("status") == "ok" and value.get("revision") == expected_sha and set(checks) == {"postgres", "redis"} and checks["postgres"] is True and checks["redis"] is True
+            return value.get("status") == "ok" and value.get("revision") == expected_sha and set(checks) == {"postgres", "redis", "migrations"} and all(checks[name] is True for name in ("postgres", "redis", "migrations"))
     except (OSError, ValueError, TypeError):
         return False

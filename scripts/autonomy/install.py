@@ -34,6 +34,7 @@ def install(repo, config_path):
         current = json.loads(installed_config.read_text())
         config.update(current)
     config["instructions_version"] = digest
+    config["daily_instructions_version"] = digest
     installed_config.write_text(json.dumps(config, indent=2) + "\n")
     installed_config.chmod(0o600)
     candidate = root / "next"
@@ -41,10 +42,11 @@ def install(repo, config_path):
         candidate.unlink()
     candidate.symlink_to(release, target_is_directory=True)
     os.replace(candidate, root / "current")
-    wrapper = root / "controller-runtime"
-    wrapper.write_text("#!" + sys.executable + "\nimport os, sys\nos.environ['ALTERA_AUTONOMY_CONFIG'] = " + repr(str(installed_config)) + "\nos.execv(sys.executable, [sys.executable, " + repr(str(root / "current" / "runtime_bridge.py")) + ", *sys.argv[1:]])\n")
-    wrapper.chmod(0o755)
-    return {"release": digest, "executable": str(wrapper), "config": str(installed_config)}
+    for name, module in (("controller-runtime", "runtime_bridge.py"), ("daily-runtime", "daily_runtime.py")):
+        wrapper = root / name
+        wrapper.write_text("#!" + sys.executable + "\nimport os, sys\nos.environ['ALTERA_AUTONOMY_CONFIG'] = " + repr(str(installed_config)) + "\nos.execv(sys.executable, [sys.executable, " + repr(str(root / "current" / module)) + ", *sys.argv[1:]])\n")
+        wrapper.chmod(0o755)
+    return {"release": digest, "executable": str(root / "controller-runtime"), "daily_executable": str(root / "daily-runtime"), "config": str(installed_config)}
 
 
 if __name__ == "__main__":
