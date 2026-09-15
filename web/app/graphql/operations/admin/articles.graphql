@@ -1,0 +1,47 @@
+query GetAdminArticles(
+  $pagination: PaginationInput! = { page: 1, limit: 20 }
+  $sort: SortInput! = { field: "updatedAt", direction: DESC }
+  $filters: ArticleFiltersInput! = { base: {} }
+) {
+  articles(pagination: $pagination, sort: $sort, filters: $filters) {
+    articles {
+      id
+      title
+      slug
+      status
+      publishedAt
+      updatedAt
+      author {
+        name
+        slug
+        email
+      }
+      contentType {
+        name
+        slug
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+mutation ChangeArticleStatus($id: ID!, $status: ArticleStatus!) {
+  setArticleStatus(id: $id, status: $status) {
+    id
+    ...ArticleStatusValue
+    publishedAt
+  }
+}
+
+mutation BulkDeleteArticles($ids: [ID!]!) {
+  bulkDeleteArticles(ids: $ids) {
+    id
+  }
+}

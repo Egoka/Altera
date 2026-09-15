@@ -1,0 +1,61 @@
+query GetAdminContentTypes(
+  $pagination: PaginationInput! = { page: 1, limit: 50 }
+  $sort: SortInput! = { field: "order", direction: ASC }
+  $filters: ContentTypeFiltersInput! = { base: {} }
+) {
+  contentTypes(pagination: $pagination, sort: $sort, filters: $filters) {
+    contentTypes {
+      ...ContentTypeSummary
+      _count {
+        articles
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+    }
+  }
+}
+
+mutation CreateContentType($input: CreateContentTypeInput!) {
+  createContentType(input: $input) {
+    id
+    name
+    slug
+    description
+    order
+    status
+  }
+}
+
+mutation UpdateContentType($id: ID!, $input: UpdateContentTypeInput!) {
+  updateContentType(id: $id, input: $input) {
+    id
+    name
+    slug
+    description
+    order
+    status
+  }
+}
+
+mutation DeleteContentType($id: ID!) {
+  deleteContentType(id: $id) {
+    id
+  }
+}
+
+mutation ReorderContentTypes($input: ReorderContentTypesInput!) {
+  reorderContentTypes(input: $input) {
+    id
+    order
+  }
+}
+
+mutation ArchiveContentType($id: ID!) {
+  archiveContentType(id: $id) {
+    id
+    status
+  }
+}

@@ -1,22 +1,30 @@
-// Экспорт всех GraphQL запросов
-
-// Страницы
-export * from "./pages/home"
-export * from "./pages/articles/detail"
-export * from "./pages/authors/detail"
-export * from "./pages/tags/detail"
-export * from "./pages/types/detail"
-
-// Личный кабинет
-export * from "./me/profile"
-export * from "./me/articles"
-
-// Админ панель
-export * from "./admin/articles"
-export * from "./admin/tags"
-export * from "./admin/types"
-
-// Общие запросы
-export * from "./common/navigation"
-export * from "./common/search"
-export * from "./common/auth"
+export {
+  ArchiveContentTypeDocument as ARCHIVE_CONTENT_TYPE,
+  BulkDeleteArticlesDocument as BULK_DELETE_ARTICLES,
+  ChangeArticleStatusDocument as CHANGE_ARTICLE_STATUS,
+  CreateArticleDocument as CREATE_ARTICLE,
+  CreateContentTypeDocument as CREATE_CONTENT_TYPE,
+  CreateTagDocument as CREATE_TAG,
+  DeleteArticleDocument as DELETE_ARTICLE,
+  DeleteContentTypeDocument as DELETE_CONTENT_TYPE,
+  DeleteTagDocument as DELETE_TAG,
+  GetAdminArticlesDocument as GET_ADMIN_ARTICLES,
+  GetAdminContentTypesDocument as GET_ADMIN_CONTENT_TYPES,
+  GetAdminTagsDocument as GET_ADMIN_TAGS,
+  GetArticleDocument as GET_ARTICLE,
+  GetArticleForEditDocument as GET_ARTICLE_FOR_EDIT,
+  GetAuthorPageDocument as GET_AUTHOR_PAGE,
+  GetContentTypePageDocument as GET_CONTENT_TYPE_PAGE,
+  GetHomePageArticlesDocument as GET_HOME_PAGE_ARTICLES,
+  GetMyProfileDocument as GET_MY_PROFILE,
+  GetNavigationDocument as GET_NAVIGATION,
+  GetTagPageDocument as GET_TAG_PAGE,
+  GetUserMenuDocument as GET_USER_MENU,
+  MergeTagsDocument as MERGE_TAGS,
+  ReorderContentTypesDocument as REORDER_CONTENT_TYPES,
+  RequestMagicLinkDocument as REQUEST_MAGIC_LINK,
+  UpdateArticleDocument as UPDATE_ARTICLE,
+  UpdateContentTypeDocument as UPDATE_CONTENT_TYPE,
+  UpdateTagDocument as UPDATE_TAG,
+  VerifyMagicLinkDocument as VERIFY_MAGIC_LINK
+} from "../graphql/generated/graphql"

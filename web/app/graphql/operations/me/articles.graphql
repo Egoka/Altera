@@ -1,0 +1,60 @@
+query GetArticleForEdit($slug: String!) {
+  article(slug: $slug) {
+    id
+    title
+    slug
+    dek
+    body
+    excerpt
+    featuredImage
+    status
+    contentType {
+      id
+      name
+      slug
+    }
+    sectionTags {
+      id
+      name
+      slug
+    }
+  }
+  contentTypes(pagination: { page: 1, limit: 100 }, sort: { field: "order", direction: ASC }, filters: { base: {} }) {
+    contentTypes {
+      id
+      name
+      slug
+    }
+  }
+  sectionTags(pagination: { page: 1, limit: 100 }, sort: { field: "name", direction: ASC }, filters: { base: {} }) {
+    tags {
+      id
+      name
+      slug
+    }
+  }
+}
+
+mutation CreateArticle($input: CreateArticleInput!) {
+  createArticle(input: $input) {
+    id
+    slug
+    title
+  }
+}
+
+mutation UpdateArticle($id: ID!, $input: UpdateArticleInput!) {
+  updateArticle(id: $id, input: $input) {
+    id
+    slug
+    title
+    status
+  }
+}
+
+mutation DeleteArticle($id: ID!) {
+  deleteArticle: archiveArticle(id: $id) {
+    id
+    status
+  }
+}
