@@ -39,11 +39,12 @@ function sanitize(value: unknown, seen: WeakSet<object>): unknown {
   seen.add(value)
 
   if (value instanceof Error) {
+    const cause = "cause" in value ? value.cause : undefined
     return {
       type: sanitizeString(value.name),
       message: sanitizeString(value.message),
       stack: value.stack ? sanitizeString(value.stack) : undefined,
-      cause: value.cause === undefined ? undefined : sanitize(value.cause, seen)
+      cause: cause === undefined ? undefined : sanitize(cause, seen)
     }
   }
   if (value instanceof Date) return value.toISOString()

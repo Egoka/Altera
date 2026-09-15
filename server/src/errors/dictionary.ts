@@ -1,5 +1,3 @@
-import type { GraphQLError } from "graphql"
-
 export type ProviderName = "psp" | "ai" | "mail" | "storage"
 
 const definitions = {
@@ -62,14 +60,16 @@ export type ApiErrorExtensions = { code: ErrorCode; requestId: string } & Record
 const providerNames: readonly ProviderName[] = ["psp", "ai", "mail", "storage"]
 
 export function isErrorCode(value: unknown): value is ErrorCode {
-  return typeof value === "string" && Object.hasOwn(ERROR_DEFINITIONS, value)
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(ERROR_DEFINITIONS, value)
 }
 
 function isPresent(value: unknown): boolean {
   return value !== undefined && value !== null && (typeof value !== "string" || value.length > 0)
 }
 
-export function pickValidExtensions(error: GraphQLError): ApiErrorExtensions | null {
+export function pickValidExtensions(error: {
+  extensions: Readonly<Record<string, unknown>>
+}): ApiErrorExtensions | null {
   const { code } = error.extensions
   if (!isErrorCode(code)) return null
 

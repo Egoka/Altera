@@ -1,6 +1,6 @@
-import { GraphQLError } from "graphql"
 import { GraphQLContext } from "../../prisma"
 import { ensureAuthenticated, ensureHasRole } from "../../exceptions/permissions"
+import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
   validateSort,
@@ -11,7 +11,6 @@ import {
   validateDateRange,
   validateSearchInput,
   validateBulkOperation,
-  logAdminOperation,
   PaginationInput,
   SortInput,
   BaseFilters,
@@ -45,11 +44,8 @@ export default {
       const cachedDetail = await ctx.cache.get(cacheKey)
 
       if (cachedDetail) {
-        console.info("CACHE: Returning article detail from cache")
         return cachedDetail
       }
-
-      console.info("DATABASE: Article detail not in cache, fetching from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug: args.slug, status: "published" },
@@ -57,7 +53,7 @@ export default {
       })
 
       if (!article) {
-        throw new GraphQLError("Article not found", { extensions: { code: "NOT_FOUND" } })
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       }
 
       // Получаем рекомендуемые статьи (похожие по тегам)
@@ -123,11 +119,8 @@ export default {
       const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
-        console.info("CACHE: Returning recommended articles from cache")
         return cachedArticles
       }
-
-      console.info("DATABASE: Recommended articles not in cache, fetching from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug: articleSlug, status: "published" },
@@ -135,7 +128,7 @@ export default {
       })
 
       if (!article) {
-        throw new GraphQLError("Article not found", { extensions: { code: "NOT_FOUND" } })
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       }
 
       const articles = await ctx.prisma.article.findMany({
@@ -170,11 +163,8 @@ export default {
       const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
-        console.info("CACHE: Returning related articles from cache")
         return cachedArticles
       }
-
-      console.info("DATABASE: Related articles not in cache, fetching from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug: articleSlug, status: "published" },
@@ -182,7 +172,7 @@ export default {
       })
 
       if (!article) {
-        throw new GraphQLError("Article not found", { extensions: { code: "NOT_FOUND" } })
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       }
 
       const articles = await ctx.prisma.article.findMany({
@@ -208,11 +198,8 @@ export default {
       const cachedStats = await ctx.cache.get(cacheKey)
 
       if (cachedStats) {
-        console.info("CACHE: Returning article stats from cache")
         return cachedStats
       }
-
-      console.info("DATABASE: Article stats not in cache, calculating from database")
 
       const article = await ctx.prisma.article.findUnique({
         where: { slug, status: "published" },
@@ -220,7 +207,7 @@ export default {
       })
 
       if (!article) {
-        throw new GraphQLError("Article not found", { extensions: { code: "NOT_FOUND" } })
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       }
 
       const wordCount = article.body.split(/\s+/).length
@@ -247,11 +234,8 @@ export default {
       const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
-        console.info("CACHE: Returning featured articles from cache")
         return cachedArticles
       }
-
-      console.info("DATABASE: Featured articles not in cache, fetching from database")
       // Получаем последние опубликованные статьи как "featured"
       // В будущем можно добавить поле isFeatured в модель Article
       const articles = await ctx.prisma.article.findMany({
@@ -273,11 +257,8 @@ export default {
       const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
-        console.info("CACHE: Returning latest articles from cache")
         return cachedArticles
       }
-
-      console.info("DATABASE: Latest articles not in cache, fetching from database")
 
       const where: any = { status: "published" }
 
@@ -314,11 +295,8 @@ export default {
       const cachedArticles = await ctx.cache.get(cacheKey)
 
       if (cachedArticles) {
-        console.info("CACHE: Returning popular articles from cache")
         return cachedArticles
       }
-
-      console.info("DATABASE: Popular articles not in cache, fetching from database")
 
       // Рассчитываем дату для фильтрации
       const now = new Date()
@@ -375,38 +353,32 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "admin.articles.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
       // Валидация входных параметров
-      validatePagination(pagination)
-      validateSort(sort, [
-        "id",
-        "title",
-        "slug",
-        "status",
-        "publishedAt",
-        "createdAt",
-        "updatedAt",
-        "author.name",
-        "contentType.name"
-      ])
+      validatePagination(pagination, ctx.requestId)
+      validateSort(
+        sort,
+        ["id", "title", "slug", "status", "publishedAt", "createdAt", "updatedAt", "author.name", "contentType.name"],
+        ctx.requestId
+      )
 
       if (search) {
-        validateSearchInput(search, ["title", "body", "excerpt", "dek"])
+        validateSearchInput(search, ["title", "body", "excerpt", "dek"], ctx.requestId)
       }
 
       if (filters.base.createdAt) {
-        validateDateRange(filters.base.createdAt)
+        validateDateRange(filters.base.createdAt, ctx.requestId)
       }
 
       if (filters.base.updatedAt) {
-        validateDateRange(filters.base.updatedAt)
+        validateDateRange(filters.base.updatedAt, ctx.requestId)
       }
 
       if (filters.publishedAt) {
-        validateDateRange(filters.publishedAt)
+        validateDateRange(filters.publishedAt, ctx.requestId)
       }
 
       // Строим WHERE условие
@@ -485,27 +457,19 @@ export default {
           : null
       }
 
-      // Логируем операцию
-      logAdminOperation("admin_articles", ctx.currentUser?.id || "unknown", {
-        pagination,
-        sort,
-        filters
-      })
-
       return result
     }
   },
   Mutation: {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
-      ensureAuthenticated(ctx.currentUser)
-      if (!ctx.currentUser) throw new Error("Authentication required.") // Redundant but good for TS
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
       const { sectionTags, ...articleData } = input
 
       const newArticle = await ctx.prisma.article.create({
         data: {
           ...articleData,
-          authorId: ctx.currentUser.id,
+          authorId: user.id,
           status: "draft", // Always create as a draft
           // Note: publishedAt is not set here
           sectionTags: sectionTags
@@ -522,17 +486,17 @@ export default {
     },
 
     updateArticle: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser)
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
       const article = await ctx.prisma.article.findUnique({
         where: { id },
         include: { author: true, contentType: true, sectionTags: true }
       })
       if (!article) {
-        throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       }
       if (article.authorId !== user.id) {
-        throw new GraphQLError("You are not authorized to edit this article.", { extensions: { code: "FORBIDDEN" } })
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.edit" })
       }
 
       const { sectionTags, ...articleData } = input
@@ -556,15 +520,15 @@ export default {
     },
 
     archiveArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser)
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
       const article = await ctx.prisma.article.findUnique({
         where: { id },
         include: { author: true, contentType: true, sectionTags: true }
       })
-      if (!article) throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
+      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       if (article.authorId !== user.id) {
-        throw new GraphQLError("You are not authorized to archive this article.", { extensions: { code: "FORBIDDEN" } })
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
       }
 
       const updatedArticle = await ctx.prisma.article.update({
@@ -579,18 +543,23 @@ export default {
     },
 
     requestReview: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser)
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
       const article = await ctx.prisma.article.findUnique({
         where: { id },
         include: { author: true, contentType: true, sectionTags: true }
       })
-      if (!article) throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
+      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       if (article.authorId !== user.id) {
-        throw new GraphQLError("You are not authorized to manage this article.", { extensions: { code: "FORBIDDEN" } })
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.requestReview" })
       }
       if (article.status !== "draft") {
-        throw new GraphQLError("Article must be a draft to request a review.", { extensions: { code: "BAD_REQUEST" } })
+        throw createApiError("CONFLICT", {
+          requestId: ctx.requestId,
+          entity: "article",
+          expected: "draft",
+          actual: article.status
+        })
       }
 
       return ctx.prisma.article.update({
@@ -601,16 +570,19 @@ export default {
     },
 
     revertToDraft: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser)
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
       const article = await ctx.prisma.article.findUnique({ where: { id } })
-      if (!article) throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
+      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       if (article.authorId !== user.id) {
-        throw new GraphQLError("You are not authorized to manage this article.", { extensions: { code: "FORBIDDEN" } })
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.revertToDraft" })
       }
       if (article.status !== "review") {
-        throw new GraphQLError("Article must be in review to revert to a draft.", {
-          extensions: { code: "BAD_REQUEST" }
+        throw createApiError("CONFLICT", {
+          requestId: ctx.requestId,
+          entity: "article",
+          expected: "review",
+          actual: article.status
         })
       }
 
@@ -622,10 +594,10 @@ export default {
     },
 
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
-      ensureHasRole(ctx.currentUser, ["admin"])
+      ensureHasRole(ctx.currentUser, ["admin"], "article.setStatus", ctx.requestId)
 
       const article = await ctx.prisma.article.findUnique({ where: { id } })
-      if (!article) throw new GraphQLError("Article not found.", { extensions: { code: "NOT_FOUND" } })
+      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
 
       const updatedArticle = await ctx.prisma.article.update({
         where: { id },
@@ -644,38 +616,32 @@ export default {
     // Админ мутации для массовых операций
     bulkDeleteArticles: async (_parent: any, { ids }: { ids: string[] }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "article.bulkDelete", ctx.requestId)
 
       // Валидация входных параметров
-      validateBulkOperation(ids, 100)
+      validateBulkOperation(ids, ctx.requestId, 100)
 
       try {
-        // Получаем статьи для логирования
+        // Получаем статьи для проверки существования и инвалидации кеша
         const articlesToDelete = await ctx.prisma.article.findMany({
           where: { id: { in: ids } },
           include: { author: true, contentType: true, sectionTags: true }
         })
 
         if (articlesToDelete.length !== ids.length) {
-          throw new GraphQLError("Some articles not found", { extensions: { code: "NOT_FOUND" } })
+          throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
         }
 
         // Удаляем статьи
-        const deletedArticles = await ctx.prisma.article.deleteMany({
+        await ctx.prisma.article.deleteMany({
           where: { id: { in: ids } }
         })
 
         await ctx.cache.delByTags(buildArticleCacheTags(...articlesToDelete))
 
-        // Логируем операцию
-        logAdminOperation("bulk_delete_articles", ctx.currentUser?.id || "unknown", {
-          deletedCount: deletedArticles.count,
-          articleIds: ids
-        })
-
         return articlesToDelete
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "article")
       }
     },
 
@@ -685,13 +651,13 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "article.bulkUpdateStatus", ctx.requestId)
 
       // Валидация входных параметров
-      validateBulkOperation(ids, 100)
+      validateBulkOperation(ids, ctx.requestId, 100)
 
       if (!["draft", "review", "published", "archived"].includes(status)) {
-        throw new GraphQLError("Invalid status", { extensions: { code: "VALIDATION_ERROR" } })
+        throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "status", rule: "enum" })
       }
 
       try {
@@ -702,7 +668,7 @@ export default {
         })
 
         if (articlesToUpdate.length !== ids.length) {
-          throw new GraphQLError("Some articles not found", { extensions: { code: "NOT_FOUND" } })
+          throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
         }
 
         // Обновляем статус статей
@@ -724,16 +690,9 @@ export default {
 
         await ctx.cache.delByTags(buildArticleCacheTags(...articlesToUpdate, ...updatedArticles))
 
-        // Логируем операцию
-        logAdminOperation("bulk_update_article_status", ctx.currentUser?.id || "unknown", {
-          updatedCount: updatedArticles.length,
-          articleIds: ids,
-          newStatus: status
-        })
-
         return updatedArticles
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "article")
       }
     }
   }

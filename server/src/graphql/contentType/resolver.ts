@@ -1,6 +1,6 @@
-import { GraphQLError } from "graphql"
 import { GraphQLContext } from "../../prisma"
 import { ensureHasRole } from "../../exceptions/permissions"
+import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
   validateSort,
@@ -10,7 +10,6 @@ import {
   handleAdminError,
   validateDateRange,
   validateSearchInput,
-  logAdminOperation,
   PaginationInput,
   SortInput,
   BaseFilters,
@@ -43,15 +42,12 @@ export default {
       const cachedData = await ctx.cache.get(cacheKey)
 
       if (cachedData) {
-        console.info("CACHE: Returning articles by content type from cache")
         return cachedData
       }
 
-      console.info("DATABASE: Articles by content type not in cache, fetching from database")
-
       const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
       if (!contentType) {
-        throw new Error("Content type not found")
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "contentType" })
       }
 
       const totalCount = await ctx.prisma.article.count({
@@ -92,7 +88,7 @@ export default {
     contentTypeStats: async (_parent: any, { contentTypeSlug }: { contentTypeSlug: string }, ctx: GraphQLContext) => {
       const contentType = await ctx.prisma.contentType.findUnique({ where: { slug: contentTypeSlug } })
       if (!contentType) {
-        throw new Error("Content type not found")
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "contentType" })
       }
 
       const totalArticles = await ctx.prisma.article.count({
@@ -199,24 +195,28 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "admin.contentTypes.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
       // Валидация входных параметров
-      validatePagination(pagination)
-      validateSort(sort, ["id", "name", "slug", "order", "status", "createdAt", "updatedAt", "_count.articles"])
+      validatePagination(pagination, ctx.requestId)
+      validateSort(
+        sort,
+        ["id", "name", "slug", "order", "status", "createdAt", "updatedAt", "_count.articles"],
+        ctx.requestId
+      )
 
       if (search) {
-        validateSearchInput(search, ["name", "description", "slug"])
+        validateSearchInput(search, ["name", "description", "slug"], ctx.requestId)
       }
 
       if (filters.base.createdAt) {
-        validateDateRange(filters.base.createdAt)
+        validateDateRange(filters.base.createdAt, ctx.requestId)
       }
 
       if (filters.base.updatedAt) {
-        validateDateRange(filters.base.updatedAt)
+        validateDateRange(filters.base.updatedAt, ctx.requestId)
       }
 
       // Строим WHERE условие
@@ -272,13 +272,6 @@ export default {
         search: search ? { query: search.query, fields: search.fields } : null
       }
 
-      // Логируем операцию
-      logAdminOperation("admin_content_types", ctx.currentUser?.id || "unknown", {
-        pagination,
-        sort,
-        filters
-      })
-
       return result
     }
   },
@@ -287,7 +280,7 @@ export default {
     // Админ мутации для управления типами контента
     createContentType: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "contentType.create", ctx.requestId)
 
       try {
         const newContentType = await ctx.prisma.contentType.create({
@@ -301,21 +294,15 @@ export default {
 
         await ctx.cache.delByTags(["home", `content-type:${newContentType.slug}`])
 
-        // Логируем операцию
-        logAdminOperation("create_content_type", ctx.currentUser?.id || "unknown", {
-          contentTypeId: newContentType.id,
-          contentTypeName: newContentType.name
-        })
-
         return newContentType
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "contentType")
       }
     },
 
     updateContentType: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "contentType.update", ctx.requestId)
 
       try {
         const previousContentType = await ctx.prisma.contentType.findUnique({ where: { id }, select: { slug: true } })
@@ -335,21 +322,15 @@ export default {
           `content-type:${updatedContentType.slug}`
         ])
 
-        // Логируем операцию
-        logAdminOperation("update_content_type", ctx.currentUser?.id || "unknown", {
-          contentTypeId: id,
-          updates: input
-        })
-
         return updatedContentType
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "contentType")
       }
     },
 
     deleteContentType: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "contentType.delete", ctx.requestId)
 
       try {
         // Проверяем, есть ли статьи с этим типом контента
@@ -364,14 +345,16 @@ export default {
         })
 
         if (!contentTypeWithArticles) {
-          throw new GraphQLError("Content type not found", { extensions: { code: "NOT_FOUND" } })
+          throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "contentType" })
         }
 
         if (contentTypeWithArticles._count.articles > 0) {
-          throw new GraphQLError(
-            `Cannot delete content type "${contentTypeWithArticles.name}" because it has ${contentTypeWithArticles._count.articles} articles. Please reassign articles first.`,
-            { extensions: { code: "CONSTRAINT_VIOLATION" } }
-          )
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "contentType",
+            expected: "no articles",
+            actual: `${contentTypeWithArticles._count.articles} articles`
+          })
         }
 
         const deletedContentType = await ctx.prisma.contentType.delete({
@@ -385,33 +368,25 @@ export default {
 
         await ctx.cache.delByTags(["home", `content-type:${deletedContentType.slug}`])
 
-        // Логируем операцию
-        logAdminOperation("delete_content_type", ctx.currentUser?.id || "unknown", {
-          contentTypeId: id,
-          contentTypeName: deletedContentType.name
-        })
-
         return deletedContentType
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "contentType")
       }
     },
 
     reorderContentTypes: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "contentType.reorder", ctx.requestId)
 
       const { items } = input
 
       // Валидация входных параметров
       if (!items || items.length === 0) {
-        throw new GraphQLError("No items to reorder", { extensions: { code: "VALIDATION_ERROR" } })
+        throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "items", rule: "required" })
       }
 
       if (items.length > 100) {
-        throw new GraphQLError("Cannot reorder more than 100 items at once", {
-          extensions: { code: "VALIDATION_ERROR" }
-        })
+        throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "items", rule: "maxItems:100" })
       }
 
       try {
@@ -440,21 +415,15 @@ export default {
           ...updatedContentTypes.map((contentType) => `content-type:${contentType.slug}`)
         ])
 
-        // Логируем операцию
-        logAdminOperation("reorder_content_types", ctx.currentUser?.id || "unknown", {
-          reorderedItems: items.length,
-          items
-        })
-
         return updatedContentTypes
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "contentType")
       }
     },
 
     archiveContentType: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin")
+      ensureHasRole(ctx.currentUser, "admin", "contentType.archive", ctx.requestId)
 
       try {
         const archivedContentType = await ctx.prisma.contentType.update({
@@ -469,15 +438,9 @@ export default {
 
         await ctx.cache.delByTags(["home", `content-type:${archivedContentType.slug}`])
 
-        // Логируем операцию
-        logAdminOperation("archive_content_type", ctx.currentUser?.id || "unknown", {
-          contentTypeId: id,
-          contentTypeName: archivedContentType.name
-        })
-
         return archivedContentType
       } catch (error) {
-        handleAdminError(error)
+        handleAdminError(error, ctx.requestId, "contentType")
       }
     }
   }

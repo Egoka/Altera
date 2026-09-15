@@ -1,36 +1,57 @@
 import { describe, it, expect } from "vitest"
-import { validatePagination, validateSort, calculatePagination } from "../src/utils/admin"
+import { GraphQLError } from "graphql"
+import { calculatePagination, handleAdminError, validatePagination, validateSort } from "../src/utils/admin"
 
 // Хелперы админских запросов (docs/guides/admin_query_standards.md).
 // Из `../prisma` здесь импортируется только тип, поэтому подключения к Redis не происходит.
 
 describe("validatePagination", () => {
   it("пропускает корректные границы", () => {
-    expect(() => validatePagination({ page: 1, limit: 100 })).not.toThrow()
+    expect(() => validatePagination({ page: 1, limit: 100 }, "req-1")).not.toThrow()
   })
 
   it("отклоняет страницу меньше первой", () => {
-    expect(() => validatePagination({ page: 0, limit: 10 })).toThrow(/Page must be >= 1/)
+    expect(() => validatePagination({ page: 0, limit: 10 }, "req-1")).toThrow(GraphQLError)
   })
 
   it("отклоняет лимит больше ста", () => {
-    expect(() => validatePagination({ page: 1, limit: 101 })).toThrow(/Limit cannot exceed 100/)
+    expect(() => validatePagination({ page: 1, limit: 101 }, "req-1")).toThrow(GraphQLError)
   })
 })
 
 describe("validateSort", () => {
   it("пропускает разрешённое поле и направление", () => {
-    expect(() => validateSort({ field: "createdAt", direction: "DESC" }, ["createdAt"])).not.toThrow()
+    expect(() => validateSort({ field: "createdAt", direction: "DESC" }, ["createdAt"], "req-1")).not.toThrow()
   })
 
   it("отклоняет поле вне списка разрешённых", () => {
-    expect(() => validateSort({ field: "password", direction: "ASC" }, ["createdAt"])).toThrow(/Invalid sort field/)
+    expect(() => validateSort({ field: "password", direction: "ASC" }, ["createdAt"], "req-1")).toThrow(GraphQLError)
   })
 
   it("отклоняет неизвестное направление", () => {
-    expect(() => validateSort({ field: "createdAt", direction: "SIDEWAYS" }, ["createdAt"])).toThrow(
-      /Invalid sort direction/
+    expect(() => validateSort({ field: "createdAt", direction: "SIDEWAYS" }, ["createdAt"], "req-1")).toThrow(
+      GraphQLError
     )
+  })
+})
+
+describe("handleAdminError", () => {
+  it.each([
+    ["P2002", "DUPLICATE"],
+    ["P2025", "NOT_FOUND"],
+    ["P2003", "CONFLICT"]
+  ])("maps Prisma %s to %s", (prismaCode, apiCode) => {
+    try {
+      handleAdminError({ code: prismaCode, meta: { target: ["slug"] } }, "req-1", "article")
+    } catch (error) {
+      expect((error as GraphQLError).extensions.code).toBe(apiCode)
+      expect((error as GraphQLError).extensions.requestId).toBe("req-1")
+    }
+  })
+
+  it("rethrows an unknown error for the Yoga boundary", () => {
+    const original = new Error("database unavailable")
+    expect(() => handleAdminError(original, "req-1", "article")).toThrow(original)
   })
 })
 
