@@ -427,3 +427,108 @@ export function createErrorMasker(options: {
 - **Документация/релиз**: после принятого source result обновляет task metadata. Изменение backend
   требует отдельного CI/merge/Render deploy/API health evidence; DB/Redis checks фиксируются отдельно,
   а отсутствие миграций не доказывает их здоровье.
+
+## Дополнение 2026-09-15: перепланирование AC-1 после остановки
+
+### Причина перепланирования
+
+Проверка `t086-ac1-yoga-error-mask` остановлена после двух неуспешных попыток. В integration test на
+Yoga 5.15.1 factory-created `NOT_FOUND` проходит через `locatedError`: внешний `GraphQLError`
+содержит исходную ошибку в `originalError`, но текущая номинальная проверка через
+`instanceof GraphQLError` не даёт устойчивого распознавания в тестовом runtime. Прямая проверка
+`extensions` у внешней или исходной ошибки также не является допустимым исправлением: caller может
+сформировать такие же `extensions` у произвольной ошибки.
+
+Установленный GraphQL.js 16.11.0 при добавлении location/path создаёт новый `GraphQLError` и сохраняет
+исходный объект в `originalError`. Следовательно, инвариантом должен быть не constructor identity и не
+содержимое публичных полей, а object identity ошибки, которую создал наш factory. Локальная проверка
+в plain Node с теми же Yoga/GraphQL версиями сохраняет известную ошибку, поэтому она не опровергает
+integration failure и не служит AC evidence; расхождение подтверждает, что `instanceof` нельзя делать
+частью security boundary.
+
+### Надёжная идентификация known error
+
+В `server/src/errors/graphql-error.ts` вводится закрытый реестр:
+
+```ts
+const knownErrors = new WeakMap<object, Readonly<PublicErrorSnapshot>>()
+```
+
+`createApiError` сначала валидирует поля по словарю, создаёт новый `GraphQLError`, сохраняет по его
+identity замороженный snapshot `{ message, extensions }` и возвращает этот же объект. Реестр, тип
+snapshot и операция регистрации не экспортируются. Snapshot содержит новый объект `extensions`, а не
+ссылку на публичный mutable объект ошибки. Symbol-brand, `Symbol.for`, `name`, `extensions.code` и
+`instanceof` не используются как доказательство происхождения: каждый из этих признаков можно
+подделать или потерять на границе модулей, кроме module-private WeakMap membership.
+
+Masker ищет зарегистрированный объект по следующему алгоритму:
+
+```text
+queue := [receivedError]
+visited := WeakSet()
+while queue not empty:
+  current := queue.shift()
+  if current is not object/function or current is visited: continue
+  visited.add(current)
+  if knownErrors has current: return stored snapshot
+  safely enqueue current.originalError
+  safely enqueue current.cause
+return unknown
+```
+
+Обход breadth-first выбирает ближайшую к Yoga wrapper известную ошибку; при одинаковой глубине
+`originalError` имеет приоритет над `cause`. Доступ к обоим полям выполняется в `try/catch`, потому что
+неизвестный объект может иметь throwing getter. `WeakSet` разрывает циклы. Искусственный limit глубины
+не нужен: число посещений ограничено конечным object graph, достижимым только по двум ссылкам.
+
+Критерий **known error**: в достижимой цепочке есть object identity, зарегистрированный именно текущим
+экземпляром `createApiError`, и для него существует сохранённый factory snapshot. Критерий **unknown
+error**: traversal завершился без такого membership, даже если любой узел выглядит как `GraphQLError`
+и содержит полностью корректные `extensions.code`, `requestId` и обязательные поля. Для known error
+ответ пересобирается из сохранённого snapshot. Для unknown error исходная причина проходит только в
+privacy-safe logger, а клиент получает новый factory-created `INTERNAL_ERROR`; stack/message/cause
+исходной ошибки в response не копируются.
+
+### Точные изменения для восстановления разработки
+
+`server/src/errors/graphql-error.ts`:
+
+- добавить приватные `knownErrors`, immutable `PublicErrorSnapshot` и helper безопасного обхода;
+- в `createApiError` после создания ошибки сохранить deep-enough copy: новый frozen объект
+  `extensions` из scalar/list fields контракта и фиксированный message словаря;
+- заменить `isApiError` на проверку registry traversal без `instanceof`; не экспортировать brand или
+  registry;
+- в `createErrorMasker` сначала искать snapshot traversal helper-ом и возвращать новый
+  `GraphQLError(snapshot.message, { extensions: { ...snapshot.extensions } })`;
+- только при отсутствии snapshot создавать `requestId`, логировать `error.unhandled` и возвращать
+  `createApiError("INTERNAL_ERROR", { requestId })`. Для log cause допустим исходный received object;
+  logger обязан санитизировать его и не сериализовать response extensions.
+
+`server/src/server.ts`:
+
+- импортировать `createErrorMasker` из единственного канонического пути
+  `./errors/graphql-error.js`, создать masker один раз рядом с logger и передать
+  `maskedErrors: { isDev: false, maskError }` в `createYoga`;
+- сохранить `logging: false`: application logger остаётся единственным контролируемым sink;
+- не добавлять fallback, доверяющий `extensions`, и не копировать factory/registry в другой модуль.
+  Factory и masker должны загружать один module instance; production build не должен импортировать
+  их через разные сгенерированные копии или разные entrypoints.
+
+### Regression matrix для следующего разрешённого цикла
+
+В `server/tests/graphql-error-boundary.test.ts` на реальном Yoga добавить/сохранить проверки:
+
+1. неизвестный resolver `Error` → только `INTERNAL_ERROR`, новый `requestId`, без исходных
+   message/stack, ровно один sanitized log;
+2. factory-created `NOT_FOUND` через Yoga located wrapper сохраняет code/поля и не создаёт
+   `error.unhandled`;
+3. вручную созданный `GraphQLError` с полностью корректными `extensions` → `INTERNAL_ERROR` и log;
+4. известная ошибка за двумя `originalError` wrappers и отдельно за `cause` распознаётся;
+5. циклические `originalError`/`cause` не зацикливают masker и остаются unknown;
+6. мутация публичных `extensions` после `createApiError` не меняет response: используется сохранённый
+   snapshot.
+
+История `t086-ac1-yoga-error-mask` остаётся `2/2 failed` и не обнуляется переименованием check.
+Архитектурная стадия не запускает третью попытку AC-1. Оркестратор должен явно открыть ограниченный
+recovery cycle разработчику; после реализации тот повторяет тот же semantic check и сохраняет связь с
+двумя предыдущими попытками. Задачи 4–5 продолжаются только после подтверждённого AC-1 recovery.
