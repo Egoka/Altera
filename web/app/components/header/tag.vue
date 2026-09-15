@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type SectionTag from "~/types/sectionTag"
+  import type { SectionTagSummaryFragment } from "~/graphql/generated/graphql"
 
   interface Props {
-    tag: Pick<SectionTag, "name">
+    tag: Pick<SectionTagSummaryFragment, "name">
   }
   defineProps<Props>()
 </script>

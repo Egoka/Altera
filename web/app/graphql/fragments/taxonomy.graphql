@@ -1,0 +1,19 @@
+fragment ContentTypeSummary on ContentType {
+  id
+  name
+  slug
+  description
+  order
+  status
+  createdAt
+  updatedAt
+}
+
+fragment SectionTagSummary on SectionTag {
+  id
+  name
+  slug
+  description
+  createdAt
+  updatedAt
+}

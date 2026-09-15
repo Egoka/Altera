@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import type ContentType from "~/types/contentType"
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment, ContentTypeSummaryFragment } from "~/graphql/generated/graphql"
   import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
   import { buildFeedGroups } from "~/utils/feedGroups"
   import { SECTION_RHYTHM } from "~/utils/feedRhythm"
@@ -10,7 +9,9 @@
   })
 
   // Моковые данные для демонстрации
-  const contentType: ContentType = {
+  type ContentTypeNavItem = ContentTypeSummaryFragment & { iconUrl?: string }
+
+  const contentType: ContentTypeNavItem = {
     id: "1",
     name: "National Security",
     slug: "national-security",
@@ -34,12 +35,14 @@
    */
   const PAGE_SIZE = 24
   const firstDay = Date.UTC(2026, 8, 13, 12)
-  const articles: ArticleResponse[] = [...DEMO_LATEST, ...DEMO_DEMANDED].slice(0, PAGE_SIZE).map((article, index) => ({
-    ...article,
-    id: `section-${index + 1}`,
-    publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
-    contentType: { name: contentType.name, slug: contentType.slug }
-  }))
+  const articles: ArticleCardFragment[] = [...DEMO_LATEST, ...DEMO_DEMANDED]
+    .slice(0, PAGE_SIZE)
+    .map((article, index) => ({
+      ...article,
+      id: `section-${index + 1}`,
+      publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
+      contentType: { name: contentType.name, slug: contentType.slug }
+    }))
   const groups = buildFeedGroups(articles, SECTION_RHYTHM)
 </script>
 

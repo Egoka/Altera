@@ -5,6 +5,7 @@
   "author": "Egor Bondarenko",
   "private": false,
   "scripts": {
+    "codegen": "graphql-codegen --config codegen.ts",
     "prepare": "husky",
     "test": "pnpm -r test",
     "lint": "pnpm -r exec eslint .",
@@ -40,14 +41,19 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@graphql-codegen/cli": "7.4.1",
+    "@graphql-codegen/client-preset": "6.2.0",
+    "@graphql-codegen/schema-ast": "6.1.0",
     "@typescript-eslint/eslint-plugin": "^8.37.0",
     "@typescript-eslint/parser": "^8.37.0",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-nuxt": "^4.0.0",
     "eslint-plugin-vue": "^10.3.0",
+    "graphql": "^16.11.0",
     "husky": "^9.1.7",
     "prettier": "^3.6.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.37.0",
     "vue-eslint-parser": "^10.2.0"
   }

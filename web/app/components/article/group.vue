@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
   import type { CardMeta, SlotMedia, SlotSpec } from "~/types/layout"
   import {
     getLayout,
@@ -13,7 +13,7 @@
   } from "~/utils/articleLayouts"
 
   const props = defineProps<{
-    articles: ArticleResponse[]
+    articles: ArticleCardFragment[]
     /** Идентификатор раскладки из реестра `articleLayouts`. */
     layout: string
     /** Служебная строка карточек: рубрика (по умолчанию) или дата — для лент внутри рубрики. */

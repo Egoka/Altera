@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type { PopularArticleData } from "~/types/article"
+  import type { PopularArticleFragment } from "~/graphql/generated/graphql"
   const props = defineProps<{
     index: number
-    article: PopularArticleData
+    article: PopularArticleFragment
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
   const author = computed(() => `/authors/${props.article.author.slug}`)

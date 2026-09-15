@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type User from "~/types/user"
+  import type { AuthorSummaryFragment } from "~/graphql/generated/graphql"
 
   interface Props {
-    user: User
+    user: AuthorSummaryFragment
   }
 
   const props = defineProps<Props>()
@@ -100,7 +100,7 @@
             <NuxtImg
               :alt="user.name + ' Icon'"
               class="block w-48 h-58 object-cover rounded-2xl border border-zinc-200 dark:border-zinc-700"
-              :src="user.photoUrl"
+              :src="user.photoUrl ?? undefined"
               width="120"
               height="120" />
           </div>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-  import type ContentType from "~/types/contentType"
+  import type { ContentTypeSummaryFragment } from "~/graphql/generated/graphql"
+
+  type ContentTypeNavItem = ContentTypeSummaryFragment & { iconUrl?: string }
 
   interface Props {
-    contentType: ContentType
+    contentType: ContentTypeNavItem
   }
 
   const props = defineProps<Props>()

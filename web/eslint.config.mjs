@@ -7,7 +7,15 @@ export default [
   {
     // .output и .data — сборочный вывод Nuxt: минифицированные чанки не являются исходным
     // кодом. .prettierignore их уже исключает, eslint исключал только .nuxt.
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.nuxt/**", "**/.output/**", "**/.data/**", "**/coverage/**"]
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.nuxt/**",
+      "**/.output/**",
+      "**/.data/**",
+      "**/coverage/**",
+      "**/app/graphql/generated/**"
+    ]
   },
   {
     files: ["**/*.ts", "**/*.js"],

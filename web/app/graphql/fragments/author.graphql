@@ -1,0 +1,12 @@
+fragment AuthorSummary on User {
+  id
+  name
+  email
+  bio
+  photoUrl
+  role
+  slug
+  socialLinks
+  createdAt
+  updatedAt
+}

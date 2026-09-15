@@ -1,0 +1,422 @@
+type Article {
+  author: User!
+  body: String!
+  contentType: ContentType!
+  createdAt: String!
+  dek: String
+  excerpt: String
+  featuredImage: String
+  id: ID!
+  publishedAt: String
+  sectionTags: [SectionTag!]!
+  slug: String!
+  status: ArticleStatus!
+  title: String!
+  updatedAt: String!
+}
+
+type ArticleDetail {
+  article: Article!
+  articleStats: ArticleStats
+  recommendedArticles: [Article!]!
+  relatedArticles: [Article!]!
+}
+
+type ArticleFilters {
+  authorId: [ID!]
+  base: BaseFiltersInfo
+  publishedAt: DateRangeInfo
+  status: [ArticleStatus!]
+  tagIds: [ID!]
+  typeId: [ID!]
+}
+
+input ArticleFiltersInput {
+  authorId: [ID!]
+  base: BaseFiltersInput
+  publishedAt: DateRangeInput
+  status: [ArticleStatus!]
+  tagIds: [ID!]
+  typeId: [ID!]
+}
+
+type ArticleStats {
+  readTime: Int!
+  shareCount: Int
+  viewCount: Int
+  wordCount: Int!
+}
+
+enum ArticleStatus {
+  archived
+  draft
+  published
+  review
+}
+
+type ArticlesByAuthorResponse {
+  articles: [Article!]!
+  currentPage: Int!
+  totalCount: Int!
+  totalPages: Int!
+}
+
+type ArticlesByContentTypeResponse {
+  articles: [Article!]!
+  currentPage: Int!
+  totalCount: Int!
+  totalPages: Int!
+}
+
+type ArticlesByTagResponse {
+  articles: [Article!]!
+  currentPage: Int!
+  totalCount: Int!
+  totalPages: Int!
+}
+
+type ArticlesResponse {
+  articles: [Article!]!
+  filters: ArticleFilters!
+  pagination: PaginationInfo!
+  search: SearchInfo
+  sort: SortInfo!
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
+type AuthorStats {
+  articlesThisMonth: Int!
+  popularTags: [SectionTag!]
+  totalArticles: Int!
+}
+
+type BaseFiltersInfo {
+  createdAt: DateRangeInfo
+  updatedAt: DateRangeInfo
+}
+
+input BaseFiltersInput {
+  createdAt: DateRangeInput
+  updatedAt: DateRangeInput
+}
+
+type ContentType {
+  _count: ContentTypeCount
+  articles: [Article!]
+  createdAt: String!
+  description: String
+  id: ID!
+  name: String!
+  order: Int!
+  slug: String!
+  status: ContentTypeStatus!
+  updatedAt: String!
+}
+
+type ContentTypeCount {
+  articles: Int!
+}
+
+type ContentTypeFilters {
+  base: BaseFiltersInfo
+  hasArticles: Boolean
+  status: [ContentTypeStatus!]
+}
+
+input ContentTypeFiltersInput {
+  base: BaseFiltersInput
+  hasArticles: Boolean
+  status: [ContentTypeStatus!]
+}
+
+type ContentTypeStats {
+  articlesThisMonth: Int!
+  averageReadTime: Float
+  popularTags: [SectionTag!]
+  topAuthors: [User!]
+  totalArticles: Int!
+}
+
+enum ContentTypeStatus {
+  active
+  archived
+}
+
+type ContentTypesResponse {
+  contentTypes: [ContentType!]!
+  filters: ContentTypeFilters!
+  pagination: PaginationInfo!
+  search: SearchInfo
+  sort: SortInfo!
+}
+
+input CreateArticleInput {
+  body: String!
+  dek: String
+  excerpt: String
+  featuredImage: String
+  sectionTags: [ID!]
+  slug: String!
+  title: String!
+  typeId: ID!
+}
+
+input CreateContentTypeInput {
+  description: String
+  name: String!
+  order: Int!
+  slug: String!
+  status: ContentTypeStatus
+}
+
+input CreateTagInput {
+  description: String
+  name: String!
+  slug: String!
+}
+
+type DateRangeInfo {
+  from: String
+  to: String
+}
+
+input DateRangeInput {
+  from: String
+  to: String
+}
+
+scalar JSON
+
+input MergeTagsInput {
+  sourceTagIds: [ID!]!
+  targetTagId: ID!
+}
+
+type Mutation {
+  _empty: String
+  archiveArticle(id: ID!): Article!
+  archiveContentType(id: ID!): ContentType!
+  bulkDeleteArticles(ids: [ID!]!): [Article!]!
+  bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
+  createArticle(input: CreateArticleInput!): Article!
+  createContentType(input: CreateContentTypeInput!): ContentType!
+  createTag(input: CreateTagInput!): SectionTag!
+  deleteContentType(id: ID!): ContentType!
+  deleteTag(id: ID!): SectionTag!
+  mergeTags(input: MergeTagsInput!): SectionTag!
+  reorderContentTypes(input: ReorderContentTypesInput!): [ContentType!]!
+  requestMagicLink(email: String!): Boolean!
+  requestReview(id: ID!): Article!
+  revertToDraft(id: ID!): Article!
+  setArticleStatus(id: ID!, status: ArticleStatus!): Article!
+  updateArticle(id: ID!, input: UpdateArticleInput!): Article!
+  updateContentType(id: ID!, input: UpdateContentTypeInput!): ContentType!
+  updateTag(id: ID!, input: UpdateTagInput!): SectionTag!
+  verifyMagicLink(token: String!): AuthPayload!
+}
+
+type PaginationInfo {
+  currentPage: Int!
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  itemsPerPage: Int!
+  totalItems: Int!
+  totalPages: Int!
+}
+
+input PaginationInput {
+  limit: Int! = 20
+  maxLimit: Int = 100
+  page: Int! = 1
+}
+
+type Query {
+  _empty: String
+  article(slug: String!): Article
+  articleDetail(slug: String!): ArticleDetail
+  articleStats(slug: String!): ArticleStats
+  articles(filters: ArticleFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): ArticlesResponse!
+  articlesByAuthor(authorSlug: String!, limit: Int = 10, page: Int = 1): ArticlesByAuthorResponse!
+  articlesByContentType(contentTypeSlug: String!, limit: Int = 10, page: Int = 1): ArticlesByContentTypeResponse!
+  articlesByTag(limit: Int = 10, page: Int = 1, tagSlug: String!): ArticlesByTagResponse!
+  author(slug: String!): User
+  authorStats(authorSlug: String!): AuthorStats
+  contentType(slug: String!): ContentType
+  contentTypeStats(contentTypeSlug: String!): ContentTypeStats
+  contentTypes(filters: ContentTypeFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): ContentTypesResponse!
+  featuredArticles(limit: Int = 5): [Article!]!
+  latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
+  me: User
+  myArticlesStats: UserArticleStats
+  popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
+  recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
+  relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
+  sectionTags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
+  tag(slug: String!): SectionTag
+  tagStats(tagSlug: String!): TagStats
+  user(slug: String!): User
+  users(filters: UserFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): UsersResponse!
+}
+
+type RelatedArticlesResponse {
+  articles: [Article!]!
+  totalCount: Int!
+}
+
+input ReorderContentTypesInput {
+  items: [ReorderItemInput!]!
+}
+
+input ReorderItemInput {
+  id: ID!
+  order: Int!
+}
+
+enum Role {
+  admin
+  author
+  editor
+  reader
+}
+
+type SearchInfo {
+  fields: [String!]
+  query: String!
+}
+
+input SearchInput {
+  fields: [String!]
+  query: String!
+}
+
+type SectionTag {
+  _count: SectionTagCount
+  articles: [Article!]
+  createdAt: String!
+  description: String
+  id: ID!
+  name: String!
+  slug: String!
+  updatedAt: String!
+}
+
+type SectionTagCount {
+  articles: Int!
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+type SortInfo {
+  direction: SortDirection!
+  field: String!
+}
+
+input SortInput {
+  direction: SortDirection! = ASC
+  field: String!
+}
+
+type TagFilters {
+  base: BaseFiltersInfo
+  hasArticles: Boolean
+}
+
+input TagFiltersInput {
+  base: BaseFiltersInput
+  hasArticles: Boolean
+}
+
+type TagStats {
+  articlesThisMonth: Int!
+  averageReadTime: Float
+  popularAuthors: [User!]
+  totalArticles: Int!
+}
+
+type TagsResponse {
+  filters: TagFilters!
+  pagination: PaginationInfo!
+  search: SearchInfo
+  sort: SortInfo!
+  tags: [SectionTag!]!
+}
+
+input UpdateArticleInput {
+  body: String
+  dek: String
+  excerpt: String
+  featuredImage: String
+  sectionTags: [ID!]
+  slug: String
+  title: String
+  typeId: ID
+}
+
+input UpdateContentTypeInput {
+  description: String
+  name: String
+  order: Int
+  slug: String
+  status: ContentTypeStatus
+}
+
+input UpdateTagInput {
+  description: String
+  name: String
+  slug: String
+}
+
+type User {
+  _count: UserCount
+  articles: [Article!]
+  bio: String
+  createdAt: String!
+  email: String!
+  id: ID!
+  name: String!
+  photoUrl: String
+  role: Role!
+  slug: String!
+  socialLinks: JSON
+  updatedAt: String!
+}
+
+type UserArticleStats {
+  archived: Int!
+  draft: Int!
+  published: Int!
+  review: Int!
+  total: Int!
+}
+
+type UserCount {
+  articles: Int!
+}
+
+type UserFilters {
+  base: BaseFiltersInfo
+  hasArticles: Boolean
+  role: [Role!]
+}
+
+input UserFiltersInput {
+  base: BaseFiltersInput
+  hasArticles: Boolean
+  role: [Role!]
+}
+
+type UsersResponse {
+  filters: UserFilters!
+  pagination: PaginationInfo!
+  search: SearchInfo
+  sort: SortInfo!
+  users: [User!]!
+}

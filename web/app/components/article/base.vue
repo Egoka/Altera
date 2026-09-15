@@ -1,9 +1,9 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
   import type { CardMeta } from "~/types/layout"
 
   const props = defineProps<{
-    article: ArticleResponse
+    article: ArticleCardFragment
     /**
      * Ступень заголовка.
      * `lead` — ведущий слот группы, заголовок на ступень крупнее.
@@ -32,7 +32,7 @@
     <figure class="mb-4">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
-          :src="article.featuredImage"
+          :src="article.featuredImage ?? undefined"
           :alt="article.title"
           class="w-full aspect-3/2 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>

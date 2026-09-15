@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
   import type { CardMeta } from "~/types/layout"
 
   /**
@@ -16,7 +16,7 @@
    * консоль полнилась предупреждениями о гидрации.
    */
   defineProps<{
-    articles: ArticleResponse[]
+    articles: ArticleCardFragment[]
     /** Служебная строка карточки: части по порядку, по умолчанию автор · рубрика. */
     meta?: CardMeta
   }>()

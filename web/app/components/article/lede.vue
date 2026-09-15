@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
+  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
 
   const props = defineProps<{
-    article: ArticleResponse
+    article: ArticleCardFragment
   }>()
   const slug = computed(() => `/${props.article.contentType.slug}/${props.article.slug}`)
   const contentType = computed(() => `/${props.article.contentType.slug}`)
@@ -17,7 +17,7 @@
     <figure class="mb-10">
       <NuxtLink :to="slug" class="block group">
         <NuxtImg
-          :src="article.featuredImage"
+          :src="article.featuredImage ?? undefined"
           :alt="article.title"
           class="block mx-auto w-full max-w-[calc(var(--lede-media-max-height)*var(--lede-media-max-ratio))] max-h-(--lede-media-max-height) aspect-square sm:aspect-2/1 object-cover rounded-sm transition-transform duration-300" />
       </NuxtLink>
@@ -32,6 +32,7 @@
     </div>
 
     <p
+      v-if="article.dek"
       class="lede-dek mt-1 font-garamond-libre text-dek-compact xs:text-card md:text-card-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-3xl mx-auto line-clamp-2">
       {{ article.dek }}
     </p>

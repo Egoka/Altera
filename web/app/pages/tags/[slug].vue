@@ -1,6 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleResponse } from "~/types/article"
-  import type SectionTag from "~/types/sectionTag"
+  import type { ArticleCardFragment, SectionTagSummaryFragment } from "~/graphql/generated/graphql"
   import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
   import { findDemoTag } from "~/utils/demoTags"
 
@@ -15,12 +14,13 @@
    * показывала «Технологии» из собственного мока, и `/tags/economics` врал в
    * заголовке. Описания у тега нет по ADR-0005, поэтому поле не заполняется.
    */
-  const tag = computed<SectionTag>(() => {
+  const tag = computed<SectionTagSummaryFragment>(() => {
     const demo = findDemoTag(String(route.params.slug ?? ""))
     return {
       id: demo.slug,
       name: demo.name,
       slug: demo.slug,
+      description: null,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z"
     }
@@ -35,11 +35,13 @@
    */
   const PAGE_SIZE = 24
   const firstDay = Date.UTC(2026, 8, 13, 12)
-  const articles: ArticleResponse[] = [...DEMO_LATEST, ...DEMO_DEMANDED].slice(0, PAGE_SIZE).map((article, index) => ({
-    ...article,
-    id: `tag-${index + 1}`,
-    publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString()
-  }))
+  const articles: ArticleCardFragment[] = [...DEMO_LATEST, ...DEMO_DEMANDED]
+    .slice(0, PAGE_SIZE)
+    .map((article, index) => ({
+      ...article,
+      id: `tag-${index + 1}`,
+      publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString()
+    }))
 </script>
 
 <template>

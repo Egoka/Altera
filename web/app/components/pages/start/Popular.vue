@@ -1,9 +1,9 @@
 <script setup lang="ts">
-  import type { PopularArticleData } from "~/types/article"
+  import type { PopularArticleFragment } from "~/graphql/generated/graphql"
 
   // Props для тестирования (опционально)
   interface Props {
-    articles?: PopularArticleData[]
+    articles?: PopularArticleFragment[]
   }
 
   const props = withDefaults(defineProps<Props>(), {

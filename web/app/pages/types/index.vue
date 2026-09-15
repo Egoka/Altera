@@ -1,8 +1,10 @@
 <script setup lang="ts">
-  import type ContentType from "~/types/contentType"
+  import type { ContentTypeSummaryFragment } from "~/graphql/generated/graphql"
+
+  type ContentTypeNavItem = ContentTypeSummaryFragment & { iconUrl?: string }
 
   // Моковые данные для типов контента
-  const mockContentTypes: ContentType[] = [
+  const mockContentTypes: ContentTypeNavItem[] = [
     {
       id: "1",
       name: "Статьи",
@@ -102,7 +104,7 @@
   ]
 
   // Реактивные данные
-  const contentTypes = ref<ContentType[]>(mockContentTypes)
+  const contentTypes = ref<ContentTypeNavItem[]>(mockContentTypes)
   const searchQuery = ref("")
 
   // Фильтрация типов контента
