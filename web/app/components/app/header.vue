@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import LanguageToggle from "~/components/functional/LanguageToggle.vue"
   import { useScroll } from "~/composables/useScroll"
   import { ref, watch } from "vue"
 
@@ -87,6 +88,7 @@
       </div>
 
       <div class="flex flex-1 justify-end">
+        <LanguageToggle />
         <NuxtLink to="/" class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Log in</NuxtLink>
       </div>
     </nav>

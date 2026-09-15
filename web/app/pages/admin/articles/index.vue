@@ -2,6 +2,7 @@
   import type { IColumn } from "#fishtvue/table"
 
   definePageMeta({
+    i18n: false,
     layout: "admin",
     middleware: ["admin"]
   })

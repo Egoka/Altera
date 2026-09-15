@@ -45,6 +45,10 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
+  routeRules: {
+    "/ru": { redirect: { to: "/", statusCode: 301 } }
+  },
+
   hooks: {
     "pages:extend": (pages) => {
       if (process.env.NODE_ENV === "production") {
@@ -109,12 +113,8 @@ export default defineNuxtConfig({
         file: "ru.json"
       }
     ],
-    defaultLocale: "en",
+    defaultLocale: "ru",
     strategy: "prefix_except_default",
-    detectBrowserLanguage: {
-      useCookie: true,
-      cookieKey: "i18n_redirected",
-      redirectOn: "root"
-    }
+    detectBrowserLanguage: false
   }
 })

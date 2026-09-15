@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "DATABASE_URL=postgresql://test:test@127.0.0.1:5432/test JWT_ACCESS_SECRET=t009-test-access-secret JWT_REFRESH_SECRET=t009-test-refresh-secret FRONTEND_URL=http://127.0.0.1:4173 PORT=4000 pnpm --filter server run dev",
+        "DATABASE_URL=postgresql://test:test@127.0.0.1:5432/test JWT_ACCESS_SECRET=t009-test-access-secret JWT_REFRESH_SECRET=t009-test-refresh-secret LOG_HASH_SECRET=t053-test-log-hash-secret FRONTEND_URL=http://127.0.0.1:4173 PORT=4000 pnpm --filter server run dev",
       url: "http://127.0.0.1:4000/",
       reuseExistingServer: false,
       timeout: 120_000
