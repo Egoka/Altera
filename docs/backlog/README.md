@@ -78,6 +78,8 @@ baseline и проверяемая revision. Разделы: 1 результа�
   Отчёт: `docs/reports/2026-09-15-t004-web-prod-build-report.md`. T-005 разблокирована.
 
 - Обновление 2026-09-15: T-009 завершена. Merge commit `5271880f` (PR #40) влит в `app`.
+
+- Обновление 2026-09-15: T-086 завершена. Source SHA `4bb55c9d` (ветка `server/t086-error-dictionary`), HEAD с отчётом `08a1075`. Ревью принято (оркестратор). Разблокированы: T-087 → кандидат; T-091 → кандидат; T-047 → зависит: T-019 (T-086 закрыта). T-088 и T-089 остаются на решении владельца (Q-11, Q-01). Follow-up: `RedisCache.warn` заглушён — не блокер T-086, подходит для отдельной задачи наблюдаемости.
   Реализован BFF-прокси `POST /api/graphql`: Nitro-маршрут с приватным `runtimeConfig.graphqlApiUrl`,
   CSRF-заголовком `x-graphql-yoga-csrf: bff`, явным allowlist и `useGraphQL` composable.
   Playwright 3/3, Vitest 14/14, bundle grep PASS; CI SUCCESS. Render deploy: not_applicable (diff только `web/`).
