@@ -2,6 +2,10 @@
   import AdminHeader from "@/components/admin/header.vue"
   import AdminMain from "@/components/admin/main.vue"
 
+  useHead({
+    meta: [{ name: "robots", content: "noindex, nofollow" }]
+  })
+
   const adminStore = useAdminStore()
 
   // Инициализация из localStorage при монтировании
