@@ -73,11 +73,11 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 
 # Database Configuration
-DATABASE_URL="postgresql://username:password@localhost:5432/altera"
-DATABASE_URL_UNPOOLED="postgresql://username:password@localhost:5432/altera"
+DATABASE_URL="postgresql://username:password@localhost:25432/altera"
+DATABASE_URL_UNPOOLED="postgresql://username:password@localhost:25432/altera"
 
 # Redis Configuration
-REDIS_URL=redis://localhost:6379
+REDIS_URL=redis://localhost:26379
 CACHE_TTL=21600
 
 # JWT Configuration

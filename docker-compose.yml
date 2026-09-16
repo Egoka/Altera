@@ -6,7 +6,9 @@ services:
       POSTGRES_USER: altera
       POSTGRES_PASSWORD: altera
     ports:
-      - "5432:5432"
+      # Собственные порты Altera (схема «2 + стандартный порт»), чтобы не конфликтовать
+      # с другими локальными проектами, занимающими стандартные 5432/6379/1025/8025.
+      - "25432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,7 +20,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "26379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -28,8 +30,8 @@ services:
   mailpit:
     image: axllent/mailpit:v1.30.6
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "21025:1025"
+      - "28025:8025"
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
