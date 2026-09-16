@@ -8,7 +8,7 @@
     "sha": "4c4749708d1f5406ea65c090695e492d8ee2065f"
   },
   "baseline_sha": "49a8302b5da832952b50ffc337819ce623791161",
-  "tested_sha": "f182d1dda5d67249a07d21514d2b872e23ab159e",
+  "tested_sha": "60823cbc1a40fd15096372145a875b194e1ee703",
   "branch": "server/t-017-bookmarks-base-authorship",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t017-bookmarks",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -29,13 +29,13 @@
     "number": 79,
     "url": "https://github.com/Egoka/Altera/pull/79",
     "base_ref": "app",
-    "base_sha": "80eca687798550cefd23742370b8078f66982136",
-    "head_sha": "f182d1dda5d67249a07d21514d2b872e23ab159e"
+    "base_sha": "c4eeae01949bdec0468e0bd3532a64ac48792505",
+    "head_sha": "60823cbc1a40fd15096372145a875b194e1ee703"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
     "run_id": null,
-    "sha": "f182d1dda5d67249a07d21514d2b872e23ab159e",
+    "sha": "60823cbc1a40fd15096372145a875b194e1ee703",
     "verdict": "pending"
   },
   "deployment": {
@@ -45,7 +45,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-017.md",
-    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    "sha256": "f95c6f2b0aff400583c68a76f4891e3b6d189c0c8788a848e47cf46aec86c32a"
   },
   "usage": null
 }
