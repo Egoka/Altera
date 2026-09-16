@@ -132,6 +132,7 @@ jobs:
       JWT_ACCESS_SECRET: "test-access-secret"
       JWT_REFRESH_SECRET: "test-refresh-secret"
       LOG_HASH_SECRET: "ci-log-hash-secret"
+      REQUEST_ID_FORWARD_SECRET: "ci-request-id-secret"
       MAGIC_LINK_EXPIRY_MINUTES: 15
       MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
       JWT_ACCESS_TOKEN_EXPIRY: "15m"
