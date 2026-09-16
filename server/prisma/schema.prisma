@@ -31,7 +31,12 @@ model User {
   archivedByRole     Role?
   archiveReason      String?
   isServiceAccount   Boolean              @default(false)
+  planTier           PlanTier             @default(free)
+  planUntil          DateTime?
   articles           Article[]
+  bookmarks          Bookmark[]
+  planGrants         PlanGrant[]          @relation("PlanGrantRecipient")
+  grantedPlanGrants  PlanGrant[]          @relation("PlanGrantActor")
   magicLink          MagicLinkToken?
   sessions           Session[]
   emailChangeRequest EmailChangeRequest?
@@ -241,6 +246,7 @@ model Article {
   coverAsset        MediaAsset?          @relation("ArticleCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
   tags              Tag[]                @relation("ArticleToTag")
   translations      ArticleTranslation[]
+  bookmarks         Bookmark[]
 
   @@index([sectionId])
   @@index([formatId])
@@ -544,6 +550,35 @@ model MediaAsset {
   @@map("media_assets")
 }
 
+model Bookmark {
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, articleId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("bookmarks")
+}
+
+model PlanGrant {
+  id          String    @id @default(uuid())
+  userId      String
+  tier        PlanTier
+  startsAt    DateTime  @default(now())
+  endsAt      DateTime?
+  grantedById String?
+  reason      String
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation("PlanGrantRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy   User?     @relation("PlanGrantActor", fields: [grantedById], references: [id], onDelete: Restrict)
+
+  @@index([userId, endsAt])
+  @@map("plan_grants")
+}
+
 enum Role {
   reader
   author
@@ -552,6 +587,12 @@ enum Role {
   analyst
   admin
   owner
+}
+
+enum PlanTier {
+  free
+  standard
+  pro
 }
 
 enum AccountArchiveMode {
