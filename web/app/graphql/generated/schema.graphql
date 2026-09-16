@@ -69,10 +69,13 @@ type ArticleStats {
 }
 
 enum ArticleStatus {
+  ai_check
   archived
   draft
+  in_review
   published
   review
+  rework
 }
 
 type ArticlesByAuthorResponse {
