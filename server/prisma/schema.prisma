@@ -37,7 +37,8 @@ model User {
   emailChangeRequest EmailChangeRequest?
   currentHandle      HandleHistory       @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
   handleHistory      HandleHistory[]     @relation("HandleOwner")
-  createdTags        Tag[]                @relation("TagCreator")
+  createdTags        Tag[]               @relation("TagCreator")
+  legalConsents      UserLegalConsent[]
 
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
@@ -230,6 +231,211 @@ model Article {
   @@map("articles")
 }
 
+model Job {
+  id            String         @id @default(uuid())
+  kind          String
+  status        JobStatus      @default(queued)
+  objectType    String?
+  objectId      String?
+  parameters    Json?
+  availableAt   DateTime       @default(now())
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  cancelledAt   DateTime?
+  attemptCount  Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  attempts      JobAttempt[]
+  aiProcesses   AiProcess[]
+  mailMessages  MailMessage[]
+  backendErrors BackendError[]
+
+  @@index([status, availableAt])
+  @@index([kind, status])
+  @@index([objectType, objectId])
+  @@map("jobs")
+}
+
+model JobAttempt {
+  id             String    @id @default(uuid())
+  jobId          String
+  job            Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  number         Int
+  status         JobStatus @default(queued)
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  errorRequestId String?
+  errorClass     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([jobId, number])
+  @@index([status])
+  @@map("job_attempts")
+}
+
+model AiProcess {
+  id                 String          @id @default(uuid())
+  jobId              String?
+  job                Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  kind               AiProcessKind
+  status             AiProcessStatus @default(created)
+  objectType         String
+  objectId           String
+  model              String?
+  promptVersion      String?
+  verdict            String?
+  reasons            Json?
+  providerErrorClass String?
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  durationMs         Int?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([kind, status, createdAt])
+  @@index([objectType, objectId])
+  @@index([jobId])
+  @@map("ai_processes")
+}
+
+/// Стоимость хранится только в агрегатах по периодам, но не у отдельного AI-процесса.
+model AiCostAggregate {
+  id             String        @id @default(uuid())
+  bucketStart    DateTime
+  bucketEnd      DateTime
+  kind           AiProcessKind
+  totalCostMinor BigInt
+  processCount   Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([bucketStart, bucketEnd, kind])
+  @@index([kind, bucketStart])
+  @@map("ai_cost_aggregates")
+}
+
+model MailMessage {
+  id                 String              @id @default(uuid())
+  jobId              String?
+  job                Job?                @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  template           String
+  recipientEmail     String
+  subject            String
+  sanitizedBody      String              @db.Text
+  status             MailDeliveryStatus  @default(queued)
+  objectType         String?
+  objectId           String?
+  provider           String?
+  messageId          String?
+  deliveryErrorClass String?
+  queuedAt           DateTime            @default(now())
+  sentAt             DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deliveryEvents     MailDeliveryEvent[]
+
+  @@index([status, createdAt])
+  @@index([template, createdAt])
+  @@index([recipientEmail])
+  @@index([objectType, objectId])
+  @@index([jobId])
+  @@map("mail_messages")
+}
+
+model MailDeliveryEvent {
+  id              String             @id @default(uuid())
+  mailMessageId   String
+  mailMessage     MailMessage        @relation(fields: [mailMessageId], references: [id], onDelete: Cascade)
+  status          MailDeliveryStatus
+  providerEventId String?
+  errorClass      String?
+  occurredAt      DateTime           @default(now())
+
+  @@index([mailMessageId, occurredAt])
+  @@map("mail_delivery_events")
+}
+
+model BackendError {
+  id                String                      @id @default(uuid())
+  signature         String                      @unique
+  service           BackendErrorService
+  code              String
+  errorClass        String?
+  sanitizedMessage  String
+  route             String?
+  requestMethod     String?
+  requestId         String?
+  sanitizedStack    String?                     @db.Text
+  actorRole         Role?
+  jobId             String?
+  job               Job?                        @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  workStatus        BackendErrorWorkStatus      @default(new_record)
+  assignedActorId   String?
+  assignedActorRole Role?
+  firstSeenAt       DateTime                    @default(now())
+  lastSeenAt        DateTime                    @default(now())
+  occurrenceCount   Int                         @default(1)
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+  statusHistory     BackendErrorStatusHistory[]
+
+  @@index([workStatus, lastSeenAt])
+  @@index([service, code])
+  @@index([requestId])
+  @@index([jobId])
+  @@map("backend_errors")
+}
+
+model BackendErrorStatusHistory {
+  id                 String                  @id @default(uuid())
+  backendErrorId     String
+  backendError       BackendError            @relation(fields: [backendErrorId], references: [id], onDelete: Cascade)
+  fromStatus         BackendErrorWorkStatus?
+  toStatus           BackendErrorWorkStatus
+  changedByActorId   String
+  changedByActorRole Role
+  comment            String?
+  createdAt          DateTime                @default(now())
+
+  @@index([backendErrorId, createdAt])
+  @@map("backend_error_status_history")
+}
+
+model LegalText {
+  id                 String             @id @default(uuid())
+  kind               LegalTextKind
+  locale             Locale
+  version            Int
+  status             LegalTextStatus    @default(draft)
+  body               String             @db.Text
+  summaryOfChanges   String
+  isMaterial         Boolean            @default(false)
+  publishedAt        DateTime?
+  publishedByActorId String?
+  publishedByRole    Role?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  consents           UserLegalConsent[]
+
+  @@unique([kind, locale, version])
+  @@index([kind, locale, status])
+  @@map("legal_texts")
+}
+
+model UserLegalConsent {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  legalTextId String
+  legalText   LegalText @relation(fields: [legalTextId], references: [id], onDelete: Restrict)
+  acceptedAt  DateTime  @default(now())
+
+  @@unique([userId, legalTextId])
+  @@index([legalTextId, acceptedAt])
+  @@map("user_legal_consents")
+}
+
 enum Role {
   reader
   author
@@ -267,4 +473,63 @@ enum ArticleStatus {
   review
   published
   archived
+}
+
+enum JobStatus {
+  queued
+  running
+  completed
+  failed
+  cancelled
+  stuck
+}
+
+enum AiProcessKind {
+  check
+  translate
+  profile
+  alt
+}
+
+enum AiProcessStatus {
+  created
+  started
+  running
+  completed
+  failed
+}
+
+enum MailDeliveryStatus {
+  queued
+  sent
+  bounced
+  failed
+}
+
+enum BackendErrorService {
+  api
+  web
+  worker
+}
+
+enum BackendErrorWorkStatus {
+  new_record  @map("new")
+  in_progress
+  resolved
+}
+
+enum LegalTextKind {
+  terms
+  privacy
+  content_rules
+  license
+  paid_services
+  refunds
+  about
+}
+
+enum LegalTextStatus {
+  draft
+  published
+  previous
 }
