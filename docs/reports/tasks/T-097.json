@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task_id": "T-097",
+  "issue_id": "01a0a9b0-568e-7917-91b1-5bc15360e53c",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-097-design-mockups-launch.md",
+    "sha": "60efbcac2f941546d7ccc5c708abdd9479857785"
+  },
+  "baseline_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
+  "tested_sha": "413515fd16b902bb33e79f0641e5ea177cbebdf9",
+  "implementer_id": "8c80740a-ba6c-4ea2-8011-17a229e214e3",
+  "implementer_run_id": "01a0a9b0-56a2-7a2b-a0c9-404d2a6d5693",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "https://github.com/Egoka/Altera/actions/runs/35092022360 — все CI checks SUCCESS; таблица покрытия состояний в docs/reports/2026-09-16-t097-page-mockups.md"
+    }
+  ],
+  "pr": {
+    "number": 70,
+    "head_sha": "413515fd16b902bb33e79f0641e5ea177cbebdf9",
+    "base_ref": "app",
+    "base_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
+    "merge_sha": "d487e41250c3db0c550d54c80ff992ce906a40ca"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0aa0b-337d-7c9a-9e1e-b2389cfb3902",
+    "sha": "413515fd16b902bb33e79f0641e5ea177cbebdf9",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Только документация — текстовые макеты страниц"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-097.md",
+    "sha256": "518cf78561abb387875098c17b0f70b583b87830d79caa598ebcac3434a056f2"
+  },
+  "usage": null
+}
