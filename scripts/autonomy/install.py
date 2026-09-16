@@ -33,6 +33,16 @@ def install(repo, config_path):
         # Read/merge only public settings; preserve IDs recorded after setup.
         current = json.loads(installed_config.read_text())
         config.update(current)
+    guard_dir = root / "bin"
+    guard_dir.mkdir(exist_ok=True)
+    guard = guard_dir / "multica"
+    guard.write_text(
+        "#!" + sys.executable + "\nimport os, sys\n"
+        "os.execv(sys.executable, [sys.executable, "
+        + repr(str(root / "current" / "multica_guard.py")) + ", *sys.argv[1:]])\n"
+    )
+    guard.chmod(0o755)
+    config["multica_guard_dir"] = str(guard_dir)
     config["instructions_version"] = digest
     config["daily_instructions_version"] = digest
     installed_config.write_text(json.dumps(config, indent=2) + "\n")
