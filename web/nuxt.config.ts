@@ -27,7 +27,8 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
 
   runtimeConfig: {
-    graphqlApiUrl: "http://127.0.0.1:4000/"
+    graphqlApiUrl: "http://127.0.0.1:4000/",
+    requestIdForwardSecret: ""
   },
 
   modules: [

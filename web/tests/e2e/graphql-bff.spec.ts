@@ -5,11 +5,12 @@ const nuxtOrigin = "http://127.0.0.1:4173"
 
 test("browser receives Yoga __typename through the same-origin BFF", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" })
+  const externalRequestId = "44444444-4444-4444-8444-444444444444"
 
-  const result = await page.evaluate(async () => {
+  const result = await page.evaluate(async (externalId) => {
     const response = await fetch("/api/graphql", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "x-request-id": externalId },
       body: JSON.stringify({ query: "{ __typename }" })
     })
 
@@ -21,10 +22,15 @@ test("browser receives Yoga __typename through the same-origin BFF", async ({ pa
       // Missing routes return Nuxt HTML during the RED phase.
     }
 
-    return { status: response.status, body }
-  })
+    return { status: response.status, body, requestId: response.headers.get("x-request-id") }
+  }, externalRequestId)
 
-  expect(result).toEqual({ status: 200, body: { data: { __typename: "Query" } } })
+  expect(result).toEqual({
+    status: 200,
+    body: { data: { __typename: "Query" } },
+    requestId: expect.stringMatching(/^[0-9a-f-]{36}$/i)
+  })
+  expect(result.requestId).not.toBe(externalRequestId)
 })
 
 test("BFF rejects a malformed body without exposing its upstream URL", async ({ page }) => {
@@ -42,6 +48,7 @@ test("BFF rejects a malformed body without exposing its upstream URL", async ({ 
 
   expect(result.status).toBe(400)
   expect(result.body).toContain("Invalid GraphQL request body")
+  expect(result.body).not.toContain("requestId")
   expect(result.body).not.toContain("127.0.0.1:4000")
 })
 

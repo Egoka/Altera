@@ -23,6 +23,7 @@ const yoga = createYoga({
       type Query {
         unknown: String
         known: String
+        providerUnavailable: String
         malformed: String
         forged: String
         nested: String
@@ -39,6 +40,9 @@ const yoga = createYoga({
         },
         known: () => {
           throw createApiError("NOT_FOUND", { requestId: "known-request", entity: "article" })
+        },
+        providerUnavailable: () => {
+          throw createApiError("PROVIDER_UNAVAILABLE", { requestId: "provider-request", provider: "ai" })
         },
         malformed: () => {
           throw new GraphQLError("leaked person@example.com", {
@@ -95,6 +99,7 @@ const yoga = createYoga({
 type QueryField =
   | "unknown"
   | "known"
+  | "providerUnavailable"
   | "malformed"
   | "forged"
   | "nested"
@@ -147,7 +152,18 @@ describe("GraphQL Yoga error boundary", () => {
     expect(result.errors).toEqual([
       {
         message: "Entity not found",
-        extensions: { code: "NOT_FOUND", requestId: "known-request", entity: "article" }
+        extensions: { code: "NOT_FOUND", entity: "article" }
+      }
+    ])
+  })
+
+  it("keeps requestId on a known technical provider failure", async () => {
+    const result = await execute("providerUnavailable")
+
+    expect(result.errors).toEqual([
+      {
+        message: "Provider unavailable",
+        extensions: { code: "PROVIDER_UNAVAILABLE", requestId: "provider-request", provider: "ai" }
       }
     ])
   })
@@ -181,13 +197,13 @@ describe("GraphQL Yoga error boundary", () => {
   it.each([
     ["nested", "nested-request"],
     ["caused", "cause-request"]
-  ] as const)("finds a factory error through the %s wrapper chain", async (field, requestId) => {
+  ] as const)("finds a factory error through the %s wrapper chain", async (field) => {
     const result = await execute(field)
 
     expect(result.errors).toEqual([
       {
         message: "Entity not found",
-        extensions: { code: "NOT_FOUND", requestId, entity: "article" }
+        extensions: { code: "NOT_FOUND", entity: "article" }
       }
     ])
     expect(lines).toEqual([])
@@ -214,7 +230,7 @@ describe("GraphQL Yoga error boundary", () => {
     expect(result.errors).toEqual([
       {
         message: "Entity not found",
-        extensions: { code: "NOT_FOUND", requestId: "mutation-request", entity: "article" }
+        extensions: { code: "NOT_FOUND", entity: "article" }
       }
     ])
     expect(JSON.stringify(result)).not.toContain("person@example.com")
