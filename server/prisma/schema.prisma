@@ -484,7 +484,7 @@ model ArticleTranslation {
   article          Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
   translator       User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
   sourceRevision   ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
-  revisions        ArticleRevision[]  @relation("TranslationRevisions")
+  revisions        ArticleRevision[] @relation("TranslationRevisions")
   reviewMessages   ReviewMessage[]
 
   @@unique([articleId, locale])
@@ -552,6 +552,8 @@ model MediaAsset {
   @@index([sha256])
   @@index([processingStatus, createdAt])
   @@map("media_assets")
+}
+
 /// Append-only audit journal. UPDATE and DELETE are blocked by DB triggers.
 model AuditLog {
   id         String   @id @default(uuid())
@@ -574,7 +576,7 @@ model AuditLog {
 }
 
 model ReviewMessage {
-  id              String            @id @default(uuid())
+  id              String             @id @default(uuid())
   translationId   String
   kind            ReviewMessageKind
   text            String?
@@ -582,10 +584,10 @@ model ReviewMessage {
   byRole          Role
   parentId        String?
   readAt          DateTime?
-  createdAt       DateTime          @default(now())
+  createdAt       DateTime           @default(now())
   translation     ArticleTranslation @relation(fields: [translationId], references: [id], onDelete: Cascade)
-  parent          ReviewMessage?    @relation("ReviewMessageThread", fields: [parentId], references: [id], onDelete: SetNull)
-  replies         ReviewMessage[]   @relation("ReviewMessageThread")
+  parent          ReviewMessage?     @relation("ReviewMessageThread", fields: [parentId], references: [id], onDelete: SetNull)
+  replies         ReviewMessage[]    @relation("ReviewMessageThread")
 
   @@index([translationId, createdAt])
   @@index([parentId])
@@ -773,6 +775,8 @@ enum MediaLicense {
   cc0
   public_domain
   permission
+}
+
 enum ReviewMessageKind {
   rework_request
   unpublish
