@@ -1,15 +1,11 @@
 query GetNavigation {
-  sections(
-    pagination: { page: 1, limit: 100 }
-    sort: { field: "order", direction: ASC }
-    filters: { base: {}, status: [active] }
-  ) {
-    sections {
-      id
-      name
-      slug
-      order
-    }
+  publicSections {
+    id
+    name
+    nameEn
+    slug
+    order
+    articleCount
   }
   popularTags: tags(
     pagination: { page: 1, limit: 10 }

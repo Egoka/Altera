@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-093",
+  "issue_id": "01a0a60b-d971-7f0c-9793-7d785e898e2e",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-093-reading-components.md",
+    "sha": "96ef15c06f3596b8eea2f9421d0915f9b6f31c4a"
+  },
+  "baseline_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
+  "tested_sha": "d23601baa11a422ab2d291d3d94856d379b47b4a",
+  "branch": "feat/t093-reading-components",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t093-reading-components",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0a9ac-8bfa-7c80-9caf-83d108e49faa",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/__snapshots__/reading-components.nuxt.test.ts.snap; web/tests/e2e/navigation.spec.ts"
+    }
+  ],
+  "checks": {
+    "report": "docs/reports/2026-09-16-t093-reading-components-report.md",
+    "local": "passed",
+    "ci": "pending",
+    "preflight": "failed_with_documented_environment_and_timing_gaps"
+  },
+  "pr": {
+    "number": 72,
+    "url": "https://github.com/Egoka/Altera/pull/72",
+    "base_ref": "app",
+    "base_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
+    "head_sha": "d23601baa11a422ab2d291d3d94856d379b47b4a"
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Новый публичный GraphQL query и его web-потребитель требуют controller-managed deployment/health решения после CI и review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-093.md",
+    "sha256": "fc0d2ba7ffc207987c75ccd8d278d38c6c6c9b4ff933201cc71f213956985482"
+  },
+  "remaining": [
+    "CI, independent native review, and controller-managed development deployment/health decision are pending"
+  ],
+  "usage": null
+}

@@ -21,6 +21,26 @@ import { archiveSection, createSection, restoreSection, updateSection } from "..
 
 export default {
   Query: {
+    publicSections: async (_parent: unknown, _args: Record<string, never>, ctx: GraphQLContext) => {
+      const sections = await ctx.prisma.section.findMany({
+        where: {
+          status: "active",
+          articles: { some: { status: "published" } }
+        },
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          name: true,
+          nameEn: true,
+          slug: true,
+          order: true,
+          _count: { select: { articles: { where: { status: "published" } } } }
+        }
+      })
+
+      return sections.map(({ _count, ...section }) => ({ ...section, articleCount: _count.articles }))
+    },
+
     section: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
       return readThroughPublicCache(
         {

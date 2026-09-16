@@ -243,6 +243,15 @@ enum ProfileCheckStatus {
   rejected
 }
 
+type PublicSection {
+  articleCount: Int!
+  id: ID!
+  name: String!
+  nameEn: String
+  order: Int!
+  slug: String!
+}
+
 type Query {
   _empty: String
   article(slug: String!): Article
@@ -259,6 +268,7 @@ type Query {
   me: AccountUser
   myArticlesStats: UserArticleStats
   popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
+  publicSections: [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
   section(slug: String!): Section
