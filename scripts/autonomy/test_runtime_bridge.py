@@ -18,7 +18,7 @@ class BridgeTests(unittest.TestCase):
                 calls.append(message)
                 return 0
             snapshot = {"issues": [
-                {"id": "a", "status": "in_progress"},
+                {"id": "a", "status": "in_progress", "runs": [("run", "running", "result")]},
                 {"id": "i", "status": "todo"},
                 {"id": "j", "status": "todo"},
                 {"id": "k", "status": "todo"},
@@ -56,12 +56,25 @@ class BridgeTests(unittest.TestCase):
 
     def test_status_category_drives_queue_attention(self):
         snapshot = {"issues": [
-            {"id": "a", "status": "custom", "status_category": "started"},
+            {"id": "a", "status": "custom", "status_category": "started",
+             "runs": [("run", "queued", "result")]},
             {"id": "i", "status": "custom", "status_category": "todo"},
             {"id": "j", "status": "custom", "status_category": "todo"},
             {"id": "k", "status": "custom", "status_category": "todo"},
         ]}
         self.assertIsNone(r.queue_attention({"queue_target_todo": 3}, snapshot))
+
+    def test_in_progress_without_native_run_requires_launch(self):
+        snapshot = {"issues": [
+            {"id": "a", "status": "in_progress", "runs": []},
+            {"id": "i", "status": "todo"},
+            {"id": "j", "status": "todo"},
+            {"id": "k", "status": "todo"},
+        ]}
+        attention = r.queue_attention({"queue_target_todo": 3}, snapshot)
+        self.assertEqual(attention["active_run_count"], 0)
+        self.assertEqual(attention["status_active_count"], 1)
+        self.assertIn("launch_assigned_work", attention["reasons"])
 
     def test_interrupted_event_requires_reconciliation_without_repeating_model(self):
         with tempfile.TemporaryDirectory() as root:
