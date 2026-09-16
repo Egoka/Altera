@@ -8,7 +8,7 @@
     "sha": "c7824f167269022d7e27954c4edff0c95648be1a"
   },
   "baseline_sha": "64c47488bd847467ed2f44cdb4877b4b10591d78",
-  "tested_sha": "a12960b157b0a709791bd4e0a4ff682205b370a2",
+  "tested_sha": "b19b324c672309f31d3b15f8dcf192638cb1755c",
   "branch": "server/t-019-admin-records",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t019-admin-records",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -30,9 +30,14 @@
     "url": "https://github.com/Egoka/Altera/pull/69",
     "base_ref": "app",
     "base_sha": "b9c9d9831a3bb72d1af5df608dba3962fa3fd4e3",
-    "head_sha": "a12960b157b0a709791bd4e0a4ff682205b370a2"
+    "head_sha": "b19b324c672309f31d3b15f8dcf192638cb1755c"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0aa60-ed89-74ed-b616-0b53d1939fe8",
+    "sha": "b19b324c672309f31d3b15f8dcf192638cb1755c",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "environment": "development",
