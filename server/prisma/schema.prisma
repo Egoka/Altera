@@ -41,6 +41,9 @@ model User {
   legalConsents      UserLegalConsent[]
   translatedArticles ArticleTranslation[] @relation("ArticleTranslator")
   articleRevisions   ArticleRevision[]    @relation("ArticleRevisionCreator")
+  ownedMediaAssets   MediaAsset[]         @relation("MediaAssetOwner")
+  avatarAsset        MediaAsset?          @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
+  previousAvatar     MediaAsset?          @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
 
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
@@ -231,14 +234,17 @@ model Article {
   authorId          String
   sectionId         String?
   formatId          String?
+  coverAssetId      String?
   author            User                 @relation(fields: [authorId], references: [id])
   section           Section?             @relation(fields: [sectionId], references: [id], onDelete: Restrict)
   format            Format?              @relation(fields: [formatId], references: [id], onDelete: SetNull)
+  coverAsset        MediaAsset?          @relation("ArticleCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
   tags              Tag[]                @relation("ArticleToTag")
   translations      ArticleTranslation[]
 
   @@index([sectionId])
   @@index([formatId])
+  @@index([coverAssetId])
   @@index([archivedByActorId])
   @@map("articles")
 }
@@ -504,6 +510,40 @@ model ArticleRevision {
   @@map("article_revisions")
 }
 
+model MediaAsset {
+  id                  String                @id @default(uuid())
+  ownerId             String
+  kind                MediaKind             @default(image)
+  processingStatus    MediaProcessingStatus @default(uploading)
+  storageKey          String                @unique
+  mimeType            String
+  byteSize            Int
+  width               Int?
+  height              Int?
+  sha256              String
+  variants            Json                  @default("[]")
+  focalX              Float?
+  focalY              Float?
+  alt                 String?
+  caption             String?
+  attribution         String
+  license             MediaLicense
+  licenseNote         String?
+  placeholder         String?
+  deletedAt           DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  owner               User                  @relation("MediaAssetOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  currentAvatarUsers  User[]                @relation("CurrentAvatar")
+  previousAvatarUsers User[]                @relation("PreviousAvatar")
+  coverArticles       Article[]             @relation("ArticleCover")
+
+  @@index([ownerId, createdAt(sort: Desc)])
+  @@index([sha256])
+  @@index([processingStatus, createdAt])
+  @@map("media_assets")
+}
+
 enum Role {
   reader
   author
@@ -610,4 +650,26 @@ enum ArticleRevisionKind {
   editorial
   manual
   autosave
+}
+
+enum MediaKind {
+  image
+}
+
+enum MediaProcessingStatus {
+  uploading
+  queued
+  processing
+  ready
+  failed
+}
+
+enum MediaLicense {
+  own
+  cc_by
+  cc_by_sa
+  cc_by_nc
+  cc0
+  public_domain
+  permission
 }
