@@ -1,48 +1,9 @@
 <script setup lang="ts">
   import type { ArticleCardFragment } from "~/graphql/generated/graphql"
 
-  const props = defineProps<{
-    article: ArticleCardFragment
-  }>()
-  const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
-  const section = computed(() => (props.article.section ? `/${props.article.section.slug}` : ""))
-  const author = computed(() => `/authors/${props.article.author.slug}`)
+  defineProps<{ article: ArticleCardFragment }>()
 </script>
 
 <template>
-  <article class="lede-article flex flex-col">
-    <!-- Высота изображения ограничена долей экрана, пропорция — пределом; дальше
-         сужается ширина и снимок встаёт по центру (токены lede-media в main.css).
-         На узких экранах снимок квадратный: горизонталь 2:1 на телефоне мельчает. -->
-    <figure class="mb-10">
-      <NuxtLink :to="slug" class="block group">
-        <NuxtImg
-          :src="article.featuredImage ?? undefined"
-          :alt="article.title"
-          class="block mx-auto w-full max-w-[calc(var(--lede-media-max-height)*var(--lede-media-max-ratio))] max-h-(--lede-media-max-height) aspect-square sm:aspect-2/1 object-cover rounded-sm transition-transform duration-300" />
-      </NuxtLink>
-    </figure>
-
-    <div class="text-center">
-      <NuxtLink
-        :to="slug"
-        class="font-garamond-libre text-title-compact xs:text-title md:text-lede font-bold text-zinc-900 dark:text-zinc-300 transition-colors block max-w-4xl mx-auto">
-        {{ article.title }}
-      </NuxtLink>
-    </div>
-
-    <p
-      v-if="article.dek"
-      class="lede-dek mt-1 font-garamond-libre text-dek-compact xs:text-card md:text-card-dek font-normal text-zinc-600 dark:text-zinc-400 text-center max-w-3xl mx-auto line-clamp-2">
-      {{ article.dek }}
-    </p>
-
-    <div class="mt-5 flex flex-row flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
-      <ShowAuthor :link="author" :name="article.author.name" />
-      <span class="font-sans text-xs/6 font-bold text-zinc-600 dark:text-zinc-400" aria-hidden="true">·</span>
-      <ShowType v-if="article.section" :link="section" :name="article.section.name" />
-    </div>
-  </article>
+  <ArticleCard :article="article" variant="lede" />
 </template>
-
-<style scoped></style>

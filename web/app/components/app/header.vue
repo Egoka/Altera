@@ -1,99 +1,90 @@
 <script setup lang="ts">
-  import LanguageToggle from "~/components/functional/LanguageToggle.vue"
-  import { useScroll } from "~/composables/useScroll"
   import { ref, watch } from "vue"
+  import LanguageToggle from "~/components/functional/LanguageToggle.vue"
+  import IconBurger from "~/components/icon/Burger.vue"
+  import VisualLogo from "~/components/visual/Logo.vue"
+  import VisualMegaMenu from "~/components/visual/MegaMenu.vue"
+  import { usePublicNavigation } from "~/composables/usePublicNavigation"
+  import { useScroll } from "~/composables/useScroll"
 
-  // Используем глобальное состояние скролла
   const { isScrolled, isHeaderVisible } = useScroll()
-
-  // Состояние для MegaMenu
+  const { sections, popularTags, status } = usePublicNavigation()
   const isMegaMenuOpen = ref(false)
 
   const toggleMegaMenu = () => {
     isMegaMenuOpen.value = !isMegaMenuOpen.value
   }
-
   const closeMegaMenu = () => {
     isMegaMenuOpen.value = false
   }
 
-  // Автоматически закрываем MegaMenu при скрытии header
-  watch(isHeaderVisible, (newValue) => {
-    if (!newValue && isMegaMenuOpen.value) {
-      isMegaMenuOpen.value = false
-    }
+  watch(isHeaderVisible, (visible) => {
+    if (!visible) closeMegaMenu()
   })
 </script>
 
 <template>
   <header
-    class="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-zinc-900 transition-all duration-300 ease-in-out"
+    class="fixed inset-x-0 top-0 z-50 border-b border-transparent bg-white transition-[transform,background-color,border-color] duration-300 motion-reduce:transition-none dark:bg-zinc-950"
     :class="{
-      'shadow-lg': isScrolled,
-      '!bg-transparent': !isScrolled,
-      'bg-white/75 dark:bg-zinc-950/75 backdrop-blur-sm': isScrolled,
-      '!bg-white dark:!bg-zinc-950': isMegaMenuOpen,
-      '-translate-y-full': !isHeaderVisible
-    }">
-    <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between h-14 px-4 sm:px-6 lg:px-8">
-      <div class="hidden lg:flex lg:flex-1 lg:gap-x-12">
-        <button
-          :class="{
-            'text-zinc-600 dark:text-zinc-100': isMegaMenuOpen,
-            'text-zinc-900 dark:text-zinc-300': !isMegaMenuOpen
-          }"
-          class="relative flex items-center gap-x-1 py-3.5 text-sm/6 font-semibold transition-colors cursor-pointer"
-          @click="toggleMegaMenu">
-          Topics
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            data-slot="icon"
-            aria-hidden="true"
-            :class="{
-              'text-zinc-600 dark:text-zinc-100 rotate-180': isMegaMenuOpen,
-              'text-zinc-400 dark:text-zinc-500': !isMegaMenuOpen
-            }"
-            class="size-5 flex-none transition-transform duration-200">
-            <path
-              d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-              clip-rule="evenodd"
-              fill-rule="evenodd" />
-          </svg>
-        </button>
-
-        <NuxtLink to="/popular" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
-          Popular
-        </NuxtLink>
-        <NuxtLink to="/latest" class="py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
-          Latest
-        </NuxtLink>
-      </div>
-      <!-- Боковые группы растягиваются поровну (flex-1) на всех экранах, поэтому логотип
-           стоит точно по центру и остаётся там, когда текстовая часть сворачивается -->
-      <div class="flex flex-1 lg:hidden">
+      'border-zinc-200 bg-white/95 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95': isScrolled,
+      '-translate-y-full': !isHeaderVisible,
+      '!translate-y-0 border-zinc-200 !bg-white dark:border-zinc-800 dark:!bg-zinc-950': isMegaMenuOpen
+    }"
+    @keydown.esc="closeMegaMenu">
+    <nav
+      aria-label="Основная навигация"
+      class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-1 items-center gap-5">
         <button
           type="button"
-          class="w-10 ml-0 -m-2.5 inline-flex items-center justify-center rounded-md p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          aria-controls="public-navigation-menu"
+          :aria-expanded="isMegaMenuOpen"
+          class="inline-flex min-h-11 items-center gap-2 font-sans text-sm font-semibold text-zinc-900 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-100 dark:hover:text-orange-400"
           @click="toggleMegaMenu">
-          <span class="sr-only">Open main menu</span>
-          <IconBurger :is-open="isMegaMenuOpen" />
+          <IconBurger class="lg:hidden" :is-open="isMegaMenuOpen" />
+          <span>Рубрики</span>
+          <span class="hidden text-xs text-zinc-400 lg:inline" aria-hidden="true">{{
+            isMegaMenuOpen ? "↑" : "↓"
+          }}</span>
         </button>
-      </div>
-      <div class="flex">
-        <NuxtLink to="/" class="-m-1.5 p-1.5">
-          <span class="sr-only">Altera</span>
-          <VisualLogo />
+
+        <NuxtLink
+          v-for="section in sections.slice(0, 2)"
+          :key="section.id"
+          :to="`/${section.slug}`"
+          class="hidden font-sans text-sm font-semibold text-zinc-700 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 xl:block dark:text-zinc-300 dark:hover:text-orange-400">
+          {{ section.name }}
         </NuxtLink>
       </div>
 
-      <div class="flex flex-1 justify-end">
-        <LanguageToggle />
-        <NuxtLink to="/" class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">Log in</NuxtLink>
+      <NuxtLink
+        to="/"
+        class="p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600">
+        <span class="sr-only">Altera — на главную</span>
+        <VisualLogo />
+      </NuxtLink>
+
+      <div class="flex flex-1 items-center justify-end gap-1 sm:gap-2">
+        <LanguageToggle compact />
+        <NuxtLink
+          to="/login"
+          class="hidden px-2 py-3 font-sans text-sm font-semibold text-zinc-800 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:inline-flex dark:text-zinc-200">
+          Войти
+        </NuxtLink>
+        <NuxtLink
+          to="/pricing"
+          class="inline-flex min-h-10 items-center border border-zinc-900 px-3 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:border-orange-700 hover:bg-orange-700 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-100 dark:text-zinc-100">
+          Писать
+        </NuxtLink>
       </div>
     </nav>
-    <VisualMegaMenu :is-open="isMegaMenuOpen && isHeaderVisible" @close="closeMegaMenu" />
+
+    <VisualMegaMenu
+      :is-open="isMegaMenuOpen"
+      :sections="sections"
+      :popular-tags="popularTags"
+      :loading="status === 'pending'"
+      @close="closeMegaMenu" />
   </header>
 </template>
-
-<style scoped></style>

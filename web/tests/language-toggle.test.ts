@@ -24,6 +24,6 @@ describe("LanguageToggle", () => {
 
   it("is explicitly imported by the public header", () => {
     expect(headerSource).toContain('import LanguageToggle from "~/components/functional/LanguageToggle.vue"')
-    expect(headerSource).toContain("<LanguageToggle />")
+    expect(headerSource).toContain("<LanguageToggle compact />")
   })
 })

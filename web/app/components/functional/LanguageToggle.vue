@@ -3,17 +3,22 @@
     :to="targetPath"
     :aria-label="ariaLabel"
     class="px-2 py-3.5 text-sm/6 font-semibold text-zinc-900 dark:text-zinc-300">
-    {{ targetName }}
+    {{ compact ? targetLocale.toUpperCase() : targetName }}
   </NuxtLink>
 </template>
 
 <script setup lang="ts">
+  import { computed } from "vue"
   import type { LocaleCode, PublishedSiblingPath } from "~/utils/localeRoute"
   import { resolveLocaleSwitchPath } from "~/utils/localeRoute"
 
-  const props = defineProps<{
-    publishedSiblingPath?: PublishedSiblingPath
-  }>()
+  const props = withDefaults(
+    defineProps<{
+      compact?: boolean
+      publishedSiblingPath?: PublishedSiblingPath
+    }>(),
+    { compact: false }
+  )
 
   const { locale, locales } = useI18n()
   const switchLocalePath = useSwitchLocalePath()
