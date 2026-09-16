@@ -76,13 +76,49 @@ def pull_requests(live):
     return result
 
 
-def dispatch(config, snapshot, prompt, model):
+def queue_attention(config, snapshot):
+    """Вернуть причину планового пробуждения только при нарушении очереди."""
+    target = int(config.get("queue_target_todo", 3))
+    issues = snapshot.get("issues", [])
+    todo_count = 0
+    active_count = 0
+    for issue in issues:
+        if not isinstance(issue, dict):
+            continue
+        status = str(issue.get("status") or "").lower()
+        category = str(issue.get("status_category") or "").lower()
+        if status == "todo" or category == "todo":
+            todo_count += 1
+        if (status in ("in_progress", "in_review", "started", "review")
+                or category in ("started", "in_progress", "active")):
+            active_count += 1
+    reasons = []
+    if todo_count < target:
+        reasons.append("refill_queue")
+    if todo_count and not active_count:
+        reasons.append("dispatch_ready_work")
+    if not reasons:
+        return None
+    return {"reasons": reasons, "todo_count": todo_count, "todo_target": target,
+            "todo_deficit": max(0, target - todo_count), "active_count": active_count}
+
+
+def dispatch(config, snapshot, prompt, model, now=None):
     root = Path(config["state_dir"])
     with lock(root / "coordinator.lock"):
         ledger = Ledger(root / "ledger.sqlite3")
         context = {"namespace": config.get("event_namespace", "coordinator"),
                    "instructions": config.get("instructions_version", "v1")}
-        key = fingerprint({"snapshot": snapshot, **context})
+        event = {"snapshot": snapshot, **context}
+        attention = queue_attention(config, snapshot)
+        if attention:
+            interval = int(config.get("liveness_interval_seconds", 3600))
+            if interval <= 0:
+                raise RuntimeError("invalid liveness interval")
+            current = now or dt.datetime.now(dt.timezone.utc)
+            event["liveness_window"] = int(current.timestamp()) // interval
+            event["attention"] = attention
+        key = fingerprint(event)
         cursor_key = "snapshot:" + fingerprint(context)
         if not ledger.claim(key):
             done = ledger.completed_at(key) is not None
@@ -97,7 +133,10 @@ def dispatch(config, snapshot, prompt, model):
                 delta[category] = [x for x in values if not isinstance(x, dict) or prior.get(x.get("id")) != x]
             elif previous.get(category) != values:
                 delta[category] = values
-        handoff = prompt + "\n\nALTERA_CONTROLLER_DELTA_V1\n" + json.dumps(delta, ensure_ascii=False)
+        handoff = prompt
+        if attention:
+            handoff += "\n\nALTERA_CONTROLLER_ATTENTION_V1\n" + json.dumps(attention, ensure_ascii=False)
+        handoff += "\n\nALTERA_CONTROLLER_DELTA_V1\n" + json.dumps(delta, ensure_ascii=False)
         outcome = model(handoff)
         ledger.finish(key, outcome == 0)
         if outcome == 0:

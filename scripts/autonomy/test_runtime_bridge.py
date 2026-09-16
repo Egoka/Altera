@@ -1,3 +1,4 @@
+import datetime as dt
 import io
 import json
 from pathlib import Path
@@ -16,7 +17,12 @@ class BridgeTests(unittest.TestCase):
             def model(message):
                 calls.append(message)
                 return 0
-            snapshot = {"issues": [{"id": "i", "status": "todo"}], "prs": []}
+            snapshot = {"issues": [
+                {"id": "a", "status": "in_progress"},
+                {"id": "i", "status": "todo"},
+                {"id": "j", "status": "todo"},
+                {"id": "k", "status": "todo"},
+            ], "prs": []}
             first = r.dispatch(config, snapshot, "prompt", model)
             second = r.dispatch(config, snapshot, "other delivery wrapper", model)
             self.assertEqual(first["model_called"], True)
@@ -24,6 +30,38 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual(second["status"], "no_action")
             self.assertEqual(second["exit_code"], 0)
             self.assertEqual(len(calls), 1)
+
+    def test_queue_deficit_rechecks_once_in_each_liveness_window(self):
+        with tempfile.TemporaryDirectory() as root:
+            config = {"state_dir": root, "queue_target_todo": 3, "liveness_interval_seconds": 3600}
+            calls = []
+            current = dt.datetime(2026, 9, 16, 3, 0, tzinfo=dt.timezone.utc)
+            snapshot = {"issues": [{"id": "i", "status": "todo"}], "prs": []}
+            first = r.dispatch(config, snapshot, "prompt", lambda message: calls.append(message) or 0,
+                               now=current)
+            duplicate = r.dispatch(config, snapshot, "prompt", lambda message: calls.append(message) or 0,
+                                   now=current + dt.timedelta(minutes=30))
+            next_window = r.dispatch(config, snapshot, "prompt", lambda message: calls.append(message) or 0,
+                                     now=current + dt.timedelta(hours=1))
+            self.assertTrue(first["model_called"])
+            self.assertFalse(duplicate["model_called"])
+            self.assertTrue(next_window["model_called"])
+            self.assertEqual(len(calls), 2)
+            attention = json.loads(calls[-1].split("ALTERA_CONTROLLER_ATTENTION_V1\n")[1]
+                                   .split("\n\nALTERA_CONTROLLER_DELTA_V1", 1)[0])
+            self.assertEqual(attention["todo_count"], 1)
+            self.assertEqual(attention["todo_deficit"], 2)
+            self.assertIn("refill_queue", attention["reasons"])
+            self.assertIn("dispatch_ready_work", attention["reasons"])
+
+    def test_status_category_drives_queue_attention(self):
+        snapshot = {"issues": [
+            {"id": "a", "status": "custom", "status_category": "started"},
+            {"id": "i", "status": "custom", "status_category": "todo"},
+            {"id": "j", "status": "custom", "status_category": "todo"},
+            {"id": "k", "status": "custom", "status_category": "todo"},
+        ]}
+        self.assertIsNone(r.queue_attention({"queue_target_todo": 3}, snapshot))
 
     def test_interrupted_event_requires_reconciliation_without_repeating_model(self):
         with tempfile.TemporaryDirectory() as root:
