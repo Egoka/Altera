@@ -156,6 +156,26 @@ class ReportingTests(unittest.TestCase):
         self.assertIsNone(result["tokens"]["input_tokens"]["observed"])
         self.assertEqual(data["coverage"]["executions"]["status"], "partial")
 
+    def test_skipped_autopilot_event_without_native_task_is_complete_coverage(self):
+        def command(args):
+            if "issue" in args and "list" in args:
+                return {"issues": [], "has_more": False}
+            if "autopilot" in args and "list" in args:
+                return {"autopilots": [{"id": "ap", "project_id": "project"}]}
+            if "autopilot" in args and "runs" in args:
+                return {"runs": [{"id": "skipped-event", "task_id": None, "autopilot_id": "ap",
+                                   "status": "skipped", "created_at": "2026-09-15T08:00:00Z"}],
+                        "total": 1}
+            if "agent" in args and "list" in args:
+                return []
+            return []
+
+        data = reporting.collect_live("multica", "https://example.test", "workspace", "project",
+                                      "owner/repo", run_json=command)
+        self.assertEqual(data["coverage"]["executions"]["status"], "complete")
+        self.assertEqual(data["coverage"]["executions"]["autopilot_events_without_task_id"], 0)
+        self.assertEqual(data["coverage"]["executions"]["skipped_autopilot_events_without_task_id"], 1)
+
     def test_partial_usage_is_unknown_and_zero_remains_measured_zero(self):
         data = snapshot()
         data["executions"] = [run(), run("r2", usage=None),
@@ -346,6 +366,18 @@ class ReportingTests(unittest.TestCase):
             result = reporting.json_command([sys.executable, "-c", program, str(marker)])
             self.assertEqual(result, {"ok": True})
             self.assertEqual(marker.read_text(), "2")
+
+    def test_source_command_survives_two_consecutive_transient_read_failures(self):
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / "attempt"
+            program = (
+                "from pathlib import Path; import sys; "
+                "p=Path(sys.argv[1]); n=int(p.read_text()) if p.exists() else 0; "
+                "p.write_text(str(n+1)); print('{\"ok\": true}'); sys.exit(1 if n<2 else 0)"
+            )
+            result = reporting.json_command([sys.executable, "-c", program, str(marker)], pause=0)
+            self.assertEqual(result, {"ok": True})
+            self.assertEqual(marker.read_text(), "3")
 
     def test_controller_verified_review_is_bound_to_distinct_actor_and_tested_sha(self):
         data = snapshot()
