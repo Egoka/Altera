@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
 
@@ -9,6 +9,21 @@ import { dirname, join } from "node:path"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const localesDir = join(here, "..", "i18n", "locales")
+const appDir = join(here, "..", "app")
+const devOnlyPages = new Set([
+  "components-showcase.vue",
+  "fonts-showcase.vue",
+  "layouts-showcase.vue",
+  "test-error.vue"
+])
+
+const vueFiles = (directory: string): string[] =>
+  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name)
+    if (entry.isDirectory()) return vueFiles(path)
+    if (!entry.name.endsWith(".vue") || devOnlyPages.has(entry.name)) return []
+    return [path]
+  })
 
 const load = (locale: string): Record<string, unknown> =>
   JSON.parse(readFileSync(join(localesDir, `${locale}.json`), "utf8"))
@@ -55,5 +70,19 @@ describe("словари локалей", () => {
   it("все значения — строки", () => {
     const wrong = [...ru, ...en].filter(([, value]) => typeof value !== "string").map(([key]) => key)
     expect(wrong).toEqual([])
+  })
+
+  it("не оставляет русские строки в runtime-шаблонах", () => {
+    const violations = vueFiles(appDir).flatMap((file) => {
+      const source = readFileSync(file, "utf8")
+      const template = source.match(/<template>([\s\S]*?)<\/template>/)?.[1]?.replace(/<!--[\s\S]*?-->/g, "") ?? ""
+
+      return template
+        .split("\n")
+        .map((line, index) => ({ file, line: index + 1, text: line.trim() }))
+        .filter(({ text }) => /[А-Яа-яЁё]/.test(text))
+    })
+
+    expect(violations).toEqual([])
   })
 })

@@ -8,17 +8,19 @@ const componentSource = readFileSync(join(here, "..", "app", "components", "func
 const headerSource = readFileSync(join(here, "..", "app", "components", "app", "header.vue"), "utf8")
 
 describe("LanguageToggle", () => {
-  it("renders one accessible navigation link to the other locale", () => {
-    expect(componentSource).toContain("<NuxtLink")
-    expect(componentSource).toContain(':to="targetPath"')
+  it("renders one accessible control for the other locale", () => {
+    expect(componentSource).toContain("<button")
     expect(componentSource).toContain(':aria-label="ariaLabel"')
-    expect(componentSource.match(/<NuxtLink/g)).toHaveLength(1)
+    expect(componentSource).toContain('@click="switchLanguage"')
   })
 
-  it("uses the tri-state sibling resolver without changing URL prefixes itself", () => {
+  it("updates the locale without reloading and preserves the tri-state sibling resolver", () => {
     expect(componentSource).toContain("publishedSiblingPath")
+    expect(componentSource).toContain("setLocale")
+    expect(componentSource).toContain("navigateTo")
     expect(componentSource).toContain("useSwitchLocalePath")
     expect(componentSource).toContain("resolveLocaleSwitchPath")
+    expect(componentSource).not.toContain("location.reload")
     expect(componentSource).not.toMatch(/replace\s*\(/)
   })
 

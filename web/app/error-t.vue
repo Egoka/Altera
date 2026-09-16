@@ -9,6 +9,7 @@
 
   const props = defineProps<ErrorProps>()
   const router = useRouter()
+  const { t } = useI18n()
 
   const handleError = () => {
     clearError({ redirect: "/" })
@@ -19,31 +20,31 @@
 
     if (error.statusCode === 404) {
       return {
-        title: "Страница не найдена",
-        message: "Запрашиваемая страница не существует или была перемещена.",
+        title: t("errors.notFound.title"),
+        message: t("errors.notFound.message"),
         icon: "🔍"
       }
     }
 
     if (error.statusCode === 500) {
       return {
-        title: "Внутренняя ошибка сервера",
-        message: "Произошла ошибка на сервере. Попробуйте обновить страницу.",
+        title: t("errors.internal.title"),
+        message: t("errors.internal.message"),
         icon: "⚙️"
       }
     }
 
     if (error.statusCode === 403) {
       return {
-        title: "Доступ запрещен",
-        message: "У вас нет прав для доступа к этой странице.",
+        title: t("errors.forbidden.title"),
+        message: t("errors.forbidden.message"),
         icon: "🚫"
       }
     }
 
     return {
-      title: "Произошла ошибка",
-      message: error.message || "Что-то пошло не так. Попробуйте обновить страницу.",
+      title: t("errors.generic.title"),
+      message: error.message || t("errors.generic.message"),
       icon: "⚠️"
     }
   }
@@ -67,12 +68,14 @@
       </p>
 
       <div class="error-actions">
-        <button class="btn-primary" @click="handleError">Вернуться на главную</button>
+        <button class="btn-primary" @click="handleError">{{ t("errors.backHome") }}</button>
 
-        <button class="btn-secondary" @click="router.go(-1)">Назад</button>
+        <button class="btn-secondary" @click="router.go(-1)">{{ t("common.back") }}</button>
       </div>
 
-      <div v-if="error.statusCode" class="error-code">Код ошибки: {{ error.statusCode }}</div>
+      <div v-if="error.statusCode" class="error-code">
+        {{ t("errors.code", { code: error.statusCode }) }}
+      </div>
     </div>
   </div>
 </template>

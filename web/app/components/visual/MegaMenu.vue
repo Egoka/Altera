@@ -12,6 +12,7 @@
   )
 
   defineEmits<{ close: [] }>()
+  const { t } = useI18n()
 </script>
 
 <template>
@@ -25,11 +26,15 @@
       id="public-navigation-menu"
       class="absolute inset-x-0 top-full border-y border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
       <div class="mx-auto grid max-w-7xl gap-10 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_18rem] lg:px-8">
-        <nav aria-label="Рубрики">
-          <p class="mb-5 font-cormorant-sc text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Рубрики</p>
-          <p v-if="loading" class="font-garamond-libre text-lg text-zinc-500" aria-live="polite">Загружаем рубрики…</p>
+        <nav :aria-label="t('navigation.sections')">
+          <p class="mb-5 font-cormorant-sc text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            {{ t("navigation.sections") }}
+          </p>
+          <p v-if="loading" class="font-garamond-libre text-lg text-zinc-500" aria-live="polite">
+            {{ t("navigation.sectionsLoading") }}
+          </p>
           <p v-else-if="sections.length === 0" class="font-garamond-libre text-lg text-zinc-500">
-            Пока нет опубликованных рубрик.
+            {{ t("navigation.sectionsEmpty") }}
           </p>
           <ul
             v-else
@@ -45,7 +50,7 @@
                 </span>
                 <span
                   class="font-sans text-xs tabular-nums text-zinc-400"
-                  :aria-label="`${section.articleCount} материалов`">
+                  :aria-label="t('navigation.articleCount', { count: section.articleCount })">
                   {{ section.articleCount }}
                 </span>
               </NuxtLink>
@@ -54,7 +59,9 @@
         </nav>
 
         <aside class="border-t border-zinc-200 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0 dark:border-zinc-800">
-          <p class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Сейчас читают</p>
+          <p class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            {{ t("navigation.trending") }}
+          </p>
           <div v-if="popularTags.length" class="mt-4 flex flex-wrap gap-2">
             <NuxtLink
               v-for="tag in popularTags"
@@ -69,7 +76,7 @@
             to="/sections"
             class="mt-6 inline-flex border-b border-orange-600 pb-1 font-serif font-semibold text-zinc-950 dark:text-zinc-100"
             @click="$emit('close')">
-            Все рубрики
+            {{ t("navigation.allSections") }}
           </NuxtLink>
         </aside>
       </div>

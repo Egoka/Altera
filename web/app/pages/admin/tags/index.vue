@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import type { IColumn } from "#fishtvue/table"
 
+  const { t } = useI18n()
+
   definePageMeta({
     i18n: false,
     layout: "admin",
@@ -178,9 +180,11 @@
     <template #toolbar>
       <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
         <div class="">
-          <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">Управление тегами</div>
+          <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">
+            {{ t("admin.tagsTitle") }}
+          </div>
           <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500">
-            Создание и редактирование тегов для статей
+            {{ t("admin.tagsDescription") }}
           </div>
         </div>
       </div>

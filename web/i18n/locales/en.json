@@ -31,7 +31,11 @@
     "author": "Author",
     "category": "Category",
     "views": "Views",
-    "shares": "Shares"
+    "shares": "Shares",
+    "openAll": "Open all",
+    "viewAll": "View all",
+    "inDevelopment": "In development",
+    "searchPlaceholder": "Search..."
   },
   "auth": {
     "login": "Login",
@@ -44,7 +48,89 @@
     "checkEmail": "Check your email",
     "invalidEmail": "Invalid email",
     "loginSuccess": "Login successful",
-    "logoutSuccess": "Logout successful"
+    "logoutSuccess": "Logout successful",
+    "login": {
+      "title": "Sign in or register",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "your{'@'}email.com",
+      "consentLabel": "I accept the {offertaLink} and {privacyLink}",
+      "consentOfferta": "terms of service",
+      "consentPrivacy": "privacy policy",
+      "submitButton": "Get login link",
+      "hint": "You will receive an email with a login link. The link is valid for 15 minutes and can only be used once.",
+      "sent": {
+        "title": "Check your email",
+        "body": "We sent a login link to {email}. Open the email and follow the link — it is valid for 15 minutes.",
+        "notReceived": "Didn't receive the email?",
+        "retry": "Request again"
+      },
+      "error": {
+        "invalidEmail": "Please enter a valid email address",
+        "consentRequired": "You must accept the terms of service and privacy policy",
+        "rateLimited": "Too many requests. Please try again in {retryAfter}.",
+        "providerUnavailable": "The email could not be sent. Please try again later.",
+        "generic": "Something went wrong. Please try again (code: {requestId})"
+      }
+    },
+    "verify": {
+      "loading": { "title": "Signing you in…", "body": "Please wait." },
+      "expired": {
+        "title": "Link is not valid",
+        "body": "The login link has expired or has already been used. Links are valid for 15 minutes and can only be used once.",
+        "action": "Request a new link"
+      },
+      "consent": {
+        "title": "Update your consent",
+        "body": "The terms of service or privacy policy have been updated since your last session. Please review the new versions.",
+        "offertaLink": "Terms of service",
+        "privacyLink": "Privacy policy",
+        "accept": "Accept and continue"
+      },
+      "error": {
+        "title": "Sign-in error",
+        "body": "We were unable to sign you in. Please try again (code: {requestId})",
+        "action": "Back to sign in"
+      }
+    }
+  },
+  "account": {
+    "archived": {
+      "title": "Account archived",
+      "body": "Your account is deactivated. Your articles are hidden from readers and do not appear in the feed. You can restore your account at any time.",
+      "restore": "Restore account",
+      "restoreNote": "After restoring, your account will be active again. Your articles remain archived — you will need to republish them separately."
+    },
+    "appeal": {
+      "title": "Account blocked",
+      "body": "Your account has been blocked. If you believe this is an error, please fill out the form — our team will review your appeal.",
+      "namePlaceholder": "Your name (optional)",
+      "messagePlaceholder": "Describe the situation and why you believe the block is a mistake",
+      "submit": "Submit appeal",
+      "sent": {
+        "title": "Appeal submitted",
+        "body": "We have received your appeal and will review it. A response will be sent to {email}."
+      }
+    }
+  },
+  "mail": {
+    "magicLink": {
+      "subject": "Your Altera login link",
+      "preheader": "Your one-time sign-in link",
+      "body": "Hello,\n\nyou requested a login link for Altera. Click the button below — it is valid for 15 minutes and can only be used once.\n\nIf you did not request this, you can safely ignore this email.",
+      "button": "Sign in to Altera",
+      "expiry": "This link expires in 15 minutes.",
+      "footer": "Altera — a journal about life."
+    },
+    "newDevice": {
+      "subject": "New sign-in to your Altera account",
+      "preheader": "Someone signed into your account",
+      "body": "Hello,\n\nsomeone just signed into your Altera account. If this was you — all is well.\n\nIf not — go to your security settings and end any suspicious sessions.",
+      "device": "Device: {device}",
+      "browser": "Browser: {browser}",
+      "time": "Time: {datetime}",
+      "action": "Manage sessions",
+      "footer": "Altera — a journal about life."
+    }
   },
   "navigation": {
     "mainMenu": "Main Menu",
@@ -52,14 +138,18 @@
     "adminPanel": "Admin Panel",
     "myArticles": "My Articles",
     "myProfile": "My Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "topTopics": "Top topics",
+    "popularTags": "Popular tags",
+    "closeMenu": "Close menu"
   },
   "home": {
     "featured": "Featured",
     "latest": "Latest Articles",
     "popular": "Popular Articles",
     "trending": "Trending",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "demanded": "In demand"
   },
   "article": {
     "readMore": "Read More",
@@ -80,6 +170,16 @@
     "statistics": "Statistics",
     "moderation": "Moderation",
     "settings": "Settings",
+    "articlesTitle": "Article management",
+    "articlesDescription": "View and manage system articles",
+    "tagsTitle": "Tag management",
+    "tagsDescription": "Create and edit article tags",
+    "typesTitle": "Content type management",
+    "typesDescription": "Create and edit article content types",
+    "usersTitle": "User management",
+    "usersDescription": "View and manage system users",
+    "editUser": "Edit user",
+    "editUserDescription": "Change the user details and click “Save”",
     "menu": {
       "Dashboard": "Dashboard",
       "Articles": "Articles",
@@ -88,6 +188,29 @@
       "Users": "Users",
       "Profiles": "Profiles"
     }
+  },
+  "language": {
+    "switchTo": "Switch language to {language}"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page not found",
+      "message": "The requested page does not exist or has moved."
+    },
+    "internal": {
+      "title": "Internal server error",
+      "message": "A server error occurred. Try refreshing the page."
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "message": "You do not have permission to access this page."
+    },
+    "generic": {
+      "title": "An error occurred",
+      "message": "Something went wrong. Try refreshing the page."
+    },
+    "backHome": "Back to home",
+    "code": "Error code: {code}"
   },
   "components": {
     "showcase": "Components Showcase",

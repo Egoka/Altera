@@ -3,6 +3,8 @@
   import { DEMO_DEMANDED } from "~/utils/demoFeed"
   import { DEMANDED_RHYTHM } from "~/utils/feedRhythm"
 
+  const { t } = useI18n()
+
   const demandedArticles = DEMO_DEMANDED
 
   /** Ритм ленты живёт в `feedRhythm` рядом с ритмом «Нового» и проверяется тестом. */
@@ -30,7 +32,9 @@
 <template>
   <section class="demanded-articles pt-24 border-t border-zinc-200 dark:border-zinc-800">
     <div>
-      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">Востребованное</h2>
+      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">
+        {{ t("home.demanded") }}
+      </h2>
       <ArticleGroup v-for="group in groups" :key="group.id" :articles="group.articles" :layout="group.layout" />
     </div>
   </section>

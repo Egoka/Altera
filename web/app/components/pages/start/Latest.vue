@@ -3,6 +3,8 @@
   import { DEMO_LATEST } from "~/utils/demoFeed"
   import { LATEST_RHYTHM } from "~/utils/feedRhythm"
 
+  const { t } = useI18n()
+
   const latestArticles = DEMO_LATEST
 
   /** Ритм ленты живёт в `feedRhythm` рядом с ритмом «Востребованного» и проверяется тестом. */
@@ -30,7 +32,9 @@
 <template>
   <section class="latest-articles pt-16">
     <div>
-      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">Новое</h2>
+      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">
+        {{ t("home.latest") }}
+      </h2>
       <ArticleGroup v-for="group in groups" :key="group.id" :articles="group.articles" :layout="group.layout" />
     </div>
   </section>

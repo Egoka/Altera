@@ -4,6 +4,8 @@
   import type { FormStructure } from "#fishtvue/form"
   import type { Role } from "~/graphql/generated/graphql"
 
+  const { t } = useI18n()
+
   interface UserRow {
     id: number
     name: string
@@ -471,10 +473,10 @@
               class="flex items-start gap-2 justify-between w-[calc(100%-24px)] my-2.5 ml-5 text-xs sm:text-base overflow-hidden">
               <div class="w-full min-w-0">
                 <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300 truncate">
-                  Управление пользователями
+                  {{ t("admin.usersTitle") }}
                 </div>
                 <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500 truncate">
-                  Просмотр и управление пользователями системы
+                  {{ t("admin.usersDescription") }}
                 </div>
               </div>
             </div>
