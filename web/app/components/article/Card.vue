@@ -34,6 +34,7 @@
   )
 
   const emit = defineEmits<{ bookmark: [bookmarked: boolean] }>()
+  const { t } = useI18n()
   const articlePath = computed(() =>
     props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""
   )
@@ -83,7 +84,7 @@
         <span
           v-if="article.isTranslation"
           class="font-sans text-[0.6875rem] font-semibold uppercase tracking-wider text-zinc-500">
-          Перевод
+          {{ t("reading.translation") }}
         </span>
       </div>
 

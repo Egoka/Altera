@@ -1,13 +1,15 @@
 <script setup lang="ts">
+  const { t } = useI18n()
+
   const links = [
-    { label: "О проекте", to: "/about" },
-    { label: "Правила публикации", to: "/legal/content-rules" },
-    { label: "Оферта", to: "/legal/paid-services" },
-    { label: "Политика персональных данных", to: "/legal/privacy" },
-    { label: "Возвраты", to: "/legal/refunds" },
-    { label: "Реквизиты", to: "/legal/paid-services#requisites" },
-    { label: "Контакты", to: "/contact" },
-    { label: "RSS", to: "/rss.xml" }
+    { labelKey: "footer.about", to: "/about" },
+    { labelKey: "footer.contentRules", to: "/legal/content-rules" },
+    { labelKey: "footer.offer", to: "/legal/paid-services" },
+    { labelKey: "footer.privacy", to: "/legal/privacy" },
+    { labelKey: "footer.refunds", to: "/legal/refunds" },
+    { labelKey: "footer.requisites", to: "/legal/paid-services#requisites" },
+    { labelKey: "footer.contacts", to: "/contact" },
+    { labelKey: "footer.rss", to: "/rss.xml" }
   ] as const
 </script>
 
@@ -19,21 +21,21 @@
           <NuxtLink
             to="/"
             class="inline-flex focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600">
-            <span class="sr-only">Altera — на главную</span>
+            <span class="sr-only">{{ t("common.logoHome") }}</span>
             <VisualLogo />
           </NuxtLink>
           <p class="mt-5 max-w-xs font-garamond-libre text-lg leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Журнал о культуре, искусстве, спорте, музыке, фотографии, путешествиях и человеческой мысли.
+            {{ t("footer.description") }}
           </p>
         </div>
 
-        <nav aria-label="Ссылки в подвале">
+        <nav :aria-label="t('footer.linksLabel')">
           <ul class="grid grid-cols-1 border-t border-zinc-300 sm:grid-cols-2 lg:grid-cols-3 dark:border-zinc-800">
             <li v-for="link in links" :key="link.to" class="border-b border-zinc-300 dark:border-zinc-800">
               <NuxtLink
                 :to="link.to"
                 class="flex min-h-12 items-center py-2 font-sans text-sm font-medium text-zinc-700 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:text-zinc-300 dark:hover:text-orange-400">
-                {{ link.label }}
+                {{ t(link.labelKey) }}
               </NuxtLink>
             </li>
           </ul>
@@ -41,7 +43,7 @@
       </div>
 
       <p class="mt-12 border-t border-zinc-300 pt-6 font-sans text-xs text-zinc-500 dark:border-zinc-800">
-        © 2026 Altera
+        {{ t("footer.copyright") }}
       </p>
     </div>
   </footer>

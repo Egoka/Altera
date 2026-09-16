@@ -8,6 +8,7 @@
   import { useScroll } from "~/composables/useScroll"
 
   const { isScrolled, isHeaderVisible } = useScroll()
+  const { t } = useI18n()
   const { sections, popularTags, status } = usePublicNavigation()
   const isMegaMenuOpen = ref(false)
 
@@ -33,7 +34,7 @@
     }"
     @keydown.esc="closeMegaMenu">
     <nav
-      aria-label="Основная навигация"
+      :aria-label="t('navigation.primary')"
       class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
       <div class="flex flex-1 items-center gap-5">
         <button
@@ -43,7 +44,7 @@
           class="inline-flex min-h-11 items-center gap-2 font-sans text-sm font-semibold text-zinc-900 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-100 dark:hover:text-orange-400"
           @click="toggleMegaMenu">
           <IconBurger class="lg:hidden" :is-open="isMegaMenuOpen" />
-          <span>Рубрики</span>
+          <span>{{ t("navigation.sections") }}</span>
           <span class="hidden text-xs text-zinc-400 lg:inline" aria-hidden="true">{{
             isMegaMenuOpen ? "↑" : "↓"
           }}</span>
@@ -61,7 +62,7 @@
       <NuxtLink
         to="/"
         class="p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600">
-        <span class="sr-only">Altera — на главную</span>
+        <span class="sr-only">{{ t("common.logoHome") }}</span>
         <VisualLogo />
       </NuxtLink>
 
@@ -70,12 +71,12 @@
         <NuxtLink
           to="/login"
           class="hidden px-2 py-3 font-sans text-sm font-semibold text-zinc-800 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:inline-flex dark:text-zinc-200">
-          Войти
+          {{ t("common.login") }}
         </NuxtLink>
         <NuxtLink
           to="/pricing"
           class="inline-flex min-h-10 items-center border border-zinc-900 px-3 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:border-orange-700 hover:bg-orange-700 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-100 dark:text-zinc-100">
-          Писать
+          {{ t("common.write") }}
         </NuxtLink>
       </div>
     </nav>

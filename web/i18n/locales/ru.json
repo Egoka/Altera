@@ -9,6 +9,8 @@
     "tags": "Теги",
     "types": "Типы контента",
     "login": "Войти",
+    "write": "Писать",
+    "logoHome": "Altera — на главную",
     "logout": "Выйти",
     "profile": "Профиль",
     "settings": "Настройки",
@@ -141,7 +143,14 @@
     "settings": "Настройки",
     "topTopics": "Топ тематики",
     "popularTags": "Популярные теги",
-    "closeMenu": "Закрыть меню"
+    "closeMenu": "Закрыть меню",
+    "primary": "Основная навигация",
+    "sections": "Рубрики",
+    "sectionsLoading": "Загружаем рубрики…",
+    "sectionsEmpty": "Пока нет опубликованных рубрик.",
+    "articleCount": "{count} материалов",
+    "trending": "Сейчас читают",
+    "allSections": "Все рубрики"
   },
   "home": {
     "featured": "Главные материалы",
@@ -160,6 +169,31 @@
     "comments": "Комментарии",
     "noComments": "Комментариев пока нет",
     "addComment": "Добавить комментарий"
+  },
+  "reading": {
+    "translation": "Перевод",
+    "loginToBookmark": "Войти, чтобы сохранить материал",
+    "removeBookmark": "Убрать из закладок",
+    "addBookmark": "Добавить в закладки",
+    "loadErrorTitle": "Не удалось загрузить материалы",
+    "loadErrorDescription": "Обновите страницу или напишите в редакцию.",
+    "requestCode": "Код запроса: {requestId}",
+    "contactEditorial": "Написать в редакцию",
+    "loading": "Материалы загружаются",
+    "proAuthor": "Автор уровня pro"
+  },
+  "footer": {
+    "about": "О проекте",
+    "contentRules": "Правила публикации",
+    "offer": "Оферта",
+    "privacy": "Политика персональных данных",
+    "refunds": "Возвраты",
+    "requisites": "Реквизиты",
+    "contacts": "Контакты",
+    "rss": "RSS",
+    "description": "Журнал о культуре, искусстве, спорте, музыке, фотографии, путешествиях и человеческой мысли.",
+    "linksLabel": "Ссылки в подвале",
+    "copyright": "© 2026 Altera"
   },
   "admin": {
     "dashboard": "Дашборд",

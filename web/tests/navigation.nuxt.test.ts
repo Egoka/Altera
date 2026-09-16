@@ -2,13 +2,43 @@
 
 import { flushPromises, mount } from "@vue/test-utils"
 import { ref } from "vue"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import AppHeader from "../app/components/app/header.vue"
 import LanguageToggle from "../app/components/functional/LanguageToggle.vue"
 
 vi.mock("~/composables/useScroll", () => ({
   useScroll: () => ({ isScrolled: ref(false), isHeaderVisible: ref(true) })
 }))
+
+const messages: Record<string, string> = {
+  "common.logoHome": "Altera — на главную",
+  "common.login": "Войти",
+  "common.write": "Писать",
+  "language.switchTo": "Switch language to {language}",
+  "navigation.primary": "Основная навигация",
+  "navigation.sections": "Рубрики",
+  "navigation.sectionsLoading": "Загружаем рубрики…",
+  "navigation.sectionsEmpty": "Пока нет опубликованных рубрик.",
+  "navigation.articleCount": "{count} материалов",
+  "navigation.trending": "Сейчас читают",
+  "navigation.allSections": "Все рубрики"
+}
+const t = (key: string, params: Record<string, string | number> = {}) =>
+  Object.entries(params).reduce(
+    (message, [name, value]) => message.replace(`{${name}}`, String(value)),
+    messages[key] ?? key
+  )
+
+beforeEach(() => {
+  vi.stubGlobal("useI18n", () => ({
+    t,
+    locale: ref("ru"),
+    locales: ref([
+      { code: "ru", name: "Русский" },
+      { code: "en", name: "English" }
+    ])
+  }))
+})
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -48,13 +78,6 @@ describe("AppHeader navigation", () => {
 
 describe("LanguageToggle compact mode", () => {
   it("сохраняет полное доступное имя, но освобождает место в мобильной шапке", () => {
-    vi.stubGlobal("useI18n", () => ({
-      locale: ref("ru"),
-      locales: ref([
-        { code: "ru", name: "Русский" },
-        { code: "en", name: "English" }
-      ])
-    }))
     vi.stubGlobal("useSwitchLocalePath", () => () => "/en")
 
     const wrapper = mount(LanguageToggle, {

@@ -9,6 +9,8 @@
     "tags": "Tags",
     "types": "Content Types",
     "login": "Login",
+    "write": "Write",
+    "logoHome": "Altera — home",
     "logout": "Logout",
     "profile": "Profile",
     "settings": "Settings",
@@ -141,7 +143,14 @@
     "settings": "Settings",
     "topTopics": "Top topics",
     "popularTags": "Popular tags",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "primary": "Primary navigation",
+    "sections": "Sections",
+    "sectionsLoading": "Loading sections…",
+    "sectionsEmpty": "No published sections yet.",
+    "articleCount": "{count} articles",
+    "trending": "Trending now",
+    "allSections": "All sections"
   },
   "home": {
     "featured": "Featured",
@@ -160,6 +169,31 @@
     "comments": "Comments",
     "noComments": "No comments yet",
     "addComment": "Add Comment"
+  },
+  "reading": {
+    "translation": "Translation",
+    "loginToBookmark": "Log in to save this article",
+    "removeBookmark": "Remove from bookmarks",
+    "addBookmark": "Add to bookmarks",
+    "loadErrorTitle": "Could not load articles",
+    "loadErrorDescription": "Refresh the page or contact the editorial team.",
+    "requestCode": "Request ID: {requestId}",
+    "contactEditorial": "Contact the editorial team",
+    "loading": "Articles are loading",
+    "proAuthor": "Pro author"
+  },
+  "footer": {
+    "about": "About",
+    "contentRules": "Publication rules",
+    "offer": "Offer",
+    "privacy": "Privacy policy",
+    "refunds": "Refunds",
+    "requisites": "Legal details",
+    "contacts": "Contact",
+    "rss": "RSS",
+    "description": "A journal about culture, art, sport, music, photography, travel, and human thought.",
+    "linksLabel": "Footer links",
+    "copyright": "© 2026 Altera"
   },
   "admin": {
     "dashboard": "Dashboard",
