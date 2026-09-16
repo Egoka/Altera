@@ -81,7 +81,8 @@ def queue_attention(config, snapshot):
     target = int(config.get("queue_target_todo", 3))
     issues = snapshot.get("issues", [])
     todo_count = 0
-    active_count = 0
+    status_active_count = 0
+    active_run_count = 0
     for issue in issues:
         if not isinstance(issue, dict):
             continue
@@ -91,16 +92,27 @@ def queue_attention(config, snapshot):
             todo_count += 1
         if (status in ("in_progress", "in_review", "started", "review")
                 or category in ("started", "in_progress", "active")):
-            active_count += 1
+            status_active_count += 1
+        runs = issue.get("runs", [])
+        run_statuses = [
+            str(run.get("status") if isinstance(run, dict) else run[1] if len(run) > 1 else "").lower()
+            for run in runs if isinstance(run, (dict, list, tuple))
+        ]
+        if any(status in ("queued", "running", "starting", "dispatched", "claimed")
+               for status in run_statuses):
+            active_run_count += 1
     reasons = []
     if todo_count < target:
         reasons.append("refill_queue")
-    if todo_count and not active_count:
+    if todo_count and not active_run_count:
         reasons.append("dispatch_ready_work")
+    if status_active_count and not active_run_count:
+        reasons.append("launch_assigned_work")
     if not reasons:
         return None
     return {"reasons": reasons, "todo_count": todo_count, "todo_target": target,
-            "todo_deficit": max(0, target - todo_count), "active_count": active_count}
+            "todo_deficit": max(0, target - todo_count), "active_count": active_run_count,
+            "active_run_count": active_run_count, "status_active_count": status_active_count}
 
 
 def dispatch(config, snapshot, prompt, model, now=None):
