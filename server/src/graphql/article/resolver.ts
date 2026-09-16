@@ -632,14 +632,28 @@ export default {
           throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
         }
 
-        // Удаляем статьи
-        await ctx.prisma.article.deleteMany({
-          where: { id: { in: ids } }
+        // Архивируем вместо физического удаления: адрес (slug) остаётся занятым навсегда
+        // (ADR-0004, журнал §26.10, AC-T053-2). Полное необратимое удаление — отдельная
+        // задача T-076, доступная только владельцу из архива.
+        await ctx.prisma.article.updateMany({
+          where: { id: { in: ids } },
+          data: {
+            status: "archived",
+            archivedAt: new Date(),
+            archivedByActorId: ctx.currentUser!.id,
+            archivedByRole: ctx.currentUser!.role,
+            archiveReason: "bulk_delete"
+          }
         })
 
-        await ctx.cache.delByTags(buildArticleCacheTags(...articlesToDelete))
+        const archivedArticles = await ctx.prisma.article.findMany({
+          where: { id: { in: ids } },
+          include: { author: true, section: true, tags: true }
+        })
 
-        return articlesToDelete
+        await ctx.cache.delByTags(buildArticleCacheTags(...articlesToDelete, ...archivedArticles))
+
+        return archivedArticles
       } catch (error) {
         handleAdminError(error, ctx.requestId, "article")
       }
