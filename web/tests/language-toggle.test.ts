@@ -6,18 +6,19 @@ import { describe, expect, it } from "vitest"
 const here = dirname(fileURLToPath(import.meta.url))
 const componentSource = readFileSync(join(here, "..", "app", "components", "functional", "LanguageToggle.vue"), "utf8")
 const headerSource = readFileSync(join(here, "..", "app", "components", "app", "header.vue"), "utf8")
+const ruMessages = JSON.parse(readFileSync(join(here, "..", "i18n", "locales", "ru.json"), "utf8"))
 
 describe("LanguageToggle", () => {
-  it("renders one accessible control for the other locale", () => {
-    expect(componentSource).toContain("<button")
+  it("renders an SSR-visible link to the other locale", () => {
+    expect(componentSource).toContain("<NuxtLink")
+    expect(componentSource).toContain(':to="targetPath"')
     expect(componentSource).toContain(':aria-label="ariaLabel"')
-    expect(componentSource).toContain('@click="switchLanguage"')
+    expect(ruMessages.language.switchTo).toBe("Switch language to {language}")
+    expect(componentSource.match(/<NuxtLink/g)).toHaveLength(1)
   })
 
-  it("updates the locale without reloading and preserves the tri-state sibling resolver", () => {
+  it("uses Nuxt SPA navigation and preserves the tri-state sibling resolver", () => {
     expect(componentSource).toContain("publishedSiblingPath")
-    expect(componentSource).toContain("setLocale")
-    expect(componentSource).toContain("navigateTo")
     expect(componentSource).toContain("useSwitchLocalePath")
     expect(componentSource).toContain("resolveLocaleSwitchPath")
     expect(componentSource).not.toContain("location.reload")

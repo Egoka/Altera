@@ -190,7 +190,7 @@
     }
   },
   "language": {
-    "switchTo": "Переключить язык на {language}"
+    "switchTo": "Switch language to {language}"
   },
   "errors": {
     "notFound": {
