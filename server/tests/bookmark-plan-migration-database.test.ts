@@ -132,6 +132,12 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
              VALUES ('free-grant', 'reader-1', 'free', 'invalid')`
           )
         ).rejects.toMatchObject({ meta: { code: "23514" } })
+        await expect(
+          after.$executeRawUnsafe(
+            `INSERT INTO "plan_grants" ("id", "userId", "tier", "reason")
+             VALUES ('lifelong-pro', 'reader-1', 'pro', 'invalid')`
+          )
+        ).rejects.toMatchObject({ meta: { code: "23514" } })
       } finally {
         await after.$disconnect()
       }
@@ -143,6 +149,8 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
       applyBaselineMigrations(url)
       const before = prismaFor(url)
       await seedUser(before, { id: "reader-1", role: "reader" })
+      await seedUser(before, { id: "author-1", role: "author" })
+      await seedUser(before, { id: "service-reader-1", role: "reader", service: true })
       await seedUser(before, { id: "editor-1", role: "editor", service: true })
       await before.$executeRawUnsafe(
         `INSERT INTO "articles" ("id", "title", "slug", "body", "status", "authorId", "updatedAt")
@@ -159,10 +167,18 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
           after.$executeRawUnsafe(`INSERT INTO "bookmarks" ("userId", "articleId") VALUES ('reader-1', 'article-1')`)
         ).resolves.toBe(1)
         await expect(
+          after.$executeRawUnsafe(`INSERT INTO "bookmarks" ("userId", "articleId") VALUES ('author-1', 'article-1')`)
+        ).resolves.toBe(1)
+        await expect(
           after.$executeRawUnsafe(`INSERT INTO "bookmarks" ("userId", "articleId") VALUES ('reader-1', 'article-1')`)
         ).rejects.toMatchObject({ meta: { code: "23505" } })
         await expect(
           after.$executeRawUnsafe(`INSERT INTO "bookmarks" ("userId", "articleId") VALUES ('editor-1', 'article-1')`)
+        ).rejects.toMatchObject({ meta: { code: "23514" } })
+        await expect(
+          after.$executeRawUnsafe(
+            `INSERT INTO "bookmarks" ("userId", "articleId") VALUES ('service-reader-1', 'article-1')`
+          )
         ).rejects.toMatchObject({ meta: { code: "23514" } })
         await expect(
           after.$executeRawUnsafe(`UPDATE "users" SET "role" = 'editor' WHERE "id" = 'reader-1'`)
@@ -175,6 +191,58 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
         expect(bookmarks).toEqual([{ count: 0n }])
       } finally {
         await after.$disconnect()
+      }
+    })
+  }, 30_000)
+
+  it("serializes bookmark creation against conversion to a service role", async () => {
+    await withDatabase("t017_bookmark_race", async (url) => {
+      applyBaselineMigrations(url)
+      const before = prismaFor(url)
+      await seedUser(before, { id: "reader-1", role: "reader" })
+      await seedUser(before, { id: "editor-1", role: "editor", service: true })
+      await before.$executeRawUnsafe(
+        `INSERT INTO "articles" ("id", "title", "slug", "body", "status", "authorId", "updatedAt")
+         VALUES ('article-1', 'Article', 'article', 'Body', 'published', 'editor-1', NOW())`
+      )
+      await before.$disconnect()
+
+      const migration = applyTargetMigration(url)
+      expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
+
+      const bookmarkClient = prismaFor(url)
+      const roleClient = prismaFor(url)
+      let markBookmarkInserted!: () => void
+      let allowBookmarkCommit!: () => void
+      const bookmarkInserted = new Promise<void>((resolve) => {
+        markBookmarkInserted = resolve
+      })
+      const bookmarkMayCommit = new Promise<void>((resolve) => {
+        allowBookmarkCommit = resolve
+      })
+
+      try {
+        const createBookmark = bookmarkClient.$transaction(async (transaction) => {
+          await transaction.$executeRawUnsafe(
+            `INSERT INTO "bookmarks" ("userId", "articleId") VALUES ('reader-1', 'article-1')`
+          )
+          markBookmarkInserted()
+          await bookmarkMayCommit
+        })
+
+        await bookmarkInserted
+        const convertToServiceRole = roleClient.$executeRawUnsafe(
+          `UPDATE "users" SET "role" = 'editor', "isServiceAccount" = true WHERE "id" = 'reader-1'`
+        )
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        allowBookmarkCommit()
+        await createBookmark
+        await expect(convertToServiceRole).rejects.toMatchObject({ meta: { code: "23514" } })
+      } finally {
+        allowBookmarkCommit()
+        await bookmarkClient.$disconnect()
+        await roleClient.$disconnect()
       }
     })
   }, 30_000)

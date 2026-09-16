@@ -50,6 +50,7 @@ model User {
   avatarAsset        MediaAsset?          @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
   previousAvatar     MediaAsset?          @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
 
+  @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
   @@map("users")
@@ -551,11 +552,13 @@ model MediaAsset {
 }
 
 model Bookmark {
-  userId    String
-  articleId String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  userId                String
+  articleId             String
+  ownerRole             Role     @default(reader)
+  ownerIsServiceAccount Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  user                  User     @relation(fields: [userId, ownerRole, ownerIsServiceAccount], references: [id, role, isServiceAccount], onDelete: Cascade, onUpdate: Cascade)
+  article               Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([userId, articleId])
   @@index([userId, createdAt(sort: Desc)])

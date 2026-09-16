@@ -21,7 +21,7 @@ CREATE TABLE "plan_grants" (
     CONSTRAINT "plan_grants_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "plan_grants_paid_tier_check" CHECK ("tier" <> 'free'),
     CONSTRAINT "plan_grants_source_check" CHECK (
-        ("endsAt" IS NULL AND "grantedById" IS NULL)
+        ("endsAt" IS NULL AND "grantedById" IS NULL AND "tier" = 'standard')
         OR ("endsAt" IS NOT NULL AND "grantedById" IS NOT NULL)
     )
 );
@@ -30,10 +30,19 @@ CREATE TABLE "plan_grants" (
 CREATE TABLE "bookmarks" (
     "userId" TEXT NOT NULL,
     "articleId" TEXT NOT NULL,
+    "ownerRole" "Role" NOT NULL DEFAULT 'reader',
+    "ownerIsServiceAccount" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "bookmarks_pkey" PRIMARY KEY ("userId", "articleId")
+    CONSTRAINT "bookmarks_pkey" PRIMARY KEY ("userId", "articleId"),
+    CONSTRAINT "bookmarks_personal_account_check" CHECK (
+        "ownerRole" IN ('reader', 'author') AND NOT "ownerIsServiceAccount"
+    )
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_id_role_isServiceAccount_key"
+ON "users"("id", "role", "isServiceAccount");
 
 -- CreateIndex
 CREATE INDEX "plan_grants_userId_endsAt_idx" ON "plan_grants"("userId", "endsAt");
@@ -58,15 +67,16 @@ FOREIGN KEY ("grantedById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDAT
 
 -- AddForeignKey
 ALTER TABLE "bookmarks"
-ADD CONSTRAINT "bookmarks_userId_fkey"
-FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ADD CONSTRAINT "bookmarks_userId_ownerRole_ownerIsServiceAccount_fkey"
+FOREIGN KEY ("userId", "ownerRole", "ownerIsServiceAccount")
+REFERENCES "users"("id", "role", "isServiceAccount") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "bookmarks"
 ADD CONSTRAINT "bookmarks_articleId_fkey"
 FOREIGN KEY ("articleId") REFERENCES "articles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Existing authors keep their launch-time base authorship without a subscription.
+-- Существующие авторы сохраняют базовое авторство первого запуска без подписки.
 INSERT INTO "plan_grants" ("id", "userId", "tier", "reason")
 SELECT md5("id" || ':base-authorship'), "id", 'standard', 'import: base authorship'
 FROM "users"
@@ -76,8 +86,8 @@ UPDATE "users"
 SET "planTier" = 'standard', "planUntil" = NULL
 WHERE "role" = 'author';
 
--- Bookmark ownership is a personal reader/author capability, never a service-account capability.
-CREATE FUNCTION assert_bookmark_owner_is_personal_account() RETURNS trigger AS $$
+-- Снимок допуска к закладкам служит только для декларативного ограничения в базе.
+CREATE FUNCTION sync_bookmark_owner_eligibility() RETURNS trigger AS $$
 DECLARE
     owner_role "Role";
     owner_is_service BOOLEAN;
@@ -87,31 +97,13 @@ BEGIN
     FROM "users"
     WHERE "id" = NEW."userId";
 
-    IF owner_role NOT IN ('reader', 'author') OR owner_is_service THEN
-        RAISE EXCEPTION 'bookmarks require an ordinary reader or author account'
-            USING ERRCODE = '23514', CONSTRAINT = 'bookmarks_personal_account_check';
-    END IF;
+    NEW."ownerRole" := owner_role;
+    NEW."ownerIsServiceAccount" := owner_is_service;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER bookmarks_personal_account_check
+CREATE TRIGGER bookmarks_sync_owner_eligibility
 BEFORE INSERT OR UPDATE OF "userId" ON "bookmarks"
-FOR EACH ROW EXECUTE FUNCTION assert_bookmark_owner_is_personal_account();
-
-CREATE FUNCTION prevent_bookmark_owner_service_conversion() RETURNS trigger AS $$
-BEGIN
-    IF (NEW."role" NOT IN ('reader', 'author') OR NEW."isServiceAccount")
-       AND EXISTS (SELECT 1 FROM "bookmarks" WHERE "userId" = NEW."id") THEN
-        RAISE EXCEPTION 'an account with bookmarks cannot become a service account'
-            USING ERRCODE = '23514', CONSTRAINT = 'users_bookmarks_personal_account_check';
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER users_bookmarks_personal_account_check
-BEFORE UPDATE OF "role", "isServiceAccount" ON "users"
-FOR EACH ROW EXECUTE FUNCTION prevent_bookmark_owner_service_conversion();
+FOR EACH ROW EXECUTE FUNCTION sync_bookmark_owner_eligibility();
