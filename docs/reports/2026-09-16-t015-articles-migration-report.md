@@ -49,6 +49,7 @@
 | Migration drift        | `prisma migrate diff --from-migrations … --to-schema-datamodel … --exit-code`                            | `No difference detected`; exit 0                          |
 | Server build           | `pnpm --filter server run build:ci`                                                                      | Prisma generate, TypeScript, GraphQL copy; exit 0         |
 | Workspace tests        | `T015_TEST_DATABASE_URL=… pnpm test`                                                                     | server 113 passed / 6 skipped; web 120 passed; exit 0     |
+| GraphQL generated      | `pnpm codegen --check`                                                                                   | generated outputs current; exit 0                         |
 | Lint                   | `pnpm lint`                                                                                              | exit 0                                                    |
 | Format                 | `pnpm format`                                                                                            | all matched files use Prettier; exit 0                    |
 | Whitespace             | `git diff --check`                                                                                       | exit 0                                                    |
@@ -70,3 +71,10 @@
   относительно выданного baseline, `LOG_HASH_SECRET` отсутствует. Локальные миграционные проверки не требовали
   запуска server runtime; исходный baseline из handoff не менялся и автоматически не перебазировался.
 - Deployment не выполнялся; следующий шаг после CI и независимого review — контролируемая release-проверка.
+
+## Независимое review
+
+Архитектурный reviewer подтвердил исправление окна конкурентной записи и синхронизацию legacy-write path,
+корректность `to_jsonb(text)`, enum-контракта, ограничений и границы T-020 на точном tested SHA
+`9a9ff842a48bd2f3cdea6871195268ff0700e832`. Verdict: **Approved**. Нативное controller-trusted review
+остаётся pending и будет запущено mention в итоговом issue comment.

@@ -147,14 +147,14 @@ Expected: schema validation and all database assertions pass.
 
 Run: focused contract/database tests, `pnpm --filter server test`, `pnpm --filter server run build:ci`, `pnpm format`, and `pnpm lint`.
 
-- [ ] **Step 2: Obtain independent read-only review**
+- [x] **Step 2: Obtain independent read-only review**
 
 The reviewer checks the exact diff from baseline `b0d45d7de65f022f2b4965fc36908c77d5c26d4d`, with special attention to the body boundary (`to_jsonb` preservation now, ProseMirror conversion only in T-020), data-loss risks, constraints, and schema/GraphQL enum parity.
 
-- [ ] **Step 3: Record evidence and canonical receipt**
+- [x] **Step 3: Record evidence and canonical receipt**
 
 The report records the exact commands, exit codes, test counts, SQL assertions, limitations and review verdict. `docs/reports/tasks/T-015.json` records task/issue IDs, baseline/tested SHA, branch, implementer IDs, PR, criteria, checks and remaining work without setting controller-owned `verified` or `accepted_at`.
 
-- [ ] **Step 4: Commit, push, and open a PR to `app`**
+- [x] **Step 4: Commit, push, and open a PR to `app`**
 
 Stage only T-015 files, inspect the staged diff, commit with a Conventional Commit message, push `server/t015-articles-migration`, and create or update its focused PR against `app`.

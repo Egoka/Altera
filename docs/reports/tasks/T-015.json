@@ -8,7 +8,7 @@
     "sha": "5fdfdd37295e4f47f216792f4d7ff82a19a0c073"
   },
   "baseline_sha": "b0d45d7de65f022f2b4965fc36908c77d5c26d4d",
-  "tested_sha": null,
+  "tested_sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832",
   "branch": "server/t015-articles-migration",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -36,7 +36,12 @@
     "ci": "pending",
     "preflight": "failed_with_documented_environment_and_timing_gaps"
   },
-  "pr": null,
+  "pr": {
+    "number": 68,
+    "url": "https://github.com/Egoka/Altera/pull/68",
+    "base": "app",
+    "head_sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832"
+  },
   "review": null,
   "deployment": {
     "required": true,
@@ -46,7 +51,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-015.md",
-    "sha256": null
+    "sha256": "335d5314d82c129568301af686bdf3bd6adf9534f162d21cfccadc925b84a6fa"
   },
   "remaining": [
     "T-020 converts preserved JSON strings to ProseMirror documents",
