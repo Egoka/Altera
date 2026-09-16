@@ -8,7 +8,7 @@
     "sha": "5fdfdd37295e4f47f216792f4d7ff82a19a0c073"
   },
   "baseline_sha": "b0d45d7de65f022f2b4965fc36908c77d5c26d4d",
-  "tested_sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832",
+  "tested_sha": "5d6b465e08e08df48d7d4779ac724b72a38d95e7",
   "branch": "server/t015-articles-migration",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -40,13 +40,14 @@
   "pr": {
     "number": 68,
     "url": "https://github.com/Egoka/Altera/pull/68",
-    "base": "app",
-    "head_sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832"
+    "base_ref": "app",
+    "base_sha": "64c47488bd847467ed2f44cdb4877b4b10591d78",
+    "head_sha": "5d6b465e08e08df48d7d4779ac724b72a38d95e7"
   },
   "review": {
-    "actor_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
-    "run_id": "01a0a972-1693-77ca-9536-277707a9cb4d",
-    "sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832",
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0a986-0f2d-7436-8aa8-c391767dd987",
+    "sha": "5d6b465e08e08df48d7d4779ac724b72a38d95e7",
     "verdict": "approved"
   },
   "deployment": {
