@@ -32,6 +32,17 @@ type SectionCount {
   articles: Int!
 }
 
+# Минимальный публичный контракт рубрики для навигации. Административные поля
+# и произвольные фильтры намеренно остаются в закрытом `sections`.
+type PublicSection {
+  id: ID!
+  name: String!
+  nameEn: String
+  slug: String!
+  order: Int!
+  articleCount: Int!
+}
+
 # Специфичные для типов контента фильтры
 input SectionFiltersInput {
   base: BaseFiltersInput
@@ -73,6 +84,7 @@ type ArticlesBySectionResponse {
 extend type Query {
   # Запросы для страницы типа контента
   section(slug: String!): Section
+  publicSections: [PublicSection!]!
   articlesBySection(sectionSlug: String!, page: Int = 1, limit: Int = 10): ArticlesBySectionResponse!
   sectionStats(sectionSlug: String!): SectionStats
 

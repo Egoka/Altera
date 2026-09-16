@@ -1,0 +1,108 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ArticleCard snapshots > оставляет карточку доступной без изображения и сохраняет метки pro/перевода 1`] = `
+"<article data-variant="large" class="group relative border-zinc-200 dark:border-zinc-800">
+  <!--v-if-->
+  <!--v-if-->
+  <div class="">
+    <div class="mb-2 flex flex-wrap items-center gap-2"><a href="/travel" class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.16em] text-orange-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-orange-400">Путешествия</a><span class="font-sans text-[0.6875rem] font-semibold uppercase tracking-wider text-zinc-500"> Перевод </span></div>
+    <h2 class="font-garamond-libre font-bold text-zinc-950 dark:text-zinc-100 text-card md:text-title"><a href="/travel/gorod-slushaet-more" class="underline-offset-4 transition-colors hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 motion-reduce:transition-none dark:hover:text-orange-400">Город, который слушает море</a></h2>
+    <p class="mt-2 line-clamp-2 font-garamond-libre text-zinc-600 dark:text-zinc-400 text-card-dek">Портовый дневник о памяти, ветре и возвращении домой.</p>
+    <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1"><a href="/authors/anna-volkova" class="font-cormorant-sc text-sm font-semibold tracking-wide text-zinc-700 underline-offset-4 hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-300 dark:hover:text-orange-400">Анна Волкова</a><span class="inline-flex items-center rounded-full bg-orange-600 px-1.5 py-0.5 font-sans text-[0.625rem] font-bold uppercase tracking-[0.12em] text-white" aria-label="Автор уровня pro"> pro </span><span aria-hidden="true" class="text-zinc-400">·</span><time datetime="2026-09-15T10:00:00.000Z" class="font-sans text-xs text-zinc-500 dark:text-zinc-400">15 сентября 2026</time></div>
+  </div>
+  <!--v-if-->
+</article>"
+`;
+
+exports[`ArticleCard snapshots > фиксирует редакционную разметку варианта large 1`] = `
+"<article data-variant="large" class="group relative border-zinc-200 dark:border-zinc-800">
+  <!--v-if-->
+  <figure class="overflow-hidden bg-zinc-100 dark:bg-zinc-900 mb-5 aspect-3/2"><a href="/travel/gorod-slushaet-more" class="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600"><img src="/images/sea.jpg" alt="Город, который слушает море" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"></a></figure>
+  <div class="">
+    <div class="mb-2 flex flex-wrap items-center gap-2"><a href="/travel" class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.16em] text-orange-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-orange-400">Путешествия</a><span class="font-sans text-[0.6875rem] font-semibold uppercase tracking-wider text-zinc-500"> Перевод </span></div>
+    <h2 class="font-garamond-libre font-bold text-zinc-950 dark:text-zinc-100 text-card md:text-title"><a href="/travel/gorod-slushaet-more" class="underline-offset-4 transition-colors hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 motion-reduce:transition-none dark:hover:text-orange-400">Город, который слушает море</a></h2>
+    <p class="mt-2 line-clamp-2 font-garamond-libre text-zinc-600 dark:text-zinc-400 text-card-dek">Портовый дневник о памяти, ветре и возвращении домой.</p>
+    <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1"><a href="/authors/anna-volkova" class="font-cormorant-sc text-sm font-semibold tracking-wide text-zinc-700 underline-offset-4 hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-300 dark:hover:text-orange-400">Анна Волкова</a><span class="inline-flex items-center rounded-full bg-orange-600 px-1.5 py-0.5 font-sans text-[0.625rem] font-bold uppercase tracking-[0.12em] text-white" aria-label="Автор уровня pro"> pro </span><span aria-hidden="true" class="text-zinc-400">·</span><time datetime="2026-09-15T10:00:00.000Z" class="font-sans text-xs text-zinc-500 dark:text-zinc-400">15 сентября 2026</time></div>
+  </div>
+  <!--v-if-->
+</article>"
+`;
+
+exports[`ArticleCard snapshots > фиксирует редакционную разметку варианта lede 1`] = `
+"<article data-variant="lede" class="group relative border-zinc-200 dark:border-zinc-800">
+  <!--v-if-->
+  <figure class="overflow-hidden bg-zinc-100 dark:bg-zinc-900 mb-8 aspect-square sm:aspect-2/1"><a href="/travel/gorod-slushaet-more" class="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600"><img src="/images/sea.jpg" alt="Город, который слушает море" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"></a></figure>
+  <div class="mx-auto max-w-4xl text-center">
+    <div class="mb-2 flex flex-wrap items-center gap-2 justify-center"><a href="/travel" class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.16em] text-orange-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-orange-400">Путешествия</a><span class="font-sans text-[0.6875rem] font-semibold uppercase tracking-wider text-zinc-500"> Перевод </span></div>
+    <h2 class="font-garamond-libre font-bold text-zinc-950 dark:text-zinc-100 text-title md:text-lede"><a href="/travel/gorod-slushaet-more" class="underline-offset-4 transition-colors hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 motion-reduce:transition-none dark:hover:text-orange-400">Город, который слушает море</a></h2>
+    <p class="mt-2 line-clamp-2 font-garamond-libre text-zinc-600 dark:text-zinc-400 text-card-dek md:text-title-compact">Портовый дневник о памяти, ветре и возвращении домой.</p>
+    <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 justify-center"><a href="/authors/anna-volkova" class="font-cormorant-sc text-sm font-semibold tracking-wide text-zinc-700 underline-offset-4 hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-300 dark:hover:text-orange-400">Анна Волкова</a><span class="inline-flex items-center rounded-full bg-orange-600 px-1.5 py-0.5 font-sans text-[0.625rem] font-bold uppercase tracking-[0.12em] text-white" aria-label="Автор уровня pro"> pro </span><span aria-hidden="true" class="text-zinc-400">·</span><time datetime="2026-09-15T10:00:00.000Z" class="font-sans text-xs text-zinc-500 dark:text-zinc-400">15 сентября 2026</time></div>
+  </div>
+  <!--v-if-->
+</article>"
+`;
+
+exports[`ArticleCard snapshots > фиксирует редакционную разметку варианта rank 1`] = `
+"<article data-variant="rank" class="group relative border-zinc-200 dark:border-zinc-800 grid grid-cols-[3.5rem_1fr] gap-4 border-t py-5">
+  <div class="font-waterway text-right text-5xl leading-none text-zinc-300 dark:text-zinc-700">2</div>
+  <!--v-if-->
+  <div class="">
+    <div class="mb-2 flex flex-wrap items-center gap-2"><a href="/travel" class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.16em] text-orange-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-orange-400">Путешествия</a><span class="font-sans text-[0.6875rem] font-semibold uppercase tracking-wider text-zinc-500"> Перевод </span></div>
+    <h2 class="font-garamond-libre font-bold text-zinc-950 dark:text-zinc-100 text-xl leading-tight"><a href="/travel/gorod-slushaet-more" class="underline-offset-4 transition-colors hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 motion-reduce:transition-none dark:hover:text-orange-400">Город, который слушает море</a></h2>
+    <!--v-if-->
+    <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1"><a href="/authors/anna-volkova" class="font-cormorant-sc text-sm font-semibold tracking-wide text-zinc-700 underline-offset-4 hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-300 dark:hover:text-orange-400">Анна Волкова</a><span class="inline-flex items-center rounded-full bg-orange-600 px-1.5 py-0.5 font-sans text-[0.625rem] font-bold uppercase tracking-[0.12em] text-white" aria-label="Автор уровня pro"> pro </span><span aria-hidden="true" class="text-zinc-400">·</span><time datetime="2026-09-15T10:00:00.000Z" class="font-sans text-xs text-zinc-500 dark:text-zinc-400">15 сентября 2026</time></div>
+  </div>
+  <!--v-if-->
+</article>"
+`;
+
+exports[`ArticleCard snapshots > фиксирует редакционную разметку варианта small 1`] = `
+"<article data-variant="small" class="group relative border-zinc-200 dark:border-zinc-800 grid grid-cols-[minmax(0,1fr)_7rem] gap-5 sm:grid-cols-2">
+  <!--v-if-->
+  <figure class="overflow-hidden bg-zinc-100 dark:bg-zinc-900 order-2 aspect-3/2 self-start"><a href="/travel/gorod-slushaet-more" class="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600"><img src="/images/sea.jpg" alt="Город, который слушает море" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"></a></figure>
+  <div class="order-1">
+    <div class="mb-2 flex flex-wrap items-center gap-2"><a href="/travel" class="font-cormorant-sc text-xs font-semibold uppercase tracking-[0.16em] text-orange-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-orange-400">Путешествия</a><span class="font-sans text-[0.6875rem] font-semibold uppercase tracking-wider text-zinc-500"> Перевод </span></div>
+    <h2 class="font-garamond-libre font-bold text-zinc-950 dark:text-zinc-100 text-card leading-tight"><a href="/travel/gorod-slushaet-more" class="underline-offset-4 transition-colors hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 motion-reduce:transition-none dark:hover:text-orange-400">Город, который слушает море</a></h2>
+    <!--v-if-->
+    <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1"><a href="/authors/anna-volkova" class="font-cormorant-sc text-sm font-semibold tracking-wide text-zinc-700 underline-offset-4 hover:text-orange-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-300 dark:hover:text-orange-400">Анна Волкова</a><span class="inline-flex items-center rounded-full bg-orange-600 px-1.5 py-0.5 font-sans text-[0.625rem] font-bold uppercase tracking-[0.12em] text-white" aria-label="Автор уровня pro"> pro </span><span aria-hidden="true" class="text-zinc-400">·</span><time datetime="2026-09-15T10:00:00.000Z" class="font-sans text-xs text-zinc-500 dark:text-zinc-400">15 сентября 2026</time></div>
+  </div>
+  <!--v-if-->
+</article>"
+`;
+
+exports[`BookmarkButton > фиксирует состояния гостя и занятой мутации 1`] = `
+{
+  "busy": "<button type="button" disabled="" aria-busy="true" aria-pressed="true" aria-label="Убрать из закладок" class="inline-flex size-10 items-center justify-center rounded-full border border-zinc-300 bg-white text-lg text-zinc-800 transition-colors hover:border-orange-600 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"><span aria-hidden="true">★</span></button>",
+  "guest": "<a href="/login?next=%2F" aria-label="Войти, чтобы сохранить материал" title="Войти, чтобы сохранить материал" class="inline-flex size-10 items-center justify-center rounded-full border border-zinc-300 bg-white text-zinc-800 transition-colors hover:border-orange-600 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200"><span aria-hidden="true">☆</span></a>",
+}
+`;
+
+exports[`reading list states > фиксирует пустое, ошибочное и загрузочное состояния 1`] = `
+{
+  "empty": "<section class="border-y border-zinc-200 py-16 text-center dark:border-zinc-800" aria-labelledby="empty-state-title">
+  <h2 id="empty-state-title" class="font-waterway text-3xl tracking-wide text-zinc-950 dark:text-zinc-100">Здесь пока пусто</h2>
+  <!--v-if--><a href="/pricing" class="mt-7 inline-flex border-b-2 border-orange-600 pb-1 font-serif font-semibold text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-100">Стать автором</a>
+</section>",
+  "error": "<section class="border-y border-red-200 py-12 text-center dark:border-red-950" role="alert">
+  <h2 class="font-waterway text-3xl tracking-wide text-zinc-950 dark:text-zinc-100"> Не удалось загрузить материалы </h2>
+  <p class="mt-3 font-garamond-libre text-lg text-zinc-600 dark:text-zinc-400"> Обновите страницу или напишите в редакцию. </p>
+  <p class="mt-2 font-mono text-xs text-zinc-500">Код запроса: req-123</p><a href="/contact" class="mt-6 inline-flex border-b-2 border-orange-600 pb-1 font-serif font-semibold text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-100"> Написать в редакцию </a>
+</section>",
+  "loading": "<section aria-busy="true" aria-label="Материалы загружаются"><span class="sr-only">Материалы загружаются</span>
+  <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
+    <div class="animate-pulse motion-reduce:animate-none">
+      <div class="aspect-3/2 bg-zinc-200 dark:bg-zinc-800"></div>
+      <div class="mt-4 h-3 w-1/3 bg-zinc-200 dark:bg-zinc-800"></div>
+      <div class="mt-3 h-7 w-full bg-zinc-200 dark:bg-zinc-800"></div>
+      <div class="mt-2 h-7 w-4/5 bg-zinc-200 dark:bg-zinc-800"></div>
+    </div>
+    <div class="animate-pulse motion-reduce:animate-none">
+      <div class="aspect-3/2 bg-zinc-200 dark:bg-zinc-800"></div>
+      <div class="mt-4 h-3 w-1/3 bg-zinc-200 dark:bg-zinc-800"></div>
+      <div class="mt-3 h-7 w-full bg-zinc-200 dark:bg-zinc-800"></div>
+      <div class="mt-2 h-7 w-4/5 bg-zinc-200 dark:bg-zinc-800"></div>
+    </div>
+  </div>
+</section>",
+}
+`;
