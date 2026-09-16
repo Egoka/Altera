@@ -10,35 +10,37 @@ datasource db {
 }
 
 model User {
-  id                 String              @id @default(uuid())
+  id                 String               @id @default(uuid())
   name               String
-  email              String              @unique
+  email              String               @unique
   bio                String?
   photoUrl           String?
-  role               Role                @default(reader)
-  handle             String              @unique
-  locale             Locale              @default(ru)
+  role               Role                 @default(reader)
+  handle             String               @unique
+  locale             Locale               @default(ru)
   avatarAssetId      String?
   prevAvatarId       String?
-  nameCheckStatus    ProfileCheckStatus  @default(ok)
-  avatarCheckStatus  ProfileCheckStatus  @default(ok)
+  nameCheckStatus    ProfileCheckStatus   @default(ok)
+  avatarCheckStatus  ProfileCheckStatus   @default(ok)
   socialLinks        Json?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
   archivedAt         DateTime?
   archiveMode        AccountArchiveMode?
   archivedByActorId  String?
   archivedByRole     Role?
   archiveReason      String?
-  isServiceAccount   Boolean             @default(false)
+  isServiceAccount   Boolean              @default(false)
   articles           Article[]
   magicLink          MagicLinkToken?
   sessions           Session[]
   emailChangeRequest EmailChangeRequest?
-  currentHandle      HandleHistory       @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
-  handleHistory      HandleHistory[]     @relation("HandleOwner")
-  createdTags        Tag[]               @relation("TagCreator")
+  currentHandle      HandleHistory        @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
+  handleHistory      HandleHistory[]      @relation("HandleOwner")
+  createdTags        Tag[]                @relation("TagCreator")
   legalConsents      UserLegalConsent[]
+  translatedArticles ArticleTranslation[] @relation("ArticleTranslator")
+  articleRevisions   ArticleRevision[]    @relation("ArticleRevisionCreator")
 
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
@@ -207,27 +209,37 @@ model TagSlugHistory {
 }
 
 model Article {
-  id            String        @id @default(uuid())
-  title         String
-  slug          String        @unique
-  dek           String?
-  body          String
-  excerpt       String?
-  featuredImage String?
-  status        ArticleStatus @default(draft)
-  publishedAt   DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  authorId      String
-  sectionId     String?
-  formatId      String?
-  author        User          @relation(fields: [authorId], references: [id])
-  section       Section?      @relation(fields: [sectionId], references: [id], onDelete: Restrict)
-  format        Format?       @relation(fields: [formatId], references: [id], onDelete: SetNull)
-  tags          Tag[]         @relation("ArticleToTag")
+  id                String               @id @default(uuid())
+  // Старые локализованные поля остаются до T-020 и перевода API на языковые версии.
+  title             String
+  slug              String               @unique
+  dek               String?
+  body              String
+  excerpt           String?
+  featuredImage     String?
+  status            ArticleStatus        @default(draft)
+  publishedAt       DateTime?
+  sourceLocale      Locale               @default(ru)
+  isEditorial       Boolean              @default(false)
+  firstPublishedAt  DateTime?
+  archivedAt        DateTime?
+  archivedByActorId String?
+  archivedByRole    Role?
+  archiveReason     String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  authorId          String
+  sectionId         String?
+  formatId          String?
+  author            User                 @relation(fields: [authorId], references: [id])
+  section           Section?             @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  format            Format?              @relation(fields: [formatId], references: [id], onDelete: SetNull)
+  tags              Tag[]                @relation("ArticleToTag")
+  translations      ArticleTranslation[]
 
   @@index([sectionId])
   @@index([formatId])
+  @@index([archivedByActorId])
   @@map("articles")
 }
 
@@ -436,6 +448,62 @@ model UserLegalConsent {
   @@map("user_legal_consents")
 }
 
+model ArticleTranslation {
+  id               String            @id @default(uuid())
+  articleId        String
+  locale           Locale
+  slug             String
+  title            String
+  dek              String?
+  excerpt          String?
+  featuredImage    String?
+  body             Json
+  status           ArticleStatus     @default(draft)
+  rejected         Boolean           @default(false)
+  publishedAt      DateTime?
+  reeditUntil      DateTime?
+  reeditedAt       DateTime?
+  translatorId     String?
+  sourceRevisionId String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  article          Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  translator       User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
+  sourceRevision   ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
+  revisions        ArticleRevision[] @relation("TranslationRevisions")
+
+  @@unique([articleId, locale])
+  @@unique([locale, slug])
+  @@index([status, publishedAt])
+  @@index([translatorId])
+  @@index([sourceRevisionId])
+  @@map("article_translations")
+}
+
+model ArticleRevision {
+  id                 String               @id @default(uuid())
+  translationId      String
+  title              String
+  dek                String?
+  excerpt            String?
+  body               Json
+  kind               ArticleRevisionKind
+  createdById        String
+  note               String?
+  restoredFromId     String?
+  createdAt          DateTime             @default(now())
+  translation        ArticleTranslation   @relation("TranslationRevisions", fields: [translationId], references: [id], onDelete: Cascade)
+  createdBy          User                 @relation("ArticleRevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  restoredFrom       ArticleRevision?     @relation("RestoredArticleRevision", fields: [restoredFromId], references: [id], onDelete: SetNull)
+  restoredRevisions  ArticleRevision[]    @relation("RestoredArticleRevision")
+  sourceTranslations ArticleTranslation[] @relation("TranslationSourceRevision")
+
+  @@index([translationId, createdAt])
+  @@index([createdById])
+  @@index([restoredFromId])
+  @@map("article_revisions")
+}
+
 enum Role {
   reader
   author
@@ -470,7 +538,10 @@ enum TaxonomyStatus {
 
 enum ArticleStatus {
   draft
+  ai_check
   review
+  in_review
+  rework
   published
   archived
 }
@@ -532,4 +603,11 @@ enum LegalTextStatus {
   draft
   published
   previous
+}
+
+enum ArticleRevisionKind {
+  publish
+  editorial
+  manual
+  autosave
 }

@@ -1,6 +1,9 @@
 enum ArticleStatus {
   draft
+  ai_check
   review
+  in_review
+  rework
   published
   archived
 }

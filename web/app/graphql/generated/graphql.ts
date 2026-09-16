@@ -14,10 +14,13 @@ export type ArticleFiltersInput = {
 };
 
 export type ArticleStatus =
+  | 'ai_check'
   | 'archived'
   | 'draft'
+  | 'in_review'
   | 'published'
-  | 'review';
+  | 'review'
+  | 'rework';
 
 export type BaseFiltersInput = {
   createdAt?: DateRangeInput | null | undefined;
