@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-095",
+  "issue_id": "01a0a701-b67a-7212-b516-a75fbb286aa4",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-095-i18n-dictionaries.md",
+    "sha": "4b971692be469635e79c10a4519f9f6100aa9d5e"
+  },
+  "baseline_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
+  "tested_sha": "c27a02a24eb036cd579aaffabdd3c10171db5a7e",
+  "branch": "web/t-095-i18n",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t095-i18n",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0ac22-c144-7b29-a992-db9a2a91c534",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/i18n-locales.test.ts: no cyrillic in runtime template blocks; i18n dictionaries ru/en cover all launch-screen strings from T-096; 131 web tests passed"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "setLocale preserves language-specific routing and does not reload document; magic-link email generator produces ru/en payload per account locale; actual email delivery deferred to T-021 (smtp transport)"
+    }
+  ],
+  "pr": {
+    "number": 73,
+    "url": "https://github.com/Egoka/Altera/pull/73",
+    "base_ref": "app",
+    "base_sha": "7a900e026ece570fa483017a8edc73fb58618863",
+    "head_sha": "c27a02a24eb036cd579aaffabdd3c10171db5a7e"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "c27a02a24eb036cd579aaffabdd3c10171db5a7e",
+    "verdict": "pending"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Веб-слой i18n: новые маршрутизация и генератор email требуют controller-managed deployment/health решения после merge"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-095.md",
+    "sha256": "e70991cb37c46a1e9d4cb8994896118ecc26798987510bfefea0a206aac8afea"
+  },
+  "usage": null
+}
