@@ -75,7 +75,7 @@ describe("словари локалей", () => {
   it("не оставляет русские строки в runtime-шаблонах", () => {
     const violations = vueFiles(appDir).flatMap((file) => {
       const source = readFileSync(file, "utf8")
-      const template = source.match(/<template>([\s\S]*?)<\/template>/)?.[1]?.replace(/<!--[\s\S]*?-->/g, "") ?? ""
+      const template = source.match(/<template>([\s\S]*)<\/template>/)?.[1]?.replace(/<!--[\s\S]*?-->/g, "") ?? ""
 
       return template
         .split("\n")

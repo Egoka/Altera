@@ -192,7 +192,7 @@
 
     <template #status="{ rowData }">
       <Badge :class="[rowData.isActive ? green : red]">
-        {{ rowData.isActive ? "Активен" : "Неактивен" }}
+        {{ rowData.isActive ? t("admin.active") : t("admin.inactive") }}
       </Badge>
     </template>
   </Table>

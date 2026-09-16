@@ -178,6 +178,8 @@
     "typesDescription": "Create and edit article content types",
     "usersTitle": "User management",
     "usersDescription": "View and manage system users",
+    "active": "Active",
+    "inactive": "Inactive",
     "editUser": "Edit user",
     "editUserDescription": "Change the user details and click “Save”",
     "menu": {

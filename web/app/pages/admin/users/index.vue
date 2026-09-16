@@ -510,10 +510,10 @@
         <div class="pt-2.5">
           <div class="px-4 mb-6 mr-17">
             <h2 class="text-xl font-semibold text-black dark:text-zinc-300 mb-2 truncate">
-              Редактирование пользователя
+              {{ t("admin.editUser") }}
             </h2>
             <p class="text-sm text-neutral-400 dark:text-neutral-500 truncate">
-              Измените данные пользователя и нажмите "Сохранить"
+              {{ t("admin.editUserDescription") }}
             </p>
           </div>
           <Form
@@ -521,7 +521,7 @@
             :structure="formStructure"
             modeValidate="onChange"
             structureClass="h-[calc(100vh-250px)] sm:h-[calc(100vh-200px)] overflow-auto border-b border-neutral-200 dark:border-neutral-800 pb-12"
-            submitButton="Сохранить"
+            :submitButton="t('common.save')"
             @submit="handleSubmit" />
         </div>
       </div>
