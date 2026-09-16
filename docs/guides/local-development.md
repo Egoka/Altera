@@ -9,8 +9,10 @@ docker compose up -d
 docker compose ps
 ```
 
-Compose публикует PostgreSQL на `localhost:5432`, Redis на `localhost:6379`, SMTP Mailpit на
-`localhost:1025`, а интерфейс просмотра писем — на `http://localhost:8025`.
+Compose публикует сервисы на собственных портах Altera (схема «2 + стандартный порт», чтобы не
+конфликтовать с другими локальными проектами): PostgreSQL на `localhost:25432`, Redis на
+`localhost:26379`, SMTP Mailpit на `localhost:21025`, а интерфейс просмотра писем — на
+`http://localhost:28025`.
 
 Том `postgres_data` сохраняет данные между остановками. Для обычной остановки используйте
 `docker compose down`. Удаление тома (`docker compose down -v`) удаляет только локальные данные
@@ -52,6 +54,6 @@ Nuxt выводит локальный URL при старте. На текущ�
 
 ## Почта
 
-Mailpit готов принять SMTP-письма на `localhost:1025` и показать их на `http://localhost:8025`.
+Mailpit готов принять SMTP-письма на `localhost:21025` и показать их на `http://localhost:28025`.
 До T-021 сервер выводит magic link в консоль и не использует SMTP-транспорт, поэтому появление
 письма в Mailpit пока не является проверяемым сценарием.
