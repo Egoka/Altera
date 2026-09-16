@@ -11,6 +11,7 @@ import re
 import statistics
 import subprocess
 import tempfile
+import time as clock
 from zoneinfo import ZoneInfo
 
 
@@ -608,15 +609,17 @@ def safe_issue(issue):
     return result
 
 
-def json_command(args):
-    for _ in range(2):
+def json_command(args, attempts=3, pause=0.25):
+    for attempt in range(attempts):
         try:
             completed = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
             if completed.returncode == 0:
                 return json.loads(completed.stdout)
         except (OSError, ValueError, subprocess.SubprocessError):
             pass
-    raise RuntimeError("Read-only source command failed after two attempts")
+        if attempt + 1 < attempts and pause:
+            clock.sleep(pause * (attempt + 1))
+    raise RuntimeError(f"Read-only source command failed after {attempts} attempts")
 
 
 def no_action_result(result):
@@ -754,7 +757,9 @@ def collect_live(multica, server_url, workspace, project, repository, *,
                 agent_tasks.append(item)
     found_ids = {row.get("id") for row in executions + agent_tasks}
     missing_ap = sorted(set(ap_links) - found_ids)
-    missing_ap_task_ids = sum(not row.get("task_id") for row in ap_runs)
+    unlinked_ap_events = [row for row in ap_runs if not row.get("task_id")]
+    skipped_ap_events = sum(str(row.get("status", "")).lower() == "skipped" for row in unlinked_ap_events)
+    missing_ap_task_ids = len(unlinked_ap_events) - skipped_ap_events
     for identifier in missing_ap:
         source = ap_links[identifier]
         agent_tasks.append({"id": identifier, "autopilot_id": source.get("autopilot_id"),
@@ -765,6 +770,7 @@ def collect_live(multica, server_url, workspace, project, repository, *,
         "status": "complete" if not missing_ap and not missing_ap_task_ids and all(
             item["status"] == "complete" for item in coverage.values()) else "partial",
         "missing_autopilot_task_ids": missing_ap, "autopilot_events_without_task_id": missing_ap_task_ids,
+        "skipped_autopilot_events_without_task_id": skipped_ap_events,
         "basis": "issue runs full history + archived agents tasks + paginated autopilot task links",
     }
 
