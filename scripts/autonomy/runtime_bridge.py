@@ -200,7 +200,18 @@ def snapshot(live):
 def native_model(config, args, message):
     # Реальный клиент сохраняет managed MCP/config аргументы daemon. Control frames
     # пересылаются в обе стороны без эмуляции tool results или auth.
-    child = subprocess.Popen([config["claude_binary"], *args], stdin=subprocess.PIPE, text=True)
+    environment = os.environ.copy()
+    scope = {
+        "MULTICA_SERVER_URL": config.get("server_url"),
+        "MULTICA_WORKSPACE_ID": config.get("workspace_id"),
+        "ALTERA_MULTICA_PROJECT_ID": config.get("project_id"),
+        "ALTERA_MULTICA_BINARY": config.get("multica"),
+    }
+    environment.update({key: value for key, value in scope.items() if value})
+    if config.get("multica_guard_dir"):
+        environment["PATH"] = config["multica_guard_dir"] + os.pathsep + environment.get("PATH", "")
+    child = subprocess.Popen([config["claude_binary"], *args], stdin=subprocess.PIPE, text=True,
+                             env=environment)
     first = {"type": "user", "message": {"role": "user", "content": message}}
     child.stdin.write(json.dumps(first) + "\n"); child.stdin.flush()
     def relay():

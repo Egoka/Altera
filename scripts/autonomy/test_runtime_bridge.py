@@ -284,6 +284,35 @@ class NativeProtocolTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(json.loads(output.read_text())['message']['content'], 'hello')
 
+    def test_native_child_receives_canonical_multica_scope(self):
+        import sys
+        with tempfile.TemporaryDirectory() as root:
+            child = Path(root) / "child.py"
+            output = Path(root) / "env.json"
+            child.write_text(
+                "import json,os,sys\n"
+                "from pathlib import Path\n"
+                "Path(sys.argv[1]).write_text(json.dumps({k: os.environ.get(k) for k in "
+                "['MULTICA_SERVER_URL','MULTICA_WORKSPACE_ID','ALTERA_MULTICA_PROJECT_ID',"
+                "'ALTERA_MULTICA_BINARY','PATH']}))\n"
+            )
+            config = {
+                "claude_binary": sys.executable,
+                "server_url": "https://api.example.test",
+                "workspace_id": "workspace",
+                "project_id": "project",
+                "multica": "/opt/multica",
+                "multica_guard_dir": str(Path(root) / "guard"),
+            }
+            with patch.object(r.sys, "stdin", io.StringIO("")):
+                self.assertEqual(r.native_model(config, [str(child), str(output)], "hello"), 0)
+            env = json.loads(output.read_text())
+            self.assertEqual(env["MULTICA_SERVER_URL"], config["server_url"])
+            self.assertEqual(env["MULTICA_WORKSPACE_ID"], "workspace")
+            self.assertEqual(env["ALTERA_MULTICA_PROJECT_ID"], "project")
+            self.assertEqual(env["ALTERA_MULTICA_BINARY"], "/opt/multica")
+            self.assertEqual(env["PATH"].split(r.os.pathsep)[0], config["multica_guard_dir"])
+
     def test_failed_event_allows_only_two_retries(self):
         with tempfile.TemporaryDirectory() as root:
             calls = []
