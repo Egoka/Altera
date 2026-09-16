@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-017",
+  "issue_id": "01a0a9d5-fdea-7e05-97da-6447250e307b",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-017-migration-bookmarks-base-authorship.md",
+    "sha": "4c4749708d1f5406ea65c090695e492d8ee2065f"
+  },
+  "baseline_sha": "49a8302b5da832952b50ffc337819ce623791161",
+  "tested_sha": "f182d1dda5d67249a07d21514d2b872e23ab159e",
+  "branch": "server/t-017-bookmarks-base-authorship",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t017-bookmarks",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0aacc-fb52-78b7-b57d-68af98151e73",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/prisma/schema.prisma: Bookmark table with FK to userId and articleId; service-role constraint enforced at schema level; 5 migration tests passed (schema contract + PostgreSQL migration)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "PlanGrant table migrated with unlimited tier for base authorship (no subscription record); ensureActiveAuthor behavioral enforcement implemented in T-026 as declared in task spec"
+    }
+  ],
+  "pr": {
+    "number": 79,
+    "url": "https://github.com/Egoka/Altera/pull/79",
+    "base_ref": "app",
+    "base_sha": "80eca687798550cefd23742370b8078f66982136",
+    "head_sha": "f182d1dda5d67249a07d21514d2b872e23ab159e"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "f182d1dda5d67249a07d21514d2b872e23ab159e",
+    "verdict": "pending"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Серверная миграция требует controller-managed deployment/health решения после merge"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-017.md",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "usage": null
+}

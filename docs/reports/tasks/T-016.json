@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-016",
+  "issue_id": "01a0a9d5-f0ac-7dff-85ef-89c6032ad0f3",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-016-migration-media-asset.md",
+    "sha": "478ec8777086d33b59db6ebb5099a7e5eb751cc6"
+  },
+  "baseline_sha": "49a8302b5da832952b50ffc337819ce623791161",
+  "tested_sha": "0d10a902dd7f18fbcf30beaf62fb472aee4e59d8",
+  "branch": "server/t-016-media-asset",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t016-media-asset",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0aacc-f210-7d1a-abe3-717b3812727d",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/prisma/schema.prisma: only MediaAsset has alt column; document content node has no alt; verified by reviewer and migration test"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/media-asset-migration-database.test.ts: orphan media query test — 2 tests passed, including lifecycle and orphan-detection query"
+    }
+  ],
+  "pr": {
+    "number": 78,
+    "url": "https://github.com/Egoka/Altera/pull/78",
+    "base_ref": "app",
+    "base_sha": "49a8302b5da832952b50ffc337819ce623791161",
+    "head_sha": "0d10a902dd7f18fbcf30beaf62fb472aee4e59d8"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ab43-3a4a-78ae-a9e0-d2a98e92bdc2",
+    "sha": "0d10a902dd7f18fbcf30beaf62fb472aee4e59d8",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Серверная миграция требует controller-managed deployment/health решения после merge"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-016.md",
+    "sha256": "bf142a52bf3caa2484e264d23c7f1fe98af689b4f58ebc16e0bf02fd168fcbba"
+  },
+  "usage": null
+}
