@@ -8,7 +8,7 @@
     "sha": "96ef15c06f3596b8eea2f9421d0915f9b6f31c4a"
   },
   "baseline_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
-  "tested_sha": "d23601baa11a422ab2d291d3d94856d379b47b4a",
+  "tested_sha": "c46c2c94a4794486aeb3c0d6e35208a8366b72b5",
   "branch": "feat/t093-reading-components",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t093-reading-components",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -30,10 +30,16 @@
     "number": 72,
     "url": "https://github.com/Egoka/Altera/pull/72",
     "base_ref": "app",
-    "base_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
-    "head_sha": "d23601baa11a422ab2d291d3d94856d379b47b4a"
+    "base_sha": "b9c9d9831a3bb72d1af5df608dba3962fa3fd4e3",
+    "head_sha": "c46c2c94a4794486aeb3c0d6e35208a8366b72b5",
+    "merge_sha": "750cd01f8677f976100b68f2d8917aab7461bbb4"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0aa60-e890-7c0e-aa9d-22d336c05c1e",
+    "sha": "c46c2c94a4794486aeb3c0d6e35208a8366b72b5",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "environment": "development",
@@ -42,7 +48,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-093.md",
-    "sha256": "fc0d2ba7ffc207987c75ccd8d278d38c6c6c9b4ff933201cc71f213956985482"
+    "sha256": "db0dc9c7db8fec0f78a099237c0d96720a4bdbe52de32b86bb8179f07d0a0490"
   },
   "remaining": [
     "CI, independent native review, and controller-managed development deployment/health decision are pending"
