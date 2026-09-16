@@ -19,14 +19,17 @@
 4. Миграция создаёт для каждой текущей статьи одну версию `ru` и одну ревизию, переносит статусы и даты,
    проверяет количество и содержимое строк до commit.
 5. Legacy-тело сохраняется в JSONB как JSON-строка без смысловой конверсии. Преобразование в документ
-   ProseMirror остаётся в T-020; текущие поля `Article` временно сохранены для совместимости действующих
-   резолверов до перехода API на языковые версии.
+   ProseMirror остаётся в T-020; текущие поля `Article` временно являются источником записи для действующих
+   резолверов. DB-trigger атомарно создаёт/обновляет исходную версию и ревизии до перехода API на языковые версии.
+6. Перед pre-migration count берётся `ACCESS EXCLUSIVE` lock на `articles`, поэтому конкурентная запись не может
+   попасть между снимком количества и backfill. Lock удерживается только в транзакции миграции.
 
 ## Критерии
 
 - **AC-1 passed**: контрактный тест сравнивает полный упорядоченный enum Prisma и GraphQL со спецификацией.
 - **AC-2 passed**: PostgreSQL-тест на копии legacy-схемы подтвердил три статьи → три версии `ru` + три ревизии,
-  точное сохранение текста, статуса, дат и начального вида ревизии.
+  точное сохранение текста, статуса, дат и начального вида ревизии. Отдельный сценарий подтвердил insert/update
+  после миграции, сохранение JSON-looking/Unicode/multiline текста как JSON-строки и создание следующей ревизии.
 - **AC-3 passed**: Prisma-схема и SQL содержат `archivedByActorId`, `archivedByRole`, `archivedAt`,
   `archiveReason`; миграционный тест читает эти поля после применения.
 
@@ -40,12 +43,12 @@
 | TDD RED enum           | `pnpm --filter server exec vitest run tests/article-schema-contract.test.ts`                             | 1 failed: отсутствовали три статуса; exit 1               |
 | TDD GREEN enum         | та же команда после schema/SDL и `prisma generate`                                                       | 1 passed; exit 0                                          |
 | TDD RED migration      | `T015_TEST_DATABASE_URL=… pnpm --filter server exec vitest run tests/article-migration-database.test.ts` | 2 failed: target migration отсутствовала; exit 1          |
-| TDD GREEN migration    | та же команда после migration/schema                                                                     | 1 file, 2 tests passed; exit 0                            |
+| TDD GREEN migration    | та же команда после migration/schema                                                                     | 1 file, 3 tests passed; exit 0                            |
 | Prisma schema          | `DATABASE_URL=… DATABASE_URL_UNPOOLED=… pnpm --filter server exec prisma validate`                       | schema valid; exit 0                                      |
 | Clean migration deploy | `pnpm --filter server exec prisma migrate deploy` на пустой PostgreSQL 17                                | 10 migrations applied; exit 0                             |
 | Migration drift        | `prisma migrate diff --from-migrations … --to-schema-datamodel … --exit-code`                            | `No difference detected`; exit 0                          |
 | Server build           | `pnpm --filter server run build:ci`                                                                      | Prisma generate, TypeScript, GraphQL copy; exit 0         |
-| Workspace tests        | `T015_TEST_DATABASE_URL=… pnpm test`                                                                     | server 112 passed / 6 skipped; web 120 passed; exit 0     |
+| Workspace tests        | `T015_TEST_DATABASE_URL=… pnpm test`                                                                     | server 113 passed / 6 skipped; web 120 passed; exit 0     |
 | Lint                   | `pnpm lint`                                                                                              | exit 0                                                    |
 | Format                 | `pnpm format`                                                                                            | all matched files use Prettier; exit 0                    |
 | Whitespace             | `git diff --check`                                                                                       | exit 0                                                    |
@@ -53,6 +56,14 @@
 ## Ограничения
 
 - Полная конверсия строкового body в ProseMirror и общая репетиция миграций E-03 относятся к T-020.
+- До cutover legacy-поля — источник записи, trigger — временный compatibility contract; T-020/API-cutover обязаны
+  удалить trigger вместе с legacy-полями после финальной синхронизации. При сбое после добавления enum основная
+  транзакция откатывается, но enum-значения остаются; повтор миграции использует `IF NOT EXISTS`, а запись
+  `_prisma_migrations` разрешается штатным Prisma recovery-процессом.
+- Проверка populated legacy-базы применяет целевой SQL через `prisma db execute`, чтобы наблюдать состояние
+  непосредственно до и после одной миграции; отдельно весь migration ledger применён через `prisma migrate deploy`
+  на пустой PostgreSQL 17. Финальная репетиция на клоне development data остаётся release-шагом.
+- Поля archive attribution созданы в T-015; заполнение их действующей archive mutation относится к T-045/T-072.
 - Два DB-набора других задач остаются skipped без их отдельных URL; T-015 DB-набор реально выполнен.
 - Preflight был запущен после начала реализации и не является PASS: `clean_start` не подтвердился из-за
   runtime-managed `AGENTS.md`/`CLAUDE.md`, `fresh_app_baseline` не подтвердился после продвижения `origin/app`

@@ -6,6 +6,8 @@ BEGIN;
 
 CREATE TYPE "ArticleRevisionKind" AS ENUM ('publish', 'editorial', 'manual', 'autosave');
 
+LOCK TABLE "articles" IN ACCESS EXCLUSIVE MODE;
+
 CREATE TEMP TABLE "_t015_before_counts" (
   "articles" BIGINT NOT NULL
 ) ON COMMIT DROP;
@@ -150,6 +152,138 @@ ALTER TABLE "article_revisions" ADD CONSTRAINT "article_revisions_restoredFromId
   FOREIGN KEY ("restoredFromId") REFERENCES "article_revisions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 ALTER TABLE "article_translations" ADD CONSTRAINT "article_translations_sourceRevisionId_fkey"
   FOREIGN KEY ("sourceRevisionId") REFERENCES "article_revisions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+CREATE FUNCTION "t015_sync_legacy_article"() RETURNS trigger AS $$
+DECLARE
+  translation_id TEXT;
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    translation_id := 'translation-' || NEW."id";
+
+    INSERT INTO "article_translations" (
+      "id",
+      "articleId",
+      "locale",
+      "slug",
+      "title",
+      "dek",
+      "excerpt",
+      "featuredImage",
+      "body",
+      "status",
+      "publishedAt",
+      "createdAt",
+      "updatedAt"
+    ) VALUES (
+      translation_id,
+      NEW."id",
+      NEW."sourceLocale",
+      NEW."slug",
+      NEW."title",
+      NEW."dek",
+      NEW."excerpt",
+      NEW."featuredImage",
+      to_jsonb(NEW."body"),
+      NEW."status",
+      NEW."publishedAt",
+      NEW."createdAt",
+      NEW."updatedAt"
+    );
+
+    INSERT INTO "article_revisions" (
+      "id",
+      "translationId",
+      "title",
+      "dek",
+      "excerpt",
+      "body",
+      "kind",
+      "createdById",
+      "createdAt"
+    ) VALUES (
+      'revision-' || NEW."id",
+      translation_id,
+      NEW."title",
+      NEW."dek",
+      NEW."excerpt",
+      to_jsonb(NEW."body"),
+      CASE WHEN NEW."status" = 'published' THEN 'publish' ELSE 'manual' END::"ArticleRevisionKind",
+      NEW."authorId",
+      NEW."updatedAt"
+    );
+
+    RETURN NEW;
+  END IF;
+
+  SELECT "id"
+  INTO translation_id
+  FROM "article_translations"
+  WHERE "articleId" = NEW."id" AND "locale" = NEW."sourceLocale";
+
+  IF translation_id IS NULL THEN
+    RAISE EXCEPTION 'missing source translation for legacy article %', NEW."id" USING ERRCODE = 'P0001';
+  END IF;
+
+  UPDATE "article_translations"
+  SET
+    "slug" = NEW."slug",
+    "title" = NEW."title",
+    "dek" = NEW."dek",
+    "excerpt" = NEW."excerpt",
+    "featuredImage" = NEW."featuredImage",
+    "body" = to_jsonb(NEW."body"),
+    "status" = NEW."status",
+    "publishedAt" = NEW."publishedAt",
+    "updatedAt" = NEW."updatedAt"
+  WHERE "id" = translation_id;
+
+  IF NEW."title" IS DISTINCT FROM OLD."title"
+    OR NEW."dek" IS DISTINCT FROM OLD."dek"
+    OR NEW."excerpt" IS DISTINCT FROM OLD."excerpt"
+    OR NEW."body" IS DISTINCT FROM OLD."body"
+    OR (NEW."status" = 'published' AND OLD."status" <> 'published') THEN
+    INSERT INTO "article_revisions" (
+      "id",
+      "translationId",
+      "title",
+      "dek",
+      "excerpt",
+      "body",
+      "kind",
+      "createdById",
+      "createdAt"
+    ) VALUES (
+      gen_random_uuid()::text,
+      translation_id,
+      NEW."title",
+      NEW."dek",
+      NEW."excerpt",
+      to_jsonb(NEW."body"),
+      CASE
+        WHEN NEW."status" = 'published' AND OLD."status" <> 'published' THEN 'publish'
+        ELSE 'manual'
+      END::"ArticleRevisionKind",
+      NEW."authorId",
+      NEW."updatedAt"
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER "t015_sync_legacy_article_trigger"
+AFTER INSERT OR UPDATE OF
+  "title",
+  "slug",
+  "dek",
+  "body",
+  "excerpt",
+  "featuredImage",
+  "status",
+  "publishedAt"
+ON "articles"
+FOR EACH ROW EXECUTE FUNCTION "t015_sync_legacy_article"();
 
 DO $$
 DECLARE

@@ -305,4 +305,85 @@ describe.skipIf(!testDatabaseUrl)("T-015 article migration on PostgreSQL 17", ()
       }
     })
   }, 30_000)
+
+  it("keeps normalized rows synchronized while legacy article writes remain authoritative", async () => {
+    await withDatabase("t015_compatibility", async (url) => {
+      applyBaselineMigrations(url)
+      const legacy = prismaFor(url)
+      await legacy.$executeRawUnsafe(`INSERT INTO "handle_history" ("handle", "userId") VALUES ('author-one', NULL)`)
+      await legacy.$executeRawUnsafe(
+        `INSERT INTO "users" ("id", "name", "email", "role", "handle", "updatedAt")
+         VALUES ('user-1', 'Author', 'author@example.test', 'author', 'author-one', NOW())`
+      )
+      await legacy.$executeRawUnsafe(`UPDATE "handle_history" SET "userId" = 'user-1' WHERE "handle" = 'author-one'`)
+      await legacy.$disconnect()
+
+      const migration = applyTargetMigration(url)
+      expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
+
+      const after = prismaFor(url)
+      try {
+        const originalBody = '{"type":"doc"}\nЮникод "цитата"'
+        await after.$executeRaw`
+          INSERT INTO "articles" ("id", "title", "slug", "body", "status", "authorId", "updatedAt")
+          VALUES ('article-after', 'After', 'after', ${originalBody}, 'draft', 'user-1', NOW())
+        `
+
+        await expect(
+          after.$queryRawUnsafe(`
+            SELECT
+              t."title",
+              t."body",
+              jsonb_typeof(t."body") AS "bodyType",
+              t."status"::text,
+              COUNT(r."id")::int AS "revisionCount"
+            FROM "article_translations" t
+            JOIN "article_revisions" r ON r."translationId" = t."id"
+            WHERE t."articleId" = 'article-after'
+            GROUP BY t."id"
+          `)
+        ).resolves.toEqual([
+          {
+            title: "After",
+            body: originalBody,
+            bodyType: "string",
+            status: "draft",
+            revisionCount: 1
+          }
+        ])
+
+        const updatedBody = "Обновлённое тело\nсо второй строкой"
+        await after.$executeRaw`
+          UPDATE "articles"
+          SET "title" = 'After updated', "body" = ${updatedBody}, "status" = 'review', "updatedAt" = NOW()
+          WHERE "id" = 'article-after'
+        `
+
+        await expect(
+          after.$queryRawUnsafe(`
+            SELECT
+              t."title",
+              t."body",
+              jsonb_typeof(t."body") AS "bodyType",
+              t."status"::text,
+              COUNT(r."id")::int AS "revisionCount"
+            FROM "article_translations" t
+            JOIN "article_revisions" r ON r."translationId" = t."id"
+            WHERE t."articleId" = 'article-after'
+            GROUP BY t."id"
+          `)
+        ).resolves.toEqual([
+          {
+            title: "After updated",
+            body: updatedBody,
+            bodyType: "string",
+            status: "review",
+            revisionCount: 2
+          }
+        ])
+      } finally {
+        await after.$disconnect()
+      }
+    })
+  }, 30_000)
 })

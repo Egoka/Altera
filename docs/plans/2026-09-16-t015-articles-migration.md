@@ -4,7 +4,7 @@
 
 **Goal:** Добавить нормализованную схему материалов, языковых версий и ревизий с безопасным переносом существующих статей и единым контрактом статусов Prisma/GraphQL.
 
-**Architecture:** `Article` получает общие метаданные и связи, а новый `ArticleTranslation` — локализованный текст, адрес и жизненный цикл; `ArticleRevision` хранит неизменяемые снимки текста версии. Миграция создаёт для каждой текущей статьи русскую версию и первую ревизию, сохраняя строковое тело как JSON-строку без преждевременной конверсии в ProseMirror; legacy-колонки остаются временным compatibility layer для действующих резолверов до T-020 и API-задач.
+**Architecture:** `Article` получает общие метаданные и связи, а новый `ArticleTranslation` — локализованный текст, адрес и жизненный цикл; `ArticleRevision` хранит неизменяемые снимки текста версии. Миграция создаёт для каждой текущей статьи русскую версию и первую ревизию, сохраняя строковое тело как JSON-строку без преждевременной конверсии в ProseMirror; legacy-колонки остаются временным источником записи для действующих резолверов, а DB-trigger синхронизирует normalized-слой до cutover в T-020/API-задачах.
 
 **Tech Stack:** PostgreSQL 17, Prisma 6.12, GraphQL SDL, TypeScript 5.8, Vitest 5.
 
@@ -17,7 +17,7 @@
 - Каждая существующая статья получает ровно одну версию `ru` и ровно одну исходную ревизию без изменения исходного текста.
 - Статья хранит `archivedByActorId`, `archivedByRole`, `archivedAt` и `archiveReason`; роль использует существующий enum `Role`.
 - Слаг уникален в пределах локали; отдельная история слагов не создаётся по решению §26.10.
-- Текущий GraphQL API остаётся собираемым за счёт временно сохранённых legacy-полей `Article`; переход резолверов на версии не входит в T-015.
+- Текущий GraphQL API остаётся собираемым за счёт временно сохранённых legacy-полей `Article`; до cutover любые insert/update этих полей атомарно отражаются в исходной версии и ревизиях DB-trigger, а переход резолверов на версии не входит в T-015.
 
 ---
 
@@ -83,7 +83,7 @@ Expected: FAIL because the target migration directory does not exist.
 
 - [x] **Step 3: Add the Prisma models and migration SQL**
 
-Add `ArticleTranslation`, `ArticleRevision`, `ArticleRevisionKind`, article-level source/editorial/archive fields, relations and indexes. In SQL, add enum values outside the data transaction if PostgreSQL requires committed values before use; create tables and backfill in one transaction, derive revision kind as `publish` when `publishedAt` is present and `manual` otherwise, then assert postconditions before commit.
+Add `ArticleTranslation`, `ArticleRevision`, `ArticleRevisionKind`, article-level source/editorial/archive fields, relations and indexes. In SQL, add enum values outside the data transaction, lock `articles` before the pre-migration count, create tables and backfill in one transaction, derive revision kind as `publish` when `publishedAt` is present and `manual` otherwise, install the temporary legacy→normalized synchronization trigger, then assert postconditions before commit.
 
 ```prisma
 model ArticleTranslation {
