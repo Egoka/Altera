@@ -33,7 +33,8 @@
   "checks": {
     "report": "docs/reports/2026-09-16-t015-articles-migration-report.md",
     "local": "passed",
-    "ci": "pending",
+    "ci": "passed",
+    "ci_run": "https://github.com/Egoka/Altera/actions/runs/35078942336",
     "preflight": "failed_with_documented_environment_and_timing_gaps"
   },
   "pr": {
@@ -42,7 +43,12 @@
     "base": "app",
     "head_sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832"
   },
-  "review": null,
+  "review": {
+    "actor_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+    "run_id": "01a0a972-1693-77ca-9536-277707a9cb4d",
+    "sha": "9a9ff842a48bd2f3cdea6871195268ff0700e832",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "environment": "development",
