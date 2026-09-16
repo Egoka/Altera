@@ -8,7 +8,7 @@
     "sha": "5fdfdd37295e4f47f216792f4d7ff82a19a0c073"
   },
   "baseline_sha": "b0d45d7de65f022f2b4965fc36908c77d5c26d4d",
-  "tested_sha": "3516a1bdd5d2dfbbb2e7f4939823b4dd0affb97c",
+  "tested_sha": "d1fc7b6871f74fc67d356e84045f8f4e144b983e",
   "branch": "server/t015-articles-migration",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -33,7 +33,7 @@
   "checks": {
     "report": "docs/reports/2026-09-16-t015-articles-migration-report.md",
     "local": "passed",
-    "ci": "passed",
+    "ci": "pending_after_rebase",
     "ci_run": "https://github.com/Egoka/Altera/actions/runs/35078942336",
     "preflight": "failed_with_documented_environment_and_timing_gaps"
   },
@@ -42,13 +42,13 @@
     "url": "https://github.com/Egoka/Altera/pull/68",
     "base_ref": "app",
     "base_sha": "64c47488bd847467ed2f44cdb4877b4b10591d78",
-    "head_sha": "3516a1bdd5d2dfbbb2e7f4939823b4dd0affb97c"
+    "head_sha": "d1fc7b6871f74fc67d356e84045f8f4e144b983e"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
     "run_id": "01a0a98f-ebf4-770c-9ddf-bf69eb618aa2",
-    "sha": "3516a1bdd5d2dfbbb2e7f4939823b4dd0affb97c",
-    "verdict": "approved"
+    "sha": "d1fc7b6871f74fc67d356e84045f8f4e144b983e",
+    "verdict": "needs_rebase_review"
   },
   "deployment": {
     "required": true,
@@ -58,7 +58,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-015.md",
-    "sha256": "335d5314d82c129568301af686bdf3bd6adf9534f162d21cfccadc925b84a6fa"
+    "sha256": "12535806e9c2e8fcb84e9d68eea456ad473663e336c3ba00c589bf222f9ad241"
   },
   "remaining": [
     "T-020 converts preserved JSON strings to ProseMirror documents",
