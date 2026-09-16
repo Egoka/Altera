@@ -1,10 +1,11 @@
 <script setup lang="ts">
   withDefaults(defineProps<{ cards?: number }>(), { cards: 3 })
+  const { t } = useI18n()
 </script>
 
 <template>
-  <section aria-busy="true" aria-label="Материалы загружаются">
-    <span class="sr-only">Материалы загружаются</span>
+  <section aria-busy="true" :aria-label="t('reading.loading')">
+    <span class="sr-only">{{ t("reading.loading") }}</span>
     <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
       <div v-for="card in cards" :key="card" class="animate-pulse motion-reduce:animate-none">
         <div class="aspect-3/2 bg-zinc-200 dark:bg-zinc-800"></div>

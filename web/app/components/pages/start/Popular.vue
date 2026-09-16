@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import type { PopularArticleFragment } from "~/graphql/generated/graphql"
 
+  const { t } = useI18n()
+
   // Props для тестирования (опционально)
   interface Props {
     articles?: PopularArticleFragment[]
@@ -155,7 +157,9 @@
 <template>
   <section class="popular-articles pt-24 border-t border-zinc-200 dark:border-zinc-800">
     <div>
-      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">Популярное</h2>
+      <h2 class="font-waterway text-3xl tracking-widest mb-10 text-zinc-900 dark:text-zinc-300">
+        {{ t("home.popular") }}
+      </h2>
       <!-- Под списком воздух в 96 px: столько же у «Востребованного» над содержимым под его
            линейкой, и линейка встаёт посередине (владелец, 2026-09-14) -->
       <div class="mb-24 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 divide-zinc-200 dark:divide-zinc-800">

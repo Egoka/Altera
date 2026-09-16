@@ -20,14 +20,14 @@
     { compact: false }
   )
 
-  const { locale, locales } = useI18n()
+  const { locale, locales, t } = useI18n()
   const switchLocalePath = useSwitchLocalePath()
   const targetLocale = computed<LocaleCode>(() => (locale.value === "ru" ? "en" : "ru"))
   const targetName = computed(() => {
     const target = locales.value.find((item) => (typeof item === "string" ? item : item.code) === targetLocale.value)
 
     if (typeof target === "object" && target.name) return target.name
-    return targetLocale.value === "ru" ? "Русский" : "English"
+    return targetLocale.value.toUpperCase()
   })
   const targetPath = computed(() =>
     resolveLocaleSwitchPath({
@@ -36,5 +36,5 @@
       staticLocalePath: switchLocalePath(targetLocale.value)
     })
   )
-  const ariaLabel = computed(() => `Switch language to ${targetName.value}`)
+  const ariaLabel = computed(() => t("language.switchTo", { language: targetName.value }))
 </script>

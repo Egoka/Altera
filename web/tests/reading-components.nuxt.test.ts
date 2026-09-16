@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { mount } from "@vue/test-utils"
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import ArticleCard from "../app/components/article/Card.vue"
 import BookmarkButton from "../app/components/reading/BookmarkButton.vue"
 import EmptyState from "../app/components/reading/EmptyState.vue"
@@ -26,6 +26,28 @@ const global = {
     NuxtImg: { props: ["src", "alt"], template: '<img :src="src" :alt="alt" />' }
   }
 }
+
+const messages: Record<string, string> = {
+  "reading.translation": "Перевод",
+  "reading.loginToBookmark": "Войти, чтобы сохранить материал",
+  "reading.removeBookmark": "Убрать из закладок",
+  "reading.addBookmark": "Добавить в закладки",
+  "reading.loadErrorTitle": "Не удалось загрузить материалы",
+  "reading.loadErrorDescription": "Обновите страницу или напишите в редакцию.",
+  "reading.requestCode": "Код запроса: {requestId}",
+  "reading.contactEditorial": "Написать в редакцию",
+  "reading.loading": "Материалы загружаются",
+  "reading.proAuthor": "Автор уровня pro"
+}
+const t = (key: string, params: Record<string, string | number> = {}) =>
+  Object.entries(params).reduce(
+    (message, [name, value]) => message.replace(`{${name}}`, String(value)),
+    messages[key] ?? key
+  )
+
+beforeEach(() => {
+  vi.stubGlobal("useI18n", () => ({ t }))
+})
 
 describe("ArticleCard snapshots", () => {
   it.each([

@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { DEMO_TAGS } from "~/utils/demoTags"
 
+  const { t } = useI18n()
+
   // Состояние поиска
   const searchQuery = ref("")
 
@@ -23,7 +25,7 @@
         class="ring-0 border-b bg-transparent dark:bg-transparent border-zinc-200 dark:border-zinc-800"
         class-input="!font-garamond-libre text-zinc-600 text-3xl text-center h-max"
         height="90px"
-        placeholder="Найти..."></Input>
+        :placeholder="t('common.searchPlaceholder')"></Input>
       <TransitionGroup
         name="tag-list"
         tag="div"

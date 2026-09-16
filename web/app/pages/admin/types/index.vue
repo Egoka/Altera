@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import type { IColumn } from "#fishtvue/table"
 
+  const { t } = useI18n()
+
   definePageMeta({
     i18n: false,
     layout: "admin",
@@ -229,10 +231,10 @@
       <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
         <div class="">
           <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">
-            Управление типами контента
+            {{ t("admin.typesTitle") }}
           </div>
           <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500">
-            Создание и редактирование типов контента для статей
+            {{ t("admin.typesDescription") }}
           </div>
         </div>
       </div>
