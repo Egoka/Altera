@@ -1,5 +1,5 @@
 import { GraphQLContext } from "../../prisma"
-import { ensureAuthenticated, ensureHasRole } from "../../exceptions/permissions"
+import { ensureActiveAuthor, ensureAuthenticated, ensurePermission, ensureRole } from "../../exceptions/permissions"
 import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
@@ -19,6 +19,16 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { buildArticleCacheTags } from "../../cache/key"
 import { readThroughPublicCache } from "../../cache/read-through"
+
+function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string) {
+  const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+  if (user.role === "reader" || user.role === "author") {
+    ensureActiveAuthor(user, action, ctx.requestId, { logger: ctx.logger })
+  } else {
+    ensurePermission(user, "editorial", action, ctx.requestId)
+  }
+  return user
+}
 
 export default {
   Query: {
@@ -353,7 +363,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "admin.articles.read", ctx.requestId)
+      ensureRole(ctx.currentUser, "admin", "admin.articles.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
@@ -462,7 +472,7 @@ export default {
   },
   Mutation: {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const user = ensureArticleAuthoringAccess(ctx, "article.create")
 
       const { tags, ...articleData } = input
 
@@ -486,7 +496,7 @@ export default {
     },
 
     updateArticle: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const user = ensureArticleAuthoringAccess(ctx, "translation.save")
 
       const article = await ctx.prisma.article.findUnique({
         where: { id },
@@ -543,7 +553,7 @@ export default {
     },
 
     requestReview: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const user = ensureArticleAuthoringAccess(ctx, "translation.submit")
 
       const article = await ctx.prisma.article.findUnique({
         where: { id },
@@ -570,7 +580,7 @@ export default {
     },
 
     revertToDraft: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const user = ensureArticleAuthoringAccess(ctx, "translation.withdraw")
 
       const article = await ctx.prisma.article.findUnique({ where: { id } })
       if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
@@ -594,7 +604,7 @@ export default {
     },
 
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
-      ensureHasRole(ctx.currentUser, ["admin"], "article.setStatus", ctx.requestId)
+      ensureRole(ctx.currentUser, "admin", "article.setStatus", ctx.requestId)
 
       const article = await ctx.prisma.article.findUnique({ where: { id } })
       if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
@@ -616,7 +626,7 @@ export default {
     // Админ мутации для массовых операций
     bulkDeleteArticles: async (_parent: any, { ids }: { ids: string[] }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "article.bulkDelete", ctx.requestId)
+      ensureRole(ctx.currentUser, "admin", "article.bulkDelete", ctx.requestId)
 
       // Валидация входных параметров
       validateBulkOperation(ids, ctx.requestId, 100)
@@ -665,7 +675,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "article.bulkUpdateStatus", ctx.requestId)
+      ensureRole(ctx.currentUser, "admin", "article.bulkUpdateStatus", ctx.requestId)
 
       // Валидация входных параметров
       validateBulkOperation(ids, ctx.requestId, 100)

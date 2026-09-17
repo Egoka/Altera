@@ -151,7 +151,13 @@ describe("domain cache tags", () => {
     }
 
     await articleResolver.Mutation.updateArticle({}, { id: "a1", input: { slug: "new-slug" } }, {
-      currentUser: { id: "u1", role: "author" },
+      currentUser: {
+        id: "u1",
+        role: "author",
+        archivedAt: null,
+        planTier: "standard",
+        planUntil: new Date("2099-01-01T00:00:00.000Z")
+      },
       prisma,
       cache,
       ...requestContext
