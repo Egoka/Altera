@@ -8,7 +8,7 @@
     "sha": "4b971692be469635e79c10a4519f9f6100aa9d5e"
   },
   "baseline_sha": "6b9a411c5d463b822c574f6447d9117eeb5c29ae",
-  "tested_sha": "c27a02a24eb036cd579aaffabdd3c10171db5a7e",
+  "tested_sha": "968f3bf78230b9aee0278defd7d0e927527cd5ca",
   "branch": "web/t-095-i18n",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t095-i18n",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -29,23 +29,23 @@
     "number": 73,
     "url": "https://github.com/Egoka/Altera/pull/73",
     "base_ref": "app",
-    "base_sha": "7a900e026ece570fa483017a8edc73fb58618863",
-    "head_sha": "c27a02a24eb036cd579aaffabdd3c10171db5a7e"
+    "base_sha": "253a0ec789b520f45e953425aebc7d8093270a1a",
+    "head_sha": "968f3bf78230b9aee0278defd7d0e927527cd5ca",
+    "merge_sha": "3b78d3c6d5c6facb83a53fc07fc6af801845cbf7"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
-    "sha": "c27a02a24eb036cd579aaffabdd3c10171db5a7e",
-    "verdict": "pending"
+    "run_id": "01a0ad32-76f6-7c47-8dd2-8e18076f5b1f",
+    "sha": "968f3bf78230b9aee0278defd7d0e927527cd5ca",
+    "verdict": "approved"
   },
   "deployment": {
-    "required": true,
-    "environment": "development",
-    "reason": "Веб-слой i18n: новые маршрутизация и генератор email требуют controller-managed deployment/health решения после merge"
+    "required": false,
+    "reason": "Web-only i18n changes (web/ only); no server, packages or infrastructure files modified"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-095.md",
-    "sha256": "e70991cb37c46a1e9d4cb8994896118ecc26798987510bfefea0a206aac8afea"
+    "sha256": "836bddefe5a609d3bab28d9a9d1161172c9ca6c9de83a96650f34a07b052a2e4"
   },
   "usage": null
 }
