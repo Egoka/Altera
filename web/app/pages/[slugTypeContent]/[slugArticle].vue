@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { GET_ARTICLE } from "~/query"
+  import { GET_ARTICLE, GET_GONE_ARTICLE } from "~/query"
   import { getArticleRouteState } from "~/utils/articleRouteVisibility"
 
   definePageMeta({
@@ -8,8 +8,9 @@
 
   const route = useRoute()
   const slugArticle = computed(() => String(route.params.slugArticle ?? ""))
+  const sectionSlug = computed(() => String(route.params.slugTypeContent ?? ""))
   const localePath = useLocalePath()
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
 
   const { data: envelope, error: requestError } = await useAsyncData(
     () => `article-route:${slugArticle.value}`,
@@ -36,14 +37,57 @@
   }
 
   const article = computed(() => (state.value.kind === "visible" ? state.value.article : null))
+  const goneArticle = ref<Awaited<ReturnType<typeof loadGoneArticle>>>(null)
+
+  async function loadGoneArticle() {
+    if (state.value.kind !== "gone") return null
+    const result = await useGraphQL(GET_GONE_ARTICLE, {
+      locale: locale.value === "en" ? "en" : "ru",
+      sectionSlug: sectionSlug.value,
+      slug: slugArticle.value
+    })
+    if (result.errors?.length || !result.data?.gone) {
+      throw createError({ statusCode: 404, statusMessage: "NOT_FOUND" })
+    }
+    return result.data.gone
+  }
+
+  if (state.value.kind === "gone") {
+    const { data: goneData, error: goneError } = await useAsyncData(
+      () => `gone-article:${locale.value}:${sectionSlug.value}:${slugArticle.value}`,
+      loadGoneArticle
+    )
+    if (goneError.value) throw goneError.value
+    goneArticle.value = goneData.value ?? null
+  }
+
+  const formattedFirstPublishedAt = computed(() => {
+    if (!goneArticle.value?.firstPublishedAt) return null
+    return new Intl.DateTimeFormat(locale.value).format(new Date(goneArticle.value.firstPublishedAt))
+  })
 </script>
 
 <template>
   <section v-if="state.kind === 'gone'" class="mx-auto max-w-3xl py-24 text-center" aria-labelledby="gone-title">
     <p class="font-sans text-sm font-bold tracking-widest text-zinc-500">410</p>
     <h1 id="gone-title" class="mt-4 font-serif text-4xl font-semibold">{{ t("article.goneTitle") }}</h1>
+    <h2 v-if="goneArticle" class="mt-6 font-serif text-3xl font-semibold">{{ goneArticle.title }}</h2>
     <p class="mx-auto mt-4 max-w-xl text-zinc-600 dark:text-zinc-400">{{ t("article.goneDescription") }}</p>
-    <NuxtLink class="mt-8 inline-block underline underline-offset-4" :to="localePath('/')">
+    <p v-if="formattedFirstPublishedAt" class="mt-4 text-sm text-zinc-500">
+      {{ t("article.gonePublished") }} {{ formattedFirstPublishedAt }}
+    </p>
+    <nav v-if="goneArticle" class="mt-8 flex justify-center gap-6">
+      <NuxtLink class="underline underline-offset-4" :to="localePath(`/authors/${goneArticle.author.handle}`)">
+        {{ goneArticle.author.name }}
+      </NuxtLink>
+      <NuxtLink
+        v-if="goneArticle.section"
+        class="underline underline-offset-4"
+        :to="localePath(`/${goneArticle.section.slug}`)">
+        {{ goneArticle.section.name }}
+      </NuxtLink>
+    </nav>
+    <NuxtLink class="mt-6 inline-block underline underline-offset-4" :to="localePath('/')">
       {{ t("article.goneHome") }}
     </NuxtLink>
   </section>

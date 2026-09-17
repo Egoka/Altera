@@ -172,7 +172,8 @@
     "addComment": "Add Comment",
     "goneTitle": "This article has been withdrawn",
     "goneDescription": "This article is no longer publicly available.",
-    "goneHome": "Go to the home page"
+    "goneHome": "Go to the home page",
+    "gonePublished": "First published"
   },
   "reading": {
     "translation": "Translation",

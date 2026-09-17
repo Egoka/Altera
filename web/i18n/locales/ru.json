@@ -172,7 +172,8 @@
     "addComment": "Добавить комментарий",
     "goneTitle": "Материал снят с публикации",
     "goneDescription": "Этот материал больше недоступен публично.",
-    "goneHome": "На главную"
+    "goneHome": "На главную",
+    "gonePublished": "Был опубликован"
   },
   "reading": {
     "translation": "Перевод",

@@ -18,7 +18,7 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveSection, createSection, restoreSection, updateSection } from "../../taxonomy/service"
-import { publicArticleWhere } from "../../visibility/article"
+import { publicArticleInclude, publicArticleWhere, publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
@@ -80,11 +80,7 @@ export default {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: {
-          author: true,
-          section: true,
-          tags: true
-        }
+        include: publicArticleInclude
       })
 
       const response = {
@@ -153,7 +149,8 @@ export default {
           articles: {
             _count: "desc"
           }
-        }
+        },
+        select: publicUserSelect
       })
 
       // Рассчитываем среднее время чтения

@@ -133,6 +133,14 @@ type ArticleStats {
   shareCount: Int # В будущем
 }
 
+type GoneArticle {
+  title: String!
+  firstPublishedAt: String!
+  unpublishedAt: String
+  author: User!
+  section: Section
+}
+
 type RelatedArticlesResponse {
   articles: [Article!]!
   totalCount: Int!
@@ -140,6 +148,7 @@ type RelatedArticlesResponse {
 
 extend type Query {
   article(slug: String!): Article
+  gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
 
   # Комплексный запрос для страницы статьи
   articleDetail(slug: String!): ArticleDetail

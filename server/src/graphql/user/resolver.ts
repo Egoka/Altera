@@ -40,19 +40,21 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
-import { publicArticleWhere } from "../../visibility/article"
+import { publicArticleWhere, publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
     user: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
       return ctx.prisma.user.findUnique({
-        where: { handle: args.handle }
+        where: { handle: args.handle },
+        select: publicUserSelect
       })
     },
 
     author: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
       return ctx.prisma.user.findUnique({
-        where: { handle: args.handle, role: "author" }
+        where: { handle: args.handle, role: "author" },
+        select: publicUserSelect
       })
     },
 
@@ -72,7 +74,10 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const author = await ctx.prisma.user.findUnique({ where: { handle: authorHandle } })
+          const author = await ctx.prisma.user.findUnique({
+            where: { handle: authorHandle },
+            select: { id: true }
+          })
           if (!author) {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
@@ -108,7 +113,10 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const author = await ctx.prisma.user.findUnique({ where: { handle: authorHandle } })
+          const author = await ctx.prisma.user.findUnique({
+            where: { handle: authorHandle },
+            select: { id: true }
+          })
           if (!author) {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }

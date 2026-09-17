@@ -10,23 +10,39 @@ const setResponseStatus = vi.fn()
 
 beforeEach(() => {
   vi.stubGlobal("computed", computed)
+  vi.stubGlobal("ref", ref)
   vi.stubGlobal("definePageMeta", vi.fn())
-  vi.stubGlobal("useRoute", () => ({ params: { slugArticle: "withdrawn-article" } }))
+  vi.stubGlobal("useRoute", () => ({ params: { slugTypeContent: "culture", slugArticle: "withdrawn-article" } }))
   vi.stubGlobal("useLocalePath", () => (path: string) => path)
   vi.stubGlobal("useI18n", () => ({
+    locale: ref("ru"),
     t: (key: string) =>
       ({
         "article.goneTitle": "Материал снят с публикации",
         "article.goneDescription": "Этот материал больше недоступен публично.",
-        "article.goneHome": "На главную"
+        "article.goneHome": "На главную",
+        "article.gonePublished": "Был опубликован"
       })[key] ?? key
   }))
   vi.stubGlobal(
     "useGraphQL",
-    vi.fn().mockResolvedValue({
-      data: { article: null },
-      errors: [{ message: "Entity archived", extensions: { code: "ARCHIVED" } }]
-    })
+    vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: { article: null },
+        errors: [{ message: "Entity archived", extensions: { code: "ARCHIVED" } }]
+      })
+      .mockResolvedValueOnce({
+        data: {
+          gone: {
+            title: "Снятый материал",
+            firstPublishedAt: "2026-09-01T00:00:00.000Z",
+            unpublishedAt: "2026-09-10T00:00:00.000Z",
+            author: { name: "Автор", handle: "author" },
+            section: { name: "Культура", slug: "culture" }
+          }
+        }
+      })
   )
   vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => ({
     data: ref(await handler()),
@@ -61,6 +77,9 @@ describe("archived article page", () => {
 
     expect(wrapper.text()).toContain("410")
     expect(wrapper.text()).toContain("Материал снят с публикации")
+    expect(wrapper.text()).toContain("Снятый материал")
+    expect(wrapper.text()).toContain("Автор")
+    expect(wrapper.text()).toContain("Культура")
     expect(wrapper.text()).not.toContain("Entity archived")
     expect(setResponseStatus).toHaveBeenCalledWith(event, 410)
   })
