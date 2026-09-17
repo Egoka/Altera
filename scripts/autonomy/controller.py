@@ -64,7 +64,10 @@ def validate(receipt, facts, phase="done"):
     deployment = receipt.get("deployment", {})
     if facts.get("requires_deploy") is not False or deployment.get("required") is not False:
         dep = facts.get("deployment", {})
-        if dep.get("status") != "live" or dep.get("sha") != pr.get("merge_sha") or dep.get("health") is not True:
+        dep_sha = dep.get("sha")
+        merge_sha = pr.get("merge_sha")
+        sha_ok = dep_sha == merge_sha or dep.get("merge_sha_included") is True
+        if dep.get("status") != "live" or not sha_ok or dep.get("health") is not True:
             errors.append("deployment")
     elif not deployment.get("reason"):
         errors.append("deployment")
@@ -238,7 +241,17 @@ class Live:
         if not value:
             return {}
         value["probe_run_id"] = run["id"]
-        value["health"] = value.get("status") == "live" and health(self.config.get("health_url", ""), value["sha"])
+        dep_sha = value.get("sha")
+        merge_sha = receipt.get("pr", {}).get("merge_sha")
+        sha_includes_task = dep_sha == merge_sha
+        if not sha_includes_task and dep_sha and merge_sha:
+            with contextlib.suppress(RuntimeError, OSError, subprocess.TimeoutExpired):
+                sha_includes_task = subprocess.run(
+                    ["git", "merge-base", "--is-ancestor", merge_sha, dep_sha],
+                    cwd=self.repo, capture_output=True
+                ).returncode == 0
+        value["merge_sha_included"] = sha_includes_task
+        value["health"] = value.get("status") == "live" and sha_includes_task and health(self.config.get("health_url", ""), dep_sha)
         return value
 
     def facts(self, receipt):
