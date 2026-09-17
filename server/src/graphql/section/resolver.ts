@@ -1,5 +1,5 @@
 import { GraphQLContext } from "../../prisma"
-import { ensureHasRole } from "../../exceptions/permissions"
+import { ensurePermission } from "../../exceptions/permissions"
 import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
@@ -216,7 +216,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "admin.sections.read", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "admin.sections.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
@@ -301,7 +301,7 @@ export default {
     // Админ мутации для управления типами контента
     createSection: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.create", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "section.create", ctx.requestId)
 
       try {
         const newSection = await createSection(ctx.prisma, {
@@ -320,7 +320,7 @@ export default {
 
     updateSection: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.update", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "section.update", ctx.requestId)
 
       try {
         const previousSection = await ctx.prisma.section.findUnique({ where: { id }, select: { slug: true } })
@@ -345,7 +345,7 @@ export default {
 
     deleteSection: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.delete", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "section.delete", ctx.requestId)
 
       try {
         // Проверяем, есть ли статьи с этим типом контента
@@ -391,7 +391,7 @@ export default {
 
     reorderSections: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.reorder", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "section.reorder", ctx.requestId)
 
       const { items } = input
 
@@ -439,7 +439,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.archive", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "section.archive", ctx.requestId)
 
       try {
         const archivedSection = await archiveSection(ctx.prisma, {
@@ -458,7 +458,7 @@ export default {
     },
 
     restoreSection: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      ensureHasRole(ctx.currentUser, ["admin", "owner"], "section.restore", ctx.requestId)
+      ensurePermission(ctx.currentUser, "taxonomy", "section.restore", ctx.requestId)
       const section = await restoreSection(ctx.prisma, {
         sectionId: id,
         actor: ctx.currentUser!,

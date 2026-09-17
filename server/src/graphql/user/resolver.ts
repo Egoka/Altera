@@ -1,5 +1,5 @@
 import { GraphQLContext } from "../../prisma"
-import { ensureAuthenticated, ensureHasRole } from "../../exceptions/permissions"
+import { ensureAuthenticated, ensurePermission } from "../../exceptions/permissions"
 import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
@@ -186,7 +186,7 @@ export default {
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
-      ensureHasRole(ctx.currentUser, "admin", "admin.users.read", ctx.requestId)
+      ensurePermission(ctx.currentUser, "accounts", "admin.users.read", ctx.requestId)
 
       const { pagination, sort, filters, search } = args
 
