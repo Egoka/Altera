@@ -44,9 +44,23 @@ describe("public GraphQL schema", () => {
     expect(article.getFields().format.type.toString()).toBe("Format")
     expect(article.getFields().tags.type.toString()).toBe("[Tag!]!")
     expect(createArticle.getFields().sectionId.type.toString()).toBe("ID")
-    expect(createArticle.getFields().formatId.type.toString()).toBe("ID")
+    expect(createArticle.getFields().locale.type.toString()).toBe("Locale")
+    expect(Object.keys(createArticle.getFields()).sort()).toEqual(["locale", "sectionId"])
     expect(schema.getType("ContentType")).toBeUndefined()
     expect(schema.getType("SectionTag")).toBeUndefined()
     expect(taxonomyStatus.getValues().map(({ name }) => name)).toEqual(["active", "archived"])
+  })
+
+  test("exposes author tag autocomplete and allows the server to derive a new tag slug", () => {
+    const typeDefs = loadFilesSync(path.resolve(__dirname, "../src/graphql"), { extensions: ["graphql"] })
+    const schema = buildASTSchema(mergeTypeDefs(typeDefs))
+    const query = schema.getQueryType()
+    const createTag = schema.getType("CreateTagInput")
+
+    expect(query?.getFields().tagAutocomplete.type.toString()).toBe("[Tag!]!")
+    expect(isInputObjectType(createTag)).toBe(true)
+    if (!isInputObjectType(createTag)) return
+
+    expect(createTag.getFields().slug.type.toString()).toBe("String")
   })
 })
