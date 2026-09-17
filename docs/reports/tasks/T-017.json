@@ -30,13 +30,14 @@
     "url": "https://github.com/Egoka/Altera/pull/79",
     "base_ref": "app",
     "base_sha": "c4eeae01949bdec0468e0bd3532a64ac48792505",
-    "head_sha": "60823cbc1a40fd15096372145a875b194e1ee703"
+    "head_sha": "60823cbc1a40fd15096372145a875b194e1ee703",
+    "merge_sha": "7a900e026ece570fa483017a8edc73fb58618863"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
+    "run_id": "01a0abaf-b6d3-78e6-98a2-b127972ad736",
     "sha": "60823cbc1a40fd15096372145a875b194e1ee703",
-    "verdict": "pending"
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
