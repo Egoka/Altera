@@ -8,7 +8,7 @@
     "sha": "772a87fd573b82a364d9029169c5b563375a6115"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "8aea697fee67c7a446824e5bc472175ba5bcabf3",
+  "tested_sha": "7f556e0d2dd4caba4d7ca7877450d7a6b06d6163",
   "branch": "server/t007-deterministic-seed",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t007-deterministic-seed",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -30,17 +30,22 @@
     "url": "https://github.com/Egoka/Altera/pull/111",
     "base_ref": "app",
     "base_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-    "head_sha": "8aea697fee67c7a446824e5bc472175ba5bcabf3",
+    "head_sha": "7f556e0d2dd4caba4d7ca7877450d7a6b06d6163",
     "merge_sha": null
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0afbf-3144-7b2f-b619-7eae902dcfc2",
+    "sha": "7f556e0d2dd4caba4d7ca7877450d7a6b06d6163",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": false,
     "reason": "Seed is an explicit development/test command; no migration or automatic production execution is introduced"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-007.md",
-    "sha256": "e34277e6c40369d7ed00cad8f2d5513faa32485949e171cc6be17607ba234e0e"
+    "sha256": "903b2e776565be6880bd2bf8736f81d2415bfbac3830b0be64e4593cf66066c9"
   },
   "usage": null
 }
