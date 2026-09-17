@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-026",
+  "issue_id": "01a0ac5a-7115-78e3-b51b-61dbb0b2bbe0",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-026-permission-checks-module.md",
+    "sha": "cbf6d6f44bc938c8ce4d2dfcdd96dd2bedcb252e"
+  },
+  "baseline_sha": "86e4b783455de76b1cc4823d884f799cf5cb4d10",
+  "tested_sha": "cc83e403f2972ad572cd004cb8393290c2db0d96",
+  "branch": "server/t026-permissions",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t026-permissions",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0acf8-ae54-7c8b-88b5-6dbee4bedf16",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "permissions.test.ts: 21 tests covering 7 roles × 10 default permissions, individual exceptions, owner override and PLAN_LIMIT; server 140 passed / 16 skipped"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "grep -r ensureHasRole server/src server/tests returns no matches; all resolvers migrated to ensurePermission/ensureRole/ensureActiveAuthor"
+    }
+  ],
+  "pr": {
+    "number": 93,
+    "url": "https://github.com/Egoka/Altera/pull/93",
+    "base_ref": "app",
+    "base_sha": "1183c9e7b723360e661ff3a0b4e61e8cd447dc31",
+    "head_sha": "cc83e403f2972ad572cd004cb8393290c2db0d96",
+    "merge_sha": "4157620488e634e518963238de2c76a8a47e1b80"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ae0b-c8de-7a07-bbb9-aeefd3d7f2b1",
+    "sha": "cc83e403f2972ad572cd004cb8393290c2db0d96",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "Server code changes require deployment verification"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-026.md",
+    "sha256": "262c99e7a7fc1c018e6f674241300ec1679cbe14d2ec073b03fa2254725674db"
+  },
+  "usage": null
+}
