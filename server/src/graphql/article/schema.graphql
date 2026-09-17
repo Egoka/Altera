@@ -209,6 +209,7 @@ extend type Mutation {
 
   # Мутации для смены статуса
   archiveArticle(id: ID!): Article!
+  restoreArticle(id: ID!): Article!
   requestReview(id: ID!): Article!
   revertToDraft(id: ID!): Article!
 
