@@ -11,6 +11,8 @@ import { createErrorMasker } from "./errors/graphql-error"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
 import { createRequestTracingPlugin, getRequestId } from "./observability/request-tracing"
+import { startPermissionExceptionExpiry } from "./permission-exceptions/scheduler"
+import type { PermissionExceptionClient } from "./permission-exceptions/service"
 
 const PORT = process.env.PORT || 4000
 const cache = createCache({ redisUrl: process.env.REDIS_URL })
@@ -50,4 +52,5 @@ const health = createHealthCheck(
   process.env.RENDER_GIT_COMMIT
 )
 const server = createServer(withHealth(yoga, health))
+startPermissionExceptionExpiry(prisma as unknown as PermissionExceptionClient, logger)
 server.listen(PORT)
