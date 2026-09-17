@@ -108,17 +108,24 @@ describe.skipIf(!testDatabaseUrl)("T-007 deterministic seed", () => {
         await expect(prisma.user.count({ where: { role: "author", isServiceAccount: false } })).resolves.toBe(2)
         await expect(
           prisma.planGrant.findMany({
-            select: { userId: true, tier: true, endsAt: true, grantedById: true },
+            select: { userId: true, tier: true, startsAt: true, endsAt: true, grantedById: true },
             orderBy: { userId: "asc" }
           })
         ).resolves.toEqual([
           {
             userId: "t007-user-author-pro",
             tier: "pro",
+            startsAt: new Date("2025-12-01T00:00:00.000Z"),
             endsAt: new Date("2099-12-31T23:59:59.000Z"),
             grantedById: "t007-user-owner"
           },
-          { userId: "t007-user-author-standard", tier: "standard", endsAt: null, grantedById: null }
+          {
+            userId: "t007-user-author-standard",
+            tier: "standard",
+            startsAt: new Date("2025-12-01T00:00:00.000Z"),
+            endsAt: null,
+            grantedById: null
+          }
         ])
         await expect(prisma.section.count()).resolves.toBe(6)
         await expect(prisma.format.count()).resolves.toBe(5)

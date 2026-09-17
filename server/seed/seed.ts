@@ -1,6 +1,7 @@
 import { ArticleStatus, PlanTier, PrismaClient, Role, TaxonomyStatus } from "../src/generated/prisma"
 
 const prisma = new PrismaClient()
+const grantStartsAt = new Date("2025-12-01T00:00:00.000Z")
 const proPlanUntil = new Date("2099-12-31T23:59:59.000Z")
 
 const users = [
@@ -116,11 +117,13 @@ export async function seedDatabase(client: PrismaClient): Promise<void> {
           id: "t007-grant-author-standard",
           userId: "t007-user-author-standard",
           tier: PlanTier.standard,
+          startsAt: grantStartsAt,
           reason: "T-007 base authorship"
         },
         update: {
           userId: "t007-user-author-standard",
           tier: PlanTier.standard,
+          startsAt: grantStartsAt,
           endsAt: null,
           grantedById: null,
           reason: "T-007 base authorship",
@@ -133,7 +136,7 @@ export async function seedDatabase(client: PrismaClient): Promise<void> {
           id: "t007-grant-author-pro",
           userId: "t007-user-author-pro",
           tier: PlanTier.pro,
-          startsAt: publishedAt,
+          startsAt: grantStartsAt,
           endsAt: proPlanUntil,
           grantedById: "t007-user-owner",
           reason: "T-007 manual pro grant"
@@ -141,7 +144,7 @@ export async function seedDatabase(client: PrismaClient): Promise<void> {
         update: {
           userId: "t007-user-author-pro",
           tier: PlanTier.pro,
-          startsAt: publishedAt,
+          startsAt: grantStartsAt,
           endsAt: proPlanUntil,
           grantedById: "t007-user-owner",
           reason: "T-007 manual pro grant",
