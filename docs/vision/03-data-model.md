@@ -24,7 +24,7 @@
 | Нет `model Job`, `model JobAttempt` | Очередь фоновых задач с историей попыток; `JobStatus` enum | T-019, `admin_operational_records` |
 | Нет `model AiProcess`, `model AiCostAggregate` | Лог AI-процессов и агрегаты стоимости; `AiProcessKind`, `AiProcessStatus` enums | T-019, `admin_operational_records` |
 | Нет `model LegalText`, `model UserLegalConsent` | Версионируемые юридические тексты и согласия пользователя; `LegalTextKind`, `LegalTextStatus` enums | T-019, `admin_operational_records` |
-| Нет `model EmailChangeRequest` | Запрос на смену почты с хэшем кода и сроком | T-013, `user_profile_handle_locale`; журнал §25.8 |
+| Нет `model EmailChangeRequest` | Запрос на смену почты с хэшем кода и сроком | T-012, `sessions_hashed_auth_tokens`; журнал §25.8 |
 
 ### Ревизия 2 → 3 (2026-09-14, T-109, журнал Г5b–Г9)
 
@@ -807,7 +807,7 @@ model MailMessage {
   template            String
   recipientEmail      String
   subject             String
-  sanitizedBody       String                         // очищено: нет токенов и секретов
+  sanitizedBody       String             @db.Text      // очищено: нет токенов и секретов
   status              MailDeliveryStatus @default(queued)
   objectType          String?
   objectId            String?
@@ -819,7 +819,10 @@ model MailMessage {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   @@index([status, createdAt])
+  @@index([template, createdAt])
   @@index([recipientEmail])
+  @@index([objectType, objectId])
+  @@index([jobId])
   @@map("mail_messages")
 }
 
@@ -847,7 +850,7 @@ model BackendError {
   route             String?
   requestMethod     String?
   requestId         String?
-  sanitizedStack    String?
+  sanitizedStack    String?                     @db.Text
   actorRole         Role?
   jobId             String?                             // → Job, SetNull
   workStatus        BackendErrorWorkStatus  @default(new_record)
@@ -860,6 +863,8 @@ model BackendError {
   updatedAt         DateTime               @updatedAt
   @@index([workStatus, lastSeenAt])
   @@index([service, code])
+  @@index([requestId])
+  @@index([jobId])
   @@map("backend_errors")
 }
 
@@ -877,8 +882,8 @@ model BackendErrorStatusHistory {
 }
 
 // Юридические тексты и согласия (ADR-0028) — этап 1; T-019
-enum LegalTextKind   { terms privacy cookie content_policy moderation_rules imprint about }
-enum LegalTextStatus { draft published archived }
+enum LegalTextKind   { terms privacy content_rules license paid_services refunds about }
+enum LegalTextStatus { draft published previous }
 model LegalText {
   id                  String          @id @default(uuid())
   kind                LegalTextKind
