@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "task_id": "T-028",
+  "issue_id": "01a0b0ff-550b-761d-b826-be4e92b25083",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-028-permission-exceptions-owner.md",
+    "sha": "3d5e1d9e6499cc204ecb1796b4da35a9ea4caa43"
+  },
+  "baseline_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
+  "tested_sha": "f7f0a81c168469f3bcabe168d207fa0e98cffbbf",
+  "branch": "server/t028-permission-exceptions",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t028-permission-exceptions",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b133-1ca5-7d37-b399-7775bb4845e6",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "https://github.com/Egoka/Altera/actions/runs/35279155492; server/tests/permission-exceptions.test.ts verifies FORBIDDEN for a non-owner grant"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "https://github.com/Egoka/Altera/actions/runs/35279155492; fake-clock expiry test verifies denial and one permission.exception.expire audit event"
+    }
+  ],
+  "pr": {
+    "number": 121,
+    "url": "https://github.com/Egoka/Altera/pull/121",
+    "head_sha": "f7f0a81c168469f3bcabe168d207fa0e98cffbbf",
+    "base_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
+    "base_ref": "app",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": "f7f0a81c168469f3bcabe168d207fa0e98cffbbf",
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "reason": "Server code and a PostgreSQL migration change; controller must apply it in an authorized environment and verify health",
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-028.md",
+    "sha256": "fa178b00bc817655beee9a14aaef73d9f9a7a0bd8d828537acbce1e2ff6021ef"
+  },
+  "usage": null
+}
