@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-003",
+  "issue_id": "01a08805-f20c-7c8d-87fa-3f0497d497ca",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-003-docker-compose-local.md",
+    "sha": "d9148e135ab0a9aa1951e3a3e70026337db24dbe"
+  },
+  "baseline_sha": "7a900e026ece570fa483017a8edc73fb58618863",
+  "tested_sha": "c89292abc215da6eb8cd287735bdce17f50a4773",
+  "branch": "chore/t003-local-ports",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t003-local-ports",
+  "implementer_id": "49314ca0-8c53-44a9-a9de-15c3f297818a",
+  "implementer_run_id": "01a0ac48-539d-70a5-a0b0-2f87f295d88b",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "docker compose ps: postgres (25432), redis (26379), mailpit (21025/28025) — Up (healthy); evidence in docs/reports/2026-09-17-t003-docker-compose-local-completion-report.md"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "curl GraphQL POST → {\"data\":{\"__typename\":\"Query\"}}; server responds with stack running"
+    }
+  ],
+  "pr": {
+    "number": 84,
+    "url": "https://github.com/Egoka/Altera/pull/84",
+    "base_ref": "app",
+    "base_sha": "0ea8b7d946d820034d790219b6868409a47230f9",
+    "head_sha": "c89292abc215da6eb8cd287735bdce17f50a4773",
+    "merge_sha": "478b63a0a90b7c2a6746025794a7cd4858c84c74"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ad33-d490-7944-9100-72ed0897b238",
+    "sha": "c89292abc215da6eb8cd287735bdce17f50a4773",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR includes server/env.example and server/ENV_SETUP.md (documentation only); controller requires deployment verification for server/ files"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-003.md",
+    "sha256": "3c1f246f56d087d6c6c2e32fdac1d354067b5a3ea8931ff3c33ca09961970cba"
+  },
+  "usage": null
+}
