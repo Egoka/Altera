@@ -8,25 +8,26 @@
     "sha": "20bac88b8a2a8e04f16e4e8f3ad6e012094889b5eeafe28ab3b3d41e2537d87a"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "925e6aee884b68f97fc39c5047b988fea0e0d219",
+  "tested_sha": "9a93cdcc0f4f4531f22e345da1ffa0e56b6395f9",
   "branch": "task/t005-lint-hygiene",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t005-lint-hygiene",
   "implementer_id": "c6dd97bf-75c1-45cd-8d4a-3d00d26dd2f0",
-  "implementer_run_id": "01a0b0e1-d0c4-7866-ae3b-89e119bd6c2d",
+  "implementer_run_id": null,
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "eslint.config.mjs правило no-console:error для server/src/**/{ts,js} присутствовало на baseline 2979101; временная вставка console.log в server/src/health.ts вызвала ошибку линта; после revert pnpm lint exit 0"
+      "evidence": "eslint.config.mjs правило no-console:error для server/src/**/{ts,js} присутствовало на baseline 2979101; временная вставка console.log в server/src/health.ts вызвала ошибку линта (error Unexpected console statement no-console); после revert pnpm lint exit 0"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "Удалены web/app/pages/fonts-showcase.vue, components-showcase.vue, test-error.vue; маршруты /fonts-showcase /components-showcase /test-error вернут 404 в прод-сборке"
+      "evidence": "Удалены web/app/pages/fonts-showcase.vue, components-showcase.vue, test-error.vue; маршруты /fonts-showcase /components-showcase /test-error будут возвращать 404 в прод-сборке; 3 files changed, 709 deletions в коммите 9a93cdc"
     },
     {
       "id": "AC-3",
       "status": "passed",
-      "evidence": "server/package.json build: prisma generate && tsc && ... — prisma migrate deploy отсутствует; подтверждено на baseline 2979101"
+      "evidence": "server/package.json build: 'prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/' — prisma migrate deploy отсутствует; подтверждено на baseline 2979101"
     }
   ],
   "pr": {
@@ -34,22 +35,23 @@
     "url": "https://github.com/Egoka/Altera/pull/116",
     "base_ref": "app",
     "base_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-    "head_sha": "925e6aee884b68f97fc39c5047b988fea0e0d219",
+    "head_sha": "9a93cdcc0f4f4531f22e345da1ffa0e56b6395f9",
     "merge_sha": null
   },
   "review": {
-    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3191d4",
     "run_id": null,
-    "sha": "925e6aee884b68f97fc39c5047b988fea0e0d219",
+    "sha": "9a93cdcc0f4f4531f22e345da1ffa0e56b6395f9",
     "verdict": null
+  },
+  "tests": {
+    "server": "140 passed | 19 skipped (159)",
+    "web": "132 passed (132)"
   },
   "deployment": {
     "required": false,
-    "reason": "Только удаление демо-страниц и конфигурация линта; нет изменений в продуктовом runtime"
+    "reason": "Только удаление страниц и конфигурация линта; нет изменений в продуктовом runtime"
   },
-  "finalization": {
-    "path": "docs/reports/tasks/T-005.md",
-    "sha256": "044bc236cf9a08d55db76d3384e507f167d901d4dc872ff79a2447a89d0789bf"
-  },
+  "finalization": null,
   "usage": null
 }
