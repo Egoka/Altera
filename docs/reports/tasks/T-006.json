@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task_id": "T-006",
+  "issue_id": "01a0ab45-ca56-797d-984b-7f8a4164df3e",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-006-cache-wrapper-noop.md",
+    "sha": "c0537cb35ec641a6349a2412e8200b604a779641"
+  },
+  "baseline_sha": "86e4b783455de76b1cc4823d884f799cf5cb4d10",
+  "tested_sha": "426dc4389868bf2288dd9aff10ed152a31119253",
+  "branch": "server/t006-cache-wrapper",
+  "worktree": null,
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0abd9-0902-73d4-a434-496ecade0c71",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server start without REDIS_URL returns NoopCache; noop-mode tests and GraphQL context integration pass; docs/reports/evidence/2026-09-16-t006-current-verification.md"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "grep .keys()/.scan() in server/src (excl. generated) — empty; Lua scripts use SMEMBERS"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "canonicalize() + SHA-256 keying; test 'isolates two different search queries' passes"
+    }
+  ],
+  "pr": {
+    "number": 83,
+    "url": "https://github.com/Egoka/Altera/pull/83",
+    "base_ref": "app",
+    "base_sha": "86e4b783455de76b1cc4823d884f799cf5cb4d10",
+    "head_sha": "426dc4389868bf2288dd9aff10ed152a31119253",
+    "merge_sha": "aa3b3aa9d265f30ee99e10a060c45e7f118f4144"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0acf3-8812-7460-b9ee-5fafa3646437",
+    "sha": "426dc4389868bf2288dd9aff10ed152a31119253",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Production code already in app via PR #38; PR #83 adds evidence document only"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-006.md",
+    "sha256": "69251864bcc0cf53c153e98e45d7b7dd41b97d02ae704f6a0da5d97bea0c46fa"
+  },
+  "usage": null
+}
