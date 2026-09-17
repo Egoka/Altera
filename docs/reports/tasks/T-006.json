@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "task_id": "T-006",
+  "issue_id": "01a0ab45-ca56-797d-984b-7f8a4164df3e",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-006-cache-wrapper-noop.md",
+    "sha": "c0537cb35ec641a6349a2412e8200b604a779641"
+  },
+  "baseline_sha": "86e4b783455de76b1cc4823d884f799cf5cb4d10",
+  "tested_sha": "426dc4389868bf2288dd9aff10ed152a31119253",
+  "branch": "server/t006-cache-wrapper",
+  "worktree": null,
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0abd9-0902-73d4-a434-496ecade0c71",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "docs/reports/evidence/2026-09-16-t006-current-verification.md: server starts without REDIS_URL in noop mode; requests respond normally"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "docs/reports/evidence/2026-09-16-t006-current-verification.md: grep confirms no KEYS call in codebase"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "docs/reports/evidence/2026-09-16-t006-current-verification.md: two different search queries produce distinct cache keys"
+    }
+  ],
+  "pr": {
+    "number": 83,
+    "url": "https://github.com/Egoka/Altera/pull/83",
+    "base_ref": "app",
+    "base_sha": "86e4b783455de76b1cc4823d884f799cf5cb4d10",
+    "head_sha": "426dc4389868bf2288dd9aff10ed152a31119253"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "426dc4389868bf2288dd9aff10ed152a31119253",
+    "verdict": "pending"
+  },
+  "deployment": {
+    "required": false
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-006.md",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "usage": null
+}

@@ -7,8 +7,8 @@
     "path": "docs/backlog/tasks/T-018-migration-audit-review-thread.md",
     "sha": "98a06a49db680ef2d50588957f4a8f7edbe914fc"
   },
-  "baseline_sha": "49a8302b5da832952b50ffc337819ce623791161",
-  "tested_sha": "ade388bb050a46f0c769c4d4e168577e38c373ff",
+  "baseline_sha": "7a900e026ece570fa483017a8edc73fb58618863",
+  "tested_sha": "1b796186761fe1e8156a18bcde817c6b32e3956d",
   "branch": "server/t-018-audit-review-thread",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t018-audit-review-thread",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -29,14 +29,14 @@
     "number": 80,
     "url": "https://github.com/Egoka/Altera/pull/80",
     "base_ref": "app",
-    "base_sha": "80eca687798550cefd23742370b8078f66982136",
-    "head_sha": "ade388bb050a46f0c769c4d4e168577e38c373ff"
+    "base_sha": "7a900e026ece570fa483017a8edc73fb58618863",
+    "head_sha": "1b796186761fe1e8156a18bcde817c6b32e3956d"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
-    "sha": "ade388bb050a46f0c769c4d4e168577e38c373ff",
-    "verdict": "pending"
+    "run_id": "01a0ac75-82da-7273-9da3-3fd59ff6c6af",
+    "sha": "1b796186761fe1e8156a18bcde817c6b32e3956d",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
