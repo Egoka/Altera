@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "T-038",
+  "issue_id": "01a0afce-21e8-7e37-860e-90e4e7048a78",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-038-my-articles-list.md",
+    "sha": "d602d41ffd775cf767ff68317508c6bc4e0d80a4"
+  },
+  "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
+  "tested_sha": "1d287b91ac9b1c75f5df80dacaa00518567e1a8e",
+  "branch": "feat/t038-my-articles",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b009-7b89-75bd-80ff-8975446bcaa8",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "pnpm test:e2e — 11 passed / 9 pre-existing skipped; server 142 passed / 19 skipped; web 132 passed; CI run 35246291644 (success)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Rejected articles render without edit action; server-side field authorization enforced; server 142 passed"
+    }
+  ],
+  "pr": {
+    "number": 113,
+    "url": "https://github.com/Egoka/Altera/pull/113",
+    "base_ref": "app",
+    "base_sha": "aa530a5ae9873678c9bb78d1da0dbed5b9fd6d36",
+    "head_sha": "1d287b91ac9b1c75f5df80dacaa00518567e1a8e",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "1d287b91ac9b1c75f5df80dacaa00518567e1a8e",
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server and web code changes require controller-managed deployment/health after merge",
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-038.md",
+    "sha256": "370a460a491dd3923f864bf03e5b5001190931b68e35a5feb02c47fa4ff67da1"
+  },
+  "usage": null
+}

@@ -33,9 +33,9 @@
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
+    "run_id": "01a0af74-f654-7c85-b6bc-0ee2fb3414af",
     "sha": "7c3ab1374f80b39f2b67add5c38eb032dfc6c191",
-    "verdict": "pending"
+    "verdict": "approved"
   },
   "deployment": {
     "required": false,

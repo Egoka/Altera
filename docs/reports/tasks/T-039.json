@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "T-039",
+  "issue_id": "01a0afc3-1996-7c01-9aca-3d2b844eb350",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-039-article-new-draft-first.md",
+    "sha": "a1ca8fccb57c0b76a8248ee120004989186d8612"
+  },
+  "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
+  "tested_sha": "481084d5870aba0411be9d95957b467efc7c8c7f",
+  "branch": "server/t039-article-draft",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b100-bfbe-7414-9e9b-2d63f1f9b8c3",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "article-draft-first.test.ts: 3/3 passed (empty draft without section, requestReview without section rejected, inaccessible pre-selected section ignored); web action create+redirect 1/1 passed; CI run on 91bcf1fd (success)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Author can create tags without manual slug; server tests 145 passed, web 133 passed; CI run on 91bcf1fd (success)"
+    }
+  ],
+  "pr": {
+    "number": 117,
+    "url": "https://github.com/Egoka/Altera/pull/117",
+    "base_ref": "app",
+    "base_sha": "aa530a5ae9873678c9bb78d1da0dbed5b9fd6d36",
+    "head_sha": "481084d5870aba0411be9d95957b467efc7c8c7f",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "481084d5870aba0411be9d95957b467efc7c8c7f",
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server and web code changes require controller-managed deployment/health after merge",
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-039.md",
+    "sha256": "1fa36a565ba9792db00d1e4d48f5bbec392fd72add59a129cbd9bbf213deccab"
+  },
+  "usage": null
+}
