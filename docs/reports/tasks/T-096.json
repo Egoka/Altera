@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "task_id": "T-096",
+  "issue_id": "01a0ad34-039d-7506-8067-0f43bc219b24",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-096-interface-copy.md",
+    "sha": "69b42536c9c1f2b6ced6e7e419a277b996d2a68e"
+  },
+  "baseline_sha": "5e0ae92104b9aaaaae059fa9756dcd8f9ad66e46",
+  "tested_sha": "7c3ab1374f80b39f2b67add5c38eb032dfc6c191",
+  "implementer_id": "b7f90cba-518a-4130-993a-f047a4355f96",
+  "implementer_run_id": "01a0ad67-2e36-7439-91ba-81f0fb4f1dc9",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Артефакт docs/reports/2026-09-17-t096-interface-texts-artifact.md: каждая страница запуска (/login, /auth/verify, /me/archived, /auth/appeal, onboarding, 'стать автором') имеет тексты состояний"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Правила публикации содержат только общие категории отказа (5 категорий без детальной логики); пороги и внутренние признаки не раскрыты (журнал §24.3)"
+    }
+  ],
+  "pr": {
+    "number": 105,
+    "url": "https://github.com/Egoka/Altera/pull/105",
+    "base_ref": "app",
+    "base_sha": "5e0ae92104b9aaaaae059fa9756dcd8f9ad66e46",
+    "head_sha": "7c3ab1374f80b39f2b67add5c38eb032dfc6c191",
+    "merge_sha": "5ad1e600d3be7aa29ac09dcc60e9026d11be6785"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "7c3ab1374f80b39f2b67add5c38eb032dfc6c191",
+    "verdict": "pending"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Docs-only task — no server or package files changed (PR #105 includes controller fix in scripts/, not server/)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-096.md",
+    "sha256": "2804e7ab8256e4dbaae2425543d9e4f978cd3b9f3ead30129f9ca349d26e7b1b"
+  },
+  "usage": null
+}
