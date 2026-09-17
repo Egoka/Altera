@@ -18,7 +18,12 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveSection, createSection, restoreSection, updateSection } from "../../taxonomy/service"
-import { publicArticleInclude, publicArticleWhere, publicUserSelect } from "../../visibility/article"
+import {
+  publicArticleSelect,
+  publicArticleWhere,
+  publicSectionSelect,
+  publicUserSelect
+} from "../../visibility/article"
 
 export default {
   Query: {
@@ -51,7 +56,7 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.publicList,
           cacheWhen: (section) => section?.status === "active"
         },
-        () => ctx.prisma.section.findUnique({ where: { slug: args.slug } })
+        () => ctx.prisma.section.findUnique({ where: { slug: args.slug }, select: publicSectionSelect })
       )
     },
 
@@ -80,7 +85,7 @@ export default {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       const response = {

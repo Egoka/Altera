@@ -7,6 +7,11 @@ interface ArticleEnvelope<TArticle> {
   errors?: readonly GraphQLErrorLike[]
 }
 
+interface GoneArticleEnvelope<TArticle> {
+  data?: { gone?: TArticle | null } | null
+  errors?: readonly GraphQLErrorLike[]
+}
+
 export type ArticleRouteState<TArticle> =
   | { kind: "visible"; article: TArticle }
   | { kind: "gone"; statusCode: 410 }
@@ -17,6 +22,26 @@ function extension(error: GraphQLErrorLike | undefined, key: string): string | u
   return typeof value === "string" ? value : undefined
 }
 
+function getErrorState(errors: readonly GraphQLErrorLike[] | undefined) {
+  const notFound = errors?.find((error) => extension(error, "code") === "NOT_FOUND")
+  if (notFound) {
+    return {
+      kind: "error" as const,
+      statusCode: 404 as const,
+      code: "NOT_FOUND",
+      requestId: extension(notFound, "requestId")
+    }
+  }
+
+  const error = errors?.[0]
+  return {
+    kind: "error" as const,
+    statusCode: 500 as const,
+    code: extension(error, "code") ?? "INTERNAL_ERROR",
+    requestId: extension(error, "requestId")
+  }
+}
+
 export function getArticleRouteState<TArticle>(envelope: ArticleEnvelope<TArticle>): ArticleRouteState<TArticle> {
   const article = envelope.data?.article
   if (article) return { kind: "visible", article }
@@ -24,21 +49,11 @@ export function getArticleRouteState<TArticle>(envelope: ArticleEnvelope<TArticl
   const archived = envelope.errors?.find((error) => extension(error, "code") === "ARCHIVED")
   if (archived) return { kind: "gone", statusCode: 410 }
 
-  const notFound = envelope.errors?.find((error) => extension(error, "code") === "NOT_FOUND")
-  if (notFound) {
-    return {
-      kind: "error",
-      statusCode: 404,
-      code: "NOT_FOUND",
-      requestId: extension(notFound, "requestId")
-    }
-  }
+  return getErrorState(envelope.errors)
+}
 
-  const error = envelope.errors?.[0]
-  return {
-    kind: "error",
-    statusCode: 500,
-    code: extension(error, "code") ?? "INTERNAL_ERROR",
-    requestId: extension(error, "requestId")
-  }
+export function getGoneArticleRouteState<TArticle>(envelope: GoneArticleEnvelope<TArticle>) {
+  const article = envelope.data?.gone
+  if (article) return { kind: "visible" as const, article }
+  return getErrorState(envelope.errors)
 }

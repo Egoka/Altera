@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getArticleRouteState } from "../app/utils/articleRouteVisibility"
+import { getArticleRouteState, getGoneArticleRouteState } from "../app/utils/articleRouteVisibility"
 
 describe("article route visibility", () => {
   it("maps ARCHIVED to the gone page even when sibling fields also report NOT_FOUND", () => {
@@ -41,5 +41,19 @@ describe("article route visibility", () => {
         ]
       })
     ).toEqual({ kind: "error", statusCode: 500, code: "INTERNAL_ERROR", requestId: "request-500" })
+  })
+
+  it("does not mask a gone metadata provider failure as NOT_FOUND", () => {
+    expect(
+      getGoneArticleRouteState({
+        data: { gone: null },
+        errors: [
+          {
+            message: "Provider unavailable",
+            extensions: { code: "PROVIDER_UNAVAILABLE", requestId: "request-gone-500" }
+          }
+        ]
+      })
+    ).toEqual({ kind: "error", statusCode: 500, code: "PROVIDER_UNAVAILABLE", requestId: "request-gone-500" })
   })
 })

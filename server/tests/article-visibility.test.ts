@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import articleResolver from "../src/graphql/article/resolver"
 import {
   getPublicArticleVisibility,
-  publicArticleInclude,
+  publicArticleSelect,
   publicArticleWhere,
   publicationDatesForStatus
 } from "../src/visibility/article"
@@ -87,8 +87,8 @@ describe("public article visibility", () => {
     })
   })
 
-  it("projects only public author fields before an article enters the public cache", () => {
-    expect(publicArticleInclude.author).toEqual({
+  it("projects only public fields before an article enters the public cache", () => {
+    expect(publicArticleSelect.author).toEqual({
       select: {
         id: true,
         name: true,
@@ -100,31 +100,47 @@ describe("public article visibility", () => {
         updatedAt: true
       }
     })
-    expect(publicArticleInclude.author.select).not.toHaveProperty("email")
-    expect(publicArticleInclude.author.select).not.toHaveProperty("role")
-    expect(publicArticleInclude.author.select).not.toHaveProperty("planTier")
+    expect(publicArticleSelect.author.select).not.toHaveProperty("email")
+    expect(publicArticleSelect.author.select).not.toHaveProperty("role")
+    expect(publicArticleSelect.author.select).not.toHaveProperty("planTier")
+    expect(publicArticleSelect).not.toHaveProperty("archivedByActorId")
+    expect(publicArticleSelect).not.toHaveProperty("archivedByRole")
+    expect(publicArticleSelect).not.toHaveProperty("archiveReason")
+    expect(publicArticleSelect.section.select).not.toHaveProperty("archivedByActorId")
+    expect(publicArticleSelect.tags.select).not.toHaveProperty("createdByActorId")
   })
 
   it("returns only safe metadata for a previously published gone article", async () => {
-    const goneArticle = { ...article("archived"), section: { slug: "articles", name: "Articles" } }
+    const goneArticle = {
+      title: "Article archived",
+      slug: "archived",
+      status: "archived",
+      publishedAt: new Date("2026-09-01T00:00:00.000Z"),
+      article: {
+        archivedAt: new Date("2026-09-10T00:00:00.000Z"),
+        author: { id: "author-1", name: "Author", handle: "author" },
+        section: { slug: "articles", name: "Articles" }
+      }
+    }
     const findUnique = vi.fn().mockResolvedValue(goneArticle)
 
     await expect(
       articleResolver.Query.gone({}, { locale: "ru", sectionSlug: "articles", slug: "archived" }, {
         ...requestContext,
         cache: createCache(),
-        prisma: { article: { findUnique } }
+        prisma: { articleTranslation: { findUnique } }
       } as never)
     ).resolves.toEqual({
       title: goneArticle.title,
-      firstPublishedAt: goneArticle.firstPublishedAt,
-      unpublishedAt: goneArticle.archivedAt,
-      author: goneArticle.author,
-      section: goneArticle.section
+      firstPublishedAt: "2026-09-01T00:00:00.000Z",
+      unpublishedAt: "2026-09-10T00:00:00.000Z",
+      author: goneArticle.article.author,
+      section: goneArticle.article.section
     })
 
     expect(findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { locale_slug: { locale: "ru", slug: "archived" } },
         select: expect.not.objectContaining({ body: true })
       })
     )
@@ -142,7 +158,9 @@ describe("public article visibility", () => {
       } as never)
     ).rejects.toMatchObject({ extensions: { code: "NOT_FOUND", entity: "article" } })
 
-    expect(findUnique).toHaveBeenCalledWith(expect.objectContaining({ include: publicArticleInclude }))
+    expect(findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining(publicArticleSelect) })
+    )
     expect(cache.set).not.toHaveBeenCalled()
   })
 

@@ -40,7 +40,7 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
-import { publicArticleWhere, publicUserSelect } from "../../visibility/article"
+import { publicArticleSelect, publicArticleWhere, publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
@@ -88,7 +88,7 @@ export default {
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { publishedAt: "desc" },
-            include: { section: true }
+            select: publicArticleSelect
           })
 
           const response = {

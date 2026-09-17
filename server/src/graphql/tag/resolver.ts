@@ -19,7 +19,7 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveTag, createTag, mergeTags, restoreTag, updateTag } from "../../taxonomy/service"
-import { publicArticleInclude, publicArticleWhere, publicUserSelect } from "../../visibility/article"
+import { publicArticleSelect, publicArticleWhere, publicTagSelect, publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
@@ -31,7 +31,7 @@ export default {
           tags: [`tag:${args.slug}`],
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
-        () => ctx.prisma.tag.findUnique({ where: { slug: args.slug } })
+        () => ctx.prisma.tag.findUnique({ where: { slug: args.slug }, select: publicTagSelect })
       )
     },
 
@@ -60,7 +60,7 @@ export default {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       const response = {

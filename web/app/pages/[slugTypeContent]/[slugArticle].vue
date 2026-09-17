@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { GET_ARTICLE, GET_GONE_ARTICLE } from "~/query"
-  import { getArticleRouteState } from "~/utils/articleRouteVisibility"
+  import { getArticleRouteState, getGoneArticleRouteState } from "~/utils/articleRouteVisibility"
 
   definePageMeta({
     layout: "default"
@@ -46,10 +46,15 @@
       sectionSlug: sectionSlug.value,
       slug: slugArticle.value
     })
-    if (result.errors?.length || !result.data?.gone) {
-      throw createError({ statusCode: 404, statusMessage: "NOT_FOUND" })
+    const goneState = getGoneArticleRouteState(result)
+    if (goneState.kind === "error") {
+      throw createError({
+        statusCode: goneState.statusCode,
+        statusMessage: goneState.code,
+        data: goneState.requestId ? { requestId: goneState.requestId } : undefined
+      })
     }
-    return result.data.gone
+    return goneState.article
   }
 
   if (state.value.kind === "gone") {
@@ -59,11 +64,14 @@
     )
     if (goneError.value) throw goneError.value
     goneArticle.value = goneData.value ?? null
+    useSeoMeta({ title: () => goneArticle.value?.title ?? t("article.goneTitle") })
   }
 
   const formattedFirstPublishedAt = computed(() => {
     if (!goneArticle.value?.firstPublishedAt) return null
-    return new Intl.DateTimeFormat(locale.value).format(new Date(goneArticle.value.firstPublishedAt))
+    return new Intl.DateTimeFormat(locale.value, { timeZone: "UTC" }).format(
+      new Date(goneArticle.value.firstPublishedAt)
+    )
   })
 </script>
 

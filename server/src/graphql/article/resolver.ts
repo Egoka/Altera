@@ -22,7 +22,7 @@ import { readThroughPublicCache } from "../../cache/read-through"
 import {
   ensurePublicArticleVisible,
   getPublicArticleVisibility,
-  publicArticleInclude,
+  publicArticleSelect,
   publicArticleWhere,
   publicationDatesForStatus
 } from "../../visibility/article"
@@ -179,10 +179,12 @@ export default {
         async () => {
           const article = await ctx.prisma.article.findUnique({
             where: { slug: args.slug },
-            include: publicArticleInclude
+            select: { ...publicArticleSelect, firstPublishedAt: true }
           })
           ensurePublicArticleVisible(article, ctx.requestId)
-          return article
+          const { firstPublishedAt, ...publicArticle } = article
+          void firstPublishedAt
+          return publicArticle
         }
       )
     },
@@ -192,33 +194,38 @@ export default {
       args: { locale: "ru" | "en"; sectionSlug: string; slug: string },
       ctx: GraphQLContext
     ) => {
-      const article = await ctx.prisma.article.findUnique({
-        where: { slug: args.slug },
+      const translation = await ctx.prisma.articleTranslation.findUnique({
+        where: { locale_slug: { locale: args.locale, slug: args.slug } },
         select: {
           title: true,
-          sourceLocale: true,
-          firstPublishedAt: true,
-          archivedAt: true,
+          slug: true,
+          publishedAt: true,
           status: true,
-          author: { select: publicArticleInclude.author.select },
-          section: true
+          article: {
+            select: {
+              archivedAt: true,
+              author: { select: publicArticleSelect.author.select },
+              section: { select: publicArticleSelect.section.select }
+            }
+          }
         }
       })
 
       if (
-        getPublicArticleVisibility(article) !== "archived" ||
-        article?.sourceLocale !== args.locale ||
-        article.section?.slug !== args.sectionSlug
+        getPublicArticleVisibility(
+          translation ? { status: translation.status, firstPublishedAt: translation.publishedAt } : null
+        ) !== "archived" ||
+        translation?.article.section?.slug !== args.sectionSlug
       ) {
         throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
       }
 
       return {
-        title: article.title,
-        firstPublishedAt: article.firstPublishedAt,
-        unpublishedAt: article.archivedAt,
-        author: article.author,
-        section: article.section
+        title: translation.title,
+        firstPublishedAt: translation.publishedAt!.toISOString(),
+        unpublishedAt: translation.article.archivedAt?.toISOString() ?? null,
+        author: translation.article.author,
+        section: translation.article.section
       }
     },
 
@@ -232,7 +239,7 @@ export default {
 
       const article = await ctx.prisma.article.findUnique({
         where: publicArticleWhere({ slug: args.slug }),
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       if (!article) {
@@ -251,18 +258,18 @@ export default {
         }),
         take: 5,
         orderBy: { publishedAt: "desc" },
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       // Получаем связанные статьи (по автору и типу контента)
       const relatedArticles = await ctx.prisma.article.findMany({
         where: publicArticleWhere({
           slug: { not: args.slug },
-          OR: [{ authorId: article.authorId }, { sectionId: article.sectionId }]
+          OR: [{ authorId: article.author.id }, { sectionId: article.section?.id ?? null }]
         }),
         take: 10,
         orderBy: { publishedAt: "desc" },
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       // Рассчитываем статистику статьи
@@ -323,7 +330,7 @@ export default {
         }),
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, {
@@ -362,7 +369,7 @@ export default {
         }),
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, {
@@ -421,7 +428,7 @@ export default {
         where: publicArticleWhere(),
         orderBy: { publishedAt: "desc" },
         take: limit,
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] })
@@ -459,7 +466,7 @@ export default {
         where: where,
         orderBy: { publishedAt: "desc" },
         take: limit,
-        include: publicArticleInclude
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] })
@@ -868,16 +875,22 @@ export default {
         if (status === "published") {
           const publishedAt = new Date()
           updateData.publishedAt = publishedAt
+          await ctx.prisma.$transaction([
+            ctx.prisma.article.updateMany({
+              where: { id: { in: ids }, firstPublishedAt: null },
+              data: { firstPublishedAt: publishedAt }
+            }),
+            ctx.prisma.article.updateMany({
+              where: { id: { in: ids } },
+              data: updateData
+            })
+          ])
+        } else {
           await ctx.prisma.article.updateMany({
-            where: { id: { in: ids }, firstPublishedAt: null },
-            data: { firstPublishedAt: publishedAt }
+            where: { id: { in: ids } },
+            data: updateData
           })
         }
-
-        await ctx.prisma.article.updateMany({
-          where: { id: { in: ids } },
-          data: updateData
-        })
 
         // Получаем обновленные статьи
         const updatedArticles = await ctx.prisma.article.findMany({
