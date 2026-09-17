@@ -10,7 +10,7 @@
 <template>
   <div>
     <AppHeader />
-    <main class="size-56 bg-primary">
+    <main class="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <slot />
     </main>
     <AppFooter />
