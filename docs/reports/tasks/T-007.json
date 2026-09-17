@@ -8,7 +8,7 @@
     "sha": "772a87fd573b82a364d9029169c5b563375a6115"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "720c198567b35b7e576ee0182fe346bafd13c822",
+  "tested_sha": "241edde914b9ee23f1fa1353f300daee5cfb090c",
   "branch": "server/t007-deterministic-seed",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t007-deterministic-seed",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -17,7 +17,7 @@
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "Two consecutive prisma db seed commands exited 0; PostgreSQL integration test called seedDatabase twice and verified unchanged entity counts"
+      "evidence": "Two consecutive prisma db seed commands exited 0; the CI-wired PostgreSQL integration test invokes the public CLI twice and verifies unchanged entity counts"
     },
     {
       "id": "AC-2",
@@ -25,7 +25,14 @@
       "evidence": "SQL after the second run returned one service account for each of editor/moderator/analyst/admin/owner and one article for each of 7 ArticleStatus values"
     }
   ],
-  "pr": null,
+  "pr": {
+    "number": 111,
+    "url": "https://github.com/Egoka/Altera/pull/111",
+    "base_ref": "app",
+    "base_sha": "2979101be6c630d53d6796594253f1765913d0d5",
+    "head_sha": "241edde914b9ee23f1fa1353f300daee5cfb090c",
+    "merge_sha": null
+  },
   "review": null,
   "deployment": {
     "required": false,
@@ -33,7 +40,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-007.md",
-    "sha256": "e944c3df9cfe550efcf54fcff870a485c40f51c24ab56220be6f962e83d9317e"
+    "sha256": "f9f710e52c2f256af5a36a87fa2297d65664874eaffe3aac6602a57d412841be"
   },
   "usage": null
 }

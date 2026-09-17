@@ -4,7 +4,7 @@
 - **Источник**: `docs/backlog/tasks/T-007-deterministic-seed.md`, blob
   `772a87fd573b82a364d9029169c5b563375a6115`
 - **Baseline**: `2979101be6c630d53d6796594253f1765913d0d5` (`origin/app`)
-- **Проверенная ревизия реализации**: `720c198567b35b7e576ee0182fe346bafd13c822`
+- **Проверенная ревизия реализации**: `241edde914b9ee23f1fa1353f300daee5cfb090c`
 - **Ветка**: `server/t007-deterministic-seed`
 - **Implementer**: `b0f3bc32-dd95-471e-b40e-517aaf83edf0`
 - **Run**: `01a0afa1-7898-76e9-a800-77d7ba51384e`
@@ -13,8 +13,9 @@
 
 - `prisma db seed` подключён к `server/seed/seed.ts` через Prisma-конфигурацию в
   `server/package.json`.
-- Seed создаёт обычного читателя, авторов с планами `standard` и `pro`, а также отдельные
-  служебные записи `editor`, `moderator`, `analyst`, `admin` и первого `owner`.
+- Seed создаёт обычного читателя, авторов с планами `standard` и `pro`, их детерминированные
+  неплатёжные `PlanGrant`, а также отдельные служебные записи `editor`, `moderator`, `analyst`,
+  `admin` и первого `owner`.
 - Добавлены шесть утверждённых рубрик продукта, пять форматов ADR-0005 и три демонстрационных
   тега. Реестры неизменяемых handle/slug заполняются до связанных сущностей.
 - Для каждого значения `ArticleStatus` модели v2 создаётся один материал с исходной русской
@@ -41,7 +42,8 @@
 
 - RED: целевой Vitest suite не загрузился из-за отсутствующего `server/seed/seed.ts`.
 - Целевой PostgreSQL-тест после реализации: 1 passed, exit 0; внутри одной чистой базы seed
-  вызывается дважды и проверяются неизменные счётчики, роли, таксономия и полный enum статусов.
+  дважды запускается через публичную команду `prisma db seed` и проверяет неизменные счётчики,
+  гранты авторов, роли, таксономию и полный enum статусов. Тест подключён к CI `server-smoke`.
 - `prisma validate`: exit 0.
 - `pnpm format`: exit 0.
 - `pnpm lint`: exit 0.
@@ -49,6 +51,53 @@
   141 tests passed, 19 skipped; web — 17 files и 132 tests passed.
 - `pnpm --filter server run build:ci`: exit 0.
 - `git diff --check`: exit 0.
+
+SQL после второго CLI-запуска:
+
+```sql
+SELECT role::text AS service_role, COUNT(*) AS count
+FROM users
+WHERE "isServiceAccount"
+GROUP BY role
+ORDER BY role;
+
+SELECT status::text AS article_status, COUNT(*) AS count
+FROM articles
+GROUP BY status
+ORDER BY status;
+
+SELECT
+  (SELECT COUNT(*) FROM sections) AS sections,
+  (SELECT COUNT(*) FROM formats) AS formats,
+  (SELECT COUNT(*) FROM tags) AS tags,
+  (SELECT COUNT(*) FROM plan_grants) AS plan_grants,
+  (SELECT COUNT(*) FROM users WHERE role = 'reader' AND NOT "isServiceAccount") AS readers,
+  (SELECT COUNT(*) FROM users WHERE role = 'author' AND NOT "isServiceAccount") AS authors;
+```
+
+```text
+ service_role | count
+--------------+------
+ editor       | 1
+ moderator    | 1
+ analyst      | 1
+ admin        | 1
+ owner        | 1
+
+ article_status | count
+----------------+------
+ draft          | 1
+ ai_check       | 1
+ review         | 1
+ in_review      | 1
+ rework         | 1
+ published      | 1
+ archived       | 1
+
+ sections | formats | tags | plan_grants | readers | authors
+----------+---------+------+-------------+---------+--------
+ 6        | 5       | 3    | 2           | 1       | 2
+```
 
 ## Остаток
 
