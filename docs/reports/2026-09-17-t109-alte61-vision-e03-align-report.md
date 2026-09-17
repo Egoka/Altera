@@ -3,7 +3,7 @@
 - **Дата**: 2026-09-17
 - **Задача**: T-109 / ALTE-61
 - **Ветка**: docs/t109-vision-e03-align
-- **Tested SHA**: (фиксируется после коммита)
+- **Tested SHA**: 0323bbf0ccc1ac8e0fe73287b262774bfbc56d75
 - **Actor / run**: e682f2d5-7541-475e-a0b4-ef0b8ae885f4 (хранитель документации)
 - **Run outcome**: success
 
