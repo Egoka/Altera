@@ -1,11 +1,10 @@
 # Модель данных: целевая схема и путь от текущей
 
-- **Ревизия**: 3 (2026-09-14), заменяет ревизию 2 (2026-09-06).
-- **Статус**: синхронизировано с журналом Г1–Г9 (T-109).
-- **Основание**: `server/prisma/schema.prisma` и четыре миграции июля 2025
-  [ФАКТ: `docs/vision/00-reality-check.md` §2]; содержимое прод-базы не проверялось
-  [НЕ ПРОВЕРЕНО]; ADR-0034…0046 поверх ADR-0001…ADR-0010, ADR-0027; журнал §21.15–16,
-  §25.6, §26.5, §27.6, §27.7, §29.5, §29.11, §29.13, #41.
+- **Ревизия**: 4 (2026-09-17), заменяет ревизию 3 (2026-09-14).
+- **Статус**: синхронизировано с журналом Г1–Г9 и миграциями E-03 (T-109, ALTE-61).
+- **Основание**: `server/prisma/schema.prisma` и миграции E-03 (T-011–T-019); ADR-0034…0046
+  поверх ADR-0001…ADR-0010, ADR-0027; журнал §21.15–16, §25.6, §26.5, §27.6, §27.7,
+  §29.5, §29.11, §29.13, #41.
 - Этот документ владеет сущностями, полями, enum, индексами, инвариантами и миграциями.
   Права — в `04-roles-and-access.md`, процесс редактирования — в `05-editor.md`.
 - Формат: таблицы полей для центральных сущностей, псевдо-схема Prisma для остальных, SQL
@@ -13,6 +12,19 @@
   роадмапа и только с именем.
 
 ## История ревизий
+
+### Ревизия 3 → 4 (2026-09-17, T-109/ALTE-61, согласование с E-03 миграциями)
+
+| Было (ревизия 3) | Стало (ревизия 4) | Источник |
+|---|---|---|
+| `enum ArchiveMode { block delete }` | `enum AccountArchiveMode { self admin emergency }` | миграция `user_account_archive_state`; журнал #4, #30, #48 |
+| `User.archiveMode ArchiveMode?` | `User.archiveMode AccountArchiveMode?` | то же |
+| `model ErrorRecord` (упрощённая модель: code/message/context/status) | `model BackendError` с `BackendErrorStatusHistory`; `BackendErrorService`, `BackendErrorWorkStatus` enums | T-019, `admin_operational_records` |
+| `model SentEmail` (упрощённая модель: toEmail/subject/body/status) | `model MailMessage` + `MailDeliveryEvent`; `MailDeliveryStatus` enum | T-019, `admin_operational_records` |
+| Нет `model Job`, `model JobAttempt` | Очередь фоновых задач с историей попыток; `JobStatus` enum | T-019, `admin_operational_records` |
+| Нет `model AiProcess`, `model AiCostAggregate` | Лог AI-процессов и агрегаты стоимости; `AiProcessKind`, `AiProcessStatus` enums | T-019, `admin_operational_records` |
+| Нет `model LegalText`, `model UserLegalConsent` | Версионируемые юридические тексты и согласия пользователя; `LegalTextKind`, `LegalTextStatus` enums | T-019, `admin_operational_records` |
+| Нет `model EmailChangeRequest` | Запрос на смену почты с хэшем кода и сроком | T-013, `user_profile_handle_locale`; журнал §25.8 |
 
 ### Ревизия 2 → 3 (2026-09-14, T-109, журнал Г5b–Г9)
 
@@ -92,7 +104,7 @@
 | archivedAt | DateTime? | да | — | Блокировка или удаление = архивирование (журнал #4, #30, #48) |
 | archivedByActorId | String? → User | да | — | Кто выполнил архивирование |
 | archiveReason | String? | да | — | Причина: блокировка, самостоятельное удаление и т. д. |
-| archiveMode | ArchiveMode? | да | — | `block / delete`; определяет правила восстановления |
+| archiveMode | AccountArchiveMode? | да | — | `self / admin / emergency`; кто выполнил архивирование |
 | deletedAt | DateTime? | да | — | Аккаунт анонимизирован; запись остаётся как «надгробие» |
 | lastLoginAt | DateTime? | да | — | |
 | consentVersion | String? | да | — | Версия оферты и политики ПД, с которой согласился (ADR-0028) |
@@ -124,6 +136,20 @@
 | createdAt, lastUsedAt | DateTime | нет | now() | |
 
 Индексы: `@@unique([tokenHash])`, `@@index([userId])`, `@@index([previousTokenHash])`.
+
+#### EmailChangeRequest (`email_change_requests`) — журнал §25.8
+
+```prisma
+model EmailChangeRequest {
+  id        String   @id @default(uuid())
+  userId    String   @unique               // → User, Cascade; один активный запрос на пользователя
+  newEmail  String
+  codeHash  String   @db.VarChar(64)       // sha256 кода; не хранить сырой код
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@map("email_change_requests")
+}
+```
 
 #### HandleHistory (`handle_history`)
 
@@ -380,7 +406,7 @@ enum MediaKind        { image }
 enum MediaLicense     { own cc_by cc_by_sa cc_by_nc cc0 public_domain permission }
 enum ReportReason     { copyright illegal spam personal_data other }
 enum ReportStatus     { open resolved dismissed }
-enum ArchiveMode      { block delete }                          // журнал #4, #30, #48
+enum AccountArchiveMode { self admin emergency }                 // журнал #4, #30, #48; #48=emergency
 ```
 
 ### 1.2. Аудит (этап 1) и замечания (этап 4)
@@ -697,32 +723,188 @@ model ReviewMessage {
   @@map("review_messages")
 }
 
-// Записи ошибок со статусами (§27.7) — этап 1
-enum ErrorStatus { new in_progress resolved }
-model ErrorRecord {
-  id          String      @id @default(uuid())
-  code        String
-  message     String
-  context     Json?
-  status      ErrorStatus @default(new)
-  resolvedById String?
-  resolvedAt  DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  @@index([status, createdAt(sort: Desc)])
-  @@map("error_records")
+// Фоновые задачи (§13.1) — этап 1; T-019
+enum JobStatus { queued running completed failed cancelled }
+model Job {
+  id           String     @id @default(uuid())
+  kind         String
+  status       JobStatus  @default(queued)
+  objectType   String?
+  objectId     String?
+  parameters   Json?
+  availableAt  DateTime   @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  cancelledAt  DateTime?
+  attemptCount Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  @@index([status, availableAt])
+  @@index([kind, status])
+  @@index([objectType, objectId])
+  @@map("jobs")
 }
 
-// История отправленных писем (§27.6) — этап 3
-model SentEmail {
-  id         BigInt   @id @default(autoincrement())
-  toEmail    String
-  subject    String
-  body       String?
-  status     String                           // delivered / bounced / failed
-  sentAt     DateTime @default(now())
-  @@index([toEmail, sentAt(sort: Desc)])
-  @@map("sent_emails")
+model JobAttempt {
+  id              String    @id @default(uuid())
+  jobId           String                        // → Job, Cascade
+  number          Int
+  status          JobStatus @default(queued)
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  errorRequestId  String?
+  errorClass      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  @@unique([jobId, number])
+  @@map("job_attempts")
+}
+
+// AI-процессы (§13.2) — этап 1; T-019
+enum AiProcessKind   { content_check translation alt_generation }
+enum AiProcessStatus { created started running completed failed }
+model AiProcess {
+  id                  String          @id @default(uuid())
+  jobId               String?                       // → Job, SetNull
+  kind                AiProcessKind
+  status              AiProcessStatus @default(created)
+  objectType          String
+  objectId            String
+  model               String?
+  promptVersion       String?
+  verdict             String?
+  reasons             Json?
+  providerErrorClass  String?
+  startedAt           DateTime?
+  finishedAt          DateTime?
+  durationMs          Int?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  @@index([kind, status, createdAt])
+  @@index([objectType, objectId])
+  @@map("ai_processes")
+}
+
+/// Стоимость хранится только в агрегатах, не у отдельного AI-процесса.
+model AiCostAggregate {
+  id             String        @id @default(uuid())
+  bucketStart    DateTime
+  bucketEnd      DateTime
+  kind           AiProcessKind
+  totalCostMinor BigInt
+  processCount   Int
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  @@unique([bucketStart, bucketEnd, kind])
+  @@map("ai_cost_aggregates")
+}
+
+// История писем (§27.6, §13.1) — этап 1; T-019
+enum MailDeliveryStatus { queued sent delivered bounced failed }
+model MailMessage {
+  id                  String             @id @default(uuid())
+  jobId               String?                        // → Job, SetNull
+  template            String
+  recipientEmail      String
+  subject             String
+  sanitizedBody       String                         // очищено: нет токенов и секретов
+  status              MailDeliveryStatus @default(queued)
+  objectType          String?
+  objectId            String?
+  provider            String?
+  messageId           String?
+  deliveryErrorClass  String?
+  queuedAt            DateTime           @default(now())
+  sentAt              DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  @@index([status, createdAt])
+  @@index([recipientEmail])
+  @@map("mail_messages")
+}
+
+model MailDeliveryEvent {
+  id              String             @id @default(uuid())
+  mailMessageId   String                              // → MailMessage, Cascade
+  status          MailDeliveryStatus
+  providerEventId String?
+  errorClass      String?
+  occurredAt      DateTime           @default(now())
+  @@index([mailMessageId, occurredAt])
+  @@map("mail_delivery_events")
+}
+
+// Сгруппированные записи ошибок бэкенда (§27.7) — этап 1; T-019
+enum BackendErrorService    { http worker scheduler ai mail storage }
+enum BackendErrorWorkStatus { new_record in_progress resolved }
+model BackendError {
+  id                String                  @id @default(uuid())
+  signature         String                  @unique
+  service           BackendErrorService
+  code              String
+  errorClass        String?
+  sanitizedMessage  String
+  route             String?
+  requestMethod     String?
+  requestId         String?
+  sanitizedStack    String?
+  actorRole         Role?
+  jobId             String?                             // → Job, SetNull
+  workStatus        BackendErrorWorkStatus  @default(new_record)
+  assignedActorId   String?
+  assignedActorRole Role?
+  firstSeenAt       DateTime               @default(now())
+  lastSeenAt        DateTime               @default(now())
+  occurrenceCount   Int                    @default(1)
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  @@index([workStatus, lastSeenAt])
+  @@index([service, code])
+  @@map("backend_errors")
+}
+
+model BackendErrorStatusHistory {
+  id                  String                  @id @default(uuid())
+  backendErrorId      String                              // → BackendError, Cascade
+  fromStatus          BackendErrorWorkStatus?
+  toStatus            BackendErrorWorkStatus
+  changedByActorId    String
+  changedByActorRole  Role
+  comment             String?
+  createdAt           DateTime               @default(now())
+  @@index([backendErrorId, createdAt])
+  @@map("backend_error_status_history")
+}
+
+// Юридические тексты и согласия (ADR-0028) — этап 1; T-019
+enum LegalTextKind   { terms privacy cookie content_policy moderation_rules imprint about }
+enum LegalTextStatus { draft published archived }
+model LegalText {
+  id                  String          @id @default(uuid())
+  kind                LegalTextKind
+  locale              Locale
+  version             Int
+  status              LegalTextStatus @default(draft)
+  body                String
+  summaryOfChanges    String
+  isMaterial          Boolean         @default(false)
+  publishedAt         DateTime?
+  publishedByActorId  String?
+  publishedByRole     Role?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  @@unique([kind, locale, version])
+  @@index([kind, locale, status])
+  @@map("legal_texts")
+}
+
+model UserLegalConsent {
+  id          String    @id @default(uuid())
+  userId      String                          // → User, Cascade
+  legalTextId String                          // → LegalText, Restrict
+  acceptedAt  DateTime  @default(now())
+  @@unique([userId, legalTextId])
+  @@map("user_legal_consents")
 }
 
 // Исключения владельца со сроком (#54) — этап 1
@@ -838,6 +1020,7 @@ Prisma не имеет down-миграций: «откат» — либо нов
 | M8 | `media_assets` | 1 | `MediaKind`, `MediaLicense`, таблица; `articles.coverAssetId`, `users.avatarAssetId` | нет (обложки — dev-скрипт импорта, если есть реальные) | drop колонок и таблицы |
 | M9a | `article_status_add_ai_check` | 1 | значения `ai_check`, `in_review`, `rework` | нет | оставить |
 | M9 | `billing_reports_bookmarks_ai_audit` | 1 | биллинг раздела 1.4, `plan_grants`, `reports`, `bookmarks`, `article_ai_checks`, `audit_log`, `articles.access`, `submittedAt`/`appealedAt`; enum | грант `standard` для `_v2_legacy_authors`, `planTier`/`planUntil` | `DROP` (до первого платежа) |
+| M9b | `admin_operational_records` | 1 | `Job`, `JobAttempt`, `AiProcess`, `AiCostAggregate`, `MailMessage`, `MailDeliveryEvent`, `BackendError`, `BackendErrorStatusHistory`, `LegalText`, `UserLegalConsent`; 9 enum значений | нет | `DROP` |
 | M10 | `review_notes` | 4 | 1 таблица | нет | `DROP` |
 | M11 | `drop_legacy_columns` | конец 1 | `DROP COLUMN legacyBody, legacyFeaturedImage` | нет; **только после** `verify:legacy-bodies` = 0 расхождений и импорта обложек | только дамп |
 | M12 | `reads_and_ranking` | 2 | `engagement_events`, `article_read_daily`, `read_exclusions`, `article_scores`, `author_scores`, `ranking_configs` | конфигурация рейтинга по умолчанию (версия 1) | `DROP` |
