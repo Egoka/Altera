@@ -43,7 +43,9 @@
   },
   "deployment": {
     "required": true,
-    "reason": "Серверная миграция БД: требует deployment verification на Render"
+    "reason": "Серверная миграция БД: требует deployment verification на Render",
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0af54-9369-7ecf-a21c-c224572743bf"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-015.md",

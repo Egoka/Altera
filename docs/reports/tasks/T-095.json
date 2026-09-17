@@ -41,7 +41,9 @@
   },
   "deployment": {
     "required": false,
-    "reason": "Web-only i18n changes (web/ only); no server, packages or infrastructure files modified"
+    "reason": "Web-only i18n changes (web/ only); no server, packages or infrastructure files modified; deploy probe performed by release agent after merge",
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0af54-9369-7ecf-a21c-c224572743bf"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-095.md",
