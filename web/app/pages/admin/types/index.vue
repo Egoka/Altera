@@ -213,7 +213,7 @@
 </script>
 
 <template>
-  <Table
+  <AppTable
     :dataSource="data"
     :columns="columns"
     search
@@ -251,7 +251,7 @@
         {{ value }}
       </span>
     </template>
-  </Table>
+  </AppTable>
 </template>
 
 <style scoped></style>
