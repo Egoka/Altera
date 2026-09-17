@@ -18,6 +18,7 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveSection, createSection, restoreSection, updateSection } from "../../taxonomy/service"
+import { publicArticleWhere } from "../../visibility/article"
 
 export default {
   Query: {
@@ -25,7 +26,7 @@ export default {
       const sections = await ctx.prisma.section.findMany({
         where: {
           status: "active",
-          articles: { some: { status: "published" } }
+          articles: { some: publicArticleWhere() }
         },
         orderBy: { order: "asc" },
         select: {
@@ -34,7 +35,7 @@ export default {
           nameEn: true,
           slug: true,
           order: true,
-          _count: { select: { articles: { where: { status: "published" } } } }
+          _count: { select: { articles: { where: publicArticleWhere() } } }
         }
       })
 
@@ -72,16 +73,10 @@ export default {
       }
 
       const totalCount = await ctx.prisma.article.count({
-        where: {
-          section: { slug: sectionSlug },
-          status: "published"
-        }
+        where: publicArticleWhere({ section: { slug: sectionSlug } })
       })
       const articles = await ctx.prisma.article.findMany({
-        where: {
-          section: { slug: sectionSlug },
-          status: "published"
-        },
+        where: publicArticleWhere({ section: { slug: sectionSlug } }),
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { publishedAt: "desc" },
@@ -113,29 +108,22 @@ export default {
       }
 
       const totalArticles = await ctx.prisma.article.count({
-        where: {
-          section: { slug: sectionSlug },
-          status: "published"
-        }
+        where: publicArticleWhere({ section: { slug: sectionSlug } })
       })
 
       const oneMonthAgo = new Date()
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
       const articlesThisMonth = await ctx.prisma.article.count({
-        where: {
+        where: publicArticleWhere({
           section: { slug: sectionSlug },
-          status: "published",
           publishedAt: { gte: oneMonthAgo }
-        }
+        })
       })
 
       // Получаем популярные теги для этого типа контента
       const articlesWithTags = await ctx.prisma.article.findMany({
-        where: {
-          section: { slug: sectionSlug },
-          status: "published"
-        },
+        where: publicArticleWhere({ section: { slug: sectionSlug } }),
         select: { tags: { select: { name: true, slug: true } } }
       })
 
@@ -157,10 +145,7 @@ export default {
       const topAuthors = await ctx.prisma.user.findMany({
         where: {
           articles: {
-            some: {
-              section: { slug: sectionSlug },
-              status: "published"
-            }
+            some: publicArticleWhere({ section: { slug: sectionSlug } })
           }
         },
         take: 5,
@@ -173,10 +158,7 @@ export default {
 
       // Рассчитываем среднее время чтения
       const articlesWithBody = await ctx.prisma.article.findMany({
-        where: {
-          section: { slug: sectionSlug },
-          status: "published"
-        },
+        where: publicArticleWhere({ section: { slug: sectionSlug } }),
         select: { body: true }
       })
 

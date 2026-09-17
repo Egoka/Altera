@@ -169,7 +169,10 @@
     "bookmark": "Bookmark",
     "comments": "Comments",
     "noComments": "No comments yet",
-    "addComment": "Add Comment"
+    "addComment": "Add Comment",
+    "goneTitle": "This article has been withdrawn",
+    "goneDescription": "This article is no longer publicly available.",
+    "goneHome": "Go to the home page"
   },
   "reading": {
     "translation": "Translation",

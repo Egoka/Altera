@@ -40,6 +40,7 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
+import { publicArticleWhere } from "../../visibility/article"
 
 export default {
   Query: {
@@ -76,9 +77,9 @@ export default {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
 
-          const totalCount = await ctx.prisma.article.count({ where: { authorId: author.id, status: "published" } })
+          const totalCount = await ctx.prisma.article.count({ where: publicArticleWhere({ authorId: author.id }) })
           const articles = await ctx.prisma.article.findMany({
-            where: { authorId: author.id, status: "published" },
+            where: publicArticleWhere({ authorId: author.id }),
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { publishedAt: "desc" },
@@ -113,22 +114,21 @@ export default {
           }
 
           const totalArticles = await ctx.prisma.article.count({
-            where: { authorId: author.id, status: "published" }
+            where: publicArticleWhere({ authorId: author.id })
           })
 
           const oneMonthAgo = new Date()
           oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
           const articlesThisMonth = await ctx.prisma.article.count({
-            where: {
+            where: publicArticleWhere({
               authorId: author.id,
-              status: "published",
               publishedAt: { gte: oneMonthAgo }
-            }
+            })
           })
 
           const articlesWithTags = await ctx.prisma.article.findMany({
-            where: { authorId: author.id, status: "published" },
+            where: publicArticleWhere({ authorId: author.id }),
             select: { tags: { select: { name: true, slug: true } } }
           })
 

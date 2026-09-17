@@ -19,6 +19,7 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveTag, createTag, mergeTags, restoreTag, updateTag } from "../../taxonomy/service"
+import { publicArticleWhere } from "../../visibility/article"
 
 export default {
   Query: {
@@ -52,16 +53,10 @@ export default {
       }
 
       const totalCount = await ctx.prisma.article.count({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        }
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } })
       })
       const articles = await ctx.prisma.article.findMany({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        },
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } }),
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { publishedAt: "desc" },
@@ -93,31 +88,24 @@ export default {
       }
 
       const totalArticles = await ctx.prisma.article.count({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        }
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } })
       })
 
       const oneMonthAgo = new Date()
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
       const articlesThisMonth = await ctx.prisma.article.count({
-        where: {
+        where: publicArticleWhere({
           tags: { some: { slug: tagSlug } },
-          status: "published",
           publishedAt: { gte: oneMonthAgo }
-        }
+        })
       })
 
       // Получаем популярных авторов для этого тега
       const popularAuthors = await ctx.prisma.user.findMany({
         where: {
           articles: {
-            some: {
-              tags: { some: { slug: tagSlug } },
-              status: "published"
-            }
+            some: publicArticleWhere({ tags: { some: { slug: tagSlug } } })
           }
         },
         take: 5,
@@ -130,10 +118,7 @@ export default {
 
       // Рассчитываем среднее время чтения (примерная оценка)
       const articlesWithBody = await ctx.prisma.article.findMany({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        },
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } }),
         select: { body: true }
       })
 
