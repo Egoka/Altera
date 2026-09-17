@@ -202,7 +202,7 @@ class Live:
     @staticmethod
     def issue_done(issue):
         category = issue.get("status_category")
-        return category == "completed" or (category is None and issue.get("status") == "done")
+        return category in ("completed", "done") or (category is None and issue.get("status") == "done")
 
     @staticmethod
     def write_verified(receipt, state_dir, accepted_at):
