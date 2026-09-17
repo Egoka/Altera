@@ -724,7 +724,7 @@ model ReviewMessage {
 }
 
 // Фоновые задачи (§13.1) — этап 1; T-019
-enum JobStatus { queued running completed failed cancelled }
+enum JobStatus { queued running completed failed cancelled stuck }
 model Job {
   id           String     @id @default(uuid())
   kind         String
@@ -761,7 +761,7 @@ model JobAttempt {
 }
 
 // AI-процессы (§13.2) — этап 1; T-019
-enum AiProcessKind   { content_check translation alt_generation }
+enum AiProcessKind   { check translate profile alt }
 enum AiProcessStatus { created started running completed failed }
 model AiProcess {
   id                  String          @id @default(uuid())
@@ -800,7 +800,7 @@ model AiCostAggregate {
 }
 
 // История писем (§27.6, §13.1) — этап 1; T-019
-enum MailDeliveryStatus { queued sent delivered bounced failed }
+enum MailDeliveryStatus { queued sent bounced failed }
 model MailMessage {
   id                  String             @id @default(uuid())
   jobId               String?                        // → Job, SetNull
@@ -835,7 +835,7 @@ model MailDeliveryEvent {
 }
 
 // Сгруппированные записи ошибок бэкенда (§27.7) — этап 1; T-019
-enum BackendErrorService    { http worker scheduler ai mail storage }
+enum BackendErrorService    { api web worker }
 enum BackendErrorWorkStatus { new_record in_progress resolved }
 model BackendError {
   id                String                  @id @default(uuid())

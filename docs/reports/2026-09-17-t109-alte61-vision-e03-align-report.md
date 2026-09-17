@@ -61,3 +61,15 @@ grep -n "ErrorRecord\|SentEmail\|\bArchiveMode\b\|error_records\|sent_emails" do
 |---|---|
 | `docs/vision/03-data-model.md` | ревизия 3 → 4; E-03 миграции |
 | `docs/reports/2026-09-17-t109-alte61-vision-e03-align-report.md` | создан |
+
+## 5. Исправление после review (rev 2, 2026-09-17)
+
+Независимое review выявило расхождение между enum-значениями в документе и `server/prisma/schema.prisma`.
+Исправлено в этом же коммите:
+
+| Enum | Было в документе | Стало (по schema.prisma) |
+|---|---|---|
+| `JobStatus` | `queued running completed failed cancelled` | `queued running completed failed cancelled stuck` |
+| `AiProcessKind` | `content_check translation alt_generation` | `check translate profile alt` |
+| `MailDeliveryStatus` | `queued sent delivered bounced failed` | `queued sent bounced failed` |
+| `BackendErrorService` | `http worker scheduler ai mail storage` | `api web worker` |
