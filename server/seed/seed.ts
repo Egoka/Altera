@@ -1,6 +1,7 @@
 import { ArticleStatus, PlanTier, PrismaClient, Role, TaxonomyStatus } from "../src/generated/prisma"
 
 const prisma = new PrismaClient()
+const proPlanUntil = new Date("2099-12-31T23:59:59.000Z")
 
 const users = [
   { id: "t007-user-reader", name: "Читатель", handle: "seed-reader", role: Role.reader, planTier: PlanTier.free },
@@ -85,6 +86,7 @@ export async function seedDatabase(client: PrismaClient): Promise<void> {
           create: {
             ...user,
             email: `${user.handle}@example.test`,
+            planUntil: user.planTier === PlanTier.pro ? proPlanUntil : null,
             isServiceAccount: isServiceRole(user.role)
           },
           update: {
@@ -93,7 +95,7 @@ export async function seedDatabase(client: PrismaClient): Promise<void> {
             handle: user.handle,
             role: user.role,
             planTier: user.planTier,
-            planUntil: null,
+            planUntil: user.planTier === PlanTier.pro ? proPlanUntil : null,
             isServiceAccount: isServiceRole(user.role),
             archivedAt: null,
             archiveMode: null,
@@ -107,6 +109,45 @@ export async function seedDatabase(client: PrismaClient): Promise<void> {
           data: { userId: user.id }
         })
       }
+
+      await transaction.planGrant.upsert({
+        where: { id: "t007-grant-author-standard" },
+        create: {
+          id: "t007-grant-author-standard",
+          userId: "t007-user-author-standard",
+          tier: PlanTier.standard,
+          reason: "T-007 base authorship"
+        },
+        update: {
+          userId: "t007-user-author-standard",
+          tier: PlanTier.standard,
+          endsAt: null,
+          grantedById: null,
+          reason: "T-007 base authorship",
+          revokedAt: null
+        }
+      })
+      await transaction.planGrant.upsert({
+        where: { id: "t007-grant-author-pro" },
+        create: {
+          id: "t007-grant-author-pro",
+          userId: "t007-user-author-pro",
+          tier: PlanTier.pro,
+          startsAt: publishedAt,
+          endsAt: proPlanUntil,
+          grantedById: "t007-user-owner",
+          reason: "T-007 manual pro grant"
+        },
+        update: {
+          userId: "t007-user-author-pro",
+          tier: PlanTier.pro,
+          startsAt: publishedAt,
+          endsAt: proPlanUntil,
+          grantedById: "t007-user-owner",
+          reason: "T-007 manual pro grant",
+          revokedAt: null
+        }
+      })
 
       for (const [order, section] of sections.entries()) {
         await transaction.sectionSlugHistory.upsert({

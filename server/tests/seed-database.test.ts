@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import path from "node:path"
 import { ArticleStatus, PrismaClient } from "../src/generated/prisma"
-import { seedDatabase } from "../seed/seed"
 import { describe, expect, it } from "vitest"
 
 const testDatabaseUrl = process.env.T007_TEST_DATABASE_URL
@@ -19,13 +18,18 @@ const prismaFor = (url: string): PrismaClient =>
     datasources: { db: { url } }
   })
 
-const migrateDatabase = (url: string): void => {
-  execFileSync("pnpm", ["exec", "prisma", "migrate", "deploy", "--schema", "prisma/schema.prisma"], {
+const runPrisma = (args: string[], url: string): string =>
+  execFileSync("pnpm", ["exec", "prisma", ...args, "--schema", "prisma/schema.prisma"], {
     cwd: serverRoot,
     env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-    stdio: "pipe"
+    encoding: "utf8"
   })
+
+const migrateDatabase = (url: string): void => {
+  runPrisma(["migrate", "deploy"], url)
 }
+
+const runSeed = (url: string): string => runPrisma(["db", "seed"], url)
 
 const withDatabase = async (run: (url: string) => Promise<void>): Promise<void> => {
   const name = `t007_seed_${randomUUID().replaceAll("-", "")}`
@@ -51,9 +55,10 @@ describe.skipIf(!testDatabaseUrl)("T-007 deterministic seed", () => {
       const prisma = prismaFor(url)
 
       try {
-        await seedDatabase(prisma)
+        expect(runSeed(url)).toContain("T-007 seed completed")
         const firstCounts = {
           users: await prisma.user.count(),
+          planGrants: await prisma.planGrant.count(),
           sections: await prisma.section.count(),
           formats: await prisma.format.count(),
           tags: await prisma.tag.count(),
@@ -62,11 +67,12 @@ describe.skipIf(!testDatabaseUrl)("T-007 deterministic seed", () => {
           revisions: await prisma.articleRevision.count()
         }
 
-        await seedDatabase(prisma)
+        expect(runSeed(url)).toContain("T-007 seed completed")
 
         await expect(
           Promise.all([
             prisma.user.count(),
+            prisma.planGrant.count(),
             prisma.section.count(),
             prisma.format.count(),
             prisma.tag.count(),
@@ -100,6 +106,20 @@ describe.skipIf(!testDatabaseUrl)("T-007 deterministic seed", () => {
 
         await expect(prisma.user.count({ where: { role: "reader", isServiceAccount: false } })).resolves.toBe(1)
         await expect(prisma.user.count({ where: { role: "author", isServiceAccount: false } })).resolves.toBe(2)
+        await expect(
+          prisma.planGrant.findMany({
+            select: { userId: true, tier: true, endsAt: true, grantedById: true },
+            orderBy: { userId: "asc" }
+          })
+        ).resolves.toEqual([
+          {
+            userId: "t007-user-author-pro",
+            tier: "pro",
+            endsAt: new Date("2099-12-31T23:59:59.000Z"),
+            grantedById: "t007-user-owner"
+          },
+          { userId: "t007-user-author-standard", tier: "standard", endsAt: null, grantedById: null }
+        ])
         await expect(prisma.section.count()).resolves.toBe(6)
         await expect(prisma.format.count()).resolves.toBe(5)
         await expect(prisma.tag.count()).resolves.toBeGreaterThan(0)
