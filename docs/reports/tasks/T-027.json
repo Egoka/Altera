@@ -8,15 +8,15 @@
     "sha": "4702ade703df50d5897fd931b74fabe30dc81c6d"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "1b6771ecf22e947d7a49bf8657b0b7f264d284b9",
+  "tested_sha": "d2eec8bbd1a39ee76a3c440ca9c2e2985561d22e",
   "branch": "server/t027-visibility",
-  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
   "implementer_run_id": "01a0afcd-8383-7e4d-a0e8-945fbd9e26ac",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "server 152 passed / 19 skipped; web 138 passed; curl: translated withdrawn slug returned HTTP/1.1 410 Gone; CI run 35246287438 (success)"
+      "evidence": "server 152 passed / 19 skipped; web 138 passed; curl: translated withdrawn slug returned HTTP/1.1 410 Gone; CI run 35240860713 (success)"
     },
     {
       "id": "AC-2",
@@ -28,16 +28,11 @@
     "number": 112,
     "url": "https://github.com/Egoka/Altera/pull/112",
     "base_ref": "app",
-    "base_sha": "aa530a5ae9873678c9bb78d1da0dbed5b9fd6d36",
-    "head_sha": "1b6771ecf22e947d7a49bf8657b0b7f264d284b9",
+    "base_sha": "2979101be6c630d53d6796594253f1765913d0d5",
+    "head_sha": "d2eec8bbd1a39ee76a3c440ca9c2e2985561d22e",
     "merge_sha": null
   },
-  "review": {
-    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
-    "sha": "1b6771ecf22e947d7a49bf8657b0b7f264d284b9",
-    "verdict": null
-  },
+  "review": null,
   "deployment": {
     "required": true,
     "environment": "development",
@@ -47,7 +42,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-027.md",
-    "sha256": "cf2a1417dc490ae1bded172ab2f78756484208550046de6e1f6f44e2fdc9cfb1"
+    "sha256": "95725b8c1a41a59f48de436c95284cb903e76512da6045a44e96fcb58306b2f3"
   },
   "usage": null
 }
