@@ -32,7 +32,12 @@
     "head_sha": "7360ead3d356c9fcfa340fc5032c84950f6b1a87",
     "merge_sha": null
   },
-  "review": {},
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0afbf-3144-7b2f-b619-7eae902dcfc2",
+    "sha": "7360ead3d356c9fcfa340fc5032c84950f6b1a87",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": false,
     "reason": "Seed is an explicit development/test command; no migration or automatic production execution is introduced"

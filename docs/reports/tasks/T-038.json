@@ -32,7 +32,12 @@
     "head_sha": "aa1ff296c918778363bcbb6eb4784c61f0aca9ef",
     "merge_sha": null
   },
-  "review": {},
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0b022-f12c-734e-a111-6f39f3e96ff0",
+    "sha": "aa1ff296c918778363bcbb6eb4784c61f0aca9ef",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "environment": "development",
