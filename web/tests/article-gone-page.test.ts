@@ -7,6 +7,7 @@ import ArticlePage from "../app/pages/[slugTypeContent]/[slugArticle].vue"
 
 const event = {}
 const setResponseStatus = vi.fn()
+const graphQLRequest = vi.fn()
 
 beforeEach(() => {
   vi.stubGlobal("computed", computed)
@@ -24,26 +25,18 @@ beforeEach(() => {
         "article.gonePublished": "Был опубликован"
       })[key] ?? key
   }))
-  vi.stubGlobal(
-    "useGraphQL",
-    vi
-      .fn()
-      .mockResolvedValueOnce({
-        data: { article: null },
-        errors: [{ message: "Entity archived", extensions: { code: "ARCHIVED" } }]
-      })
-      .mockResolvedValueOnce({
-        data: {
-          gone: {
-            title: "Снятый материал",
-            firstPublishedAt: "2026-09-01T00:00:00.000Z",
-            unpublishedAt: "2026-09-10T00:00:00.000Z",
-            author: { name: "Автор", handle: "author" },
-            section: { name: "Культура", slug: "culture" }
-          }
-        }
-      })
-  )
+  graphQLRequest.mockResolvedValue({
+    data: {
+      gone: {
+        title: "Снятый материал",
+        firstPublishedAt: "2026-09-01T00:00:00.000Z",
+        unpublishedAt: "2026-09-10T00:00:00.000Z",
+        author: { name: "Автор", handle: "author" },
+        section: { name: "Культура", slug: "culture" }
+      }
+    }
+  })
+  vi.stubGlobal("useGraphQL", graphQLRequest)
   vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => ({
     data: ref(await handler()),
     error: ref(null)
@@ -56,6 +49,7 @@ beforeEach(() => {
 
 afterEach(() => {
   setResponseStatus.mockReset()
+  graphQLRequest.mockReset()
   vi.unstubAllGlobals()
 })
 
@@ -82,5 +76,6 @@ describe("archived article page", () => {
     expect(wrapper.text()).toContain("Культура")
     expect(wrapper.text()).not.toContain("Entity archived")
     expect(setResponseStatus).toHaveBeenCalledWith(event, 410)
+    expect(graphQLRequest).toHaveBeenCalledTimes(1)
   })
 })

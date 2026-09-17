@@ -92,7 +92,7 @@ class FakeRedisClient implements CacheRedisClient {
   }
 
   private reverseKey(dataKey: string): string {
-    return `cache:v2:key-tags:${dataKey.slice(dataKey.lastIndexOf(":") + 1)}`
+    return `cache:v3:key-tags:${dataKey.slice(dataKey.lastIndexOf(":") + 1)}`
   }
 
   private deleteDataKey(dataKey: string, reverseKey: string): void {
@@ -115,7 +115,7 @@ describe("buildCacheKey", () => {
     })
 
     expect(first).toBe(second)
-    expect(first).toMatch(/^cache:v2:data:query\.latestArticles:[a-f0-9]{64}$/)
+    expect(first).toMatch(/^cache:v3:data:query\.latestArticles:[a-f0-9]{64}$/)
   })
 
   it("различает изменение вложенного аргумента", () => {
@@ -199,7 +199,7 @@ describe("RedisCache", () => {
       ["query.latestArticles", { pagination: { page: 1, limit: 20 } }]
     ] as const) {
       const currentKey = buildCacheKey(namespace, args)
-      const legacyKey = currentKey.replace("cache:v2:", "cache:v1:")
+      const legacyKey = currentKey.replace("cache:v3:", "cache:v2:")
       client.values.set(legacyKey, JSON.stringify({ author: legacyAuthor }))
 
       await expect(cache.get(currentKey)).resolves.toBeNull()
