@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "task_id": "T-109",
+  "issue_id": "01a0ad33-470d-7e81-8f79-2883e3664f5c",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-109-vision-revision.md",
+    "sha": "7644c3b8a9d557d65836adbb6d8a25f669409f1b"
+  },
+  "baseline_sha": "48eede0d4a710491169872b6a760133135f83410",
+  "tested_sha": "b662fe8dd69c789161404e4227c8e30a36cf4ac5",
+  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+  "implementer_run_id": "01a0ad67-2bea-7710-b065-339eb4251a6a",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "grep по устаревшим правилам и E-03 паттернам даёт 0 попаданий вне таблиц «было → стало»; 03-data-model.md ревизия 4 — enum-значения и модели соответствуют schema.prisma (review подтвердил)"
+    }
+  ],
+  "pr": {
+    "number": 97,
+    "url": "https://github.com/Egoka/Altera/pull/97",
+    "base_ref": "app",
+    "base_sha": "c2143f4ea669810ac3566416f8a91cbf422f84ce",
+    "head_sha": "b662fe8dd69c789161404e4227c8e30a36cf4ac5",
+    "merge_sha": "32101fa3b93c5486fe23be08f96157d52984b3b2"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ae44-f325-76dd-94b0-ccb9970cf5f3",
+    "sha": "b662fe8dd69c789161404e4227c8e30a36cf4ac5",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Docs-only task — no server or package files changed"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-109.md",
+    "sha256": "fdabec553ff645065e3796a996453900642b75b755fb41ab98223b44df3495e0"
+  },
+  "usage": null
+}
