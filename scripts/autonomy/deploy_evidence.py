@@ -34,7 +34,7 @@ def render_deploy(messages, config, now, run_id=None):
             continue
         try:
             stamp = dt.datetime.fromisoformat(message["created_at"].replace("Z", "+00:00"))
-            if not 0 <= (now-stamp).total_seconds() <= 900:
+            if not 0 <= (now-stamp).total_seconds() <= 3600:
                 continue
             blocks = json.loads(message["output"])
             if not isinstance(blocks, list) or len(blocks) != 1 or blocks[0].get("type") != "text":
