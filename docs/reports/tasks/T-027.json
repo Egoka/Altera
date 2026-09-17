@@ -8,7 +8,7 @@
     "sha": "4702ade703df50d5897fd931b74fabe30dc81c6d"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "f37cd026c5040907e6abab5e43dc53ee92b6ddb9",
+  "tested_sha": "1b6771ecf22e947d7a49bf8657b0b7f264d284b9",
   "branch": "server/t027-visibility",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0afcd-8383-7e4d-a0e8-945fbd9e26ac",
@@ -28,15 +28,15 @@
     "number": 112,
     "url": "https://github.com/Egoka/Altera/pull/112",
     "base_ref": "app",
-    "base_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-    "head_sha": "f37cd026c5040907e6abab5e43dc53ee92b6ddb9",
+    "base_sha": "9d2940d9cd788d4c6ac869521c8bbf9e0dc38077",
+    "head_sha": "1b6771ecf22e947d7a49bf8657b0b7f264d284b9",
     "merge_sha": null
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": "01a0b009-7126-7170-b16e-372f7f0708ab",
-    "sha": "f37cd026c5040907e6abab5e43dc53ee92b6ddb9",
-    "verdict": "approved"
+    "run_id": null,
+    "sha": "1b6771ecf22e947d7a49bf8657b0b7f264d284b9",
+    "verdict": null
   },
   "deployment": {
     "required": true,

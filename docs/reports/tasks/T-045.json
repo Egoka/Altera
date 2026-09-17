@@ -8,7 +8,7 @@
     "sha": "5c146d0de50a88d2cd4acf4c7b075d659d6be5d6"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "cfc9fe2e81f78b6188f754f301ee8d5873d90705",
+  "tested_sha": "ad7c930151c3569d4a58020fc533293a6d4b2a07",
   "branch": "server/t045-archive-restore",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b081-7289-7cf1-b20a-2e980864add3",
@@ -28,15 +28,15 @@
     "number": 114,
     "url": "https://github.com/Egoka/Altera/pull/114",
     "base_ref": "app",
-    "base_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-    "head_sha": "cfc9fe2e81f78b6188f754f301ee8d5873d90705",
+    "base_sha": "9d2940d9cd788d4c6ac869521c8bbf9e0dc38077",
+    "head_sha": "ad7c930151c3569d4a58020fc533293a6d4b2a07",
     "merge_sha": null
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": "01a0b093-0c34-76dd-bcb6-fc419b62b83e",
-    "sha": "cfc9fe2e81f78b6188f754f301ee8d5873d90705",
-    "verdict": "approved"
+    "run_id": null,
+    "sha": "ad7c930151c3569d4a58020fc533293a6d4b2a07",
+    "verdict": null
   },
   "deployment": {
     "required": true,
