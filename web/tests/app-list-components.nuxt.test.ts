@@ -51,8 +51,11 @@ describe("AppListPanel", () => {
     expect(banner.text()).toBe("Could not load data")
     expect(banner.classes()).toEqual(
       expect.arrayContaining([
+        "border-[var(--color-error-300)]",
+        "bg-[var(--color-error-50)]",
+        "text-[var(--color-error-700)]",
         "dark:border-[var(--color-error-800)]",
-        "dark:bg-[var(--color-error-950)]",
+        "dark:bg-[var(--color-error-900)]",
         "dark:text-[var(--color-error-300)]"
       ])
     )

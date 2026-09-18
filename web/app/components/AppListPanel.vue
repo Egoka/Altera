@@ -18,8 +18,7 @@
     <div
       v-if="error"
       role="alert"
-      class="mb-4 rounded border px-4 py-3 font-sans text-sm dark:border-[var(--color-error-800)] dark:bg-[var(--color-error-950)] dark:text-[var(--color-error-300)]"
-      style="border-color: var(--color-error-300); background: var(--color-error-50); color: var(--color-error-700)">
+      class="mb-4 rounded border px-4 py-3 font-sans text-sm border-[var(--color-error-300)] bg-[var(--color-error-50)] text-[var(--color-error-700)] dark:border-[var(--color-error-800)] dark:bg-[var(--color-error-900)] dark:text-[var(--color-error-300)]">
       {{ t("common.loadError") }}
     </div>
 
