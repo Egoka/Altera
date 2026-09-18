@@ -2,6 +2,8 @@
   import type { IColumn } from "#fishtvue/table"
 
   const { t } = useI18n()
+  const isListLoading = ref(false)
+  const loadError = ref(false)
 
   definePageMeta({
     i18n: false,
@@ -295,50 +297,52 @@
 </script>
 
 <template>
-  <AppTable
-    :dataSource="data"
-    :columns="columns"
-    search
-    toolbar
-    class="p-0 overflow-auto"
-    :styles="{
-      hoverRows: true,
-      class: {
-        toolbar: 'flex-col md:flex-row'
-      },
-      width: '100%',
-      height: '100%'
-    }">
-    <template #toolbar>
-      <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
-        <div class="">
-          <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">
-            {{ t("admin.articlesTitle") }}
-          </div>
-          <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500">
-            {{ t("admin.articlesDescription") }}
+  <AppListPanel :loading="isListLoading" :error="loadError">
+    <AppTable
+      :dataSource="data"
+      :columns="columns"
+      search
+      toolbar
+      class="p-0 overflow-auto"
+      :styles="{
+        hoverRows: true,
+        class: {
+          toolbar: 'flex-col md:flex-row'
+        },
+        width: '100%',
+        height: '100%'
+      }">
+      <template #toolbar>
+        <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
+          <div class="">
+            <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">
+              {{ t("admin.articlesTitle") }}
+            </div>
+            <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500">
+              {{ t("admin.articlesDescription") }}
+            </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template #status="{ rowData }">
-      <Badge :class="getStatusStyle(rowData.status)">
-        {{ getStatusText(rowData.status) }}
-      </Badge>
-    </template>
-
-    <template #tags="{ rowData }">
-      <div class="flex flex-wrap gap-1">
-        <Badge
-          v-for="tag in rowData.tags"
-          :key="tag.id"
-          class="bg-zinc-100 text-zinc-700 text-xs dark:bg-zinc-900 dark:text-zinc-400">
-          {{ tag.name }}
+      <template #status="{ rowData }">
+        <Badge :class="getStatusStyle(rowData.status)">
+          {{ getStatusText(rowData.status) }}
         </Badge>
-      </div>
-    </template>
-  </AppTable>
+      </template>
+
+      <template #tags="{ rowData }">
+        <div class="flex flex-wrap gap-1">
+          <Badge
+            v-for="tag in rowData.tags"
+            :key="tag.id"
+            class="bg-zinc-100 text-zinc-700 text-xs dark:bg-zinc-900 dark:text-zinc-400">
+            {{ tag.name }}
+          </Badge>
+        </div>
+      </template>
+    </AppTable>
+  </AppListPanel>
 </template>
 
 <style scoped></style>

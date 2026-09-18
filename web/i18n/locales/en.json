@@ -16,6 +16,7 @@
     "settings": "Settings",
     "admin": "Admin Panel",
     "loading": "Loading...",
+    "loadError": "Could not load data",
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",
@@ -214,6 +215,10 @@
     "usersDescription": "View and manage system users",
     "active": "Active",
     "inactive": "Inactive",
+    "table": {
+      "empty": "No data",
+      "emptyDesc": "No records yet"
+    },
     "editUser": "Edit user",
     "editUserDescription": "Change the user details and click “Save”",
     "menu": {
