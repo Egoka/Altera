@@ -1,0 +1,31 @@
+enum AdminSummaryPeriod {
+  DAYS_7
+  DAYS_30
+}
+
+enum AdminSummaryCardStatus {
+  READY
+  ERROR
+}
+
+type AdminSummaryMetric {
+  id: String!
+  value: Int!
+}
+
+type AdminSummaryCard {
+  id: String!
+  href: String!
+  metrics: [AdminSummaryMetric!]!
+  requestId: String
+  status: AdminSummaryCardStatus!
+}
+
+type AdminSummary {
+  role: Role!
+  cards: [AdminSummaryCard!]!
+}
+
+extend type Query {
+  adminSummary(period: AdminSummaryPeriod!): AdminSummary!
+}

@@ -74,6 +74,7 @@ describe("ensureRole", () => {
 
 describe("матрица дефолтных прав первого запуска", () => {
   const expected: Record<PermissionCode, readonly PermissionUser["role"][]> = {
+    "admin.enter": ["editor", "moderator", "analyst", "admin", "owner"],
     publish: ["editor", "moderator", "owner"],
     review: ["moderator", "owner"],
     moderate: ["moderator", "admin", "owner"],

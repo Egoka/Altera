@@ -68,8 +68,28 @@ jobs:
   web-smoke:
     name: Браузерная проверка веба
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: altera_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d altera_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
+      ALTERA_ISOLATED_CI: "1"
+      DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
+      DATABASE_URL_UNPOOLED: "postgresql://test:test@127.0.0.1:5432/altera_ci"
       LOG_HASH_SECRET: "ci-log-hash-secret"
+      NODE_ENV: test
+      REDIS_URL: "redis://127.0.0.1:6379/0"
+      T069_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -84,6 +104,8 @@ jobs:
         run: node -v
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Deploy migrations to isolated browser-test database
+        run: node scripts/autonomy/infra_probe.mjs --migrate
       - name: Install Chromium
         run: pnpm --filter nuxt-app exec playwright install --with-deps chromium
       - name: Smoke check homepage
