@@ -8,7 +8,7 @@
     "sha": "787e2f9b6ff81aaa5f88462e6f23be854cfb51f5"
   },
   "baseline_sha": "7bec6f1d7049203c3ba7278183eea60becad7dd5",
-  "tested_sha": "256954685739374a363768b59fe47b3791d87665",
+  "tested_sha": "a13773574bc439cef5483ee0490e833412c3d2f1",
   "branch": "server/t029-pd-read-audit",
   "implementer_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
   "implementer_run_id": "01a0b508-74ef-7335-a0df-b4fb51034410",
@@ -29,13 +29,13 @@
     "url": "https://github.com/Egoka/Altera/pull/127",
     "base_ref": "app",
     "base_sha": "7bec6f1d7049203c3ba7278183eea60becad7dd5",
-    "head_sha": "256954685739374a363768b59fe47b3791d87665",
+    "head_sha": "a13773574bc439cef5483ee0490e833412c3d2f1",
     "merge_sha": null
   },
   "review": {
     "actor_id": null,
     "run_id": null,
-    "sha": "256954685739374a363768b59fe47b3791d87665",
+    "sha": "a13773574bc439cef5483ee0490e833412c3d2f1",
     "verdict": "pending"
   },
   "deployment": {
