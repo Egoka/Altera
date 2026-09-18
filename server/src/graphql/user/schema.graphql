@@ -115,4 +115,5 @@ extend type Query {
 
   # Запросы для управления пользователями (требуют права admin)
   users(pagination: PaginationInput!, sort: SortInput!, filters: UserFiltersInput!, search: SearchInput): UsersResponse!
+  adminUser(id: ID!): AccountUser
 }
