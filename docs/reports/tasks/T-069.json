@@ -8,7 +8,7 @@
     "sha": "60e48d64a3781111a2a0154b8bf79bf990d85208"
   },
   "baseline_sha": "7bec6f1d7049203c3ba7278183eea60becad7dd5",
-  "tested_sha": "f3fb80bd8e53e7ea8defa25be9d0d62e120c9ddd",
+  "tested_sha": "0384b856c58a086b1637ce05dbb0de162493d857",
   "branch": "server/t069-admin-shell",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t069-admin-shell",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -33,7 +33,7 @@
     "web_typecheck": "passed",
     "web_build": "passed",
     "playwright": "22 passed / 9 pre-existing skipped",
-    "ci": "running: https://github.com/Egoka/Altera/actions/runs/35376938200",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35376938200",
     "environment": "Node 24.12.0, pnpm 10.18.3, isolated PostgreSQL 17 for Playwright"
   },
   "pr": {
@@ -41,10 +41,15 @@
     "url": "https://github.com/Egoka/Altera/pull/128",
     "base_ref": "app",
     "base_sha": "7bec6f1d7049203c3ba7278183eea60becad7dd5",
-    "head_sha": "f3fb80bd8e53e7ea8defa25be9d0d62e120c9ddd",
-    "merge_sha": null
+    "head_sha": "0384b856c58a086b1637ce05dbb0de162493d857",
+    "merge_sha": "287d117bf5e194a88d62c8415224c9a9b87d69a1"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0b5a8-7c54-7003-9fb3-4bad45d89d4a",
+    "sha": "0384b856c58a086b1637ce05dbb0de162493d857",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "environment": "development",
@@ -52,7 +57,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-069.md",
-    "sha256": "c05c4d5be5912395855a6892dde51f4dfe32918fc62b03f8bfc1d3569daa818e"
+    "sha256": "b7deb3fb8b1cb070ece38c42789bfc794a9ccdac6d947e1644dd8c7e2cefbc20"
   },
   "usage": null
 }
