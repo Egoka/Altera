@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task_id": "T-094",
+  "issue_id": "01a0b16c-0654-7934-966e-f42104d04ddd",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-094-app-components-fishtvue.md",
+    "sha": "92ea328fdada385a670d44a02fdf9e5d0d6e3f05"
+  },
+  "baseline_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
+  "tested_sha": "e8a3d0196301f090f6529908f0c4c547de72dc2a",
+  "branch": "web/t094-list-states",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t094-list-states",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b399-1136-7942-bb09-75969040ac1e",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Playwright two-theme smoke: theme.spec.ts and app-components-theme.spec.ts, 3 passed"
+    },
+    {
+      "id": "SPEC-3",
+      "status": "passed",
+      "evidence": "AppTable default/custom empty slot and AppListPanel loading/error states covered by web/tests/app-list-components.nuxt.test.ts; four admin list pages use AppListPanel"
+    },
+    {
+      "id": "SPEC-7",
+      "status": "passed",
+      "evidence": "ru/en admin.table.empty and admin.table.emptyDesc covered by web/tests/i18n-locales.test.ts; missing common.loadError dependency restored in both locales"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 140 passed / 19 skipped; web 137 passed",
+    "web_typecheck": "passed",
+    "playwright_two_theme": "3 passed",
+    "ci": "pending",
+    "environment": "Node 24.3.0 (repository requires 24.12.0), pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 124,
+    "url": "https://github.com/Egoka/Altera/pull/124",
+    "base_ref": "app",
+    "base_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
+    "head_sha": "e8a3d0196301f090f6529908f0c4c547de72dc2a",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": "e8a3d0196301f090f6529908f0c4c547de72dc2a",
+    "verdict": "pending"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Web-only list-state UI and locale changes; Neon preview branch creation currently fails independently of this scope"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-094.md",
+    "sha256": "055b773eb1056040cd74d794a99e1347ba3dd5a818cc4d3c3e7d9af6ad6d8ca3"
+  },
+  "remaining": [
+    "GitHub CI and independent native review of the exact PR head are pending",
+    "Neon preview branch creation failed in PR automation; web-only task does not require a database migration"
+  ],
+  "usage": null
+}
