@@ -8,7 +8,7 @@
     "sha": "92ea328fdada385a670d44a02fdf9e5d0d6e3f05"
   },
   "baseline_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
-  "tested_sha": "57957ee49b2d1b60cf2a38129761928a46613f1a",
+  "tested_sha": "0ce94b46bfe915837e2d0c8302be6cffc0cd50f5",
   "branch": "web/t094-list-states",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t094-list-states",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -44,13 +44,13 @@
     "url": "https://github.com/Egoka/Altera/pull/124",
     "base_ref": "app",
     "base_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
-    "head_sha": "57957ee49b2d1b60cf2a38129761928a46613f1a",
+    "head_sha": "0ce94b46bfe915837e2d0c8302be6cffc0cd50f5",
     "merge_sha": null
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": "01a0b3dc-b995-7455-a373-1a1918982284",
-    "sha": "57957ee49b2d1b60cf2a38129761928a46613f1a",
+    "run_id": null,
+    "sha": "0ce94b46bfe915837e2d0c8302be6cffc0cd50f5",
     "verdict": "pending"
   },
   "deployment": {
@@ -61,9 +61,5 @@
     "path": "docs/reports/tasks/T-094.md",
     "sha256": "055b773eb1056040cd74d794a99e1347ba3dd5a818cc4d3c3e7d9af6ad6d8ca3"
   },
-  "remaining": [
-    "GitHub CI and independent native review of the exact PR head are pending",
-    "Neon preview branch creation failed in PR automation; web-only task does not require a database migration"
-  ],
   "usage": null
 }
