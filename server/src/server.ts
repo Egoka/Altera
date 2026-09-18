@@ -11,6 +11,9 @@ import { createErrorMasker } from "./errors/graphql-error"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
 import { createRequestTracingPlugin, getRequestId } from "./observability/request-tracing"
+import { jobHandlers } from "./jobs/job-handlers"
+import { createJobWorker } from "./jobs/job-worker"
+import { createPrismaJobStore } from "./jobs/prisma-job-store"
 
 const PORT = process.env.PORT || 4000
 const cache = createCache({ redisUrl: process.env.REDIS_URL })
@@ -50,4 +53,7 @@ const health = createHealthCheck(
   process.env.RENDER_GIT_COMMIT
 )
 const server = createServer(withHealth(yoga, health))
+const jobWorker = createJobWorker({ store: createPrismaJobStore(prisma), handlers: jobHandlers, logger })
+jobWorker.start()
+server.on("close", () => jobWorker.stop())
 server.listen(PORT)

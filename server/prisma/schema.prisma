@@ -258,27 +258,31 @@ model Article {
 }
 
 model Job {
-  id            String         @id @default(uuid())
-  kind          String
-  status        JobStatus      @default(queued)
-  objectType    String?
-  objectId      String?
-  parameters    Json?
-  availableAt   DateTime       @default(now())
-  startedAt     DateTime?
-  finishedAt    DateTime?
-  cancelledAt   DateTime?
-  attemptCount  Int            @default(0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  attempts      JobAttempt[]
-  aiProcesses   AiProcess[]
-  mailMessages  MailMessage[]
-  backendErrors BackendError[]
+  id                 String         @id @default(uuid())
+  kind               String
+  status             JobStatus      @default(queued)
+  objectType         String?
+  objectId           String?
+  parameters         Json?
+  originRequestId    String?
+  availableAt        DateTime       @default(now())
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  cancelledAt        DateTime?
+  attemptCount       Int            @default(0)
+  maxAttempts        Int            @default(3)
+  manualRetryAllowed Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  attempts           JobAttempt[]
+  aiProcesses        AiProcess[]
+  mailMessages       MailMessage[]
+  backendErrors      BackendError[]
 
   @@index([status, availableAt])
   @@index([kind, status])
   @@index([objectType, objectId])
+  @@index([originRequestId])
   @@map("jobs")
 }
 
