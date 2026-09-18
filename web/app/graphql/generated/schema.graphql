@@ -18,6 +18,34 @@ type AccountUser {
   updatedAt: String!
 }
 
+type AdminSummary {
+  cards: [AdminSummaryCard!]!
+  role: Role!
+}
+
+type AdminSummaryCard {
+  href: String!
+  id: String!
+  metrics: [AdminSummaryMetric!]!
+  requestId: String
+  status: AdminSummaryCardStatus!
+}
+
+enum AdminSummaryCardStatus {
+  ERROR
+  READY
+}
+
+type AdminSummaryMetric {
+  id: String!
+  value: Int!
+}
+
+enum AdminSummaryPeriod {
+  DAYS_7
+  DAYS_30
+}
+
 type Article {
   author: User!
   body: String!
@@ -254,6 +282,7 @@ type PublicSection {
 
 type Query {
   _empty: String
+  adminSummary(period: AdminSummaryPeriod!): AdminSummary!
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats

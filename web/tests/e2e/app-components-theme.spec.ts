@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test"
+import { authenticateAdminPage } from "./helpers/admin-auth"
 
 const themes = ["light", "dark"] as const
 
 for (const theme of themes) {
   test(`admin table follows design-system tokens in ${theme} theme`, async ({ page }) => {
+    await authenticateAdminPage(page)
     await page.addInitScript((selectedTheme) => {
       localStorage.setItem("nuxt-color-mode", selectedTheme)
     }, theme)

@@ -1,61 +1,39 @@
 <script setup lang="ts">
   import type { GroupMenu, ItemMenu, MenuExpose } from "#fishtvue"
+  import { computed, onMounted, ref, watch } from "vue"
+  import { getAdminNavigation } from "~/utils/admin"
 
   const adminStore = useAdminStore()
+  const { summary } = useAdminDashboard()
+  const { t } = useI18n()
 
   const toggleMenuCollapsed = () => {
     adminStore.toggleMenuCollapsed()
   }
 
-  const menuGroups = (): GroupMenu[] => {
-    const { $i18n } = useNuxtApp()
-    const { t } = $i18n
-
-    return [
-      {
-        class: "h-[calc(100vh-48px-112px-12px-13px-15px-40px)]",
-        items: [
-          {
-            name: "Dashboard",
-            title: t("admin.menu.Dashboard"),
-            icon: "lucide:layout-dashboard",
-            to: "/admin"
-          },
-          {
-            title: t("admin.menu.Articles"),
-            icon: "lucide:file-text",
-            to: "/admin/articles"
-          },
-          {
-            title: t("admin.menu.Types"),
-            icon: "lucide:layers",
-            to: "/admin/types"
-          },
-          {
-            title: t("admin.menu.Users"),
-            icon: "lucide:users",
-            to: "/admin/users"
-          },
-          {
-            title: t("admin.menu.Tags"),
-            icon: "lucide:tag",
-            to: "/admin/tags"
-          }
-        ]
-      }
-    ]
-  }
+  const menu = computed<GroupMenu[]>(() => [
+    {
+      class: "h-[calc(100vh-48px-112px-12px-13px-15px-40px)]",
+      items: summary.value
+        ? getAdminNavigation(summary.value.role).map((item) => ({
+            name: item.id,
+            title: t(`admin.sections.${item.id}`),
+            icon: item.icon,
+            to: item.to
+          }))
+        : []
+    }
+  ])
 
   const HEADER_HEIGHT = 56
 
   const menuApp = ref<MenuExpose>()
   const activePage = ref("")
   const isOpen = ref(false)
-  const menu = ref(menuGroups())
   const route = useRoute()
 
   const findActiveMenuItem = () => {
-    return menuApp.value?.listGroups[0]?.items?.find((item) => {
+    return menuApp.value?.listGroups?.[0]?.items?.find((item) => {
       if (!item.to) return false
       // Точное совпадение
       if (item.to === route.path) return true
@@ -71,10 +49,10 @@
 
     if (activeItem) {
       activePage.value = activeItem.to
-      menuApp.value?.setSelectedItem(activeItem["_key"] ?? "")
+      menuApp.value?.setSelectedItem?.(activeItem["_key"] ?? "")
     } else {
       activePage.value = menuApp.value?.listGroups?.[0]?.items?.[0]?.to
-      menuApp.value?.setSelectedItem(menuApp.value?.listGroups[0]?.items?.[0]?.["_key"] ?? "")
+      menuApp.value?.setSelectedItem?.(menuApp.value?.listGroups?.[0]?.items?.[0]?.["_key"] ?? "")
     }
   })
 
@@ -84,11 +62,11 @@
       const activeItem = findActiveMenuItem()
       if (activeItem) {
         activePage.value = activeItem.to
-        menuApp.value?.setSelectedItem(activeItem["_key"] ?? "")
+        menuApp.value?.setSelectedItem?.(activeItem["_key"] ?? "")
       }
     }
   )
-  function switchPage(_: any, data: ItemMenu) {
+  function switchPage(_: unknown, data: ItemMenu) {
     isOpen.value = false
     activePage.value = data.to
     navigateTo(data.to)
@@ -97,13 +75,6 @@
   const toggleMenu = () => {
     isOpen.value = !isOpen.value
   }
-
-  // Моковые данные пользователя
-  const user = ref({
-    firstName: "Александр",
-    lastName: "Иванов",
-    email: "alex.ivanov@example.com"
-  })
 </script>
 
 <template>
@@ -173,8 +144,10 @@
           </FixWindow>
         </template>
         <template #footer>
-          <div class="mt-[15px] flex items-center gap-3">
-            <img src="/avatars/William_Taylor.jpg" alt="avatar" class="size-10 rounded-full object-cover" />
+          <div v-if="summary" class="mt-[15px] flex items-center gap-3">
+            <span class="flex size-10 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800">
+              <Icons type="lucide:shield-check" class="size-5 text-zinc-700 dark:text-zinc-200" />
+            </span>
             <Transition
               enter-active-class="transition-all duration-300 ease-out"
               enter-from-class="opacity-0"
@@ -184,10 +157,7 @@
               leave-to-class="opacity-0">
               <div v-if="!adminStore.isMenuCollapsed" class="flex flex-col min-w-0">
                 <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                  {{ user.firstName }} {{ user.lastName }}
-                </div>
-                <div class="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                  {{ user.email }}
+                  {{ t(`admin.roles.${summary.role}`) }}
                 </div>
               </div>
             </Transition>
@@ -214,7 +184,9 @@
           </div>
 
           <div class="lg:flex lg:flex-1 lg:justify-end">
-            <img src="/avatars/William_Taylor.jpg" alt="avatar" class="size-8 rounded-full object-cover" />
+            <span class="flex size-8 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800">
+              <Icons type="lucide:shield-check" class="size-4 text-zinc-700 dark:text-zinc-200" />
+            </span>
           </div>
         </nav>
         <Transition
