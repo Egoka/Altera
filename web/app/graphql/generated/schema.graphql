@@ -283,6 +283,7 @@ type PublicSection {
 type Query {
   _empty: String
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
+  adminUser(id: ID!): AccountUser
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
