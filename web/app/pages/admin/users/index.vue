@@ -32,6 +32,8 @@
   const { isSm, isMd } = useBreakpoint()
   const tableHeight = ref(47)
   const isLoading = ref(false)
+  const isListLoading = ref(false)
+  const loadError = ref(false)
   // const tableHeight = computed(() => {
   //   return isMd.value ? 47 : isSm.value ? 102 : 82
   // })
@@ -446,7 +448,7 @@
       panel: 'h-full sm:rounded-xl bg-zinc-100 dark:bg-zinc-900'
     }">
     <template #table>
-      <div class="p-3">
+      <AppListPanel :loading="isListLoading" :error="loadError" class="p-3">
         <AppTable
           :dataSource="data"
           :columns="columns"
@@ -487,7 +489,7 @@
             </Badge>
           </template>
         </AppTable>
-      </div>
+      </AppListPanel>
     </template>
     <template #item>
       <div class="relative h-[calc(100vh-56px-25px)] sm:h-[calc(100vh-48px)] overflow-y-auto p-3">

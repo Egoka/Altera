@@ -2,6 +2,8 @@
   import type { IColumn } from "#fishtvue/table"
 
   const { t } = useI18n()
+  const isListLoading = ref(false)
+  const loadError = ref(false)
 
   definePageMeta({
     i18n: false,
@@ -163,39 +165,41 @@
 </script>
 
 <template>
-  <AppTable
-    :dataSource="data"
-    :columns="columns"
-    search
-    toolbar
-    class="p-0 overflow-auto"
-    :styles="{
-      hoverRows: true,
-      class: {
-        toolbar: 'flex-col md:flex-row'
-      },
-      width: '100%',
-      height: '100%'
-    }">
-    <template #toolbar>
-      <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
-        <div class="">
-          <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">
-            {{ t("admin.tagsTitle") }}
-          </div>
-          <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500">
-            {{ t("admin.tagsDescription") }}
+  <AppListPanel :loading="isListLoading" :error="loadError">
+    <AppTable
+      :dataSource="data"
+      :columns="columns"
+      search
+      toolbar
+      class="p-0 overflow-auto"
+      :styles="{
+        hoverRows: true,
+        class: {
+          toolbar: 'flex-col md:flex-row'
+        },
+        width: '100%',
+        height: '100%'
+      }">
+      <template #toolbar>
+        <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
+          <div class="">
+            <div class="text-lg sm:text-2xl font-medium leading-8 text-black dark:text-zinc-300">
+              {{ t("admin.tagsTitle") }}
+            </div>
+            <div class="mt-1 leading-6 text-neutral-400 dark:text-neutral-500">
+              {{ t("admin.tagsDescription") }}
+            </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template #status="{ rowData }">
-      <Badge :class="[rowData.isActive ? green : red]">
-        {{ rowData.isActive ? t("admin.active") : t("admin.inactive") }}
-      </Badge>
-    </template>
-  </AppTable>
+      <template #status="{ rowData }">
+        <Badge :class="[rowData.isActive ? green : red]">
+          {{ rowData.isActive ? t("admin.active") : t("admin.inactive") }}
+        </Badge>
+      </template>
+    </AppTable>
+  </AppListPanel>
 </template>
 
 <style scoped></style>
