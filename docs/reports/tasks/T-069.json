@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task_id": "T-069",
+  "issue_id": "01a0b548-7f71-7ad6-bbf6-c551c255e98d",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-069-admin-shell-dashboard.md",
+    "sha": "60e48d64a3781111a2a0154b8bf79bf990d85208"
+  },
+  "baseline_sha": "7bec6f1d7049203c3ba7278183eea60becad7dd5",
+  "tested_sha": "f3fb80bd8e53e7ea8defa25be9d0d62e120c9ddd",
+  "branch": "server/t069-admin-shell",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t069-admin-shell",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b57f-27b1-7a14-ac11-d1f923bc3c6f",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Playwright admin-dashboard.spec.ts covers empty/loading/full-error/partial-error and five service-role card sets; full browser run: 22 passed / 9 pre-existing skipped"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Playwright author receives HTTP 403 for /admin"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 149 passed / 19 skipped; web 155 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "22 passed / 9 pre-existing skipped",
+    "ci": "running: https://github.com/Egoka/Altera/actions/runs/35376938200",
+    "environment": "Node 24.12.0, pnpm 10.18.3, isolated PostgreSQL 17 for Playwright"
+  },
+  "pr": {
+    "number": 128,
+    "url": "https://github.com/Egoka/Altera/pull/128",
+    "base_ref": "app",
+    "base_sha": "7bec6f1d7049203c3ba7278183eea60becad7dd5",
+    "head_sha": "f3fb80bd8e53e7ea8defa25be9d0d62e120c9ddd",
+    "merge_sha": null
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server GraphQL and web admin behavior require controller-managed deployment and health verification after merge"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-069.md",
+    "sha256": "c05c4d5be5912395855a6892dde51f4dfe32918fc62b03f8bfc1d3569daa818e"
+  },
+  "usage": null
+}
