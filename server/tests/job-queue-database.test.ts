@@ -1,17 +1,13 @@
-import { execFileSync, spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { readdirSync } from "node:fs"
-import path from "node:path"
 import { PrismaClient } from "../src/generated/prisma"
 import { describe, expect, it, vi } from "vitest"
 import { cancelJob, retryJob } from "../src/jobs/job-actions"
 import { createJobWorker } from "../src/jobs/job-worker"
 import { createPrismaJobStore } from "../src/jobs/prisma-job-store"
 import type { AppLogger } from "../src/observability/logger"
+import { applyBaselineMigrations, applyMigration } from "./helpers/migration-database"
 
 const testDatabaseUrl = process.env.T047_TEST_DATABASE_URL
-const serverRoot = path.resolve(__dirname, "..")
-const migrationsRoot = path.join(serverRoot, "prisma/migrations")
 const targetMigration = "20260918120000_job_queue_runner"
 
 const databaseUrl = (name: string): string => {
@@ -22,40 +18,9 @@ const databaseUrl = (name: string): string => {
 
 const prismaFor = (url: string): PrismaClient => new PrismaClient({ datasources: { db: { url } } })
 
-const runPrisma = (args: string[], url: string): void => {
-  execFileSync("pnpm", ["exec", "prisma", ...args, "--schema", path.join(serverRoot, "prisma/schema.prisma")], {
-    cwd: serverRoot,
-    env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-    stdio: "pipe"
-  })
-}
-
 const applyMigrations = (url: string) => {
-  const migrations = readdirSync(migrationsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && entry.name < targetMigration)
-    .map((entry) => entry.name)
-    .sort()
-  for (const migration of migrations) {
-    runPrisma(["db", "execute", "--file", path.join(migrationsRoot, migration, "migration.sql")], url)
-  }
-  return spawnSync(
-    "pnpm",
-    [
-      "exec",
-      "prisma",
-      "db",
-      "execute",
-      "--file",
-      path.join(migrationsRoot, targetMigration, "migration.sql"),
-      "--schema",
-      path.join(serverRoot, "prisma/schema.prisma")
-    ],
-    {
-      cwd: serverRoot,
-      env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-      encoding: "utf8"
-    }
-  )
+  applyBaselineMigrations(targetMigration, url)
+  return applyMigration(targetMigration, url)
 }
 
 const withDatabase = async (run: (database: PrismaClient) => Promise<void>): Promise<void> => {
