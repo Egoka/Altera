@@ -1,16 +1,16 @@
 name: Ветка Neon для pull request
 
-# Ветка базы Neon на pull request: создаётся при открытии и обновлении, удаляется
-# при закрытии. Шаблон — руководство https://neon.com/docs/guides/neon-github-app.
-# Секрет NEON_API_KEY и переменную NEON_PROJECT_ID записала интеграция Neon GitHub App
-# (2026-09-14). Родитель новой ветки не задан, поэтому это ветка проекта по умолчанию —
-# production.
+# Одноразовая ветка базы Neon на каждый прогон pull request: создаётся в начале прогона
+# и удаляется в его конце, даже если проверки на ней упали или прогон отменили.
+# Шаблон — руководство https://neon.com/docs/guides/neon-github-app. Секрет NEON_API_KEY
+# и переменную NEON_PROJECT_ID записала интеграция Neon GitHub App (2026-09-14). Родитель
+# ветки не задан, поэтому это ветка проекта по умолчанию в Neon.
 #
-# Ветка нужна только pull request, который меняет server/: база есть лишь у сервера.
-# Бесплатный план Neon держит не больше 10 веток на проект, и при ветке на каждый
-# pull request лимит кончался, а docs- и web-PR падали с «branches limit exceeded».
-# Фильтр действует на все события, поэтому ветка удаляется при закрытии того же PR,
-# для которого создавалась.
+# Раньше ветка жила до закрытия pull request. Бесплатный план Neon держит не больше
+# 10 веток на проект, поэтому при нескольких открытых PR лимит кончался и следующие
+# прогоны падали с «branches limit exceeded». Теперь ветка занимает место только на время
+# прогона. При закрытии PR удаление запускается ещё раз и снимает ветку, если она осталась
+# от прерванного прогона или от прежней схемы.
 
 on:
   pull_request:
@@ -19,37 +19,18 @@ on:
       - reopened
       - synchronize
       - closed
-    paths:
-      - "server/**"
-      - ".github/workflows/neon_workflow.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
-jobs:
-  setup:
-    name: Имя git-ветки
-    outputs:
-      branch: ${{ steps.branch_name.outputs.current_branch }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get branch name
-        id: branch_name
-        uses: tj-actions/branch-names@v8
+env:
+  # Имя прежней схемы: по нему находятся и ветки, созданные до перехода на одноразовые.
+  NEON_BRANCH: preview/pr-${{ github.event.number }}-${{ github.head_ref }}
 
+jobs:
   create_neon_branch:
     name: Создать ветку Neon
-    # В шаблоне Neon outputs ссылаются на шаг create_neon_branch_encode, которого нет.
-    # Здесь ссылка на реальный id шага.
-    outputs:
-      db_url: ${{ steps.create_neon_branch.outputs.db_url }}
-      db_url_with_pooler: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
-    needs: setup
-    if: |
-      github.event_name == 'pull_request' && (
-      github.event.action == 'synchronize'
-      || github.event.action == 'opened'
-      || github.event.action == 'reopened')
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Create Neon Branch
@@ -57,13 +38,12 @@ jobs:
         uses: neondatabase/create-branch-action@v5
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          branch_name: ${{ env.NEON_BRANCH }}
           api_key: ${{ secrets.NEON_API_KEY }}
 
-      # Ветка создана. Дальше на ней можно прогнать миграции Prisma и тесты или отдать строку
-      # подключения окружению предпросмотра. URL доступны как
-      # steps.create_neon_branch.outputs.db_url (прямое подключение) и
-      # steps.create_neon_branch.outputs.db_url_with_pooler (через пулер).
+      # Ветка создана и живёт до конца этого прогона. Проверки на ней добавляются сюда, до
+      # удаления. URL доступны как steps.create_neon_branch.outputs.db_url (прямое
+      # подключение) и steps.create_neon_branch.outputs.db_url_with_pooler (через пулер).
       # Печатать их в лог нельзя: в них логин и пароль базы.
       #
       # Пример миграций — пока не включён, решение отдельное:
@@ -79,18 +59,33 @@ jobs:
       #        uses: neondatabase/schema-diff-action@v1
       #        with:
       #          project_id: ${{ vars.NEON_PROJECT_ID }}
-      #          compare_branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+      #          compare_branch: ${{ env.NEON_BRANCH }}
       #          api_key: ${{ secrets.NEON_API_KEY }}
 
   delete_neon_branch:
     name: Удалить ветку Neon
-    needs: setup
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    needs: create_neon_branch
+    # always(): удалить и после упавшего или отменённого создания, и при закрытии PR,
+    # когда создание пропущено.
+    if: always()
     runs-on: ubuntu-latest
     steps:
+      # neondatabase/delete-branch-action падает, если ветки нет. Здесь отсутствие ветки —
+      # нормальный исход: её уже удалил прошлый прогон или создание не удалось.
       - name: Delete Neon Branch
-        uses: neondatabase/delete-branch-action@v3
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          api="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
+          ids=$(curl -fsS --get -H "Authorization: Bearer $NEON_API_KEY" \
+            --data-urlencode "search=$NEON_BRANCH" "$api" |
+            jq -r --arg name "$NEON_BRANCH" '.branches[] | select(.name == $name) | .id')
+          if [ -z "$ids" ]; then
+            echo "Ветки $NEON_BRANCH нет, удалять нечего."
+            exit 0
+          fi
+          for id in $ids; do
+            curl -fsS -X DELETE -H "Authorization: Bearer $NEON_API_KEY" "$api/$id" > /dev/null
+            echo "Удалена ветка $NEON_BRANCH ($id)."
+          done
