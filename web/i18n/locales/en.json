@@ -20,6 +20,7 @@
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",
+    "confirm": "Confirm",
     "save": "Save",
     "edit": "Edit",
     "delete": "Delete",
@@ -41,17 +42,6 @@
     "searchPlaceholder": "Search..."
   },
   "auth": {
-    "login": "Login",
-    "register": "Register",
-    "email": "Email",
-    "password": "Password",
-    "forgotPassword": "Forgot Password?",
-    "magicLink": "Login with Link",
-    "sendMagicLink": "Send Login Link",
-    "checkEmail": "Check your email",
-    "invalidEmail": "Invalid email",
-    "loginSuccess": "Login successful",
-    "logoutSuccess": "Logout successful",
     "login": {
       "title": "Sign in or register",
       "emailLabel": "Email address",
@@ -75,8 +65,21 @@
         "generic": "Something went wrong. Please try again (code: {requestId})"
       }
     },
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "magicLink": "Login with Link",
+    "sendMagicLink": "Send Login Link",
+    "checkEmail": "Check your email",
+    "invalidEmail": "Invalid email",
+    "loginSuccess": "Login successful",
+    "logoutSuccess": "Logout successful",
     "verify": {
-      "loading": { "title": "Signing you in…", "body": "Please wait." },
+      "loading": {
+        "title": "Signing you in…",
+        "body": "Please wait."
+      },
       "expired": {
         "title": "Link is not valid",
         "body": "The login link has expired or has already been used. Links are valid for 15 minutes and can only be used once.",
@@ -345,7 +348,34 @@
       "failedMail": "Failed mail",
       "owners": "Owners",
       "serviceAccounts": "Service accounts"
-    }
+    },
+    "grantsTitle": "Manual plan grants",
+    "grantsDescription": "Manage manual plan grants to users",
+    "subscriptionsTitle": "Subscriptions & plans",
+    "subscriptionsDescription": "Manage user subscriptions",
+    "grantPlan": "Grant plan",
+    "revokePlan": "Revoke grant",
+    "grantStatus": {
+      "queued": "Queued",
+      "active": "Active",
+      "ended": "Ended",
+      "revoked": "Revoked"
+    },
+    "firstLaunchSubscriptionsNote": "Paid subscriptions are a separate phase. In first-launch mode only manual plan grants are available.",
+    "indefinite": "Indefinite",
+    "selectFromList": "Select a grant from the list",
+    "manageGrantsLink": "Manage grants →",
+    "fieldPlan": "Plan",
+    "fieldStatus": "Status",
+    "fieldStartsAt": "Start",
+    "fieldEndsAt": "End",
+    "fieldReason": "Reason",
+    "fieldGrantedBy": "Granted by",
+    "fieldRevokedAt": "Revoked at",
+    "endsAtHint": "(required for manual grants)",
+    "userHandleLabel": "User handle",
+    "reasonPlaceholder": "Enter grant reason",
+    "revokeReasonPlaceholder": "Revoke reason"
   },
   "language": {
     "switchTo": "Switch language to {language}"
