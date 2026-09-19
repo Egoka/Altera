@@ -8,7 +8,7 @@
     "sha": "f934e0e654b9d9aa1b82a37ee020f26c49458936"
   },
   "baseline_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
-  "tested_sha": "93e48024da23e6165e366aa0e518ad4e298f23ee",
+  "tested_sha": "040d8c693317aef34636458b42c019b7be850416",
   "branch": "web/t070-admin-categories",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t070-admin-categories",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -41,7 +41,7 @@
     "url": "https://github.com/Egoka/Altera/pull/134",
     "base_ref": "app",
     "base_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
-    "head_sha": "93e48024da23e6165e366aa0e518ad4e298f23ee",
+    "head_sha": "040d8c693317aef34636458b42c019b7be850416",
     "merge_sha": null
   },
   "review": null,
