@@ -58,7 +58,8 @@ describe("magic-link persistence", () => {
       },
       logger: { log: vi.fn() },
       piiHasher: { email: vi.fn().mockReturnValue("email-hash") },
-      requestId: "request-1"
+      requestId: "request-1",
+      mail: { send: vi.fn().mockResolvedValue({ mailId: "mail-1", messageId: "fake-1" }) }
     } as never
 
     await authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx)
