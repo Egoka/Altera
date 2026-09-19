@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from "./generated/prisma"
 import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
+import type { MailService } from "./mail/service"
 import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
 import { getRequestId, setRequestUserSnapshot } from "./observability/request-tracing"
@@ -22,13 +23,15 @@ export interface GraphQLContext {
   requestId: string
   logger: AppLogger
   piiHasher: PiiHasher
+  mail: MailService
 }
 
 export async function createContext(
   initialContext: YogaInitialContext,
   cache: Cache,
   logger: AppLogger,
-  piiHasher: PiiHasher
+  piiHasher: PiiHasher,
+  mail: MailService
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const authorization = initialContext.request.headers.get("authorization")
@@ -62,5 +65,5 @@ export async function createContext(
   }
 
   setRequestUserSnapshot(currentUser ? { id: currentUser.id, role: currentUser.role } : null)
-  return { prisma, currentUser, cache, requestId, logger, piiHasher }
+  return { prisma, currentUser, cache, requestId, logger, piiHasher, mail }
 }

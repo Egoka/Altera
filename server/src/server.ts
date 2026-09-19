@@ -8,6 +8,8 @@ import { createContext, GraphQLContext, prisma } from "./prisma"
 import { checkMigrations, createHealthCheck, redisReadiness, withHealth } from "./health"
 import { createCache } from "./cache"
 import { createErrorMasker } from "./errors/graphql-error"
+import { createMailConfigFromEnv } from "./mail/config"
+import { createMailService } from "./mail/service"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
 import { createRequestTracingPlugin, getRequestId } from "./observability/request-tracing"
@@ -20,11 +22,13 @@ const logger = createAppLogger({ service: "api", environment: process.env.NODE_E
 const piiHasher = createPiiHasher(process.env.LOG_HASH_SECRET)
 const forwardedRequestSecret = process.env.REQUEST_ID_FORWARD_SECRET
 if (!forwardedRequestSecret) throw new Error("REQUEST_ID_FORWARD_SECRET must be defined")
+const mailConfig = createMailConfigFromEnv(process.env)
+const mail = createMailService({ store: prisma, transport: mailConfig.transport, logger, from: mailConfig.from })
 const maskError = createErrorMasker({ logger, requestIdFactory: getRequestId })
 
 const yoga = createYoga<GraphQLContext>({
   schema,
-  context: (initialContext) => createContext(initialContext, cache, logger, piiHasher),
+  context: (initialContext) => createContext(initialContext, cache, logger, piiHasher, mail),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {

@@ -33,3 +33,21 @@ export const createMagicLinkMessage = (locale: Locale, url: string): MailMessage
     html: `<p>Здравствуйте,</p><p>вы запросили ссылку входа в Altera. Перейдите по кнопке ниже — она действует 15 минут и подходит только для одного входа.</p><p><a href="${escapedUrl}">Войти в Altera</a></p><p>Ссылка действует 15 минут.</p><p>Если вы не запрашивали ссылку — просто проигнорируйте это письмо.</p><p>Altera — журнал о жизни.</p>`
   }
 }
+
+export const MAGIC_LINK_TEMPLATE = "magic_link"
+
+// [ДОПУЩЕНИЕ] Пометка вместо секрета в копии письма (docs/spec/40-admin/mail.md §3).
+const secretPlaceholder: Record<Locale, string> = {
+  ru: "[секрет не показывается]",
+  en: "[secret not shown]"
+}
+
+export interface MagicLinkMail {
+  message: MailMessage
+  sanitizedBody: string
+}
+
+export const createMagicLinkMail = (locale: Locale, url: string): MagicLinkMail => ({
+  message: createMagicLinkMessage(locale, url),
+  sanitizedBody: createMagicLinkMessage(locale, secretPlaceholder[locale]).text
+})
