@@ -1,13 +1,9 @@
-import { execFileSync, spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { readdirSync } from "node:fs"
-import path from "node:path"
 import { PrismaClient } from "../src/generated/prisma"
 import { describe, expect, it } from "vitest"
+import { applyBaselineMigrations, applyMigration } from "./helpers/migration-database"
 
 const testDatabaseUrl = process.env.T016_TEST_DATABASE_URL
-const serverRoot = path.resolve(__dirname, "..")
-const migrationsRoot = path.join(serverRoot, "prisma/migrations")
 const targetMigration = "20260916170000_media_assets"
 
 const databaseUrl = (name: string): string => {
@@ -20,45 +16,6 @@ const prismaFor = (url: string): PrismaClient =>
   new PrismaClient({
     datasources: { db: { url } }
   })
-
-const runPrisma = (args: string[], url: string): void => {
-  execFileSync("pnpm", ["exec", "prisma", ...args, "--schema", path.join(serverRoot, "prisma/schema.prisma")], {
-    cwd: serverRoot,
-    env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-    stdio: "pipe"
-  })
-}
-
-const applyBaselineMigrations = (url: string): void => {
-  const migrations = readdirSync(migrationsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && entry.name < targetMigration)
-    .map((entry) => entry.name)
-    .sort()
-
-  for (const migration of migrations) {
-    runPrisma(["db", "execute", "--file", path.join(migrationsRoot, migration, "migration.sql")], url)
-  }
-}
-
-const applyTargetMigration = (url: string) =>
-  spawnSync(
-    "pnpm",
-    [
-      "exec",
-      "prisma",
-      "db",
-      "execute",
-      "--file",
-      path.join(migrationsRoot, targetMigration, "migration.sql"),
-      "--schema",
-      path.join(serverRoot, "prisma/schema.prisma")
-    ],
-    {
-      cwd: serverRoot,
-      env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-      encoding: "utf8"
-    }
-  )
 
 const withDatabase = async (prefix: string, run: (url: string) => Promise<void>): Promise<void> => {
   const name = `${prefix}_${randomUUID().replaceAll("-", "")}`
@@ -89,9 +46,9 @@ const insertAsset = (database: PrismaClient, id: string) =>
 describe.skipIf(!testDatabaseUrl)("T-016 media asset migration on PostgreSQL 17", () => {
   it("creates media assets with the processing lifecycle and one canonical alt", async () => {
     await withDatabase("t016_schema", async (url) => {
-      applyBaselineMigrations(url)
+      applyBaselineMigrations(targetMigration, url)
 
-      const migration = applyTargetMigration(url)
+      const migration = applyMigration(targetMigration, url)
       expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
 
       const database = prismaFor(url)
@@ -155,9 +112,9 @@ describe.skipIf(!testDatabaseUrl)("T-016 media asset migration on PostgreSQL 17"
 
   it("selects only media assets without an active content, cover, or avatar relation", async () => {
     await withDatabase("t016_orphans", async (url) => {
-      applyBaselineMigrations(url)
+      applyBaselineMigrations(targetMigration, url)
 
-      const migration = applyTargetMigration(url)
+      const migration = applyMigration(targetMigration, url)
       expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
 
       const database = prismaFor(url)

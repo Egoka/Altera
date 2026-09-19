@@ -1,13 +1,9 @@
-import { execFileSync, spawnSync } from "node:child_process"
 import { randomUUID } from "node:crypto"
-import { readdirSync } from "node:fs"
-import path from "node:path"
 import { PrismaClient } from "../src/generated/prisma"
 import { describe, expect, it } from "vitest"
+import { applyBaselineMigrations, applyMigration } from "./helpers/migration-database"
 
 const testDatabaseUrl = process.env.T017_TEST_DATABASE_URL
-const serverRoot = path.resolve(__dirname, "..")
-const migrationsRoot = path.join(serverRoot, "prisma/migrations")
 const targetMigration = "20260916190000_bookmarks_base_authorship"
 
 const databaseUrl = (name: string): string => {
@@ -20,45 +16,6 @@ const prismaFor = (url: string): PrismaClient =>
   new PrismaClient({
     datasources: { db: { url } }
   })
-
-const runPrisma = (args: string[], url: string): void => {
-  execFileSync("pnpm", ["exec", "prisma", ...args, "--schema", path.join(serverRoot, "prisma/schema.prisma")], {
-    cwd: serverRoot,
-    env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-    stdio: "pipe"
-  })
-}
-
-const applyBaselineMigrations = (url: string): void => {
-  const migrations = readdirSync(migrationsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && entry.name < targetMigration)
-    .map((entry) => entry.name)
-    .sort()
-
-  for (const migration of migrations) {
-    runPrisma(["db", "execute", "--file", path.join(migrationsRoot, migration, "migration.sql")], url)
-  }
-}
-
-const applyTargetMigration = (url: string) =>
-  spawnSync(
-    "pnpm",
-    [
-      "exec",
-      "prisma",
-      "db",
-      "execute",
-      "--file",
-      path.join(migrationsRoot, targetMigration, "migration.sql"),
-      "--schema",
-      path.join(serverRoot, "prisma/schema.prisma")
-    ],
-    {
-      cwd: serverRoot,
-      env: { ...process.env, DATABASE_URL: url, DATABASE_URL_UNPOOLED: url },
-      encoding: "utf8"
-    }
-  )
 
 const withDatabase = async (prefix: string, run: (url: string) => Promise<void>): Promise<void> => {
   const name = `${prefix}_${randomUUID().replaceAll("-", "")}`
@@ -94,13 +51,13 @@ const seedUser = async (
 describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration", () => {
   it("backfills existing authors with a lifelong standard grant without changing other users", async () => {
     await withDatabase("t017_grants", async (url) => {
-      applyBaselineMigrations(url)
+      applyBaselineMigrations(targetMigration, url)
       const before = prismaFor(url)
       await seedUser(before, { id: "reader-1", role: "reader" })
       await seedUser(before, { id: "author-1", role: "author" })
       await before.$disconnect()
 
-      const migration = applyTargetMigration(url)
+      const migration = applyMigration(targetMigration, url)
       expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
 
       const after = prismaFor(url)
@@ -146,7 +103,7 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
 
   it("keeps bookmarks private to ordinary readers and authors at the database boundary", async () => {
     await withDatabase("t017_bookmarks", async (url) => {
-      applyBaselineMigrations(url)
+      applyBaselineMigrations(targetMigration, url)
       const before = prismaFor(url)
       await seedUser(before, { id: "reader-1", role: "reader" })
       await seedUser(before, { id: "author-1", role: "author" })
@@ -158,7 +115,7 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
       )
       await before.$disconnect()
 
-      const migration = applyTargetMigration(url)
+      const migration = applyMigration(targetMigration, url)
       expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
 
       const after = prismaFor(url)
@@ -197,7 +154,7 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
 
   it("serializes bookmark creation against conversion to a service role", async () => {
     await withDatabase("t017_bookmark_race", async (url) => {
-      applyBaselineMigrations(url)
+      applyBaselineMigrations(targetMigration, url)
       const before = prismaFor(url)
       await seedUser(before, { id: "reader-1", role: "reader" })
       await seedUser(before, { id: "editor-1", role: "editor", service: true })
@@ -207,7 +164,7 @@ describe.skipIf(!testDatabaseUrl)("T-017 bookmark and base authorship migration"
       )
       await before.$disconnect()
 
-      const migration = applyTargetMigration(url)
+      const migration = applyMigration(targetMigration, url)
       expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
 
       const bookmarkClient = prismaFor(url)
