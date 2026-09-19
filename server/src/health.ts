@@ -1,6 +1,7 @@
 import type { RequestListener } from "node:http"
 import { readdir } from "node:fs/promises"
 import { resolve } from "node:path"
+import type { Cache } from "./cache"
 
 export const checkMigrations = async (
   query: () => Promise<unknown>,
@@ -33,16 +34,21 @@ export const checkMigrations = async (
 }
 
 interface Health {
-  status: "ok" | "unavailable"
+  status: "ok" | "degraded" | "unavailable"
   revision: string | null
-  checks: { postgres: boolean; redis: boolean; migrations: boolean }
+  // "disabled" — REDIS_URL не задан: кеш работает в режиме noop, Redis не проверяется (ADR-0019).
+  checks: { postgres: boolean; redis: boolean | "disabled"; migrations: boolean }
 }
 
 interface Dependencies {
   postgres: () => Promise<unknown>
-  redis: () => Promise<boolean>
+  // Отсутствует, когда Redis не настроен.
+  redis?: () => Promise<boolean>
   migrations: () => Promise<boolean>
 }
+
+export const redisReadiness = (cache: Pick<Cache, "mode" | "isReady">): (() => Promise<boolean>) | undefined =>
+  cache.mode === "redis" ? () => cache.isReady() : undefined
 
 export const createHealthCheck = (dependencies: Dependencies, commit?: string): (() => Promise<Health>) => {
   const revision = commit && /^[0-9a-f]{40}$/.test(commit) ? commit : null
@@ -54,10 +60,16 @@ export const createHealthCheck = (dependencies: Dependencies, commit?: string): 
     if (cached && Date.now() < expiresAt) return Promise.resolve(cached)
     if (inFlight) return inFlight
 
-    const checks = { postgres: false, redis: false, migrations: false }
+    const checks: Health["checks"] = {
+      postgres: false,
+      redis: dependencies.redis ? false : "disabled",
+      migrations: false
+    }
     let timedOut = false
+    // 503 — только неготовая база или схема; недоступный Redis — деградация без 503
+    // (docs/spec/80-observability/health-and-alerts.md п. 1, 7).
     const result = (): Health => ({
-      status: checks.postgres && checks.redis && checks.migrations ? "ok" : "unavailable",
+      status: !checks.postgres || !checks.migrations ? "unavailable" : checks.redis === false ? "degraded" : "ok",
       revision,
       checks: { ...checks }
     })
@@ -74,12 +86,14 @@ export const createHealthCheck = (dependencies: Dependencies, commit?: string): 
         checks.migrations = ready === true
       })
       .catch(() => undefined)
-    const redis = Promise.resolve()
-      .then(dependencies.redis)
-      .then((ready) => {
-        checks.redis = ready === true
-      })
-      .catch(() => undefined)
+    const redis = dependencies.redis
+      ? Promise.resolve()
+          .then(dependencies.redis)
+          .then((ready) => {
+            checks.redis = ready === true
+          })
+          .catch(() => undefined)
+      : Promise.resolve()
 
     inFlight = new Promise<Health>((resolve) => {
       const complete = () => {
@@ -111,7 +125,7 @@ export const withHealth =
     }
     void check().then((health) => {
       if (response.destroyed || response.writableEnded) return
-      response.statusCode = health.status === "ok" ? 200 : 503
+      response.statusCode = health.status === "unavailable" ? 503 : 200
       response.setHeader("content-type", "application/json; charset=utf-8")
       response.setHeader("cache-control", "no-store")
       response.end(JSON.stringify(health))

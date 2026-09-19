@@ -4,12 +4,27 @@ import { join } from "node:path"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { checkMigrations, createHealthCheck, withHealth } from "../src/health"
+import { checkMigrations, createHealthCheck, redisReadiness, withHealth } from "../src/health"
+import { createCache } from "../src/cache"
 import { NoopCache } from "../src/cache/noop"
 import { RedisCache, type CacheRedisClient } from "../src/cache/redis"
 
 const revision = "a".repeat(40)
 const servers: Server[] = []
+
+function redisClient(ping: CacheRedisClient["ping"]): CacheRedisClient {
+  const client: CacheRedisClient = {
+    on: () => client,
+    ping,
+    get: async () => null,
+    multi: () => {
+      throw new Error("not used")
+    },
+    eval: async () => undefined,
+    quit: async () => undefined
+  }
+  return client
+}
 
 async function serve(check: ReturnType<typeof createHealthCheck>) {
   const server = createServer(
@@ -41,16 +56,7 @@ afterEach(async () => {
 
 describe("HTTP readiness", () => {
   it("requires a real Redis PONG and rejects noop or failed cache connections", async () => {
-    const client: CacheRedisClient = {
-      on: () => client,
-      ping: vi.fn(async () => "PONG"),
-      get: async () => null,
-      multi: () => {
-        throw new Error("not used")
-      },
-      eval: async () => undefined,
-      quit: async () => undefined
-    }
+    const client = redisClient(vi.fn(async () => "PONG"))
     const cache = new RedisCache(client, 60)
     expect(await cache.isReady()).toBe(true)
     vi.mocked(client.ping).mockResolvedValue("LOADING")
@@ -154,6 +160,89 @@ describe("HTTP readiness", () => {
     postgres.mockImplementation(async () => [{ ok: 1 }])
     expect((await check()).status).toBe("ok")
     expect(postgres).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe("optional Redis (ADR-0019)", () => {
+  const ready = { postgres: async () => [{ ok: 1 }], migrations: async () => true }
+
+  it.each([undefined, "", "  "])(
+    "returns 200 and reports Redis as disabled without REDIS_URL (%j)",
+    async (redisUrl) => {
+      const url = await serve(
+        createHealthCheck({ ...ready, redis: redisReadiness(createCache({ redisUrl })) }, revision)
+      )
+      const response = await fetch(`${url}/health`)
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({
+        status: "ok",
+        revision,
+        checks: { postgres: true, redis: "disabled", migrations: true }
+      })
+    }
+  )
+
+  it("returns 503 without driver details when Postgres is down and Redis is disabled", async () => {
+    const url = await serve(
+      createHealthCheck({
+        postgres: async () => {
+          throw new Error("postgresql://user:private-value@host/db")
+        },
+        migrations: async () => true,
+        redis: redisReadiness(createCache({}))
+      })
+    )
+    const response = await fetch(`${url}/health`)
+    expect(response.status).toBe(503)
+    const body = await response.text()
+    expect(body).not.toContain("private-value")
+    expect(JSON.parse(body)).toEqual({
+      status: "unavailable",
+      revision: null,
+      checks: { postgres: false, redis: "disabled", migrations: true }
+    })
+  })
+
+  it("degrades without 503 when configured Redis is unreachable", async () => {
+    const cache = new RedisCache(
+      redisClient(async () => {
+        throw new Error("redis://default:private-password@cache:6379")
+      }),
+      60
+    )
+    const url = await serve(createHealthCheck({ ...ready, redis: redisReadiness(cache) }, revision))
+    const response = await fetch(`${url}/health`)
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).not.toContain("private-password")
+    expect(JSON.parse(body)).toEqual({
+      status: "degraded",
+      revision,
+      checks: { postgres: true, redis: false, migrations: true }
+    })
+  })
+
+  it("probes configured Redis through the cache client", async () => {
+    const ping = vi.fn(async () => "PONG")
+    const check = createHealthCheck({ ...ready, redis: redisReadiness(new RedisCache(redisClient(ping), 60)) })
+    expect(await check()).toEqual({
+      status: "ok",
+      revision: null,
+      checks: { postgres: true, redis: true, migrations: true }
+    })
+    expect(ping).toHaveBeenCalledTimes(1)
+  })
+
+  it("degrades at the shared deadline when a configured Redis probe hangs", async () => {
+    vi.useFakeTimers()
+    const check = createHealthCheck({ ...ready, redis: () => new Promise<boolean>(() => {}) })
+    const pending = check()
+    await vi.advanceTimersByTimeAsync(4000)
+    expect(await pending).toEqual({
+      status: "degraded",
+      revision: null,
+      checks: { postgres: true, redis: false, migrations: true }
+    })
   })
 })
 
