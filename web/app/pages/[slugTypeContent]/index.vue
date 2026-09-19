@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import type { ArticleCardFragment, SectionSummaryFragment } from "~/graphql/generated/graphql"
+  import { GetSectionRedirectDocument } from "~/graphql/generated/graphql"
   import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
   import { buildFeedGroups } from "~/utils/feedGroups"
   import { SECTION_RHYTHM } from "~/utils/feedRhythm"
@@ -7,6 +8,16 @@
   definePageMeta({
     layout: "default"
   })
+
+  const route = useRoute()
+  const requestedSlug = String(route.params.slugTypeContent ?? "")
+  const redirectResult = await useGraphQL(GetSectionRedirectDocument, { slug: requestedSlug })
+  const redirectSection = redirectResult.data?.section
+  const successorSlug = redirectSection?.successor?.slug
+
+  if (redirectSection?.status === "archived" && successorSlug) {
+    await navigateTo(`/${successorSlug}`, { redirectCode: 301, replace: true })
+  }
 
   // Моковые данные для демонстрации
   type SectionNavItem = SectionSummaryFragment & { iconUrl?: string }

@@ -17,7 +17,16 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
-import { archiveSection, createSection, restoreSection, updateSection } from "../../taxonomy/service"
+import {
+  archiveFormat,
+  archiveSection,
+  createFormat,
+  createSection,
+  restoreFormat,
+  restoreSection,
+  updateFormat,
+  updateSection
+} from "../../taxonomy/service"
 
 export default {
   Query: {
@@ -50,7 +59,11 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.publicList,
           cacheWhen: (section) => section?.status === "active"
         },
-        () => ctx.prisma.section.findUnique({ where: { slug: args.slug } })
+        () =>
+          ctx.prisma.section.findUnique({
+            where: { slug: args.slug },
+            include: { successor: true }
+          })
       )
     },
 
@@ -294,6 +307,53 @@ export default {
       }
 
       return result
+    },
+
+    formats: async (
+      _parent: unknown,
+      args: {
+        pagination: PaginationInput
+        sort: SortInput
+        filters: { status?: string[]; hasArticles?: boolean }
+      },
+      ctx: GraphQLContext
+    ) => {
+      ensurePermission(ctx.currentUser, "taxonomy", "admin.formats.read", ctx.requestId)
+      validatePagination(args.pagination, ctx.requestId)
+      validateSort(args.sort, ["name", "slug", "status", "createdAt", "updatedAt"], ctx.requestId)
+
+      const where: Record<string, unknown> = {}
+      if (args.filters.status?.length) where.status = { in: args.filters.status }
+      if (args.filters.hasArticles !== undefined) {
+        where.articles = args.filters.hasArticles ? { some: {} } : { none: {} }
+      }
+
+      const total = await ctx.prisma.format.count({ where })
+      const { skip, take, pagination } = calculatePagination(args.pagination.page, args.pagination.limit, total)
+      const formats = await ctx.prisma.format.findMany({
+        where,
+        skip,
+        take,
+        orderBy: buildOrderBy(args.sort),
+        include: { _count: { select: { articles: true } } }
+      })
+      return { formats, pagination }
+    },
+
+    taxonomyAudit: async (_parent: unknown, args: { entityType: string; entityId: string }, ctx: GraphQLContext) => {
+      ensurePermission(ctx.currentUser, "taxonomy", "admin.taxonomy.audit", ctx.requestId)
+      if (!new Set(["Section", "Format"]).has(args.entityType)) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "entityType",
+          rule: "Section-or-Format"
+        })
+      }
+      return ctx.prisma.auditLog.findMany({
+        where: { entityType: args.entityType, entityId: args.entityId },
+        orderBy: { createdAt: "desc" },
+        take: 20
+      })
     }
   },
 
@@ -422,7 +482,23 @@ export default {
             updates.push(update)
           }
 
-          return await Promise.all(updates)
+          const sections = await Promise.all(updates)
+          await Promise.all(
+            sections.map((section) =>
+              tx.auditLog.create({
+                data: {
+                  action: "section.update",
+                  actorId: ctx.currentUser!.id,
+                  actorRole: ctx.currentUser!.role,
+                  entityType: "Section",
+                  entityId: section.id,
+                  diff: { order: section.order },
+                  requestId: ctx.requestId
+                }
+              })
+            )
+          )
+          return sections
         })
 
         await ctx.cache.delByTags(["home", ...updatedSections.map((section) => `section:${section.slug}`)])
@@ -435,7 +511,7 @@ export default {
 
     archiveSection: async (
       _parent: any,
-      { id, successorId }: { id: string; successorId: string },
+      { id, successorId, reason }: { id: string; successorId: string; reason: string },
       ctx: GraphQLContext
     ) => {
       // Проверка прав доступа
@@ -445,6 +521,7 @@ export default {
         const archivedSection = await archiveSection(ctx.prisma, {
           sectionId: id,
           successorId,
+          reason,
           actor: ctx.currentUser!,
           requestId: ctx.requestId
         })
@@ -466,6 +543,55 @@ export default {
       })
       await ctx.cache.delByTags(["home", `section:${section.slug}`])
       return section
+    },
+
+    createFormat: async (_parent: unknown, { input }: { input: any }, ctx: GraphQLContext) => {
+      ensurePermission(ctx.currentUser, "taxonomy", "format.create", ctx.requestId)
+      try {
+        return await createFormat(ctx.prisma, { input, actor: ctx.currentUser!, requestId: ctx.requestId })
+      } catch (error) {
+        handleAdminError(error, ctx.requestId, "format")
+      }
+    },
+
+    updateFormat: async (_parent: unknown, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
+      ensurePermission(ctx.currentUser, "taxonomy", "format.update", ctx.requestId)
+      try {
+        return await updateFormat(ctx.prisma, {
+          formatId: id,
+          input,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
+        })
+      } catch (error) {
+        handleAdminError(error, ctx.requestId, "format")
+      }
+    },
+
+    archiveFormat: async (_parent: unknown, { id }: { id: string }, ctx: GraphQLContext) => {
+      ensurePermission(ctx.currentUser, "taxonomy", "format.archive", ctx.requestId)
+      try {
+        return await archiveFormat(ctx.prisma, {
+          formatId: id,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
+        })
+      } catch (error) {
+        handleAdminError(error, ctx.requestId, "format")
+      }
+    },
+
+    restoreFormat: async (_parent: unknown, { id }: { id: string }, ctx: GraphQLContext) => {
+      ensurePermission(ctx.currentUser, "taxonomy", "format.restore", ctx.requestId)
+      try {
+        return await restoreFormat(ctx.prisma, {
+          formatId: id,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
+        })
+      } catch (error) {
+        handleAdminError(error, ctx.requestId, "format")
+      }
     }
   }
 }

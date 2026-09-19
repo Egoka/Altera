@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getAdminAccessDecision, getAdminNavigation, parseAdminPeriod } from "../app/utils/admin"
+import { canManageTaxonomy, getAdminAccessDecision, getAdminNavigation, parseAdminPeriod } from "../app/utils/admin"
 
 describe("admin shell role navigation", () => {
   it.each([
@@ -71,6 +71,15 @@ describe("admin shell role navigation", () => {
 })
 
 describe("admin middleware decision", () => {
+  it.each([
+    ["admin", true],
+    ["owner", true],
+    ["editor", false],
+    ["analyst", false]
+  ] as const)("limits taxonomy management for %s", (role, expected) => {
+    expect(canManageTaxonomy(role)).toBe(expected)
+  })
+
   it("allows a service summary returned by the server", () => {
     const summary = { role: "editor", cards: [] } as const
 

@@ -60,11 +60,16 @@ export async function archiveSection(
   input: {
     sectionId: string
     successorId: string
+    reason: string
     actor: TaxonomyActor
     requestId: string
   }
 ) {
   requireRole(input.actor, editorialRoles, "section.archive", input.requestId)
+  const reason = input.reason.trim()
+  if (!reason) {
+    throw createApiError("VALIDATION_ERROR", { requestId: input.requestId, field: "reason", rule: "required" })
+  }
   if (input.sectionId === input.successorId) {
     throw createApiError("VALIDATION_ERROR", {
       requestId: input.requestId,
@@ -95,12 +100,15 @@ export async function archiveSection(
       })
     }
 
-    await tx.article.updateMany({ where: { sectionId: input.sectionId }, data: { sectionId: input.successorId } })
+    const movedArticles = await tx.article.updateMany({
+      where: { sectionId: input.sectionId },
+      data: { sectionId: input.successorId }
+    })
     await tx.sectionSlugHistory.updateMany({
       where: { ownerSectionId: input.sectionId },
       data: { redirectToSectionId: input.successorId }
     })
-    return tx.section.update({
+    const section = await tx.section.update({
       where: { id: input.sectionId },
       data: {
         status: "archived",
@@ -110,6 +118,18 @@ export async function archiveSection(
         archivedByRole: input.actor.role
       }
     })
+    await tx.auditLog.create({
+      data: {
+        action: "section.archive",
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        entityType: "Section",
+        entityId: input.sectionId,
+        diff: { successorId: input.successorId, movedArticles: movedArticles.count, reason },
+        requestId: input.requestId
+      }
+    })
+    return section
   })
 }
 
@@ -267,6 +287,17 @@ export async function createSection(
         where: { slug },
         data: { ownerSectionId: section.id, redirectToSectionId: section.id }
       })
+      await tx.auditLog.create({
+        data: {
+          action: "section.update",
+          actorId: input.actor.id,
+          actorRole: input.actor.role,
+          entityType: "Section",
+          entityId: section.id,
+          diff: { created: { ...input.input, slug } },
+          requestId: input.requestId
+        }
+      })
       return section
     })
   } catch (error) {
@@ -307,7 +338,21 @@ export async function updateSection(
 
   try {
     return await prisma.$transaction(async (tx) => {
-      const current = await tx.section.findUnique({ where: { id: input.sectionId }, select: { slug: true } })
+      const current = await tx.section.findUnique({
+        where: { id: input.sectionId },
+        select: {
+          slug: true,
+          name: true,
+          nameEn: true,
+          description: true,
+          descriptionEn: true,
+          seoTitle: true,
+          seoTitleEn: true,
+          seoDescription: true,
+          seoDescriptionEn: true,
+          order: true
+        }
+      })
       if (!current) throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "section" })
       if (slug && slug !== current.slug) await tx.sectionSlugHistory.create({ data: { slug } })
 
@@ -321,6 +366,17 @@ export async function updateSection(
           data: { ownerSectionId: section.id, redirectToSectionId: section.id }
         })
       }
+      await tx.auditLog.create({
+        data: {
+          action: "section.update",
+          actorId: input.actor.id,
+          actorRole: input.actor.role,
+          entityType: "Section",
+          entityId: section.id,
+          diff: { before: current, after: input.input },
+          requestId: input.requestId
+        }
+      })
       return section
     })
   } catch (error) {
@@ -347,10 +403,22 @@ export async function restoreSection(
       where: { ownerSectionId: input.sectionId },
       data: { redirectToSectionId: input.sectionId }
     })
-    return tx.section.update({
+    const section = await tx.section.update({
       where: { id: input.sectionId },
       data: { status: "active", successorId: null, archivedAt: null, archivedByActorId: null, archivedByRole: null }
     })
+    await tx.auditLog.create({
+      data: {
+        action: "section.restore",
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        entityType: "Section",
+        entityId: section.id,
+        diff: { status: { before: "archived", after: "active" } },
+        requestId: input.requestId
+      }
+    })
+    return section
   })
 }
 
@@ -409,5 +477,155 @@ export async function restoreTag(
       where: { id: input.tagId },
       data: { status: "active", mergedIntoId: null, archivedAt: null, archivedByActorId: null, archivedByRole: null }
     })
+  })
+}
+
+interface FormatInput {
+  name: string
+  nameEn?: string | null
+  slug: string
+  description?: string | null
+  descriptionEn?: string | null
+}
+
+export async function createFormat(
+  prisma: TaxonomyClient,
+  input: { input: FormatInput; actor: TaxonomyActor; requestId: string }
+) {
+  requireRole(input.actor, editorialRoles, "format.create", input.requestId)
+  const data = { ...input.input, slug: normalizeSlug(input.input.slug, input.requestId) }
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const format = await tx.format.create({ data })
+      await tx.auditLog.create({
+        data: {
+          action: "format.update",
+          actorId: input.actor.id,
+          actorRole: input.actor.role,
+          entityType: "Format",
+          entityId: format.id,
+          diff: { created: data },
+          requestId: input.requestId
+        }
+      })
+      return format
+    })
+  } catch (error) {
+    if (isRegistryConflict(error)) {
+      throw createApiError("CONFLICT", {
+        requestId: input.requestId,
+        entity: "format",
+        expected: "unused slug",
+        actual: "existing slug"
+      })
+    }
+    throw error
+  }
+}
+
+export async function updateFormat(
+  prisma: TaxonomyClient,
+  input: {
+    formatId: string
+    input: Partial<FormatInput>
+    actor: TaxonomyActor
+    requestId: string
+  }
+) {
+  requireRole(input.actor, editorialRoles, "format.update", input.requestId)
+  const data = {
+    ...input.input,
+    ...(input.input.slug ? { slug: normalizeSlug(input.input.slug, input.requestId) } : {})
+  }
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const before = await tx.format.findUnique({
+        where: { id: input.formatId },
+        select: {
+          name: true,
+          nameEn: true,
+          slug: true,
+          description: true,
+          descriptionEn: true,
+          status: true
+        }
+      })
+      if (!before) throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "format" })
+      const format = await tx.format.update({ where: { id: input.formatId }, data })
+      await tx.auditLog.create({
+        data: {
+          action: "format.update",
+          actorId: input.actor.id,
+          actorRole: input.actor.role,
+          entityType: "Format",
+          entityId: format.id,
+          diff: { before, after: data },
+          requestId: input.requestId
+        }
+      })
+      return format
+    })
+  } catch (error) {
+    if (isRegistryConflict(error)) {
+      throw createApiError("CONFLICT", {
+        requestId: input.requestId,
+        entity: "format",
+        expected: "unused slug",
+        actual: "existing slug"
+      })
+    }
+    throw error
+  }
+}
+
+export async function archiveFormat(
+  prisma: TaxonomyClient,
+  input: { formatId: string; actor: TaxonomyActor; requestId: string }
+) {
+  requireRole(input.actor, editorialRoles, "format.archive", input.requestId)
+  return prisma.$transaction(async (tx) => {
+    const format = await tx.format.update({
+      where: { id: input.formatId },
+      data: { status: "archived", archivedAt: new Date() }
+    })
+    await tx.auditLog.create({
+      data: {
+        action: "format.update",
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        entityType: "Format",
+        entityId: format.id,
+        diff: { status: { before: "active", after: "archived" } },
+        requestId: input.requestId
+      }
+    })
+    return format
+  })
+}
+
+export async function restoreFormat(
+  prisma: TaxonomyClient,
+  input: { formatId: string; actor: TaxonomyActor; requestId: string }
+) {
+  requireRole(input.actor, editorialRoles, "format.restore", input.requestId)
+  return prisma.$transaction(async (tx) => {
+    const format = await tx.format.update({
+      where: { id: input.formatId },
+      data: { status: "active", archivedAt: null }
+    })
+    await tx.auditLog.create({
+      data: {
+        action: "format.update",
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        entityType: "Format",
+        entityId: format.id,
+        diff: { status: { before: "archived", after: "active" } },
+        requestId: input.requestId
+      }
+    })
+    return format
   })
 }
