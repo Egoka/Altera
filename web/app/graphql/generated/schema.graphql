@@ -203,6 +203,43 @@ input BaseFiltersInput {
   updatedAt: DateRangeInput
 }
 
+type BookmarkCounts {
+  total: Int!
+  unavailable: Int!
+}
+
+type BookmarkItem {
+  article: BookmarkedArticle!
+  bookmarkedAt: String!
+}
+
+type BookmarkState {
+  articleId: ID!
+  bookmarked: Boolean!
+}
+
+type BookmarkedArticle {
+  author: BookmarkedArticleAuthor!
+  available: Boolean!
+  cover: String
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  section: Section
+  slug: String!
+  title: String!
+}
+
+type BookmarkedArticleAuthor {
+  handle: String!
+  name: String!
+}
+
+type BookmarksPageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
 input CreateArticleInput {
   locale: Locale
   sectionId: ID
@@ -311,6 +348,7 @@ input MergeTagsInput {
 
 type Mutation {
   _empty: String
+  addBookmark(articleId: ID!): BookmarkState!
   archiveArticle(id: ID!): Article!
   archiveFormat(id: ID!): AdminFormat!
   archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
@@ -326,6 +364,7 @@ type Mutation {
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
   mergeTags(input: MergeTagsInput!): Tag!
+  removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
@@ -400,6 +439,12 @@ type MyArticlesPageInfo {
   hasNextPage: Boolean!
 }
 
+type MyBookmarksConnection {
+  counts: BookmarkCounts!
+  items: [BookmarkItem!]!
+  pageInfo: BookmarksPageInfo!
+}
+
 type PaginationInfo {
   currentPage: Int!
   hasNextPage: Boolean!
@@ -472,6 +517,8 @@ type Query {
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
+  myBookmark(articleId: ID!): BookmarkState!
+  myBookmarks(cursor: ID, limit: Int = 20, unavailable: Boolean): MyBookmarksConnection!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
   publicSections: [PublicSection!]!
