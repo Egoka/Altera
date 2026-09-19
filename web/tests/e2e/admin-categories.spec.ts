@@ -51,15 +51,33 @@ test.describe("admin categories", () => {
     })
     await prisma.handleHistory.update({ where: { handle: "t070-admin" }, data: { userId: "t070-admin" } })
     await prisma.handleHistory.update({ where: { handle: "t070-author" }, data: { userId: "t070-author" } })
+    await prisma.sectionSlugHistory.upsert({
+      where: { slug: "t070-culture" },
+      create: { slug: "t070-culture" },
+      update: {}
+    })
     await prisma.section.upsert({
       where: { slug: "t070-culture" },
       update: { status: "active", successorId: null, order: 700 },
       create: { id: "t070-culture", name: "T070 Культура", nameEn: "T070 Culture", slug: "t070-culture", order: 700 }
     })
+    await prisma.sectionSlugHistory.update({
+      where: { slug: "t070-culture" },
+      data: { ownerSectionId: "t070-culture", redirectToSectionId: null }
+    })
+    await prisma.sectionSlugHistory.upsert({
+      where: { slug: "t070-science" },
+      create: { slug: "t070-science" },
+      update: {}
+    })
     await prisma.section.upsert({
       where: { slug: "t070-science" },
       update: { status: "active", successorId: null, order: 701 },
       create: { id: "t070-science", name: "T070 Наука", nameEn: "T070 Science", slug: "t070-science", order: 701 }
+    })
+    await prisma.sectionSlugHistory.update({
+      where: { slug: "t070-science" },
+      data: { ownerSectionId: "t070-science", redirectToSectionId: null }
     })
     await prisma.format.upsert({
       where: { slug: "t070-essay" },
