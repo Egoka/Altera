@@ -3,11 +3,12 @@
 - **Task / issue**: T-007 / ALTE-63 (`01a0af61-f884-77db-b6cc-bce46335a18d`)
 - **Источник**: `docs/backlog/tasks/T-007-deterministic-seed.md`, blob
   `772a87fd573b82a364d9029169c5b563375a6115`
-- **Baseline**: `2979101be6c630d53d6796594253f1765913d0d5` (`origin/app`)
-- **Проверенная ревизия реализации**: `fede5dcf2c373b42880be3155807e95f0bfa2e70`
+- **Исходный baseline задачи**: `2979101be6c630d53d6796594253f1765913d0d5`
+- **PR rebase base**: `67066a297cd047e1c6040dfcccac87e6de31496f` (`origin/app`)
+- **Проверенная ревизия**: `d0a8ce9cf81f1126a940ca34cd181f02642cb82d`
 - **Ветка**: `server/t007-deterministic-seed`
 - **Implementer**: `b0f3bc32-dd95-471e-b40e-517aaf83edf0`
-- **Run**: `01a0afa1-7898-76e9-a800-77d7ba51384e`
+- **Run**: `01a0b7a2-1d06-7d5c-92d9-852f288a4ce2`
 
 ## Что сделано
 
@@ -48,8 +49,10 @@
 - `prisma validate`: exit 0.
 - `pnpm format`: exit 0.
 - `pnpm lint`: exit 0.
-- `T007_TEST_DATABASE_URL=… pnpm test`: exit 0; server — 24 files passed, 7 skipped,
-  141 tests passed, 19 skipped; web — 17 files и 132 tests passed.
+- `T007_TEST_DATABASE_URL=… pnpm test`: exit 0; server — 26 files passed, 7 skipped,
+  155 tests passed, 19 skipped; web — 21 files и 155 tests passed.
+- `vitest run tests/admin-pd-audit.test.ts tests/seed-database.test.ts`: exit 0; 2 files,
+  6 tests passed; T-029 files match `origin/app` byte-for-byte after rebase.
 - `pnpm --filter server run build:ci`: exit 0.
 - `git diff --check`: exit 0.
 
