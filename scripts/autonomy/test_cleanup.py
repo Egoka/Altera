@@ -60,6 +60,8 @@ class LiveEvidence:
 
 
 class CleanupTests(unittest.TestCase):
+    merge_mode = "squash"
+
     def setUp(self):
         self.assertIsNotNone(cleanup_module, "safe cleanup module is not implemented")
         self.temp = tempfile.TemporaryDirectory()
@@ -88,8 +90,11 @@ class CleanupTests(unittest.TestCase):
         (self.worktree / "product.txt").write_text("completed feature\n")
         git(self.worktree, "commit", "-am", "feature")
         self.head = git(self.worktree, "rev-parse", "HEAD")
-        git(self.repo, "merge", "--squash", self.branch)
-        git(self.repo, "commit", "-m", "squash feature")
+        if self.merge_mode == "squash":
+            git(self.repo, "merge", "--squash", self.branch)
+            git(self.repo, "commit", "-m", "squash feature")
+        else:
+            git(self.repo, "merge", "--no-ff", "-m", "merge feature", self.branch)
         self.merge = git(self.repo, "rev-parse", "HEAD")
         git(self.repo, "push", "origin", "app", self.branch)
         self.finalization = self.repo / "docs" / "reports" / "finalization.md"
@@ -363,6 +368,31 @@ class CleanupTests(unittest.TestCase):
         result = cleanup_module.runtime_gc({"daemon": "multica"}, apply=True)
         self.assertEqual(result["status"], "unsupported")
         self.assertTrue(self.worktree.exists())
+
+
+class MergeCommitCleanupTests(CleanupTests):
+    """Тот же контракт для обычного merge-коммита GitHub: второй родитель — проверенный head."""
+
+    merge_mode = "merge"
+
+    def test_merge_commit_second_parent_is_verified_head(self):
+        parents = git(self.repo, "rev-list", "--parents", "-n", "1", self.merge).split()[1:]
+        self.assertEqual(parents, [self.base, self.head])
+        self.assertEqual(self.run_cleanup()["status"], "eligible")
+
+    def test_merge_commit_with_other_second_parent_is_rejected(self):
+        # Та же правка другим коммитом: содержимое совпадает, но PR head в merge не входит.
+        git(self.repo, "checkout", "-b", "other", self.base)
+        (self.repo / "product.txt").write_text("completed feature\n")
+        git(self.repo, "commit", "-am", "same content, other commit")
+        git(self.repo, "checkout", "app")
+        git(self.repo, "merge", "--no-ff", "-m", "merge other", "other")
+        wrong_merge = git(self.repo, "rev-parse", "HEAD")
+        git(self.repo, "push", "origin", "app")
+        self.receipt["pr"]["merge_sha"] = wrong_merge
+        self.evidence["pr"]["merge_sha"] = wrong_merge
+        self.evidence["task"]["receipt_sha256"] = digest(self.receipt)
+        self.assert_preserved("merge parent")
 
 
 if __name__ == "__main__":
