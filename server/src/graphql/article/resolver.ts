@@ -19,6 +19,13 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { buildArticleCacheTags } from "../../cache/key"
 import { readThroughPublicCache } from "../../cache/read-through"
+import {
+  ensurePublicArticleVisible,
+  getPublicArticleVisibility,
+  publicArticleSelect,
+  publicArticleWhere,
+  publicationDatesForStatus
+} from "../../visibility/article"
 import { randomUUID } from "node:crypto"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
@@ -86,6 +93,23 @@ const mapMyArticle = (article: MyArticleRecord, userId: string) => ({
     }
   })
 })
+
+const articleCreatorRoles = new Set(["reader", "author", "editor"])
+
+// Рубрика обязательна перед отправкой на проверку и публикацией (article-new.md §1).
+const sectionRequiredStatuses = new Set(["review", "published"])
+
+function ensureActiveSection(
+  article: { sectionId: string | null; section?: { status: string } | null },
+  requestId: string
+): void {
+  if (!article.sectionId) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "sectionId", rule: "required" })
+  }
+  if (article.section?.status !== "active") {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "sectionId", rule: "active" })
+  }
+}
 
 function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string) {
   const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
@@ -170,12 +194,57 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.article,
           cacheWhen: (article) => article?.status === "published"
         },
-        () =>
-          ctx.prisma.article.findUnique({
+        async () => {
+          const article = await ctx.prisma.article.findUnique({
             where: { slug: args.slug },
-            include: { author: true, section: true, tags: true }
+            select: { ...publicArticleSelect, firstPublishedAt: true }
           })
+          ensurePublicArticleVisible(article, ctx.requestId)
+          const { firstPublishedAt, ...publicArticle } = article
+          void firstPublishedAt
+          return publicArticle
+        }
       )
+    },
+
+    gone: async (
+      _parent: unknown,
+      args: { locale: "ru" | "en"; sectionSlug: string; slug: string },
+      ctx: GraphQLContext
+    ) => {
+      const translation = await ctx.prisma.articleTranslation.findUnique({
+        where: { locale_slug: { locale: args.locale, slug: args.slug } },
+        select: {
+          title: true,
+          slug: true,
+          publishedAt: true,
+          status: true,
+          article: {
+            select: {
+              archivedAt: true,
+              author: { select: publicArticleSelect.author.select },
+              section: { select: publicArticleSelect.section.select }
+            }
+          }
+        }
+      })
+
+      if (
+        getPublicArticleVisibility(
+          translation ? { status: translation.status, firstPublishedAt: translation.publishedAt } : null
+        ) !== "archived" ||
+        translation?.article.section?.slug !== args.sectionSlug
+      ) {
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+      }
+
+      return {
+        title: translation.title,
+        firstPublishedAt: translation.publishedAt!.toISOString(),
+        unpublishedAt: translation.article.archivedAt?.toISOString() ?? null,
+        author: translation.article.author,
+        section: translation.article.section
+      }
     },
 
     articleDetail: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
@@ -187,8 +256,8 @@ export default {
       }
 
       const article = await ctx.prisma.article.findUnique({
-        where: { slug: args.slug, status: "published" },
-        include: { author: true, section: true, tags: true }
+        where: publicArticleWhere({ slug: args.slug }),
+        select: publicArticleSelect
       })
 
       if (!article) {
@@ -197,30 +266,28 @@ export default {
 
       // Получаем рекомендуемые статьи (похожие по тегам)
       const recommendedArticles = await ctx.prisma.article.findMany({
-        where: {
-          status: "published",
+        where: publicArticleWhere({
           slug: { not: args.slug },
           tags: {
             some: {
               slug: { in: article.tags.map((tag) => tag.slug) }
             }
           }
-        },
+        }),
         take: 5,
         orderBy: { publishedAt: "desc" },
-        include: { author: true, section: true, tags: true }
+        select: publicArticleSelect
       })
 
       // Получаем связанные статьи (по автору и типу контента)
       const relatedArticles = await ctx.prisma.article.findMany({
-        where: {
-          status: "published",
+        where: publicArticleWhere({
           slug: { not: args.slug },
-          OR: [{ authorId: article.authorId }, { sectionId: article.sectionId }]
-        },
+          OR: [{ authorId: article.author.id }, { sectionId: article.section?.id ?? null }]
+        }),
         take: 10,
         orderBy: { publishedAt: "desc" },
-        include: { author: true, section: true, tags: true }
+        select: publicArticleSelect
       })
 
       // Рассчитываем статистику статьи
@@ -262,7 +329,7 @@ export default {
       }
 
       const article = await ctx.prisma.article.findUnique({
-        where: { slug: articleSlug, status: "published" },
+        where: publicArticleWhere({ slug: articleSlug }),
         include: { tags: true }
       })
 
@@ -271,18 +338,17 @@ export default {
       }
 
       const articles = await ctx.prisma.article.findMany({
-        where: {
-          status: "published",
+        where: publicArticleWhere({
           slug: { not: articleSlug },
           tags: {
             some: {
               slug: { in: article.tags.map((tag) => tag.slug) }
             }
           }
-        },
+        }),
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: { author: true, section: true, tags: true }
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, {
@@ -306,7 +372,7 @@ export default {
       }
 
       const article = await ctx.prisma.article.findUnique({
-        where: { slug: articleSlug, status: "published" },
+        where: publicArticleWhere({ slug: articleSlug }),
         select: { authorId: true, sectionId: true }
       })
 
@@ -315,14 +381,13 @@ export default {
       }
 
       const articles = await ctx.prisma.article.findMany({
-        where: {
-          status: "published",
+        where: publicArticleWhere({
           slug: { not: articleSlug },
           OR: [{ authorId: article.authorId }, { sectionId: article.sectionId }]
-        },
+        }),
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: { author: true, section: true, tags: true }
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, {
@@ -341,7 +406,7 @@ export default {
       }
 
       const article = await ctx.prisma.article.findUnique({
-        where: { slug, status: "published" },
+        where: publicArticleWhere({ slug }),
         select: { body: true }
       })
 
@@ -378,10 +443,10 @@ export default {
       // Получаем последние опубликованные статьи как "featured"
       // В будущем можно добавить поле isFeatured в модель Article
       const articles = await ctx.prisma.article.findMany({
-        where: { status: "published" },
+        where: publicArticleWhere(),
         orderBy: { publishedAt: "desc" },
         take: limit,
-        include: { author: true, section: true, tags: true }
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] })
@@ -399,12 +464,12 @@ export default {
         return cachedArticles
       }
 
-      const where: any = { status: "published" }
+      const where = publicArticleWhere()
 
       if (excludeFeatured) {
         // Сначала получаем ID "featured" статей, чтобы исключить их
         const featuredArticles = await ctx.prisma.article.findMany({
-          where: { status: "published" },
+          where: publicArticleWhere(),
           orderBy: { publishedAt: "desc" },
           take: 5, // Стандартное количество для featured
           select: { id: true }
@@ -419,7 +484,7 @@ export default {
         where: where,
         orderBy: { publishedAt: "desc" },
         take: limit,
-        include: { author: true, section: true, tags: true }
+        select: publicArticleSelect
       })
 
       await ctx.cache.set(cacheKey, articles, { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] })
@@ -458,12 +523,11 @@ export default {
       // Пока просто возвращаем последние статьи
       // В будущем можно добавить аналитику просмотров
       const articles = await ctx.prisma.article.findMany({
-        where: {
-          status: "published",
+        where: publicArticleWhere({
           publishedAt: {
             gte: dateFilter
           }
-        },
+        }),
         orderBy: { publishedAt: "desc" },
         take: limit,
         include: { author: true, section: true, tags: true }
@@ -602,6 +666,10 @@ export default {
   Mutation: {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       const user = ensureArticleAuthoringAccess(ctx, "article.create")
+      // Из служебных ролей материал создаёт только editor — редакционный (article-new.md §2, журнал §17, §25.2).
+      if (!articleCreatorRoles.has(user.role)) {
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.create" })
+      }
 
       const articleId = randomUUID()
       const locale = input.locale ?? user.locale
@@ -626,6 +694,7 @@ export default {
             sectionId: section?.id ?? null,
             sourceLocale: locale,
             authorId: user.id,
+            isEditorial: user.role === "editor",
             status: "draft",
             translations: {
               create: {
@@ -818,13 +887,7 @@ export default {
           actual: article.status
         })
       }
-      if (!article.sectionId) {
-        throw createApiError("VALIDATION_ERROR", {
-          requestId: ctx.requestId,
-          field: "sectionId",
-          rule: "required"
-        })
-      }
+      ensureActiveSection(article, ctx.requestId)
 
       return ctx.prisma.article.update({
         where: { id },
@@ -860,14 +923,15 @@ export default {
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
       ensureRole(ctx.currentUser, "admin", "article.setStatus", ctx.requestId)
 
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
+      const article = await ctx.prisma.article.findUnique({ where: { id }, include: { section: true } })
       if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+      if (sectionRequiredStatuses.has(status)) ensureActiveSection(article, ctx.requestId)
 
       const updatedArticle = await ctx.prisma.article.update({
         where: { id },
         data: {
           status,
-          publishedAt: status === "published" && article.status !== "published" ? new Date() : article.publishedAt
+          ...publicationDatesForStatus(status, article.publishedAt, article.firstPublishedAt)
         },
         include: { author: true, section: true, tags: true }
       })
@@ -948,17 +1012,31 @@ export default {
         if (articlesToUpdate.length !== ids.length) {
           throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
         }
+        if (sectionRequiredStatuses.has(status)) {
+          for (const article of articlesToUpdate) ensureActiveSection(article, ctx.requestId)
+        }
 
         // Обновляем статус статей
         const updateData: any = { status }
         if (status === "published") {
-          updateData.publishedAt = new Date()
+          const publishedAt = new Date()
+          updateData.publishedAt = publishedAt
+          await ctx.prisma.$transaction([
+            ctx.prisma.article.updateMany({
+              where: { id: { in: ids }, firstPublishedAt: null },
+              data: { firstPublishedAt: publishedAt }
+            }),
+            ctx.prisma.article.updateMany({
+              where: { id: { in: ids } },
+              data: updateData
+            })
+          ])
+        } else {
+          await ctx.prisma.article.updateMany({
+            where: { id: { in: ids } },
+            data: updateData
+          })
         }
-
-        await ctx.prisma.article.updateMany({
-          where: { id: { in: ids } },
-          data: updateData
-        })
 
         // Получаем обновленные статьи
         const updatedArticles = await ctx.prisma.article.findMany({

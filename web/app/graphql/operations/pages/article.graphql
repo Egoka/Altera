@@ -28,15 +28,20 @@ query GetArticle($slug: String!) {
       slug
     }
   }
-  relatedArticles(articleSlug: $slug, limit: 5) {
-    id
+}
+
+query GetGoneArticle($locale: Locale!, $sectionSlug: String!, $slug: String!) {
+  gone(locale: $locale, sectionSlug: $sectionSlug, slug: $slug) {
     title
-    slug
-    dek
-    featuredImage
+    firstPublishedAt
+    unpublishedAt
     author {
       name
-      slug: handle
+      handle
+    }
+    section {
+      name
+      slug
     }
   }
 }

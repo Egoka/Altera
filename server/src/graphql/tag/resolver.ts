@@ -19,12 +19,15 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveTag, createTag, mergeTags, restoreTag, updateTag } from "../../taxonomy/service"
+import { publicArticleSelect, publicArticleWhere, publicTagSelect, publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
-    tagAutocomplete: async (_parent: any, { q, limit = 10 }: { q: string; limit?: number }, ctx: GraphQLContext) => {
+    tagAutocomplete: async (_parent: any, args: { q: string; limit?: number | null }, ctx: GraphQLContext) => {
       ensureAuthenticated(ctx.currentUser, ctx.requestId)
-      const query = q.trim()
+      // Явный null в GraphQL не подставляет значение по умолчанию из схемы.
+      const limit = args.limit ?? 10
+      const query = args.q.trim()
       if (query.length < 2) {
         throw createApiError("VALIDATION_ERROR", {
           requestId: ctx.requestId,
@@ -40,18 +43,29 @@ export default {
         })
       }
 
-      return ctx.prisma.tag.findMany({
-        where: {
-          status: "active",
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { nameEn: { contains: query, mode: "insensitive" } },
-            { slug: { contains: query, mode: "insensitive" } }
-          ]
-        },
+      const matching = (filter: { startsWith: string } | { contains: string }) => {
+        const condition = { ...filter, mode: "insensitive" as const }
+        return [{ name: condition }, { nameEn: condition }, { slug: condition }]
+      }
+
+      // Сначала совпадения по началу: иначе точный тег может не попасть в лимит среди подстрок.
+      const prefixMatches = await ctx.prisma.tag.findMany({
+        where: { status: "active", OR: matching({ startsWith: query }) },
         orderBy: { name: "asc" },
         take: limit
       })
+      if (prefixMatches.length >= limit) return prefixMatches
+
+      const otherMatches = await ctx.prisma.tag.findMany({
+        where: {
+          status: "active",
+          id: { notIn: prefixMatches.map((tag) => tag.id) },
+          OR: matching({ contains: query })
+        },
+        orderBy: { name: "asc" },
+        take: limit - prefixMatches.length
+      })
+      return [...prefixMatches, ...otherMatches]
     },
 
     tag: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
@@ -62,7 +76,7 @@ export default {
           tags: [`tag:${args.slug}`],
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
-        () => ctx.prisma.tag.findUnique({ where: { slug: args.slug } })
+        () => ctx.prisma.tag.findUnique({ where: { slug: args.slug }, select: publicTagSelect })
       )
     },
 
@@ -84,24 +98,14 @@ export default {
       }
 
       const totalCount = await ctx.prisma.article.count({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        }
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } })
       })
       const articles = await ctx.prisma.article.findMany({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        },
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } }),
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { publishedAt: "desc" },
-        include: {
-          author: true,
-          section: true,
-          tags: true
-        }
+        select: publicArticleSelect
       })
 
       const response = {
@@ -125,31 +129,24 @@ export default {
       }
 
       const totalArticles = await ctx.prisma.article.count({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        }
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } })
       })
 
       const oneMonthAgo = new Date()
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
       const articlesThisMonth = await ctx.prisma.article.count({
-        where: {
+        where: publicArticleWhere({
           tags: { some: { slug: tagSlug } },
-          status: "published",
           publishedAt: { gte: oneMonthAgo }
-        }
+        })
       })
 
       // Получаем популярных авторов для этого тега
       const popularAuthors = await ctx.prisma.user.findMany({
         where: {
           articles: {
-            some: {
-              tags: { some: { slug: tagSlug } },
-              status: "published"
-            }
+            some: publicArticleWhere({ tags: { some: { slug: tagSlug } } })
           }
         },
         take: 5,
@@ -157,15 +154,13 @@ export default {
           articles: {
             _count: "desc"
           }
-        }
+        },
+        select: publicUserSelect
       })
 
       // Рассчитываем среднее время чтения (примерная оценка)
       const articlesWithBody = await ctx.prisma.article.findMany({
-        where: {
-          tags: { some: { slug: tagSlug } },
-          status: "published"
-        },
+        where: publicArticleWhere({ tags: { some: { slug: tagSlug } } }),
         select: { body: true }
       })
 

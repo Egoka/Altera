@@ -1,6 +1,6 @@
 import crypto from "crypto"
 
-export const CACHE_KEY_VERSION = "v2"
+export const CACHE_KEY_VERSION = "v3"
 
 const canonicalize = (value: unknown): string => {
   if (value === undefined) return '["undefined"]'

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import sectionResolver from "../src/graphql/section/resolver"
+import { publicSectionSelect } from "../src/visibility/article"
 
 const admin = { id: "admin-1", role: "admin" as const }
 
@@ -21,9 +22,10 @@ describe("admin categories GraphQL", () => {
     }
 
     await expect(sectionResolver.Query.section({}, { slug: "culture" }, context as never)).resolves.toEqual(section)
+    // Публичный запрос отдаёт только публичные поля рубрики и её преемника (T-027).
     expect(findUnique).toHaveBeenCalledWith({
       where: { slug: "culture" },
-      include: { successor: true }
+      select: { ...publicSectionSelect, successor: { select: publicSectionSelect } }
     })
   })
 

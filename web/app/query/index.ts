@@ -10,6 +10,7 @@ export {
   GetAdminArticlesDocument as GET_ADMIN_ARTICLES,
   GetAdminTagsDocument as GET_ADMIN_TAGS,
   GetArticleDocument as GET_ARTICLE,
+  GetGoneArticleDocument as GET_GONE_ARTICLE,
   GetArticleForEditDocument as GET_ARTICLE_FOR_EDIT,
   GetAuthorPageDocument as GET_AUTHOR_PAGE,
   GetSectionPageDocument as GET_SECTION_PAGE,

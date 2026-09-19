@@ -246,6 +246,14 @@ type FormatsResponse {
   pagination: PaginationInfo!
 }
 
+type GoneArticle {
+  author: User!
+  firstPublishedAt: String!
+  section: Section
+  title: String!
+  unpublishedAt: String
+}
+
 input GrantPermissionExceptionInput {
   endsAt: String
   kind: PermissionExceptionKind!
@@ -420,6 +428,7 @@ type Query {
   authorStats(authorHandle: String!): AuthorStats
   featuredArticles(limit: Int = 5): [Article!]!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
+  gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
