@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-084",
+  "issue_id": "01a0b5ee-a851-7891-b084-89bd16ffc07c",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-084-admin-grants-launch.md",
+    "sha": "204cd1897651036994681474a4a70179cfd0dd9e"
+  },
+  "baseline_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
+  "tested_sha": "05ae29569ad1e120b06f87260ab16828b7dfcbd7",
+  "branch": "web/t084-admin-grants",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot/Altera",
+  "implementer_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
+  "implementer_run_id": "01a0b877-6121-73dd-abb5-88696a82c415",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "grants/index.vue: GrantPlan modal with userHandle (required), tier select, startsAt/endsAt date inputs (empty endsAt = indefinite), reason (required). Submit disabled until userHandle + reason filled. Mock submitGrant() adds row with status queued. E2e tests in web/tests/e2e/17-admin-grants.spec.ts cover form validation and indefinite grant submission."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "subscriptions/index.vue: first-launch info banner (admin.firstLaunchSubscriptionsNote), same grant table showing all statuses, detail panel links to /admin/grants. E2e tests cover banner visibility, all status rows, and link presence."
+    }
+  ],
+  "pr": {
+    "number": 135,
+    "url": "https://github.com/Egoka/Altera/pull/135",
+    "base_ref": "app",
+    "base_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
+    "head_sha": "05ae29569ad1e120b06f87260ab16828b7dfcbd7",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Frontend-only changes: new Vue pages, i18n keys, navigation menu items. No server code, no env vars, no migrations."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-084.md",
+    "sha256": null
+  },
+  "usage": null
+}
