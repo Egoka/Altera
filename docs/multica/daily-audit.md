@@ -22,6 +22,19 @@
 Дневной аудит сам не назначает работу, не меняет issue и не отправляет сообщения. Сбор и рендеринг выполняются
 детерминированным Python stdlib кодом `scripts/autonomy/reporting.py`.
 
+## Публикация и слияние
+
+Решение владельца от 2026-09-19: отчёты сразу сливаются в `app`, а не ждут на отдельной ветке.
+`scripts/autonomy/daily_publish.py` публикует ветку `codex/autonomy-report-<date>` и один PR, ждёт итоговый
+`test` GitHub Actions по точному head SHA и сливает PR обычным merge-коммитом
+(`gh pr merge --merge --match-head-commit`). Если `app` за время CI ушёл вперёд, publisher вливает его в ветку,
+пересчитывает `PROGRESS.md` и `periods.json` из суточных JSON и ждёт CI нового head. После подтверждённого
+merge он удаляет свои локальные worktree и ветку; ветку на `origin` снимает GitHub.
+
+Красный CI, конфликт или таймаут оставляют PR открытым, а запуск завершается ошибкой; Ledger допускает повтор
+тех же суток, и повтор сливает существующий PR. Параметры конфигурации: `report_auto_merge` (по умолчанию
+`true`), `report_merge_timeout_seconds` (1800), `report_merge_poll_seconds` (20) и `report_merge_attempts` (3).
+
 ## Команды
 
 Параметры сервера, workspace, проекта и GitHub repository обязательны. Collector не использует неявный активный

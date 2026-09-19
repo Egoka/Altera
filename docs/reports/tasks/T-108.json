@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "task_id": "T-108",
+  "issue_id": "01a0ad33-1576-7794-8770-747f6d48d916",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-108-adr-0047-plus.md",
+    "sha": "5bba41a599581e52484dff2cc131615b08e2a4cc"
+  },
+  "baseline_sha": "48eede0d4a710491169872b6a760133135f83410",
+  "tested_sha": "7aaab7e5ba0fd163f871f66163d65c192a2a6620",
+  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+  "implementer_run_id": "01a0ad67-2bac-70fb-97dd-645c64ac6e54",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "ADR-0048…0054 в docs/decisions/ ссылаются на журнальные решения §1–§29; заменённые ADR (0035, 0039, 0040, 0043) имеют строки статуса; README обновлён; новых правил не введено (review подтвердил)"
+    }
+  ],
+  "pr": {
+    "number": 98,
+    "url": "https://github.com/Egoka/Altera/pull/98",
+    "base_ref": "app",
+    "base_sha": "48eede0d4a710491169872b6a760133135f83410",
+    "head_sha": "7aaab7e5ba0fd163f871f66163d65c192a2a6620",
+    "merge_sha": "26776c1c9584e3fda2f06cc9b1dca1202659c967"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0adce-d06e-78a4-89a8-fa11c6e60241",
+    "sha": "7aaab7e5ba0fd163f871f66163d65c192a2a6620",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Docs-only task — no server or package files changed"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-108.md",
+    "sha256": "dc79b646850b6e8b2cc6ddd55f26e5275ee64f6b9a60d6cf17f49380f32ae8e3"
+  },
+  "usage": null
+}
