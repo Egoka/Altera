@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task_id": "T-070",
+  "issue_id": "01a0b5ee-c45e-7edd-b058-768964c3b5da",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-070-admin-categories.md",
+    "sha": "f934e0e654b9d9aa1b82a37ee020f26c49458936"
+  },
+  "baseline_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
+  "tested_sha": "93e48024da23e6165e366aa0e518ad4e298f23ee",
+  "branch": "web/t070-admin-categories",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t070-admin-categories",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b80b-5a38-7495-af19-95c39c31439e",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "pending_ci",
+      "evidence": "Unit/contract tests pass; Playwright admin-categories.spec.ts is running in PR #134 isolated PostgreSQL 17 CI"
+    },
+    {
+      "id": "AC-2",
+      "status": "pending_ci",
+      "evidence": "Server tests cover required successor, atomic move and audit; Playwright covers HTTP 301 and Location"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 166 passed / 20 skipped; web 164 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright_local": "precondition_failed: local PostgreSQL rejected test credentials before browser steps",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35429013860",
+    "environment": "Node 24.3.0 (repository requires 24.12.0), pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 134,
+    "url": "https://github.com/Egoka/Altera/pull/134",
+    "base_ref": "app",
+    "base_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
+    "head_sha": "93e48024da23e6165e366aa0e518ad4e298f23ee",
+    "merge_sha": null
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server GraphQL and web taxonomy behavior require controller-managed deployment and health verification after merge"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-070.md",
+    "sha256": "039672acdbb2334ce9eed148e5d7ccf6a1d2f3ea52fd105fc07ad595208ae5ba"
+  },
+  "managed_path_only": true,
+  "usage": null
+}
