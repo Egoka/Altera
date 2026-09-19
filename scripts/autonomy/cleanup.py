@@ -306,7 +306,7 @@ def cleanup(repo, receipt, evidence_provider, *, owned_root, log_dir=None,
                     _git(repo, "push", "--force-with-lease=refs/heads/" + receipt["branch"] + ":" + remote_head,
                          remote, ":refs/heads/" + receipt["branch"])
                     result["actions"].append("remote_branch_deleted")
-                # update-ref поддерживает CAS и корректен для подтверждённого squash.
+                # update-ref поддерживает CAS и корректен для подтверждённого merge-коммита и squash.
                 _validate_identity(repo, receipt, owned_root, False)
                 _git(repo, "update-ref", "-d", "refs/heads/" + receipt["branch"], receipt["pr"]["head_sha"])
                 result["actions"].append("local_branch_deleted")
