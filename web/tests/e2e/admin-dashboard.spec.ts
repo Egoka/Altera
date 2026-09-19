@@ -276,7 +276,7 @@ test.describe("admin dashboard", () => {
 
     await page.getByRole("button", { name: "Обновить" }).click()
 
-    await expect(page.getByRole("alert")).toBeVisible()
+    await expect(page.getByRole("alert").filter({ hasText: /\S/ })).toBeVisible()
     await expect(page.getByText("requestId: req-whole")).toBeVisible()
   })
 })
