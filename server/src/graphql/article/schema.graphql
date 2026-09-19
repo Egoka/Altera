@@ -167,15 +167,8 @@ extend type Query {
 
 # Типы для мутаций
 input CreateArticleInput {
-  title: String!
-  body: String!
-  slug: String!
-  dek: String
-  excerpt: String
-  featuredImage: String
   sectionId: ID
-  formatId: ID
-  tags: [ID!]
+  locale: Locale
 }
 
 input UpdateArticleInput {

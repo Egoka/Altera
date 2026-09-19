@@ -19,6 +19,7 @@ import {
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { buildArticleCacheTags } from "../../cache/key"
 import { readThroughPublicCache } from "../../cache/read-through"
+import { randomUUID } from "node:crypto"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
 
@@ -602,21 +603,50 @@ export default {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       const user = ensureArticleAuthoringAccess(ctx, "article.create")
 
-      const { tags, ...articleData } = input
+      const articleId = randomUUID()
+      const locale = input.locale ?? user.locale
+      const title = ""
+      const body = ""
+      const slug = `draft-${articleId}`
 
-      const newArticle = await ctx.prisma.article.create({
-        data: {
-          ...articleData,
-          authorId: user.id,
-          status: "draft", // Always create as a draft
-          // Note: publishedAt is not set here
-          tags: tags
-            ? {
-                connect: tags.map((id: string) => ({ id }))
+      const newArticle = await ctx.prisma.$transaction(async (tx) => {
+        const section = input.sectionId
+          ? await tx.section.findFirst({
+              where: { id: input.sectionId, status: "active" },
+              select: { id: true }
+            })
+          : null
+
+        return tx.article.create({
+          data: {
+            id: articleId,
+            title,
+            body,
+            slug,
+            sectionId: section?.id ?? null,
+            sourceLocale: locale,
+            authorId: user.id,
+            status: "draft",
+            translations: {
+              create: {
+                locale,
+                slug,
+                title,
+                body: [],
+                status: "draft",
+                revisions: {
+                  create: {
+                    title,
+                    body: [],
+                    kind: "manual",
+                    createdById: user.id
+                  }
+                }
               }
-            : undefined
-        },
-        include: { author: true, section: true, tags: true }
+            }
+          },
+          include: { author: true, section: true, tags: true, translations: true }
+        })
       })
 
       // No cache invalidation is needed because drafts are not public.
@@ -786,6 +816,13 @@ export default {
           entity: "article",
           expected: "draft",
           actual: article.status
+        })
+      }
+      if (!article.sectionId) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "sectionId",
+          rule: "required"
         })
       }
 

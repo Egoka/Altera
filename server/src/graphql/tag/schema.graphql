@@ -59,6 +59,8 @@ type ArticlesByTagResponse {
 }
 
 extend type Query {
+  tagAutocomplete(q: String!, limit: Int = 10): [Tag!]!
+
   # Запросы для страницы тега
   tag(slug: String!): Tag
   articlesByTag(tagSlug: String!, page: Int = 1, limit: Int = 10): ArticlesByTagResponse!
@@ -72,7 +74,7 @@ extend type Query {
 input CreateTagInput {
   name: String!
   nameEn: String
-  slug: String!
+  slug: String
   description: String
 }
 
