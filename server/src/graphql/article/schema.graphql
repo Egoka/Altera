@@ -8,6 +8,21 @@ enum ArticleStatus {
   archived
 }
 
+enum MyArticleStatus {
+  draft
+  ai_check
+  review
+  rework
+  published
+  rejected
+  archived
+}
+
+enum ArticleArchiveActor {
+  self
+  staff
+}
+
 type Article {
   id: ID!
   title: String!
@@ -24,6 +39,52 @@ type Article {
   section: Section
   format: Format
   tags: [Tag!]!
+}
+
+type MyArticleTranslation {
+  id: ID!
+  locale: Locale!
+  slug: String!
+  title: String!
+  status: ArticleStatus!
+  rejected: Boolean!
+  publishedAt: String
+  updatedAt: String!
+  reeditUntil: String
+  lastReviewMessageAt: String
+  unread: Boolean!
+}
+
+type MyArticle {
+  id: ID!
+  status: ArticleStatus!
+  archivedBy: ArticleArchiveActor
+  section: Section
+  format: Format
+  tags: [Tag!]!
+  translations: [MyArticleTranslation!]!
+}
+
+type MyArticleCounts {
+  total: Int!
+  draft: Int!
+  ai_check: Int!
+  review: Int!
+  rework: Int!
+  published: Int!
+  rejected: Int!
+  archived: Int!
+}
+
+type MyArticlesPageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
+type MyArticlesConnection {
+  items: [MyArticle!]!
+  counts: MyArticleCounts!
+  pageInfo: MyArticlesPageInfo!
 }
 
 # Специфичные для статей фильтры
@@ -100,6 +161,8 @@ extend type Query {
     filters: ArticleFiltersInput!
     search: SearchInput
   ): ArticlesResponse!
+
+  myArticles(status: [MyArticleStatus!], cursor: ID, limit: Int = 20): MyArticlesConnection!
 }
 
 # Типы для мутаций
