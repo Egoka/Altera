@@ -257,6 +257,40 @@
     "statistics": "Statistics",
     "moderation": "Moderation",
     "settings": "Settings",
+    "systemSettings": {
+      "eyebrow": "Operations",
+      "title": "System settings",
+      "description": "Providers, domains and parameters the system currently runs with. Secrets are never shown: only presence and a mask.",
+      "readOnly": "Read only: until stage 4 settings come from environment variables and releases.",
+      "adminNote": "Changes are made by the owner.",
+      "ownerNote": "Changing settings from the interface arrives in stage 4.",
+      "groups": {
+        "ai": "AI",
+        "payments": "Payments",
+        "mail": "Mail",
+        "storage": "Storage",
+        "domains": "Domains and locales",
+        "limits": "Limits"
+      },
+      "error": "Could not load settings.",
+      "retry": "Retry",
+      "adapter": "Active adapter",
+      "adapterMissing": "The provider for this group is not connected yet.",
+      "source": {
+        "ENV": "environment variable",
+        "CODE": "code parameter"
+      },
+      "secret": "secret",
+      "notSet": "not set",
+      "none": {
+        "ai": "No AI parameters yet: the provider is connected in a separate stage.",
+        "payments": "No payment parameters yet: paid launch is a separate stage.",
+        "mail": "No mail parameters.",
+        "storage": "No storage parameters yet: object storage is not connected.",
+        "domains": "No domain parameters.",
+        "limits": "Rate limits are not implemented in code yet; values ship with releases, not settings."
+      }
+    },
     "articlesTitle": "Article management",
     "articlesDescription": "View and manage system articles",
     "tagsTitle": "Tag management",
