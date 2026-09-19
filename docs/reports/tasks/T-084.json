@@ -5,32 +5,44 @@
   "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-084-admin-grants-launch.md",
-    "sha": "204cd1897651036994681474a4a70179cfd0dd9e"
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
   },
-  "baseline_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
-  "tested_sha": "05ae29569ad1e120b06f87260ab16828b7dfcbd7",
+  "baseline_sha": "a5f6c64eef712dceef8f36b2aea69f07a331ffd1",
+  "tested_sha": "8bed4761986ed167bf65149eac7699403fa0d852",
   "branch": "web/t084-admin-grants",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot/Altera",
-  "implementer_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
-  "implementer_run_id": "01a0b877-6121-73dd-abb5-88696a82c415",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b9d8-b39c-752a-8e63-ac9aaac60ec4",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "grants/index.vue: GrantPlan modal with userHandle (required), tier select, startsAt/endsAt date inputs (empty endsAt = indefinite), reason (required). Submit disabled until userHandle + reason filled. Mock submitGrant() adds row with status queued. E2e tests in web/tests/e2e/17-admin-grants.spec.ts cover form validation and indefinite grant submission."
+      "evidence": "GraphQL adminGrants/adminGrant/grantPlan/revokePlan use finance permission and currentUser actor; manual grants require startsAt, endsAt and reason; Playwright covers finite submission and visible queued/active/ended/revoked states. Indefinite grant remains an explicit T-110 fixme."
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "subscriptions/index.vue: first-launch info banner (admin.firstLaunchSubscriptionsNote), same grant table showing all statuses, detail panel links to /admin/grants. E2e tests cover banner visibility, all status rows, and link presence."
+      "evidence": "Both admin pages consume the same persisted grants query; subscriptions shows the paid-phase notice and links selected grants to /admin/grants; first-launch authorship fixtures were removed."
     }
   ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 164 passed / 20 skipped; web 160 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "T-084 target: 4 passed / 1 T-110 fixme skipped",
+    "ci": "https://github.com/Egoka/Altera/pull/135/checks",
+    "preflight": "repository/runtime checks passed; LOG_HASH_SECRET unavailable locally, so no live server/database probe was run",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
   "pr": {
     "number": 135,
     "url": "https://github.com/Egoka/Altera/pull/135",
     "base_ref": "app",
-    "base_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
-    "head_sha": "05ae29569ad1e120b06f87260ab16828b7dfcbd7",
+    "base_sha": "a5f6c64eef712dceef8f36b2aea69f07a331ffd1",
+    "head_sha": "8bed4761986ed167bf65149eac7699403fa0d852",
     "merge_sha": null
   },
   "review": {
@@ -40,12 +52,17 @@
     "verdict": null
   },
   "deployment": {
-    "required": false,
-    "reason": "Frontend-only changes: new Vue pages, i18n keys, navigation menu items. No server code, no env vars, no migrations."
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "New server GraphQL operations and web consumers require controller-managed development deployment and health verification after CI and independent review"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-084.md",
     "sha256": null
   },
+  "remaining": [
+    "CI, independent native review, and controller-managed development deployment/health verification are pending"
+  ],
   "usage": null
 }
