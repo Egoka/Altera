@@ -8,9 +8,8 @@
     "sha": "772a87fd573b82a364d9029169c5b563375a6115"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "d0a8ce9cf81f1126a940ca34cd181f02642cb82d",
+  "tested_sha": "bb227d2ca5eeb1bc492cf84901c1ef64676077ef",
   "branch": "server/t007-deterministic-seed",
-  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t007-deterministic-seed",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b7a2-1d06-7d5c-92d9-852f288a4ce2",
   "criteria": [
@@ -30,14 +29,14 @@
     "url": "https://github.com/Egoka/Altera/pull/111",
     "base_ref": "app",
     "base_sha": "67066a297cd047e1c6040dfcccac87e6de31496f",
-    "head_sha": "d0a8ce9cf81f1126a940ca34cd181f02642cb82d",
-    "merge_sha": null
+    "head_sha": "bb227d2ca5eeb1bc492cf84901c1ef64676077ef",
+    "merge_sha": "3722abfd77c39d03b93fcbe5f11d5143a3954502"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": "01a0b724-0196-7243-8009-090ba3becf31",
-    "sha": "a3eebdb27e726fd27c65b8a17d706668b32bde1e",
-    "verdict": null
+    "run_id": "01a0b7b2-1ed1-707b-90a0-a897a6d0a23a",
+    "sha": "bb227d2ca5eeb1bc492cf84901c1ef64676077ef",
+    "verdict": "approved"
   },
   "deployment": {
     "required": false,
@@ -45,7 +44,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-007.md",
-    "sha256": "f6b9057e8c150a5a1e42038227454eed3bc53a780c3d8346e5b312b05edbccea"
+    "sha256": "a6593eb012bb95b679e4a2463f63f58a27502984f7ebc0994ac1ea70eb3e8119"
   },
   "usage": null
 }
