@@ -22,9 +22,11 @@ import { archiveTag, createTag, mergeTags, restoreTag, updateTag } from "../../t
 
 export default {
   Query: {
-    tagAutocomplete: async (_parent: any, { q, limit = 10 }: { q: string; limit?: number }, ctx: GraphQLContext) => {
+    tagAutocomplete: async (_parent: any, args: { q: string; limit?: number | null }, ctx: GraphQLContext) => {
       ensureAuthenticated(ctx.currentUser, ctx.requestId)
-      const query = q.trim()
+      // Явный null в GraphQL не подставляет значение по умолчанию из схемы.
+      const limit = args.limit ?? 10
+      const query = args.q.trim()
       if (query.length < 2) {
         throw createApiError("VALIDATION_ERROR", {
           requestId: ctx.requestId,
@@ -40,18 +42,29 @@ export default {
         })
       }
 
-      return ctx.prisma.tag.findMany({
-        where: {
-          status: "active",
-          OR: [
-            { name: { contains: query, mode: "insensitive" } },
-            { nameEn: { contains: query, mode: "insensitive" } },
-            { slug: { contains: query, mode: "insensitive" } }
-          ]
-        },
+      const matching = (filter: { startsWith: string } | { contains: string }) => {
+        const condition = { ...filter, mode: "insensitive" as const }
+        return [{ name: condition }, { nameEn: condition }, { slug: condition }]
+      }
+
+      // Сначала совпадения по началу: иначе точный тег может не попасть в лимит среди подстрок.
+      const prefixMatches = await ctx.prisma.tag.findMany({
+        where: { status: "active", OR: matching({ startsWith: query }) },
         orderBy: { name: "asc" },
         take: limit
       })
+      if (prefixMatches.length >= limit) return prefixMatches
+
+      const otherMatches = await ctx.prisma.tag.findMany({
+        where: {
+          status: "active",
+          id: { notIn: prefixMatches.map((tag) => tag.id) },
+          OR: matching({ contains: query })
+        },
+        orderBy: { name: "asc" },
+        take: limit - prefixMatches.length
+      })
+      return [...prefixMatches, ...otherMatches]
     },
 
     tag: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {

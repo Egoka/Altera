@@ -87,6 +87,23 @@ const mapMyArticle = (article: MyArticleRecord, userId: string) => ({
   })
 })
 
+const articleCreatorRoles = new Set(["reader", "author", "editor"])
+
+// Рубрика обязательна перед отправкой на проверку и публикацией (article-new.md §1).
+const sectionRequiredStatuses = new Set(["review", "published"])
+
+function ensureActiveSection(
+  article: { sectionId: string | null; section?: { status: string } | null },
+  requestId: string
+): void {
+  if (!article.sectionId) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "sectionId", rule: "required" })
+  }
+  if (article.section?.status !== "active") {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "sectionId", rule: "active" })
+  }
+}
+
 function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string) {
   const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
   if (user.role === "reader" || user.role === "author") {
@@ -602,6 +619,10 @@ export default {
   Mutation: {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       const user = ensureArticleAuthoringAccess(ctx, "article.create")
+      // Из служебных ролей материал создаёт только editor — редакционный (article-new.md §2, журнал §17, §25.2).
+      if (!articleCreatorRoles.has(user.role)) {
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.create" })
+      }
 
       const articleId = randomUUID()
       const locale = input.locale ?? user.locale
@@ -626,6 +647,7 @@ export default {
             sectionId: section?.id ?? null,
             sourceLocale: locale,
             authorId: user.id,
+            isEditorial: user.role === "editor",
             status: "draft",
             translations: {
               create: {
@@ -818,13 +840,7 @@ export default {
           actual: article.status
         })
       }
-      if (!article.sectionId) {
-        throw createApiError("VALIDATION_ERROR", {
-          requestId: ctx.requestId,
-          field: "sectionId",
-          rule: "required"
-        })
-      }
+      ensureActiveSection(article, ctx.requestId)
 
       return ctx.prisma.article.update({
         where: { id },
@@ -860,8 +876,9 @@ export default {
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
       ensureRole(ctx.currentUser, "admin", "article.setStatus", ctx.requestId)
 
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
+      const article = await ctx.prisma.article.findUnique({ where: { id }, include: { section: true } })
       if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+      if (sectionRequiredStatuses.has(status)) ensureActiveSection(article, ctx.requestId)
 
       const updatedArticle = await ctx.prisma.article.update({
         where: { id },
@@ -947,6 +964,9 @@ export default {
 
         if (articlesToUpdate.length !== ids.length) {
           throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+        }
+        if (sectionRequiredStatuses.has(status)) {
+          for (const article of articlesToUpdate) ensureActiveSection(article, ctx.requestId)
         }
 
         // Обновляем статус статей
