@@ -1,8 +1,12 @@
 # Проверки Altera
 
-`GET /health` проверяет `SELECT 1` через серверный Prisma client и `PING` через тот же
-Redis client, который обслуживает кеш. Ответ — HTTP 200/503, `status`, `revision`
-(валидный `RENDER_GIT_COMMIT` либо `null`) и булевы `checks.postgres`/`checks.redis`/`checks.migrations`.
+`GET /health` проверяет `SELECT 1` через серверный Prisma client и, если задан `REDIS_URL`, `PING`
+через тот же Redis client, который обслуживает кеш. Ответ — HTTP 200/503, `status`
+(`ok`/`degraded`/`unavailable`), `revision` (валидный `RENDER_GIT_COMMIT` либо `null`), булевы
+`checks.postgres`/`checks.migrations` и `checks.redis`: `true`/`false` для настроенного Redis либо
+`"disabled"` без `REDIS_URL` (кеш noop, ADR-0019). HTTP 503 (`unavailable`) — только неготовые база
+или миграции. Недоступный настроенный Redis даёт HTTP 200 и `degraded`: кеш отключён, API работает
+(`docs/spec/80-observability/health-and-alerts.md` п. 1, 7).
 Проверка миграций читает `_prisma_migrations`: все каталоги из `server/prisma/migrations`
 должны иметь завершённую, не откаченную запись; незавершённые попытки, отсутствующая таблица
 или каталог миграций дают HTTP 503. Проверка не применяет миграции и не возвращает их записи.
