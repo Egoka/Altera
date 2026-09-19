@@ -1,0 +1,49 @@
+enum AdminPlanTier {
+  standard
+  pro
+}
+
+enum AdminGrantStatus {
+  queued
+  active
+  ended
+  revoked
+}
+
+type AdminPlanGrant {
+  id: ID!
+  userId: ID!
+  userName: String!
+  userHandle: String!
+  tier: AdminPlanTier!
+  startsAt: String!
+  endsAt: String
+  grantedByName: String
+  reason: String!
+  status: AdminGrantStatus!
+  revokedAt: String
+  createdAt: String!
+}
+
+input GrantPlanInput {
+  userHandle: String!
+  tier: AdminPlanTier!
+  startsAt: String!
+  endsAt: String!
+  reason: String!
+}
+
+input RevokePlanInput {
+  grantId: ID!
+  reason: String!
+}
+
+extend type Query {
+  adminGrants: [AdminPlanGrant!]!
+  adminGrant(id: ID!): AdminPlanGrant
+}
+
+extend type Mutation {
+  grantPlan(input: GrantPlanInput!): AdminPlanGrant!
+  revokePlan(input: RevokePlanInput!): AdminPlanGrant!
+}

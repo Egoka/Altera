@@ -368,7 +368,7 @@
     "fieldReason": "Причина",
     "fieldGrantedBy": "Выдал",
     "fieldRevokedAt": "Отозвана",
-    "endsAtHint": "(оставьте пустым — бессрочно)",
+    "endsAtHint": "(обязательно для ручной выдачи)",
     "userHandleLabel": "Хэндл пользователя",
     "reasonPlaceholder": "Укажите причину выдачи",
     "revokeReasonPlaceholder": "Причина отзыва"

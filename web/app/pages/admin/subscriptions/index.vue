@@ -1,26 +1,12 @@
 <script setup lang="ts">
   import type { IColumn } from "#fishtvue/table"
   import type { Panel } from "#fishtvue/split"
+  import type { AdminGrantRow } from "@/composables/useAdminGrants"
 
   const { t } = useI18n()
 
-  type GrantStatus = "queued" | "active" | "ended" | "revoked"
-  type PlanTier = "standard" | "pro"
-
-  interface GrantRow {
-    id: string
-    userId: string
-    userName: string
-    userHandle: string
-    tier: PlanTier
-    startsAt: string
-    endsAt: string | null
-    grantedByName: string | null
-    reason: string
-    status: GrantStatus
-    revokedAt: string | null
-    createdAt: string
-  }
+  type GrantStatus = AdminGrantRow["status"]
+  type PlanTier = AdminGrantRow["tier"]
 
   const tierOptions: Array<{ id: PlanTier; value: string }> = [
     { id: "standard", value: "Standard" },
@@ -42,8 +28,7 @@
 
   const { isSm, isMd } = useBreakpoint()
   const tableHeight = ref(47)
-  const isListLoading = ref(false)
-  const loadError = ref(false)
+  const { grants: data, pending: isListLoading, failed: loadError } = useAdminGrants()
 
   watch(
     isSm,
@@ -63,79 +48,6 @@
   const panels = ref<Panel[]>([
     { name: "table", minSize: 10 },
     { name: "item", minSize: 10, size: 40, hidden: true }
-  ])
-
-  const data = shallowRef<GrantRow[]>([
-    {
-      id: "g-001",
-      userId: "u-001",
-      userName: "Александр Иванов",
-      userHandle: "alex-ivanov",
-      tier: "pro",
-      startsAt: "2024-01-15T00:00:00Z",
-      endsAt: "2024-07-15T00:00:00Z",
-      grantedByName: "Сергей Морозов",
-      reason: "Тестирование Pro-функций для партнёрской программы",
-      status: "active",
-      revokedAt: null,
-      createdAt: "2024-01-14T18:30:00Z"
-    },
-    {
-      id: "g-002",
-      userId: "u-002",
-      userName: "Мария Петрова",
-      userHandle: "maria-petrova",
-      tier: "standard",
-      startsAt: "2024-02-01T00:00:00Z",
-      endsAt: null,
-      grantedByName: "Сергей Морозов",
-      reason: "Базовое авторство первого запуска",
-      status: "active",
-      revokedAt: null,
-      createdAt: "2024-01-30T10:00:00Z"
-    },
-    {
-      id: "g-003",
-      userId: "u-003",
-      userName: "Дмитрий Сидоров",
-      userHandle: "dmitry-sidorov",
-      tier: "pro",
-      startsAt: "2024-03-01T00:00:00Z",
-      endsAt: "2024-04-01T00:00:00Z",
-      grantedByName: "Сергей Морозов",
-      reason: "Контрибьютор открытого исходного кода",
-      status: "ended",
-      revokedAt: null,
-      createdAt: "2024-02-28T09:15:00Z"
-    },
-    {
-      id: "g-004",
-      userId: "u-004",
-      userName: "Елена Козлова",
-      userHandle: "elena-kozlova",
-      tier: "standard",
-      startsAt: "2024-01-20T00:00:00Z",
-      endsAt: "2024-06-20T00:00:00Z",
-      grantedByName: "Сергей Морозов",
-      reason: "Участник бета-тестирования",
-      status: "revoked",
-      revokedAt: "2024-02-10T14:00:00Z",
-      createdAt: "2024-01-19T11:00:00Z"
-    },
-    {
-      id: "g-005",
-      userId: "u-005",
-      userName: "Анна Смирнова",
-      userHandle: "anna-smirnova",
-      tier: "pro",
-      startsAt: "2024-04-01T00:00:00Z",
-      endsAt: "2024-10-01T00:00:00Z",
-      grantedByName: "Сергей Морозов",
-      reason: "Редакционное партнёрство",
-      status: "queued",
-      revokedAt: null,
-      createdAt: "2024-03-28T16:00:00Z"
-    }
   ])
 
   const columns = shallowRef<Array<IColumn>>([
@@ -226,9 +138,9 @@
     standard: "bg-blue-50 text-blue-700 ring-blue-600/10 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-400/10"
   }
 
-  const selectedGrant = ref<GrantRow | null>(null)
+  const selectedGrant = ref<AdminGrantRow | null>(null)
 
-  function openDetail(row: GrantRow) {
+  function openDetail(row: AdminGrantRow) {
     selectedGrant.value = row
     panels.value = panels.value.map((p) => (p.name === "item" ? { ...p, hidden: false } : p))
   }
@@ -264,33 +176,37 @@
     <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
       <template #table>
         <Table
-          :data="data"
+          v-if="!isListLoading"
+          :data-source="data"
           :columns="columns"
           :height="tableHeight"
           :is-loading="isListLoading"
           :load-error="loadError"
           class="h-full"
-          @rowClick="openDetail">
-          <template #cell-tier="{ value }">
+          @click-row="openDetail($event.data)">
+          <template #tier="{ value }">
             <span
               class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
               :class="tierColors[value as PlanTier]">
               {{ value === "pro" ? "Pro" : "Standard" }}
             </span>
           </template>
-          <template #cell-status="{ value }">
+          <template #status="{ value }">
             <span
               class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
               :class="statusColors[value as GrantStatus]">
               {{ t(`admin.grantStatus.${value}`) }}
             </span>
           </template>
-          <template #cell-endsAt="{ value }">
+          <template #endsAt="{ value }">
             <span :class="value ? '' : 'text-zinc-400 italic'">
               {{ value ? formatDate(value) : t("admin.indefinite") }}
             </span>
           </template>
         </Table>
+        <div v-else role="status" class="flex h-full items-center justify-center text-sm text-zinc-500">
+          {{ t("common.loading") }}
+        </div>
       </template>
 
       <template #item>

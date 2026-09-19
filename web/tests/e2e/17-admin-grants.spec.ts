@@ -1,83 +1,165 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
+
+const grants = [
+  {
+    id: "grant-queued",
+    userId: "user-queued",
+    userName: "Пользователь в очереди",
+    userHandle: "queued-user",
+    tier: "standard",
+    startsAt: "2026-10-01T00:00:00.000Z",
+    endsAt: "2026-11-01T00:00:00.000Z",
+    grantedByName: "Аналитик",
+    reason: "Будущая выдача",
+    status: "queued",
+    revokedAt: null,
+    createdAt: "2026-09-19T00:00:00.000Z"
+  },
+  {
+    id: "grant-active",
+    userId: "user-active",
+    userName: "Активный пользователь",
+    userHandle: "active-user",
+    tier: "pro",
+    startsAt: "2026-09-01T00:00:00.000Z",
+    endsAt: "2026-10-01T00:00:00.000Z",
+    grantedByName: "Администратор",
+    reason: "Активная выдача",
+    status: "active",
+    revokedAt: null,
+    createdAt: "2026-09-01T00:00:00.000Z"
+  },
+  {
+    id: "grant-ended",
+    userId: "user-ended",
+    userName: "Завершённый пользователь",
+    userHandle: "ended-user",
+    tier: "standard",
+    startsAt: "2026-07-01T00:00:00.000Z",
+    endsAt: "2026-08-01T00:00:00.000Z",
+    grantedByName: "Аналитик",
+    reason: "Завершённая выдача",
+    status: "ended",
+    revokedAt: null,
+    createdAt: "2026-07-01T00:00:00.000Z"
+  },
+  {
+    id: "grant-revoked",
+    userId: "user-revoked",
+    userName: "Отозванный пользователь",
+    userHandle: "revoked-user",
+    tier: "pro",
+    startsAt: "2026-08-01T00:00:00.000Z",
+    endsAt: "2026-10-01T00:00:00.000Z",
+    grantedByName: "Владелец",
+    reason: "Отозванная выдача",
+    status: "revoked",
+    revokedAt: "2026-09-01T00:00:00.000Z",
+    createdAt: "2026-08-01T00:00:00.000Z"
+  }
+]
+
+async function mockAdminGrants(page: Page, onGrant?: (input: Record<string, unknown>) => void) {
+  await page.route("**/api/graphql", async (route) => {
+    const body = route.request().postDataJSON() as {
+      query?: string
+      variables?: { input?: Record<string, unknown> }
+    }
+    const query = body.query ?? ""
+    let data: Record<string, unknown>
+
+    if (query.includes("GetAdminSummary")) {
+      data = { adminSummary: { role: "admin", cards: [] } }
+    } else if (query.includes("GetAdminGrants")) {
+      data = { adminGrants: grants }
+    } else if (query.includes("GrantPlan")) {
+      onGrant?.(body.variables?.input ?? {})
+      data = { grantPlan: { id: "grant-created" } }
+    } else if (query.includes("RevokePlan")) {
+      data = { revokePlan: { id: "grant-revoked" } }
+    } else {
+      return route.continue()
+    }
+
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data }) })
+  })
+}
+
+async function navigateToAdminPage(page: Page, path: "/admin/grants" | "/admin/subscriptions") {
+  await page.goto("/")
+  const grantsResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/graphql") && response.request().postData()?.includes("GetAdminGrants") === true
+  )
+  await page.evaluate((target) => {
+    window.history.pushState({}, "", target)
+    window.dispatchEvent(new PopStateEvent("popstate"))
+  }, path)
+  await expect(page).toHaveURL(path)
+  await grantsResponse
+}
 
 test.describe("admin grants page", () => {
-  test("shows all grant status rows — queued, active, ended, revoked", async ({ page }) => {
-    await page.goto("/admin/grants")
+  test("shows all persisted grant states and no first-launch authorship row", async ({ page }) => {
+    await mockAdminGrants(page)
+    await navigateToAdminPage(page, "/admin/grants")
 
-    await expect(page.getByText(/в очереди/i)).toBeVisible()
-    await expect(page.getByText(/активна/i).first()).toBeVisible()
-    await expect(page.getByText(/завершена/i)).toBeVisible()
-    await expect(page.getByText(/отозвана/i)).toBeVisible()
+    await expect(page.locator("tbody").getByText("В очереди", { exact: true })).toBeVisible()
+    await expect(page.locator("tbody").getByText("Активна", { exact: true })).toBeVisible()
+    await expect(page.locator("tbody").getByText("Завершена", { exact: true })).toBeVisible()
+    await expect(page.locator("tbody").getByText("Отозвана", { exact: true })).toBeVisible()
+    await expect(page.getByText(/базовое авторство первого запуска/i)).toHaveCount(0)
   })
 
-  test("shows indefinite grant (бессрочно) when endsAt is null", async ({ page }) => {
-    await page.goto("/admin/grants")
-
-    await expect(page.getByText(/бессрочно/i).first()).toBeVisible()
-  })
-
-  test("opens detail panel on row click", async ({ page }) => {
-    await page.goto("/admin/grants")
-
-    await page.getByText("Александр Иванов").first().click()
-    await expect(page.getByText(/тестирование pro-функций/i)).toBeVisible()
-  })
-
-  test("grant form opens and validates required fields — AC-1", async ({ page }) => {
-    await page.goto("/admin/grants")
-
-    await page.getByRole("button", { name: /выдать план/i }).click()
-
-    const submitBtn = page.getByRole("button", { name: /выдать план/i }).last()
-    await expect(submitBtn).toBeDisabled()
-
-    await page.getByPlaceholder(/user-handle/i).fill("test-user")
-    await expect(submitBtn).toBeDisabled()
-
-    await page.getByPlaceholder(/причину выдачи/i).fill("Тестовая причина")
-    await expect(submitBtn).toBeEnabled()
-  })
-
-  test("indefinite grant — endsAt empty, submit succeeds — AC-1", async ({ page }) => {
-    await page.goto("/admin/grants")
-
-    await page.getByRole("button", { name: /выдать план/i }).click()
-    await page.getByPlaceholder(/user-handle/i).fill("new-user")
-    await page.getByPlaceholder(/причину выдачи/i).fill("Тест бессрочной выдачи")
-
-    const endDateInput = page.getByLabel(/конец/i)
-    await expect(endDateInput).toHaveValue("")
+  test("requires endsAt and sends a finite manual grant", async ({ page }) => {
+    let submitted: Record<string, unknown> | null = null
+    await mockAdminGrants(page, (input) => {
+      submitted = input
+    })
+    await navigateToAdminPage(page, "/admin/grants")
 
     await page
       .getByRole("button", { name: /выдать план/i })
-      .last()
+      .first()
       .click()
-    await expect(page.getByPlaceholder(/user-handle/i)).not.toBeVisible()
+    await page.getByPlaceholder(/user-handle/i).fill("new-user")
+    await page.getByLabel(/начало/i).fill("2026-09-20")
+    await page.getByPlaceholder(/причину выдачи/i).fill("Редакционная выдача")
 
-    await expect(page.getByText("new-user")).toBeVisible()
+    const submit = page.getByRole("button", { name: /выдать план/i }).last()
+    await expect(submit).toBeDisabled()
+    await page.getByLabel(/конец/i).fill("2026-10-20")
+    await expect(submit).toBeEnabled()
+    await submit.click()
+
+    expect(submitted).toMatchObject({
+      userHandle: "new-user",
+      startsAt: "2026-09-20T00:00:00.000Z",
+      endsAt: "2026-10-20T00:00:00.000Z",
+      reason: "Редакционная выдача"
+    })
   })
+
+  test.fixme("TODO T-110: indefinite manual grant remains unavailable", async () => {})
 })
 
 test.describe("admin subscriptions page — first launch mode", () => {
-  test("shows first-launch banner about paid subscriptions phase", async ({ page }) => {
-    await page.goto("/admin/subscriptions")
+  test("shows the separate paid phase note and the same persisted states", async ({ page }) => {
+    await mockAdminGrants(page)
+    await navigateToAdminPage(page, "/admin/subscriptions")
 
     await expect(page.getByText(/платные подписки.*отдельный этап/i)).toBeVisible()
+    await expect(page.locator("tbody").getByText("В очереди", { exact: true })).toBeVisible()
+    await expect(page.locator("tbody").getByText("Активна", { exact: true })).toBeVisible()
+    await expect(page.locator("tbody").getByText("Завершена", { exact: true })).toBeVisible()
+    await expect(page.locator("tbody").getByText("Отозвана", { exact: true })).toBeVisible()
   })
 
-  test("shows grants list — all state rows visible — AC-2", async ({ page }) => {
-    await page.goto("/admin/subscriptions")
+  test("links a selected grant back to grant management", async ({ page }) => {
+    await mockAdminGrants(page)
+    await navigateToAdminPage(page, "/admin/subscriptions")
 
-    await expect(page.getByText(/в очереди/i)).toBeVisible()
-    await expect(page.getByText(/активна/i).first()).toBeVisible()
-    await expect(page.getByText(/завершена/i)).toBeVisible()
-    await expect(page.getByText(/отозвана/i)).toBeVisible()
-  })
-
-  test("link to grants page is present in detail panel", async ({ page }) => {
-    await page.goto("/admin/subscriptions")
-
-    await page.getByText("Александр Иванов").first().click()
-    await expect(page.getByRole("link", { name: /управление выдачами/i })).toBeVisible()
+    await page.getByText("Активный пользователь").first().click()
+    await expect(page.getByRole("link", { name: /управление выдачами/i })).toHaveAttribute("href", "/admin/grants")
   })
 })

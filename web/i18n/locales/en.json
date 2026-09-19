@@ -368,7 +368,7 @@
     "fieldReason": "Reason",
     "fieldGrantedBy": "Granted by",
     "fieldRevokedAt": "Revoked at",
-    "endsAtHint": "(leave empty for indefinite)",
+    "endsAtHint": "(required for manual grants)",
     "userHandleLabel": "User handle",
     "reasonPlaceholder": "Enter grant reason",
     "revokeReasonPlaceholder": "Revoke reason"
