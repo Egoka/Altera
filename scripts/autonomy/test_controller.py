@@ -127,6 +127,23 @@ class ReconciliationTests(unittest.TestCase):
             self.assertTrue(result["ok"])
             self.assertTrue(result["reconciled"])
 
+    def test_merge_uses_merge_commit_not_squash(self):
+        open_facts = {**self.facts, "state": "OPEN"}
+        class OpenLive(c.Live):
+            def facts(inner, receipt):
+                return open_facts
+        calls = []
+        with tempfile.TemporaryDirectory() as root:
+            live = OpenLive({"repo": root, "github_repo": "example/project"})
+            with patch.object(c, "command", side_effect=lambda args, *rest, **kw: calls.append(args)):
+                result = live.transition(self.receipt, "merge", root)
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][:4], ["gh", "pr", "merge", "123"])
+        self.assertIn("--merge", calls[0])
+        self.assertNotIn("--squash", calls[0])
+        self.assertEqual(calls[0][calls[0].index("--match-head-commit") + 1], "b" * 40)
+
     def test_unconfirmed_running_action_is_not_replayed_after_restart(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ledger.sqlite3"

@@ -331,7 +331,8 @@ class Live:
                 return {"ok": False, "blocked": ["duplicate_or_reconciliation_required"]}
             # До внешнего вызова запись running. Неопределённый сбой оставляет её для сверки.
             if phase == "merge":
-                command(["gh", "pr", "merge", str(receipt["pr"]["number"]), "--repo", self.gh_repo, "--squash", "--match-head-commit", receipt["tested_sha"]], as_json=False)
+                # Обычный merge-коммит: проверенный head становится предком app (решение владельца 2026-09-19).
+                command(["gh", "pr", "merge", str(receipt["pr"]["number"]), "--repo", self.gh_repo, "--merge", "--match-head-commit", receipt["tested_sha"]], as_json=False)
             else:
                 self.multica("issue", "status", receipt["issue_id"], "done", "--no-start")
                 issue = self.multica("issue", "get", receipt["issue_id"])
