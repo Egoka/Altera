@@ -1,6 +1,30 @@
 import { GraphQLContext } from "../../prisma"
 import { ensureAuthenticated, ensurePermission } from "../../exceptions/permissions"
 import { createApiError } from "../../errors/graphql-error"
+import type { PrismaClient } from "../../generated/prisma"
+
+async function auditPersonalDataRead(
+  prisma: PrismaClient,
+  requestId: string,
+  actorId: string,
+  actorRole: string,
+  subjectId: string,
+  context: string,
+  purpose: string
+): Promise<void> {
+  await prisma.auditLog.create({
+    data: {
+      action: "admin.read.personal",
+      actorId,
+      actorRole: actorRole as any,
+      entityType: "user",
+      entityId: subjectId,
+      context,
+      purpose,
+      requestId
+    }
+  })
+}
 import {
   validatePagination,
   validateSort,
@@ -244,6 +268,11 @@ export default {
         }
       })
 
+      const actor = ctx.currentUser!
+      for (const u of users) {
+        await auditPersonalDataRead(ctx.prisma, ctx.requestId, actor.id, actor.role, u.id, "users", "admin.users.read")
+      }
+
       const result = {
         users,
         pagination: paginationInfo,
@@ -269,6 +298,18 @@ export default {
       }
 
       return result
+    },
+
+    adminUser: async (_parent: any, args: { id: string }, ctx: GraphQLContext) => {
+      ensurePermission(ctx.currentUser, "accounts", "admin.user.read", ctx.requestId)
+
+      const user = await ctx.prisma.user.findUnique({ where: { id: args.id } })
+      if (!user) return null
+
+      const actor = ctx.currentUser!
+      await auditPersonalDataRead(ctx.prisma, ctx.requestId, actor.id, actor.role, user.id, "users", "admin.user.read")
+
+      return user
     }
   }
 }

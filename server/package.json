@@ -19,6 +19,9 @@
     "test:watch": "vitest",
     "smoke": "bash scripts/smoke.sh"
   },
+  "prisma": {
+    "seed": "ts-node seed/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

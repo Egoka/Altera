@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "T-029",
+  "issue_id": "01a0b0ff-771b-79c5-af95-f5c1df9d0f93",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-029-pd-read-audit.md",
+    "sha": "787e2f9b6ff81aaa5f88462e6f23be854cfb51f5"
+  },
+  "baseline_sha": "608a54d8cb472efce90802d6b535346ce171ce96",
+  "tested_sha": "94c7e3bbf5d2a968c5bd49348f9850eb995a9235",
+  "branch": "server/t029-pd-read-audit",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b133-27d3-7ce7-8b0d-6e1115954713",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/admin-pd-audit.test.ts: adminUser пишет admin.read.personal в auditLog; 145 passed"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/admin-pd-audit.test.ts: Article.author не содержит email (публичный тип User); 145 passed"
+    }
+  ],
+  "pr": {
+    "number": 127,
+    "url": "https://github.com/Egoka/Altera/pull/127",
+    "base_ref": "app",
+    "base_sha": "608a54d8cb472efce90802d6b535346ce171ce96",
+    "head_sha": "94c7e3bbf5d2a968c5bd49348f9850eb995a9235",
+    "merge_sha": "052aa07ca0ebdef1e2e4b8195b27db0d0c6188f8"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0b722-d4b7-7210-9941-e0eca25076f0",
+    "sha": "94c7e3bbf5d2a968c5bd49348f9850eb995a9235",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server code changes require controller-managed deployment and health verification after merge",
+    "probe_actor_id": null,
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-029.md",
+    "sha256": "c48d0d7cedeb05c7eaac2abc16d807154e1ed69db057d0d7fbf7a49849b2090b"
+  },
+  "usage": null
+}

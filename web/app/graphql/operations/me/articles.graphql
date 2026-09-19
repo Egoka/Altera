@@ -66,3 +66,55 @@ mutation DeleteArticle($id: ID!) {
     status
   }
 }
+
+query GetMyArticles($status: [MyArticleStatus!], $cursor: ID, $limit: Int = 20) {
+  myArticles(status: $status, cursor: $cursor, limit: $limit) {
+    items {
+      id
+      status
+      archivedBy
+      section {
+        id
+        name
+        slug
+      }
+      format {
+        id
+        name
+        slug
+      }
+      tags {
+        id
+        name
+        slug
+      }
+      translations {
+        id
+        locale
+        slug
+        title
+        status
+        rejected
+        publishedAt
+        updatedAt
+        reeditUntil
+        lastReviewMessageAt
+        unread
+      }
+    }
+    counts {
+      total
+      draft
+      ai_check
+      review
+      rework
+      published
+      rejected
+      archived
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+}
