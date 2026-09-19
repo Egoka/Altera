@@ -83,6 +83,8 @@ describe("матрица дефолтных прав первого запуск
     finance: ["analyst", "admin", "owner"],
     accounts: ["admin", "owner"],
     "ai.read": ["moderator", "analyst", "admin", "owner"],
+    "job.retry": ["owner"],
+    "job.cancel": ["owner"],
     user: ["reader", "author"],
     owner: ["owner"]
   }

@@ -13,6 +13,9 @@ import { createMailService } from "./mail/service"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
 import { createRequestTracingPlugin, getRequestId } from "./observability/request-tracing"
+import { jobHandlers } from "./jobs/job-handlers"
+import { createJobWorker } from "./jobs/job-worker"
+import { createPrismaJobStore } from "./jobs/prisma-job-store"
 import { startPermissionExceptionExpiry } from "./permission-exceptions/scheduler"
 import type { PermissionExceptionClient } from "./permission-exceptions/service"
 
@@ -56,5 +59,8 @@ const health = createHealthCheck(
   process.env.RENDER_GIT_COMMIT
 )
 const server = createServer(withHealth(yoga, health))
+const jobWorker = createJobWorker({ store: createPrismaJobStore(prisma), handlers: jobHandlers, logger })
+jobWorker.start()
+server.on("close", () => jobWorker.stop())
 startPermissionExceptionExpiry(prisma as unknown as PermissionExceptionClient, logger)
 server.listen(PORT)
