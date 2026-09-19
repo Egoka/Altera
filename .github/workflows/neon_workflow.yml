@@ -1,10 +1,16 @@
 name: Ветка Neon для pull request
 
-# Ветка базы Neon на каждый pull request: создаётся при открытии и обновлении, удаляется
+# Ветка базы Neon на pull request: создаётся при открытии и обновлении, удаляется
 # при закрытии. Шаблон — руководство https://neon.com/docs/guides/neon-github-app.
 # Секрет NEON_API_KEY и переменную NEON_PROJECT_ID записала интеграция Neon GitHub App
 # (2026-09-14). Родитель новой ветки не задан, поэтому это ветка проекта по умолчанию —
 # production.
+#
+# Ветка нужна только pull request, который меняет server/: база есть лишь у сервера.
+# Бесплатный план Neon держит не больше 10 веток на проект, и при ветке на каждый
+# pull request лимит кончался, а docs- и web-PR падали с «branches limit exceeded».
+# Фильтр действует на все события, поэтому ветка удаляется при закрытии того же PR,
+# для которого создавалась.
 
 on:
   pull_request:
@@ -13,6 +19,9 @@ on:
       - reopened
       - synchronize
       - closed
+    paths:
+      - "server/**"
+      - ".github/workflows/neon_workflow.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
