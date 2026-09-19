@@ -122,6 +122,8 @@ class Github:
 
 
 MERGEABLE = {"CLEAN", "HAS_HOOKS", "UNSTABLE"}
+# Конфликт производных файлов разрешает пересборка; конфликт отчётов по существу остановит prepare_worktree.
+RESYNC = {"BEHIND", "DIRTY"}
 
 
 def merged(pr):
@@ -131,8 +133,10 @@ def merged(pr):
 def merge_when_green(github, number, head, *, timeout, interval, sleep=time.sleep, clock=time.monotonic):
     """Дождаться итогового `test` точного head и слить PR обычным merge-коммитом.
 
-    `behind` значит, что app ушёл вперёд: защита ветки требует актуальности, отчёт синхронизируется заново.
-    Красный CI, конфликт и таймаут оставляют PR открытым для следующего запуска.
+    `resync` значит, что ветку нужно заново синхронизировать с app: PR конфликтует с app (обычно другой
+    отчёт уже поменял PROGRESS.md и periods.json) или защита ветки снова требует актуальности (BEHIND).
+    Отставание от app само по себе merge не мешает (решение владельца 2026-09-19).
+    Красный CI, конфликт вне производных файлов и таймаут оставляют PR открытым для следующего запуска.
     """
     if not re.fullmatch(r"[0-9a-f]{40}", head or ""):
         raise PublishError("Report head must be a full commit SHA")
@@ -145,10 +149,8 @@ def merge_when_green(github, number, head, *, timeout, interval, sleep=time.slee
             raise PublishError("Report PR is not open and ready; merge skipped")
         # До появления нового head в GitHub его состояние относится к прежней ревизии.
         if pr["headRefOid"] == head:
-            if pr.get("mergeStateStatus") == "BEHIND":
-                return {"status": "behind"}
-            if pr.get("mergeStateStatus") == "DIRTY":
-                raise PublishError("Report PR conflicts with app; left open")
+            if pr.get("mergeStateStatus") in RESYNC:
+                return {"status": "resync"}
             check = github.required_check(head)
             if check == "failure":
                 raise PublishError("Required CI check failed on report head; PR left open")
@@ -160,8 +162,8 @@ def merge_when_green(github, number, head, *, timeout, interval, sleep=time.slee
                 confirmed = github.status(number)
                 if confirmed["state"] == "MERGED":
                     return merged(confirmed)
-                if confirmed.get("mergeStateStatus") == "BEHIND":
-                    return {"status": "behind"}
+                if confirmed.get("mergeStateStatus") in RESYNC:
+                    return {"status": "resync"}
                 raise PublishError("Report PR merge could not be confirmed; PR left open")
         if clock() >= deadline:
             raise PublishError("Report CI did not finish in time; PR left open for the next run")
@@ -339,8 +341,8 @@ def run(config, report_date, snapshot=None, *, github=None, sleep=time.sleep, cl
                 except PublishError:
                     merge["cleanup"] = "failed"  # Merge уже подтверждён; сбой уборки его не отменяет.
                 return {**result, "merge": merge}
-            # app ушёл вперёд во время CI: следующий проход вливает его и пересчитывает агрегаты.
-        raise PublishError("App kept advancing during report CI; PR left open for the next run")
+            # Следующий проход вливает app в ветку и пересчитывает агрегаты из суточных JSON.
+        raise PublishError("Report PR still needs a sync with app after all attempts; left open for the next run")
 
 
 def main(argv=None):

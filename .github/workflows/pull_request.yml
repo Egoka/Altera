@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - app
+  # Решение владельца 2026-09-19: PR вливаются без обновления до актуальной app, поэтому
+  # несовместимость двух по отдельности зелёных PR ловит отдельный прогон самой app после merge.
+  push:
+    branches:
+      - app
 
 jobs:
   checks:

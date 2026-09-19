@@ -59,7 +59,9 @@ def validate(receipt, facts, phase="done"):
     if facts.get("files_complete") is not True:
         errors.append("pr_files")
     if phase == "merge":
-        if facts.get("state") != "OPEN" or facts.get("base_current") is not True:
+        # `base` — PR закрыт, конфликтует с app или GitHub ещё не посчитал mergeability.
+        # Отставание от app само по себе merge не блокирует (решение владельца 2026-09-19).
+        if facts.get("state") != "OPEN" or facts.get("mergeable") is not True:
             errors.append("base")
         return errors
     if facts.get("state") != "MERGED" or not pr.get("merge_sha") or pr.get("merge_sha") != live_pr.get("merge_sha") or facts.get("merge_in_app") is not True:
@@ -304,14 +306,13 @@ class Live:
         actor = selected.get("agent_id")
         path = receipt.get("finalization", {}).get("path", "")
         final_hash = None
+        # Объекты app нужны ниже для finalization и merge_in_app.
         base_fetched = self.fetch_matches("refs/heads/app", base)
-        base_current = False
-        if base_fetched and not pr.get("merged") and pr.get("state") == "open" and self.fetch_matches(f"refs/pull/{number}/head", sha):
-            try:
-                command(["git", "merge-base", "--is-ancestor", base, sha], self.repo, False)
-                base_current = True
-            except (RuntimeError, OSError, subprocess.TimeoutExpired):
-                pass
+        # Решение владельца 2026-09-19: ветку не догоняют до app перед merge. Достаточно, что
+        # проверенный head совпадает с PR и GitHub подтверждает слияние без конфликтов.
+        mergeable = bool(base_fetched and not pr.get("merged") and pr.get("state") == "open"
+                         and pr.get("mergeable") is True and pr.get("mergeable_state") != "dirty"
+                         and self.fetch_matches(f"refs/pull/{number}/head", sha))
         review_equivalent = self.review_equivalent(review.get("sha"), sha, pr["base"]["sha"], receipt.get("task_id"))
         if path.startswith("docs/reports/") and ".." not in Path(path).parts:
             p = subprocess.run(["git", "show", f"{base}:{path}"], cwd=self.repo, capture_output=True, check=False)
@@ -328,7 +329,7 @@ class Live:
                  "review_equivalent": review_equivalent,
                  "implementer_trusted": implementer.get("status") == "completed" and bool(receipt.get("implementer_id")) and implementer.get("agent_id") == receipt.get("implementer_id"),
                  "files_complete": len(names) == pr.get("changed_files"),
-                 "base_current": base_current and base == receipt["pr"].get("base_sha"), "merge_in_app": merged,
+                 "mergeable": mergeable, "merge_in_app": merged,
                  "requires_deploy": requires_deploy, "finalization_sha256": final_hash}
         # Native tool-result связывается с trusted actor/run; HTTP проверяется здесь.
         if requires_deploy:
@@ -343,7 +344,7 @@ class Live:
             ledger = Ledger(Path(state_dir) / "ledger.sqlite3")
             key = fingerprint({"phase": phase, "task": receipt["task_id"], "sha": receipt["tested_sha"]})
             if phase == "merge" and facts.get("state") == "MERGED" and facts.get("merge_in_app") is True:
-                prior = {**facts, "state": "OPEN", "base_current": True}
+                prior = {**facts, "state": "OPEN", "mergeable": True}
                 if not validate(receipt, prior, "merge"):
                     ledger.observe_done(key)
                     return {"ok": True, "phase": phase, "reconciled": True, "merge_sha": facts["pr"].get("merge_sha")}
