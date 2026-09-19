@@ -142,7 +142,7 @@ next_action: bounded_action_or_none
 
 | Наблюдение                                | Обязательный результат                                                |
 | ----------------------------------------- | --------------------------------------------------------------------- |
-| CI старого head зелёный, PR обновлён      | Повторный CI/review нового head, merge запрещён                       |
+| CI старого head зелёный, PR обновлён      | Повторный CI нового head; review — если изменился патч ветки          |
 | Последний Live относится к старому SHA    | Текущая ревизия не подтверждена; искать точный SHA                    |
 | Build success, deploy ещё обновляется     | Build passed, deploy pending, health not_run                          |
 | Deploy ещё не появился после merge        | Awaiting publication до сохранённого deadline; затем handoff          |

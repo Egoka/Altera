@@ -45,6 +45,19 @@ const ru = flatten(load("ru"))
 const en = flatten(load("en"))
 
 describe("словари локалей", () => {
+  it("содержат общие состояния административных списков", () => {
+    expect(Object.fromEntries(ru)).toMatchObject({
+      "admin.table.empty": "Нет данных",
+      "admin.table.emptyDesc": "Записей пока нет",
+      "common.loadError": "Не удалось загрузить данные"
+    })
+    expect(Object.fromEntries(en)).toMatchObject({
+      "admin.table.empty": "No data",
+      "admin.table.emptyDesc": "No records yet",
+      "common.loadError": "Could not load data"
+    })
+  })
+
   it("непустые", () => {
     expect(ru.size).toBeGreaterThan(0)
     expect(en.size).toBe(ru.size)

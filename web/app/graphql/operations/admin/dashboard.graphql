@@ -1,0 +1,15 @@
+query GetAdminSummary($period: AdminSummaryPeriod!) {
+  adminSummary(period: $period) {
+    role
+    cards {
+      id
+      href
+      status
+      requestId
+      metrics {
+        id
+        value
+      }
+    }
+  }
+}

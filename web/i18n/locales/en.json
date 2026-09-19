@@ -16,6 +16,7 @@
     "settings": "Settings",
     "admin": "Admin Panel",
     "loading": "Loading...",
+    "loadError": "Could not load data",
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",
@@ -182,6 +183,51 @@
     "loading": "Articles are loading",
     "proAuthor": "Pro author"
   },
+  "myArticles": {
+    "pageTitle": "My articles",
+    "eyebrow": "Author workspace",
+    "description": "Track publication, return to drafts, and find editorial decisions in one place.",
+    "create": "Create article",
+    "filtersLabel": "Article filters",
+    "loadingLabel": "Loading articles",
+    "loadErrorTitle": "Articles could not be loaded",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Try again",
+    "emptyTitle": "No articles here yet",
+    "emptyDescription": "Choose another filter or start a new article.",
+    "loadingMore": "Loading…",
+    "showMore": "Show more",
+    "tabs": {
+      "all": "All",
+      "draft": "Drafts",
+      "review": "In review",
+      "rework": "Needs work",
+      "published": "Published",
+      "rejected": "Rejected",
+      "archived": "Archive"
+    },
+    "row": {
+      "status": {
+        "draft": "Draft",
+        "aiCheck": "Checking",
+        "review": "In review",
+        "rework": "Needs work",
+        "published": "Published",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "versionCount": "+ {count} version",
+      "updated": "Updated {date}",
+      "reworkDetail": "Needs work: recommendations available",
+      "rejectedDetail": "Rejected by the editorial team, read only",
+      "archivedSelf": "Archived by you",
+      "archivedStaff": "Archived by the editorial team",
+      "reeditUntil": "Re-edit until {date}",
+      "openReadOnly": "Open read-only",
+      "edit": "Edit",
+      "open": "Open"
+    }
+  },
   "footer": {
     "about": "About",
     "contentRules": "Publication rules",
@@ -214,6 +260,10 @@
     "usersDescription": "View and manage system users",
     "active": "Active",
     "inactive": "Inactive",
+    "table": {
+      "empty": "No data",
+      "emptyDesc": "No records yet"
+    },
     "editUser": "Edit user",
     "editUserDescription": "Change the user details and click “Save”",
     "menu": {
@@ -223,6 +273,74 @@
       "Types": "Types",
       "Users": "Users",
       "Profiles": "Profiles"
+    },
+    "summary": {
+      "title": "Overview",
+      "serviceArea": "Service area",
+      "period": "Period",
+      "period7": "7 days",
+      "period30": "30 days",
+      "refresh": "Refresh",
+      "open": "Open",
+      "empty": "No data yet",
+      "emptyHint": "Open an available section to get started.",
+      "cardError": "Could not load"
+    },
+    "roles": {
+      "editor": "Editor",
+      "moderator": "Moderator",
+      "analyst": "Analyst",
+      "admin": "Administrator",
+      "owner": "Owner"
+    },
+    "sections": {
+      "dashboard": "Overview",
+      "categories": "Categories",
+      "tags": "Tags",
+      "articles": "Articles",
+      "review": "Review queue",
+      "users": "Users",
+      "admins": "Administrators",
+      "subscriptions": "Subscriptions and plans",
+      "payments": "Payments",
+      "grants": "Grants and promo codes",
+      "statistics": "Statistics",
+      "jobs": "Background jobs",
+      "ai": "AI processes",
+      "ranking": "Ranking",
+      "audit": "Audit",
+      "mail": "Mail",
+      "errors": "Errors and health",
+      "legal": "Legal texts",
+      "settings": "System settings"
+    },
+    "cards": {
+      "editorial": { "title": "Editorial articles" },
+      "editorialProcesses": { "title": "Editorial processes" },
+      "reviewQueue": { "title": "Manual review queue" },
+      "profileChecks": { "title": "Profile checks" },
+      "growth": { "title": "Registrations and plans" },
+      "operationalQueue": { "title": "Operations queue" },
+      "health": { "title": "Health and errors" },
+      "ownership": { "title": "Service accounts" }
+    },
+    "metrics": {
+      "drafts": "Drafts",
+      "review": "In review",
+      "published": "Published",
+      "ai": "AI processes",
+      "mail": "Mail",
+      "articles": "Articles",
+      "unreadReplies": "Awaiting reply",
+      "removed": "Removed",
+      "pending": "Pending checks",
+      "registrations": "Registrations",
+      "activePlans": "Active plans",
+      "failedJobs": "Failed jobs",
+      "errors": "Errors",
+      "failedMail": "Failed mail",
+      "owners": "Owners",
+      "serviceAccounts": "Service accounts"
     }
   },
   "language": {

@@ -18,6 +18,34 @@ type AccountUser {
   updatedAt: String!
 }
 
+type AdminSummary {
+  cards: [AdminSummaryCard!]!
+  role: Role!
+}
+
+type AdminSummaryCard {
+  href: String!
+  id: String!
+  metrics: [AdminSummaryMetric!]!
+  requestId: String
+  status: AdminSummaryCardStatus!
+}
+
+enum AdminSummaryCardStatus {
+  ERROR
+  READY
+}
+
+type AdminSummaryMetric {
+  id: String!
+  value: Int!
+}
+
+enum AdminSummaryPeriod {
+  DAYS_7
+  DAYS_30
+}
+
 type Article {
   author: User!
   body: String!
@@ -34,6 +62,11 @@ type Article {
   tags: [Tag!]!
   title: String!
   updatedAt: String!
+}
+
+enum ArticleArchiveActor {
+  self
+  staff
 }
 
 type ArticleDetail {
@@ -222,6 +255,62 @@ type Mutation {
   verifyMagicLink(token: String!): AuthPayload!
 }
 
+type MyArticle {
+  archivedBy: ArticleArchiveActor
+  format: Format
+  id: ID!
+  section: Section
+  status: ArticleStatus!
+  tags: [Tag!]!
+  translations: [MyArticleTranslation!]!
+}
+
+type MyArticleCounts {
+  ai_check: Int!
+  archived: Int!
+  draft: Int!
+  published: Int!
+  rejected: Int!
+  review: Int!
+  rework: Int!
+  total: Int!
+}
+
+enum MyArticleStatus {
+  ai_check
+  archived
+  draft
+  published
+  rejected
+  review
+  rework
+}
+
+type MyArticleTranslation {
+  id: ID!
+  lastReviewMessageAt: String
+  locale: Locale!
+  publishedAt: String
+  reeditUntil: String
+  rejected: Boolean!
+  slug: String!
+  status: ArticleStatus!
+  title: String!
+  unread: Boolean!
+  updatedAt: String!
+}
+
+type MyArticlesConnection {
+  counts: MyArticleCounts!
+  items: [MyArticle!]!
+  pageInfo: MyArticlesPageInfo!
+}
+
+type MyArticlesPageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
 type PaginationInfo {
   currentPage: Int!
   hasNextPage: Boolean!
@@ -254,6 +343,8 @@ type PublicSection {
 
 type Query {
   _empty: String
+  adminSummary(period: AdminSummaryPeriod!): AdminSummary!
+  adminUser(id: ID!): AccountUser
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
@@ -266,6 +357,7 @@ type Query {
   featuredArticles(limit: Int = 5): [Article!]!
   latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
   me: AccountUser
+  myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
   popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
   publicSections: [PublicSection!]!

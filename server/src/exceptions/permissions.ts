@@ -3,6 +3,7 @@ import { createApiError } from "../errors/graphql-error"
 import type { AppLogger } from "../observability/logger"
 
 export const PERMISSION_CODES = [
+  "admin.enter",
   "publish",
   "review",
   "moderate",
@@ -47,6 +48,7 @@ interface ActiveAuthorOptions {
 }
 
 export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<PermissionCode, readonly Role[]>> = {
+  "admin.enter": ["editor", "moderator", "analyst", "admin", "owner"],
   publish: ["editor", "moderator", "owner"],
   review: ["moderator", "owner"],
   moderate: ["moderator", "admin", "owner"],

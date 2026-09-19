@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { authenticateAdminPage } from "./helpers/admin-auth"
 
 test("cabinet page /me has noindex meta tag", async ({ page }) => {
   await page.goto("/me")
@@ -8,6 +9,7 @@ test("cabinet page /me has noindex meta tag", async ({ page }) => {
 })
 
 test("admin page /admin has noindex meta tag", async ({ page }) => {
+  await authenticateAdminPage(page)
   await page.goto("/admin")
 
   const robotsMeta = page.locator('meta[name="robots"]')
