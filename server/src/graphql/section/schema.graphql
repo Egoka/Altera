@@ -32,6 +32,46 @@ type SectionCount {
   articles: Int!
 }
 
+type FormatCount {
+  articles: Int!
+}
+
+type AdminFormat {
+  id: ID!
+  name: String!
+  nameEn: String
+  slug: String!
+  description: String
+  descriptionEn: String
+  status: TaxonomyStatus!
+  archivedAt: String
+  createdAt: String!
+  updatedAt: String!
+  _count: FormatCount!
+}
+
+input FormatFiltersInput {
+  status: [TaxonomyStatus!]
+  hasArticles: Boolean
+}
+
+type FormatsResponse {
+  formats: [AdminFormat!]!
+  pagination: PaginationInfo!
+}
+
+type TaxonomyAuditEntry {
+  id: ID!
+  action: String!
+  actorId: ID
+  actorRole: Role
+  entityType: String!
+  entityId: ID!
+  diff: JSON
+  requestId: String
+  createdAt: String!
+}
+
 # Минимальный публичный контракт рубрики для навигации. Административные поля
 # и произвольные фильтры намеренно остаются в закрытом `sections`.
 type PublicSection {
@@ -95,6 +135,8 @@ extend type Query {
     filters: SectionFiltersInput!
     search: SearchInput
   ): SectionsResponse!
+  formats(pagination: PaginationInput!, sort: SortInput!, filters: FormatFiltersInput!): FormatsResponse!
+  taxonomyAudit(entityType: String!, entityId: ID!): [TaxonomyAuditEntry!]!
 }
 
 # Input типы для мутаций
@@ -133,12 +175,32 @@ input ReorderItemInput {
   order: Int!
 }
 
+input CreateFormatInput {
+  name: String!
+  nameEn: String
+  slug: String!
+  description: String
+  descriptionEn: String
+}
+
+input UpdateFormatInput {
+  name: String
+  nameEn: String
+  slug: String
+  description: String
+  descriptionEn: String
+}
+
 extend type Mutation {
   # Админ мутации для управления типами контента
   createSection(input: CreateSectionInput!): Section!
   updateSection(id: ID!, input: UpdateSectionInput!): Section!
   deleteSection(id: ID!): Section!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
-  archiveSection(id: ID!, successorId: ID!): Section!
+  archiveSection(id: ID!, successorId: ID!, reason: String!): Section!
   restoreSection(id: ID!): Section!
+  createFormat(input: CreateFormatInput!): AdminFormat!
+  updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
+  archiveFormat(id: ID!): AdminFormat!
+  restoreFormat(id: ID!): AdminFormat!
 }

@@ -31,3 +31,12 @@ query GetSectionPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
     currentPage
   }
 }
+
+query GetSectionRedirect($slug: String!) {
+  section(slug: $slug) {
+    status
+    successor {
+      slug
+    }
+  }
+}

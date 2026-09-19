@@ -76,6 +76,8 @@ const roleSectionIds: Partial<Record<Role, readonly string[]>> = {
 export const getAdminNavigation = (role: Role): AdminNavigationItem[] =>
   (roleSectionIds[role] ?? []).flatMap((id) => (sections[id] ? [sections[id]] : []))
 
+export const canManageTaxonomy = (role: Role): boolean => role === "admin" || role === "owner"
+
 export const parseAdminPeriod = (value: unknown): 7 | 30 => (value === "30d" ? 30 : 7)
 
 interface GraphQLErrorLike {

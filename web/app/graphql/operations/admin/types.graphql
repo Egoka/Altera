@@ -1,60 +1,111 @@
-query GetAdminSections(
-  $pagination: PaginationInput! = { page: 1, limit: 50 }
-  $sort: SortInput! = { field: "order", direction: ASC }
-  $filters: SectionFiltersInput! = { base: {} }
+query GetAdminCategories(
+  $sectionPagination: PaginationInput! = { page: 1, limit: 100 }
+  $sectionSort: SortInput! = { field: "order", direction: ASC }
+  $sectionFilters: SectionFiltersInput! = { base: {}, status: [active] }
+  $formatPagination: PaginationInput! = { page: 1, limit: 100 }
+  $formatSort: SortInput! = { field: "name", direction: ASC }
+  $formatFilters: FormatFiltersInput! = { status: [active] }
 ) {
-  sections(pagination: $pagination, sort: $sort, filters: $filters) {
+  sections(pagination: $sectionPagination, sort: $sectionSort, filters: $sectionFilters) {
     sections {
       ...SectionSummary
+      nameEn
+      descriptionEn
+      seoTitle
+      seoTitleEn
+      seoDescription
+      seoDescriptionEn
+      archivedAt
+      archivedByRole
+      successor {
+        id
+        name
+      }
       _count {
         articles
       }
     }
     pagination {
-      currentPage
-      totalPages
       totalItems
     }
+  }
+  formats(pagination: $formatPagination, sort: $formatSort, filters: $formatFilters) {
+    formats {
+      id
+      name
+      nameEn
+      slug
+      description
+      descriptionEn
+      status
+      archivedAt
+      _count {
+        articles
+      }
+    }
+    pagination {
+      totalItems
+    }
+  }
+}
+
+query GetTaxonomyAudit($entityType: String!, $entityId: ID!) {
+  taxonomyAudit(entityType: $entityType, entityId: $entityId) {
+    id
+    action
+    actorRole
+    diff
+    requestId
+    createdAt
   }
 }
 
 mutation CreateSection($input: CreateSectionInput!) {
   createSection(input: $input) {
     id
-    name
-    slug
-    description
-    order
-    status
   }
 }
-
 mutation UpdateSection($id: ID!, $input: UpdateSectionInput!) {
   updateSection(id: $id, input: $input) {
     id
-    name
-    slug
-    description
-    order
-    status
   }
 }
-
-mutation DeleteSection($id: ID!) {
-  deleteSection(id: $id) {
-    id
-  }
-}
-
 mutation ReorderSections($input: ReorderSectionsInput!) {
   reorderSections(input: $input) {
     id
     order
   }
 }
-
-mutation ArchiveSection($id: ID!, $successorId: ID!) {
-  archiveSection(id: $id, successorId: $successorId) {
+mutation ArchiveSection($id: ID!, $successorId: ID!, $reason: String!) {
+  archiveSection(id: $id, successorId: $successorId, reason: $reason) {
+    id
+    status
+  }
+}
+mutation RestoreSection($id: ID!) {
+  restoreSection(id: $id) {
+    id
+    status
+  }
+}
+mutation CreateFormat($input: CreateFormatInput!) {
+  createFormat(input: $input) {
+    id
+  }
+}
+mutation UpdateFormat($id: ID!, $input: UpdateFormatInput!) {
+  updateFormat(id: $id, input: $input) {
+    id
+  }
+}
+mutation ArchiveFormat($id: ID!) {
+  archiveFormat(id: $id) {
+    id
+    status
+  }
+}
+mutation RestoreFormat($id: ID!) {
+  restoreFormat(id: $id) {
     id
     status
   }

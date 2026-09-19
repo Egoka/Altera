@@ -18,6 +18,20 @@ type AccountUser {
   updatedAt: String!
 }
 
+type AdminFormat {
+  _count: FormatCount!
+  archivedAt: String
+  createdAt: String!
+  description: String
+  descriptionEn: String
+  id: ID!
+  name: String!
+  nameEn: String
+  slug: String!
+  status: TaxonomyStatus!
+  updatedAt: String!
+}
+
 enum AdminGrantStatus {
   active
   ended
@@ -194,6 +208,14 @@ input CreateArticleInput {
   sectionId: ID
 }
 
+input CreateFormatInput {
+  description: String
+  descriptionEn: String
+  name: String!
+  nameEn: String
+  slug: String!
+}
+
 input CreateSectionInput {
   description: String
   descriptionEn: String
@@ -237,6 +259,20 @@ type Format {
   updatedAt: String!
 }
 
+type FormatCount {
+  articles: Int!
+}
+
+input FormatFiltersInput {
+  hasArticles: Boolean
+  status: [TaxonomyStatus!]
+}
+
+type FormatsResponse {
+  formats: [AdminFormat!]!
+  pagination: PaginationInfo!
+}
+
 type GoneArticle {
   author: User!
   firstPublishedAt: String!
@@ -276,11 +312,13 @@ input MergeTagsInput {
 type Mutation {
   _empty: String
   archiveArticle(id: ID!): Article!
-  archiveSection(id: ID!, successorId: ID!): Section!
+  archiveFormat(id: ID!): AdminFormat!
+  archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
   archiveTag(id: ID!): Tag!
   bulkDeleteArticles(ids: [ID!]!): [Article!]!
   bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
   createArticle(input: CreateArticleInput!): Article!
+  createFormat(input: CreateFormatInput!): AdminFormat!
   createSection(input: CreateSectionInput!): Section!
   createTag(input: CreateTagInput!): Tag!
   deleteSection(id: ID!): Section!
@@ -292,6 +330,7 @@ type Mutation {
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
   restoreArticle(id: ID!): Article!
+  restoreFormat(id: ID!): AdminFormat!
   restoreSection(id: ID!): Section!
   restoreTag(id: ID!): Tag!
   revertToDraft(id: ID!): Article!
@@ -299,6 +338,7 @@ type Mutation {
   revokePlan(input: RevokePlanInput!): AdminPlanGrant!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
+  updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
   verifyMagicLink(token: String!): AuthPayload!
@@ -426,6 +466,7 @@ type Query {
   author(handle: String!): User
   authorStats(authorHandle: String!): AuthorStats
   featuredArticles(limit: Int = 5): [Article!]!
+  formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
   me: AccountUser
@@ -443,6 +484,7 @@ type Query {
   tagAutocomplete(limit: Int = 10, q: String!): [Tag!]!
   tagStats(tagSlug: String!): TagStats
   tags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
+  taxonomyAudit(entityId: ID!, entityType: String!): [TaxonomyAuditEntry!]!
   user(handle: String!): User
   users(filters: UserFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): UsersResponse!
 }
@@ -604,6 +646,18 @@ type TagsResponse {
   tags: [Tag!]!
 }
 
+type TaxonomyAuditEntry {
+  action: String!
+  actorId: ID
+  actorRole: Role
+  createdAt: String!
+  diff: JSON
+  entityId: ID!
+  entityType: String!
+  id: ID!
+  requestId: String
+}
+
 enum TaxonomyStatus {
   active
   archived
@@ -619,6 +673,14 @@ input UpdateArticleInput {
   slug: String
   tags: [ID!]
   title: String
+}
+
+input UpdateFormatInput {
+  description: String
+  descriptionEn: String
+  name: String
+  nameEn: String
+  slug: String
 }
 
 input UpdateSectionInput {
