@@ -8,7 +8,7 @@
     "sha": "3d5e1d9e6499cc204ecb1796b4da35a9ea4caa43"
   },
   "baseline_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
-  "tested_sha": "97ecfabd2a3730529b9b7edd2fb9cf005d0015cb",
+  "tested_sha": "48dbb175da8c5174dc9ab6afc95cfbe5396aefcb",
   "branch": "server/t028-permission-exceptions",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t028-permission-exceptions",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -28,15 +28,15 @@
   "pr": {
     "number": 121,
     "url": "https://github.com/Egoka/Altera/pull/121",
-    "head_sha": "97ecfabd2a3730529b9b7edd2fb9cf005d0015cb",
+    "head_sha": "48dbb175da8c5174dc9ab6afc95cfbe5396aefcb",
     "base_sha": "608a54d8cb472efce90802d6b535346ce171ce96",
     "base_ref": "app",
     "merge_sha": null
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
-    "sha": "97ecfabd2a3730529b9b7edd2fb9cf005d0015cb",
+    "run_id": "01a0b724-0905-7df1-a624-47f5550541d6",
+    "sha": "48dbb175da8c5174dc9ab6afc95cfbe5396aefcb",
     "verdict": null
   },
   "deployment": {
