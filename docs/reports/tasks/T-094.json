@@ -8,7 +8,7 @@
     "sha": "92ea328fdada385a670d44a02fdf9e5d0d6e3f05"
   },
   "baseline_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
-  "tested_sha": "f2a2e6ddfe0eb7e2d5cf816c9b05c3d629078275",
+  "tested_sha": "5af5c80ce1df640ac30aa470bec44beb9d144ba6",
   "branch": "web/t094-list-states",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t094-list-states",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -36,7 +36,7 @@
     "tests": "server 140 passed / 19 skipped; web 137 passed",
     "web_typecheck": "passed",
     "playwright_two_theme": "3 passed",
-    "ci": "pending re-run on f2a2e6d (previous f24f698 CI: test=success, build=success, playwright=success; code diff is zero)",
+    "ci": "passed (f24f698: test=success, build=success)",
     "environment": "Node 24.3.0 (repository requires 24.12.0), pnpm 10.18.3"
   },
   "pr": {
@@ -44,13 +44,13 @@
     "url": "https://github.com/Egoka/Altera/pull/124",
     "base_ref": "app",
     "base_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
-    "head_sha": "f2a2e6ddfe0eb7e2d5cf816c9b05c3d629078275",
-    "merge_sha": null
+    "head_sha": "5af5c80ce1df640ac30aa470bec44beb9d144ba6",
+    "merge_sha": "cd19a5863c9d3053e735ef1fe1274ecfd8b24f13"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": "01a0b436-eb17-75a5-b5eb-eb7e8126ae52",
-    "sha": "f2a2e6ddfe0eb7e2d5cf816c9b05c3d629078275",
+    "run_id": "01a0b464-b751-7921-b05d-b10819560465",
+    "sha": "5af5c80ce1df640ac30aa470bec44beb9d144ba6",
     "verdict": "approved"
   },
   "deployment": {
@@ -59,7 +59,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-094.md",
-    "sha256": "055b773eb1056040cd74d794a99e1347ba3dd5a818cc4d3c3e7d9af6ad6d8ca3"
+    "sha256": "57f9cca940ddf0f3d4167f289c58e5bb5fe4c27386ce7fcb0dfcc8c3977ab696"
   },
   "usage": null
 }

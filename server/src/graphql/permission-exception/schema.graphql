@@ -1,0 +1,36 @@
+enum PermissionExceptionKind {
+  grant
+  deny
+}
+
+type PermissionException {
+  id: ID!
+  userId: ID!
+  role: Role!
+  permission: String!
+  kind: PermissionExceptionKind!
+  grantedById: ID!
+  reason: String!
+  startsAt: String!
+  endsAt: String
+  revokedAt: String
+  revokedById: ID
+  expiredAt: String
+}
+
+input GrantPermissionExceptionInput {
+  userId: ID!
+  permission: String!
+  kind: PermissionExceptionKind!
+  endsAt: String
+  reason: String!
+}
+
+extend type Query {
+  permissionExceptions(userId: ID): [PermissionException!]!
+}
+
+extend type Mutation {
+  grantException(input: GrantPermissionExceptionInput!): PermissionException!
+  revokeException(id: ID!, reason: String!): PermissionException!
+}

@@ -10,46 +10,49 @@ datasource db {
 }
 
 model User {
-  id                 String               @id @default(uuid())
-  name               String
-  email              String               @unique
-  bio                String?
-  photoUrl           String?
-  role               Role                 @default(reader)
-  handle             String               @unique
-  locale             Locale               @default(ru)
-  avatarAssetId      String?
-  prevAvatarId       String?
-  nameCheckStatus    ProfileCheckStatus   @default(ok)
-  avatarCheckStatus  ProfileCheckStatus   @default(ok)
-  socialLinks        Json?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  archivedAt         DateTime?
-  archiveMode        AccountArchiveMode?
-  archivedByActorId  String?
-  archivedByRole     Role?
-  archiveReason      String?
-  isServiceAccount   Boolean              @default(false)
-  planTier           PlanTier             @default(free)
-  planUntil          DateTime?
-  articles           Article[]
-  bookmarks          Bookmark[]
-  planGrants         PlanGrant[]          @relation("PlanGrantRecipient")
-  grantedPlanGrants  PlanGrant[]          @relation("PlanGrantActor")
-  magicLink          MagicLinkToken?
-  sessions           Session[]
-  emailChangeRequest EmailChangeRequest?
-  currentHandle      HandleHistory        @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
-  handleHistory      HandleHistory[]      @relation("HandleOwner")
-  createdTags        Tag[]                @relation("TagCreator")
-  legalConsents      UserLegalConsent[]
-  translatedArticles ArticleTranslation[] @relation("ArticleTranslator")
-  articleRevisions   ArticleRevision[]    @relation("ArticleRevisionCreator")
-  ownedMediaAssets   MediaAsset[]         @relation("MediaAssetOwner")
-  avatarAsset        MediaAsset?          @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
-  previousAvatar     MediaAsset?          @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
-  reviewNotes        ReviewNote[]         @relation("ReviewNoteCreator")
+  id                          String                @id @default(uuid())
+  name                        String
+  email                       String                @unique
+  bio                         String?
+  photoUrl                    String?
+  role                        Role                  @default(reader)
+  handle                      String                @unique
+  locale                      Locale                @default(ru)
+  avatarAssetId               String?
+  prevAvatarId                String?
+  nameCheckStatus             ProfileCheckStatus    @default(ok)
+  avatarCheckStatus           ProfileCheckStatus    @default(ok)
+  socialLinks                 Json?
+  createdAt                   DateTime              @default(now())
+  updatedAt                   DateTime              @updatedAt
+  archivedAt                  DateTime?
+  archiveMode                 AccountArchiveMode?
+  archivedByActorId           String?
+  archivedByRole              Role?
+  archiveReason               String?
+  isServiceAccount            Boolean               @default(false)
+  planTier                    PlanTier              @default(free)
+  planUntil                   DateTime?
+  articles                    Article[]
+  bookmarks                   Bookmark[]
+  planGrants                  PlanGrant[]           @relation("PlanGrantRecipient")
+  grantedPlanGrants           PlanGrant[]           @relation("PlanGrantActor")
+  permissionExceptions        PermissionException[] @relation("PermissionExceptionRecipient")
+  grantedPermissionExceptions PermissionException[] @relation("PermissionExceptionGrantActor")
+  revokedPermissionExceptions PermissionException[] @relation("PermissionExceptionRevokeActor")
+  magicLink                   MagicLinkToken?
+  sessions                    Session[]
+  emailChangeRequest          EmailChangeRequest?
+  currentHandle               HandleHistory         @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
+  handleHistory               HandleHistory[]       @relation("HandleOwner")
+  createdTags                 Tag[]                 @relation("TagCreator")
+  legalConsents               UserLegalConsent[]
+  translatedArticles          ArticleTranslation[]  @relation("ArticleTranslator")
+  articleRevisions            ArticleRevision[]     @relation("ArticleRevisionCreator")
+  ownedMediaAssets            MediaAsset[]          @relation("MediaAssetOwner")
+  avatarAsset                 MediaAsset?           @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
+  previousAvatar              MediaAsset?           @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
+  reviewNotes                 ReviewNote[]          @relation("ReviewNoteCreator")
 
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
@@ -641,6 +644,29 @@ model PlanGrant {
   @@map("plan_grants")
 }
 
+model PermissionException {
+  id          String                  @id @default(uuid())
+  userId      String
+  role        Role
+  permission  String
+  kind        PermissionExceptionKind
+  grantedById String
+  reason      String
+  startsAt    DateTime                @default(now())
+  endsAt      DateTime?
+  revokedAt   DateTime?
+  revokedById String?
+  expiredAt   DateTime?
+  createdAt   DateTime                @default(now())
+  user        User                    @relation("PermissionExceptionRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy   User                    @relation("PermissionExceptionGrantActor", fields: [grantedById], references: [id], onDelete: Restrict)
+  revokedBy   User?                   @relation("PermissionExceptionRevokeActor", fields: [revokedById], references: [id], onDelete: Restrict)
+
+  @@index([userId, role, permission])
+  @@index([endsAt, expiredAt])
+  @@map("permission_exceptions")
+}
+
 enum Role {
   reader
   author
@@ -649,6 +675,11 @@ enum Role {
   analyst
   admin
   owner
+}
+
+enum PermissionExceptionKind {
+  grant
+  deny
 }
 
 enum PlanTier {

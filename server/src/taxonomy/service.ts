@@ -13,6 +13,41 @@ interface TaxonomyClient {
 const editorialRoles = new Set<Role>(["admin", "owner"])
 const tagCreatorRoles = new Set<Role>(["author", "admin", "owner"])
 const slugPattern = /^[a-z0-9-]+$/
+const cyrillicToLatin: Readonly<Record<string, string>> = {
+  а: "a",
+  б: "b",
+  в: "v",
+  г: "g",
+  д: "d",
+  е: "e",
+  ё: "e",
+  ж: "zh",
+  з: "z",
+  и: "i",
+  й: "i",
+  к: "k",
+  л: "l",
+  м: "m",
+  н: "n",
+  о: "o",
+  п: "p",
+  р: "r",
+  с: "s",
+  т: "t",
+  у: "u",
+  ф: "f",
+  х: "h",
+  ц: "c",
+  ч: "ch",
+  ш: "sh",
+  щ: "sch",
+  ъ: "",
+  ы: "y",
+  ь: "",
+  э: "e",
+  ю: "yu",
+  я: "ya"
+}
 const reservedSectionSlugs = new Set([
   "en",
   "authors",
@@ -39,6 +74,21 @@ function normalizeSlug(value: string, requestId: string): string {
   const slug = value.trim().toLowerCase()
   if (!slugPattern.test(slug)) {
     throw createApiError("VALIDATION_ERROR", { requestId, field: "slug", rule: "lowercase-latin-slug" })
+  }
+  return slug
+}
+
+function slugFromName(name: string, requestId: string): string {
+  const slug = Array.from(name.trim().toLowerCase())
+    .map((character) => cyrillicToLatin[character] ?? character)
+    .join("")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+
+  if (!slug) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "name", rule: "slug-source" })
   }
   return slug
 }
@@ -136,13 +186,15 @@ export async function archiveSection(
 export async function createTag(
   prisma: TaxonomyClient,
   input: {
-    input: { name: string; nameEn?: string | null; slug: string; description?: string | null }
+    input: { name: string; nameEn?: string | null; slug?: string | null; description?: string | null }
     actor: TaxonomyActor
     requestId: string
   }
 ) {
   requireRole(input.actor, tagCreatorRoles, "tag.create", input.requestId)
-  const slug = normalizeSlug(input.input.slug, input.requestId)
+  const slug = input.input.slug
+    ? normalizeSlug(input.input.slug, input.requestId)
+    : slugFromName(input.input.name, input.requestId)
 
   try {
     return await prisma.$transaction(async (tx) => {
