@@ -39,7 +39,7 @@ class CompletionTests(unittest.TestCase):
         self.facts = {"pr": copy.deepcopy(self.receipt["pr"]), "state": "MERGED", "ci": {"sha": "b" * 40, "passed": True},
                       "review": copy.deepcopy(self.receipt["review"]), "review_completed": True, "review_trusted": True,
                       "merge_in_app": True, "finalization_sha256": "d" * 64, "requires_deploy": False,
-                      "base_current": True, "implementer_trusted": True, "files_complete": True, "issue_scope_valid": True}
+                      "mergeable": True, "implementer_trusted": True, "files_complete": True, "issue_scope_valid": True}
 
     def test_missing_implementer_and_incomplete_diff_reject(self):
         self.facts["implementer_trusted"] = False
@@ -101,9 +101,11 @@ class CompletionTests(unittest.TestCase):
             self.facts["deployment"] = dep
             self.assertIn("deployment", c.validate(self.receipt, self.facts))
 
-    def test_old_base_blocks_premerge(self):
-        self.facts["state"] = "OPEN"; self.facts["base_current"] = False
-        self.assertIn("base", c.validate(self.receipt, self.facts, phase="merge"))
+    def test_conflicting_or_unknown_mergeability_blocks_premerge(self):
+        for value in (False, None):
+            with self.subTest(mergeable=value):
+                facts = {**self.facts, "state": "OPEN", "mergeable": value}
+                self.assertIn("base", c.validate(self.receipt, facts, phase="merge"))
 
     def test_unknown_schema_or_empty_criteria_rejected(self):
         self.receipt["criteria"] = []
@@ -277,6 +279,7 @@ class FreshBaseTests(unittest.TestCase):
         self.receipt["pr"].update(base_sha=self.base, head_sha=self.head)
         self.receipt["tested_sha"] = self.head
         self.receipt["review"]["sha"] = self.head
+        self.mergeable = True
         self.live = c.Live({"repo": str(self.repo), "workspace_id": "ws", "project_id": "project", "reviewer_ids": ["reviewer"]})
 
     def git(self, *args):
@@ -285,7 +288,8 @@ class FreshBaseTests(unittest.TestCase):
     def facts(self):
         def gh(endpoint):
             if endpoint.endswith("/pulls/123"):
-                return {"head": {"sha": self.head}, "base": {"ref": "app", "sha": self.base}, "state": "open", "mergeable_state": "clean", "changed_files": 1}
+                return {"head": {"sha": self.head}, "base": {"ref": "app", "sha": self.base}, "state": "open",
+                        "mergeable": self.mergeable, "mergeable_state": "clean" if self.mergeable else "dirty", "changed_files": 1}
             if "/check-runs?" in endpoint:
                 return {"check_runs": [{"name": "test", "app": {"slug": "github-actions"}, "id": 1, "conclusion": "success"}]}
             if endpoint.endswith("/git/ref/heads/app"):
@@ -307,21 +311,24 @@ class FreshBaseTests(unittest.TestCase):
         with patch.object(self.live, "gh", side_effect=gh), patch.object(self.live, "multica", side_effect=multica), patch.object(c, "command", side_effect=command):
             return self.live.facts(self.receipt)
 
-    def test_advanced_base_blocks_old_green_head_and_updated_head_passes(self):
+    def test_app_advancing_does_not_block_green_mergeable_head(self):
+        # Решение владельца 2026-09-19: отставание от app не требует обновления ветки перед merge.
         refs = self.git("show-ref")
+        self.assertNotEqual(subprocess.run(["git", "merge-base", "--is-ancestor", self.base, self.head],
+                                           cwd=self.repo).returncode, 0)
         facts = self.facts()
         self.assertIs(facts["ci"]["passed"], True)
-        self.assertIs(facts["base_current"], False)
-        self.assertEqual(c.validate(self.receipt, facts, "merge"), ["base"])
+        self.assertIs(facts["mergeable"], True)
+        self.assertEqual(c.validate(self.receipt, facts, "merge"), [])
         self.assertEqual(self.git("show-ref"), refs)
-        self.git("checkout", "feature")
-        self.git("merge", "--no-edit", "app")
-        self.head = self.git("rev-parse", "HEAD")
-        self.git("push", "origin", "feature:refs/pull/123/head")
-        self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.receipt["review"]["sha"] = self.head
-        refs = self.git("show-ref")
-        self.assertEqual(c.validate(self.receipt, self.facts(), "merge"), [])
-        self.assertEqual(self.git("show-ref"), refs)
+
+    def test_conflict_or_pending_mergeability_blocks_merge(self):
+        for value in (False, None):
+            with self.subTest(mergeable=value):
+                self.mergeable = value
+                facts = self.facts()
+                self.assertIs(facts["mergeable"], False)
+                self.assertEqual(c.validate(self.receipt, facts, "merge"), ["base"])
 
     def test_branch_update_with_same_patch_keeps_review_of_earlier_head(self):
         reviewed = self.head
@@ -352,13 +359,13 @@ class FreshBaseTests(unittest.TestCase):
         # GitHub reports a compatible head, but the fetched PR ref remains the old commit.
         self.head = self.base
         self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.receipt["review"]["sha"] = self.head
-        self.assertIs(self.facts()["base_current"], False)
+        self.assertIs(self.facts()["mergeable"], False)
         self.git("push", "origin", ":refs/pull/123/head")
-        self.assertIs(self.facts()["base_current"], False)
+        self.assertIs(self.facts()["mergeable"], False)
 
-    def test_done_validation_does_not_require_current_base_ancestry(self):
+    def test_done_validation_does_not_require_open_mergeable_pr(self):
         CompletionTests.setUp(self)
-        self.facts["base_current"] = False
+        self.facts["mergeable"] = False
         self.assertEqual(c.validate(self.receipt, self.facts, "done"), [])
 
 

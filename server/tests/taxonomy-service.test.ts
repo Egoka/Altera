@@ -90,7 +90,7 @@ describe("taxonomy service", () => {
 
     await expect(
       createTag({ $transaction: transaction } as never, {
-        input: { name: "Photo story", slug: " Photo-Story " },
+        input: { name: "Photo story" },
         actor: actor("author"),
         requestId: "request-1"
       })

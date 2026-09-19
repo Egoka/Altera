@@ -59,12 +59,14 @@ def prepared_handoff(config, date, report, snapshot_path, prepared_root, publica
         "report_json": str(prepared_root / "docs/reports/autonomy" / f"{date}.json"),
         "report_markdown": str(prepared_root / "docs/reports/autonomy" / f"{date}.md"),
         "publication": {"status": publication["status"], "branch": publication.get("branch"),
-                        "pr": {key: publication["pr"].get(key) for key in ("number", "url")}},
+                        "pr": {key: publication["pr"].get(key) for key in ("number", "url")},
+                        "merge_sha": (publication.get("merge") or {}).get("merge_sha")},
     }
     instruction = (
         "Суточные источники и агрегаты уже собраны, а отчётный PR подтверждён программно до запуска модели. "
         "Выполняй только короткий read-only анализ готового отчёта; ничего не публикуй и не собирай заново. "
-        "Идемпотентный publisher уже создал или обновил один PR в app и сохранил историю исправлений. "
+        "Идемпотентный publisher уже создал или обновил один PR в app, после зелёного CI слил его "
+        "merge-коммитом и сохранил историю исправлений. "
         "В native run верни ссылку на PR, до трёх фактов и до пяти пробелов; модельный текст не входит в PR. "
         "Детали при необходимости читай только из report_json/report_markdown. "
         "Не меняй продукт, очередь, права, MCP, инфраструктуру и другие autopilot. "

@@ -19,10 +19,17 @@ def git(directory, *args):
 
 
 class FakeGithub:
-    def __init__(self):
+    """GitHub поверх временного remote: merge-коммит в app; strict up-to-date выключен, как в защите app."""
+
+    def __init__(self, repo=None):
         self.prs = {}
         self.created = 0
         self.crash_after_create = False
+        self.repo = repo
+        self.checks = ["success"]
+        self.on_check = None
+        self.merges = []
+        self.strict = False
 
     def find(self, branch):
         return self.prs.get(branch)
@@ -30,11 +37,54 @@ class FakeGithub:
     def publish(self, branch, title, body):
         if branch not in self.prs:
             self.created += 1
-            self.prs[branch] = {"number": self.created, "state": "OPEN", "url": "https://example.test/pr/1"}
+            self.prs[branch] = {"number": self.created, "state": "OPEN", "url": "https://example.test/pr/1",
+                                "branch": branch}
         if self.crash_after_create:
             self.crash_after_create = False
             raise RuntimeError("simulated response loss after PR creation")
         return self.prs[branch]
+
+    def _pr(self, number):
+        return next(pr for pr in self.prs.values() if pr["number"] == number)
+
+    def _behind(self, head):
+        git(self.repo, "fetch", "origin")
+        return subprocess.run(["git", "-C", str(self.repo), "merge-base", "--is-ancestor", "origin/app", head],
+                              capture_output=True).returncode != 0
+
+    def _conflicts(self, head):
+        return subprocess.run(["git", "-C", str(self.repo), "merge-tree", "--write-tree", "origin/app", head],
+                              capture_output=True).returncode == 1
+
+    def status(self, number):
+        pr = self._pr(number)
+        if pr["state"] != "OPEN":
+            return {"state": pr["state"], "isDraft": False, "headRefOid": pr["head"],
+                    "mergeStateStatus": "UNKNOWN", "mergeCommit": {"oid": pr["merge_sha"]}}
+        git(self.repo, "fetch", "origin")
+        head = git(self.repo, "rev-parse", f"origin/{pr['branch']}")
+        state = "CLEAN"
+        if self._behind(head):
+            state = "DIRTY" if self._conflicts(head) else "BEHIND" if self.strict else "CLEAN"
+        return {"state": "OPEN", "isDraft": False, "headRefOid": head, "mergeCommit": None, "mergeStateStatus": state}
+
+    def required_check(self, sha):
+        if self.on_check:
+            hook, self.on_check = self.on_check, None
+            hook()
+        return self.checks.pop(0) if len(self.checks) > 1 else self.checks[0]
+
+    def merge(self, number, sha):
+        pr = self._pr(number)
+        self.merges.append(sha)
+        behind = self._behind(sha)
+        if git(self.repo, "rev-parse", f"origin/{pr['branch']}") != sha or (behind and (self.strict or self._conflicts(sha))):
+            raise daily_publish.PublishError("head changed, branch conflicts or is out of date")
+        git(self.repo, "checkout", "app")
+        git(self.repo, "merge", "--ff-only", "origin/app")
+        git(self.repo, "merge", "--no-ff", "-m", f"Merge {pr['branch']}", sha)
+        git(self.repo, "push", "origin", "app")
+        pr.update(state="MERGED", head=sha, merge_sha=git(self.repo, "rev-parse", "HEAD"))
 
 
 class DailyPublishTests(unittest.TestCase):
@@ -52,11 +102,12 @@ class DailyPublishTests(unittest.TestCase):
         git(self.repo, "add", "product.txt")
         git(self.repo, "commit", "-m", "chore: baseline")
         git(self.repo, "push", "origin", "app")
+        # Сценарии публикации без merge; автослияние проверяется отдельными тестами ниже.
         self.config = {"repo": str(self.repo), "github_repo": "owner/repo", "state_dir": str(self.root / "state"),
-                       "reports_worktree_root": str(self.root / "reports")}
+                       "reports_worktree_root": str(self.root / "reports"), "report_auto_merge": False}
         self.snapshot = {"schema_version": 1, "collected_at": "2026-09-15T08:00:00Z",
                          "coverage": {}, "issues": [], "executions": [], "receipts": []}
-        self.gh = FakeGithub()
+        self.gh = FakeGithub(self.repo)
 
     def tearDown(self):
         self.temp.cleanup()
@@ -153,6 +204,101 @@ class DailyPublishTests(unittest.TestCase):
         self.assertEqual(git(self.repo, "config", "--get", "core.hooksPath"), str(hooks))
         changed = git(Path(result["worktree"]), "diff", "--name-only", "app..HEAD").splitlines()
         self.assertTrue(all(path == "PROGRESS.md" or path.startswith("docs/reports/autonomy/") for path in changed))
+
+    def publish_with_merge(self, **config):
+        self.config.update({"report_auto_merge": True, "report_merge_timeout_seconds": 0, **config})
+        return daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh, sleep=lambda _: None)
+
+    def remote_app(self):
+        git(self.repo, "fetch", "origin")
+        return git(self.repo, "rev-parse", "origin/app")
+
+    def test_green_report_is_merged_into_app_with_merge_commit_and_cleaned_up(self):
+        self.gh.checks = ["pending", "success"]
+        result = self.publish_with_merge(report_merge_timeout_seconds=60)
+        self.assertEqual(result["merge"]["status"], "merged")
+        self.assertEqual(self.gh.merges, [result["head"]])
+        parents = git(self.repo, "rev-list", "--parents", "-n", "1", self.remote_app()).split()[1:]
+        self.assertEqual(len(parents), 2)
+        self.assertIn(result["head"], parents)
+        self.assertEqual(result["merge"]["merge_sha"], self.remote_app())
+        self.assertEqual(result["merge"]["cleanup"], "removed")
+        self.assertFalse(Path(result["worktree"]).exists())
+        self.assertEqual(git(self.repo, "branch", "--list", result["branch"]), "")
+
+    def test_red_ci_keeps_report_pr_open_and_app_untouched(self):
+        before = self.remote_app()
+        self.gh.checks = ["failure"]
+        with self.assertRaises(daily_publish.PublishError):
+            self.publish_with_merge()
+        self.assertEqual(self.gh.merges, [])
+        self.assertEqual(self.remote_app(), before)
+        self.assertEqual(self.gh.find("codex/autonomy-report-2026-09-15")["state"], "OPEN")
+
+    def test_pending_ci_times_out_and_same_day_retry_merges_the_existing_pr(self):
+        self.gh.checks = ["pending"]
+        with self.assertRaises(daily_publish.PublishError):
+            self.publish_with_merge()
+        self.assertEqual(self.gh.merges, [])
+        self.gh.checks = ["success"]
+        result = self.publish_with_merge()
+        self.assertEqual(result["merge"]["status"], "merged")
+        self.assertEqual(self.gh.created, 1)
+
+    def other_clone(self):
+        other = self.root / "other"
+        subprocess.run(["git", "clone", "--branch", "app", str(self.remote), str(other)], capture_output=True, check=True)
+        git(other, "config", "user.email", "other@example.test")
+        git(other, "config", "user.name", "Other")
+        return other
+
+    def advance_app_with_product_change(self):
+        other = self.other_clone()
+        (other / "product.txt").write_text("merged meanwhile\n")
+        git(other, "commit", "-am", "fix: merged meanwhile")
+        git(other, "push", "origin", "app")
+        self.advanced = git(other, "rev-parse", "HEAD")
+
+    def test_app_advancing_without_conflict_merges_head_as_is(self):
+        # Решение владельца 2026-09-19: отставание от app не требует обновлять ветку перед merge.
+        self.gh.on_check = self.advance_app_with_product_change
+        result = self.publish_with_merge()
+        self.assertEqual(result["merge"]["status"], "merged")
+        self.assertEqual(self.gh.merges, [result["head"]])
+        self.assertNotEqual(subprocess.run(["git", "-C", str(self.repo), "merge-base", "--is-ancestor",
+                                            self.advanced, result["head"]]).returncode, 0)
+        git(self.repo, "merge-base", "--is-ancestor", self.advanced, self.remote_app())
+        git(self.repo, "merge-base", "--is-ancestor", result["head"], self.remote_app())
+
+    def test_other_report_merged_during_ci_resyncs_conflicting_indexes(self):
+        def merge_next_day_report():
+            other = self.other_clone()
+            daily_publish.reporting.publish({**self.snapshot, "collected_at": "2026-09-16T08:00:00Z"}, "2026-09-16", other)
+            git(other, "add", "PROGRESS.md", "docs/reports/autonomy")
+            git(other, "commit", "-m", "docs(autonomy): report 2026-09-16")
+            git(other, "push", "origin", "app")
+        self.gh.on_check = merge_next_day_report
+        result = self.publish_with_merge()
+        self.assertEqual(result["merge"]["status"], "merged")
+        # Первая попытка упирается в конфликт индексов, вторая сливает пересобранный head.
+        self.assertEqual(len(self.gh.merges), 2)
+        self.assertEqual(self.gh.merges[-1], result["head"])
+        progress = git(self.repo, "show", f"{self.remote_app()}:PROGRESS.md")
+        self.assertIn("2026-09-15", progress)
+        self.assertIn("2026-09-16", progress)
+        periods = json.loads(git(self.repo, "show", f"{self.remote_app()}:docs/reports/autonomy/periods.json"))
+        self.assertEqual(periods["7"]["covered_days"], 2)
+
+    def test_strict_protection_behind_resyncs_report_before_merge(self):
+        self.gh.strict = True
+        self.gh.on_check = self.advance_app_with_product_change
+        result = self.publish_with_merge()
+        self.assertEqual(result["merge"]["status"], "merged")
+        self.assertEqual(len(self.gh.merges), 2)
+        self.assertNotEqual(self.gh.merges[0], result["head"])
+        git(self.repo, "merge-base", "--is-ancestor", self.advanced, result["head"])
+        git(self.repo, "merge-base", "--is-ancestor", result["head"], self.remote_app())
+        self.assertEqual(self.gh.created, 1)
 
 
 if __name__ == "__main__":

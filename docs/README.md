@@ -47,6 +47,11 @@
 ### 📂 decisions/
 Журнал архитектурных решений (ADR); указатель и шаблон — в `decisions/README.md`.
 
+### 📂 infrastructure/
+Карта инфраструктуры (черновик от 2026-09-19): как есть, требования документов, целевая
+топология в Kubernetes, два домена, Cloudflare перед `altera.com`, российский CDN перед
+`altera.ru`, решения владельца. Terraform Cloudflare — `infra/cloudflare/`.
+
 ### 📂 guides/
 Руководства и стандарты разработки:
 - `authentication_guide.md` - руководство по тестированию авторизации

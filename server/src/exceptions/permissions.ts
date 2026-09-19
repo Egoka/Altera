@@ -25,12 +25,13 @@ export interface PermissionUser {
   archivedAt: Date | null
   planTier: PlanTier
   planUntil: Date | null
+  permissionExceptions?: readonly PermissionException[]
 }
 
 export interface PermissionException {
   userId: string
   role: Role
-  permission: PermissionCode
+  permission: string
   kind: PermissionExceptionKind
   startsAt: Date
   endsAt: Date | null
@@ -126,7 +127,7 @@ export function ensurePermission(
   }
 
   const now = options.now ?? new Date()
-  const exceptions = (options.exceptions ?? []).filter((exception) =>
+  const exceptions = (options.exceptions ?? user.permissionExceptions ?? []).filter((exception) =>
     isActiveException(exception, user, permission, now)
   )
   const hasGrant = exceptions.some(({ kind }) => kind === "grant")

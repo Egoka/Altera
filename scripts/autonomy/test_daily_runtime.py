@@ -51,7 +51,7 @@ class DailyRuntimeTests(unittest.TestCase):
     def publish(self, config, date, snapshot):
         self.publications.append(date)
         return {"status": "published", "pr": {"number": 1, "url": "https://example.test/pr/1"},
-                "branch": "codex/report"}
+                "branch": "codex/report", "merge": {"status": "merged", "merge_sha": "a" * 40}}
 
     def run_daily(self, collect, **kwargs):
         return daily_runtime.run(self.config, ["--output-format", "stream-json"], "auditor",
@@ -90,6 +90,7 @@ class DailyRuntimeTests(unittest.TestCase):
             self.assertEqual(json.loads(source.read_text())["issues"][0]["id"], "0")
             self.assertEqual(json.loads(report.read_text())["tasks"]["created"], 400)
             self.assertEqual(handoff["publication"]["pr"]["url"], "https://example.test/pr/1")
+            self.assertEqual(handoff["publication"]["merge_sha"], "a" * 40)
             self.assertNotIn("publisher_argv", handoff)
             self.assertLess(len(message), 8192)
             self.assertNotIn("RAW HISTORY", message)
