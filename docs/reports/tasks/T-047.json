@@ -8,7 +8,7 @@
     "sha": "e50bf40ccf891f743e64812963bd6399a63076b4"
   },
   "baseline_sha": "3722abfd77c39d03b93fcbe5f11d5143a3954502",
-  "tested_sha": "bf109969a762d1d15b66f1acd25b1e81a69bc75c",
+  "tested_sha": "d6ccb24a76157c167025e71ffa6895d8c5959cdb",
   "branch": "server/t047-job-queue",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b133-3287-7c8e-8600-b25a7be68e7a",
@@ -28,9 +28,9 @@
     "number": 123,
     "url": "https://github.com/Egoka/Altera/pull/123",
     "base_ref": "app",
-    "base_sha": "fa1e71311a953bdf2da1d6cabe5b7756edb0ea67",
-    "head_sha": "bf109969a762d1d15b66f1acd25b1e81a69bc75c",
-    "merge_sha": null
+    "base_sha": "86a1022c0635b04633339e5cd29a8197248dace1",
+    "head_sha": "d6ccb24a76157c167025e71ffa6895d8c5959cdb",
+    "merge_sha": "0a6509103589d39e908f29dca3b4a0f97c3e3d72"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
@@ -47,7 +47,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-047.md",
-    "sha256": "b7ee72aac7b8ba0aeda67d1f19a80a43628f04e9673257d85ba48f6e9a9765b7"
+    "sha256": "1ec9182fd173c4cadbe3b049ff13fe3e0f6f8e191998fd5113592d6059fd77aa"
   },
   "usage": null
 }
