@@ -8,7 +8,7 @@
     "sha": "f934e0e654b9d9aa1b82a37ee020f26c49458936"
   },
   "baseline_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
-  "tested_sha": "6b5664fa3b6df295c94f9587e88adf74d97b7eea",
+  "tested_sha": "baa842258f1eb9e0f4a6bb5eac89bbbe5c340e8a",
   "branch": "web/t070-admin-categories",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b80b-5a38-7495-af19-95c39c31439e",
@@ -28,9 +28,9 @@
     "number": 134,
     "url": "https://github.com/Egoka/Altera/pull/134",
     "base_ref": "app",
-    "base_sha": "c9abc9cf8d08ffafbe0fb55ed8af0c5b63926692",
-    "head_sha": "6b5664fa3b6df295c94f9587e88adf74d97b7eea",
-    "merge_sha": null
+    "base_sha": "d18ddac8edf25a3662fbf00f64d3c68c12f7d8da",
+    "head_sha": "baa842258f1eb9e0f4a6bb5eac89bbbe5c340e8a",
+    "merge_sha": "df2a3815e2d73f16ea56667c477f86e3223fc04f"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
@@ -47,7 +47,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-070.md",
-    "sha256": "bd53421d76ca887bc6b5cef9067abe0313e69095da940aa4db785cf191eb0bbd"
+    "sha256": "816f3ff4b576e38d93bc1c064bf58ec1d900913951a2f82aede8f354dd083723"
   },
   "usage": null
 }

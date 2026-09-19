@@ -8,7 +8,7 @@
     "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
   },
   "baseline_sha": "a5f6c64eef712dceef8f36b2aea69f07a331ffd1",
-  "tested_sha": "8bed4761986ed167bf65149eac7699403fa0d852",
+  "tested_sha": "179d41917c8dca2319de05136b61f050e412d775",
   "branch": "web/t084-admin-grants",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot/Altera",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -33,7 +33,7 @@
     "web_typecheck": "passed",
     "web_build": "passed",
     "playwright": "T-084 target: 4 passed / 1 T-110 fixme skipped",
-    "ci": "https://github.com/Egoka/Altera/pull/135/checks",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35455157891",
     "preflight": "repository/runtime checks passed; LOG_HASH_SECRET unavailable locally, so no live server/database probe was run",
     "environment": "Node 24.12.0, pnpm 10.18.3"
   },
@@ -41,9 +41,9 @@
     "number": 135,
     "url": "https://github.com/Egoka/Altera/pull/135",
     "base_ref": "app",
-    "base_sha": "a5f6c64eef712dceef8f36b2aea69f07a331ffd1",
-    "head_sha": "8bed4761986ed167bf65149eac7699403fa0d852",
-    "merge_sha": null
+    "base_sha": "86a1022c0635b04633339e5cd29a8197248dace1",
+    "head_sha": "179d41917c8dca2319de05136b61f050e412d775",
+    "merge_sha": "3977168b5082c8e7849945fc17003f3983aeffbc"
   },
   "review": {
     "actor_id": null,
@@ -59,10 +59,10 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-084.md",
-    "sha256": null
+    "sha256": "344ef01b08f75a8dbfa069fe0c4aa948252c789778a894dddce1a111d308b93f"
   },
   "remaining": [
-    "CI, independent native review, and controller-managed development deployment/health verification are pending"
+    "Independent native review of the tested SHA and controller-managed development deployment/health verification are pending"
   ],
   "usage": null
 }
