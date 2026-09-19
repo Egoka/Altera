@@ -245,6 +245,7 @@ type Mutation {
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
+  restoreArticle(id: ID!): Article!
   restoreSection(id: ID!): Section!
   restoreTag(id: ID!): Tag!
   revertToDraft(id: ID!): Article!

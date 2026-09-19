@@ -660,19 +660,108 @@ export default {
     archiveArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
-      const article = await ctx.prisma.article.findUnique({
-        where: { id },
-        include: { author: true, section: true, tags: true }
-      })
-      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (article.authorId !== user.id) {
-        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
-      }
+      const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
+        const article = await transaction.article.findUnique({
+          where: { id },
+          include: { author: true, section: true, tags: true }
+        })
+        if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+        if (article.authorId !== user.id) {
+          throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
+        }
+        if (article.status === "archived") {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "article",
+            expected: "active",
+            actual: article.status
+          })
+        }
 
-      const updatedArticle = await ctx.prisma.article.update({
-        where: { id },
-        data: { status: "archived" },
-        include: { author: true, section: true, tags: true }
+        const updatedArticle = await transaction.article.update({
+          where: { id },
+          data: {
+            status: "archived",
+            archivedAt: new Date(),
+            archivedByActorId: user.id,
+            archivedByRole: user.role,
+            archiveReason: "author"
+          },
+          include: { author: true, section: true, tags: true }
+        })
+        await transaction.auditLog.create({
+          data: {
+            action: "article.archive",
+            actorId: user.id,
+            actorRole: user.role,
+            entityType: "article",
+            entityId: id,
+            diff: { status: { from: article.status, to: "archived" } },
+            requestId: ctx.requestId
+          }
+        })
+
+        return { article, updatedArticle }
+      })
+
+      await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
+
+      return updatedArticle
+    },
+
+    restoreArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      ensureActiveAuthor(user, "article.restore", ctx.requestId, { logger: ctx.logger })
+
+      const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
+        const article = await transaction.article.findUnique({
+          where: { id },
+          include: { author: true, section: true, tags: true }
+        })
+        if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+        if (article.authorId !== user.id) {
+          throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
+        }
+        if (article.status !== "archived") {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "article",
+            expected: "archived",
+            actual: article.status
+          })
+        }
+        if (
+          article.archivedByActorId !== user.id ||
+          (article.archivedByRole !== "author" && article.archivedByRole !== "reader")
+        ) {
+          throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
+        }
+
+        const restoredStatus = article.firstPublishedAt || article.publishedAt ? "published" : "draft"
+        const updatedArticle = await transaction.article.update({
+          where: { id },
+          data: {
+            status: restoredStatus,
+            archivedAt: null,
+            archivedByActorId: null,
+            archivedByRole: null,
+            archiveReason: null
+          },
+          include: { author: true, section: true, tags: true }
+        })
+        await transaction.auditLog.create({
+          data: {
+            action: "article.restore",
+            actorId: user.id,
+            actorRole: user.role,
+            entityType: "article",
+            entityId: id,
+            diff: { status: { from: "archived", to: restoredStatus } },
+            requestId: ctx.requestId
+          }
+        })
+
+        return { article, updatedArticle }
       })
 
       await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
