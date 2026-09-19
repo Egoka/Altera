@@ -26,6 +26,7 @@ import {
   publicArticleWhere,
   publicationDatesForStatus
 } from "../../visibility/article"
+import { randomUUID } from "node:crypto"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
 
@@ -649,21 +650,50 @@ export default {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
       const user = ensureArticleAuthoringAccess(ctx, "article.create")
 
-      const { tags, ...articleData } = input
+      const articleId = randomUUID()
+      const locale = input.locale ?? user.locale
+      const title = ""
+      const body = ""
+      const slug = `draft-${articleId}`
 
-      const newArticle = await ctx.prisma.article.create({
-        data: {
-          ...articleData,
-          authorId: user.id,
-          status: "draft", // Always create as a draft
-          // Note: publishedAt is not set here
-          tags: tags
-            ? {
-                connect: tags.map((id: string) => ({ id }))
+      const newArticle = await ctx.prisma.$transaction(async (tx) => {
+        const section = input.sectionId
+          ? await tx.section.findFirst({
+              where: { id: input.sectionId, status: "active" },
+              select: { id: true }
+            })
+          : null
+
+        return tx.article.create({
+          data: {
+            id: articleId,
+            title,
+            body,
+            slug,
+            sectionId: section?.id ?? null,
+            sourceLocale: locale,
+            authorId: user.id,
+            status: "draft",
+            translations: {
+              create: {
+                locale,
+                slug,
+                title,
+                body: [],
+                status: "draft",
+                revisions: {
+                  create: {
+                    title,
+                    body: [],
+                    kind: "manual",
+                    createdById: user.id
+                  }
+                }
               }
-            : undefined
-        },
-        include: { author: true, section: true, tags: true }
+            }
+          },
+          include: { author: true, section: true, tags: true, translations: true }
+        })
       })
 
       // No cache invalidation is needed because drafts are not public.
@@ -707,19 +737,108 @@ export default {
     archiveArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
 
-      const article = await ctx.prisma.article.findUnique({
-        where: { id },
-        include: { author: true, section: true, tags: true }
-      })
-      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (article.authorId !== user.id) {
-        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
-      }
+      const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
+        const article = await transaction.article.findUnique({
+          where: { id },
+          include: { author: true, section: true, tags: true }
+        })
+        if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+        if (article.authorId !== user.id) {
+          throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
+        }
+        if (article.status === "archived") {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "article",
+            expected: "active",
+            actual: article.status
+          })
+        }
 
-      const updatedArticle = await ctx.prisma.article.update({
-        where: { id },
-        data: { status: "archived" },
-        include: { author: true, section: true, tags: true }
+        const updatedArticle = await transaction.article.update({
+          where: { id },
+          data: {
+            status: "archived",
+            archivedAt: new Date(),
+            archivedByActorId: user.id,
+            archivedByRole: user.role,
+            archiveReason: "author"
+          },
+          include: { author: true, section: true, tags: true }
+        })
+        await transaction.auditLog.create({
+          data: {
+            action: "article.archive",
+            actorId: user.id,
+            actorRole: user.role,
+            entityType: "article",
+            entityId: id,
+            diff: { status: { from: article.status, to: "archived" } },
+            requestId: ctx.requestId
+          }
+        })
+
+        return { article, updatedArticle }
+      })
+
+      await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
+
+      return updatedArticle
+    },
+
+    restoreArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      ensureActiveAuthor(user, "article.restore", ctx.requestId, { logger: ctx.logger })
+
+      const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
+        const article = await transaction.article.findUnique({
+          where: { id },
+          include: { author: true, section: true, tags: true }
+        })
+        if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
+        if (article.authorId !== user.id) {
+          throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
+        }
+        if (article.status !== "archived") {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "article",
+            expected: "archived",
+            actual: article.status
+          })
+        }
+        if (
+          article.archivedByActorId !== user.id ||
+          (article.archivedByRole !== "author" && article.archivedByRole !== "reader")
+        ) {
+          throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
+        }
+
+        const restoredStatus = article.firstPublishedAt || article.publishedAt ? "published" : "draft"
+        const updatedArticle = await transaction.article.update({
+          where: { id },
+          data: {
+            status: restoredStatus,
+            archivedAt: null,
+            archivedByActorId: null,
+            archivedByRole: null,
+            archiveReason: null
+          },
+          include: { author: true, section: true, tags: true }
+        })
+        await transaction.auditLog.create({
+          data: {
+            action: "article.restore",
+            actorId: user.id,
+            actorRole: user.role,
+            entityType: "article",
+            entityId: id,
+            diff: { status: { from: "archived", to: restoredStatus } },
+            requestId: ctx.requestId
+          }
+        })
+
+        return { article, updatedArticle }
       })
 
       await ctx.cache.delByTags(buildArticleCacheTags(article, updatedArticle))
@@ -744,6 +863,13 @@ export default {
           entity: "article",
           expected: "draft",
           actual: article.status
+        })
+      }
+      if (!article.sectionId) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "sectionId",
+          rule: "required"
         })
       }
 

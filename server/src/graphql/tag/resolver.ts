@@ -23,6 +23,38 @@ import { publicArticleSelect, publicArticleWhere, publicTagSelect, publicUserSel
 
 export default {
   Query: {
+    tagAutocomplete: async (_parent: any, { q, limit = 10 }: { q: string; limit?: number }, ctx: GraphQLContext) => {
+      ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const query = q.trim()
+      if (query.length < 2) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "q",
+          rule: "minLength:2"
+        })
+      }
+      if (limit < 1 || limit > 20) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "limit",
+          rule: "range:1-20"
+        })
+      }
+
+      return ctx.prisma.tag.findMany({
+        where: {
+          status: "active",
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { nameEn: { contains: query, mode: "insensitive" } },
+            { slug: { contains: query, mode: "insensitive" } }
+          ]
+        },
+        orderBy: { name: "asc" },
+        take: limit
+      })
+    },
+
     tag: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
       return readThroughPublicCache(
         {

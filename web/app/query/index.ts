@@ -24,6 +24,7 @@ export {
   MergeTagsDocument as MERGE_TAGS,
   ReorderSectionsDocument as REORDER_SECTIONS,
   RequestMagicLinkDocument as REQUEST_MAGIC_LINK,
+  TagAutocompleteDocument as TAG_AUTOCOMPLETE,
   UpdateArticleDocument as UPDATE_ARTICLE,
   UpdateSectionDocument as UPDATE_SECTION,
   UpdateTagDocument as UPDATE_TAG,

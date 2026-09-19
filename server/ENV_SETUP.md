@@ -33,6 +33,18 @@
 - `MAGIC_LINK_EXPIRY_MINUTES` - время жизни magic link в минутах (по умолчанию: 15)
 - `MAGIC_LINK_BASE_URL` - базовый URL для magic link (по умолчанию: http://localhost:3000/auth/verify)
 
+### Почта (T-021)
+
+- `MAIL_TRANSPORT` - `smtp`, `console` или `fake`. Вне production без значения используется
+  `console`: письмо не доставляется, в логах остаются только шаблон, статус, провайдер и
+  `messageId`. В production неявный `console` не подставляется: без значения каждая отправка
+  фиксируется как `failed` и возвращает `PROVIDER_UNAVAILABLE: mail`; `fake` в production запрещён.
+- `MAIL_FROM` - адрес отправителя (вне production по умолчанию `Altera <no-reply@localhost>`;
+  для `smtp` в production обязателен).
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` (`true`/`false`), `SMTP_USER` и `SMTP_PASSWORD`
+  (задаются вместе) - параметры `smtp`. Локально это Mailpit из `docker-compose.yml`:
+  SMTP `localhost:21025`, веб-интерфейс `http://localhost:28025`. Реальный провайдер — Q-01.
+
 ### JWT токены
 
 - `JWT_ACCESS_TOKEN_EXPIRY` - время жизни access токена (по умолчанию: 15m)

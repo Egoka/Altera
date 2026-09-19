@@ -1,0 +1,14 @@
+# Скопировать в terraform.tfvars (файл в git не попадает) и подставить значения.
+# Токен Cloudflare — только через переменную окружения CLOUDFLARE_API_TOKEN.
+
+zone_id               = "<id зоны altera.com в Cloudflare>"
+domain                = "altera.com"
+ru_domain             = "altera.ru"
+origin_ipv4           = "<внешний IPv4 Gateway кластера в РФ>"
+media_origin_hostname = "<хост источника медиа, см. cloudflare-altera-com.md, раздел «Медиа»>"
+
+# Должно совпадать с именем cookie сессии, которую выставляет BFF Nuxt.
+session_cookie_names = ["altera_session"]
+
+# Включать только после решения владельца о схеме адресов двух доменов.
+enable_ru_geo_redirect = false
