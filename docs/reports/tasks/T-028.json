@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "T-028",
+  "issue_id": "01a0b0ff-550b-761d-b826-be4e92b25083",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-028-permission-exceptions-owner.md",
+    "sha": "3d5e1d9e6499cc204ecb1796b4da35a9ea4caa43"
+  },
+  "baseline_sha": "fc3e1c5d4c3483e649082025b05ff55b6db66d98",
+  "tested_sha": "c0c2ee88de996f8fb6cd2355e9d8b4224913c908",
+  "branch": "server/t028-permission-exceptions",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b7a2-51ff-7e32-befe-1788b3848bf2",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/permission-exceptions.test.ts 5 passed; server 159 passed / 19 skipped; CI run 35442979373 SUCCESS on head c0c2ee88"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "fake-clock expiry test verifies denial and permission.exception.expire audit event; CI run 35442979373 SUCCESS"
+    }
+  ],
+  "pr": {
+    "number": 121,
+    "url": "https://github.com/Egoka/Altera/pull/121",
+    "base_ref": "app",
+    "base_sha": "c9abc9cf8d08ffafbe0fb55ed8af0c5b63926692",
+    "head_sha": "c0c2ee88de996f8fb6cd2355e9d8b4224913c908",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": null,
+    "sha": "c0c2ee88de996f8fb6cd2355e9d8b4224913c908",
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server code and PostgreSQL migration; controller must apply in authorized environment and verify health",
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-028.md",
+    "sha256": "d5a818fccc76ad6dc78287bc49c2b84396d8c90f6917abfe4d10a0eaa5975916"
+  },
+  "usage": null
+}
