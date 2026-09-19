@@ -8,7 +8,7 @@
     "sha": "a1ca8fccb57c0b76a8248ee120004989186d8612"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "481084d5870aba0411be9d95957b467efc7c8c7f",
+  "tested_sha": "7c59003769d537385ac02c2341c71793e1dfc59b",
   "branch": "server/t039-article-draft",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b100-bfbe-7414-9e9b-2d63f1f9b8c3",
@@ -29,13 +29,13 @@
     "url": "https://github.com/Egoka/Altera/pull/117",
     "base_ref": "app",
     "base_sha": "aa530a5ae9873678c9bb78d1da0dbed5b9fd6d36",
-    "head_sha": "481084d5870aba0411be9d95957b467efc7c8c7f",
+    "head_sha": "7c59003769d537385ac02c2341c71793e1dfc59b",
     "merge_sha": null
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
     "run_id": null,
-    "sha": "481084d5870aba0411be9d95957b467efc7c8c7f",
+    "sha": "7c59003769d537385ac02c2341c71793e1dfc59b",
     "verdict": null
   },
   "deployment": {
@@ -47,7 +47,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-039.md",
-    "sha256": "1fa36a565ba9792db00d1e4d48f5bbec392fd72add59a129cbd9bbf213deccab"
+    "sha256": "739db9a78f17a78cbc84b6820f084f869348c7aa445389b67e2b143e425255d1"
   },
   "usage": null
 }

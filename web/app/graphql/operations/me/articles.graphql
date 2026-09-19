@@ -43,6 +43,14 @@ mutation CreateArticle($input: CreateArticleInput!) {
   }
 }
 
+query TagAutocomplete($q: String!, $limit: Int = 10) {
+  tagAutocomplete(q: $q, limit: $limit) {
+    id
+    name
+    slug
+  }
+}
+
 mutation UpdateArticle($id: ID!, $input: UpdateArticleInput!) {
   updateArticle(id: $id, input: $input) {
     id
