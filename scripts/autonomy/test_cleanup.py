@@ -162,7 +162,9 @@ class CleanupTests(unittest.TestCase):
         self.assertEqual(result["status"], "removed", result)
         self.assertFalse(self.worktree.exists())
         self.assertEqual(git(self.repo, "branch", "--list", self.branch), "")
-        self.assertEqual(git(self.repo, "ls-remote", "origin", self.branch), "")
+        # Исходная ветка PR остаётся на origin после слияния.
+        self.assertIn(self.head, git(self.repo, "ls-remote", "origin", self.branch))
+        self.assertNotIn("remote_branch_deleted", result["actions"])
         self.assertTrue(self.repo.exists())
         self.assertTrue(self.finalization.exists())
         records = [json.loads(line) for line in Path(result["log_path"]).read_text().splitlines()]

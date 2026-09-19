@@ -299,18 +299,15 @@ def cleanup(repo, receipt, evidence_provider, *, owned_root, log_dir=None,
                     raise Ineligible("finalization changed after worktree removal")
                 current_remote = _validate_git(repo, receipt, target, remote, False)
                 _validate_evidence(receipt, evidence, max_age)
+                # Remote-ветка остаётся на origin (решение владельца 2026-09-19), но её смена —
+                # признак новой работы, поэтому локальная ветка тогда сохраняется.
                 if current_remote != remote_head:
                     raise Ineligible("remote branch changed after worktree removal")
-                if remote_head:
-                    # CAS на сервере: новая версия ветки никогда не удаляется.
-                    _git(repo, "push", "--force-with-lease=refs/heads/" + receipt["branch"] + ":" + remote_head,
-                         remote, ":refs/heads/" + receipt["branch"])
-                    result["actions"].append("remote_branch_deleted")
                 # update-ref поддерживает CAS и корректен для подтверждённого merge-коммита и squash.
                 _validate_identity(repo, receipt, owned_root, False)
                 _git(repo, "update-ref", "-d", "refs/heads/" + receipt["branch"], receipt["pr"]["head_sha"])
                 result["actions"].append("local_branch_deleted")
-                result.update(status="removed", reason="verified worktree and branch refs removed")
+                result.update(status="removed", reason="verified worktree and local branch ref removed; remote branch kept")
     except Ineligible as exc:
         result.update(status="partial" if result["applied"] else "skipped", reason=str(exc))
     except Exception as exc:
