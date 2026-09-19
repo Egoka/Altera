@@ -39,7 +39,8 @@
     "openAll": "Open all",
     "viewAll": "View all",
     "inDevelopment": "In development",
-    "searchPlaceholder": "Search..."
+    "searchPlaceholder": "Search...",
+    "close": "Close"
   },
   "auth": {
     "login": {
@@ -267,7 +268,10 @@
       "eyebrow": "Editorial catalogue",
       "title": "Sections and formats",
       "description": "Publication structure, public addresses, and change history.",
-      "tabs": { "sections": "Sections", "formats": "Formats" },
+      "tabs": {
+        "sections": "Sections",
+        "formats": "Formats"
+      },
       "createSection": "New section",
       "createFormat": "New format",
       "create": "Create",
@@ -356,14 +360,30 @@
       "settings": "System settings"
     },
     "cards": {
-      "editorial": { "title": "Editorial articles" },
-      "editorialProcesses": { "title": "Editorial processes" },
-      "reviewQueue": { "title": "Manual review queue" },
-      "profileChecks": { "title": "Profile checks" },
-      "growth": { "title": "Registrations and plans" },
-      "operationalQueue": { "title": "Operations queue" },
-      "health": { "title": "Health and errors" },
-      "ownership": { "title": "Service accounts" }
+      "editorial": {
+        "title": "Editorial articles"
+      },
+      "editorialProcesses": {
+        "title": "Editorial processes"
+      },
+      "reviewQueue": {
+        "title": "Manual review queue"
+      },
+      "profileChecks": {
+        "title": "Profile checks"
+      },
+      "growth": {
+        "title": "Registrations and plans"
+      },
+      "operationalQueue": {
+        "title": "Operations queue"
+      },
+      "health": {
+        "title": "Health and errors"
+      },
+      "ownership": {
+        "title": "Service accounts"
+      }
     },
     "metrics": {
       "drafts": "Drafts",
@@ -409,7 +429,50 @@
     "endsAtHint": "(required for manual grants)",
     "userHandleLabel": "User handle",
     "reasonPlaceholder": "Enter grant reason",
-    "revokeReasonPlaceholder": "Revoke reason"
+    "revokeReasonPlaceholder": "Revoke reason",
+    "audit": {
+      "eyebrow": "Service journal",
+      "title": "Audit",
+      "description": "Immutable journal of actions that happened: who changed what and when.",
+      "scopeFull": "Full journal across all zones",
+      "scope": {
+        "editorial": "Editorial articles",
+        "moderation": "Material and AI decisions",
+        "financeAndPd": "Finance, personal data reads and AI metrics",
+        "own": "Records of your own zone"
+      },
+      "refresh": "Refresh",
+      "export": "Export CSV",
+      "zone": "Zone",
+      "allZones": "All zones",
+      "action": "Action code",
+      "allActions": "All codes",
+      "actor": "Actor",
+      "allActors": "All actors",
+      "systemOnly": "Automatic records only",
+      "systemActor": "System",
+      "period": "Period",
+      "periodHint": "7d, 30d, 90d or 2026-09-01..2026-09-20",
+      "entity": "Entity",
+      "entityTypeHint": "user, article, payment…",
+      "entityId": "Entity identifier",
+      "subject": "Subject",
+      "context": "Context",
+      "purpose": "Purpose",
+      "diff": "Fields before and after",
+      "recordedAt": "Recorded at",
+      "apply": "Apply",
+      "reset": "Reset",
+      "summaryTotal": "Records for the filter: {total}",
+      "rateLimited": "Export used more often than the limit. Retry in {retryAfter} s.",
+      "exported": "File {filename} is ready: {rows} records.",
+      "error": "Could not load the journal.",
+      "empty": "No actions during the period",
+      "more": "Show more",
+      "exportConfirmTitle": "Journal export",
+      "exportConfirmText": "The file describes personal data reads. Personal fields stay out of the export: only time, code, actor role, entity type and requestId.",
+      "exportConfirmAction": "Download"
+    }
   },
   "language": {
     "switchTo": "Switch language to {language}"
