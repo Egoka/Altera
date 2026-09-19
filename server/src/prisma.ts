@@ -1,4 +1,4 @@
-import { PrismaClient, User } from "./generated/prisma"
+import { Prisma, PrismaClient } from "./generated/prisma"
 import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
@@ -13,10 +13,11 @@ const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
 const expectedJwtErrorNames = new Set(["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"])
 
 export const prisma = new PrismaClient()
+type AuthenticatedUser = Prisma.UserGetPayload<{ include: { permissionExceptions: true } }>
 
 export interface GraphQLContext {
   prisma: PrismaClient
-  currentUser: User | null
+  currentUser: AuthenticatedUser | null
   cache: Cache
   requestId: string
   logger: AppLogger
@@ -31,7 +32,7 @@ export async function createContext(
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const authorization = initialContext.request.headers.get("authorization")
-  let currentUser: User | null = null
+  let currentUser: AuthenticatedUser | null = null
 
   if (authorization) {
     const token = authorization.replace("Bearer ", "")
@@ -39,7 +40,10 @@ export async function createContext(
       const decoded = jwt.verify(token, JWT_ACCESS_SECRET) as { userId: string }
       if (decoded && decoded.userId) {
         currentUser = await prisma.user.findUnique({
-          where: { id: decoded.userId }
+          where: { id: decoded.userId },
+          include: {
+            permissionExceptions: { where: { revokedAt: null } }
+          }
         })
       }
     } catch (error: unknown) {

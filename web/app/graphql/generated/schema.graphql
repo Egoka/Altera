@@ -210,6 +210,14 @@ type Format {
   updatedAt: String!
 }
 
+input GrantPermissionExceptionInput {
+  endsAt: String
+  kind: PermissionExceptionKind!
+  permission: String!
+  reason: String!
+  userId: ID!
+}
+
 scalar JSON
 
 enum Locale {
@@ -234,6 +242,7 @@ type Mutation {
   createTag(input: CreateTagInput!): Tag!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
+  grantException(input: GrantPermissionExceptionInput!): PermissionException!
   mergeTags(input: MergeTagsInput!): Tag!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
@@ -242,6 +251,7 @@ type Mutation {
   restoreSection(id: ID!): Section!
   restoreTag(id: ID!): Tag!
   revertToDraft(id: ID!): Article!
+  revokeException(id: ID!, reason: String!): PermissionException!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateSection(id: ID!, input: UpdateSectionInput!): Section!
@@ -320,6 +330,26 @@ input PaginationInput {
   page: Int! = 1
 }
 
+type PermissionException {
+  endsAt: String
+  expiredAt: String
+  grantedById: ID!
+  id: ID!
+  kind: PermissionExceptionKind!
+  permission: String!
+  reason: String!
+  revokedAt: String
+  revokedById: ID
+  role: Role!
+  startsAt: String!
+  userId: ID!
+}
+
+enum PermissionExceptionKind {
+  deny
+  grant
+}
+
 enum ProfileCheckStatus {
   ok
   pending
@@ -353,6 +383,7 @@ type Query {
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
+  permissionExceptions(userId: ID): [PermissionException!]!
   popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
   publicSections: [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
