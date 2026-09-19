@@ -40,18 +40,21 @@ import {
 } from "../../utils/admin"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
+import { publicArticleSelect, publicArticleWhere, publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
     user: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
       return ctx.prisma.user.findUnique({
-        where: { handle: args.handle }
+        where: { handle: args.handle },
+        select: publicUserSelect
       })
     },
 
     author: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
       return ctx.prisma.user.findUnique({
-        where: { handle: args.handle, role: "author" }
+        where: { handle: args.handle, role: "author" },
+        select: publicUserSelect
       })
     },
 
@@ -71,18 +74,21 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const author = await ctx.prisma.user.findUnique({ where: { handle: authorHandle } })
+          const author = await ctx.prisma.user.findUnique({
+            where: { handle: authorHandle },
+            select: { id: true }
+          })
           if (!author) {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
 
-          const totalCount = await ctx.prisma.article.count({ where: { authorId: author.id, status: "published" } })
+          const totalCount = await ctx.prisma.article.count({ where: publicArticleWhere({ authorId: author.id }) })
           const articles = await ctx.prisma.article.findMany({
-            where: { authorId: author.id, status: "published" },
+            where: publicArticleWhere({ authorId: author.id }),
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { publishedAt: "desc" },
-            include: { section: true }
+            select: publicArticleSelect
           })
 
           const response = {
@@ -107,28 +113,30 @@ export default {
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const author = await ctx.prisma.user.findUnique({ where: { handle: authorHandle } })
+          const author = await ctx.prisma.user.findUnique({
+            where: { handle: authorHandle },
+            select: { id: true }
+          })
           if (!author) {
             throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
           }
 
           const totalArticles = await ctx.prisma.article.count({
-            where: { authorId: author.id, status: "published" }
+            where: publicArticleWhere({ authorId: author.id })
           })
 
           const oneMonthAgo = new Date()
           oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
           const articlesThisMonth = await ctx.prisma.article.count({
-            where: {
+            where: publicArticleWhere({
               authorId: author.id,
-              status: "published",
               publishedAt: { gte: oneMonthAgo }
-            }
+            })
           })
 
           const articlesWithTags = await ctx.prisma.article.findMany({
-            where: { authorId: author.id, status: "published" },
+            where: publicArticleWhere({ authorId: author.id }),
             select: { tags: { select: { name: true, slug: true } } }
           })
 

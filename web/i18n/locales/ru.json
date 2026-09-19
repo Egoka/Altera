@@ -169,7 +169,11 @@
     "bookmark": "Закладка",
     "comments": "Комментарии",
     "noComments": "Комментариев пока нет",
-    "addComment": "Добавить комментарий"
+    "addComment": "Добавить комментарий",
+    "goneTitle": "Материал снят с публикации",
+    "goneDescription": "Этот материал больше недоступен публично.",
+    "goneHome": "На главную",
+    "gonePublished": "Был опубликован"
   },
   "reading": {
     "translation": "Перевод",
