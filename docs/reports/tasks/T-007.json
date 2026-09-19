@@ -39,8 +39,10 @@
     "verdict": "approved"
   },
   "deployment": {
-    "required": false,
-    "reason": "Seed is an explicit development/test command; no migration or automatic production execution is introduced"
+    "required": true,
+    "reason": "Seed is in server/ directory; deployment probe required for controller verification",
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": null
   },
   "finalization": {
     "path": "docs/reports/tasks/T-007.md",
