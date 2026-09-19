@@ -12,6 +12,8 @@ export const PERMISSION_CODES = [
   "finance",
   "accounts",
   "ai.read",
+  "job.retry",
+  "job.cancel",
   "user",
   "owner"
 ] as const
@@ -58,6 +60,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<PermissionCode, readonly 
   finance: ["analyst", "admin", "owner"],
   accounts: ["admin", "owner"],
   "ai.read": ["moderator", "analyst", "admin", "owner"],
+  "job.retry": ["owner"],
+  "job.cancel": ["owner"],
   user: ["reader", "author"],
   owner: ["owner"]
 }

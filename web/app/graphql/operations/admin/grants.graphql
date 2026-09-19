@@ -1,0 +1,45 @@
+query GetAdminGrants {
+  adminGrants {
+    id
+    userId
+    userName
+    userHandle
+    tier
+    startsAt
+    endsAt
+    grantedByName
+    reason
+    status
+    revokedAt
+    createdAt
+  }
+}
+
+query GetAdminGrant($id: ID!) {
+  adminGrant(id: $id) {
+    id
+    userId
+    userName
+    userHandle
+    tier
+    startsAt
+    endsAt
+    grantedByName
+    reason
+    status
+    revokedAt
+    createdAt
+  }
+}
+
+mutation GrantPlan($input: GrantPlanInput!) {
+  grantPlan(input: $input) {
+    id
+  }
+}
+
+mutation RevokePlan($input: RevokePlanInput!) {
+  revokePlan(input: $input) {
+    id
+  }
+}

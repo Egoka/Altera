@@ -32,6 +32,33 @@ type AdminFormat {
   updatedAt: String!
 }
 
+enum AdminGrantStatus {
+  active
+  ended
+  queued
+  revoked
+}
+
+type AdminPlanGrant {
+  createdAt: String!
+  endsAt: String
+  grantedByName: String
+  id: ID!
+  reason: String!
+  revokedAt: String
+  startsAt: String!
+  status: AdminGrantStatus!
+  tier: AdminPlanTier!
+  userHandle: String!
+  userId: ID!
+  userName: String!
+}
+
+enum AdminPlanTier {
+  pro
+  standard
+}
+
 type AdminSummary {
   cards: [AdminSummaryCard!]!
   role: Role!
@@ -262,6 +289,14 @@ input GrantPermissionExceptionInput {
   userId: ID!
 }
 
+input GrantPlanInput {
+  endsAt: String!
+  reason: String!
+  startsAt: String!
+  tier: AdminPlanTier!
+  userHandle: String!
+}
+
 scalar JSON
 
 enum Locale {
@@ -289,6 +324,7 @@ type Mutation {
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
+  grantPlan(input: GrantPlanInput!): AdminPlanGrant!
   mergeTags(input: MergeTagsInput!): Tag!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
@@ -299,6 +335,7 @@ type Mutation {
   restoreTag(id: ID!): Tag!
   revertToDraft(id: ID!): Article!
   revokeException(id: ID!, reason: String!): PermissionException!
+  revokePlan(input: RevokePlanInput!): AdminPlanGrant!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
@@ -415,6 +452,8 @@ type PublicSection {
 
 type Query {
   _empty: String
+  adminGrant(id: ID!): AdminPlanGrant
+  adminGrants: [AdminPlanGrant!]!
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
   adminUser(id: ID!): AccountUser
   article(slug: String!): Article
@@ -462,6 +501,11 @@ input ReorderItemInput {
 
 input ReorderSectionsInput {
   items: [ReorderItemInput!]!
+}
+
+input RevokePlanInput {
+  grantId: ID!
+  reason: String!
 }
 
 enum Role {
