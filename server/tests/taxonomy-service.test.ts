@@ -111,6 +111,41 @@ describe("taxonomy service", () => {
     })
   })
 
+  it.each([
+    [{ name: "Anything", slug: " Photo-Story " }, "photo-story"],
+    [{ name: "Фотоистория Съёмки" }, "fotoistoriya-semki"],
+    [{ name: "  Жизнь & щи!  " }, "zhizn-schi"],
+    [{ name: "Café Crème" }, "cafe-creme"]
+  ])("reserves the normalized or derived slug for %j", async (input, slug) => {
+    const reserve = vi.fn().mockResolvedValue({})
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        tagSlugHistory: { create: reserve, update: vi.fn().mockResolvedValue({}) },
+        tag: { create: vi.fn().mockResolvedValue({ id: "tag-1", slug }) }
+      })
+    )
+
+    await createTag({ $transaction: transaction } as never, {
+      input,
+      actor: actor("author"),
+      requestId: "request-1"
+    })
+
+    expect(reserve).toHaveBeenCalledWith({ data: { slug } })
+  })
+
+  it.each([
+    [{ name: "!!! ъ ь" }, "name", "slug-source"],
+    [{ name: "Photo", slug: "Photo Story" }, "slug", "lowercase-latin-slug"]
+  ])("rejects %j before touching the slug registry", async (input, field, rule) => {
+    const transaction = vi.fn()
+
+    await expect(
+      createTag({ $transaction: transaction } as never, { input, actor: actor("author"), requestId: "request-1" })
+    ).rejects.toMatchObject({ extensions: { code: "VALIDATION_ERROR", field, rule } })
+    expect(transaction).not.toHaveBeenCalled()
+  })
+
   it("reserves a section slug before creating the section", async () => {
     const reserve = vi.fn().mockResolvedValue({})
     const created = { id: "section-1", slug: "culture", status: "active" }
