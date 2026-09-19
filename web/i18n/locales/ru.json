@@ -20,6 +20,7 @@
     "error": "Ошибка",
     "success": "Успешно",
     "cancel": "Отмена",
+    "confirm": "Подтвердить",
     "save": "Сохранить",
     "edit": "Редактировать",
     "delete": "Удалить",
@@ -41,17 +42,6 @@
     "searchPlaceholder": "Найти..."
   },
   "auth": {
-    "login": "Войти",
-    "register": "Регистрация",
-    "email": "Email",
-    "password": "Пароль",
-    "forgotPassword": "Забыли пароль?",
-    "magicLink": "Войти по ссылке",
-    "sendMagicLink": "Отправить ссылку для входа",
-    "checkEmail": "Проверьте email",
-    "invalidEmail": "Неверный email",
-    "loginSuccess": "Успешный вход",
-    "logoutSuccess": "Успешный выход",
     "login": {
       "title": "Войти или зарегистрироваться",
       "emailLabel": "Адрес электронной почты",
@@ -75,8 +65,21 @@
         "generic": "Что-то пошло не так. Попробуйте ещё раз (код: {requestId})"
       }
     },
+    "register": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "forgotPassword": "Забыли пароль?",
+    "magicLink": "Войти по ссылке",
+    "sendMagicLink": "Отправить ссылку для входа",
+    "checkEmail": "Проверьте email",
+    "invalidEmail": "Неверный email",
+    "loginSuccess": "Успешный вход",
+    "logoutSuccess": "Успешный выход",
     "verify": {
-      "loading": { "title": "Входим в систему…", "body": "Пожалуйста, подождите." },
+      "loading": {
+        "title": "Входим в систему…",
+        "body": "Пожалуйста, подождите."
+      },
       "expired": {
         "title": "Ссылка недействительна",
         "body": "Ссылка входа истекла или уже была использована. Ссылка действует 15 минут и подходит только для одного входа.",
@@ -341,7 +344,34 @@
       "failedMail": "Сбойные письма",
       "owners": "Владельцы",
       "serviceAccounts": "Служебные записи"
-    }
+    },
+    "grantsTitle": "Ручные выдачи планов",
+    "grantsDescription": "Управление ручными выдачами планов пользователям",
+    "subscriptionsTitle": "Подписки и планы",
+    "subscriptionsDescription": "Управление подписками пользователей",
+    "grantPlan": "Выдать план",
+    "revokePlan": "Отозвать выдачу",
+    "grantStatus": {
+      "queued": "В очереди",
+      "active": "Активна",
+      "ended": "Завершена",
+      "revoked": "Отозвана"
+    },
+    "firstLaunchSubscriptionsNote": "Платные подписки — отдельный этап. В режиме первого запуска доступны только ручные выдачи планов.",
+    "indefinite": "Бессрочно",
+    "selectFromList": "Выберите выдачу из списка",
+    "manageGrantsLink": "Управление выдачами →",
+    "fieldPlan": "План",
+    "fieldStatus": "Состояние",
+    "fieldStartsAt": "Начало",
+    "fieldEndsAt": "Конец",
+    "fieldReason": "Причина",
+    "fieldGrantedBy": "Выдал",
+    "fieldRevokedAt": "Отозвана",
+    "endsAtHint": "(оставьте пустым — бессрочно)",
+    "userHandleLabel": "Хэндл пользователя",
+    "reasonPlaceholder": "Укажите причину выдачи",
+    "revokeReasonPlaceholder": "Причина отзыва"
   },
   "language": {
     "switchTo": "Switch language to {language}"

@@ -1,0 +1,71 @@
+query AdminGrants($pagination: PaginationInput!, $filters: GrantFiltersInput) {
+  adminGrants(pagination: $pagination, filters: $filters) {
+    items {
+      id
+      userId
+      tier
+      startsAt
+      endsAt
+      reason
+      status
+      revokedAt
+      createdAt
+      user {
+        id
+        name
+        handle
+      }
+      grantedBy {
+        id
+        name
+      }
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      hasNextPage
+    }
+  }
+}
+
+query AdminGrant($id: ID!) {
+  adminGrant(id: $id) {
+    id
+    userId
+    tier
+    startsAt
+    endsAt
+    reason
+    status
+    revokedAt
+    createdAt
+    user {
+      id
+      name
+      handle
+    }
+    grantedBy {
+      id
+      name
+    }
+  }
+}
+
+mutation GrantPlan($input: GrantPlanInput!) {
+  grantPlan(input: $input) {
+    id
+    tier
+    startsAt
+    endsAt
+    status
+  }
+}
+
+mutation RevokePlan($grantId: ID!, $reason: String!) {
+  revokePlan(grantId: $grantId, reason: $reason) {
+    id
+    status
+    revokedAt
+  }
+}
