@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "task_id": "T-084",
+  "issue_id": "01a0b5ee-a851-7891-b084-89bd16ffc07c",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-084-admin-grants-launch.md",
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
+  },
+  "baseline_sha": "a5f6c64eef712dceef8f36b2aea69f07a331ffd1",
+  "tested_sha": "8bed4761986ed167bf65149eac7699403fa0d852",
+  "branch": "web/t084-admin-grants",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot/Altera",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0b9d8-b39c-752a-8e63-ac9aaac60ec4",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "GraphQL adminGrants/adminGrant/grantPlan/revokePlan use finance permission and currentUser actor; manual grants require startsAt, endsAt and reason; Playwright covers finite submission and visible queued/active/ended/revoked states. Indefinite grant remains an explicit T-110 fixme."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Both admin pages consume the same persisted grants query; subscriptions shows the paid-phase notice and links selected grants to /admin/grants; first-launch authorship fixtures were removed."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 164 passed / 20 skipped; web 160 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "T-084 target: 4 passed / 1 T-110 fixme skipped",
+    "ci": "https://github.com/Egoka/Altera/pull/135/checks",
+    "preflight": "repository/runtime checks passed; LOG_HASH_SECRET unavailable locally, so no live server/database probe was run",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 135,
+    "url": "https://github.com/Egoka/Altera/pull/135",
+    "base_ref": "app",
+    "base_sha": "a5f6c64eef712dceef8f36b2aea69f07a331ffd1",
+    "head_sha": "8bed4761986ed167bf65149eac7699403fa0d852",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "New server GraphQL operations and web consumers require controller-managed development deployment and health verification after CI and independent review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-084.md",
+    "sha256": null
+  },
+  "remaining": [
+    "CI, independent native review, and controller-managed development deployment/health verification are pending"
+  ],
+  "usage": null
+}

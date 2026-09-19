@@ -1,2 +1,12 @@
 #!/usr/bin/env sh
+# Демон Multica в режиме in_place вписывает свой brief запуска в CLAUDE.md/AGENTS.md
+# рабочего дерева между маркерами MULTICA-RUNTIME. Этот блок не является инструкцией
+# проекта и не должен попадать в коммит: проверяется индекс, то есть то, что будет закоммичено.
+if git grep --cached -l -e '<!-- BEGIN MULTICA-RUNTIME' -e '^# Multica Agent Runtime' \
+  -- ':(glob)**/CLAUDE.md' ':(glob)**/AGENTS.md'; then
+  echo "pre-commit: в индексе есть служебный блок Multica (MULTICA-RUNTIME)." >&2
+  echo "Уберите файл из коммита: git restore --staged <файл>; см. docs/multica/runtime-entry.md." >&2
+  exit 1
+fi
+
 npm run format && npm run lint && npm run test

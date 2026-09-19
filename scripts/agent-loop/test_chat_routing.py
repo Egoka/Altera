@@ -64,5 +64,22 @@ class ChatRoutingTests(unittest.TestCase):
             self.assertTrue(list((PLUGIN / kind).glob('multica-*.md')))
 
 
+class SharedInstructionsTests(unittest.TestCase):
+    """Brief запуска, который демон Multica вписывает в рабочее дерево, не попадает в Git.
+
+    Читается закоммиченная версия: в рабочем дереве in_place демон держит блок штатно.
+    """
+
+    MARKERS = ('<!-- BEGIN MULTICA-RUNTIME', '# Multica Agent Runtime')
+
+    def test_shared_instructions_have_no_injected_multica_runtime(self):
+        for name in ['CLAUDE.md', 'AGENTS.md']:
+            text = subprocess.run(['git', '-C', str(ROOT), 'show', f'HEAD:{name}'],
+                                  capture_output=True, text=True, check=True).stdout
+            for marker in self.MARKERS:
+                self.assertFalse(marker in text,
+                                 f'{name}: служебный блок Multica ({marker!r}) попал в коммит')
+
+
 if __name__ == '__main__':
     unittest.main()
