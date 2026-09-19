@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - app
+  # Решение владельца 2026-09-19: PR вливаются без обновления до актуальной app, поэтому
+  # несовместимость двух по отдельности зелёных PR ловит отдельный прогон самой app после merge.
+  push:
+    branches:
+      - app
 
 jobs:
   checks:
@@ -79,6 +84,17 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd "pg_isready -U test -d altera_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      # Локальный SMTP-приёмник для письма входа (T-021); порты совпадают с docker-compose.yml.
+      mailpit:
+        image: axllent/mailpit:v1.30.6
+        ports:
+          - 21025:1025
+          - 28025:8025
+        options: >-
+          --health-cmd "/mailpit readyz"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -192,6 +208,10 @@ jobs:
         env:
           T007_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/seed-database.test.ts
+      - name: Проверить историю писем T-021
+        env:
+          T021_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/mail-history-database.test.ts
       - name: Проверить инварианты миграции T-017
         env:
           T017_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}

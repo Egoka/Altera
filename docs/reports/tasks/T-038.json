@@ -8,7 +8,7 @@
     "sha": "d602d41ffd775cf767ff68317508c6bc4e0d80a4"
   },
   "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
-  "tested_sha": "f492614139672c181e37b916abd53592fc202fc0",
+  "tested_sha": "30a2b43cd43a3ea928861299fe67e3c119e6235e",
   "branch": "feat/t038-my-articles",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b009-7b89-75bd-80ff-8975446bcaa8",
@@ -29,13 +29,14 @@
     "url": "https://github.com/Egoka/Altera/pull/113",
     "base_ref": "app",
     "base_sha": "204cd1897651036994681474a4a70179cfd0dd9e",
-    "head_sha": "6eea7a69cad4b02cd7de799fa24978f2c0f13eb9",
-    "merge_sha": null
+    "head_sha": "30a2b43cd43a3ea928861299fe67e3c119e6235e",
+    "merge_sha": "c9abc9cf8d08ffafbe0fb55ed8af0c5b63926692"
   },
   "review": {
-    "sha": "6eea7a69cad4b02cd7de799fa24978f2c0f13eb9",
-    "verdict": null,
-    "run_id": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0b725-79b5-7637-bc31-371aebe166c5",
+    "sha": "30a2b43cd43a3ea928861299fe67e3c119e6235e",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -46,7 +47,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-038.md",
-    "sha256": "1cb15dfc1b70338974d1652f2d5c5fad8abe1df451440f875d0ac121fa1920ad"
+    "sha256": "5a1eedea206a835e8358166e8a63ed1e804e057a3b0da8c08dcc2947e62f339e"
   },
   "usage": null
 }

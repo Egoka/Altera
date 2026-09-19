@@ -51,12 +51,17 @@ def validate(receipt, facts, phase="done"):
         errors.append("pr")
     if facts.get("ci", {}).get("sha") != sha or facts.get("ci", {}).get("passed") is not True:
         errors.append("ci")
-    if not receipt.get("implementer_run_id") or facts.get("implementer_trusted") is not True or not review.get("actor_id") or review.get("actor_id") == receipt.get("implementer_id") or review.get("sha") != sha or review.get("verdict") != "approved" or not review.get("run_id") or facts.get("review") != review or facts.get("review_completed") is not True or facts.get("review_trusted") is not True:
+    # Review более раннего SHA действует, только если контроллер подтвердил тот же патч ветки.
+    reviewed_sha = review.get("sha")
+    review_sha_ok = isinstance(reviewed_sha, str) and re.fullmatch(r"[0-9a-f]{40}", reviewed_sha) and (reviewed_sha == sha or facts.get("review_equivalent") is True)
+    if not receipt.get("implementer_run_id") or facts.get("implementer_trusted") is not True or not review.get("actor_id") or review.get("actor_id") == receipt.get("implementer_id") or not review_sha_ok or review.get("verdict") != "approved" or not review.get("run_id") or facts.get("review") != review or facts.get("review_completed") is not True or facts.get("review_trusted") is not True:
         errors.append("review")
     if facts.get("files_complete") is not True:
         errors.append("pr_files")
     if phase == "merge":
-        if facts.get("state") != "OPEN" or facts.get("base_current") is not True:
+        # `base` — PR закрыт, конфликтует с app или GitHub ещё не посчитал mergeability.
+        # Отставание от app само по себе merge не блокирует (решение владельца 2026-09-19).
+        if facts.get("state") != "OPEN" or facts.get("mergeable") is not True:
             errors.append("base")
         return errors
     if facts.get("state") != "MERGED" or not pr.get("merge_sha") or pr.get("merge_sha") != live_pr.get("merge_sha") or facts.get("merge_in_app") is not True:
@@ -190,6 +195,33 @@ class Live:
         except (RuntimeError, OSError, subprocess.TimeoutExpired):
             return False
 
+    def patch_fingerprint(self, sha, base, task_id):
+        """Отпечаток патча ветки от точки ответвления от app; собственный итог задачи не входит."""
+        fork = command(["git", "merge-base", sha, base], self.repo, False)
+        own_receipt = [f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")]
+        diff = subprocess.run(["git", "diff", "--no-color", "--no-ext-diff", "--full-index", "--binary", fork, sha, "--", ".", *own_receipt],
+                              cwd=self.repo, capture_output=True, timeout=120, check=True).stdout
+        if not diff:
+            return None
+        # Номера строк не входят в patch-id; контекст, содержимое и бинарные данные входят.
+        patch = subprocess.run(["git", "patch-id", "--stable"], input=diff, cwd=self.repo, capture_output=True, timeout=120, check=True).stdout.split()
+        return patch[0].decode() if patch else None
+
+    def review_equivalent(self, reviewed_sha, head_sha, base_sha, task_id):
+        """Обновление ветки от app не отменяет review, если её патч не изменился."""
+        shas = (reviewed_sha, head_sha, base_sha)
+        if not all(isinstance(x, str) and re.fullmatch(r"[0-9a-f]{40}", x) for x in shas) or not isinstance(task_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", task_id):
+            return False
+        if reviewed_sha == head_sha:
+            return True
+        try:
+            if subprocess.run(["git", "cat-file", "-e", reviewed_sha + "^{commit}"], cwd=self.repo, capture_output=True).returncode:
+                command(["git", "fetch", "--no-tags", "--refmap=", "origin", reviewed_sha], self.repo, False)
+            reviewed = self.patch_fingerprint(reviewed_sha, base_sha, task_id)
+            return reviewed is not None and reviewed == self.patch_fingerprint(head_sha, base_sha, task_id)
+        except (RuntimeError, OSError, subprocess.SubprocessError):
+            return False
+
     def issue_scope(self, receipt, issue):
         metadata = issue.get("metadata") if isinstance(issue, dict) else None
         return bool(
@@ -274,14 +306,14 @@ class Live:
         actor = selected.get("agent_id")
         path = receipt.get("finalization", {}).get("path", "")
         final_hash = None
+        # Объекты app нужны ниже для finalization и merge_in_app.
         base_fetched = self.fetch_matches("refs/heads/app", base)
-        base_current = False
-        if base_fetched and not pr.get("merged") and pr.get("state") == "open" and self.fetch_matches(f"refs/pull/{number}/head", sha):
-            try:
-                command(["git", "merge-base", "--is-ancestor", base, sha], self.repo, False)
-                base_current = True
-            except (RuntimeError, OSError, subprocess.TimeoutExpired):
-                pass
+        # Решение владельца 2026-09-19: ветку не догоняют до app перед merge. Достаточно, что
+        # проверенный head совпадает с PR и GitHub подтверждает слияние без конфликтов.
+        mergeable = bool(base_fetched and not pr.get("merged") and pr.get("state") == "open"
+                         and pr.get("mergeable") is True and pr.get("mergeable_state") != "dirty"
+                         and self.fetch_matches(f"refs/pull/{number}/head", sha))
+        review_equivalent = self.review_equivalent(review.get("sha"), sha, pr["base"]["sha"], receipt.get("task_id"))
         if path.startswith("docs/reports/") and ".." not in Path(path).parts:
             p = subprocess.run(["git", "show", f"{base}:{path}"], cwd=self.repo, capture_output=True, check=False)
             if p.returncode == 0 and receipt["task_id"].encode() in p.stdout and sha.encode() in p.stdout:
@@ -293,10 +325,11 @@ class Live:
         requires_deploy = any(x.startswith(("server/", "packages/")) or x in ("pnpm-lock.yaml", "pnpm-workspace.yaml", "package.json", ".nvmrc", "render.yaml") for x in names)
         facts = {"issue_scope_valid": True, "pr": {"number": number, "head_sha": sha, "base_ref": pr["base"]["ref"], "base_sha": pr["base"]["sha"], "merge_sha": merge_sha},
                  "state": "MERGED" if pr.get("merged") else pr["state"].upper(), "ci": {"sha": sha, "passed": bool(aggregate and aggregate[0].get("conclusion") == "success")},
-                 "review": review, "review_completed": selected.get("status") == "completed", "review_trusted": actor == review.get("actor_id") and actor in self.config.get("reviewer_ids", []) and review_approved(content, sha),
+                 "review": review, "review_completed": selected.get("status") == "completed", "review_trusted": actor == review.get("actor_id") and actor in self.config.get("reviewer_ids", []) and review_approved(content, review.get("sha")),
+                 "review_equivalent": review_equivalent,
                  "implementer_trusted": implementer.get("status") == "completed" and bool(receipt.get("implementer_id")) and implementer.get("agent_id") == receipt.get("implementer_id"),
                  "files_complete": len(names) == pr.get("changed_files"),
-                 "base_current": base_current and base == receipt["pr"].get("base_sha"), "merge_in_app": merged,
+                 "mergeable": mergeable, "merge_in_app": merged,
                  "requires_deploy": requires_deploy, "finalization_sha256": final_hash}
         # Native tool-result связывается с trusted actor/run; HTTP проверяется здесь.
         if requires_deploy:
@@ -311,7 +344,7 @@ class Live:
             ledger = Ledger(Path(state_dir) / "ledger.sqlite3")
             key = fingerprint({"phase": phase, "task": receipt["task_id"], "sha": receipt["tested_sha"]})
             if phase == "merge" and facts.get("state") == "MERGED" and facts.get("merge_in_app") is True:
-                prior = {**facts, "state": "OPEN", "base_current": True}
+                prior = {**facts, "state": "OPEN", "mergeable": True}
                 if not validate(receipt, prior, "merge"):
                     ledger.observe_done(key)
                     return {"ok": True, "phase": phase, "reconciled": True, "merge_sha": facts["pr"].get("merge_sha")}

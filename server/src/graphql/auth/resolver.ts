@@ -5,6 +5,7 @@ import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
+import { createMagicLinkMail, MAGIC_LINK_TEMPLATE } from "../../mail/messages"
 import type { Locale, User } from "../../generated/prisma"
 
 if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
@@ -16,10 +17,18 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
 const JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || "15m"
 const JWT_REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_TOKEN_EXPIRY || "7d"
 const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
+const MAGIC_LINK_BASE_URL = process.env.MAGIC_LINK_BASE_URL || "http://localhost:3000/auth/verify"
+
+const buildMagicLinkUrl = (token: string): string => {
+  const url = new URL(MAGIC_LINK_BASE_URL)
+  url.searchParams.set("token", token)
+  return url.toString()
+}
+
 export default {
   Mutation: {
     requestMagicLink: async (_: unknown, { email, locale }: { email: string; locale: Locale }, ctx: GraphQLContext) => {
-      const { prisma, logger, piiHasher, requestId } = ctx
+      const { prisma, logger, piiHasher, requestId, mail } = ctx
       const user = await prisma.user.findUnique({ where: { email } })
 
       let targetUser: User
@@ -56,6 +65,15 @@ export default {
           userId: targetUser.id,
           expiresAt
         }
+      })
+
+      const { message, sanitizedBody } = createMagicLinkMail(locale, buildMagicLinkUrl(token))
+      await mail.send({
+        template: MAGIC_LINK_TEMPLATE,
+        to: email,
+        content: { subject: message.subject, text: message.text, html: message.html },
+        sanitizedBody,
+        requestId
       })
 
       logger.log({

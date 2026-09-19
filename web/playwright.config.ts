@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test"
 
 const port = 4173
 const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
+// SMTP-порт Mailpit из docker-compose.yml; в CI поднимается тот же сервис с теми же портами.
+const smtpPort = process.env.T021_SMTP_PORT ?? "21025"
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -28,6 +30,10 @@ export default defineConfig({
         JWT_ACCESS_SECRET: "t009-test-access-secret",
         JWT_REFRESH_SECRET: "t009-test-refresh-secret",
         LOG_HASH_SECRET: "t053-test-log-hash-secret",
+        MAGIC_LINK_BASE_URL: `http://127.0.0.1:${port}/auth/verify`,
+        MAIL_TRANSPORT: "smtp",
+        SMTP_HOST: "127.0.0.1",
+        SMTP_PORT: smtpPort,
         PORT: "4000",
         REQUEST_ID_FORWARD_SECRET: "t087-e2e-forward-secret"
       },

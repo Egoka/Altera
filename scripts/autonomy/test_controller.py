@@ -39,7 +39,7 @@ class CompletionTests(unittest.TestCase):
         self.facts = {"pr": copy.deepcopy(self.receipt["pr"]), "state": "MERGED", "ci": {"sha": "b" * 40, "passed": True},
                       "review": copy.deepcopy(self.receipt["review"]), "review_completed": True, "review_trusted": True,
                       "merge_in_app": True, "finalization_sha256": "d" * 64, "requires_deploy": False,
-                      "base_current": True, "implementer_trusted": True, "files_complete": True, "issue_scope_valid": True}
+                      "mergeable": True, "implementer_trusted": True, "files_complete": True, "issue_scope_valid": True}
 
     def test_missing_implementer_and_incomplete_diff_reject(self):
         self.facts["implementer_trusted"] = False
@@ -69,6 +69,22 @@ class CompletionTests(unittest.TestCase):
                 facts = copy.deepcopy(self.facts); facts[key] = value
                 self.assertIn(expected, c.validate(self.receipt, facts))
 
+    def test_review_of_earlier_sha_needs_controller_confirmed_same_patch(self):
+        self.receipt["review"]["sha"] = "e" * 40
+        self.facts["review"] = copy.deepcopy(self.receipt["review"])
+        self.assertIn("review", c.validate(self.receipt, self.facts))
+        self.facts["review_equivalent"] = True
+        self.assertEqual(c.validate(self.receipt, self.facts), [])
+        self.assertEqual(c.validate(self.receipt, {**self.facts, "state": "OPEN"}, "merge"), [])
+
+    def test_review_sha_must_be_full_sha_even_with_same_patch(self):
+        for value in (None, "", "e" * 39, 7):
+            with self.subTest(value=value):
+                self.receipt["review"]["sha"] = value
+                self.facts["review"] = copy.deepcopy(self.receipt["review"])
+                self.facts["review_equivalent"] = True
+                self.assertIn("review", c.validate(self.receipt, self.facts))
+
     def test_self_review_and_untrusted_review_block(self):
         self.receipt["review"]["actor_id"] = "developer"
         self.facts["review"] = self.receipt["review"]
@@ -85,9 +101,11 @@ class CompletionTests(unittest.TestCase):
             self.facts["deployment"] = dep
             self.assertIn("deployment", c.validate(self.receipt, self.facts))
 
-    def test_old_base_blocks_premerge(self):
-        self.facts["state"] = "OPEN"; self.facts["base_current"] = False
-        self.assertIn("base", c.validate(self.receipt, self.facts, phase="merge"))
+    def test_conflicting_or_unknown_mergeability_blocks_premerge(self):
+        for value in (False, None):
+            with self.subTest(mergeable=value):
+                facts = {**self.facts, "state": "OPEN", "mergeable": value}
+                self.assertIn("base", c.validate(self.receipt, facts, phase="merge"))
 
     def test_unknown_schema_or_empty_criteria_rejected(self):
         self.receipt["criteria"] = []
@@ -250,7 +268,9 @@ class FreshBaseTests(unittest.TestCase):
         self.git("remote", "add", "origin", str(self.remote))
         self.git("commit", "--allow-empty", "-m", "initial")
         self.git("checkout", "-b", "feature")
-        self.git("commit", "--allow-empty", "-m", "tested change")
+        (self.repo / "feature.txt").write_text("tested change\n")
+        self.git("add", "feature.txt")
+        self.git("commit", "-m", "tested change")
         self.head = self.git("rev-parse", "HEAD")
         self.git("checkout", "app")
         self.git("commit", "--allow-empty", "-m", "app advanced independently")
@@ -259,6 +279,7 @@ class FreshBaseTests(unittest.TestCase):
         self.receipt["pr"].update(base_sha=self.base, head_sha=self.head)
         self.receipt["tested_sha"] = self.head
         self.receipt["review"]["sha"] = self.head
+        self.mergeable = True
         self.live = c.Live({"repo": str(self.repo), "workspace_id": "ws", "project_id": "project", "reviewer_ids": ["reviewer"]})
 
     def git(self, *args):
@@ -267,7 +288,8 @@ class FreshBaseTests(unittest.TestCase):
     def facts(self):
         def gh(endpoint):
             if endpoint.endswith("/pulls/123"):
-                return {"head": {"sha": self.head}, "base": {"ref": "app", "sha": self.base}, "state": "open", "mergeable_state": "clean", "changed_files": 1}
+                return {"head": {"sha": self.head}, "base": {"ref": "app", "sha": self.base}, "state": "open",
+                        "mergeable": self.mergeable, "mergeable_state": "clean" if self.mergeable else "dirty", "changed_files": 1}
             if "/check-runs?" in endpoint:
                 return {"check_runs": [{"name": "test", "app": {"slug": "github-actions"}, "id": 1, "conclusion": "success"}]}
             if endpoint.endswith("/git/ref/heads/app"):
@@ -277,7 +299,7 @@ class FreshBaseTests(unittest.TestCase):
             if args[:2] == ("issue", "get"):
                 return {"id": "issue-123", "workspace_id": "ws", "project_id": "project", "metadata": {"task_id": "T-123"}}
             if args[:2] == ("issue", "runs"):
-                marker = "ALTERA_REVIEW_V1 " + json.dumps({"sha": self.head, "verdict": "approved"})
+                marker = "ALTERA_REVIEW_V1 " + json.dumps({"sha": self.receipt["review"]["sha"], "verdict": "approved"})
                 return [{"id": "run-d", "agent_id": "developer", "status": "completed"},
                         {"id": "run-r", "agent_id": "reviewer", "status": "completed", "result": {"output": marker}}]
             raise AssertionError(args)
@@ -289,34 +311,145 @@ class FreshBaseTests(unittest.TestCase):
         with patch.object(self.live, "gh", side_effect=gh), patch.object(self.live, "multica", side_effect=multica), patch.object(c, "command", side_effect=command):
             return self.live.facts(self.receipt)
 
-    def test_advanced_base_blocks_old_green_head_and_updated_head_passes(self):
+    def test_app_advancing_does_not_block_green_mergeable_head(self):
+        # Решение владельца 2026-09-19: отставание от app не требует обновления ветки перед merge.
         refs = self.git("show-ref")
+        self.assertNotEqual(subprocess.run(["git", "merge-base", "--is-ancestor", self.base, self.head],
+                                           cwd=self.repo).returncode, 0)
         facts = self.facts()
         self.assertIs(facts["ci"]["passed"], True)
-        self.assertIs(facts["base_current"], False)
-        self.assertEqual(c.validate(self.receipt, facts, "merge"), ["base"])
+        self.assertIs(facts["mergeable"], True)
+        self.assertEqual(c.validate(self.receipt, facts, "merge"), [])
         self.assertEqual(self.git("show-ref"), refs)
+
+    def test_conflict_or_pending_mergeability_blocks_merge(self):
+        for value in (False, None):
+            with self.subTest(mergeable=value):
+                self.mergeable = value
+                facts = self.facts()
+                self.assertIs(facts["mergeable"], False)
+                self.assertEqual(c.validate(self.receipt, facts, "merge"), ["base"])
+
+    def test_branch_update_with_same_patch_keeps_review_of_earlier_head(self):
+        reviewed = self.head
         self.git("checkout", "feature")
         self.git("merge", "--no-edit", "app")
         self.head = self.git("rev-parse", "HEAD")
         self.git("push", "origin", "feature:refs/pull/123/head")
-        self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.receipt["review"]["sha"] = self.head
-        refs = self.git("show-ref")
-        self.assertEqual(c.validate(self.receipt, self.facts(), "merge"), [])
-        self.assertEqual(self.git("show-ref"), refs)
+        self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.head
+        self.assertEqual(self.receipt["review"]["sha"], reviewed)
+        facts = self.facts()
+        self.assertIs(facts["review_equivalent"], True)
+        self.assertIs(facts["review_trusted"], True)
+        self.assertEqual(c.validate(self.receipt, facts, "merge"), [])
+
+    def test_code_pushed_after_review_requires_new_review(self):
+        self.git("checkout", "feature")
+        (self.repo / "feature.txt").write_text("changed after review\n")
+        self.git("commit", "-am", "unreviewed change")
+        self.git("merge", "--no-edit", "app")
+        self.head = self.git("rev-parse", "HEAD")
+        self.git("push", "origin", "feature:refs/pull/123/head")
+        self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.head
+        facts = self.facts()
+        self.assertIs(facts["review_equivalent"], False)
+        self.assertEqual(c.validate(self.receipt, facts, "merge"), ["review"])
 
     def test_mismatched_or_missing_pr_ref_fails_closed(self):
         # GitHub reports a compatible head, but the fetched PR ref remains the old commit.
         self.head = self.base
         self.receipt["tested_sha"] = self.receipt["pr"]["head_sha"] = self.receipt["review"]["sha"] = self.head
-        self.assertIs(self.facts()["base_current"], False)
+        self.assertIs(self.facts()["mergeable"], False)
         self.git("push", "origin", ":refs/pull/123/head")
-        self.assertIs(self.facts()["base_current"], False)
+        self.assertIs(self.facts()["mergeable"], False)
 
-    def test_done_validation_does_not_require_current_base_ancestry(self):
+    def test_done_validation_does_not_require_open_mergeable_pr(self):
         CompletionTests.setUp(self)
-        self.facts["base_current"] = False
+        self.facts["mergeable"] = False
         self.assertEqual(c.validate(self.receipt, self.facts, "done"), [])
+
+
+class ReviewEquivalenceTests(unittest.TestCase):
+    """Одобрение переживает обновление ветки от app, пока патч ветки не меняется."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.repo = Path(temporary.name)
+        self.git("init", "-b", "app")
+        self.git("config", "user.name", "Test")
+        self.git("config", "user.email", "test@example.invalid")
+        self.write("server/a.ts", "".join(f"line {i}\n" for i in range(1, 101)))
+        self.base = self.commit("base")
+        self.git("checkout", "-b", "feature")
+        self.replace("server/a.ts", "line 80\n", "changed 80\n")
+        self.reviewed = self.commit("reviewed change")
+        self.live = c.Live({"repo": str(self.repo)})
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.repo, capture_output=True, text=True, check=True).stdout.strip()
+
+    def write(self, path, text):
+        target = self.repo / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text)
+
+    def replace(self, path, old, new):
+        self.write(path, (self.repo / path).read_text().replace(old, new))
+
+    def commit(self, message):
+        self.git("add", "-A")
+        self.git("commit", "-m", message)
+        return self.git("rev-parse", "HEAD")
+
+    def rebase_after_app_change(self, old, new):
+        self.git("checkout", "app")
+        self.replace("server/a.ts", old, new)
+        app = self.commit("app advanced")
+        self.git("checkout", "feature")
+        self.git("rebase", "app")
+        return app, self.git("rev-parse", "HEAD")
+
+    def test_rebase_over_distant_app_change_keeps_review(self):
+        app, head = self.rebase_after_app_change("line 5\n", "changed 5\n")
+        self.assertNotEqual(head, self.reviewed)
+        self.assertTrue(self.live.review_equivalent(self.reviewed, head, app, "T-123"))
+
+    def test_app_change_inside_review_context_requires_new_review(self):
+        app, head = self.rebase_after_app_change("line 78\n", "changed 78\n")
+        self.assertFalse(self.live.review_equivalent(self.reviewed, head, app, "T-123"))
+
+    def test_only_own_receipt_is_ignored(self):
+        self.write("docs/reports/tasks/T-123.json", "{}\n")
+        own = self.commit("own receipt")
+        self.assertTrue(self.live.review_equivalent(self.reviewed, own, self.base, "T-123"))
+        self.write("docs/reports/tasks/T-999.json", "{}\n")
+        foreign = self.commit("foreign receipt")
+        self.assertFalse(self.live.review_equivalent(self.reviewed, foreign, self.base, "T-123"))
+
+    def test_changed_code_or_binary_requires_new_review(self):
+        self.replace("server/a.ts", "line 90\n", "changed 90\n")
+        self.assertFalse(self.live.review_equivalent(self.reviewed, self.commit("more code"), self.base, "T-123"))
+        self.git("reset", "--hard", self.reviewed)
+        (self.repo / "image.bin").write_bytes(b"\x00\x01")
+        with_binary = self.commit("binary")
+        (self.repo / "image.bin").write_bytes(b"\x00\x02")
+        other_binary = self.commit("other binary")
+        self.assertFalse(self.live.review_equivalent(with_binary, other_binary, self.base, "T-123"))
+
+    def test_unknown_input_fails_closed(self):
+        for reviewed, head, base, task in [("f" * 40, self.reviewed, self.base, "T-123"),
+                                            (None, self.reviewed, self.base, "T-123"),
+                                            (self.reviewed, self.reviewed + "0", self.base, "T-123"),
+                                            (self.reviewed, self.base, self.base, "T-123"),
+                                            (self.reviewed, self.reviewed, self.base, "../T-123"),
+                                            (self.reviewed, self.reviewed, self.base, 123)]:
+            with self.subTest(reviewed=reviewed, head=head, task=task):
+                self.assertFalse(self.live.review_equivalent(reviewed, head, base, task))
+
+    def test_identical_head_is_equivalent_without_git(self):
+        live = c.Live({"repo": "/nonexistent"})
+        self.assertTrue(live.review_equivalent(self.reviewed, self.reviewed, self.base, "T-123"))
 
 
 if __name__ == "__main__":

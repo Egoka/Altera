@@ -27,7 +27,8 @@ const context = (overrides: Record<string, unknown> = {}) => ({
   },
   logger: { log: vi.fn() },
   piiHasher: { email: vi.fn().mockReturnValue("email-hash") },
-  requestId: "request-1"
+  requestId: "request-1",
+  mail: { send: vi.fn().mockResolvedValue({ mailId: "mail-1", messageId: "fake-1" }) }
 })
 
 describe("profile handle allocation", () => {
