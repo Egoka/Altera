@@ -183,6 +183,51 @@
     "loading": "Articles are loading",
     "proAuthor": "Pro author"
   },
+  "myArticles": {
+    "pageTitle": "My articles",
+    "eyebrow": "Author workspace",
+    "description": "Track publication, return to drafts, and find editorial decisions in one place.",
+    "create": "Create article",
+    "filtersLabel": "Article filters",
+    "loadingLabel": "Loading articles",
+    "loadErrorTitle": "Articles could not be loaded",
+    "loadErrorDescription": "Check your connection and try again.",
+    "retry": "Try again",
+    "emptyTitle": "No articles here yet",
+    "emptyDescription": "Choose another filter or start a new article.",
+    "loadingMore": "Loading…",
+    "showMore": "Show more",
+    "tabs": {
+      "all": "All",
+      "draft": "Drafts",
+      "review": "In review",
+      "rework": "Needs work",
+      "published": "Published",
+      "rejected": "Rejected",
+      "archived": "Archive"
+    },
+    "row": {
+      "status": {
+        "draft": "Draft",
+        "aiCheck": "Checking",
+        "review": "In review",
+        "rework": "Needs work",
+        "published": "Published",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "versionCount": "+ {count} version",
+      "updated": "Updated {date}",
+      "reworkDetail": "Needs work: recommendations available",
+      "rejectedDetail": "Rejected by the editorial team, read only",
+      "archivedSelf": "Archived by you",
+      "archivedStaff": "Archived by the editorial team",
+      "reeditUntil": "Re-edit until {date}",
+      "openReadOnly": "Open read-only",
+      "edit": "Edit",
+      "open": "Open"
+    }
+  },
   "footer": {
     "about": "About",
     "contentRules": "Publication rules",

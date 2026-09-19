@@ -20,6 +20,72 @@ import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { buildArticleCacheTags } from "../../cache/key"
 import { readThroughPublicCache } from "../../cache/read-through"
 
+type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
+
+interface MyArticleTranslationRecord {
+  id: string
+  locale: string
+  slug: string
+  title: string
+  status: string
+  rejected: boolean
+  publishedAt: Date | null
+  updatedAt: Date
+  reeditUntil: Date | null
+  reviewMessages: Array<{ createdAt: Date; readAt: Date | null }>
+}
+
+interface MyArticleRecord {
+  id: string
+  status: string
+  archivedByActorId: string | null
+  updatedAt: Date
+  section: unknown
+  format: unknown
+  tags: unknown[]
+  translations: MyArticleTranslationRecord[]
+}
+
+const effectiveArticleStatus = (article: MyArticleRecord): string =>
+  article.status === "archived" ? "archived" : (article.translations[0]?.status ?? article.status)
+
+const matchesMyArticleStatus = (article: MyArticleRecord, status: MyArticleStatus): boolean => {
+  if (status === "rejected") return article.translations.some((translation) => translation.rejected)
+  if (article.translations.some((translation) => translation.rejected)) return false
+
+  const effectiveStatus = effectiveArticleStatus(article)
+  if (status === "review") return effectiveStatus === "review" || effectiveStatus === "in_review"
+  return effectiveStatus === status
+}
+
+const isoOrNull = (value: Date | null): string | null => value?.toISOString() ?? null
+
+const mapMyArticle = (article: MyArticleRecord, userId: string) => ({
+  id: article.id,
+  status: effectiveArticleStatus(article),
+  archivedBy:
+    effectiveArticleStatus(article) === "archived" ? (article.archivedByActorId === userId ? "self" : "staff") : null,
+  section: article.section,
+  format: article.format,
+  tags: article.tags,
+  translations: article.translations.map((translation) => {
+    const lastReviewMessage = translation.reviewMessages[0]
+    return {
+      id: translation.id,
+      locale: translation.locale,
+      slug: translation.slug,
+      title: translation.title,
+      status: translation.status,
+      rejected: translation.rejected,
+      publishedAt: isoOrNull(translation.publishedAt),
+      updatedAt: translation.updatedAt.toISOString(),
+      reeditUntil: isoOrNull(translation.reeditUntil),
+      lastReviewMessageAt: lastReviewMessage?.createdAt.toISOString() ?? null,
+      unread: lastReviewMessage?.readAt === null
+    }
+  })
+})
+
 function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string) {
   const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
   if (user.role === "reader" || user.role === "author") {
@@ -32,6 +98,68 @@ function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string) {
 
 export default {
   Query: {
+    myArticles: async (
+      _parent: unknown,
+      args: { status?: MyArticleStatus[]; cursor?: string; limit?: number },
+      ctx: GraphQLContext
+    ) => {
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const limit = args.limit ?? 20
+      validatePagination({ page: 1, limit }, ctx.requestId)
+
+      if (!["reader", "author", "editor"].includes(user.role)) {
+        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.listOwn" })
+      }
+
+      const articles = (await ctx.prisma.article.findMany({
+        where: user.role === "editor" ? { isEditorial: true } : { authorId: user.id },
+        orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+        include: {
+          section: true,
+          format: true,
+          tags: true,
+          translations: {
+            orderBy: { locale: "asc" },
+            include: {
+              reviewMessages: {
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: { createdAt: true, readAt: true }
+              }
+            }
+          }
+        }
+      })) as unknown as MyArticleRecord[]
+
+      const counts = {
+        total: articles.length,
+        draft: articles.filter((article) => matchesMyArticleStatus(article, "draft")).length,
+        ai_check: articles.filter((article) => matchesMyArticleStatus(article, "ai_check")).length,
+        review: articles.filter((article) => matchesMyArticleStatus(article, "review")).length,
+        rework: articles.filter((article) => matchesMyArticleStatus(article, "rework")).length,
+        published: articles.filter((article) => matchesMyArticleStatus(article, "published")).length,
+        rejected: articles.filter((article) => matchesMyArticleStatus(article, "rejected")).length,
+        archived: articles.filter((article) => matchesMyArticleStatus(article, "archived")).length
+      }
+
+      const filtered = args.status?.length
+        ? articles.filter((article) => args.status!.some((status) => matchesMyArticleStatus(article, status)))
+        : articles
+      const cursorIndex = args.cursor ? filtered.findIndex((article) => article.id === args.cursor) : -1
+      const start = cursorIndex >= 0 ? cursorIndex + 1 : 0
+      const page = filtered.slice(start, start + limit)
+      const hasNextPage = start + limit < filtered.length
+
+      return {
+        items: page.map((article) => mapMyArticle(article, user.id)),
+        counts,
+        pageInfo: {
+          endCursor: hasNextPage ? (page[page.length - 1]?.id ?? null) : null,
+          hasNextPage
+        }
+      }
+    },
+
     article: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
       return readThroughPublicCache(
         {
