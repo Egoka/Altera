@@ -1,5 +1,6 @@
 import pino, { type DestinationStream } from "pino"
 import { isLogEventCode, type LogEventCode } from "./log-events"
+import { isMetricEventCode, type MetricEventCode } from "./metric-events"
 import { sanitizeLogValue } from "./privacy"
 
 export type LogLevel = "debug" | "info" | "warn" | "error"
@@ -36,8 +37,18 @@ type GeneralLogEntry = BaseLogEntry &
 
 export type LogEntry = HttpRequestLogEntry | GeneralLogEntry
 
+/// Счётчик продукта (`metric` в реестре событий): попадает в тот же поток, но отдельным `kind`,
+/// чтобы сборщик агрегатов отличал его от журнала операций.
+export interface MetricEntry {
+  event: MetricEventCode
+  requestId: string
+  data?: Readonly<Record<string, unknown>>
+}
+
 export interface AppLogger {
   log(entry: LogEntry): void
+  // Необязателен: тестовые двойники журнала остаются парой `{ log }`.
+  metric?(entry: MetricEntry): void
 }
 
 interface AppLoggerOptions {
@@ -83,6 +94,16 @@ export function createAppLogger(options: AppLoggerOptions): AppLogger {
       const safeFields = sanitizeLogValue(fields) as Record<string, unknown>
       const safeMessage = sanitizeLogValue(message) as string
       target[level](safeFields, safeMessage)
+    },
+
+    metric(entry) {
+      if (!isMetricEventCode(entry.event)) throw new Error("Unknown metric event")
+      if (typeof entry.requestId !== "string" || entry.requestId.length === 0) {
+        throw new Error("Metric entry must have a requestId")
+      }
+
+      const safeFields = sanitizeLogValue({ ...entry, kind: "metric" }) as Record<string, unknown>
+      target.info(safeFields, entry.event)
     }
   }
 }

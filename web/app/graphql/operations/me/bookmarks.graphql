@@ -1,0 +1,53 @@
+query GetMyBookmarks($cursor: ID, $limit: Int = 20, $unavailable: Boolean) {
+  myBookmarks(cursor: $cursor, limit: $limit, unavailable: $unavailable) {
+    items {
+      bookmarkedAt
+      article {
+        id
+        title
+        slug
+        locale
+        cover
+        publishedAt
+        available
+        author {
+          name
+          handle
+        }
+        section {
+          name
+          slug
+        }
+      }
+    }
+    counts {
+      total
+      unavailable
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+}
+
+query GetMyBookmark($articleId: ID!) {
+  myBookmark(articleId: $articleId) {
+    articleId
+    bookmarked
+  }
+}
+
+mutation AddBookmark($articleId: ID!) {
+  addBookmark(articleId: $articleId) {
+    articleId
+    bookmarked
+  }
+}
+
+mutation RemoveBookmark($articleId: ID!) {
+  removeBookmark(articleId: $articleId) {
+    articleId
+    bookmarked
+  }
+}

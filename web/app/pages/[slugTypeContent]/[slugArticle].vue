@@ -94,6 +94,9 @@
   </section>
   <div v-else-if="article">
     <HeaderTag :tag="{ name: article.title }" />
+    <div class="mx-auto flex max-w-3xl justify-end px-4 py-6">
+      <ReadingArticleBookmark :article-id="article.id" :login-path="`/login?next=${route.fullPath}`" />
+    </div>
   </div>
 </template>
 
