@@ -78,6 +78,29 @@ describe("proxyGraphQLRequest", () => {
     })
   })
 
+  it("forwards the device and the client address recorded in the session", async () => {
+    const fetchRaw = vi.fn(async () => ({
+      status: 200,
+      headers: new Headers({ "content-type": "application/json" }),
+      _data: { data: { __typename: "Mutation" } }
+    }))
+
+    await proxyGraphQLRequest({
+      graphqlApiUrl: "http://127.0.0.1:4000/",
+      body: { query: "mutation { logoutAll }" },
+      userAgent: "Mozilla/5.0 (Macintosh)",
+      clientIp: "203.0.113.10",
+      requestId,
+      requestIdForwardSecret,
+      fetchRaw
+    })
+
+    expect(fetchRaw.mock.calls[0]![1].headers).toMatchObject({
+      "user-agent": "Mozilla/5.0 (Macintosh)",
+      "x-forwarded-for": "203.0.113.10"
+    })
+  })
+
   it("preserves upstream status and the complete GraphQL envelope", async () => {
     const envelope = {
       data: { article: null },

@@ -339,7 +339,7 @@ enum AuditZone {
 
 type AuthPayload {
   accessToken: String!
-  refreshToken: String!
+  refreshToken: String
   user: AccountUser!
 }
 
@@ -532,7 +532,10 @@ type Mutation {
   exportAudit(filters: AuditLogFilters): AuditExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
+  logout(refreshToken: String): Boolean!
+  logoutAll: Boolean!
   mergeTags(input: MergeTagsInput!): Tag!
+  refreshSession(refreshToken: String!): AuthPayload!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
