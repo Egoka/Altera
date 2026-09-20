@@ -55,15 +55,20 @@
         "title": "Check your email",
         "body": "We sent a login link to {email}. Open the email and follow the link — it is valid for 15 minutes.",
         "notReceived": "Didn't receive the email?",
-        "retry": "Request again"
+        "retry": "Request again",
+        "spam": "If the email is missing, check the Spam folder.",
+        "changeAddress": "Change the address"
       },
       "error": {
         "invalidEmail": "Please enter a valid email address",
         "consentRequired": "You must accept the terms of service and privacy policy",
         "rateLimited": "Too many requests. Please try again in {retryAfter}.",
         "providerUnavailable": "The email could not be sent. Please try again later.",
-        "generic": "Something went wrong. Please try again (code: {requestId})"
-      }
+        "generic": "Something went wrong. Please try again (code: {requestId})",
+        "legalUnavailable": "The published terms of service and privacy policy are unavailable. Please try again later."
+      },
+      "why": "An account is needed for bookmarks, author subscriptions and the path to becoming an author.",
+      "pricingLink": "What a subscription gives"
     },
     "register": "Register",
     "email": "Email",
@@ -91,6 +96,15 @@
         "offertaLink": "Terms of service",
         "privacyLink": "Privacy policy",
         "accept": "Accept and continue"
+      },
+      "rateLimited": {
+        "title": "Too many attempts",
+        "body": "Please wait a little and request a new login link."
+      },
+      "blocked": {
+        "title": "Account access is restricted",
+        "body": "Access was closed by an administrator decision. You can appeal it.",
+        "action": "Appeal"
       },
       "error": {
         "title": "Sign-in error",

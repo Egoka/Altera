@@ -1,0 +1,104 @@
+# T-022: регистрация и вход по ссылке — отчёт
+
+- **Дата**: 2026-09-20
+- **Задача**: T-022 / ALTE-57 (native issue `01a0ab35-9d73-723f-bbb2-cf9c5db7a7df`)
+- **Источник задачи**: `docs/backlog/tasks/T-022-register-login-magic-link.md` @ `88e47776573975866c867b06775f02ff3880cb71`
+- **Baseline**: `4ea27a63d0fac9ccc9eb38cde522d9b17b58799b`
+- **Ветка**: `feat/t022-register-login`, worktree `.worktrees/t022-auth`
+- **План**: `docs/plans/2026-09-20-t022-register-login-magic-link.md`
+
+## Что сделано
+
+### Сервер
+
+- `MagicLinkToken` перестал быть привязан к учётной записи и ключуется адресом: миграция
+  `20260920090000_magic_link_pending_registration` заменяет `userId` на `email @unique` и
+  добавляет `locale`, `next`, `termsVersion`, `privacyVersion`. Это следствие правила
+  «первый вход создаёт аккаунт» (`50-access/session-lifecycle.md` п. 2): до подтверждения
+  ссылки учётной записи может не быть. Та же миграция добавляет `Session.limited` —
+  флаг ограниченной сессии самостоятельно архивированного аккаунта (п. 7).
+- `requestMagicLink(email, consentVersion, locale, next)` возвращает
+  `MagicLinkRequestResult { ok, retryAfterSec }`. Ответ для существующего и неизвестного
+  адреса совпадает полем в поле; запрос по неизвестному адресу больше не заводит учётную
+  запись. Согласие сверяется с действующими версиями, письмо уходит на основном языке
+  аккаунта (журнал §20.11), повторный запрос отзывает прежний токен адреса.
+- `verifyMagicLink(token)` отвечает размеченным результатом: `authenticated`,
+  `consent_required`, `archived_self` (ограниченная сессия), `archived_admin` (сессии нет,
+  `appealToken` — тот же токен входа, журнал #48). Неизвестный, использованный и истёкший
+  токен отвечают одинаково `NOT_FOUND` (`verify.md` §4).
+- `acceptConsent(token, termsVersion, privacyVersion)` завершает вход после принятия новых
+  версий; `legalVersions(locale)` отдаёт действующие версии и публичные адреса текстов.
+- Сессия стала записью в таблице (`server/src/auth/session.ts`): хранится хэш refresh-токена,
+  срок берётся из claim, роль в access-токен не кладётся (ADR-0003 п. 4).
+- Логи `auth.link.requested`, `auth.login` (с `isNewAccount` и `reason = archived_self`),
+  `auth.login.failed` (с `reason`: `unknown`, `used`, `expired`, `archived_admin`).
+
+### Веб
+
+- `web/app/pages/login.vue` — форма по `login.md`: e-mail, чекбокс согласия с версиями и
+  ссылками, состояние «письмо отправлено» с повтором и сменой адреса, состояния загрузки,
+  ошибки данных, лимита и недоступной почты. С сессией страница отвечает редиректом.
+- `web/app/pages/auth/verify.vue` — обмен токена и принятие новых условий выполняются на SSR
+  до рендера: токены сессии не проходят через браузерный JS. Экран согласия отправляет
+  обычную форму на тот же адрес, поэтому и этот путь остаётся серверным.
+- Сессия кладётся в httpOnly-cookie, BFF подставляет её в `Authorization` вместо браузера
+  (ADR-0023). `web/app/middleware/auth.global.ts` уводит гостя с закрытых страниц на
+  `/login?next=`. `/signup` и `/register` отвечают 301 на `/login`.
+
+## Как проверено
+
+Команды выполнены на дереве ветки, Node 24.12.0, pnpm 10.18.3:
+
+- `pnpm format` — exit 0.
+- `pnpm lint` — exit 0.
+- `pnpm test` — server 289 passed / 24 skipped, web 201 passed.
+- `pnpm --filter server run build:ci` — exit 0.
+- `pnpm --filter nuxt-app run typecheck` — exit 0.
+- `pnpm --filter nuxt-app run build` — exit 0.
+
+Пробы на собранном Nitro (`node .output/server/index.mjs`, API намеренно недоступен):
+
+| Адрес | Наблюдаемый ответ |
+|---|---|
+| `/login`, `/en/login` | 200, `data-login-state="loading"`, кнопка `disabled`, `meta robots = noindex, follow` |
+| `/signup`, `/register` | 301 на `/login` |
+| `/auth/verify` без токена | 302 на `/login` |
+| `/auth/verify?token=…` при недоступном API | 200, `data-verify-state="error"`, `meta robots = noindex, nofollow`, `meta referrer = no-referrer` |
+| `/me` без сессии | 302 на `/login?next=/me` |
+
+### Критерии готовности
+
+| Критерий | Состояние | Чем проверен |
+|---|---|---|
+| AC-1: строки состояний `login.md` и `verify.md` воспроизводимы | покрыт тестами, результат — из CI | `web/tests/e2e/22-login-verify-states.spec.ts` (15 сценариев) плюс `web/tests/auth-page-states.test.ts` для строк, недостижимых без T-024 |
+| AC-2: ответ одинаков для существующего и неизвестного адреса | PASS локально | `server/tests/auth-magic-link.test.ts` («answers identically…», «does not create an account…»), e2e «the answer to a link request is the same…» |
+| AC-3: архивированный аккаунт попадает на экран состояния | покрыт тестом, результат — из CI | `web/tests/e2e/01-register-login.spec.ts`, шаг 5: 302 на `/me/archived` и `Session.limited = true` |
+
+## Границы и ограничения
+
+- **Playwright и миграция локально не запускались**: в этом runtime Docker-демон отвечает
+  500 на API `/containers/json`, PostgreSQL и Mailpit локально недоступны, поэтому
+  браузерные сценарии и применение миграции проверяются прогоном CI на head ветки
+  (джобы «Браузерная проверка веба» и «Сборка сервера и дымовая проверка старта»).
+  Локальные unit- и build-результаты этого не заменяют.
+- **`retryAfterSec` остаётся `null`**: пауза до повторного запроса — часть серверных лимитов
+  (T-024, журнал числовых значений не задаёт). Поле присутствует в контракте, но числа
+  здесь не выдумываются.
+- **Строки `RATE_LIMITED` в таблицах состояний** достижимы только вместе с T-024. Отображение
+  этих кодов проверено юнит-тестом отображения кода в состояние, а не браузерным сценарием.
+- **`/me/archived` и `/auth/appeal` не создаются**: T-022 отвечает за переход на эти адреса,
+  сами экраны — T-035 и T-061. До них переход заканчивается 404.
+- **Сессия**: T-022 создаёт запись сессии и кладёт токены в httpOnly-cookie — без этого
+  ветка ограниченной сессии архивированного аккаунта не существовала бы. Ротация refresh,
+  выход, выход везде и обнаружение повторного предъявления остаются за T-023; проверка
+  флага `limited` на каждом запросе — за T-023 и T-035.
+- **Юридические тексты**: `legalVersions` читает опубликованные `LegalText`. Механизм версий
+  и страницы `/legal/*` — T-101; сценарии Playwright поднимают минимальные тексты как
+  собственную фикстуру, продуктовое содержимое здесь не задаётся.
+- **SEO**: страницы закрыты `noindex` по `routes.md`. `canonical` и `hreflang` из `login.md`
+  §10 относятся к общему SEO-слою (E-15) и здесь не вводятся.
+- **Не связанные тесты, затронутые изменением контракта**: `21-magic-link-mail.spec.ts`
+  (T-021) читает действующие версии согласия перед запросом ссылки;
+  `noindex-meta.spec.ts` и `17-my-articles.spec.ts` ставят сессию перед переходом в кабинет,
+  потому что гость теперь уводится на вход. Проверки не ослаблены: изменились предусловия,
+  а не утверждения.

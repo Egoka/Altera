@@ -40,7 +40,6 @@ model User {
   permissionExceptions        PermissionException[] @relation("PermissionExceptionRecipient")
   grantedPermissionExceptions PermissionException[] @relation("PermissionExceptionGrantActor")
   revokedPermissionExceptions PermissionException[] @relation("PermissionExceptionRevokeActor")
-  magicLink                   MagicLinkToken?
   sessions                    Session[]
   emailChangeRequest          EmailChangeRequest?
   currentHandle               HandleHistory         @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
@@ -72,14 +71,20 @@ model HandleHistory {
   @@map("handle_history")
 }
 
+/// Токен входа привязан к адресу, а не к учётной записи: первый вход создаёт аккаунт
+/// при подтверждении ссылки (docs/spec/50-access/session-lifecycle.md п. 2), поэтому
+/// на момент запроса ссылки пользователя ещё может не быть.
 model MagicLinkToken {
-  id        String    @id @default(cuid())
-  tokenHash String    @unique @db.VarChar(64)
-  userId    String    @unique
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
+  id             String    @id @default(cuid())
+  tokenHash      String    @unique @db.VarChar(64)
+  email          String    @unique
+  locale         Locale    @default(ru)
+  next           String?
+  termsVersion   Int?
+  privacyVersion Int?
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime  @default(now())
 
   @@map("magic_link_tokens")
 }
@@ -94,6 +99,9 @@ model Session {
   revokedAt         DateTime?
   userAgent         String?
   ip                String?
+  /// Ограниченная сессия самостоятельно архивированного аккаунта: доступен только экран
+  /// состояния /me/archived (docs/spec/50-access/session-lifecycle.md п. 7).
+  limited           Boolean   @default(false)
   createdAt         DateTime  @default(now())
   lastUsedAt        DateTime  @default(now())
 

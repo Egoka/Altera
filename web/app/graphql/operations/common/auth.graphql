@@ -1,9 +1,39 @@
-mutation RequestMagicLink($email: String!, $locale: Locale!) {
-  requestMagicLink(email: $email, locale: $locale)
+query LegalVersions($locale: Locale!) {
+  legalVersions(locale: $locale) {
+    termsVersion
+    privacyVersion
+    termsPath
+    privacyPath
+  }
+}
+
+mutation RequestMagicLink($email: String!, $consentVersion: ConsentVersionsInput!, $locale: Locale!, $next: String) {
+  requestMagicLink(email: $email, consentVersion: $consentVersion, locale: $locale, next: $next) {
+    ok
+    retryAfterSec
+  }
 }
 
 mutation VerifyMagicLink($token: String!) {
   verifyMagicLink(token: $token) {
+    ...VerifyOutcome
+  }
+}
+
+mutation AcceptConsent($token: String!, $termsVersion: Int, $privacyVersion: Int) {
+  acceptConsent(token: $token, termsVersion: $termsVersion, privacyVersion: $privacyVersion) {
+    ...VerifyOutcome
+  }
+}
+
+fragment VerifyOutcome on VerifyMagicLinkResult {
+  outcome
+  next
+  isNewAccount
+  termsVersion
+  privacyVersion
+  appealToken
+  session {
     accessToken
     refreshToken
     user {
@@ -12,6 +42,7 @@ mutation VerifyMagicLink($token: String!) {
       email
       role
       handle
+      locale
     }
   }
 }

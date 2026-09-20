@@ -4,7 +4,79 @@ type AuthPayload {
   user: AccountUser!
 }
 
+"""
+Действующие версии оферты и политики персональных данных для локали страницы входа
+(docs/spec/20-public/login.md §4). `null` означает, что действующий текст ещё не опубликован:
+согласие в этом случае невалидно и форма показывает состояние ошибки данных (§8).
+"""
+type LegalVersions {
+  termsVersion: Int
+  privacyVersion: Int
+  termsPath: String!
+  privacyPath: String!
+}
+
+input ConsentVersionsInput {
+  termsVersion: Int
+  privacyVersion: Int
+}
+
+"""
+Ответ на запрос ссылки одинаков для существующего и неизвестного адреса
+(docs/spec/20-public/login.md §4). `retryAfterSec` — пауза до повторного запроса; пока
+серверные лимиты не заданы (T-024), поле остаётся `null`.
+"""
+type MagicLinkRequestResult {
+  ok: Boolean!
+  retryAfterSec: Int
+}
+
+"""
+Ветки подтверждения ссылки (docs/spec/20-public/verify.md §3–4).
+"""
+enum VerifyOutcome {
+  """
+  Сессия создана: переход на `next` или `/me`.
+  """
+  authenticated
+  """
+  Версия оферты или политики изменилась: экран повторного согласия.
+  """
+  consent_required
+  """
+  Аккаунт архивирован самим пользователем: ограниченная сессия и экран `/me/archived`.
+  """
+  archived_self
+  """
+  Аккаунт заблокирован администратором: сессии нет, переход к форме оспаривания.
+  """
+  archived_admin
+}
+
+type VerifyMagicLinkResult {
+  outcome: VerifyOutcome!
+  session: AuthPayload
+  next: String
+  isNewAccount: Boolean!
+  termsVersion: Int
+  privacyVersion: Int
+  """
+  Токен формы оспаривания — тот же токен входа (журнал #48).
+  """
+  appealToken: String
+}
+
+extend type Query {
+  legalVersions(locale: Locale!): LegalVersions!
+}
+
 extend type Mutation {
-  requestMagicLink(email: String!, locale: Locale!): Boolean!
-  verifyMagicLink(token: String!): AuthPayload!
+  requestMagicLink(
+    email: String!
+    consentVersion: ConsentVersionsInput!
+    locale: Locale!
+    next: String
+  ): MagicLinkRequestResult!
+  verifyMagicLink(token: String!): VerifyMagicLinkResult!
+  acceptConsent(token: String!, termsVersion: Int, privacyVersion: Int): VerifyMagicLinkResult!
 }

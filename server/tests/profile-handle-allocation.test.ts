@@ -19,10 +19,35 @@ const uniqueError = (target: string[]) => ({
   meta: { modelName: target.includes("handle") ? "HandleHistory" : "User", target }
 })
 
-const context = (overrides: Record<string, unknown> = {}) => ({
+// Регистрация завершается при обмене ссылки (session-lifecycle.md п. 2), поэтому хэндл
+// выделяется в verifyMagicLink по действующей записи токена.
+const linkRecord = (email: string, locale: "ru" | "en") => ({
+  id: "token-1",
+  tokenHash: "c".repeat(64),
+  email,
+  locale,
+  next: null,
+  termsVersion: null,
+  privacyVersion: null,
+  expiresAt: new Date(Date.now() + 10 * 60_000),
+  usedAt: null
+})
+
+const context = (
+  overrides: Record<string, unknown> = {},
+  email = "reader@example.test",
+  locale: "ru" | "en" = "ru"
+) => ({
   prisma: {
+    legalText: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]) },
+    userLegalConsent: { findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn().mockResolvedValue({}) },
     user: { findUnique: vi.fn().mockResolvedValue(null) },
-    magicLinkToken: { upsert: vi.fn().mockResolvedValue({}) },
+    session: { create: vi.fn().mockResolvedValue({ id: "session-1" }) },
+    magicLinkToken: {
+      findUnique: vi.fn().mockResolvedValue(linkRecord(email, locale)),
+      update: vi.fn().mockResolvedValue({}),
+      upsert: vi.fn().mockResolvedValue({})
+    },
     ...overrides
   },
   logger: { log: vi.fn() },
@@ -92,7 +117,7 @@ describe("profile handle allocation", () => {
     expect(prisma.$transaction).toHaveBeenCalledTimes(1)
   })
 
-  it("retries a reserved random handle and completes magic-link registration", async () => {
+  it("retries a reserved random handle and completes registration on link exchange", async () => {
     const candidates = [Buffer.from("11111111", "hex"), Buffer.from("22222222", "hex")]
     vi.spyOn(crypto, "randomBytes").mockImplementation(((size: number) => {
       if (size === 4) return candidates.shift() ?? Buffer.from("33333333", "hex")
@@ -117,17 +142,22 @@ describe("profile handle allocation", () => {
         user: { create: createUser }
       })
     )
-    const ctx = context({
-      user: {
-        findUnique: vi.fn().mockResolvedValue(null),
-        create: vi.fn().mockRejectedValue(uniqueError(["handle"]))
+    const ctx = context(
+      {
+        user: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockRejectedValue(uniqueError(["handle"]))
+        },
+        $transaction: transaction
       },
-      $transaction: transaction
-    })
+      "reader@example.test",
+      "en"
+    )
 
-    await expect(
-      authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "en" }, ctx as never)
-    ).resolves.toBe(true)
+    await expect(authMutations.verifyMagicLink(null, { token: "plain-token" }, ctx as never)).resolves.toMatchObject({
+      outcome: "authenticated",
+      isNewAccount: true
+    })
 
     expect(reserve).toHaveBeenCalledTimes(2)
     expect(createUser).toHaveBeenCalledWith({
@@ -145,21 +175,28 @@ describe("profile handle allocation", () => {
   })
 
   it("continues with the existing user when concurrent registration wins the email", async () => {
-    const existingUser = { id: "user-existing", email: "reader@example.test" }
+    const existingUser = {
+      id: "user-existing",
+      email: "reader@example.test",
+      locale: "ru",
+      archivedAt: null,
+      archiveMode: null
+    }
     const findUnique = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(existingUser)
     const transaction = vi.fn().mockRejectedValue(uniqueError(["email"]))
-    const upsert = vi.fn().mockResolvedValue({})
     const ctx = context({
-      findUnique,
       $transaction: transaction,
-      user: { findUnique, create: vi.fn().mockRejectedValue(uniqueError(["email"])) },
-      magicLinkToken: { upsert }
+      user: { findUnique, create: vi.fn().mockRejectedValue(uniqueError(["email"])) }
     })
 
-    await expect(
-      authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx as never)
-    ).resolves.toBe(true)
+    await expect(authMutations.verifyMagicLink(null, { token: "plain-token" }, ctx as never)).resolves.toMatchObject({
+      outcome: "authenticated",
+      isNewAccount: false
+    })
 
-    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: "user-existing" } }))
+    expect(findUnique).toHaveBeenCalledTimes(2)
+    expect(ctx.prisma.session.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ userId: "user-existing" }) })
+    )
   })
 })

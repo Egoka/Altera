@@ -53,7 +53,8 @@ describe("magic-link persistence", () => {
     const upsert = vi.fn().mockResolvedValue({})
     const ctx = {
       prisma: {
-        user: { findUnique: vi.fn().mockResolvedValue({ id: "user-1" }) },
+        legalText: { findFirst: vi.fn().mockResolvedValue(null) },
+        user: { findUnique: vi.fn().mockResolvedValue({ id: "user-1", locale: "ru" }) },
         magicLinkToken: { upsert }
       },
       logger: { log: vi.fn() },
@@ -62,7 +63,7 @@ describe("magic-link persistence", () => {
       mail: { send: vi.fn().mockResolvedValue({ mailId: "mail-1", messageId: "fake-1" }) }
     } as never
 
-    await authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx)
+    await authMutations.requestMagicLink(null, { email: "reader@example.test", consentVersion: {}, locale: "ru" }, ctx)
 
     const payload = upsert.mock.calls[0][0]
     const expectedHash = "271a413bd339c5709fdceaec41f14f11e9fbfb5042d72d331c65f32b284cd09a"
@@ -77,6 +78,7 @@ describe("magic-link persistence", () => {
     const findUnique = vi.fn().mockResolvedValue(null)
     const ctx = {
       prisma: { magicLinkToken: { findUnique } },
+      logger: { log: vi.fn() },
       requestId: "request-2"
     } as never
 
@@ -85,8 +87,7 @@ describe("magic-link persistence", () => {
     })
 
     expect(findUnique).toHaveBeenCalledWith({
-      where: { tokenHash: "b8327fe9fd1b3d80691871fdc042e4fcfbfd9524d67e3b7d5ba205d6df83c78b" },
-      include: { user: true }
+      where: { tokenHash: "b8327fe9fd1b3d80691871fdc042e4fcfbfd9524d67e3b7d5ba205d6df83c78b" }
     })
     expect(JSON.stringify(findUnique.mock.calls)).not.toContain("plain-magic-token")
   })

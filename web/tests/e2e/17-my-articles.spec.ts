@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { setSessionCookie } from "./helpers/auth-fixtures"
 
 const allItems = [
   ["draft", "Материал в черновике", false],
@@ -34,6 +35,8 @@ const allItems = [
 }))
 
 test("shows every author article state and keeps rejected material read-only", async ({ page }) => {
+  // Кабинет закрыт для гостя (docs/spec/20-public/login.md §3): сессия ставится до перехода.
+  await setSessionCookie(page, "t022-my-articles")
   await page.route("**/api/graphql", async (route) => {
     const body = route.request().postDataJSON() as { variables?: { status?: string[] } }
     const statuses = body.variables?.status ?? []
