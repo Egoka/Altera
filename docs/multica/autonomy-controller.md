@@ -66,6 +66,9 @@ UUID и SHA в примере — placeholders, не готовое evidence. П
 и выполни актуальный независимый review в канонической задаче.
 
 Вызовы: `python3 scripts/autonomy/controller.py verify|merge|done --config <installed-config> --receipt <json>`.
+Готовность к слиянию проверяется `verify --phase merge`; без флага `verify` отвечает про фазу Done.
+Это разные вопросы: `deployment` и `finalization` входят только в Done и слияние не запрещают.
+Отказ Done по деплою не означает, что PR нельзя сливать: задача сливается и ждёт выкладки уже в `app`.
 Не вызывать merge/Done напрямую. При отказе исправить конкретное недостающее evidence.
 Потеря доступа фиксируется один раз; ручное Done владельца не требуется.
 

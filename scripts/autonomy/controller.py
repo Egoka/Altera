@@ -424,13 +424,16 @@ def main():
     parser.add_argument("action", choices=["verify", "merge", "done"])
     parser.add_argument("--config", required=True)
     parser.add_argument("--receipt", required=True)
+    # Готовность к merge и к Done — разные вопросы: `deployment` и `finalization`
+    # относятся только к Done. Без выбора фазы отказ Done читается как запрет слияния.
+    parser.add_argument("--phase", choices=["merge", "done"], default="done")
     args = parser.parse_args()
     config = json.loads(Path(args.config).read_text())
     receipt = json.loads(Path(args.receipt).read_text())
     live = Live(config)
     if args.action == "verify":
-        errors = validate(receipt, live.facts(receipt))
-        result = {"ok": not errors, "blocked": errors}
+        errors = validate(receipt, live.facts(receipt), args.phase)
+        result = {"ok": not errors, "phase": args.phase, "blocked": errors}
     else:
         result = live.transition(receipt, args.action, config["state_dir"])
     print(json.dumps(result, ensure_ascii=False))
