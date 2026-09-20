@@ -39,6 +39,81 @@ enum AdminGrantStatus {
   revoked
 }
 
+type AdminMail {
+  """Сохранённая копия письма без секретов; для editor и moderator — null."""
+  body: String
+  canResend: Boolean!
+  createdAt: String!
+  deliveryErrorClass: String
+  deliveryEvents: [AdminMailDeliveryEvent!]!
+  id: ID!
+  jobId: ID
+  messageId: String
+  objectId: ID
+  objectType: String
+  provider: String
+  queuedAt: String!
+
+  """Адрес получателя: только analyst, admin и owner (журнал §27.6)."""
+  recipientEmail: String
+  recipientHandle: String
+  sentAt: String
+  status: AdminMailStatus!
+  subject: String!
+  template: String!
+}
+
+enum AdminMailAccess {
+  full
+  scoped
+}
+
+type AdminMailDeliveryEvent {
+  errorClass: String
+  id: ID!
+  occurredAt: String!
+  providerEventId: String
+  status: AdminMailStatus!
+}
+
+input AdminMailFiltersInput {
+  objectId: ID
+  period: DateRangeInput
+  query: String
+  recipient: String
+  status: [AdminMailStatus!]
+  template: String
+}
+
+type AdminMailList {
+  access: AdminMailAccess!
+  items: [AdminMail!]!
+  pagination: PaginationInfo!
+
+  """Письма ждут в очереди: почтовый провайдер их не забрал."""
+  providerWaiting: Boolean!
+}
+
+type AdminMailResendResult {
+  resent: Int!
+  skipped: Int!
+}
+
+enum AdminMailStatus {
+  bounced
+  failed
+  queued
+  sent
+}
+
+type AdminMailSummaryRow {
+  bounced: Int!
+  failed: Int!
+  queued: Int!
+  sent: Int!
+  template: String!
+}
+
 type AdminPlanGrant {
   createdAt: String!
   endsAt: String
@@ -411,6 +486,8 @@ type Mutation {
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
+  resendMail(id: ID!): AdminMail!
+  resendMails(ids: [ID!]!): AdminMailResendResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
   restoreSection(id: ID!): Section!
@@ -536,6 +613,8 @@ type Query {
   _empty: String
   adminGrant(id: ID!): AdminPlanGrant
   adminGrants: [AdminPlanGrant!]!
+  adminMail(id: ID!): AdminMail
+  adminMails(filters: AdminMailFiltersInput, pagination: PaginationInput): AdminMailList!
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
   adminUser(id: ID!): AccountUser
   article(slug: String!): Article
@@ -554,6 +633,7 @@ type Query {
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
+  mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
