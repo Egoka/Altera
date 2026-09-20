@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "T-057",
+  "issue_id": "01a0c0de-5bba-73b7-98ce-c09f7315d889",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-057-author-page.md",
+    "sha": "26d6888035ae9678afe37602ddbad48a79a8ecb0"
+  },
+  "baseline_sha": "7cd976f2efafe9a4b455b17f7544e3407e85f48e",
+  "tested_sha": "3f9d85411edfb24102b2a7f04cb3be62edafd9b4",
+  "branch": "feat/t057-author-page",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c110-2bdc-7723-9c8c-502e5db8082f",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/author-page.spec.ts reproduces the author.md §8 rows in Chromium: 404 on an empty database, ready page with month chronicle and pagination, empty locale with the language switch, 410 for a withdrawn account, 301 from a former handle, and a data failure showing the request id; the expired-plan row keeps the page and drops the pro badge. Green in CI run 35545655538 (browser job 145 passed / 9 skipped)."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/author-public-contract.test.ts walks every reachable field of AuthorProfile, Feed and AuthorCatalog for email, role, plan, plan expiry and sessions; a positive control asserts the same walk finds AccountUser.email, AccountUser.role and AccountUser.nameCheckStatus, so an empty result is not vacuous."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 616 passed / 25 skipped; web 420 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "CI browser job 145 passed / 9 skipped; not run locally: no Docker/PostgreSQL",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35545655538",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 185,
+    "url": "https://github.com/Egoka/Altera/pull/185",
+    "base_ref": "app",
+    "base_sha": "7cd976f2efafe9a4b455b17f7544e3407e85f48e",
+    "head_sha": "3f9d85411edfb24102b2a7f04cb3be62edafd9b4",
+    "merge_sha": "92cb5e70e877211495e8ac3fcc6f6990d08f2513"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "New public GraphQL query and rewritten page require controller-managed development deployment and health verification after independent review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-057.md",
+    "sha256": "fe02c08419ce2788a18b8532250e9f4a496ea80aeebe5597552cc88ea61cf64f"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA and controller-managed development deployment are pending",
+    "Author subscription (FollowButton, followerCountShort) stays out of scope per task §3: stage 3 and F-10, no follow model exists",
+    "Meta, canonical, hreflang, Open Graph and JSON-LD for the page (author.md §10) belong to T-100, which depends on T-057",
+    "Owner and admin links of §5 zone 2 wait for the /me/settings page and web session identity (T-023)",
+    "Social icons: the local a-icon collection has none, links render as kind labels until the design stage supplies icons"
+  ],
+  "usage": null
+}
