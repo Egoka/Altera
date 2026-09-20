@@ -1,0 +1,71 @@
+query GetAuditLog($filters: AuditLogFilters, $limit: Int, $cursor: String) {
+  auditLog(filters: $filters, limit: $limit, cursor: $cursor) {
+    entries {
+      id
+      action
+      createdAt
+      actor {
+        id
+        role
+        name
+        isSystem
+      }
+      entityType
+      entityId
+      requestId
+      zones
+      changedFields
+    }
+    nextCursor
+    zone
+    canExport
+    availableActions
+  }
+}
+
+query GetAuditEntry($id: ID!) {
+  auditEntry(id: $id) {
+    id
+    action
+    createdAt
+    actor {
+      id
+      role
+      name
+      isSystem
+    }
+    entityType
+    entityId
+    requestId
+    zones
+    changedFields
+    diff
+    subject
+    context
+    purpose
+  }
+}
+
+query GetAuditSummary($filters: AuditLogFilters) {
+  auditSummary(filters: $filters) {
+    total
+    byAction {
+      key
+      count
+    }
+    byActor {
+      key
+      label
+      count
+    }
+  }
+}
+
+mutation ExportAudit($filters: AuditLogFilters) {
+  exportAudit(filters: $filters) {
+    filename
+    contentType
+    rows
+    csv
+  }
+}

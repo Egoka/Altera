@@ -39,7 +39,8 @@
     "openAll": "Открыть все",
     "viewAll": "Посмотреть все",
     "inDevelopment": "В разработке",
-    "searchPlaceholder": "Найти..."
+    "searchPlaceholder": "Найти...",
+    "close": "Закрыть"
   },
   "auth": {
     "login": {
@@ -270,7 +271,10 @@
       "eyebrow": "Редакционный каталог",
       "title": "Рубрики и форматы",
       "description": "Структура публикаций, публичные адреса и история изменений.",
-      "tabs": { "sections": "Рубрики", "formats": "Форматы" },
+      "tabs": {
+        "sections": "Рубрики",
+        "formats": "Форматы"
+      },
       "createSection": "Новая рубрика",
       "createFormat": "Новый формат",
       "create": "Создание",
@@ -359,14 +363,30 @@
       "settings": "Настройки системы"
     },
     "cards": {
-      "editorial": { "title": "Редакционные статьи" },
-      "editorialProcesses": { "title": "Редакционные процессы" },
-      "reviewQueue": { "title": "Очередь ручной проверки" },
-      "profileChecks": { "title": "Проверки профиля" },
-      "growth": { "title": "Регистрации и планы" },
-      "operationalQueue": { "title": "Операционная очередь" },
-      "health": { "title": "Здоровье и ошибки" },
-      "ownership": { "title": "Служебные записи" }
+      "editorial": {
+        "title": "Редакционные статьи"
+      },
+      "editorialProcesses": {
+        "title": "Редакционные процессы"
+      },
+      "reviewQueue": {
+        "title": "Очередь ручной проверки"
+      },
+      "profileChecks": {
+        "title": "Проверки профиля"
+      },
+      "growth": {
+        "title": "Регистрации и планы"
+      },
+      "operationalQueue": {
+        "title": "Операционная очередь"
+      },
+      "health": {
+        "title": "Здоровье и ошибки"
+      },
+      "ownership": {
+        "title": "Служебные записи"
+      }
     },
     "metrics": {
       "drafts": "Черновики",
@@ -412,7 +432,50 @@
     "endsAtHint": "(обязательно для ручной выдачи)",
     "userHandleLabel": "Хэндл пользователя",
     "reasonPlaceholder": "Укажите причину выдачи",
-    "revokeReasonPlaceholder": "Причина отзыва"
+    "revokeReasonPlaceholder": "Причина отзыва",
+    "audit": {
+      "eyebrow": "Служебный журнал",
+      "title": "Аудит",
+      "description": "Неизменяемый журнал произошедших действий: кто, когда и что изменил.",
+      "scopeFull": "Полный журнал по всем зонам",
+      "scope": {
+        "editorial": "Редакционные статьи",
+        "moderation": "Решения по материалам и AI",
+        "financeAndPd": "Финансы, чтения ПДн и AI-метрики",
+        "own": "Записи своей зоны"
+      },
+      "refresh": "Обновить",
+      "export": "Экспорт CSV",
+      "zone": "Зона",
+      "allZones": "Все зоны",
+      "action": "Код действия",
+      "allActions": "Все коды",
+      "actor": "Актор",
+      "allActors": "Все акторы",
+      "systemOnly": "Только автоматические записи",
+      "systemActor": "Система",
+      "period": "Период",
+      "periodHint": "7d, 30d, 90d или 2026-09-01..2026-09-20",
+      "entity": "Сущность",
+      "entityTypeHint": "user, article, payment…",
+      "entityId": "Идентификатор сущности",
+      "subject": "Субъект",
+      "context": "Контекст",
+      "purpose": "Цель",
+      "diff": "Поля до и после",
+      "recordedAt": "Когда записано",
+      "apply": "Применить",
+      "reset": "Сбросить",
+      "summaryTotal": "Записей по фильтру: {total}",
+      "rateLimited": "Экспорт чаще лимита. Повторите через {retryAfter} с.",
+      "exported": "Файл {filename} готов: {rows} записей.",
+      "error": "Не удалось загрузить журнал.",
+      "empty": "За период действий не было",
+      "more": "Показать ещё",
+      "exportConfirmTitle": "Экспорт журнала",
+      "exportConfirmText": "Файл содержит сведения о персональных данных. Персональные поля в выгрузку не попадают: только время, код, роль актора, тип сущности и requestId.",
+      "exportConfirmAction": "Выгрузить"
+    }
   },
   "language": {
     "switchTo": "Switch language to {language}"

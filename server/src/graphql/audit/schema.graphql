@@ -1,0 +1,95 @@
+# Раздел аудита (`docs/spec/40-admin/audit-log.md`). Журнал неизменяем: мутаций создания,
+# изменения и удаления записи нет ни для одной роли, включая `owner` (журнал #59).
+
+enum AuditZone {
+  editorial
+  moderation
+  financeAndPd
+}
+
+input AuditLogFilters {
+  zone: AuditZone
+  action: String
+  actorId: ID
+  actorSystem: Boolean
+  entityType: String
+  entityId: ID
+  subject: String
+  requestId: String
+  from: String
+  to: String
+}
+
+type AuditActor {
+  id: ID
+  role: Role
+  name: String
+  isSystem: Boolean!
+}
+
+type AuditEntry {
+  id: ID!
+  action: String!
+  createdAt: String!
+  actor: AuditActor!
+  entityType: String!
+  entityId: ID!
+  requestId: String
+  zones: [AuditZone!]!
+  changedFields: [String!]!
+}
+
+type AuditEntryDetail {
+  id: ID!
+  action: String!
+  createdAt: String!
+  actor: AuditActor!
+  entityType: String!
+  entityId: ID!
+  requestId: String
+  zones: [AuditZone!]!
+  changedFields: [String!]!
+  diff: JSON
+  subject: String
+  context: String
+  purpose: String
+}
+
+type AuditLogPage {
+  entries: [AuditEntry!]!
+  nextCursor: String
+  zone: AuditZone
+  canExport: Boolean!
+  availableActions: [String!]!
+}
+
+type AuditSummaryBucket {
+  key: String!
+  label: String
+  count: Int!
+}
+
+type AuditSummary {
+  total: Int!
+  byAction: [AuditSummaryBucket!]!
+  byActor: [AuditSummaryBucket!]!
+}
+
+# CSV содержит только время, код, роль актора, признак «система», тип сущности и `requestId`:
+# полей с персональными данными в выгрузке нет (`audit-log.md` §5).
+type AuditExport {
+  filename: String!
+  contentType: String!
+  rows: Int!
+  csv: String!
+}
+
+extend type Query {
+  auditLog(filters: AuditLogFilters, limit: Int, cursor: String): AuditLogPage!
+  auditEntry(id: ID!): AuditEntryDetail!
+  auditSummary(filters: AuditLogFilters): AuditSummary!
+}
+
+extend type Mutation {
+  exportAudit(filters: AuditLogFilters): AuditExport!
+}
