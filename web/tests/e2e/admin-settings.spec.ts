@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 // Строки состояний docs/spec/40-admin/system-settings.md §9 и доступ §2 (T-082).
 const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
@@ -11,14 +11,10 @@ const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
 const roles = ["admin", "owner", "editor"] as const
 type TestRole = (typeof roles)[number]
 
-const signToken = (role: TestRole) => {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const payload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role, userId: `t082-${role}` })
-  ).toString("base64url")
-  const unsigned = `${header}.${payload}`
-  return `${unsigned}.${createHmac("sha256", accessSecret).update(unsigned).digest("base64url")}`
-}
+// После T-023 токен авторизует запрос только вместе с живой сессией (ADR-0009 п. 3).
+const sessionIds = Object.fromEntries(roles.map((role) => [role, ""])) as Record<TestRole, string>
+
+const signToken = (role: TestRole) => signAccessToken(`t082-${role}`, sessionIds[role])
 
 const signIn = (page: Page, role: TestRole) => page.setExtraHTTPHeaders({ authorization: `Bearer ${signToken(role)}` })
 
@@ -43,6 +39,7 @@ test.describe("admin system settings", () => {
         }
       })
       await prisma.handleHistory.update({ where: { handle }, data: { userId: handle } })
+      sessionIds[role] = await createSessionId(prisma, handle)
     }
   })
 
