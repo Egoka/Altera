@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from "vitest"
 import type { Cache, CacheSetOptions } from "../src/cache"
-import feedResolver, { FEED_PAGE_SIZE, feedPageInfo, requireValidPage } from "../src/graphql/feed/resolver"
+import feedResolver, {
+  FEED_PAGE_SIZE,
+  feedPageInfo,
+  LATEST_FEED_MAX_LIMIT,
+  requireValidLimit,
+  requireValidPage
+} from "../src/graphql/feed/resolver"
 
 // Ленты рубрики и тега: `docs/spec/20-public/section-feed.md` §8 и `tag-feed.md` §8.
 
@@ -273,5 +279,56 @@ describe("лента тега", () => {
 
   it("лента без слага — неверный запрос, а не пустая страница", async () => {
     await expect(callFeed({}, { scope: "tag", slug: "" })).rejects.toThrowError(/Validation failed/)
+  })
+})
+
+// Лента `latest` для RSS: `docs/spec/20-public/feeds-and-sitemap.md` §4, §8, §12.
+describe("лента последних публикаций", () => {
+  it("отдаёт материалы локали в порядке первой публикации", async () => {
+    const stubs = prismaStub({ articles: [record("1"), record("2")] })
+    const feed = await callFeed({}, { scope: "latest", limit: 50 }, stubs)
+
+    expect(feed.items).toHaveLength(2)
+    expect(feed.caption).toBe("by_publication_date")
+    expect(stubs.prisma.article.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { status: "published", sourceLocale: "ru", sectionId: { not: null }, firstPublishedAt: { not: null } },
+        orderBy: [{ firstPublishedAt: "desc" }, { id: "asc" }],
+        take: 50
+      })
+    )
+  })
+
+  it("слаг ленте не нужен: она не привязана к рубрике или тегу", async () => {
+    const feed = await callFeed({ articles: [record("1")] }, { scope: "latest" })
+
+    expect(feed.scope).toBe("latest")
+    expect(feed.items).toHaveLength(1)
+  })
+
+  it("пустая лента — валидный ответ без элементов, а не отказ", async () => {
+    const feed = await callFeed({ articles: [] }, { scope: "latest" })
+
+    expect(feed.items).toEqual([])
+  })
+
+  it("материал без рубрики в ленту не попадает", async () => {
+    const feed = await callFeed({ articles: [record("1", { section: null })] }, { scope: "latest" })
+
+    expect(feed.items).toEqual([])
+  })
+
+  it("запрос сверх потолка усекается до пятидесяти элементов", async () => {
+    const stubs = prismaStub({ articles: [record("1")] })
+    await callFeed({}, { scope: "latest", limit: 500 }, stubs)
+
+    expect(stubs.prisma.article.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: LATEST_FEED_MAX_LIMIT }))
+  })
+
+  it("ноль, отрицательное и дробное число элементов — неверный запрос", () => {
+    for (const limit of [0, -5, 2.5]) {
+      expect(() => requireValidLimit(limit, "req")).toThrowError(/Validation failed/)
+    }
+    expect(requireValidLimit(10, "req")).toBe(10)
   })
 })

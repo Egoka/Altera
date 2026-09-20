@@ -1,0 +1,16 @@
+# Карта сайта по локалям (`docs/spec/20-public/feeds-and-sitemap.md` §4, §5.3). Экрана нет:
+# запрос отдаёт перечень публичных адресов, а XML собирает веб.
+
+type SitemapEntry {
+  # Путь без префикса локали: префикс добавляет веб по своей схеме маршрутов.
+  path: String!
+  # Дата последнего изменения адреса в ISO 8601; у статических страниц её нет.
+  lastmod: String
+  priority: Float!
+  # Локали, в которых адрес публичен, — источник `hreflang`-альтернатив (ADR-0002).
+  locales: [Locale!]!
+}
+
+extend type Query {
+  sitemapEntries(locale: Locale!): [SitemapEntry!]!
+}
