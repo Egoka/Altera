@@ -5,7 +5,7 @@
 - **План**: `docs/plans/2026-09-20-t023-session-rotation-logout-cookie.md`
 - **Источник задачи**: `docs/backlog/tasks/T-023-session-rotation-logout-cookie.md`
 - **Базовый коммит**: `4ea27a63d0fac9ccc9eb38cde522d9b17b58799b` (`origin/app`)
-- **Ветка**: `feat/t023-sessions`, проверенный коммит `f79c78af2a2b690f32407816ea27ee08988efa83`
+- **Ветка**: `feat/t023-sessions`, проверенный коммит `948f41502a25a5c19d576769fffc8beb6a0d0362`
 - **PR**: https://github.com/Egoka/Altera/pull/168
 - **Статус**: реализация завершена, передаётся на независимое ревью
 
@@ -47,7 +47,7 @@
 
 Среда: Node 24.12.0, pnpm 10.18.3, macOS (darwin 25.5.0). Все команды выполнены в worktree
 `/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t023-sessions` на коммите
-`f79c78af2a2b690f32407816ea27ee08988efa83`.
+`948f41502a25a5c19d576769fffc8beb6a0d0362`.
 
 | Команда | Exit | Наблюдаемый результат |
 | --- | --- | --- |
@@ -59,6 +59,11 @@
 | `pnpm --filter server run build:ci` | 0 | `prisma generate` + `tsc` + копирование SDL |
 | `pnpm --filter nuxt-app run typecheck` | 0 | `nuxt prepare && vue-tsc -b --noEmit` без диагностик |
 | `pnpm --filter nuxt-app run build` | 0 | Nitro-сборка, 13.1 MB |
+| CI `pnpm --filter nuxt-app run test:e2e` (job «Браузерная проверка веба») | 0 | 42 теста: 32 passed, 10 skipped |
+
+CI на проверенном коммите зелёный целиком:
+https://github.com/Egoka/Altera/actions/runs/35505570781 — `checks`, `web-checks`, `web-smoke`,
+`server-smoke` и агрегирующий `test` прошли.
 
 На baseline (`origin/app`, измерено отдельным запуском `pnpm test`) было server 259 passed /
 24 skipped и web 180 passed; прирост дают новые файлы
@@ -85,8 +90,10 @@ Playwright `23-session-cookie.spec.ts`: после входа `document.cookie` 
 
 Ограничение: локально сценарий не выполнялся. Playwright поднимает API и Nitro и требует
 PostgreSQL и Mailpit из `docker-compose.yml`, а Docker-демон в рабочей среде не поднялся
-(`docker info` возвращал ошибку инициализации всё время работы). Браузерные сценарии выполняет
-job `web-smoke` в CI на том же коммите; результат приложен к задаче ссылкой на запуск.
+(`docker info` возвращал ошибку инициализации всё время работы). Сценарий выполнен в CI job
+`web-smoke` на проверенном коммите: 42 теста, 32 passed, 10 skipped, ни одного failed —
+https://github.com/Egoka/Altera/actions/runs/35505570781/job/106064686488. На baseline тот же
+job запускал 40 тестов; два новых — сценарии T-023.
 
 ### AC-3 — `logoutAll` не оставляет активных сессий
 
@@ -98,6 +105,16 @@ job `web-smoke` в CI на том же коммите; результат при
 
 `session-mutations.test.ts` выполняет `refreshSession` для читателя с истёкшим `planUntil`:
 ротация проходит, сессия остаётся активной.
+
+### Регрессия браузерных фикстур и её исправление
+
+Первый запуск CI на коммите `f79c78a` дал пять падений в админских сценариях
+(`admin-categories`, `admin-dashboard`, `app-components-theme`, `noindex-meta`). Причина —
+прямое следствие изменения контракта: фикстуры подписывали access-токен вручную клеймами
+`{userId, role}` без `sid`, а после задачи такой токен не авторизует запрос. Фикстуры получили
+запись сессии и клейм `sid`; подпись и создание сессии вынесены в
+`web/tests/e2e/helpers/session-token.ts`. Продуктовый код при этом не ослаблялся.
+Запуск с падениями: https://github.com/Egoka/Altera/actions/runs/35505305746.
 
 ## Решения и ограничения
 
