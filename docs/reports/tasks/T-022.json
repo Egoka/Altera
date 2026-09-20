@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task_id": "T-022",
+  "issue_id": "01a0ab35-9d73-723f-bbb2-cf9c5db7a7df",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-022-register-login-magic-link.md",
+    "sha": "88e47776573975866c867b06775f02ff3880cb71"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "e5141c5da98fde666ef963659c46afa3c61324e4",
+  "branch": "feat/t022-register-login",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t022-auth",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bd01-799f-7c38-a393-749593a901e7",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/22-login-verify-states.spec.ts проходит по таблицам состояний login.md §8 и verify.md §8: загрузка, ошибка данных, лимит, недоступная почта, проверка формата и согласия, архивированный адрес, редирект с сессией, noindex обеих локалей, 301 с /signup и /register, 302 успешного обмена, 302 без токена, 200 на неизвестной ссылке, блокировка с переходом к оспариванию, повторное согласие, noindex и no-referrer страницы подтверждения. Строки RATE_LIMITED, недостижимые без T-024, покрыты web/tests/auth-page-states.test.ts."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/auth-magic-link.test.ts сверяет ответ и последовательность логов для известного и неизвестного адреса и проверяет, что учётная запись по неизвестному адресу не создаётся; e2e «the answer to a link request is the same for a known and an unknown address» повторяет это через BFF на живой базе."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "web/tests/e2e/01-register-login.spec.ts шаг 5: вход в самостоятельно архивированный аккаунт заканчивается на /me/archived, в базе ровно одна сессия с limited = true."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 289 passed / 24 skipped; web 201 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "47 passed / 9 skipped (CI)",
+    "migrations": "passed on the isolated CI database ({\"schema_version\":1,\"ok\":true,\"migrations\":\"passed\"})",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35490440256",
+    "preflight": "not_run: scripts/autonomy/preflight.py requires runtime and run identifiers that this run does not expose as arguments; Docker daemon in this runtime answers 500, so no local PostgreSQL, Redis or Mailpit was available",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 164,
+    "url": "https://github.com/Egoka/Altera/pull/164",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "e5141c5da98fde666ef963659c46afa3c61324e4",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Новая миграция базы и изменённый контракт GraphQL требуют развёртывания и проверки здоровья через контроллер после CI и независимого review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-022.md",
+    "sha256": "0f6621fea44224b301d50c1a0112b0f93fc4735ca835f3d9a901d18da80e9f74"
+  },
+  "remaining": [
+    "Независимое review проверенного SHA и развёртывание с проверкой здоровья через контроллер не выполнены",
+    "retryAfterSec остаётся null до T-024; экраны /me/archived (T-035) и /auth/appeal (T-061) ещё не созданы"
+  ],
+  "usage": null
+}
