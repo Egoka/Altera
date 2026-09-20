@@ -1,15 +1,12 @@
-query GetHomePageArticles {
-  featuredArticles(limit: 5) {
-    ...ArticleCard
-  }
-  latestArticles(limit: 20, excludeFeatured: true) {
-    ...ArticleCard
-    tags {
-      name
-      slug
+query GetHomeFeed($locale: Locale!) {
+  feed(scope: home, locale: $locale) {
+    locale
+    sections {
+      key
+      caption
+      items {
+        ...FeedCard
+      }
     }
-  }
-  popularArticles(timeRange: "week", limit: 10) {
-    ...PopularArticle
   }
 }

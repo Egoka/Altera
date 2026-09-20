@@ -21,16 +21,20 @@ fragment ArticleStatusValue on Article {
   status
 }
 
-fragment PopularArticle on Article {
+# Карточка подборки главной: поля приходят из `feed`, а не из административного `Article`.
+fragment FeedCard on FeedItem {
   id
-  title
   slug
+  sectionSlug
+  sectionName
+  title
+  dek
+  cover
+  publishedAt
+  isTranslation
   author {
     name
-    slug: handle
-  }
-  section {
-    name
-    slug
+    handle
+    grade
   }
 }

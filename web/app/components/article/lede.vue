@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
+  import type { ReadingArticle } from "~/types/reading"
 
-  defineProps<{ article: ArticleCardFragment }>()
+  defineProps<{ article: ReadingArticle }>()
 </script>
 
 <template>
