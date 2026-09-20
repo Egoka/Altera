@@ -5,7 +5,7 @@ import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
 
 type FeedLocale = "ru" | "en"
-type FeedScope = "home" | "section" | "tag"
+type FeedScope = "home" | "section" | "tag" | "latest"
 type FeedSectionKey = "top" | "new" | "popular"
 type FeedCaption = "by_publication_date"
 type AuthorGrade = "standard" | "pro"
@@ -20,6 +20,8 @@ export const HOME_NEW_WINDOW_DAYS = 3
 export const FEED_PAGE_SIZE = 24
 /** Сколько частых тегов рубрики предлагается фильтром (`section-feed.md` §5 зона 3). */
 export const SECTION_TOP_TAGS = 12
+/** Потолок ленты `latest`: RSS отдаёт до пятидесяти элементов (`feeds-and-sitemap.md` §12). */
+export const LATEST_FEED_MAX_LIMIT = 50
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -371,6 +373,44 @@ const buildTagFeed = async (ctx: GraphQLContext, locale: FeedLocale, slug: strin
   }
 }
 
+/**
+ * Размер ленты `latest`. Ноль, отрицательное и дробное значение — отказ `VALIDATION_ERROR`:
+ * молча подменять их числом по умолчанию значит отдавать не то, что запросил клиент. Запрос
+ * сверх потолка усекается до него: пятьдесят элементов — граница ленты, а не ошибка адреса
+ * (`feeds-and-sitemap.md` §12 `[ДОПУЩЕНИЕ]`).
+ */
+export const requireValidLimit = (limit: number, requestId: string): number => {
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "limit", rule: "positive-integer" })
+  }
+  return Math.min(limit, LATEST_FEED_MAX_LIMIT)
+}
+
+/**
+ * Плоский список последних публикаций локали для RSS (`feeds-and-sitemap.md` §4). Порядок —
+ * дата первой публикации, затем `id`: доработки и «обновлено» (§20.6) элемент не поднимают,
+ * поэтому сортировка по `updatedAt` здесь не используется. Материал без рубрики в ленту не
+ * попадает — без неё не собрать адрес его страницы.
+ */
+const buildLatestFeed = async (ctx: GraphQLContext, locale: FeedLocale, limit: number): Promise<Feed> => {
+  const articles = (await ctx.prisma.article.findMany({
+    where: publicArticleWhere({
+      sourceLocale: locale,
+      sectionId: { not: null },
+      firstPublishedAt: { not: null }
+    }),
+    orderBy: [{ firstPublishedAt: "desc" }, { id: "asc" }],
+    take: limit,
+    select: feedArticleSelect
+  })) as unknown as FeedArticleRecord[]
+
+  return {
+    ...emptyFeed("latest", locale),
+    items: articles.filter((article) => article.section !== null).map((article) => toFeedItem(article, locale)),
+    caption: "by_publication_date"
+  }
+}
+
 const buildHomeFeed = async (ctx: GraphQLContext, locale: FeedLocale): Promise<Feed> => {
   const articles = (await ctx.prisma.article.findMany({
     where: publicArticleWhere({
@@ -397,17 +437,19 @@ export default {
         format?: string | null
         tag?: string | null
         page?: number
+        limit?: number
       },
       ctx: GraphQLContext
     ): Promise<Feed> => {
       const scope = args.scope ?? "home"
       const locale = args.locale
       const page = requireValidPage(args.page ?? 1, ctx.requestId)
+      const limit = requireValidLimit(args.limit ?? LATEST_FEED_MAX_LIMIT, ctx.requestId)
       const slug = args.slug?.trim() ?? ""
       const format = args.format?.trim() || null
       const tag = args.tag?.trim() || null
 
-      if (scope !== "home" && !slug) {
+      if (scope !== "home" && scope !== "latest" && !slug) {
         throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "slug", rule: "required" })
       }
 
@@ -418,13 +460,24 @@ export default {
       return readThroughPublicCache(
         {
           cache: ctx.cache,
-          key: buildCacheKey("query.feed", { scope, locale, slug, format, tag, page }),
+          // Размер читает только `latest`: ключу остальных областей он не нужен, иначе
+          // лишний аргумент запроса разводит одинаковые ответы по разным записям кеша.
+          key: buildCacheKey("query.feed", {
+            scope,
+            locale,
+            slug,
+            format,
+            tag,
+            page,
+            ...(scope === "latest" ? { limit } : {})
+          }),
           tags,
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
           if (scope === "section") return buildSectionFeed(ctx, locale, slug, format, tag, page)
           if (scope === "tag") return buildTagFeed(ctx, locale, slug, page)
+          if (scope === "latest") return buildLatestFeed(ctx, locale, limit)
           return buildHomeFeed(ctx, locale)
         }
       )

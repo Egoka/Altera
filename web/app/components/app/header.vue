@@ -8,7 +8,7 @@
   import { useScroll } from "~/composables/useScroll"
 
   const { isScrolled, isHeaderVisible } = useScroll()
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
   const { sections, popularTags, status } = usePublicNavigation()
   const isMegaMenuOpen = ref(false)
 
@@ -21,6 +21,19 @@
 
   watch(isHeaderVisible, (visible) => {
     if (!visible) closeMegaMenu()
+  })
+
+  // Ссылка на ленту текущей локали (`docs/spec/20-public/feeds-and-sitemap.md` §3, §6):
+  // агрегатор находит RSS по ней, не разбирая разметку страницы.
+  useHead({
+    link: () => [
+      {
+        rel: "alternate",
+        type: "application/rss+xml",
+        title: t("footer.rss"),
+        href: locale.value === "en" ? "/en/rss.xml" : "/rss.xml"
+      }
+    ]
   })
 </script>
 

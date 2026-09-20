@@ -1,10 +1,12 @@
 # Подборки и ленты публичных страниц. `home` — главная (`docs/spec/20-public/home.md`,
 # `docs/spec/60-ranking/home-sections.md`); `section` и `tag` — ленты рубрики и тега
-# (`section-feed.md`, `tag-feed.md`). Лента автора получит своё значение в T-057.
+# (`section-feed.md`, `tag-feed.md`); `latest` — плоский список последних публикаций локали
+# для RSS (`feeds-and-sitemap.md` §4). Лента автора получит своё значение в T-057.
 enum FeedScope {
   home
   section
   tag
+  latest
 }
 
 # Ключи подборок главной в фиксированном порядке отбора (журнал §22.4).
@@ -113,5 +115,14 @@ type Feed {
 }
 
 extend type Query {
-  feed(scope: FeedScope! = home, locale: Locale!, slug: String, format: String, tag: String, page: Int! = 1): Feed!
+  # `limit` читает только `latest`: остальные области отдают страницу фиксированного размера.
+  feed(
+    scope: FeedScope! = home
+    locale: Locale!
+    slug: String
+    format: String
+    tag: String
+    page: Int! = 1
+    limit: Int! = 50
+  ): Feed!
 }

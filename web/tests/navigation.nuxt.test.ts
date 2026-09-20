@@ -21,7 +21,8 @@ const messages: Record<string, string> = {
   "navigation.sectionsEmpty": "Пока нет опубликованных рубрик.",
   "navigation.articleCount": "{count} материалов",
   "navigation.trending": "Сейчас читают",
-  "navigation.allSections": "Все рубрики"
+  "navigation.allSections": "Все рубрики",
+  "footer.rss": "RSS"
 }
 const t = (key: string, params: Record<string, string | number> = {}) =>
   Object.entries(params).reduce(
@@ -29,7 +30,32 @@ const t = (key: string, params: Record<string, string | number> = {}) =>
     messages[key] ?? key
   )
 
+const head = vi.fn()
+
+/** Шапка объявляет ленту через `useHead`: в тестах он подменяется, как на других страницах. */
+const headLinks = (): Record<string, string>[] => {
+  const link = head.mock.calls.at(-1)?.[0]?.link
+  return typeof link === "function" ? link() : (link ?? [])
+}
+
+const mountHeader = () =>
+  mount(AppHeader, {
+    global: {
+      stubs: {
+        NuxtLink: { props: ["to"], template: '<a :href="to"><slot /></a>' },
+        LanguageToggle: true,
+        VisualLogo: { template: "<span>Altera</span>" },
+        IconBurger: true
+      }
+    }
+  })
+
 beforeEach(() => {
+  head.mockClear()
+  vi.stubGlobal("useHead", head)
+  vi.stubGlobal("useRequestFetch", () =>
+    vi.fn().mockResolvedValue({ data: { publicSections: [], popularTags: { tags: [] } } })
+  )
   vi.stubGlobal("useI18n", () => ({
     t,
     locale: ref("ru"),
@@ -73,6 +99,28 @@ describe("AppHeader navigation", () => {
     expect(wrapper.get('nav[aria-label="Рубрики"]').text()).toContain("Культура")
     expect(wrapper.get('a[href="/travel"]').text()).toContain("Путешествия")
     expect(requestFetch).toHaveBeenCalledOnce()
+  })
+})
+
+// Ссылка на ленту в шапке: `docs/spec/20-public/feeds-and-sitemap.md` §3, §6.
+describe("AppHeader RSS", () => {
+  it("объявляет ленту русской локали", () => {
+    mountHeader()
+
+    expect(headLinks()).toContainEqual({
+      rel: "alternate",
+      type: "application/rss+xml",
+      title: "RSS",
+      href: "/rss.xml"
+    })
+  })
+
+  it("в английской локали ведёт на её ленту", () => {
+    vi.stubGlobal("useI18n", () => ({ t, locale: ref("en"), locales: ref([{ code: "en", name: "English" }]) }))
+
+    mountHeader()
+
+    expect(headLinks()[0]!.href).toBe("/en/rss.xml")
   })
 })
 
