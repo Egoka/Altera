@@ -73,7 +73,9 @@ export const useAdminGrants = () => {
   return {
     grants: data,
     pending: computed(() => pending.value || mutationPending.value),
-    failed: computed(() => error.value !== null),
+    // `useAsyncData` держит в `error` значение `undefined`, а не `null`: сравнение с `null` включало
+    // признак отказа навсегда (nuxt@4 `asyncData.js`: `_errors[key] ??= void 0`).
+    failed: computed(() => Boolean(error.value)),
     requestId,
     refresh,
     grant,

@@ -73,8 +73,10 @@
           class="hidden px-2 py-3 font-sans text-sm font-semibold text-zinc-800 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:inline-flex dark:text-zinc-200">
           {{ t("common.login") }}
         </NuxtLink>
+        <!-- Первый запуск бесплатный: «Писать» ведёт прямо в создание материала, а гостя
+             страница создания перекладывает на вход с возвратом (журнал §25.1, `home.md` §7). -->
         <NuxtLink
-          to="/pricing"
+          to="/me/articles/new"
           class="inline-flex min-h-10 items-center border border-zinc-900 px-3 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:border-orange-700 hover:bg-orange-700 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-100 dark:text-zinc-100">
           {{ t("common.write") }}
         </NuxtLink>
