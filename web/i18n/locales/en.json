@@ -832,5 +832,30 @@
     "emptyDescription": "An author joins the catalogue with their first publication.",
     "emptyFilterTitle": "Nothing found",
     "pagination": "Author list pages"
+  },
+  "bookmarks": {
+    "pageTitle": "Bookmarks",
+    "eyebrow": "Reader account",
+    "description": "Saved material in the order you added it — come back when you have time.",
+    "filtersLabel": "Bookmark filter",
+    "tabs": {
+      "all": "All",
+      "unavailable": "Unavailable"
+    },
+    "savedAt": "Saved {date}",
+    "unavailable": "Unavailable",
+    "unavailableDetail": "The material was unpublished or archived: its content no longer opens, but the bookmark stays.",
+    "remove": "Remove from bookmarks",
+    "removed": "Bookmark removed",
+    "undo": "Undo",
+    "loadingLabel": "Loading bookmarks",
+    "loadErrorTitle": "Bookmarks did not load",
+    "loadErrorDescription": "Check the connection and try again.",
+    "retry": "Retry",
+    "emptyTitle": "Saved material will appear here",
+    "emptyDescription": "Tap the star on a material to come back to it later.",
+    "emptyLink": "Go to the home page",
+    "loadingMore": "Loading…",
+    "showMore": "Show more"
   }
 }

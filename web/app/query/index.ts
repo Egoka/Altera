@@ -1,4 +1,5 @@
 export {
+  AddBookmarkDocument as ADD_BOOKMARK,
   ArchiveSectionDocument as ARCHIVE_SECTION,
   BulkDeleteArticlesDocument as BULK_DELETE_ARTICLES,
   ChangeArticleStatusDocument as CHANGE_ARTICLE_STATUS,
@@ -15,6 +16,8 @@ export {
   GetAuthorPageDocument as GET_AUTHOR_PAGE,
   GetAuthorCatalogDocument as GET_AUTHOR_CATALOG,
   GetHomeFeedDocument as GET_HOME_FEED,
+  GetMyBookmarkDocument as GET_MY_BOOKMARK,
+  GetMyBookmarksDocument as GET_MY_BOOKMARKS,
   GetMyProfileDocument as GET_MY_PROFILE,
   GetNavigationDocument as GET_NAVIGATION,
   GetSectionCatalogDocument as GET_SECTION_CATALOG,
@@ -24,6 +27,7 @@ export {
   GetUserMenuDocument as GET_USER_MENU,
   MergeTagsDocument as MERGE_TAGS,
   ReorderSectionsDocument as REORDER_SECTIONS,
+  RemoveBookmarkDocument as REMOVE_BOOKMARK,
   RequestMagicLinkDocument as REQUEST_MAGIC_LINK,
   TagAutocompleteDocument as TAG_AUTOCOMPLETE,
   UpdateArticleDocument as UPDATE_ARTICLE,
