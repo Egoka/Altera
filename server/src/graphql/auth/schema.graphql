@@ -1,10 +1,15 @@
 type AuthPayload {
   accessToken: String!
-  refreshToken: String!
+  # Через BFF браузер получает null: refresh переносится в httpOnly-cookie (ADR-0023 п. 2).
+  refreshToken: String
   user: AccountUser!
 }
 
 extend type Mutation {
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   verifyMagicLink(token: String!): AuthPayload!
+  # BFF подставляет значение из httpOnly-cookie; браузерный код его не хранит.
+  refreshSession(refreshToken: String!): AuthPayload!
+  logout(refreshToken: String): Boolean!
+  logoutAll: Boolean!
 }
