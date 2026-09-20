@@ -39,7 +39,8 @@
     "openAll": "Открыть все",
     "viewAll": "Посмотреть все",
     "inDevelopment": "В разработке",
-    "searchPlaceholder": "Найти..."
+    "searchPlaceholder": "Найти...",
+    "close": "Закрыть"
   },
   "auth": {
     "login": {
@@ -158,11 +159,14 @@
   },
   "home": {
     "featured": "Главные материалы",
-    "latest": "Последние статьи",
-    "popular": "Популярные статьи",
+    "latest": "Новое",
+    "popular": "Популярное за неделю",
     "trending": "Тренды",
     "viewAll": "Посмотреть все",
-    "demanded": "Востребованное"
+    "captionByDate": "по дате публикации",
+    "emptyTitle": "Здесь пока пусто",
+    "emptyDescription": "Станьте первым автором Altera.",
+    "emptyAction": "Стать автором"
   },
   "article": {
     "readMore": "Читать далее",
@@ -249,6 +253,56 @@
     "copyright": "© 2026 Altera"
   },
   "admin": {
+    "mail": {
+      "title": "Письма",
+      "description": "История отправленных писем и их статусы доставки. Секреты не показываются.",
+      "providerWaiting": "Почтовый провайдер недоступен, письма ждут в очереди.",
+      "filterTemplate": "Шаблон",
+      "filterStatus": "Статус",
+      "filterPeriod": "Период",
+      "filterRecipient": "Получатель",
+      "filterQuery": "Тема или messageId",
+      "allStatuses": "Все статусы",
+      "period7": "7 дней",
+      "period30": "30 дней",
+      "status": {
+        "queued": "В очереди",
+        "sent": "Отправлено",
+        "bounced": "Не доставлено",
+        "failed": "Ошибка"
+      },
+      "columnTime": "Время",
+      "columnTemplate": "Шаблон",
+      "columnRecipient": "Получатель",
+      "columnSubject": "Тема",
+      "columnStatus": "Статус",
+      "columnProvider": "Провайдер",
+      "recipientHidden": "Адрес не показывается",
+      "loading": "Загрузка писем",
+      "empty": "Писем по этому фильтру нет",
+      "loadError": "Не удалось загрузить историю писем.",
+      "retry": "Повторить запрос",
+      "previous": "Назад",
+      "next": "Вперёд",
+      "pageOf": "Страница {page} из {total}",
+      "resendSelected": "Повторить выбранные ({count})",
+      "resend": "Отправить повторно",
+      "resendDone": "Повторно отправлено писем: {count}",
+      "limitExceeded": "За один раз можно повторить не больше {limit} писем.",
+      "conflict": "Письмо уже отправлено повторно.",
+      "confirmTitle": "Повторная отправка",
+      "confirmBody": "Будет отправлено писем: {count}. Шаблоны: {templates}. У получателей могут появиться дубли.",
+      "confirmSecrets": "Письма с одноразовыми кодами и ссылками входа исключаются автоматически.",
+      "confirmSubmit": "Отправить",
+      "cancel": "Отмена",
+      "backToList": "К списку писем",
+      "queuedAt": "В очереди с",
+      "sentAt": "Отправлено",
+      "errorClass": "Класс ошибки",
+      "bodyTitle": "Содержание письма",
+      "bodyHidden": "Содержание письма доступно только аналитику, администратору и владельцу.",
+      "eventsTitle": "История статусов"
+    },
     "dashboard": "Дашборд",
     "articles": "Статьи",
     "tags": {
@@ -466,7 +520,50 @@
     "endsAtHint": "(обязательно для ручной выдачи)",
     "userHandleLabel": "Хэндл пользователя",
     "reasonPlaceholder": "Укажите причину выдачи",
-    "revokeReasonPlaceholder": "Причина отзыва"
+    "revokeReasonPlaceholder": "Причина отзыва",
+    "audit": {
+      "eyebrow": "Служебный журнал",
+      "title": "Аудит",
+      "description": "Неизменяемый журнал произошедших действий: кто, когда и что изменил.",
+      "scopeFull": "Полный журнал по всем зонам",
+      "scope": {
+        "editorial": "Редакционные статьи",
+        "moderation": "Решения по материалам и AI",
+        "financeAndPd": "Финансы, чтения ПДн и AI-метрики",
+        "own": "Записи своей зоны"
+      },
+      "refresh": "Обновить",
+      "export": "Экспорт CSV",
+      "zone": "Зона",
+      "allZones": "Все зоны",
+      "action": "Код действия",
+      "allActions": "Все коды",
+      "actor": "Актор",
+      "allActors": "Все акторы",
+      "systemOnly": "Только автоматические записи",
+      "systemActor": "Система",
+      "period": "Период",
+      "periodHint": "7d, 30d, 90d или 2026-09-01..2026-09-20",
+      "entity": "Сущность",
+      "entityTypeHint": "user, article, payment…",
+      "entityId": "Идентификатор сущности",
+      "subject": "Субъект",
+      "context": "Контекст",
+      "purpose": "Цель",
+      "diff": "Поля до и после",
+      "recordedAt": "Когда записано",
+      "apply": "Применить",
+      "reset": "Сбросить",
+      "summaryTotal": "Записей по фильтру: {total}",
+      "rateLimited": "Экспорт чаще лимита. Повторите через {retryAfter} с.",
+      "exported": "Файл {filename} готов: {rows} записей.",
+      "error": "Не удалось загрузить журнал.",
+      "empty": "За период действий не было",
+      "more": "Показать ещё",
+      "exportConfirmTitle": "Экспорт журнала",
+      "exportConfirmText": "Файл содержит сведения о персональных данных. Персональные поля в выгрузку не попадают: только время, код, роль актора, тип сущности и requestId.",
+      "exportConfirmAction": "Выгрузить"
+    }
   },
   "language": {
     "switchTo": "Switch language to {language}"

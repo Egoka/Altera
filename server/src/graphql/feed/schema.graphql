@@ -1,0 +1,64 @@
+# Подборки публичных страниц. Первый этап описывает только главную
+# (`docs/spec/20-public/home.md`, `docs/spec/60-ranking/home-sections.md`); ленты рубрики,
+# тега и автора получат свои значения `FeedScope` в своих задачах.
+enum FeedScope {
+  home
+}
+
+# Ключи подборок главной в фиксированном порядке отбора (журнал §22.4).
+enum FeedSectionKey {
+  top
+  new
+  popular
+}
+
+# Словесный принцип подборки: сервер отдаёт ключ, текст подписи берётся из словаря локали
+# (`home-sections.md` §7). На первом этапе и топ, и «Новое» упорядочены по дате публикации
+# (журнал §20.4, `home.md` §6); подписи «по рейтингу за сутки» и «популярное за неделю»
+# появятся вместе со своими подборками на втором этапе.
+enum FeedCaption {
+  by_publication_date
+}
+
+# Уровень автора для бейджа; чисел рейтинга публичные типы не содержат (журнал §21.18).
+enum AuthorGrade {
+  standard
+  pro
+}
+
+type FeedAuthor {
+  name: String!
+  handle: String!
+  grade: AuthorGrade!
+}
+
+type FeedItem {
+  id: ID!
+  slug: String!
+  sectionSlug: String!
+  # Название рубрики в локали запроса: служебная строка карточки выводит слово, а не слаг.
+  sectionName: String!
+  title: String!
+  dek: String
+  cover: String
+  author: FeedAuthor!
+  publishedAt: String
+  isTranslation: Boolean!
+}
+
+type FeedSection {
+  key: FeedSectionKey!
+  caption: FeedCaption!
+  items: [FeedItem!]!
+}
+
+type Feed {
+  scope: FeedScope!
+  locale: Locale!
+  # Только непустые подборки в порядке отбора: пустая зона на странице не показывается.
+  sections: [FeedSection!]!
+}
+
+extend type Query {
+  feed(scope: FeedScope! = home, locale: Locale!): Feed!
+}
