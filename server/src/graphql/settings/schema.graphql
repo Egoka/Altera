@@ -1,0 +1,34 @@
+enum SystemSettingsGroup {
+  ai
+  payments
+  mail
+  storage
+  domains
+  limits
+}
+
+enum SystemSettingSource {
+  ENV
+  CODE
+}
+
+"Значение секрета не возвращается никогда: только факт наличия и маска."
+type SystemSetting {
+  key: String!
+  source: SystemSettingSource!
+  secret: Boolean!
+  configured: Boolean!
+  value: String
+  mask: String
+}
+
+type SystemSettings {
+  group: SystemSettingsGroup!
+  adapter: String
+  canChange: Boolean!
+  settings: [SystemSetting!]!
+}
+
+extend type Query {
+  systemSettings(group: SystemSettingsGroup!): SystemSettings!
+}

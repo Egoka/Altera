@@ -1,7 +1,9 @@
 # Срез реальности: что в Altera существует на самом деле
 
+> **Актуальный срез — ревизия 3 (2026-09-20, коммит `4ea27a6`).** Добавлен раздел «Срез 2» в конце документа; он фиксирует изменения после эпиков E-01–E-05. Срез 1 (2026-09-05, коммит `8cb987c`) сохранён как исторический. Предупреждение «Расхождения с журналом решений Г1–Г9» остаётся для среза 1 ниже.
+>
 > **Расхождения с журналом решений Г1–Г9 (2026-09-08/09).** Документ стоит на ревизии 2 (2026-09-06) и не синхронизирован с рабочим журналом `docs/decisions/role-review-working-log-2026-09-08.md`; при расхождении главнее журнал и действующие спецификации `docs/spec/`. Полная ревизия — задача T-109 (`docs/backlog/`); номера строк ниже — по тексту ревизии 2 до этой врезки. Не действуют:
-- срез от 2026-09-05 (коммит `8cb987c`); обновление — задача T-111 после эпиков E-01–E-05.
+- срез от 2026-09-05 (коммит `8cb987c`); обновление выполнено в T-111 (срез 2, 2026-09-20).
 
 
 - **Коммит**: `8cb987c` (ветка `server/api`), дата среза 2026-09-05.
@@ -481,3 +483,143 @@ magic link в логе, отсутствие rate limit, отсутствие т
   `settings.json` объявляет `api: RESTful`, `rules` — GraphQL: файлы противоречат друг другу и
   коду. `.qoder/` — пустая папка `quests/`. Упоминаний The Atlantic в них нет; «вдохновлена
   The Atlantic» — комментарий в `main.css:286` и записи в `docs/status/*`.
+
+---
+
+## Срез 2: состояние после эпиков E-01–E-05
+
+- **Коммит**: `4ea27a6` (ветка `app`), дата среза 2026-09-20.
+- **Назначение**: зафиксировать изменения, внесённые эпиками E-01–E-05, как основание
+  для дальнейшей разработки. Срез 1 (§0–§10) сохранён как исторический.
+- **Пометки**: `[ФАКТ: файл:строка]` — проверено чтением кода или командой.
+
+---
+
+### С2.1. Инженерная база (E-01)
+
+- **Тесты есть**: `find server -name "*.test.ts"` — 50 файлов в `server/tests/`; `find web -name
+  "*.test.ts" -o -name "*.spec.ts"` — 48 файлов. `pnpm test` запускает реальные тесты
+  [ФАКТ: `server/package.json:18`, `web/package.json:12`].
+- **CI честный**: `pull_request.yml` использует `node-version-file: ".nvmrc"` (Node 24.12.0) и
+  `pnpm/action-setup@v4` (версия из `packageManager` корневого `package.json`) [ФАКТ:
+  `.github/workflows/pull_request.yml:24,28`]; `timeout 2s pnpm start || true` удалён;
+  CI ловит реальные падения [ФАКТ: `.github/workflows/pull_request.yml:36-41`].
+- **GraphQL codegen** в CI: шаг `pnpm codegen --check` завершается с ошибкой при расхождении
+  схемы и сгенерированных типов [ФАКТ: `.github/workflows/pull_request.yml:34-35`].
+- **`docker-compose.yml`** с PostgreSQL 16, Redis 7, Mailpit; порты 25432/26379/21025/28025
+  (не конфликтуют со стандартными) [ФАКТ: `docker-compose.yml:11-30`].
+- **Сид-скрипт существует**: `server/seed/seed.ts` есть [ФАКТ: `server/seed/seed.ts`];
+  скрипты в `server/package.json` ссылаются на него правильно [ФАКТ: `server/package.json:16,23`].
+- **Мёртвые демо-страницы удалены**: `components-showcase`, `fonts-showcase`, `test-error` больше
+  не существуют в `web/app/pages/`; middleware `dev-only-routes.global.ts` отдаёт 404 при запросе
+  этих путей вне dev-режима [ФАКТ: `web/app/middleware/dev-only-routes.global.ts:1`].
+- **`process.client` не используется**: 0 вхождений в `web/app/`; везде `import.meta.client`
+  [ФАКТ: `web/app/composables/useBreakpoint.ts:57`, поиск по дереву].
+
+### С2.2. Схема данных (E-03)
+
+- Схема: **30 моделей, 13 enum** против исходных 5 моделей и 3 enum
+  [ФАКТ: `server/prisma/schema.prisma:1-826`].
+- **Роль**: теперь 7 значений — `reader`, `author`, `editor`, `moderator`, `analyst`, `admin`,
+  `owner` [ФАКТ: `server/prisma/schema.prisma:674-682`]. Добавлена в миграции
+  `20260915090000_role_add_moderator_analyst_owner`.
+- **Пользователь**: поле `handle` (уникальное) вместо `slug` из e-mail; `HandleHistory` —
+  append-only реестр [ФАКТ: `server/prisma/schema.prisma:19,64-75`]. Коллизии домена
+  e-mail больше не вызывают необработанную ошибку Prisma.
+- **Сессии**: модель `Session` с хэшем токена `tokenHash`; magic-link токены хранятся как
+  `tokenHash`, не в открытом виде [ФАКТ: `server/prisma/schema.prisma:87-112`].
+- **Таксономия**: модели `Section`, `SectionSlugHistory`, `Format`, `Tag`, `TagSlugHistory`
+  с историей слагов и признаком архива [ФАКТ: `server/prisma/schema.prisma:117-221`].
+- **Материал**: `ArticleTranslation`, `ArticleRevision` — языковые версии и ревизии вместо
+  единого строкового поля `body` [ФАКТ: `server/prisma/schema.prisma:472,505`].
+- **Медиа**: модель `MediaAsset` с вариантами, лицензией, статусом обработки
+  [ФАКТ: `server/prisma/schema.prisma:530-563`].
+- **Аудит и переписка**: `AuditLog` (неизменяемый), `ReviewMessage`, `ReviewNote`
+  [ФАКТ: `server/prisma/schema.prisma:565,585,604`].
+- **Закладки и гранты**: `Bookmark`, `PlanGrant` [ФАКТ: `server/prisma/schema.prisma:620,634`].
+- **Исключения прав**: `PermissionException` [ФАКТ: `server/prisma/schema.prisma:651`].
+- **Инфраструктура**: `Job`, `JobAttempt`, `AiProcess`, `AiCostAggregate`, `MailMessage`,
+  `MailDeliveryEvent`, `BackendError`, `BackendErrorStatusHistory`, `LegalText`,
+  `UserLegalConsent` [ФАКТ: `server/prisma/schema.prisma:263-469`].
+- Миграций стало 16: 4 исходных + 12 добавленных в 2026-09
+  [ФАКТ: `ls server/prisma/migrations/`].
+
+### С2.3. API (E-02, E-05)
+
+- **Веб подключён к API**: BFF-прокси `POST /api/graphql` в
+  `web/server/api/graphql.post.ts`; адрес API в `runtimeConfig.graphqlApiUrl`
+  [ФАКТ: `web/server/api/graphql.post.ts:1-23`, `web/nuxt.config.ts:29-30`].
+  Composable `useGraphQL` использует `useRequestFetch` для SSR-совместимости
+  [ФАКТ: `web/app/composables/useGraphQL.ts:1-16`].
+- **Операции фронта** перенесены в `.graphql` файлы:
+  `web/app/graphql/operations/` — 14 файлов; типизированный кодоген в
+  `web/app/graphql/generated/` [ФАКТ: `find web/app/graphql/operations -name "*.graphql"`].
+- **E-mail убран из публичного типа**: публичный `type User` не содержит поля `email`
+  [ФАКТ: `server/src/graphql/user/schema.graphql:23-36`]; `email` доступен только
+  в `type AccountUser` (для аутентифицированного `/me`)
+  [ФАКТ: `server/src/graphql/user/schema.graphql:38-68`].
+- **Черновики и архив защищены** (T-027): публичные резолверы используют модуль
+  `server/src/visibility/article.ts`; состояния `visible`, `not_found`, `archived`
+  [ФАКТ: `server/src/visibility/article.ts:4,83-86`]; возвращает `ARCHIVED` при ранее
+  опубликованном адресе (HTTP 410) [ФАКТ: `server/src/visibility/article.ts:106`].
+- **Матрица прав**: `DEFAULT_ROLE_PERMISSIONS` в `server/src/exceptions/permissions.ts`
+  с 18 кодами прав и их носителями; `editor`/`moderator`/`analyst` имеют конкретные
+  права [ФАКТ: `server/src/exceptions/permissions.ts:5-75`].
+- **Исключения прав**: `grantPermissionException`/`revokePermissionException` —
+  временные гранты и блокировки для конкретного пользователя
+  [ФАКТ: `server/src/graphql/permission-exception/resolver.ts:1-30`].
+
+### С2.4. Кеш и Redis (E-01/T-006)
+
+- **Tag-based invalidation**: инвалидация через Lua-скрипты (`DELETE_BY_TAGS_LUA`,
+  `DELETE_DATA_KEY_LUA`), не через `KEYS pattern`
+  [ФАКТ: `server/src/cache/redis.ts:22-57`].
+- **NoopCache**: при недоступном Redis сервер деградирует без кеша (возвращает `null`
+  на каждый `get`), а не зависает в очереди
+  [ФАКТ: `server/src/cache/noop.ts:1-38`].
+- Ключи кеша включают все параметры запроса через стабильный хэш
+  [ФАКТ: `server/src/cache/key.ts`].
+
+### С2.5. Наблюдаемость и почта (E-01/T-086, E-04/T-021)
+
+- **Структурированный логгер** (pino): `createAppLogger` в
+  `server/src/observability/logger.ts:50`; все резолверы используют `ctx.logger`
+  [ФАКТ: `server/src/server.ts:13,24`]; 0 вхождений `console.log` в
+  `server/src/graphql/` (не считая generated/).
+- **Словарь ошибок**: `ERROR_DEFINITIONS` в `server/src/errors/dictionary.ts`;
+  типизированные коды и поля ответа [ФАКТ: `server/src/errors/graphql-error.ts:5`].
+- **Health-check** `/health`: проверяет postgres, migrations, redis, возвращает
+  `RENDER_GIT_COMMIT` [ФАКТ: `server/src/health.ts:53-131`].
+- **Модуль почты**: транспорты `smtp`, `console`, `fake`, `unconfigured`
+  в `server/src/mail/transports/`; magic-link отправляется через `mail.send()`
+  [ФАКТ: `server/src/graphql/auth/resolver.ts:70-77`]; поле `console.log` для
+  ссылки удалено [ФАКТ: `server/src/graphql/auth/resolver.ts:1-100`].
+
+### С2.6. Веб: что изменилось
+
+- **Admin middleware функционален**: `web/app/middleware/admin.ts` делает реальный
+  GraphQL-запрос через `useAdminDashboard` и перенаправляет на `/login` при отсутствии прав
+  [ФАКТ: `web/app/middleware/admin.ts:2-22`, `web/app/utils/admin.ts:103`].
+- **Новые admin-страницы**: sections, categories, grants, subscriptions
+  [ФАКТ: `web/app/pages/admin/sections/index.vue`, `web/app/pages/admin/categories/index.vue`,
+  `web/app/pages/admin/grants/index.vue`, `web/app/pages/admin/subscriptions/index.vue`].
+- **Admin dashboard** использует `useAdminDashboard` с реальным GraphQL-запросом
+  [ФАКТ: `web/app/composables/useAdminDashboard.ts:5,14`].
+
+### С2.7. Что остаётся не реализованным
+
+- **`auth.global.ts` middleware** — тело закомментировано; сессионная защита маршрутов
+  не работает [ФАКТ: `web/app/middleware/auth.global.ts:1-13`].
+- **Страниц `/login` и `/auth/verify` нет**: ссылки на них есть в коде
+  [ФАКТ: `web/app/middleware/admin.ts:102`, `web/app/components/app/header.vue:72`],
+  но файлов страниц нет (T-022 не завершена).
+- **`/me` — заглушки**: `web/app/pages/me/index.vue` выводит `<div>/me</div>`
+  [ФАКТ: `web/app/pages/me/index.vue:10`]; T-023/T-025 не завершены.
+- **`error-t.vue`** не переименован в `error.vue` — Nuxt не использует
+  [ФАКТ: `web/app/error-t.vue`].
+- **i18n**: конфиг и словари на месте, но `$t(...)` используется только в
+  `layouts-showcase.vue` [ФАКТ: поиск по `web/app/`, 0 вне showcase].
+- **SEO meta**: `useSeoMeta` нигде не вызывается; sitemap, OG, canonical отсутствуют.
+- **Refresh/logout**: операций нет; после 15 мин. доступа клиент не может обновить
+  токен (T-023 не завершена) [ФАКТ: `server/src/graphql/auth/schema.graphql:7-10`].
+- **Rate limiting**: отсутствует (T-024 отложена до решения Q-04) [ФАКТ: `server/src/server.ts`].
