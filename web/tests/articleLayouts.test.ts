@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest"
 import {
   ARTICLE_LAYOUTS,
+  capacityOf,
   getLayout,
   mdMediaFor,
   mdSpanFor,
   validateLayout,
   validateRhythm
 } from "../app/utils/articleLayouts"
-import { DEMO_DEMANDED, DEMO_LATEST } from "../app/utils/demoFeed"
-import { DEMANDED_RHYTHM, LATEST_RHYTHM } from "../app/utils/feedRhythm"
+import { LATEST_RHYTHM } from "../app/utils/feedRhythm"
 
 // Кривая матрица ломает сетку молча: браузер отбрасывает grid-template-areas
 // целиком и без ошибки. Ритм с неверной вместимостью молча терял хвост ленты.
@@ -30,12 +30,10 @@ describe("реестр раскладок", () => {
 })
 
 describe("ритм лент стартовой страницы", () => {
-  it("«Новое» вмещает ровно свои материалы и не монотонно", () => {
-    expect(validateRhythm(LATEST_RHYTHM, DEMO_LATEST.length)).toEqual([])
-  })
+  it("круг «Нового» непротиворечив и не монотонен", () => {
+    const capacity = LATEST_RHYTHM.reduce((sum, id) => sum + capacityOf(getLayout(id)!), 0)
 
-  it("«Востребованное» вмещает ровно свои материалы и не монотонно", () => {
-    expect(validateRhythm(DEMANDED_RHYTHM, DEMO_DEMANDED.length)).toEqual([])
+    expect(validateRhythm(LATEST_RHYTHM, capacity)).toEqual([])
   })
 })
 

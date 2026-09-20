@@ -126,6 +126,15 @@ jobs:
         run: pnpm --filter nuxt-app exec playwright install --with-deps chromium
       - name: Smoke check homepage
         run: pnpm --filter nuxt-app run test:e2e
+      # Состояние страницы на момент отказа: без этого шага разбор падения идёт по одному стеку.
+      - name: Сохранить артефакты Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
 
   server-smoke:
     name: Сборка сервера и дымовая проверка старта

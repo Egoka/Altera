@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
   import type { CardMeta } from "~/types/layout"
+  import type { ReadingArticle } from "~/types/reading"
 
-  defineProps<{ article: ArticleCardFragment; scale?: "lead" | "index"; meta?: CardMeta }>()
+  defineProps<{ article: ReadingArticle; scale?: "lead" | "index"; meta?: CardMeta }>()
 </script>
 
 <template>

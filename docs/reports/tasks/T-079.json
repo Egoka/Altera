@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "task_id": "T-079",
+  "issue_id": "01a0b5cf-eab9-7219-a9a2-dd303367a12b",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-079-admin-audit-log.md",
+    "sha": "fa6b533dacb9cc55feb8046c0509e02066375547"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "69e2298a9d14b0caa73a15db34ecf5abb11594c5",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bb8b-bfbe-71d1-abbf-d81128317758",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "https://github.com/Egoka/Altera/actions/runs/35471572549 — 7 checks SUCCESS; джоб «Браузерная проверка веба» pass, 56 e2e тестов (46 passed, 10 skipped), из них 16 новых сценариев web/tests/e2e/admin-audit.spec.ts под ролями editor/moderator/analyst/admin/owner"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/admin-audit.test.ts — «просмотр аудита не аудируется»: auditLog.create не вызывается списком, карточкой и сводкой; e2e сверяет число записей журнала до и после просмотра; CI run 35471572549"
+    }
+  ],
+  "pr": {
+    "number": 157,
+    "url": "https://github.com/Egoka/Altera/pull/157",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "69e2298a9d14b0caa73a15db34ecf5abb11594c5",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Изменения в server/ (GraphQL аудита и сервис) требуют deploy evidence после merge",
+    "probe_actor_id": null,
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-079.md",
+    "sha256": "69f690c4f933d62bd1a2204ea0d590ad0101edb09eb3fbe9191567ece3d2c435"
+  },
+  "usage": null
+}

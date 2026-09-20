@@ -14,7 +14,7 @@ export {
   GetArticleForEditDocument as GET_ARTICLE_FOR_EDIT,
   GetAuthorPageDocument as GET_AUTHOR_PAGE,
   GetSectionPageDocument as GET_SECTION_PAGE,
-  GetHomePageArticlesDocument as GET_HOME_PAGE_ARTICLES,
+  GetHomeFeedDocument as GET_HOME_FEED,
   GetMyProfileDocument as GET_MY_PROFILE,
   GetNavigationDocument as GET_NAVIGATION,
   GetTagPageDocument as GET_TAG_PAGE,
