@@ -39,6 +39,122 @@ enum AdminGrantStatus {
   revoked
 }
 
+type AdminJob {
+  attemptCount: Int!
+  cancellable: Boolean!
+  cancelledAt: String
+  createdAt: String!
+  durationMs: Int
+  finishedAt: String
+  id: ID!
+  kind: String!
+  lastErrorClass: String
+  lastErrorRequestId: String
+  manualRetryAllowed: Boolean!
+  maxAttempts: Int!
+  objectId: String
+  objectType: String
+  retryable: Boolean!
+  startedAt: String
+  status: AdminJobStatus!
+}
+
+type AdminJobAction {
+  action: String!
+  actorId: ID
+  actorName: String
+  actorRole: Role
+  createdAt: String!
+  reason: String
+}
+
+type AdminJobAttempt {
+  errorClass: String
+  errorRequestId: String
+  finishedAt: String
+  number: Int!
+  startedAt: String
+  status: AdminJobStatus!
+}
+
+type AdminJobCard {
+  actions: [AdminJobAction!]!
+  attempts: [AdminJobAttempt!]!
+  job: AdminJob!
+  objectHref: String
+  parameters: [AdminJobParameter!]!
+  viewer: AdminJobViewer!
+}
+
+type AdminJobParameter {
+  key: String!
+  value: String!
+}
+
+enum AdminJobSortField {
+  attempts
+  createdAt
+  duration
+}
+
+enum AdminJobStatus {
+  cancelled
+  completed
+  failed
+  queued
+  running
+  stuck
+}
+
+type AdminJobViewer {
+  canCancel: Boolean!
+  canRetry: Boolean!
+}
+
+input AdminJobsFilterInput {
+  from: String
+  kinds: [String!]
+  objectId: String
+  statuses: [AdminJobStatus!]
+  stuckOnly: Boolean
+  to: String
+}
+
+type AdminJobsResponse {
+  appliedFrom: String!
+  appliedTo: String!
+  jobs: [AdminJob!]!
+  kinds: [String!]!
+  pagination: PaginationInfo!
+  viewer: AdminJobViewer!
+}
+
+type AdminJobsRetryResult {
+  requested: Int!
+  retried: [ID!]!
+  skipped: [ID!]!
+}
+
+input AdminJobsSortInput {
+  direction: SortDirection! = DESC
+  field: AdminJobSortField! = createdAt
+}
+
+type AdminJobsSummary {
+  depthByKind: [AdminJobsSummaryKind!]!
+  failedInPeriod: Int!
+  failureRate: Float!
+  finishedInPeriod: Int!
+  oldestPendingAgeSec: Int
+  periodFrom: String!
+  periodTo: String!
+}
+
+type AdminJobsSummaryKind {
+  depth: Int!
+  kind: String!
+}
+
 type AdminMail {
   """Сохранённая копия письма без секретов; для editor и moderator — null."""
   body: String
@@ -339,7 +455,7 @@ enum AuditZone {
 
 type AuthPayload {
   accessToken: String!
-  refreshToken: String!
+  refreshToken: String
   user: AccountUser!
 }
 
@@ -551,6 +667,7 @@ type Mutation {
   archiveTag(id: ID!): Tag!
   bulkDeleteArticles(ids: [ID!]!): [Article!]!
   bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
+  cancelJob(id: ID!, reason: String!): AdminJob!
   createArticle(input: CreateArticleInput!): Article!
   createFormat(input: CreateFormatInput!): AdminFormat!
   createSection(input: CreateSectionInput!): Section!
@@ -560,7 +677,10 @@ type Mutation {
   exportAudit(filters: AuditLogFilters): AuditExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
+  logout(refreshToken: String): Boolean!
+  logoutAll: Boolean!
   mergeTags(input: MergeTagsInput!): Tag!
+  refreshSession(refreshToken: String!): AuthPayload!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
   requestReview(id: ID!): Article!
@@ -570,6 +690,8 @@ type Mutation {
   restoreFormat(id: ID!): AdminFormat!
   restoreSection(id: ID!): Section!
   restoreTag(id: ID!): Tag!
+  retryJob(id: ID!): AdminJob!
+  retryJobs(ids: [ID!]!): AdminJobsRetryResult!
   revertToDraft(id: ID!): Article!
   revokeException(id: ID!, reason: String!): PermissionException!
   revokePlan(input: RevokePlanInput!): AdminPlanGrant!
@@ -691,6 +813,8 @@ type Query {
   _empty: String
   adminGrant(id: ID!): AdminPlanGrant
   adminGrants: [AdminPlanGrant!]!
+  adminJob(id: ID!): AdminJobCard
+  adminJobs(filters: AdminJobsFilterInput, limit: Int = 20, page: Int = 1, sort: AdminJobsSortInput): AdminJobsResponse!
   adminMail(id: ID!): AdminMail
   adminMails(filters: AdminMailFiltersInput, pagination: PaginationInput): AdminMailList!
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
@@ -710,6 +834,7 @@ type Query {
   feed(locale: Locale!, scope: FeedScope! = home): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
+  jobsSummary: AdminJobsSummary!
   legalVersions(locale: Locale!): LegalVersions!
   mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
   me: AccountUser
@@ -722,6 +847,7 @@ type Query {
   section(slug: String!): Section
   sectionStats(sectionSlug: String!): SectionStats
   sections(filters: SectionFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): SectionsResponse!
+  systemSettings(group: SystemSettingsGroup!): SystemSettings!
   tag(slug: String!): Tag
   tagAutocomplete(limit: Int = 10, q: String!): [Tag!]!
   tagStats(tagSlug: String!): TagStats
@@ -838,6 +964,37 @@ type SortInfo {
 input SortInput {
   direction: SortDirection! = ASC
   field: String!
+}
+
+"""Значение секрета не возвращается никогда: только факт наличия и маска."""
+type SystemSetting {
+  configured: Boolean!
+  key: String!
+  mask: String
+  secret: Boolean!
+  source: SystemSettingSource!
+  value: String
+}
+
+enum SystemSettingSource {
+  CODE
+  ENV
+}
+
+type SystemSettings {
+  adapter: String
+  canChange: Boolean!
+  group: SystemSettingsGroup!
+  settings: [SystemSetting!]!
+}
+
+enum SystemSettingsGroup {
+  ai
+  domains
+  limits
+  mail
+  payments
+  storage
 }
 
 type Tag {

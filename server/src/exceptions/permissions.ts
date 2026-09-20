@@ -12,6 +12,7 @@ export const PERMISSION_CODES = [
   "finance",
   "accounts",
   "ai.read",
+  "job.list",
   "job.retry",
   "job.cancel",
   "user",
@@ -60,6 +61,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<PermissionCode, readonly 
   finance: ["analyst", "admin", "owner"],
   accounts: ["admin", "owner"],
   "ai.read": ["moderator", "analyst", "admin", "owner"],
+  "job.list": ["admin", "owner"],
   "job.retry": ["owner"],
   "job.cancel": ["owner"],
   user: ["reader", "author"],
@@ -112,6 +114,27 @@ function isActiveException(
   )
 }
 
+// Раздел «нет прав на часть действий» скрывает кнопки заранее, поэтому решение нужно и без броска.
+export function hasPermission(
+  currentUser: PermissionUser | null,
+  permission: PermissionCode,
+  options: PermissionOptions = {}
+): boolean {
+  if (!currentUser || currentUser.archivedAt) return false
+
+  const hasDefaultPermission = DEFAULT_ROLE_PERMISSIONS[permission].includes(currentUser.role)
+  if (permission === "owner" || !exceptionRoles.has(currentUser.role)) return hasDefaultPermission
+
+  const now = options.now ?? new Date()
+  const exceptions = (options.exceptions ?? currentUser.permissionExceptions ?? []).filter((exception) =>
+    isActiveException(exception, currentUser, permission, now)
+  )
+  const hasGrant = exceptions.some(({ kind }) => kind === "grant")
+  const hasDeny = exceptions.some(({ kind }) => kind === "deny")
+
+  return hasGrant || (hasDefaultPermission && !hasDeny)
+}
+
 export function ensurePermission(
   currentUser: PermissionUser | null,
   permission: PermissionCode,
@@ -122,24 +145,19 @@ export function ensurePermission(
   const user = ensureAuthenticated(currentUser, requestId)
   ensureAccountActive(user, action, requestId)
 
-  const hasDefaultPermission = DEFAULT_ROLE_PERMISSIONS[permission].includes(user.role)
-  if (permission === "owner" || !exceptionRoles.has(user.role)) {
-    if (!hasDefaultPermission) {
-      throw createApiError("FORBIDDEN", { requestId, action })
-    }
-    return
-  }
-
-  const now = options.now ?? new Date()
-  const exceptions = (options.exceptions ?? user.permissionExceptions ?? []).filter((exception) =>
-    isActiveException(exception, user, permission, now)
-  )
-  const hasGrant = exceptions.some(({ kind }) => kind === "grant")
-  const hasDeny = exceptions.some(({ kind }) => kind === "deny")
-
-  if (!hasGrant && (!hasDefaultPermission || hasDeny)) {
+  if (!hasPermission(user, permission, options)) {
     throw createApiError("FORBIDDEN", { requestId, action })
   }
+}
+
+/**
+ * Активность плана для авторских действий (permission-checks.md п. 6). Бессрочная базовая выдача
+ * первого запуска представлена как `planTier = standard` с `planUntil = NULL` (plan-free.md п. 6а),
+ * поэтому отсутствие срока означает не истёкший план, а выдачу без срока.
+ */
+export function hasActiveAuthorPlan(user: Pick<PermissionUser, "planTier" | "planUntil">, now: Date): boolean {
+  if (user.planTier === "free") return false
+  return user.planUntil === null || user.planUntil > now
 }
 
 export function ensureActiveAuthor(
@@ -156,8 +174,7 @@ export function ensureActiveAuthor(
   }
 
   const now = options.now ?? new Date()
-  const hasActivePlan = user.planTier !== "free" && user.planUntil !== null && user.planUntil > now
-  if (hasActivePlan) return
+  if (hasActiveAuthorPlan(user, now)) return
 
   options.logger?.log({
     level: "warn",

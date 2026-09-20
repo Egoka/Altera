@@ -8,7 +8,9 @@ const REFRESH_MAX_AGE_SECONDS = 30 * 24 * 60 * 60
 
 interface SessionTokens {
   accessToken: string
-  refreshToken: string
+  // Через BFF refresh приходит как `null`: маршрут уже положил его в httpOnly-cookie
+  // (ADR-0023 п. 2). Значение появляется только у прямых серверных и тестовых вызовов.
+  refreshToken?: string | null
 }
 
 const cookieOptions = (maxAge: number) => ({
@@ -34,12 +36,14 @@ export const useAuthSession = () => {
     start(tokens: SessionTokens) {
       if (event) {
         setCookie(event, SESSION_ACCESS_COOKIE, tokens.accessToken, cookieOptions(ACCESS_MAX_AGE_SECONDS))
-        setCookie(event, SESSION_REFRESH_COOKIE, tokens.refreshToken, cookieOptions(REFRESH_MAX_AGE_SECONDS))
+        if (tokens.refreshToken) {
+          setCookie(event, SESSION_REFRESH_COOKIE, tokens.refreshToken, cookieOptions(REFRESH_MAX_AGE_SECONDS))
+        }
         return
       }
 
       access.value = tokens.accessToken
-      refresh.value = tokens.refreshToken
+      if (tokens.refreshToken) refresh.value = tokens.refreshToken
     }
   }
 }

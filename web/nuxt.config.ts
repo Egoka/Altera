@@ -53,7 +53,13 @@ export default defineNuxtConfig({
     "/signup": { redirect: { to: "/login", statusCode: 301 } },
     "/register": { redirect: { to: "/login", statusCode: 301 } },
     "/en/signup": { redirect: { to: "/en/login", statusCode: 301 } },
-    "/en/register": { redirect: { to: "/en/login", statusCode: 301 } }
+    "/en/register": { redirect: { to: "/en/login", statusCode: 301 } },
+    // Старые адреса подписки ведут на единственную страницу планов
+    // (`docs/spec/20-public/pricing.md` §3, помечено там как `[ДОПУЩЕНИЕ]`).
+    "/plans": { redirect: { to: "/pricing", statusCode: 301 } },
+    "/subscribe": { redirect: { to: "/pricing", statusCode: 301 } },
+    "/en/plans": { redirect: { to: "/en/pricing", statusCode: 301 } },
+    "/en/subscribe": { redirect: { to: "/en/pricing", statusCode: 301 } }
   },
 
   hooks: {

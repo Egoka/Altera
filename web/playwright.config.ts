@@ -30,7 +30,6 @@ export default defineConfig({
         DATABASE_URL_UNPOOLED: databaseUrl,
         FRONTEND_URL: `http://127.0.0.1:${port}`,
         JWT_ACCESS_SECRET: "t009-test-access-secret",
-        JWT_REFRESH_SECRET: "t009-test-refresh-secret",
         LOG_HASH_SECRET: "t053-test-log-hash-secret",
         MAGIC_LINK_BASE_URL: `http://127.0.0.1:${port}/auth/verify`,
         MAIL_TRANSPORT: "smtp",

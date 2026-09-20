@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task_id": "T-082",
+  "issue_id": "01a0b5b1-36e8-7616-8ee0-d40000182250",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-082-admin-system-settings.md",
+    "sha": "57ca237ccd54591b0f886140a98ccbc193774dcb"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "59bbc4303b11242df37f56e2aa316b739ca4c444",
+  "branch": "web/t082-admin-settings",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t082-settings",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bb6b-18dd-75c9-98b6-ced07bc1d1c0",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/admin-system-settings.test.ts asserts the full Yoga HTTP body for all six groups contains no secret values; removing the secret flag from SMTP_PASSWORD fails 2 tests; Playwright also checks /api/graphql and page HTML."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/e2e/admin-settings.spec.ts passed in CI run 35468766593: loading skeleton, read-only env note, error with requestId and retry, admin/owner permission notes, editor 403, guest 302. Conflict and limit rows are not applicable before stage 4 (no mutations)."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 275 passed / 24 skipped; web 196 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed in CI",
+    "playwright": "CI browser job 37 passed / 10 skipped (app baseline 30 / 10); not run locally: no Docker/PostgreSQL",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35468766593",
+    "preflight": "passed on 59bbc43",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 156,
+    "url": "https://github.com/Egoka/Altera/pull/156",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "59bbc4303b11242df37f56e2aa316b739ca4c444",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "New server GraphQL query and web page require controller-managed development deployment and health verification after independent review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-082.md",
+    "sha256": "bcd5aafe8534a6ede0fde6fc21a95ca53499361c1ca48871ef3851e921887b54"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA and controller-managed development deployment/health verification are pending",
+    "Stage 4 changeSetting/rotateSecret with settings.change/secrets.rotate audit is out of scope per spec §1, §9 and log #36"
+  ],
+  "usage": null
+}

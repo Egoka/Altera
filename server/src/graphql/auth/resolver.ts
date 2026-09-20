@@ -1,15 +1,29 @@
 import { addMinutes } from "date-fns"
 import crypto from "crypto"
+import jwt from "jsonwebtoken"
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
-import { issueSession } from "../../auth/session"
+import {
+  findSessionByRefreshToken,
+  revokeAllSessions,
+  revokeSession,
+  rotateSession,
+  startSession,
+  type SessionClient
+} from "../../auth/session"
 import { sanitizeNextPath } from "../../auth/next-path"
 import { findOutdatedConsent, readLegalVersions, recordConsent, type LegalVersions } from "../../auth/legal"
 import { createMagicLinkMail, MAGIC_LINK_TEMPLATE } from "../../mail/messages"
 import type { Locale, MagicLinkToken, User } from "../../generated/prisma"
 
+if (!process.env.JWT_ACCESS_SECRET) {
+  throw new Error("JWT secrets must be defined in environment variables.")
+}
+
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
+const JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || "15m"
 const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
 const MAGIC_LINK_BASE_URL = process.env.MAGIC_LINK_BASE_URL || "http://localhost:3000/auth/verify"
 
@@ -19,6 +33,12 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/
 interface ConsentVersionsInput {
   termsVersion?: number | null
   privacyVersion?: number | null
+}
+
+interface SessionPayload {
+  accessToken: string
+  refreshToken: string
+  user: User
 }
 
 const buildMagicLinkUrl = (token: string): string => {
@@ -32,9 +52,30 @@ const normalizeEmail = (email: string): string => email.trim().toLowerCase()
 const sameVersion = (accepted: number | null | undefined, current: number | null): boolean =>
   current === null ? accepted === null || accepted === undefined : accepted === current
 
+// Роль в клейм не попадает: она читается из базы на каждый запрос (ADR-0003 п. 4, ADR-0009 п. 6).
+const issueAccessToken = (userId: string, sessionId: string): string =>
+  (jwt as any).sign({ userId, sid: sessionId }, JWT_ACCESS_SECRET, { expiresIn: JWT_ACCESS_TOKEN_EXPIRY })
+
+const sessionClient = (ctx: GraphQLContext): SessionClient => ctx.prisma as unknown as SessionClient
+
+/**
+ * Сессия выдаётся хранилищем T-023: непрозрачный refresh-токен с ротацией и обнаружением
+ * повторного предъявления (ADR-0009 п. 3, `session-lifecycle.md` §2.4–2.5). Контракт входа
+ * остаётся контрактом T-022, поэтому ветки подтверждения ссылки получают ту же полезную нагрузку.
+ */
+async function issueSession(ctx: GraphQLContext, user: User, options: { limited?: boolean } = {}) {
+  // Метаданные запроса приходят от BFF; серверные и тестовые вызовы могут их не передавать.
+  const meta = ctx.requestMeta ?? { userAgent: null, ip: null }
+  const { session, refreshToken } = await startSession(sessionClient(ctx), user.id, meta, new Date(), {
+    limited: options.limited ?? false
+  })
+
+  return { accessToken: issueAccessToken(user.id, session.id), refreshToken, user, sessionId: session.id }
+}
+
 interface VerifyMagicLinkResult {
   outcome: "authenticated" | "consent_required" | "archived_self" | "archived_admin"
-  session: Awaited<ReturnType<typeof issueSession>> | null
+  session: SessionPayload | null
   next: string | null
   isNewAccount: boolean
   termsVersion: number | null
@@ -75,14 +116,14 @@ async function completeLogin(
   const { prisma, logger, piiHasher, requestId } = ctx
 
   await prisma.magicLinkToken.update({ where: { id: record.id }, data: { usedAt: new Date() } })
-  const session = await issueSession(prisma, user)
+  const { sessionId, ...session } = await issueSession(ctx, user)
 
   logger.log({
     level: "info",
     event: "auth.login",
     requestId,
     message: "Login completed",
-    data: { emailHash: piiHasher.email(user.email), isNewAccount: options.isNewAccount }
+    data: { emailHash: piiHasher.email(user.email), isNewAccount: options.isNewAccount, sessionId }
   })
 
   return {
@@ -221,14 +262,14 @@ export default {
         if (user.archiveMode === "self") {
           // Ограниченная сессия: доступен только экран состояния (`session-lifecycle.md` п. 7).
           await prisma.magicLinkToken.update({ where: { id: record.id }, data: { usedAt: new Date() } })
-          const session = await issueSession(prisma, user, { limited: true })
+          const { sessionId, ...session } = await issueSession(ctx, user, { limited: true })
 
           logger.log({
             level: "info",
             event: "auth.login",
             requestId,
             message: "Limited login into self-archived account",
-            data: { emailHash: piiHasher.email(user.email), reason: "archived_self" }
+            data: { emailHash: piiHasher.email(user.email), reason: "archived_self", sessionId }
           })
 
           return {
@@ -311,6 +352,97 @@ export default {
       })
 
       return completeLogin(ctx, record, user, { isNewAccount: false })
+    },
+
+    refreshSession: async (_: unknown, { refreshToken }: { refreshToken: string }, ctx: GraphQLContext) => {
+      const { prisma, logger, requestId, requestMeta } = ctx
+      const outcome = await rotateSession(sessionClient(ctx), refreshToken, requestMeta)
+
+      if (outcome.status === "reuse_detected") {
+        // Предъявлен уже ротированный токен: это кража, а не гонка обновления (ADR-0009 п. 3).
+        logger.log({
+          level: "warn",
+          event: "session.reuse_detected",
+          requestId,
+          message: "Rotated refresh token presented again",
+          data: { userId: outcome.userId, sessionId: outcome.sessionId, revokedCount: outcome.revokedCount }
+        })
+        logger.log({
+          level: "warn",
+          event: "session.revoked",
+          requestId,
+          message: "All user sessions revoked after refresh token reuse",
+          data: { userId: outcome.userId, reason: "reuse_detected", revokedCount: outcome.revokedCount }
+        })
+        throw createApiError("UNAUTHENTICATED", { requestId })
+      }
+
+      if (outcome.status !== "rotated") {
+        throw createApiError("UNAUTHENTICATED", { requestId })
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: outcome.session.userId } })
+      if (!user) {
+        throw createApiError("UNAUTHENTICATED", { requestId })
+      }
+
+      logger.log({
+        level: "info",
+        event: "session.refresh",
+        requestId,
+        message: "Session refreshed",
+        data: { userId: user.id, sessionId: outcome.session.id }
+      })
+
+      return {
+        accessToken: issueAccessToken(user.id, outcome.session.id),
+        refreshToken: outcome.refreshToken,
+        user
+      }
+    },
+
+    logout: async (_: unknown, { refreshToken }: { refreshToken?: string | null }, ctx: GraphQLContext) => {
+      const { logger, requestId, sessionId, currentUser } = ctx
+      const client = sessionClient(ctx)
+      const session = sessionId
+        ? { id: sessionId, userId: currentUser?.id ?? null }
+        : refreshToken
+          ? await findSessionByRefreshToken(client, refreshToken)
+          : null
+
+      if (!session) {
+        throw createApiError("UNAUTHENTICATED", { requestId })
+      }
+
+      const revokedCount = await revokeSession(client, session.id)
+      logger.log({
+        level: "info",
+        event: "session.revoked",
+        requestId,
+        message: "Session revoked on logout",
+        data: { userId: session.userId, sessionId: session.id, reason: "logout", revokedCount }
+      })
+
+      return true
+    },
+
+    logoutAll: async (_: unknown, __: unknown, ctx: GraphQLContext) => {
+      const { logger, requestId, currentUser } = ctx
+      if (!currentUser) {
+        throw createApiError("UNAUTHENTICATED", { requestId })
+      }
+
+      // Текущая сессия тоже отзывается: после `logoutAll` активных сессий не остаётся (ADR-0009 п. 4).
+      const revokedCount = await revokeAllSessions(sessionClient(ctx), currentUser.id)
+      logger.log({
+        level: "info",
+        event: "session.revoked",
+        requestId,
+        message: "All user sessions revoked",
+        data: { userId: currentUser.id, reason: "logout_all", revokedCount }
+      })
+
+      return true
     }
   }
 }

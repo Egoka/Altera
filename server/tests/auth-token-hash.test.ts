@@ -5,7 +5,6 @@ let authMutations: typeof import("../src/graphql/auth/resolver").default.Mutatio
 
 beforeAll(async () => {
   vi.stubEnv("JWT_ACCESS_SECRET", "test-access-secret")
-  vi.stubEnv("JWT_REFRESH_SECRET", "test-refresh-secret")
   ;({ Mutation: authMutations } = (await import("../src/graphql/auth/resolver")).default)
 })
 
