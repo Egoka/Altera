@@ -87,6 +87,10 @@ async function mockAdminGrants(page: Page, onGrant?: (input: Record<string, unkn
 
 async function navigateToAdminPage(page: Page, path: "/admin/grants" | "/admin/subscriptions") {
   await page.goto("/")
+  // Переход подменой истории выполняется только после гидратации: на гидратации Nuxt
+  // заменяет адрес на тот, что отрисовал сервер, и `pushState`, случившийся раньше,
+  // молча откатывался к «/». Гидратация закончилась, когда запросы страницы утихли.
+  await page.waitForLoadState("networkidle")
   const grantsResponse = page.waitForResponse(
     (response) =>
       response.url().includes("/api/graphql") && response.request().postData()?.includes("GetAdminGrants") === true

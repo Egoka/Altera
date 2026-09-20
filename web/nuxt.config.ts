@@ -48,6 +48,9 @@ export default defineNuxtConfig({
 
   routeRules: {
     "/ru": { redirect: { to: "/", statusCode: 301 } },
+    // Каталог рубрик переехал с `/types` на `/sections` (`sections-index.md` §3).
+    "/types": { redirect: { to: "/sections", statusCode: 301 } },
+    "/en/types": { redirect: { to: "/en/sections", statusCode: 301 } },
     // Старые адреса подписки ведут на единственную страницу планов
     // (`docs/spec/20-public/pricing.md` §3, помечено там как `[ДОПУЩЕНИЕ]`).
     "/plans": { redirect: { to: "/pricing", statusCode: 301 } },

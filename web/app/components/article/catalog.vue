@@ -1,6 +1,6 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
   import type { CardMeta } from "~/types/layout"
+  import type { ReadingArticle } from "~/types/reading"
 
   /**
    * Ровный каталог материалов: сеточный двойник `ArticleGroup`. Тот рисует
@@ -16,7 +16,7 @@
    * консоль полнилась предупреждениями о гидрации.
    */
   defineProps<{
-    articles: ArticleCardFragment[]
+    articles: ReadingArticle[]
     /** Служебная строка карточки: части по порядку, по умолчанию автор · рубрика. */
     meta?: CardMeta
   }>()

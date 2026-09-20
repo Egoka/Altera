@@ -1,74 +1,95 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment, TagSummaryFragment } from "~/graphql/generated/graphql"
-  import { GetTagRedirectDocument } from "~/graphql/generated/graphql"
-  import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
-  import { findDemoTag } from "~/utils/demoTags"
+  import { GET_TAG_FEED } from "~/query"
+  import { toReadingArticle } from "~/utils/homeFeed"
+  import {
+    errorRequestId,
+    pageParam,
+    requestLocale,
+    rethrowNotFound,
+    throwOnFeedError,
+    withQuery
+  } from "~/utils/publicFeed"
 
-  definePageMeta({
-    layout: "default"
-  })
+  /**
+   * Лента тега (`docs/spec/20-public/tag-feed.md`): ровный каталог равных карточек.
+   * Тег сводит материалы разных рубрик, и между собой они равны, поэтому иерархии в
+   * сетке нет, а служебная строка называет автора и рубрику.
+   *
+   * Панель ленты и «похожие теги» владелец оставил на отдельные заходы (§12), поэтому
+   * страница ограничивается шапкой, каталогом и пагинацией.
+   */
+  definePageMeta({ layout: "default" })
 
   const route = useRoute()
+  const { locale, t } = useI18n()
 
-  /**
-   * Слияние тегов необратимо архивирует источники и указывает цель: адрес источника
-   * отвечает 301 на слаг цели (`40-admin/tags.md` §5, ADR-0004). Слаг остаётся занят
-   * навсегда (журнал §26.10), поэтому перенаправление строится по самому тегу.
-   */
-  const requestedSlug = String(route.params.slug ?? "")
-  const redirectResult = await useGraphQL(GetTagRedirectDocument, { slug: requestedSlug })
-  const redirectTag = redirectResult.data?.tag
-  const successorSlug = redirectTag?.mergedInto?.slug
+  const slug = computed(() => String(route.params.slug ?? ""))
+  const page = computed(() => pageParam(route.query.page))
 
-  if (redirectTag?.status === "archived" && successorSlug) {
-    await navigateTo(`/tags/${successorSlug}`, { redirectCode: 301, replace: true })
-  }
+  const {
+    data: feed,
+    error,
+    status
+  } = await useAsyncData(
+    () => `tag-feed:${locale.value}:${slug.value}:${page.value}`,
+    async () =>
+      throwOnFeedError(
+        await useGraphQL(GET_TAG_FEED, {
+          locale: requestLocale(locale.value),
+          slug: slug.value,
+          page: page.value
+        })
+      ).feed,
+    { watch: [locale, slug, page] }
+  )
 
-  /**
-   * Тег берётся из маршрута по демо-справочнику: раньше страница любого слага
-   * показывала «Технологии» из собственного мока, и `/tags/economics` врал в
-   * заголовке. Описания у тега нет по ADR-0005, поэтому поле не заполняется.
-   */
-  const tag = computed<TagSummaryFragment>(() => {
-    const demo = findDemoTag(String(route.params.slug ?? ""))
-    return {
-      id: demo.slug,
-      name: demo.name,
-      slug: demo.slug,
-      description: null,
-      createdAt: "2025-01-01T00:00:00Z",
-      updatedAt: "2025-01-01T00:00:00Z"
-    }
-  })
+  /** Слитый тег и прежний слаг ведут на целевой тег (ADR-0004, `admin-sections.md` #3). */
+  // Неизвестный и архивированный тег — 404 страницы #21 (`tag-feed.md` §8).
+  rethrowNotFound(error.value)
 
-  /**
-   * Демо-лента тега: одна страница из 24 материалов главной. Даты детерминированы —
-   * по дню назад от фиксированной точки, чтобы лента по новизне выглядела одинаково
-   * при каждом запуске. Рубрика материалов не подменяется одной на всю страницу: под
-   * тегом лежат материалы разных рубрик, и именно это делает кикер рубрики на
-   * карточке осмысленным (`tag-feed.md` §4).
-   */
-  const PAGE_SIZE = 24
-  const firstDay = Date.UTC(2026, 8, 13, 12)
-  const articles: ArticleCardFragment[] = [...DEMO_LATEST, ...DEMO_DEMANDED]
-    .slice(0, PAGE_SIZE)
-    .map((article, index) => ({
-      ...article,
-      id: `tag-${index + 1}`,
-      publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString()
-    }))
+  const followRedirect = (value: typeof feed.value) =>
+    value?.redirect ? navigateTo(`/tags/${value.redirect.slug}`, { redirectCode: 301, replace: true }) : undefined
+
+  // На сервере переход выполняется до рендера — ответом становится сам 301.
+  await followRedirect(feed.value)
+  watch(feed, followRedirect)
+
+  const tag = computed(() => feed.value?.tag ?? null)
+  const articles = computed(() => (feed.value?.items ?? []).map(toReadingArticle))
+  const pageInfo = computed(() => feed.value?.pageInfo ?? null)
+  const requestId = computed(() => errorRequestId(error.value))
+
+  useHead(() => ({ title: tag.value?.name }))
 </script>
 
 <template>
-  <div>
+  <ReadingErrorState v-if="error" :request-id="requestId" />
+
+  <div v-else-if="tag">
     <HeaderTag :tag="tag" />
-    <!-- Лента тега — ровный каталог: тег сводит материалы разных рубрик, между собой
-         они равны, поэтому иерархии в сетке нет. Служебная строка показывает автора и
-         рубрику: сам тег назван в шапке. -->
-    <section class="pt-12 pb-16">
+
+    <ReadingLoadingSkeleton v-if="status === 'pending'" :cards="6" class="py-12" />
+
+    <section v-else-if="articles.length" class="pt-12 pb-4">
       <ArticleCatalog :articles="articles" :meta="['author', 'type']" />
     </section>
-  </div>
-</template>
 
-<style scoped></style>
+    <!-- Пусто в локали: материалы другого языка не подмешиваются (журнал §20.5). -->
+    <ReadingEmptyState
+      v-else
+      class="my-12"
+      :title="t('tagFeed.emptyTitle')"
+      :description="t('tagFeed.emptyDescription')"
+      :action-label="t('tagFeed.emptyAction')"
+      action-to="/tags" />
+
+    <ReadingPagination
+      v-if="pageInfo"
+      :page="pageInfo.page"
+      :total-pages="pageInfo.totalPages"
+      :label="t('tagFeed.pagination')"
+      :to="(value) => withQuery(`/tags/${slug}`, { page: value })" />
+  </div>
+
+  <ReadingLoadingSkeleton v-else :cards="6" class="py-12" />
+</template>

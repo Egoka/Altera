@@ -194,30 +194,122 @@
     "loading": "Articles are loading",
     "proAuthor": "Pro author"
   },
-  "bookmarks": {
-    "pageTitle": "Bookmarks",
-    "eyebrow": "Reader account",
-    "description": "Saved material in the order you added it — come back when you have time.",
-    "filtersLabel": "Bookmark filter",
-    "tabs": {
-      "all": "All",
-      "unavailable": "Unavailable"
+  "pricing": {
+    "meta": {
+      "title": "Plans and pricing — Altera",
+      "description": "Reading is free for everyone. At the first launch you can write and publish without paying; paid plans arrive later."
     },
-    "savedAt": "Saved {date}",
-    "unavailable": "Unavailable",
-    "unavailableDetail": "The material was unpublished or archived: its content no longer opens, but the bookmark stays.",
-    "remove": "Remove from bookmarks",
-    "removed": "Bookmark removed",
-    "undo": "Undo",
-    "loadingLabel": "Loading bookmarks",
-    "loadErrorTitle": "Bookmarks did not load",
-    "loadErrorDescription": "Check the connection and try again.",
-    "retry": "Retry",
-    "emptyTitle": "Saved material will appear here",
-    "emptyDescription": "Tap the star on a material to come back to it later.",
-    "emptyLink": "Go to the home page",
-    "loadingMore": "Loading…",
-    "showMore": "Show more"
+    "hero": {
+      "kicker": "Plans",
+      "title": "A subscription is the path to authorship",
+      "lede": "Reading is free for everyone. A plan decides what you can create and publish.",
+      "launchNote": "There is no billing at the first launch: this page shows no prices and no payment buttons. Basic authoring opens by itself the first time you press «Create article» — without payment and without manual approval. Paid plans arrive later.",
+      "cta": "Create article"
+    },
+    "plansLabel": "Subscription plans",
+    "availability": {
+      "now": "Available now",
+      "later": "Paid plans arrive later"
+    },
+    "plans": {
+      "free": {
+        "name": "free",
+        "summary": "The plan every account starts with: read everything published, at no cost.",
+        "features": {
+          "read": "Reading every published article",
+          "bookmarks": "Bookmarks",
+          "follow": "Following authors"
+        }
+      },
+      "standard": {
+        "name": "standard",
+        "summary": "Write and publish: the editor, media, and a second language version made by hand.",
+        "features": {
+          "write": "Creating and publishing articles",
+          "editor": "Article editor",
+          "media": "Media inside articles",
+          "translation": "Second language version made by hand"
+        }
+      },
+      "pro": {
+        "name": "pro",
+        "summary": "Everything in standard, stronger visibility and author standing, professional tools.",
+        "features": {
+          "standard": "Everything in standard",
+          "visibility": "Stronger visibility and author standing",
+          "aiTranslation": "AI translation",
+          "stats": "Daily statistics",
+          "tools": "Professional author tools"
+        }
+      }
+    },
+    "compare": {
+      "title": "What the plans include",
+      "note": "The table only says what each plan includes: prices, limits, and payment rules arrive together with billing.",
+      "caption": "Comparison of the free, standard, and pro plans",
+      "feature": "Capability",
+      "included": "included",
+      "excluded": "not included",
+      "rows": {
+        "read": "Reading every published article",
+        "bookmarks": "Bookmarks",
+        "follow": "Following authors",
+        "write": "Creating and publishing articles",
+        "editor": "Article editor",
+        "media": "Media inside articles",
+        "translation": "Second language version made by hand",
+        "aiTranslation": "AI translation",
+        "stats": "Daily statistics",
+        "visibility": "Stronger visibility and author standing"
+      }
+    },
+    "legal": {
+      "title": "Rules",
+      "offer": "Offer",
+      "refunds": "Refunds",
+      "requisites": "Legal details",
+      "notes": {
+        "noPayment": "There is no payment at the first launch: a subscription cannot be bought, and a promo code is not checked on this page.",
+        "readingFree": "Reading stays free for everyone.",
+        "articlesStay": "Published articles, author sections, and personal analytics stay available to read.",
+        "laterRules": "The rules for paid periods, renewals, and refunds take effect together with billing."
+      }
+    },
+    "faq": {
+      "title": "Frequent questions",
+      "items": {
+        "whyAccount": {
+          "question": "Why do I need an account if reading is free?",
+          "answer": "An account is for bookmarks, following authors, and your own articles. Published material can be read without one."
+        },
+        "howToWrite": {
+          "question": "How do I start writing at the first launch?",
+          "answer": "Press «Create article»: basic authoring opens without payment and without manual approval."
+        },
+        "prices": {
+          "question": "Why are there no prices on this page?",
+          "answer": "The first launch is free. The plans are shown so the future paid tiers are visible; prices arrive together with billing."
+        },
+        "myArticles": {
+          "question": "What happens to my articles once paid plans arrive?",
+          "answer": "Published articles stay published, and your own articles, rating, and personal analytics stay readable."
+        },
+        "moderation": {
+          "question": "How does review work?",
+          "answer": "The review procedure is described in the publication rules and does not depend on the plan."
+        },
+        "refunds": {
+          "question": "Can I get my money back?",
+          "answer": "There are no payments at the first launch, so there is nothing to refund. The refund procedure is described separately and starts working together with billing."
+        }
+      }
+    },
+    "states": {
+      "empty": {
+        "title": "Plans are temporarily unavailable",
+        "description": "Refresh the page or contact the editorial team."
+      }
+    }
   },
   "myArticles": {
     "pageTitle": "My articles",
@@ -276,7 +368,10 @@
     "rss": "RSS",
     "description": "A journal about culture, art, sport, music, photography, travel, and human thought.",
     "linksLabel": "Footer links",
-    "copyright": "© 2026 Altera"
+    "copyright": "© 2026 Altera",
+    "sections": "Sections",
+    "tags": "Tags",
+    "authors": "Authors"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -781,121 +876,86 @@
     "notifications": "Notifications",
     "loaders": "Loaders"
   },
-  "pricing": {
-    "meta": {
-      "title": "Plans and pricing — Altera",
-      "description": "Reading is free for everyone. At the first launch you can write and publish without paying; paid plans arrive later."
+  "sectionFeed": {
+    "articleCount": "{count} stories",
+    "filterFormat": "Format",
+    "filterTag": "Tag",
+    "reset": "Clear filters",
+    "otherSections": "Other sections",
+    "emptyTitle": "Nothing found",
+    "emptyDescription": "No stories match the selected filters.",
+    "pagination": "Section feed pages"
+  },
+  "tagFeed": {
+    "emptyTitle": "Nothing in this language under this tag yet",
+    "emptyDescription": "Stories in another language are not mixed into the feed.",
+    "emptyAction": "All tags",
+    "pagination": "Tag feed pages"
+  },
+  "sectionsIndex": {
+    "title": "Sections",
+    "description": "The magazine writes about many sides of life — pick a section.",
+    "count": "{count} sections",
+    "articleCount": "{count} stories",
+    "emptyTitle": "No stories yet",
+    "emptyDescription": "A section joins the catalogue with its first publication.",
+    "emptyAction": "Become an author"
+  },
+  "tagsIndex": {
+    "title": "Tags",
+    "count": "{count} tags",
+    "popular": "Popular",
+    "searchPlaceholder": "Tag by first letters",
+    "sort": "Order",
+    "sortPopular": "Popular",
+    "sortName": "By name",
+    "letters": "Letter",
+    "reset": "Clear",
+    "emptyTitle": "No tags yet",
+    "emptyQueryTitle": "Nothing found",
+    "pagination": "Tag list pages"
+  },
+  "authorsIndex": {
+    "title": "Authors",
+    "count": "{count} authors",
+    "captionRecent": "by latest publication date",
+    "captionName": "by name",
+    "sort": "Order",
+    "sortRecent": "Recent",
+    "sortName": "By name",
+    "filterSection": "Section",
+    "letters": "Letter",
+    "reset": "Clear",
+    "articleCount": "{count} stories",
+    "becomeAuthor": "Become an author",
+    "emptyTitle": "No authors yet — be the first",
+    "emptyDescription": "An author joins the catalogue with their first publication.",
+    "emptyFilterTitle": "Nothing found",
+    "pagination": "Author list pages"
+  },
+  "bookmarks": {
+    "pageTitle": "Bookmarks",
+    "eyebrow": "Reader account",
+    "description": "Saved material in the order you added it — come back when you have time.",
+    "filtersLabel": "Bookmark filter",
+    "tabs": {
+      "all": "All",
+      "unavailable": "Unavailable"
     },
-    "hero": {
-      "kicker": "Plans",
-      "title": "A subscription is the path to authorship",
-      "lede": "Reading is free for everyone. A plan decides what you can create and publish.",
-      "launchNote": "There is no billing at the first launch: this page shows no prices and no payment buttons. Basic authoring opens by itself the first time you press «Create article» — without payment and without manual approval. Paid plans arrive later.",
-      "cta": "Create article"
-    },
-    "plansLabel": "Subscription plans",
-    "availability": {
-      "now": "Available now",
-      "later": "Paid plans arrive later"
-    },
-    "plans": {
-      "free": {
-        "name": "free",
-        "summary": "The plan every account starts with: read everything published, at no cost.",
-        "features": {
-          "read": "Reading every published article",
-          "bookmarks": "Bookmarks",
-          "follow": "Following authors"
-        }
-      },
-      "standard": {
-        "name": "standard",
-        "summary": "Write and publish: the editor, media, and a second language version made by hand.",
-        "features": {
-          "write": "Creating and publishing articles",
-          "editor": "Article editor",
-          "media": "Media inside articles",
-          "translation": "Second language version made by hand"
-        }
-      },
-      "pro": {
-        "name": "pro",
-        "summary": "Everything in standard, stronger visibility and author standing, professional tools.",
-        "features": {
-          "standard": "Everything in standard",
-          "visibility": "Stronger visibility and author standing",
-          "aiTranslation": "AI translation",
-          "stats": "Daily statistics",
-          "tools": "Professional author tools"
-        }
-      }
-    },
-    "compare": {
-      "title": "What the plans include",
-      "note": "The table only says what each plan includes: prices, limits, and payment rules arrive together with billing.",
-      "caption": "Comparison of the free, standard, and pro plans",
-      "feature": "Capability",
-      "included": "included",
-      "excluded": "not included",
-      "rows": {
-        "read": "Reading every published article",
-        "bookmarks": "Bookmarks",
-        "follow": "Following authors",
-        "write": "Creating and publishing articles",
-        "editor": "Article editor",
-        "media": "Media inside articles",
-        "translation": "Second language version made by hand",
-        "aiTranslation": "AI translation",
-        "stats": "Daily statistics",
-        "visibility": "Stronger visibility and author standing"
-      }
-    },
-    "legal": {
-      "title": "Rules",
-      "offer": "Offer",
-      "refunds": "Refunds",
-      "requisites": "Legal details",
-      "notes": {
-        "noPayment": "There is no payment at the first launch: a subscription cannot be bought, and a promo code is not checked on this page.",
-        "readingFree": "Reading stays free for everyone.",
-        "articlesStay": "Published articles, author sections, and personal analytics stay available to read.",
-        "laterRules": "The rules for paid periods, renewals, and refunds take effect together with billing."
-      }
-    },
-    "faq": {
-      "title": "Frequent questions",
-      "items": {
-        "whyAccount": {
-          "question": "Why do I need an account if reading is free?",
-          "answer": "An account is for bookmarks, following authors, and your own articles. Published material can be read without one."
-        },
-        "howToWrite": {
-          "question": "How do I start writing at the first launch?",
-          "answer": "Press «Create article»: basic authoring opens without payment and without manual approval."
-        },
-        "prices": {
-          "question": "Why are there no prices on this page?",
-          "answer": "The first launch is free. The plans are shown so the future paid tiers are visible; prices arrive together with billing."
-        },
-        "myArticles": {
-          "question": "What happens to my articles once paid plans arrive?",
-          "answer": "Published articles stay published, and your own articles, rating, and personal analytics stay readable."
-        },
-        "moderation": {
-          "question": "How does review work?",
-          "answer": "The review procedure is described in the publication rules and does not depend on the plan."
-        },
-        "refunds": {
-          "question": "Can I get my money back?",
-          "answer": "There are no payments at the first launch, so there is nothing to refund. The refund procedure is described separately and starts working together with billing."
-        }
-      }
-    },
-    "states": {
-      "empty": {
-        "title": "Plans are temporarily unavailable",
-        "description": "Refresh the page or contact the editorial team."
-      }
-    }
+    "savedAt": "Saved {date}",
+    "unavailable": "Unavailable",
+    "unavailableDetail": "The material was unpublished or archived: its content no longer opens, but the bookmark stays.",
+    "remove": "Remove from bookmarks",
+    "removed": "Bookmark removed",
+    "undo": "Undo",
+    "loadingLabel": "Loading bookmarks",
+    "loadErrorTitle": "Bookmarks did not load",
+    "loadErrorDescription": "Check the connection and try again.",
+    "retry": "Retry",
+    "emptyTitle": "Saved material will appear here",
+    "emptyDescription": "Tap the star on a material to come back to it later.",
+    "emptyLink": "Go to the home page",
+    "loadingMore": "Loading…",
+    "showMore": "Show more"
   }
 }
