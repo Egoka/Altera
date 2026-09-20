@@ -101,6 +101,17 @@ class CompletionTests(unittest.TestCase):
             self.facts["deployment"] = dep
             self.assertIn("deployment", c.validate(self.receipt, self.facts))
 
+    def test_missing_deploy_and_finalization_block_done_but_not_merge(self):
+        # Отказ Done читался как запрет слияния, и готовые PR оставались открытыми.
+        self.receipt["deployment"] = {"required": True}
+        self.facts["requires_deploy"] = True
+        self.facts["deployment"] = {"status": "not_run", "sha": None, "health": False}
+        self.facts["finalization_sha256"] = None
+        done = c.validate(self.receipt, self.facts)
+        self.assertIn("deployment", done)
+        self.assertIn("finalization", done)
+        self.assertEqual(c.validate(self.receipt, {**self.facts, "state": "OPEN"}, "merge"), [])
+
     def test_conflicting_or_unknown_mergeability_blocks_premerge(self):
         for value in (False, None):
             with self.subTest(mergeable=value):
