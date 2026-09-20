@@ -1,14 +1,15 @@
 import { expect, test, type Page } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
-const accessSecret = "t009-test-access-secret"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
 
 const roles = ["admin", "owner"] as const
 type JobsRole = (typeof roles)[number]
 const userIds: Record<JobsRole, string> = { admin: "t077-admin", owner: "t077-owner" }
+// После T-023 токен авторизует запрос только вместе с живой сессией (ADR-0009 п. 3).
+const sessionIds: Record<JobsRole, string> = { admin: "", owner: "" }
 
 // Идентификаторы заданий — настоящие UUID: массовый повтор адресуется теми же значениями.
 const FAILED_JOB = "77000000-0000-4000-8000-000000000001"
@@ -17,14 +18,7 @@ const RUNNING_JOB = "77000000-0000-4000-8000-000000000003"
 const CONFLICT_JOB = "77000000-0000-4000-8000-000000000004"
 const seededJobs = [FAILED_JOB, STUCK_JOB, RUNNING_JOB, CONFLICT_JOB]
 
-function signToken(role: JobsRole) {
-  const encodedHeader = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const encodedPayload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role, userId: userIds[role] })
-  ).toString("base64url")
-  const unsigned = `${encodedHeader}.${encodedPayload}`
-  return `${unsigned}.${createHmac("sha256", accessSecret).update(unsigned).digest("base64url")}`
-}
+const signToken = (role: JobsRole) => signAccessToken(userIds[role], sessionIds[role])
 
 async function upsertUser(role: JobsRole) {
   const id = userIds[role]
@@ -36,6 +30,7 @@ async function upsertUser(role: JobsRole) {
     create: { id, email: `${handle}@example.test`, handle, isServiceAccount: true, name: `T077 ${role}`, role }
   })
   await prisma.handleHistory.update({ where: { handle }, data: { userId: id } })
+  sessionIds[role] = await createSessionId(prisma, id)
 }
 
 // Записи аудита неизменяемы на уровне базы, поэтому пересев их не удаляет:

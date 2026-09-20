@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient, type Role } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 /**
  * T-079: строки состояний `docs/spec/40-admin/audit-log.md` §9 под ролями, маршрутные коды §2 и
@@ -12,7 +12,6 @@ import { PrismaClient, type Role } from "../../../server/src/generated/prisma/in
 const databaseUrl =
   process.env.T079_TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
-const accessSecret = "t009-test-access-secret"
 
 const serviceRoles = ["editor", "moderator", "analyst", "admin", "owner"] as const satisfies readonly Role[]
 type TestRole = (typeof serviceRoles)[number] | "author" | "limitAdmin"
@@ -46,14 +45,10 @@ const entryIds = {
 }
 const subjectUserId = `t079-${run}-target`
 
-const signToken = (role: TestRole) => {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const payload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role: roleOf[role], userId: userIds[role] })
-  ).toString("base64url")
-  const unsigned = `${header}.${payload}`
-  return `${unsigned}.${createHmac("sha256", accessSecret).update(unsigned).digest("base64url")}`
-}
+// После T-023 токен авторизует запрос только вместе с живой сессией (ADR-0009 п. 3).
+const sessionIds: Record<string, string> = {}
+
+const signToken = (role: TestRole) => signAccessToken(userIds[role], sessionIds[role] ?? "")
 
 async function upsertUser(role: TestRole) {
   const id = userIds[role]
@@ -72,6 +67,7 @@ async function upsertUser(role: TestRole) {
     }
   })
   await prisma.handleHistory.update({ where: { handle }, data: { userId: id } })
+  sessionIds[role] = await createSessionId(prisma, id)
 }
 
 async function seedAuditEntries() {
