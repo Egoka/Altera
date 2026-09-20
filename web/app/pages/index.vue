@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { GET_HOME_FEED } from "~/query"
-  import { captionKey, feedRequestId, homeSection, toHomeSections } from "~/utils/homeFeed"
+  import { captionKey, homeSection, toHomeSections } from "~/utils/homeFeed"
+  import { feedRequestId } from "~/utils/publicFeed"
 
   /**
    * Главная: три подборки из всех рубрик в порядке ответа `feed` (`home.md` §5, журнал §20.1).

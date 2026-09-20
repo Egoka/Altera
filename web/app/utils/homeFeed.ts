@@ -43,15 +43,5 @@ export const toHomeSections = (feed: GetHomeFeedQuery["feed"] | null | undefined
     articles: section.items.map(toReadingArticle)
   }))
 
-interface GraphQLErrorLike {
-  extensions?: Readonly<Record<string, unknown>>
-}
-
-/** Код запроса из отказа `feed`: его страница показывает читателю в `ErrorState` (`home.md` §8). */
-export const feedRequestId = (errors?: readonly GraphQLErrorLike[]): string | undefined => {
-  const value = errors?.[0]?.extensions?.requestId
-  return typeof value === "string" ? value : undefined
-}
-
 export const homeSection = (sections: readonly HomeSection[], key: FeedSectionKey): HomeSection | undefined =>
   sections.find((section) => section.key === key)

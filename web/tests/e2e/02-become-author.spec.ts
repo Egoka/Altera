@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { setSessionCookie } from "./helpers/auth-fixtures"
 
 // Flow #2 «Стать автором», шаг 1 (become-author.md): первое «Создать статью» бессрочно открывает
 // базовые авторские возможности, сразу создаёт черновик и открывает редактор (журнал §25.1, §25.3).
@@ -41,6 +42,7 @@ test("шаг 1: «Создать статью» создаёт черновик 
     data: { createArticle: { id: "article-1", slug: "draft-article-1", title: "" } }
   })
 
+  await setSessionCookie(page, "t022-become-author")
   await page.goto("/me/articles")
   await page.getByRole("link", { name: "Создать статью" }).click()
 
@@ -54,6 +56,7 @@ test("развилка шага 1: служебная запись получа�
     errors: [{ message: "Action forbidden", extensions: { code: "FORBIDDEN" } }]
   })
 
+  await setSessionCookie(page, "t022-become-author")
   await page.goto("/me/articles")
   await page.getByRole("link", { name: "Создать статью" }).click()
 

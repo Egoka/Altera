@@ -1,21 +1,18 @@
 <script setup lang="ts">
-  import type { TagSummaryFragment } from "~/graphql/generated/graphql"
-
-  interface Props {
-    tag: Pick<TagSummaryFragment, "name">
-  }
-  defineProps<Props>()
+  /**
+   * Шапка ленты тега. Описания у тега нет (ADR-0005); счётчик и решётку владелец убрал
+   * решением 2026-09-14 (`tag-feed.md` §12), поэтому зона показывает только название.
+   */
+  defineProps<{ tag: { name: string } }>()
 </script>
 
 <template>
-  <header v-if="tag" class="w-full border-b border-zinc-200 dark:border-zinc-800">
-    <div class="w-full pb-8 pt-12 sm:pb-6 sm:pt-10 md:pb-10 md:pt-14">
-      <div class="max-w-7xl mx-auto px-8 sm:px-10">
-        <h1
-          class="font-waterway tracking-widest text-center md:text-left text-3xl md:text-4xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-          {{ tag.name }}
-        </h1>
-      </div>
+  <header class="w-full border-b border-zinc-200 dark:border-zinc-800">
+    <div class="w-full pt-12 pb-8 sm:pt-10 sm:pb-6 md:pt-14 md:pb-10">
+      <h1
+        class="font-waterway text-center text-3xl font-bold tracking-widest text-zinc-900 md:text-left md:text-4xl dark:text-zinc-100">
+        {{ tag.name }}
+      </h1>
     </div>
   </header>
 </template>

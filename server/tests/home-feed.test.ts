@@ -119,6 +119,13 @@ describe("подборки главной первого этапа", () => {
 })
 
 describe("резолвер feed", () => {
+  /**
+   * Ключ главной собран из полного набора аргументов запроса: у лент рубрики и тега в нём
+   * ещё слаг, фильтры и страница, и один построитель ключа держит их все.
+   */
+  const homeCacheKey = (locale: "ru" | "en") =>
+    buildCacheKey("query.feed", { scope: "home", locale, slug: "", format: null, tag: null, page: 1 })
+
   const callFeed = async (cache: Cache, findMany: ReturnType<typeof vi.fn>, locale: "ru" | "en" = "ru") =>
     feedResolver.Query.feed({}, { scope: "home", locale }, {
       cache,
@@ -157,7 +164,7 @@ describe("резолвер feed", () => {
     expect(second).toEqual(first)
     expect(cache.writes).toEqual([
       {
-        key: buildCacheKey("query.feed", { scope: "home", locale: "ru" }),
+        key: homeCacheKey("ru"),
         options: { ttlSeconds: CACHE_TTL_SECONDS.publicList, tags: ["home"] }
       }
     ])
@@ -175,13 +182,13 @@ describe("резолвер feed", () => {
     expect(findMany).toHaveBeenCalledTimes(2)
   })
 
-  it("ответ не зависит от сессии: ключ кеша собран только из scope и локали", async () => {
+  it("ответ не зависит от сессии: ключ кеша собран только из аргументов запроса", async () => {
     const cache = new MemoryCache()
     const findMany = vi.fn().mockResolvedValue(candidates(1))
 
     await callFeed(cache, findMany)
 
-    expect(cache.values.has(buildCacheKey("query.feed", { scope: "home", locale: "ru" }))).toBe(true)
-    expect(cache.values.has(buildCacheKey("query.feed", { scope: "home", locale: "en" }))).toBe(false)
+    expect(cache.values.has(homeCacheKey("ru"))).toBe(true)
+    expect(cache.values.has(homeCacheKey("en"))).toBe(false)
   })
 })

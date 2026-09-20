@@ -35,12 +35,21 @@ async function magicLinkToken(
   email: string,
   expectedLetters = 1
 ): Promise<string> {
+  // T-022: ссылка запрашивается вместе с версиями согласия, принятыми на странице входа,
+  // а ответ одинаков для известного и неизвестного адреса (`20-public/login.md` §4).
+  const legal = await callGraphQL(
+    page,
+    "query ($locale: Locale!) { legalVersions(locale: $locale) { termsVersion privacyVersion } }",
+    { locale: "ru" }
+  )
+  const consentVersion = legal.body.data?.legalVersions
+
   const requested = await callGraphQL(
     page,
-    "mutation ($email: String!, $locale: Locale!) { requestMagicLink(email: $email, locale: $locale) }",
-    { email, locale: "ru" }
+    "mutation ($email: String!, $consentVersion: ConsentVersionsInput!, $locale: Locale!) { requestMagicLink(email: $email, consentVersion: $consentVersion, locale: $locale) { ok retryAfterSec } }",
+    { email, consentVersion, locale: "ru" }
   )
-  expect(requested.body.data).toEqual({ requestMagicLink: true })
+  expect(requested.body.data).toEqual({ requestMagicLink: { ok: true, retryAfterSec: null } })
 
   // Mailpit отдаёт письма от новых к старым; ждём именно то, которое запросил этот шаг.
   let messages: { ID: string }[] = []

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { setSessionCookie } from "./helpers/auth-fixtures"
 
 const articles = {
   published: {
@@ -73,6 +74,7 @@ const stubBookmarks = async (page: import("@playwright/test").Page) => {
 
 test("keeps an archived article in bookmarks as unavailable", async ({ page }) => {
   await stubBookmarks(page)
+  await setSessionCookie(page, "t022-bookmarks")
   await page.goto("/me/bookmarks")
 
   await expect(page.getByRole("heading", { name: "Закладки · 2" })).toBeVisible()
@@ -98,6 +100,7 @@ test("keeps an archived article in bookmarks as unavailable", async ({ page }) =
 
 test("filters the list down to unavailable bookmarks", async ({ page }) => {
   await stubBookmarks(page)
+  await setSessionCookie(page, "t022-bookmarks")
   await page.goto("/me/bookmarks")
 
   await page.getByRole("link", { name: /Недоступные/ }).click()
@@ -109,6 +112,7 @@ test("filters the list down to unavailable bookmarks", async ({ page }) => {
 
 test("removes a bookmark and offers to bring it back", async ({ page }) => {
   const removed = await stubBookmarks(page)
+  await setSessionCookie(page, "t022-bookmarks")
   await page.goto("/me/bookmarks")
 
   await page.getByRole("article", { name: "Снятый материал" }).getByTestId("bookmark-remove").click()

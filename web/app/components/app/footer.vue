@@ -1,7 +1,12 @@
 <script setup lang="ts">
   const { t } = useI18n()
 
+  // Каталоги рубрик, тегов и авторов названы точками входа в своих спецификациях
+  // (`sections-index.md` §3, `tags-index.md` §3, `authors-index.md` §3).
   const links = [
+    { labelKey: "footer.sections", to: "/sections" },
+    { labelKey: "footer.tags", to: "/tags" },
+    { labelKey: "footer.authors", to: "/authors" },
     { labelKey: "footer.about", to: "/about" },
     // Футер — один из входов на «Цены и планы» (`docs/spec/20-public/pricing.md` §3).
     { labelKey: "footer.pricing", to: "/pricing" },

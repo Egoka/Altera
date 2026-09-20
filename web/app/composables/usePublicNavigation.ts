@@ -14,6 +14,7 @@ export interface PublicNavigationSection {
 export interface PublicNavigationTag {
   name: string
   slug: string
+  articleCount: number
 }
 
 export const usePublicNavigation = () => {
@@ -21,14 +22,16 @@ export const usePublicNavigation = () => {
   const popularTags = ref<PublicNavigationTag[]>([])
   const status = ref<"idle" | "pending" | "success" | "error">("idle")
 
+  const { locale } = useI18n()
+
   const load = async () => {
     status.value = "pending"
     try {
-      const result = await useGraphQL(GET_NAVIGATION)
+      const result = await useGraphQL(GET_NAVIGATION, { locale: locale.value === "en" ? "en" : "ru" })
       if (result.errors?.length || !result.data) throw new Error("Navigation GraphQL request failed")
 
       sections.value = result.data.publicSections
-      popularTags.value = result.data.popularTags.tags
+      popularTags.value = result.data.popularTags
       status.value = "success"
     } catch {
       sections.value = []
