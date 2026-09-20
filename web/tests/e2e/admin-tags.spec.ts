@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 const databaseUrl =
   process.env.T071_TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
-const accessSecret = "t009-test-access-secret"
+let sessionId = ""
 
 // Слияние проверяет идентификаторы источников как UUID (`validateBulkOperation`),
 // поэтому фикстуры тегов используют фиксированные UUID, а не читаемые строки.
@@ -14,14 +14,7 @@ const SOURCE = "0de0f52a-7071-4a71-9c21-000000000002"
 const SHELF = "0de0f52a-7071-4a71-9c21-000000000003"
 const OWNER_ARCHIVED = "0de0f52a-7071-4a71-9c21-000000000004"
 
-const token = () => {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const payload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role: "admin", userId: "t071-admin" })
-  ).toString("base64url")
-  const unsigned = `${header}.${payload}`
-  return `${unsigned}.${createHmac("sha256", accessSecret).update(unsigned).digest("base64url")}`
-}
+const token = () => signAccessToken("t071-admin", sessionId)
 
 const seedTag = async (
   id: string,
@@ -87,6 +80,7 @@ test.describe("admin tags", () => {
     })
     await prisma.handleHistory.update({ where: { handle: "t071-admin" }, data: { userId: "t071-admin" } })
     await prisma.handleHistory.update({ where: { handle: "t071-author" }, data: { userId: "t071-author" } })
+    sessionId = await createSessionId(prisma, "t071-admin")
 
     await prisma.auditLog.deleteMany({ where: { entityType: "Tag", entityId: { in: [SOURCE, SHELF] } } })
     await seedTag(TARGET, "t071-cinema", "T071 Кино")
