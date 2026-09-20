@@ -1,0 +1,104 @@
+fragment AdminStaffMemberFields on AdminStaffMember {
+  id
+  name
+  email
+  emailMasked
+  role
+  status
+  createdAt
+  createdByName
+  lastActiveAt
+  activeExceptionCount
+  archivedAt
+  archiveReason
+}
+
+query GetAdminStaff($filters: AdminStaffFiltersInput) {
+  adminStaff(filters: $filters) {
+    ...AdminStaffMemberFields
+  }
+}
+
+query GetAdminStaffMember($id: ID!) {
+  adminStaffMember(id: $id) {
+    ...AdminStaffMemberFields
+    sessionCount
+    roleHistory {
+      id
+      action
+      before
+      after
+      actorName
+      reason
+      createdAt
+    }
+    exceptions {
+      id
+      permission
+      kind
+      reason
+      startsAt
+      endsAt
+      revokedAt
+      expiredAt
+    }
+  }
+}
+
+query GetOwners {
+  owners {
+    id
+    name
+    email
+    status
+    assignedAt
+  }
+}
+
+mutation CreateStaff($input: CreateStaffInput!) {
+  createStaff(input: $input) {
+    id
+  }
+}
+
+mutation ChangeStaffRole($id: ID!, $role: AssignableStaffRole!, $reason: String!) {
+  changeStaffRole(id: $id, role: $role, reason: $reason) {
+    id
+  }
+}
+
+mutation RevokeStaffRole($id: ID!, $reason: String!) {
+  revokeStaffRole(id: $id, reason: $reason) {
+    id
+  }
+}
+
+mutation AssignOwner($id: ID!) {
+  assignOwner(id: $id) {
+    id
+  }
+}
+
+mutation RevokeOwner($id: ID!, $reason: String!) {
+  revokeOwner(id: $id, reason: $reason) {
+    id
+  }
+}
+
+mutation DeactivateOwner($id: ID!, $reason: String!) {
+  deactivateOwner(id: $id, reason: $reason) {
+    id
+  }
+}
+
+mutation ArchiveStaffAccount($id: ID!, $reason: String!) {
+  archiveStaffAccount(id: $id, reason: $reason) {
+    id
+  }
+}
+
+mutation RestoreStaffAccount($id: ID!, $reason: String!) {
+  restoreStaffAccount(id: $id, reason: $reason) {
+    id
+  }
+}

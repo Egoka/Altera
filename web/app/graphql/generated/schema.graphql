@@ -230,6 +230,14 @@ type AdminMailSummaryRow {
   template: String!
 }
 
+type AdminOwner {
+  assignedAt: String
+  email: String!
+  id: ID!
+  name: String!
+  status: AdminStaffStatus!
+}
+
 type AdminPlanGrant {
   createdAt: String!
   endsAt: String
@@ -248,6 +256,54 @@ type AdminPlanGrant {
 enum AdminPlanTier {
   pro
   standard
+}
+
+enum AdminStaffExceptionTerm {
+  expiring
+  indefinite
+}
+
+input AdminStaffFiltersInput {
+  hasExceptions: Boolean
+  role: Role
+  search: String
+  status: AdminStaffStatus
+  term: AdminStaffExceptionTerm
+}
+
+type AdminStaffMember {
+  activeExceptionCount: Int!
+  archiveReason: String
+  archivedAt: String
+  createdAt: String!
+  createdByName: String
+
+  """Маскированный адрес в списке, полный — в карточке."""
+  email: String!
+  emailMasked: Boolean!
+  exceptions: [PermissionException!]!
+  id: ID!
+  lastActiveAt: String
+  name: String!
+  role: Role!
+  roleHistory: [AdminStaffRoleChange!]!
+  sessionCount: Int!
+  status: AdminStaffStatus!
+}
+
+type AdminStaffRoleChange {
+  action: String!
+  actorName: String
+  after: Role
+  before: Role
+  createdAt: String!
+  id: ID!
+  reason: String
+}
+
+enum AdminStaffStatus {
+  active
+  archived
 }
 
 type AdminSummary {
@@ -372,6 +428,16 @@ type ArticlesResponse {
   sort: SortInfo!
 }
 
+"""
+Роли, которые выдаются служебной записи напрямую; owner назначается вторым шагом.
+"""
+enum AssignableStaffRole {
+  admin
+  analyst
+  editor
+  moderator
+}
+
 type AuditActor {
   id: ID
   isSystem: Boolean!
@@ -480,6 +546,43 @@ input BaseFiltersInput {
   updatedAt: DateRangeInput
 }
 
+type BookmarkCounts {
+  total: Int!
+  unavailable: Int!
+}
+
+type BookmarkItem {
+  article: BookmarkedArticle!
+  bookmarkedAt: String!
+}
+
+type BookmarkState {
+  articleId: ID!
+  bookmarked: Boolean!
+}
+
+type BookmarkedArticle {
+  author: BookmarkedArticleAuthor!
+  available: Boolean!
+  cover: String
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  section: Section
+  slug: String!
+  title: String!
+}
+
+type BookmarkedArticleAuthor {
+  handle: String!
+  name: String!
+}
+
+type BookmarksPageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
 input CreateArticleInput {
   locale: Locale
   sectionId: ID
@@ -504,6 +607,12 @@ input CreateSectionInput {
   seoTitle: String
   seoTitleEn: String
   slug: String!
+}
+
+input CreateStaffInput {
+  email: String!
+  name: String!
+  role: AssignableStaffRole!
 }
 
 input CreateTagInput {
@@ -633,17 +742,23 @@ input MergeTagsInput {
 
 type Mutation {
   _empty: String
+  addBookmark(articleId: ID!): BookmarkState!
   archiveArticle(id: ID!): Article!
   archiveFormat(id: ID!): AdminFormat!
   archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
+  archiveStaffAccount(id: ID!, reason: String!): AdminStaffMember!
   archiveTag(id: ID!): Tag!
+  assignOwner(id: ID!): AdminStaffMember!
   bulkDeleteArticles(ids: [ID!]!): [Article!]!
   bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
   cancelJob(id: ID!, reason: String!): AdminJob!
+  changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
   createArticle(input: CreateArticleInput!): Article!
   createFormat(input: CreateFormatInput!): AdminFormat!
   createSection(input: CreateSectionInput!): Section!
+  createStaff(input: CreateStaffInput!): AdminStaffMember!
   createTag(input: CreateTagInput!): Tag!
+  deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
   exportAudit(filters: AuditLogFilters): AuditExport!
@@ -653,6 +768,7 @@ type Mutation {
   logoutAll: Boolean!
   mergeTags(input: MergeTagsInput!): Tag!
   refreshSession(refreshToken: String!): AuthPayload!
+  removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(email: String!, locale: Locale!): Boolean!
   requestReview(id: ID!): Article!
@@ -661,12 +777,15 @@ type Mutation {
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
   restoreSection(id: ID!): Section!
+  restoreStaffAccount(id: ID!, reason: String!): AdminStaffMember!
   restoreTag(id: ID!): Tag!
   retryJob(id: ID!): AdminJob!
   retryJobs(ids: [ID!]!): AdminJobsRetryResult!
   revertToDraft(id: ID!): Article!
   revokeException(id: ID!, reason: String!): PermissionException!
+  revokeOwner(id: ID!, reason: String!): AdminStaffMember!
   revokePlan(input: RevokePlanInput!): AdminPlanGrant!
+  revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
@@ -731,6 +850,12 @@ type MyArticlesPageInfo {
   hasNextPage: Boolean!
 }
 
+type MyBookmarksConnection {
+  counts: BookmarkCounts!
+  items: [BookmarkItem!]!
+  pageInfo: BookmarksPageInfo!
+}
+
 type PaginationInfo {
   currentPage: Int!
   hasNextPage: Boolean!
@@ -789,6 +914,8 @@ type Query {
   adminJobs(filters: AdminJobsFilterInput, limit: Int = 20, page: Int = 1, sort: AdminJobsSortInput): AdminJobsResponse!
   adminMail(id: ID!): AdminMail
   adminMails(filters: AdminMailFiltersInput, pagination: PaginationInput): AdminMailList!
+  adminStaff(filters: AdminStaffFiltersInput): [AdminStaffMember!]!
+  adminStaffMember(id: ID!): AdminStaffMember
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
   adminUser(id: ID!): AccountUser
   article(slug: String!): Article
@@ -811,6 +938,9 @@ type Query {
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
+  myBookmark(articleId: ID!): BookmarkState!
+  myBookmarks(cursor: ID, limit: Int = 20, unavailable: Boolean): MyBookmarksConnection!
+  owners: [AdminOwner!]!
   permissionExceptions(userId: ID): [PermissionException!]!
   publicSections: [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
