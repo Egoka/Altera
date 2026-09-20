@@ -15,7 +15,7 @@ export {
   GetArticleForEditDocument as GET_ARTICLE_FOR_EDIT,
   GetAuthorPageDocument as GET_AUTHOR_PAGE,
   GetSectionPageDocument as GET_SECTION_PAGE,
-  GetHomePageArticlesDocument as GET_HOME_PAGE_ARTICLES,
+  GetHomeFeedDocument as GET_HOME_FEED,
   GetMyBookmarkDocument as GET_MY_BOOKMARK,
   GetMyBookmarksDocument as GET_MY_BOOKMARKS,
   GetMyProfileDocument as GET_MY_PROFILE,
