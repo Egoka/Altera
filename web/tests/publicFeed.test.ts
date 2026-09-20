@@ -4,6 +4,7 @@ import {
   feedRequestId,
   pageParam,
   requestLocale,
+  rethrowNotFound,
   stringParam,
   throwOnFeedError,
   withQuery
@@ -79,6 +80,20 @@ describe("отказ API в состояние страницы", () => {
 
   it("успешный ответ отдаёт данные без ошибки", () => {
     expect(throwOnFeedError({ data: { ok: true } })).toEqual({ ok: true })
+  })
+})
+
+describe("«не найдено» становится ответом 404", () => {
+  it("пробрасывает отказ 404 наружу страницы", () => {
+    vi.stubGlobal("createError", (input: object) => Object.assign(new Error("not found"), input))
+
+    expect(() => rethrowNotFound({ statusCode: 404 })).toThrowError()
+    vi.unstubAllGlobals()
+  })
+
+  it("отказ данных и отсутствие ошибки страницу не прерывают", () => {
+    expect(rethrowNotFound({ statusCode: 500 })).toBeUndefined()
+    expect(rethrowNotFound(null)).toBeUndefined()
   })
 })
 

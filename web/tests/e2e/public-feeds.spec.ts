@@ -160,7 +160,8 @@ test("лента рубрики: отказ данных показывает к
   await page.goto("/sections")
   await page.getByRole("link", { name: "Культура" }).first().click()
 
-  await expect(page.getByRole("alert")).toContainText("req-e2e")
+  // Локатор по тексту, а не по роли: у объявления маршрута Nuxt та же роль `alert`.
+  await expect(page.getByText("Код запроса: req-e2e")).toBeVisible()
 })
 
 test("список тегов: облако, список со счётчиками и сортировка", async ({ page }) => {

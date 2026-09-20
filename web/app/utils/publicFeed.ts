@@ -41,6 +41,20 @@ export const throwOnFeedError = <T>(result: ExecutionResult<T>): T => {
   })
 }
 
+/**
+ * Отказ «не найдено» превращается в настоящий ответ 404.
+ *
+ * Ошибка, брошенная внутри обработчика `useAsyncData`, остаётся значением `error` и не
+ * меняет код ответа: страница отрисовалась бы с кодом 200. Строки «Не найдено» §8
+ * обещают 404 и страницу #21, поэтому такой отказ пробрасывается из `setup` наружу.
+ * Отказ данных (500) намеренно остаётся внутри страницы: `ErrorState` показывается на
+ * месте, а шапка и футер сохраняются.
+ */
+export const rethrowNotFound = (error: unknown): void => {
+  if ((error as { statusCode?: number } | null)?.statusCode !== 404) return
+  throw createError({ statusCode: 404, statusMessage: "NOT_FOUND", fatal: true })
+}
+
 /** Код запроса из уже пойманной ошибки страницы. */
 export const errorRequestId = (error: unknown): string | undefined => {
   const data = (error as { data?: { requestId?: string } } | null)?.data

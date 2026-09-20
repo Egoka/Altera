@@ -8,6 +8,7 @@
     errorRequestId,
     pageParam,
     requestLocale,
+    rethrowNotFound,
     stringParam,
     throwOnFeedError,
     withQuery
@@ -54,6 +55,10 @@
    * `admin-sections.md` #2). Фильтры и страница в преемника не переносятся: у другой
    * рубрики другие форматы и теги, и сохранённый срез показал бы не то, что обещает.
    */
+  // Неизвестный слаг, архивированная рубрика без преемника, рубрика без публикаций в
+  // локали и страница вне диапазона — 404 страницы #21, а не пустая лента с кодом 200.
+  rethrowNotFound(error.value)
+
   const followRedirect = (value: typeof feed.value) =>
     value?.redirect ? navigateTo(`/${value.redirect.slug}`, { redirectCode: 301, replace: true }) : undefined
 

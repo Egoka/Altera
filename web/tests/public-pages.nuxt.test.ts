@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { flushPromises, mount } from "@vue/test-utils"
-import { computed, defineComponent, onBeforeUnmount, ref, watch } from "vue"
+import { computed, defineComponent, onBeforeUnmount, onErrorCaptured, ref, watch } from "vue"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import SectionFeedPage from "../app/pages/[slugTypeContent]/index.vue"
 import TagFeedPage from "../app/pages/tags/[slug].vue"
@@ -88,6 +88,24 @@ const render = async (page: unknown) => {
   const wrapper = mount(host, { global: { stubs } })
   await flushPromises()
   return wrapper
+}
+
+/** Отказ 404 прерывает setup страницы; он ловится хозяином, а не всплывает в отчёт. */
+const renderFailing = async (page: unknown) => {
+  const captured: { statusCode?: number }[] = []
+  const host = defineComponent({
+    components: { Page: page as never },
+    setup: () => {
+      onErrorCaptured((thrown) => {
+        captured.push(thrown as { statusCode?: number })
+        return false
+      })
+    },
+    template: "<Suspense><Page /></Suspense>"
+  })
+  mount(host, { global: { stubs } })
+  await flushPromises()
+  return captured
 }
 
 const pending = () =>
@@ -197,6 +215,12 @@ describe("лента рубрики", () => {
     expect(wrapper.get('[data-zone="error"]').attributes("data-request-id")).toBe("req-section")
   })
 
+  it("неизвестная рубрика прерывает страницу отказом 404, а не рисует пустую ленту", async () => {
+    respondWith({ errors: [{ extensions: { code: "NOT_FOUND" } }] })
+
+    expect(await renderFailing(SectionFeedPage)).toEqual([expect.objectContaining({ statusCode: 404 })])
+  })
+
   it("клиентская навигация показывает скелеты", async () => {
     pending()
 
@@ -252,6 +276,12 @@ describe("лента тега", () => {
     respondWith({ errors: [{ extensions: { code: "INTERNAL_ERROR", requestId: "req-tag" } }] })
 
     expect((await render(TagFeedPage)).get('[data-zone="error"]').attributes("data-request-id")).toBe("req-tag")
+  })
+
+  it("архивированный тег прерывает страницу отказом 404", async () => {
+    respondWith({ errors: [{ extensions: { code: "NOT_FOUND" } }] })
+
+    expect(await renderFailing(TagFeedPage)).toEqual([expect.objectContaining({ statusCode: 404 })])
   })
 })
 

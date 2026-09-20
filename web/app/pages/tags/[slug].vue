@@ -1,7 +1,14 @@
 <script setup lang="ts">
   import { GET_TAG_FEED } from "~/query"
   import { toReadingArticle } from "~/utils/homeFeed"
-  import { errorRequestId, pageParam, requestLocale, throwOnFeedError, withQuery } from "~/utils/publicFeed"
+  import {
+    errorRequestId,
+    pageParam,
+    requestLocale,
+    rethrowNotFound,
+    throwOnFeedError,
+    withQuery
+  } from "~/utils/publicFeed"
 
   /**
    * Лента тега (`docs/spec/20-public/tag-feed.md`): ровный каталог равных карточек.
@@ -37,6 +44,9 @@
   )
 
   /** Слитый тег и прежний слаг ведут на целевой тег (ADR-0004, `admin-sections.md` #3). */
+  // Неизвестный и архивированный тег — 404 страницы #21 (`tag-feed.md` §8).
+  rethrowNotFound(error.value)
+
   const followRedirect = (value: typeof feed.value) =>
     value?.redirect ? navigateTo(`/tags/${value.redirect.slug}`, { redirectCode: 301, replace: true }) : undefined
 

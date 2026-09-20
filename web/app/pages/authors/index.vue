@@ -5,6 +5,7 @@
     errorRequestId,
     pageParam,
     requestLocale,
+    rethrowNotFound,
     stringParam,
     throwOnFeedError,
     withQuery
@@ -44,6 +45,9 @@
       ),
     { watch: [locale, sort, section, letter, page] }
   )
+
+  // Неверные параметры адреса — 404 (`authors-index.md` §8).
+  rethrowNotFound(error.value)
 
   const requestId = computed(() => errorRequestId(error.value))
   const authors = computed(() => catalog.value?.authorCatalog.items ?? [])

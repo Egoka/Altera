@@ -5,6 +5,7 @@
     errorRequestId,
     pageParam,
     requestLocale,
+    rethrowNotFound,
     stringParam,
     throwOnFeedError,
     withQuery
@@ -44,6 +45,9 @@
       ),
     { watch: [locale, query, letter, sort, page] }
   )
+
+  // Неверные параметры адреса — 404 (`tags-index.md` §8), а не молчаливый показ всего.
+  rethrowNotFound(error.value)
 
   const requestId = computed(() => errorRequestId(error.value))
   const tags = computed(() => catalog.value?.tagCatalog.items ?? [])
