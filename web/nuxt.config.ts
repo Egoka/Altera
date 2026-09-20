@@ -47,7 +47,10 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
 
   routeRules: {
-    "/ru": { redirect: { to: "/", statusCode: 301 } }
+    "/ru": { redirect: { to: "/", statusCode: 301 } },
+    // Каталог рубрик переехал с `/types` на `/sections` (`sections-index.md` §3).
+    "/types": { redirect: { to: "/sections", statusCode: 301 } },
+    "/en/types": { redirect: { to: "/en/sections", statusCode: 301 } }
   },
 
   hooks: {

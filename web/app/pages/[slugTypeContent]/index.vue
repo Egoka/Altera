@@ -1,68 +1,126 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment, SectionSummaryFragment } from "~/graphql/generated/graphql"
-  import { GetSectionRedirectDocument } from "~/graphql/generated/graphql"
-  import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
+  import type { FeedControlGroup } from "~/types/reading"
+  import { GET_SECTION_FEED } from "~/query"
   import { buildFeedGroups } from "~/utils/feedGroups"
   import { SECTION_RHYTHM } from "~/utils/feedRhythm"
-
-  definePageMeta({
-    layout: "default"
-  })
-
-  const route = useRoute()
-  const requestedSlug = String(route.params.slugTypeContent ?? "")
-  const redirectResult = await useGraphQL(GetSectionRedirectDocument, { slug: requestedSlug })
-  const redirectSection = redirectResult.data?.section
-  const successorSlug = redirectSection?.successor?.slug
-
-  if (redirectSection?.status === "archived" && successorSlug) {
-    await navigateTo(`/${successorSlug}`, { redirectCode: 301, replace: true })
-  }
-
-  // Моковые данные для демонстрации
-  type SectionNavItem = SectionSummaryFragment & { iconUrl?: string }
-
-  const section: SectionNavItem = {
-    id: "1",
-    name: "National Security",
-    slug: "national-security",
-    description:
-      "Graeme Wood is a distinguished staff writer at The Atlantic and the acclaimed author of The Way of the Strangers: Encounters With the Islamic State, a groundbreaking work that delves deep into the psychology and motivations of ISIS members. He joined the magazine in 2006 after an extraordinary journey that saw him working as a translator, courier, and bootlegger in the dangerous regions of northern Iraq during some of the most tumultuous periods of the Iraq War. His early experiences in conflict zones shaped his unique perspective on international affairs and human nature. Since joining The Atlantic, Wood has established himself as one of the publication's most intrepid foreign correspondents, reporting from every continent except Antarctica on subjects as diverse as foreign policy, international security, cultural anthropology, and even professional wrestling. His reporting has taken him to war zones in Syria, Yemen, and Libya, where he has interviewed everyone from government officials to rebel leaders, providing readers with unprecedented insights into complex geopolitical situations. Wood's expertise extends beyond traditional journalism; he has conducted extensive research on radicalization processes, religious extremism, and the social dynamics that drive individuals toward violent ideologies. His work has been recognized with numerous awards and has influenced policy discussions at the highest levels of government. He is a respected member of the Council on Foreign Relations, where he contributes to important discussions on international security and foreign policy. Additionally, he serves as a contributing editor at The New Republic, where he continues to shape public discourse on critical global issues. Wood's writing is characterized by its depth, nuance, and willingness to explore uncomfortable truths about human nature and international relations. Graeme Wood is a distinguished staff writer at The Atlantic and the acclaimed author of The Way of the Strangers: Encounters With the Islamic State, a groundbreaking work that delves deep into the psychology and motivations of ISIS members. He joined the magazine in 2006 after an extraordinary journey that saw him working as a translator, courier, and bootlegger in the dangerous regions of northern Iraq during some of the most tumultuous periods of the Iraq War. His early experiences in conflict zones shaped his unique perspective on international affairs and human nature. Since joining The Atlantic, Wood has established himself as one of the publication's most intrepid foreign correspondents, reporting from every continent except Antarctica on subjects as diverse as foreign policy, international security, cultural anthropology, and even professional wrestling. His reporting has taken him to war zones in Syria, Yemen, and Libya, where he has interviewed everyone from government officials to rebel leaders, providing readers with unprecedented insights into complex geopolitical situations. Wood's expertise extends beyond traditional journalism; he has conducted extensive research on radicalization processes, religious extremism, and the social dynamics that drive individuals toward violent ideologies. His work has been recognized with numerous awards and has influenced policy discussions at the highest levels of government. He is a respected member of the Council on Foreign Relations, where he contributes to important discussions on international security and foreign policy. Additionally, he serves as a contributing editor at The New Republic, where he continues to shape public discourse on critical global issues. Wood's writing is characterized by its depth, nuance, and willingness to explore uncomfortable truths about human nature and international relations.",
-    iconUrl:
-      // "images/Art.png",
-      // "images/Sport.png",
-      "https://cdn.theatlantic.com/thumbor/bsofsE3P6DEt6k04rWoKU6v9kD8=/0x0:960x960/200x200/media/img/collections/icon/Layer_1_1/original.png",
-    order: 1,
-    status: "active",
-    createdAt: "2025-01-01T00:00:00Z",
-    updatedAt: "2025-01-01T00:00:00Z"
-  }
+  import { toReadingArticle } from "~/utils/homeFeed"
+  import {
+    errorRequestId,
+    pageParam,
+    requestLocale,
+    stringParam,
+    throwOnFeedError,
+    withQuery
+  } from "~/utils/publicFeed"
 
   /**
-   * Демо-лента: одна страница из 24 материалов (`section-feed.md` §5), взятых из
-   * материалов главной с подстановкой рубрики. Даты детерминированы — по дню назад
-   * от фиксированной точки, чтобы лента по новизне выглядела одинаково при каждом
-   * запуске. Группы собирает `buildFeedGroups` по ритму рубрики.
+   * Лента рубрики (`docs/spec/20-public/section-feed.md`): шапка рубрики, панель фильтров,
+   * группы реестра раскладок по ритму рубрики, пагинация и ряд других рубрик.
+   *
+   * Пустой рубрики не бывает — она не публична до первой публикации (журнал §20.9), поэтому
+   * пустое состояние здесь означает только «фильтр ничего не нашёл».
    */
-  const PAGE_SIZE = 24
-  const firstDay = Date.UTC(2026, 8, 13, 12)
-  const articles: ArticleCardFragment[] = [...DEMO_LATEST, ...DEMO_DEMANDED]
-    .slice(0, PAGE_SIZE)
-    .map((article, index) => ({
-      ...article,
-      id: `section-${index + 1}`,
-      publishedAt: new Date(firstDay - index * 24 * 60 * 60 * 1000).toISOString(),
-      section: { name: section.name, slug: section.slug }
-    }))
-  const groups = buildFeedGroups(articles, SECTION_RHYTHM)
+  definePageMeta({ layout: "default" })
+
+  const route = useRoute()
+  const { locale, t } = useI18n()
+
+  const slug = computed(() => String(route.params.slugTypeContent ?? ""))
+  const page = computed(() => pageParam(route.query.page))
+  const format = computed(() => stringParam(route.query.format))
+  const tag = computed(() => stringParam(route.query.tag))
+
+  const {
+    data: feed,
+    error,
+    status
+  } = await useAsyncData(
+    () => `section-feed:${locale.value}:${slug.value}:${page.value}:${format.value}:${tag.value}`,
+    async () =>
+      throwOnFeedError(
+        await useGraphQL(GET_SECTION_FEED, {
+          locale: requestLocale(locale.value),
+          slug: slug.value,
+          page: page.value,
+          format: format.value,
+          tag: tag.value
+        })
+      ).feed,
+    { watch: [locale, slug, page, format, tag] }
+  )
+
+  /**
+   * Архивированная рубрика и прежний слаг ведут на нынешний адрес (ADR-0004,
+   * `admin-sections.md` #2). Фильтры и страница в преемника не переносятся: у другой
+   * рубрики другие форматы и теги, и сохранённый срез показал бы не то, что обещает.
+   */
+  const followRedirect = (value: typeof feed.value) =>
+    value?.redirect ? navigateTo(`/${value.redirect.slug}`, { redirectCode: 301, replace: true }) : undefined
+
+  // На сервере переход выполняется до рендера — ответом становится сам 301; watch
+  // повторяет его при клиентской навигации на другой слаг.
+  await followRedirect(feed.value)
+  watch(feed, followRedirect)
+
+  const section = computed(() => feed.value?.section ?? null)
+  const articles = computed(() => (feed.value?.items ?? []).map(toReadingArticle))
+  const groups = computed(() => buildFeedGroups(articles.value, SECTION_RHYTHM))
+  const pageInfo = computed(() => feed.value?.pageInfo ?? null)
+  const filtered = computed(() => Boolean(format.value || tag.value))
+  const requestId = computed(() => errorRequestId(error.value))
+
+  const pathTo = (params: { format?: string | null; tag?: string | null; page?: number }) =>
+    withQuery(`/${slug.value}`, {
+      format: params.format === undefined ? format.value : params.format,
+      tag: params.tag === undefined ? tag.value : params.tag,
+      page: params.page ?? 1
+    })
+
+  /** Выбор фильтра всегда сбрасывает страницу на первую: номер из другого среза бессмыслен. */
+  const controlGroups = computed<FeedControlGroup[]>(() => {
+    const groupsOfFilters: FeedControlGroup[] = []
+    const formats = feed.value?.formats ?? []
+    const topTags = feed.value?.topTags ?? []
+    if (formats.length) {
+      groupsOfFilters.push({
+        label: t("sectionFeed.filterFormat"),
+        options: formats,
+        active: format.value,
+        to: (value) => pathTo({ format: value })
+      })
+    }
+    if (topTags.length) {
+      groupsOfFilters.push({
+        label: t("sectionFeed.filterTag"),
+        options: topTags,
+        active: tag.value,
+        to: (value) => pathTo({ tag: value })
+      })
+    }
+    return groupsOfFilters
+  })
+
+  useHead(() => ({ title: section.value?.name }))
 </script>
 
 <template>
-  <div>
-    <HeaderType :section="section" />
+  <ReadingErrorState v-if="error" :request-id="requestId" />
+
+  <div v-else-if="section">
+    <HeaderType :section="section" :count-label="t('sectionFeed.articleCount', { count: section.articleCount })" />
+
+    <ReadingFeedControls
+      v-if="controlGroups.length"
+      :caption="t('home.captionByDate')"
+      :groups="controlGroups"
+      :reset-label="filtered ? t('sectionFeed.reset') : undefined"
+      :reset-to="filtered ? `/${slug}` : undefined" />
+
+    <ReadingLoadingSkeleton v-if="status === 'pending'" :cards="6" class="py-12" />
+
     <!-- Список рубрики — группы реестра раскладок во всю ширину контейнера, служебная
          строка карточек показывает дату: рубрика и так в шапке. -->
-    <section class="pt-4 pb-16">
+    <section v-else-if="articles.length" class="pt-4 pb-4">
       <ArticleGroup
         v-for="group in groups"
         :key="group.id"
@@ -70,7 +128,39 @@
         :layout="group.layout"
         :meta="['author', 'date']" />
     </section>
-  </div>
-</template>
 
-<style scoped></style>
+    <ReadingEmptyState
+      v-else
+      class="my-12"
+      :title="t('sectionFeed.emptyTitle')"
+      :description="t('sectionFeed.emptyDescription')"
+      :action-label="t('sectionFeed.reset')"
+      :action-to="`/${slug}`" />
+
+    <ReadingPagination
+      v-if="pageInfo"
+      :page="pageInfo.page"
+      :total-pages="pageInfo.totalPages"
+      :label="t('sectionFeed.pagination')"
+      :to="(value) => pathTo({ page: value })" />
+
+    <!-- Зона «другие рубрики»: непустые рубрики локали со счётчиками. -->
+    <section v-if="feed?.otherSections.length" class="border-t border-zinc-200 py-8 dark:border-zinc-800">
+      <h2 class="font-sans text-xs font-bold uppercase text-zinc-500 dark:text-zinc-500">
+        {{ t("sectionFeed.otherSections") }}
+      </h2>
+      <div class="mt-4 flex gap-x-8 gap-y-3 overflow-x-auto md:flex-wrap md:overflow-visible">
+        <NuxtLink
+          v-for="other in feed.otherSections"
+          :key="other.slug"
+          :to="`/${other.slug}`"
+          class="shrink-0 font-garamond-libre text-lg text-zinc-700 transition-colors duration-300 hover:text-red-700 dark:text-zinc-300 dark:hover:text-red-400">
+          {{ other.name }}
+          <span class="font-sans text-xs text-zinc-500">{{ other.count }}</span>
+        </NuxtLink>
+      </div>
+    </section>
+  </div>
+
+  <ReadingLoadingSkeleton v-else :cards="6" class="py-12" />
+</template>

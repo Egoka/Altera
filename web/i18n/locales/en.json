@@ -250,7 +250,10 @@
     "rss": "RSS",
     "description": "A journal about culture, art, sport, music, photography, travel, and human thought.",
     "linksLabel": "Footer links",
-    "copyright": "© 2026 Altera"
+    "copyright": "© 2026 Altera",
+    "sections": "Sections",
+    "tags": "Tags",
+    "authors": "Authors"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -509,5 +512,62 @@
     "modals": "Modals",
     "notifications": "Notifications",
     "loaders": "Loaders"
+  },
+  "sectionFeed": {
+    "articleCount": "{count} stories",
+    "filterFormat": "Format",
+    "filterTag": "Tag",
+    "reset": "Clear filters",
+    "otherSections": "Other sections",
+    "emptyTitle": "Nothing found",
+    "emptyDescription": "No stories match the selected filters.",
+    "pagination": "Section feed pages"
+  },
+  "tagFeed": {
+    "emptyTitle": "Nothing in this language under this tag yet",
+    "emptyDescription": "Stories in another language are not mixed into the feed.",
+    "emptyAction": "All tags",
+    "pagination": "Tag feed pages"
+  },
+  "sectionsIndex": {
+    "title": "Sections",
+    "description": "The magazine writes about many sides of life — pick a section.",
+    "count": "{count} sections",
+    "articleCount": "{count} stories",
+    "emptyTitle": "No stories yet",
+    "emptyDescription": "A section joins the catalogue with its first publication.",
+    "emptyAction": "Become an author"
+  },
+  "tagsIndex": {
+    "title": "Tags",
+    "count": "{count} tags",
+    "popular": "Popular",
+    "searchPlaceholder": "Tag by first letters",
+    "sort": "Order",
+    "sortPopular": "Popular",
+    "sortName": "By name",
+    "letters": "Letter",
+    "reset": "Clear",
+    "emptyTitle": "No tags yet",
+    "emptyQueryTitle": "Nothing found",
+    "pagination": "Tag list pages"
+  },
+  "authorsIndex": {
+    "title": "Authors",
+    "count": "{count} authors",
+    "captionRecent": "by latest publication date",
+    "captionName": "by name",
+    "sort": "Order",
+    "sortRecent": "Recent",
+    "sortName": "By name",
+    "filterSection": "Section",
+    "letters": "Letter",
+    "reset": "Clear",
+    "articleCount": "{count} stories",
+    "becomeAuthor": "Become an author",
+    "emptyTitle": "No authors yet — be the first",
+    "emptyDescription": "An author joins the catalogue with their first publication.",
+    "emptyFilterTitle": "Nothing found",
+    "pagination": "Author list pages"
   }
 }

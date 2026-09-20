@@ -268,6 +268,17 @@ type AuthPayload {
   user: AccountUser!
 }
 
+type AuthorCatalog {
+  items: [CatalogAuthor!]!
+  letters: [String!]!
+  pageInfo: CatalogPageInfo!
+}
+
+enum AuthorCatalogSort {
+  name
+  recent
+}
+
 enum AuthorGrade {
   pro
   standard
@@ -287,6 +298,48 @@ type BaseFiltersInfo {
 input BaseFiltersInput {
   createdAt: DateRangeInput
   updatedAt: DateRangeInput
+}
+
+type CatalogArticleLink {
+  author: String!
+  path: String!
+  title: String!
+}
+
+type CatalogAuthor {
+  avatar: String
+  bioShort: String
+  grade: AuthorGrade!
+  handle: String!
+  id: ID!
+  isEditorial: Boolean!
+  lastPublishedAt: String
+  name: String!
+  publishedCount: Int!
+  recent: [CatalogArticleLink!]!
+}
+
+type CatalogPageInfo {
+  hasNext: Boolean!
+  page: Int!
+  totalCount: Int!
+  totalPages: Int!
+}
+
+type CatalogSection {
+  articleCount: Int!
+  cover: String
+  description: String
+  name: String!
+  order: Int!
+  preview: [CatalogArticleLink!]!
+  slug: String!
+}
+
+type CatalogTag {
+  articleCount: Int!
+  name: String!
+  slug: String!
 }
 
 input CreateArticleInput {
@@ -333,9 +386,18 @@ input DateRangeInput {
 }
 
 type Feed {
+  caption: FeedCaption
+  formats: [FeedFacet!]!
+  items: [FeedItem!]!
   locale: Locale!
+  otherSections: [FeedFacet!]!
+  pageInfo: FeedPageInfo
+  redirect: FeedRedirect
   scope: FeedScope!
+  section: FeedSectionHeader
   sections: [FeedSection!]!
+  tag: FeedTagHeader
+  topTags: [FeedFacet!]!
 }
 
 type FeedAuthor {
@@ -346,6 +408,12 @@ type FeedAuthor {
 
 enum FeedCaption {
   by_publication_date
+}
+
+type FeedFacet {
+  count: Int!
+  name: String!
+  slug: String!
 }
 
 type FeedItem {
@@ -361,8 +429,21 @@ type FeedItem {
   title: String!
 }
 
+type FeedPageInfo {
+  hasNext: Boolean!
+  page: Int!
+  totalPages: Int!
+}
+
+type FeedRedirect {
+  scope: FeedScope!
+  slug: String!
+}
+
 enum FeedScope {
   home
+  section
+  tag
 }
 
 type FeedSection {
@@ -371,10 +452,23 @@ type FeedSection {
   key: FeedSectionKey!
 }
 
+type FeedSectionHeader {
+  articleCount: Int!
+  description: String
+  name: String!
+  slug: String!
+}
+
 enum FeedSectionKey {
   new
   popular
   top
+}
+
+type FeedTagHeader {
+  articleCount: Int!
+  name: String!
+  slug: String!
 }
 
 type Format {
@@ -599,22 +693,26 @@ type Query {
   auditLog(cursor: String, filters: AuditLogFilters, limit: Int): AuditLogPage!
   auditSummary(filters: AuditLogFilters): AuditSummary!
   author(handle: String!): User
+  authorCatalog(letter: String, locale: Locale!, page: Int! = 1, section: String, sort: AuthorCatalogSort! = recent): AuthorCatalog!
   authorStats(authorHandle: String!): AuthorStats
-  feed(locale: Locale!, scope: FeedScope! = home): Feed!
+  feed(format: String, locale: Locale!, page: Int! = 1, scope: FeedScope! = home, slug: String, tag: String): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
   permissionExceptions(userId: ID): [PermissionException!]!
+  popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
   publicSections: [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
   section(slug: String!): Section
+  sectionCatalog(locale: Locale!): [CatalogSection!]!
   sectionStats(sectionSlug: String!): SectionStats
   sections(filters: SectionFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): SectionsResponse!
   tag(slug: String!): Tag
   tagAutocomplete(limit: Int = 10, q: String!): [Tag!]!
+  tagCatalog(letter: String, locale: Locale!, page: Int! = 1, q: String, sort: TagCatalogSort! = popular): TagCatalog!
   tagStats(tagSlug: String!): TagStats
   tags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
   taxonomyAudit(entityId: ID!, entityType: String!): [TaxonomyAuditEntry!]!
@@ -748,6 +846,17 @@ type Tag {
   slug: String!
   status: TaxonomyStatus!
   updatedAt: String!
+}
+
+type TagCatalog {
+  items: [CatalogTag!]!
+  letters: [String!]!
+  pageInfo: CatalogPageInfo!
+}
+
+enum TagCatalogSort {
+  name
+  popular
 }
 
 type TagCount {

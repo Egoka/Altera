@@ -250,7 +250,10 @@
     "rss": "RSS",
     "description": "Журнал о культуре, искусстве, спорте, музыке, фотографии, путешествиях и человеческой мысли.",
     "linksLabel": "Ссылки в подвале",
-    "copyright": "© 2026 Altera"
+    "copyright": "© 2026 Altera",
+    "sections": "Рубрики",
+    "tags": "Теги",
+    "authors": "Авторы"
   },
   "admin": {
     "dashboard": "Дашборд",
@@ -509,5 +512,62 @@
     "modals": "Модальные окна",
     "notifications": "Уведомления",
     "loaders": "Загрузчики"
+  },
+  "sectionFeed": {
+    "articleCount": "{count} материалов",
+    "filterFormat": "Формат",
+    "filterTag": "Тег",
+    "reset": "Сбросить фильтры",
+    "otherSections": "Другие рубрики",
+    "emptyTitle": "Ничего не найдено",
+    "emptyDescription": "По выбранным фильтрам материалов нет.",
+    "pagination": "Страницы ленты рубрики"
+  },
+  "tagFeed": {
+    "emptyTitle": "На этом языке под тегом пока ничего нет",
+    "emptyDescription": "Материалы другого языка в ленту не подмешиваются.",
+    "emptyAction": "Все теги",
+    "pagination": "Страницы ленты тега"
+  },
+  "sectionsIndex": {
+    "title": "Рубрики",
+    "description": "Издание пишет о разных сторонах жизни — выберите рубрику.",
+    "count": "{count} рубрик",
+    "articleCount": "{count} материалов",
+    "emptyTitle": "Материалов пока нет",
+    "emptyDescription": "Рубрика появляется в каталоге с первой публикацией.",
+    "emptyAction": "Стать автором"
+  },
+  "tagsIndex": {
+    "title": "Теги",
+    "count": "{count} тегов",
+    "popular": "Популярные",
+    "searchPlaceholder": "Тег по началу слова",
+    "sort": "Порядок",
+    "sortPopular": "Популярные",
+    "sortName": "По имени",
+    "letters": "Буква",
+    "reset": "Сбросить",
+    "emptyTitle": "Тегов пока нет",
+    "emptyQueryTitle": "Ничего не найдено",
+    "pagination": "Страницы списка тегов"
+  },
+  "authorsIndex": {
+    "title": "Авторы",
+    "count": "{count} авторов",
+    "captionRecent": "по дате последней публикации",
+    "captionName": "по имени",
+    "sort": "Порядок",
+    "sortRecent": "Недавние",
+    "sortName": "По имени",
+    "filterSection": "Рубрика",
+    "letters": "Буква",
+    "reset": "Сбросить",
+    "articleCount": "{count} материалов",
+    "becomeAuthor": "Стать автором",
+    "emptyTitle": "Авторов пока нет — станьте первым",
+    "emptyDescription": "Автор появляется в каталоге с первой публикацией.",
+    "emptyFilterTitle": "Ничего не найдено",
+    "pagination": "Страницы списка авторов"
   }
 }

@@ -2,7 +2,8 @@ import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
-import { captionKey, feedRequestId, homeSection, toHomeSections, toReadingArticle } from "../app/utils/homeFeed"
+import { captionKey, homeSection, toHomeSections, toReadingArticle } from "../app/utils/homeFeed"
+import { feedRequestId } from "../app/utils/publicFeed"
 
 const appDir = fileURLToPath(new URL("../app", import.meta.url))
 

@@ -1,164 +1,37 @@
 <script setup lang="ts">
-  import type { SectionSummaryFragment } from "~/graphql/generated/graphql"
-
-  type SectionNavItem = SectionSummaryFragment & { iconUrl?: string }
-
-  interface Props {
-    section: SectionNavItem
-  }
-
-  const props = defineProps<Props>()
-
-  const isExpanded = ref(false)
-  const shouldApplyLineClamp = ref(false)
-  const showToggleButton = ref(false)
-
-  // Состояние для отслеживания подписки
-  const isFollowing = ref(false)
-
-  // Реф для получения реальной высоты контента
-  const bioContent = ref<HTMLElement>()
-  const bioHeight = ref(0)
-
-  const toggleExpanded = () => {
-    if (isExpanded.value) {
-      isExpanded.value = false
-      shouldApplyLineClamp.value = true
-
-      // Плавно прокручиваем страницу вверх при закрытии текста
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      })
-    } else {
-      shouldApplyLineClamp.value = false
-      isExpanded.value = true
-    }
-  }
-
-  watch(isExpanded, (newValue) => {
-    if (!newValue) {
-      setTimeout(() => {
-        shouldApplyLineClamp.value = false
-      }, 1100)
-    }
-  })
-
-  // Функция для переключения подписки
-  const toggleFollow = () => {
-    isFollowing.value = !isFollowing.value
-  }
-
-  // Функция для вычисления реальной высоты контента
-  const calculateBioHeight = () => {
-    if (bioContent.value) {
-      // Временно убираем ограничения для измерения реальной высоты
-      const tempStyle = bioContent.value.style
-      const originalMaxHeight = tempStyle.maxHeight
-      const originalOverflow = tempStyle.overflow
-
-      tempStyle.maxHeight = "none"
-      tempStyle.overflow = "visible"
-
-      bioHeight.value = bioContent.value.scrollHeight
-
-      showToggleButton.value = bioHeight.value > bioContent.value.offsetHeight
-
-      // Восстанавливаем стили
-      tempStyle.maxHeight = originalMaxHeight
-      tempStyle.overflow = originalOverflow
-    }
-  }
-
-  // Вычисляем высоту при загрузке компонента
-  onMounted(() => {
-    nextTick(() => {
-      if (props.section.description && props.section.description.trim()) {
-        calculateBioHeight()
-      }
-    })
-
-    // Добавляем обработчик изменения размера окна
-    window.addEventListener("resize", () => {
-      if (props.section.description && props.section.description.trim()) {
-        calculateBioHeight()
-      }
-    })
-  })
-
-  // Очищаем обработчик при размонтировании
-  onUnmounted(() => {
-    window.removeEventListener("resize", calculateBioHeight)
-  })
+  /**
+   * Шапка ленты рубрики (`section-feed.md` §5 зона 2): название, описание и число
+   * материалов локали. Описания может не быть — тогда зона показывает одно название.
+   *
+   * Кнопки подписки здесь нет: подписка на автора — F-10, и на рубрику она не
+   * распространяется; прежняя кнопка ничего не меняла и обещала несуществующее действие.
+   * Описание выводится текстом, а не разметкой: публичная страница не исполняет HTML
+   * из административного поля.
+   */
+  defineProps<{
+    section: { name: string; description?: string | null; articleCount?: number }
+    countLabel?: string
+  }>()
 </script>
 
 <template>
-  <header
-    v-if="section"
-    class="w-full border-b border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-400 transition-colors duration-500">
-    <div class="w-full pb-8 pt-12 sm:pb-6 sm:pt-10 md:pb-10 md:pt-14">
-      <div class="max-w-7xl mx-auto px-8 sm:px-10">
-        <div class="flex flex-col items-center gap-6">
-          <div v-if="section.iconUrl" class="relative mb-6">
-            <NuxtImg
-              :alt="section.name + ' Icon'"
-              class="block mx-auto mb-6 md:mb-6 sm:mb-4 w-30 h-30 object-contain dark:invert-100"
-              :src="section.iconUrl"
-              width="120"
-              height="120" />
-          </div>
-          <h1
-            class="font-waterway tracking-widest text-center text-5xl md:text-4xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-            {{ section.name }}
-          </h1>
+  <header class="w-full border-b border-zinc-200 dark:border-zinc-800">
+    <div class="w-full pt-12 pb-8 sm:pt-10 sm:pb-6 md:pt-14 md:pb-10">
+      <div class="flex flex-col items-center gap-4">
+        <h1
+          class="font-waterway text-center text-3xl font-bold tracking-widest text-zinc-900 sm:text-4xl md:text-5xl dark:text-zinc-100">
+          {{ section.name }}
+        </h1>
 
-          <div v-if="section.description && section.description.trim()" class="max-w-3xl text-center">
-            <div
-              ref="bioContent"
-              :class="[
-                'relative overflow-hidden text-justify transition-all duration-1000',
-                !(isExpanded || shouldApplyLineClamp) ? 'line-clamp-3' : ''
-              ]"
-              :style="{
-                maxHeight: isExpanded ? `${bioHeight}px` : '5.75rem'
-              }">
-              <div
-                class="font-garamond-libre text-xl text-zinc-600 dark:text-zinc-300 leading-relaxed"
-                v-html="section.description"></div>
-            </div>
+        <p
+          v-if="section.description?.trim()"
+          class="max-w-3xl text-center font-garamond-libre text-xl leading-relaxed text-zinc-600 dark:text-zinc-300">
+          {{ section.description }}
+        </p>
 
-            <button
-              v-show="showToggleButton"
-              @click.stop.prevent="toggleExpanded"
-              @mousedown.stop
-              @mouseup.stop
-              class="mt-3 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-500 font-serif hover:text-zinc-700 dark:hover:text-zinc-400 transition-colors">
-              {{ isExpanded ? "read less -" : "read more +" }}
-            </button>
-          </div>
-
-          <button
-            @click.stop.prevent="toggleFollow"
-            @mousedown.stop
-            @mouseup.stop
-            :class="[
-              'flex items-center gap-2 pr-4 pl-3 py-1 rounded-md transition-all duration-300',
-              isFollowing
-                ? 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                : 'bg-zinc-50 dark:bg-zinc-900 border border-red-500 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950'
-            ]">
-            <Icon
-              :name="isFollowing ? 'a-icon:round-remove-circle' : 'a-icon:round-add-circle'"
-              :class="isFollowing ? 'text-zinc-600 dark:text-zinc-400' : 'text-red-500 dark:text-red-800'" />
-            <span
-              :class="[
-                'font-serif font-medium tracking-wide',
-                isFollowing ? 'text-zinc-600 dark:text-zinc-400' : 'text-red-500'
-              ]">
-              {{ isFollowing ? "Unfollow" : "Follow" }}
-            </span>
-          </button>
-        </div>
+        <p v-if="countLabel" class="font-sans text-xs font-bold uppercase text-zinc-500 dark:text-zinc-500">
+          {{ countLabel }}
+        </p>
       </div>
     </div>
   </header>
