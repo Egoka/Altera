@@ -201,9 +201,11 @@ class Live:
             return False
 
     def patch_fingerprint(self, sha, base, task_id):
-        """Отпечаток патча ветки от точки ответвления от app; собственный итог задачи не входит."""
+        """Отпечаток патча ветки от точки ответвления от app; финализация задачи не входит."""
         fork = command(["git", "merge-base", sha, base], self.repo, False)
-        own_receipt = [f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")]
+        # Итог и отчёт пишутся после review, поэтому одобрение кода они не отменяют.
+        # `:(glob)` не даёт `*` перейти через `/`: подкаталоги `docs/reports/` остаются в патче.
+        own_receipt = [f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")] + [":(glob,exclude)docs/reports/*"]
         diff = subprocess.run(["git", "diff", "--no-color", "--no-ext-diff", "--full-index", "--binary", fork, sha, "--", ".", *own_receipt],
                               cwd=self.repo, capture_output=True, timeout=120, check=True).stdout
         if not diff:

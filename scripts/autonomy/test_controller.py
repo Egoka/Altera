@@ -148,6 +148,7 @@ class HeadReceiptOnlyTests(unittest.TestCase):
         self.root = self.directory.name
         self.git("init", "-q", "-b", "app")
         self.live = c.Live({"repo": self.root})
+        self.base = self.commit("README.md", "base\n")
         self.tested = self.commit("server/src/feature.ts", "export const feature = 1\n")
 
     def test_own_finalization_written_after_the_work_is_accepted(self):
@@ -171,6 +172,20 @@ class HeadReceiptOnlyTests(unittest.TestCase):
         self.git("checkout", "-q", "--orphan", "rewritten")
         rewritten = self.commit("docs/reports/tasks/T-123.json", '{"task_id": "T-123"}\n')
         self.assertFalse(self.live.head_receipt_only(self.tested, rewritten, "T-123"))
+
+    def test_review_survives_its_own_finalization_but_not_other_changes(self):
+        reviewed = self.live.patch_fingerprint(self.tested, self.base, "T-123")
+        self.assertIsNotNone(reviewed)
+        for path in ("docs/reports/2026-09-20-t123-report.md", "docs/reports/tasks/T-123.md"):
+            with self.subTest(path=path):
+                self.git("reset", "-q", "--hard", self.tested)
+                head = self.commit(path, "финализация\n")
+                self.assertEqual(self.live.patch_fingerprint(head, self.base, "T-123"), reviewed)
+        for path in ("docs/reports/evidence/probe.json", "docs/reports/tasks/T-456.md", "server/src/feature.ts"):
+            with self.subTest(path=path):
+                self.git("reset", "-q", "--hard", self.tested)
+                head = self.commit(path, "не финализация\n")
+                self.assertNotEqual(self.live.patch_fingerprint(head, self.base, "T-123"), reviewed)
 
     def test_unknown_or_malformed_shas_are_rejected_without_network(self):
         for tested, head in [(None, "f" * 40), ("b" * 40, "short"), ("b" * 40, "f" * 40)]:
