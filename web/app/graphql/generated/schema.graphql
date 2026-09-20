@@ -181,6 +181,87 @@ type ArticlesResponse {
   sort: SortInfo!
 }
 
+type AuditActor {
+  id: ID
+  isSystem: Boolean!
+  name: String
+  role: Role
+}
+
+type AuditEntry {
+  action: String!
+  actor: AuditActor!
+  changedFields: [String!]!
+  createdAt: String!
+  entityId: ID!
+  entityType: String!
+  id: ID!
+  requestId: String
+  zones: [AuditZone!]!
+}
+
+type AuditEntryDetail {
+  action: String!
+  actor: AuditActor!
+  changedFields: [String!]!
+  context: String
+  createdAt: String!
+  diff: JSON
+  entityId: ID!
+  entityType: String!
+  id: ID!
+  purpose: String
+  requestId: String
+  subject: String
+  zones: [AuditZone!]!
+}
+
+type AuditExport {
+  contentType: String!
+  csv: String!
+  filename: String!
+  rows: Int!
+}
+
+input AuditLogFilters {
+  action: String
+  actorId: ID
+  actorSystem: Boolean
+  entityId: ID
+  entityType: String
+  from: String
+  requestId: String
+  subject: String
+  to: String
+  zone: AuditZone
+}
+
+type AuditLogPage {
+  availableActions: [String!]!
+  canExport: Boolean!
+  entries: [AuditEntry!]!
+  nextCursor: String
+  zone: AuditZone
+}
+
+type AuditSummary {
+  byAction: [AuditSummaryBucket!]!
+  byActor: [AuditSummaryBucket!]!
+  total: Int!
+}
+
+type AuditSummaryBucket {
+  count: Int!
+  key: String!
+  label: String
+}
+
+enum AuditZone {
+  editorial
+  financeAndPd
+  moderation
+}
+
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
@@ -323,6 +404,7 @@ type Mutation {
   createTag(input: CreateTagInput!): Tag!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
+  exportAudit(filters: AuditLogFilters): AuditExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
   mergeTags(input: MergeTagsInput!): Tag!
@@ -463,6 +545,9 @@ type Query {
   articlesByAuthor(authorHandle: String!, limit: Int = 10, page: Int = 1): ArticlesByAuthorResponse!
   articlesBySection(limit: Int = 10, page: Int = 1, sectionSlug: String!): ArticlesBySectionResponse!
   articlesByTag(limit: Int = 10, page: Int = 1, tagSlug: String!): ArticlesByTagResponse!
+  auditEntry(id: ID!): AuditEntryDetail!
+  auditLog(cursor: String, filters: AuditLogFilters, limit: Int): AuditLogPage!
+  auditSummary(filters: AuditLogFilters): AuditSummary!
   author(handle: String!): User
   authorStats(authorHandle: String!): AuthorStats
   featuredArticles(limit: Int = 5): [Article!]!
