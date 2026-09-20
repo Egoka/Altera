@@ -1,0 +1,53 @@
+type BookmarkedArticleAuthor {
+  name: String!
+  handle: String!
+}
+
+type BookmarkedArticle {
+  id: ID!
+  title: String!
+  slug: String!
+  locale: Locale!
+  cover: String
+  publishedAt: String
+  # Снятый или архивированный материал остаётся в списке со значением false.
+  available: Boolean!
+  author: BookmarkedArticleAuthor!
+  section: Section
+}
+
+type BookmarkItem {
+  bookmarkedAt: String!
+  article: BookmarkedArticle!
+}
+
+type BookmarkCounts {
+  total: Int!
+  unavailable: Int!
+}
+
+type BookmarksPageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
+type MyBookmarksConnection {
+  items: [BookmarkItem!]!
+  counts: BookmarkCounts!
+  pageInfo: BookmarksPageInfo!
+}
+
+type BookmarkState {
+  articleId: ID!
+  bookmarked: Boolean!
+}
+
+extend type Query {
+  myBookmarks(cursor: ID, limit: Int = 20, unavailable: Boolean): MyBookmarksConnection!
+  myBookmark(articleId: ID!): BookmarkState!
+}
+
+extend type Mutation {
+  addBookmark(articleId: ID!): BookmarkState!
+  removeBookmark(articleId: ID!): BookmarkState!
+}

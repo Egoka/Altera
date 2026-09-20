@@ -3,8 +3,9 @@ import path from "node:path"
 import { describe, expect, test } from "vitest"
 import { ERROR_DEFINITIONS } from "../src/errors/dictionary"
 import { LOG_EVENT_CODES } from "../src/observability/log-events"
+import { METRIC_EVENT_CODES } from "../src/observability/metric-events"
 
-type RegistryCodeType = "error" | "log"
+type RegistryCodeType = "error" | "log" | "metric"
 
 const registryPath = path.resolve(__dirname, "../../docs/spec/00-registries/events-and-logs.md")
 
@@ -46,5 +47,9 @@ describe("event code registry", () => {
 
   test("approved error codes match ERROR_DEFINITIONS bijectively", () => {
     expect(Object.keys(ERROR_DEFINITIONS).sort()).toEqual(approvedRegistryCodes("error"))
+  })
+
+  test("approved metric codes match METRIC_EVENT_CODES bijectively", () => {
+    expect([...METRIC_EVENT_CODES].sort()).toEqual(approvedRegistryCodes("metric"))
   })
 })
