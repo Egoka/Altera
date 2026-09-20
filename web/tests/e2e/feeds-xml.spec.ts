@@ -51,9 +51,18 @@ test("карта локали содержит главную и статиче�
     expect(body).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"')
     expect(body).toContain(`<loc>${home}</loc>`)
     expect(body).toContain("<priority>1.0</priority>")
+
+    // Сравниваются целые адреса, а не начала строк: `/authors` начинается с `/auth`,
+    // и проверка по началу запрещала бы публичный каталог авторов. Префикс локали
+    // снимается, чтобы `/en/me` ловился наравне с `/me`.
+    const paths = [...body.matchAll(/<loc>([^<]+)<\/loc>/g)]
+      .map((match) => match[1]!.slice(String(baseURL).length))
+      .map((value) => (value === "/en" ? "/" : value.startsWith("/en/") ? value.slice(3) : value))
+
     // Кабинет, админка и вход роботу не отдаются (§4).
     for (const forbidden of ["/me", "/admin", "/auth", "/search"]) {
-      expect(body, `${path} без ${forbidden}`).not.toContain(`<loc>${baseURL}${forbidden}`)
+      const leaked = paths.filter((value) => value === forbidden || value.startsWith(`${forbidden}/`))
+      expect(leaked, `${path} без ${forbidden}`).toEqual([])
     }
   }
 })
