@@ -40,3 +40,17 @@ export const formatArticleMonth = (key: string, locale: string): string => {
   const label = format(date, "LLLL yyyy", { locale: dateLocale })
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
+
+/**
+ * Месяц первой публикации для строки «публикуется с {месяц год}» (`author.md` §5 зона 2).
+ * Здесь месяц стоит внутри фразы, поэтому в русской локали он остаётся строчным и в
+ * родительном падеже — «с марта 2026», а не «с Март 2026»; заголовок месяца в хронике
+ * (`formatArticleMonth`), наоборот, именительный и с прописной.
+ */
+export const formatPublishingSince = (iso: string, locale: string): string => {
+  if (!iso) return ""
+  const date = parseISO(iso)
+  if (!isValid(date)) return ""
+  const { locale: dateLocale } = LOCALES[locale] ?? LOCALES.en!
+  return format(date, "MMMM yyyy", { locale: dateLocale })
+}

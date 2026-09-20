@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
+  import type { DemoArticleCard } from "~/types/reading"
   import type { CardMeta } from "~/types/layout"
 
   // Служебная строка карточки: части в заданном порядке через точку-разделитель.
   // Один атом вместо трёх одинаковых блоков в карточках base, large и small.
   const props = withDefaults(
     defineProps<{
-      article: ArticleCardFragment
+      article: DemoArticleCard
       parts?: CardMeta
     }>(),
     { parts: () => ["author", "type"] }

@@ -21,9 +21,10 @@ export const feedRequestId = (errors?: readonly GraphQLErrorLike[]): string | un
 
 /**
  * Отказ API превращается в состояние страницы: «не найдено» и неверный параметр адреса —
- * 404 страницы #21, всё остальное — 500 с кодом запроса (`section-feed.md` §8).
- * `VALIDATION_ERROR` тоже даёт 404: такой адрес не ведёт никуда, и подменять его первой
- * страницей значит показывать не то, что в URL.
+ * 404 страницы #21, снятый с публикации адрес — 410 страницы #22, всё остальное — 500 с
+ * кодом запроса (`section-feed.md` §8, `author.md` §8). `VALIDATION_ERROR` тоже даёт 404:
+ * такой адрес не ведёт никуда, и подменять его первой страницей значит показывать не то,
+ * что в URL.
  */
 export const throwOnFeedError = <T>(result: ExecutionResult<T>): T => {
   if (!result.errors?.length && result.data) return result.data
@@ -31,6 +32,11 @@ export const throwOnFeedError = <T>(result: ExecutionResult<T>): T => {
   const code = codeOf(result.errors)
   if (code === "NOT_FOUND" || code === "VALIDATION_ERROR") {
     throw createError({ statusCode: 404, statusMessage: "NOT_FOUND", fatal: true })
+  }
+
+  // 410 остаётся внутри страницы: её тело объясняет, что адрес был публичным и снят.
+  if (code === "ARCHIVED") {
+    throw createError({ statusCode: 410, statusMessage: "ARCHIVED", fatal: false })
   }
 
   throw createError({

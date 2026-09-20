@@ -1,8 +1,8 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
+  import type { DemoArticleCard } from "~/types/reading"
 
   const props = defineProps<{
-    article: ArticleCardFragment
+    article: DemoArticleCard
   }>()
   const slug = computed(() => (props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""))
   const section = computed(() => (props.article.section ? `/${props.article.section.slug}` : ""))

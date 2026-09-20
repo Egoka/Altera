@@ -8,6 +8,7 @@ import TagFeedPage from "../app/pages/tags/[slug].vue"
 import SectionsIndexPage from "../app/pages/sections/index.vue"
 import TagsIndexPage from "../app/pages/tags/index.vue"
 import AuthorsIndexPage from "../app/pages/authors/index.vue"
+import AuthorPage from "../app/pages/authors/[slug].vue"
 
 // Строки состояний §8 пяти спецификаций публичных страниц: готовая страница, «Пусто»,
 // «Ошибка данных», скелеты клиентской навигации и переезд адреса на 301.
@@ -39,6 +40,11 @@ const stubs = {
     template: '<header data-zone="section-header">{{ section.name }}</header>'
   },
   HeaderTag: { props: ["tag"], template: '<header data-zone="tag-header">{{ tag.name }}</header>' },
+  ReadingAuthorHeader: {
+    props: ["author", "sinceLabel", "countLabel"],
+    template:
+      '<header data-zone="author-header" :data-since="sinceLabel" :data-count="countLabel" :data-links="author.links.length">{{ author.name }}</header>'
+  },
   ArticleGroup: {
     props: ["articles", "layout", "meta"],
     template: '<section data-zone="group" :data-count="articles.length" />'
@@ -78,8 +84,11 @@ const stubs = {
 
 const graphQLRequest = vi.fn()
 const navigate = vi.fn()
+const setStatus = vi.fn()
+const requestEvent = { node: {} }
 const routeQuery = ref<Record<string, unknown>>({})
 const routeParams = ref<Record<string, unknown>>({})
+const routePath = ref("/authors/vera")
 
 const respondWith = (envelope: unknown) => graphQLRequest.mockResolvedValue(envelope)
 
@@ -114,6 +123,7 @@ const pending = () =>
 beforeEach(() => {
   graphQLRequest.mockReset()
   navigate.mockReset()
+  setStatus.mockReset()
   routeQuery.value = {}
   routeParams.value = {}
   vi.stubGlobal("computed", computed)
@@ -126,6 +136,11 @@ beforeEach(() => {
   vi.stubGlobal("navigateTo", navigate)
   vi.stubGlobal("useRoute", () => ({ query: routeQuery.value, params: routeParams.value }))
   vi.stubGlobal("useRouter", () => ({ replace: vi.fn() }))
+  vi.stubGlobal("useLocalePath", () => (path: string) => path)
+  vi.stubGlobal("useSwitchLocalePath", () => (target: string) => `/${target}${routePath.value}`)
+  vi.stubGlobal("useRequestEvent", () => requestEvent)
+  vi.stubGlobal("setResponseStatus", setStatus)
+  vi.stubGlobal("useSeoMeta", vi.fn())
   vi.stubGlobal("createError", (input: object) => Object.assign(new Error("request failed"), input))
   vi.stubGlobal("useGraphQL", graphQLRequest)
   vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => {
@@ -436,5 +451,118 @@ describe("список авторов", () => {
     expect((await render(AuthorsIndexPage)).get('[data-zone="error"]').attributes("data-request-id")).toBe(
       "req-authors"
     )
+  })
+})
+
+describe("страница автора", () => {
+  beforeEach(() => {
+    routeParams.value = { slug: "vera" }
+    routePath.value = "/authors/vera"
+  })
+
+  const authorPage = (overrides: { author?: Record<string, unknown>; feed?: Record<string, unknown> } = {}) => ({
+    data: {
+      author: {
+        id: "1",
+        handle: "vera",
+        name: "Вера Орлова",
+        bio: "Пишет о городе.",
+        avatar: null,
+        grade: "pro",
+        publishedCount: 3,
+        firstPublishedAt: "2026-03-04T08:00:00.000Z",
+        redirect: null,
+        links: [{ kind: "telegram", url: "https://t.me/vera" }],
+        ...overrides.author
+      },
+      feed: {
+        caption: "by_publication_date",
+        redirect: null,
+        items: [feedItem("1"), feedItem("2")],
+        pageInfo: { page: 1, totalPages: 2, hasNext: true },
+        ...overrides.feed
+      }
+    }
+  })
+
+  it("рисует шапку автора, подпись порядка, хронику и пагинацию", async () => {
+    respondWith(authorPage())
+
+    const wrapper = await render(AuthorPage)
+
+    expect(wrapper.get('[data-zone="author-header"]').text()).toBe("Вера Орлова")
+    expect(wrapper.get('[data-zone="author-header"]').attributes("data-count")).toBe("authorPage.articleCount:3")
+    expect(wrapper.get('[data-zone="author-header"]').attributes("data-since")).toBe("authorPage.since:марта 2026")
+    expect(wrapper.get('[data-zone="controls"]').attributes("data-groups")).toBe("0")
+    // Один месяц публикации, внутри — однорядные группы ритма автора: первая раскладка
+    // ритма держит один материал, второй ложится в запасную под остаток.
+    expect(wrapper.findAll("h2").map((heading) => heading.text())).toEqual(["Сентябрь 2026"])
+    expect(
+      wrapper.findAll('[data-zone="group"]').reduce((total, group) => total + Number(group.attributes("data-count")), 0)
+    ).toBe(2)
+    expect(wrapper.get('[data-zone="pagination"]').attributes("data-next")).toBe("/authors/vera?page=2")
+  })
+
+  it("хэндл и страница адреса уходят в запрос локали", async () => {
+    routeQuery.value = { page: "2" }
+    respondWith(authorPage())
+
+    await render(AuthorPage)
+
+    expect(graphQLRequest).toHaveBeenCalledWith(expect.anything(), { handle: "vera", locale: "ru", page: 2 })
+  })
+
+  it("пусто в локали предлагает другой язык и не подмешивает чужие материалы", async () => {
+    respondWith(authorPage({ feed: { items: [], pageInfo: { page: 1, totalPages: 0, hasNext: false } } }))
+
+    const wrapper = await render(AuthorPage)
+
+    expect(wrapper.get('[data-zone="empty"]').attributes("data-action")).toBe("/en/authors/vera")
+    expect(wrapper.find('[data-zone="group"]').exists()).toBe(false)
+  })
+
+  it("прежний хэндл уводит на нынешний кодом 301", async () => {
+    respondWith(authorPage({ author: { redirect: "vera-new", handle: "vera-new" } }))
+
+    await render(AuthorPage)
+
+    expect(navigate).toHaveBeenCalledWith("/authors/vera-new", { redirectCode: 301, replace: true })
+  })
+
+  it("хэндл не в том регистре тоже уводит на канонический", async () => {
+    routeParams.value = { slug: "Vera" }
+    respondWith(authorPage())
+
+    await render(AuthorPage)
+
+    expect(navigate).toHaveBeenCalledWith("/authors/vera", { redirectCode: 301, replace: true })
+  })
+
+  it("архивированный аккаунт отвечает 410 и текстом страницы #22", async () => {
+    respondWith({ errors: [{ extensions: { code: "ARCHIVED" } }] })
+
+    const wrapper = await render(AuthorPage)
+
+    expect(setStatus).toHaveBeenCalledWith(requestEvent, 410)
+    expect(wrapper.get("#author-gone-title").text()).toBe("authorPage.goneTitle")
+    expect(wrapper.find('[data-zone="author-header"]').exists()).toBe(false)
+  })
+
+  it("неизвестный хэндл и аккаунт без публикаций прерывают страницу отказом 404", async () => {
+    respondWith({ errors: [{ extensions: { code: "NOT_FOUND" } }] })
+
+    expect(await renderFailing(AuthorPage)).toEqual([expect.objectContaining({ statusCode: 404 })])
+  })
+
+  it("отказ данных показывает состояние ошибки с кодом запроса", async () => {
+    respondWith({ errors: [{ extensions: { code: "INTERNAL_ERROR", requestId: "req-author" } }] })
+
+    expect((await render(AuthorPage)).get('[data-zone="error"]').attributes("data-request-id")).toBe("req-author")
+  })
+
+  it("клиентская навигация показывает скелеты", async () => {
+    pending()
+
+    expect((await render(AuthorPage)).find('[data-zone="skeleton"]').exists()).toBe(true)
   })
 })

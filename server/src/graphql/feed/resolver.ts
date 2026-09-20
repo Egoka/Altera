@@ -3,9 +3,10 @@ import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
+import { findPageAuthor, normalizeHandle } from "../author/resolver"
 
 type FeedLocale = "ru" | "en"
-type FeedScope = "home" | "section" | "tag" | "latest"
+type FeedScope = "home" | "section" | "tag" | "author" | "latest"
 type FeedSectionKey = "top" | "new" | "popular"
 type FeedCaption = "by_publication_date"
 type AuthorGrade = "standard" | "pro"
@@ -374,6 +375,34 @@ const buildTagFeed = async (ctx: GraphQLContext, locale: FeedLocale, slug: strin
 }
 
 /**
+ * Лента страницы автора (`author.md` §4, §5 зона 4): только опубликованные материалы автора
+ * в локали запроса, порядок — дата публикации (журнал §20.4). Прежний хэндл уводит на
+ * нынешний, архивированный аккаунт отвечает 410, неизвестный — 404; существование самой
+ * страницы проверяет запрос `author` (§1), поэтому пустая лента локали здесь — состояние
+ * «пусто», а не отказ: материалы другого языка не подмешиваются (журнал §20.5).
+ */
+const buildAuthorFeed = async (
+  ctx: GraphQLContext,
+  locale: FeedLocale,
+  handle: string,
+  page: number
+): Promise<Feed> => {
+  const { user, redirect } = await findPageAuthor(ctx, handle)
+  if (redirect) return { ...emptyFeed("author", locale), redirect: { scope: "author", slug: redirect } }
+
+  const where = publicArticleWhere({ sourceLocale: locale, authorId: user.id })
+  const articleCount = await ctx.prisma.article.count({ where })
+  const pageInfo = feedPageInfo(articleCount, page, ctx.requestId)
+
+  return {
+    ...emptyFeed("author", locale),
+    items: articleCount > 0 ? await readFeedPage(ctx, where, page, locale) : [],
+    caption: "by_publication_date",
+    pageInfo
+  }
+}
+
+/**
  * Размер ленты `latest`. Ноль, отрицательное и дробное значение — отказ `VALIDATION_ERROR`:
  * молча подменять их числом по умолчанию значит отдавать не то, что запросил клиент. Запрос
  * сверх потолка усекается до него: пятьдесят элементов — граница ленты, а не ошибка адреса
@@ -434,6 +463,7 @@ export default {
         scope?: FeedScope
         locale: FeedLocale
         slug?: string | null
+        handle?: string | null
         format?: string | null
         tag?: string | null
         page?: number
@@ -448,14 +478,24 @@ export default {
       const slug = args.slug?.trim() ?? ""
       const format = args.format?.trim() || null
       const tag = args.tag?.trim() || null
+      // Лента автора адресуется хэндлом, а не слагом: регистр в нём не учитывается (§3).
+      const handle = scope === "author" ? normalizeHandle(args.handle ?? "", ctx.requestId) : ""
 
-      if (scope !== "home" && scope !== "latest" && !slug) {
+      if ((scope === "section" || scope === "tag") && !slug) {
         throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "slug", rule: "required" })
       }
 
       // Ответ одинаков для всех и не зависит от сессии (ADR-0019): кеш общий, а теги
-      // публикации уже сбрасывают и главную, и ленты рубрики и тега затронутого материала.
-      const tags = scope === "section" ? [`section:${slug}`] : scope === "tag" ? [`tag:${slug}`] : ["home"]
+      // публикации уже сбрасывают и главную, и ленты рубрики, тега и автора затронутого
+      // материала (`cache/key.ts`).
+      const tags =
+        scope === "section"
+          ? [`section:${slug}`]
+          : scope === "tag"
+            ? [`tag:${slug}`]
+            : scope === "author"
+              ? [`author:${handle}`]
+              : ["home"]
 
       return readThroughPublicCache(
         {
@@ -466,6 +506,7 @@ export default {
             scope,
             locale,
             slug,
+            handle,
             format,
             tag,
             page,
@@ -477,6 +518,7 @@ export default {
         async () => {
           if (scope === "section") return buildSectionFeed(ctx, locale, slug, format, tag, page)
           if (scope === "tag") return buildTagFeed(ctx, locale, slug, page)
+          if (scope === "author") return buildAuthorFeed(ctx, locale, handle, page)
           if (scope === "latest") return buildLatestFeed(ctx, locale, limit)
           return buildHomeFeed(ctx, locale)
         }

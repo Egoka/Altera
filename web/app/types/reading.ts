@@ -23,6 +23,24 @@ export interface ReadingArticle {
 }
 
 /**
+ * Карточка витрины раскладок и демонстрационных фикстур: форма прежнего фрагмента
+ * `ArticleCard`, снятого вместе с переходом страницы автора на `feed` (T-057). Настоящие
+ * ленты собираются из `ReadingArticle`; этот тип живёт только ради страницы `layouts-showcase`
+ * и её фикстур, поэтому в нём остался `photoUrl` автора, которого публичная лента не отдаёт.
+ */
+export interface DemoArticleCard {
+  id: string
+  title: string
+  slug: string
+  dek: string | null
+  excerpt: string | null
+  featuredImage: string | null
+  publishedAt: string | null
+  author: { name: string; slug: string; photoUrl: string | null }
+  section: { name: string; slug: string } | null
+}
+
+/**
  * Ряд значений фильтра панели ленты: подпись, значения со счётчиками, выбранное
  * значение и способ собрать адрес выбора. Панель сама адресов не знает — их строит
  * страница, у которой есть маршрут и остальные параметры.

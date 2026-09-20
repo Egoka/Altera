@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ArticleCardFragment } from "~/graphql/generated/graphql"
+  import type { DemoArticleCard } from "~/types/reading"
   import { ARTICLE_LAYOUTS, capacityOf, validateLayout } from "~/utils/articleLayouts"
 
   // Витрина раскладок: только для разработки. Показывает каждую комбинацию из
@@ -24,7 +24,7 @@
     { name: "Наука", slug: "science" }
   ]
 
-  const makeArticle = (i: number): ArticleCardFragment => ({
+  const makeArticle = (i: number): DemoArticleCard => ({
     id: `demo-${i}`,
     title: titles[i % titles.length]!,
     slug: `demo-${i}`,

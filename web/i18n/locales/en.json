@@ -947,6 +947,18 @@
     "emptyFilterTitle": "Nothing found",
     "pagination": "Author list pages"
   },
+  "authorPage": {
+    "articleCount": "{count} stories",
+    "since": "publishing since {month}",
+    "captionByDate": "by publication date",
+    "emptyTitle": "Nothing from this author in this language yet",
+    "emptyDescription": "Stories in the other language are not mixed into the feed.",
+    "emptyAction": "Switch language",
+    "goneTitle": "This author page is unavailable",
+    "goneDescription": "The account has been withdrawn, and its stories are no longer shown.",
+    "goneAction": "All authors",
+    "pagination": "Author story pages"
+  },
   "bookmarks": {
     "pageTitle": "Bookmarks",
     "eyebrow": "Reader account",

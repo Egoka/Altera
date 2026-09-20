@@ -1,25 +1,34 @@
-query GetAuthorPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
-  user(handle: $slug) {
-    ...AuthorSummary
-  }
-  articlesByAuthor(authorHandle: $slug, page: $page, limit: $limit) {
-    articles {
-      ...ArticleCard
-      tags {
-        name
-        slug
-      }
+# Страница автора (`docs/spec/20-public/author.md` §4): профиль без ПДн и служебных полей
+# и лента его опубликованных материалов в локали страницы. Подписка на автора — этап 3
+# (F-10), поэтому ни кнопки, ни числа подписчиков в запросе нет.
+query GetAuthorPage($handle: String!, $locale: Locale!, $page: Int!) {
+  author(handle: $handle) {
+    id
+    handle
+    name
+    bio
+    avatar
+    grade
+    publishedCount
+    firstPublishedAt
+    redirect
+    links {
+      kind
+      url
     }
-    totalCount
-    totalPages
-    currentPage
   }
-  authorStats(authorHandle: $slug) {
-    totalArticles
-    articlesThisMonth
-    popularTags {
-      name
+  feed(scope: author, handle: $handle, locale: $locale, page: $page) {
+    caption
+    redirect {
       slug
+    }
+    items {
+      ...FeedCard
+    }
+    pageInfo {
+      page
+      totalPages
+      hasNext
     }
   }
 }

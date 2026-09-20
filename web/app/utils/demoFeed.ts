@@ -1,4 +1,4 @@
-import type { ArticleCardFragment } from "~/graphql/generated/graphql"
+import type { DemoArticleCard } from "~/types/reading"
 
 /**
  * Демонстрационные материалы стартовой страницы.
@@ -10,7 +10,7 @@ import type { ArticleCardFragment } from "~/graphql/generated/graphql"
  */
 
 /** Лента «Новое» — пятнадцать материалов. */
-export const DEMO_LATEST: ArticleCardFragment[] = [
+export const DEMO_LATEST: DemoArticleCard[] = [
   {
     id: "6",
     title: "TypeScript 5.0: новые возможности и улучшения",
@@ -284,7 +284,7 @@ export const DEMO_LATEST: ArticleCardFragment[] = [
 ]
 
 /** Лента «Востребованное» — шестнадцать материалов, свой набор. */
-export const DEMO_DEMANDED: ArticleCardFragment[] = [
+export const DEMO_DEMANDED: DemoArticleCard[] = [
   {
     id: "d1",
     title: "Микросервисы против модульного монолита",

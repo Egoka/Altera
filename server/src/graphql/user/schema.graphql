@@ -90,28 +90,15 @@ type UserArticleStats {
   archived: Int!
 }
 
-type AuthorStats {
-  totalArticles: Int!
-  articlesThisMonth: Int!
-  popularTags: [Tag!]
-}
-
-type ArticlesByAuthorResponse {
-  articles: [Article!]!
-  totalCount: Int!
-  totalPages: Int!
-  currentPage: Int!
-}
-
 extend type Query {
   user(handle: String!): User
   me: AccountUser
   myArticlesStats: UserArticleStats
 
-  # Запросы для страницы автора
-  author(handle: String!): User
-  articlesByAuthor(authorHandle: String!, page: Int = 1, limit: Int = 10): ArticlesByAuthorResponse!
-  authorStats(authorHandle: String!): AuthorStats
+  # Публичная страница автора живёт в собственном модуле: `author(handle)` отдаёт профиль
+  # по `20-public/author.md` §4, лента — `feed(scope: author)`. Черновые `author`,
+  # `articlesByAuthor` и `authorStats` отдавали полный `User` и ни архива аккаунта, ни
+  # истории хэндлов, ни локали не знали, поэтому сняты вместе с T-057.
 
   # Запросы для управления пользователями (требуют права admin)
   users(pagination: PaginationInput!, sort: SortInput!, filters: UserFiltersInput!, search: SearchInput): UsersResponse!
