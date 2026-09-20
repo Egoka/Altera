@@ -48,16 +48,16 @@
 Все команды выполнены в `.worktrees/t054-home` на изменённом дереве, Node `24.12.0`,
 pnpm `10.18.3`.
 
-| Команда | Exit | Наблюдаемый результат |
-| --- | --- | --- |
-| `pnpm codegen --check` | 0 | сгенерированный клиент совпадает со схемой |
-| `pnpm format` | 0 | `All matched files use Prettier code style!` |
-| `pnpm lint` | 0 | без вывода |
-| `pnpm test` | 0 | server 270 passed, 24 skipped; web 195 passed |
-| `pnpm --filter nuxt-app run typecheck` | 0 | `vue-tsc -b --noEmit` без диагностик |
-| `pnpm --filter nuxt-app run build` | 0 | `.output` собран |
-| `PORT=4322 pnpm --filter nuxt-app run smoke` | 0 | `/` 200, `/en` 200, `/ru` 301 → `/`, dev-маршруты 404 |
-| `cd server && pnpm run build:ci` | 0 | `dist/server.js` и `dist/graphql/feed/schema.graphql` на месте |
+| Команда                                      | Exit | Наблюдаемый результат                                          |
+| -------------------------------------------- | ---- | -------------------------------------------------------------- |
+| `pnpm codegen --check`                       | 0    | сгенерированный клиент совпадает со схемой                     |
+| `pnpm format`                                | 0    | `All matched files use Prettier code style!`                   |
+| `pnpm lint`                                  | 0    | без вывода                                                     |
+| `pnpm test`                                  | 0    | server 270 passed, 24 skipped; web 195 passed                  |
+| `pnpm --filter nuxt-app run typecheck`       | 0    | `vue-tsc -b --noEmit` без диагностик                           |
+| `pnpm --filter nuxt-app run build`           | 0    | `.output` собран                                               |
+| `PORT=4322 pnpm --filter nuxt-app run smoke` | 0    | `/` 200, `/en` 200, `/ru` 301 → `/`, dev-маршруты 404          |
+| `cd server && pnpm run build:ci`             | 0    | `dist/server.js` и `dist/graphql/feed/schema.graphql` на месте |
 
 Новые тесты: `server/tests/home-feed.test.ts` — 11 проверок (размер топа и подпись, отсутствие
 повторов и добор, окно новизны, пустая база, отсутствие «Популярного», название рубрики и уровень
@@ -87,11 +87,11 @@ GraphQL-ответом. `/` вернул 200 и содержит `data-section="
 web/app/components/pages/start/` не нашёл совпадений (exit 1). `demoFeed` остаётся у страниц
 рубрики, тега и автора — их данные переводит T-055.
 
-| Критерий готовности | Состояние |
-| --- | --- |
-| 1. Строки состояний `home.md` воспроизводимы — Playwright | спецификация добавлена; запуск — за CI `web-smoke`, локально среда без PostgreSQL |
-| 2. Материал не повторяется в двух подборках — тест резолвера | PASS (`server/tests/home-feed.test.ts`) |
-| 3. Фикстуры главной удалены — grep по `web/app` | PASS |
+| Критерий готовности                                          | Состояние                                                                         |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| 1. Строки состояний `home.md` воспроизводимы — Playwright    | спецификация добавлена; запуск — за CI `web-smoke`, локально среда без PostgreSQL |
+| 2. Материал не повторяется в двух подборках — тест резолвера | PASS (`server/tests/home-feed.test.ts`)                                           |
+| 3. Фикстуры главной удалены — grep по `web/app`              | PASS                                                                              |
 
 ## 3. Границы и ограничения
 
@@ -122,3 +122,24 @@ web/app/components/pages/start/` не нашёл совпадений (exit 1). 
 2. **Реестр `pages.md` #1 упоминает `topAuthors`**, чего нет в `home.md` §5 и что противоречит
    журналу §20.1 («блока авторов нет»). Реализация следует `home.md`; синхронизация реестра —
    T-110.
+
+## 5. Обновление ветки и подтверждение критерия 1 в CI
+
+`app` ушёл вперёд на T-079 (журнал аудита), и PR #160 стал `CONFLICTING`. По контракту ветка
+обновлена от `origin/app` (`f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54`) коммитом
+`2cca7eb4b7e3d79f687a4625a9bec9fe172bec43`. Конфликт был только в сгенерированном
+`web/app/graphql/generated/graphql.ts`: он не правился руками, а перегенерирован `pnpm codegen`
+на объединённой схеме (`feed` + `audit`); `pnpm codegen --check` дрейфа не показывает. Словари
+`ru`/`en` сведены без потери ключей обеих задач, продуктовый патч T-054 не менялся.
+
+Локальные проверки на обновлённом дереве — все exit 0: `pnpm codegen --check`, `pnpm format`,
+`pnpm lint`, `pnpm test` (server 310 passed / 24 skipped, web 211 passed),
+`pnpm --filter nuxt-app run typecheck`, `run build`, `run smoke`, `cd server && pnpm run build:ci`.
+
+CI на обновлённом head: https://github.com/Egoka/Altera/actions/runs/35513768558 — все семь
+проверок SUCCESS. Джоб «Браузерная проверка веба» выполнил 61 тест (51 passed, 10 skipped); на
+`app` того же дня набор был 56 (46 passed, 10 skipped), то есть пять новых сценариев
+`web/tests/e2e/homepage-feed.spec.ts` прошли. **Критерий 1 подтверждён Playwright в CI** — запись
+в §2 о том, что спецификация ещё не исполнялась, относится к локальной среде без PostgreSQL.
+
+Канонический receipt задачи — `docs/reports/tasks/T-054.json` и `docs/reports/tasks/T-054.md`.
