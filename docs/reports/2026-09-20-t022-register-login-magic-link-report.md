@@ -58,13 +58,13 @@
 
 Пробы на собранном Nitro (`node .output/server/index.mjs`, API намеренно недоступен):
 
-| Адрес | Наблюдаемый ответ |
-|---|---|
-| `/login`, `/en/login` | 200, `data-login-state="loading"`, кнопка `disabled`, `meta robots = noindex, follow` |
-| `/signup`, `/register` | 301 на `/login` |
-| `/auth/verify` без токена | 302 на `/login` |
+| Адрес                                      | Наблюдаемый ответ                                                                                  |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `/login`, `/en/login`                      | 200, `data-login-state="loading"`, кнопка `disabled`, `meta robots = noindex, follow`              |
+| `/signup`, `/register`                     | 301 на `/login`                                                                                    |
+| `/auth/verify` без токена                  | 302 на `/login`                                                                                    |
 | `/auth/verify?token=…` при недоступном API | 200, `data-verify-state="error"`, `meta robots = noindex, nofollow`, `meta referrer = no-referrer` |
-| `/me` без сессии | 302 на `/login?next=/me` |
+| `/me` без сессии                           | 302 на `/login?next=/me`                                                                           |
 
 Прогон CI на head `e5141c5da98fde666ef963659c46afa3c61324e4`
 ([run 35490440256](https://github.com/Egoka/Altera/actions/runs/35490440256)): сводная проверка
@@ -83,11 +83,11 @@
 
 ### Критерии готовности
 
-| Критерий | Состояние | Чем проверен |
-|---|---|---|
-| AC-1: строки состояний `login.md` и `verify.md` воспроизводимы | PASS | `web/tests/e2e/22-login-verify-states.spec.ts` (15 сценариев) плюс `web/tests/auth-page-states.test.ts` для строк, недостижимых без T-024 |
-| AC-2: ответ одинаков для существующего и неизвестного адреса | PASS | `server/tests/auth-magic-link.test.ts` («answers identically…», «does not create an account…»), e2e «the answer to a link request is the same…» |
-| AC-3: архивированный аккаунт попадает на экран состояния | PASS | `web/tests/e2e/01-register-login.spec.ts`, шаг 5: 302 на `/me/archived` и `Session.limited = true` |
+| Критерий                                                       | Состояние | Чем проверен                                                                                                                                    |
+| -------------------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-1: строки состояний `login.md` и `verify.md` воспроизводимы | PASS      | `web/tests/e2e/22-login-verify-states.spec.ts` (15 сценариев) плюс `web/tests/auth-page-states.test.ts` для строк, недостижимых без T-024       |
+| AC-2: ответ одинаков для существующего и неизвестного адреса   | PASS      | `server/tests/auth-magic-link.test.ts` («answers identically…», «does not create an account…»), e2e «the answer to a link request is the same…» |
+| AC-3: архивированный аккаунт попадает на экран состояния       | PASS      | `web/tests/e2e/01-register-login.spec.ts`, шаг 5: 302 на `/me/archived` и `Session.limited = true`                                              |
 
 ## Границы и ограничения
 
@@ -120,3 +120,21 @@
   `noindex-meta.spec.ts` и `17-my-articles.spec.ts` ставят сессию перед переходом в кабинет,
   потому что гость теперь уводится на вход. Проверки не ослаблены: изменились предусловия,
   а не утверждения.
+
+## Обновление ветки от `app` (2026-09-20, вечер)
+
+PR #164 оказался `CONFLICTING`: ветка отставала от `app` на 25 коммитов. `app`
+(`cd7323467ba50d60accd287eaaad2dff4bd70855`) влит в ветку коммитом `c45afbe`. Конфликт был
+только в собираемых артефактах `web/app/graphql/generated/graphql.ts` и
+`web/app/graphql/generated/schema.graphql`: их источники — `server/src/graphql/**/*.graphql`
+и `web/app/graphql/**/*.graphql` — слились без конфликтов, поэтому артефакты пересобраны
+`pnpm codegen`, а не правились руками. Продуктовый патч T-022 остался прежним: `patch-id`
+диапазонов `4ea27a6..83e2881` и `cd73234..c45afbe` без сборочных артефактов совпадает
+(`806fa38b28de34f688581f3dbf295aa301c4f8a5`), набор изменённых файлов тот же, диапазонный diff
+словарей `web/i18n/locales/*.json` тоже совпадает. Независимое review сохраняется по patch-id.
+
+Проверки на новом head: CI run 35531399240 — все джобы pass, Playwright 83 passed / 9 skipped,
+миграции на изолированной базе CI `{"schema_version":1,"ok":true,"migrations":"passed"}`.
+Локально `pnpm format`, `pnpm lint` — exit 0; `pnpm test` — server 362 passed / 24 skipped,
+web 245 passed; `build:ci`, web typecheck, web build — exit 0. Рост числа тестов относительно
+прежнего прогона — из `app`, тесты T-022 не менялись.

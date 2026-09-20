@@ -8,7 +8,7 @@
     "sha": "88e47776573975866c867b06775f02ff3880cb71"
   },
   "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
-  "tested_sha": "e5141c5da98fde666ef963659c46afa3c61324e4",
+  "tested_sha": "c45afbedbd85f5698464e4028511de615553330d",
   "branch": "feat/t022-register-login",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t022-auth",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -33,13 +33,13 @@
   "checks": {
     "format": "passed",
     "lint": "passed",
-    "tests": "server 289 passed / 24 skipped; web 201 passed",
+    "tests": "server 362 passed / 24 skipped; web 245 passed",
     "server_build": "passed",
     "web_typecheck": "passed",
     "web_build": "passed",
-    "playwright": "47 passed / 9 skipped (CI)",
+    "playwright": "83 passed / 9 skipped (CI)",
     "migrations": "passed on the isolated CI database ({\"schema_version\":1,\"ok\":true,\"migrations\":\"passed\"})",
-    "ci": "https://github.com/Egoka/Altera/actions/runs/35490440256",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35531399240",
     "preflight": "not_run: scripts/autonomy/preflight.py requires runtime and run identifiers that this run does not expose as arguments; Docker daemon in this runtime answers 500, so no local PostgreSQL, Redis or Mailpit was available",
     "environment": "Node 24.12.0, pnpm 10.18.3"
   },
@@ -47,8 +47,8 @@
     "number": 164,
     "url": "https://github.com/Egoka/Altera/pull/164",
     "base_ref": "app",
-    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
-    "head_sha": "e5141c5da98fde666ef963659c46afa3c61324e4",
+    "base_sha": "cd7323467ba50d60accd287eaaad2dff4bd70855",
+    "head_sha": "c45afbedbd85f5698464e4028511de615553330d",
     "merge_sha": null
   },
   "review": {
@@ -65,7 +65,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-022.md",
-    "sha256": "0f6621fea44224b301d50c1a0112b0f93fc4735ca835f3d9a901d18da80e9f74"
+    "sha256": "9b9297cf65fc81e4a707967860914f27e40fe4bd7d6c5026ea2894ad96ccfdb8"
   },
   "remaining": [
     "Независимое review проверенного SHA и развёртывание с проверкой здоровья через контроллер не выполнены",
