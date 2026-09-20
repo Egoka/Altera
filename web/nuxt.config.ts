@@ -48,6 +48,12 @@ export default defineNuxtConfig({
 
   routeRules: {
     "/ru": { redirect: { to: "/", statusCode: 301 } },
+    // [ДОПУЩЕНИЕ] Отдельной регистрации нет: первый вход по ссылке создаёт аккаунт
+    // (docs/spec/20-public/login.md §3).
+    "/signup": { redirect: { to: "/login", statusCode: 301 } },
+    "/register": { redirect: { to: "/login", statusCode: 301 } },
+    "/en/signup": { redirect: { to: "/en/login", statusCode: 301 } },
+    "/en/register": { redirect: { to: "/en/login", statusCode: 301 } },
     // Каталог рубрик переехал с `/types` на `/sections` (`sections-index.md` §3).
     "/types": { redirect: { to: "/sections", statusCode: 301 } },
     "/en/types": { redirect: { to: "/en/sections", statusCode: 301 } },

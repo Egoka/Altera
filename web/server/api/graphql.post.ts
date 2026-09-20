@@ -1,3 +1,4 @@
+import { SESSION_ACCESS_COOKIE } from "#shared/session"
 import { GraphQLProxyError, getGraphQLRouteError, proxyGraphQLRequest } from "../utils/graphqlProxy"
 import {
   REFRESH_COOKIE_MAX_AGE_SECONDS,
@@ -30,10 +31,14 @@ export default defineEventHandler(async (event) => {
       throw new GraphQLProxyError(403, "Cross-origin mutation rejected")
     }
 
+    // Браузер токенов не видит (ADR-0023): токен доступа лежит в cookie и подставляется здесь,
+    // refresh живёт в отдельной httpOnly-cookie и попадает в переменные мутации ниже.
+    // Явный заголовок остаётся для серверных и тестовых вызовов и имеет приоритет.
+    const accessToken = getCookie(event, SESSION_ACCESS_COOKIE)
     const result = await proxyGraphQLRequest({
       graphqlApiUrl: runtimeConfig.graphqlApiUrl,
       body: withRefreshTokenVariable(body, operation.fields, getCookie(event, REFRESH_COOKIE_NAME) ?? null),
-      authorization: getHeader(event, "authorization"),
+      authorization: getHeader(event, "authorization") ?? (accessToken ? `Bearer ${accessToken}` : undefined),
       userAgent: getHeader(event, "user-agent"),
       clientIp: getRequestIP(event, { xForwardedFor: true }),
       requestId,

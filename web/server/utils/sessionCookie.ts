@@ -8,7 +8,10 @@ export const REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30
 // Мутации, которым BFF подставляет refresh из cookie вместо клиента.
 const REFRESH_INPUT_FIELDS = new Set(["refreshSession", "logout"])
 // Мутации, ответ которых содержит новый refresh.
-const REFRESH_OUTPUT_FIELDS = new Set(["verifyMagicLink", "refreshSession"])
+const REFRESH_OUTPUT_FIELDS = new Set(["verifyMagicLink", "acceptConsent", "refreshSession"])
+// По контракту входа (T-022) ветки подтверждения ссылки возвращают сессию вложенным полем,
+// а `refreshSession` — плоской полезной нагрузкой. Ищется и то, и другое.
+const NESTED_SESSION_FIELD = "session"
 // Мутации, после успеха которых cookie стирается.
 const SESSION_END_FIELDS = new Set(["logout", "logoutAll"])
 
@@ -87,10 +90,22 @@ export function extractSessionCookie(payload: unknown, fields: readonly string[]
   for (const field of fields) {
     if (!REFRESH_OUTPUT_FIELDS.has(field)) continue
     const result = sanitizedData?.[field]
-    if (!isRecord(result) || typeof result.refreshToken !== "string" || result.refreshToken.length === 0) continue
+    if (!isRecord(result)) continue
 
-    token = result.refreshToken
-    sanitizedData = { ...sanitizedData, [field]: { ...result, refreshToken: null } }
+    const nested = isRecord(result[NESTED_SESSION_FIELD])
+      ? (result[NESTED_SESSION_FIELD] as Record<string, unknown>)
+      : null
+    const carrier = typeof result.refreshToken === "string" ? result : nested
+    if (!carrier || typeof carrier.refreshToken !== "string" || carrier.refreshToken.length === 0) continue
+
+    token = carrier.refreshToken
+    sanitizedData = {
+      ...sanitizedData,
+      [field]:
+        carrier === result
+          ? { ...result, refreshToken: null }
+          : { ...result, [NESTED_SESSION_FIELD]: { ...carrier, refreshToken: null } }
+    }
   }
 
   const endedSession = fields.some((field) => SESSION_END_FIELDS.has(field) && data?.[field] === true)

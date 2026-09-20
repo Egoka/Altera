@@ -29,6 +29,7 @@ function createContext(locale: "ru" | "en" = "ru") {
   const mail = createMailService({ store, transport, logger, from: "Altera <no-reply@altera.test>" })
   const ctx = {
     prisma: {
+      legalText: { findFirst: vi.fn().mockResolvedValue(null) },
       user: { findUnique: vi.fn().mockResolvedValue({ id: "user-1", locale }) },
       magicLinkToken: { upsert: vi.fn().mockResolvedValue({}) }
     },
@@ -45,8 +46,8 @@ describe("письмо со ссылкой входа", () => {
     const { ctx, messages, transport } = createContext()
 
     await expect(
-      authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx)
-    ).resolves.toBe(true)
+      authMutations.requestMagicLink(null, { email: "reader@example.test", consentVersion: {}, locale: "ru" }, ctx)
+    ).resolves.toEqual({ ok: true, retryAfterSec: null })
 
     expect(transport.sent).toHaveLength(1)
     expect(transport.sent[0]).toMatchObject({ to: "reader@example.test", subject: "Ссылка входа в Altera" })
@@ -60,10 +61,10 @@ describe("письмо со ссылкой входа", () => {
     expect(stored?.sanitizedBody).not.toContain("token=")
   })
 
-  it("использует язык запроса для письма", async () => {
+  it("использует основной язык аккаунта для письма", async () => {
     const { ctx, transport, messages } = createContext("en")
 
-    await authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "en" }, ctx)
+    await authMutations.requestMagicLink(null, { email: "reader@example.test", consentVersion: {}, locale: "en" }, ctx)
 
     expect(transport.sent[0]?.subject).toBe("Your Altera login link")
     expect([...messages.values()][0]?.sanitizedBody).toContain("[secret not shown]")
@@ -72,7 +73,7 @@ describe("письмо со ссылкой входа", () => {
   it("не пишет адрес, ссылку и токен в логи", async () => {
     const { ctx, entries } = createContext()
 
-    await authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx)
+    await authMutations.requestMagicLink(null, { email: "reader@example.test", consentVersion: {}, locale: "ru" }, ctx)
 
     expect(entries.map((entry) => entry.event)).toEqual(["mail.queued", "mail.sent", "auth.link.requested"])
     const serialized = JSON.stringify(entries)
@@ -86,7 +87,7 @@ describe("письмо со ссылкой входа", () => {
     transport.failWith(Object.assign(new Error("Greeting never received"), { code: "ETIMEDOUT" }))
 
     await expect(
-      authMutations.requestMagicLink(null, { email: "reader@example.test", locale: "ru" }, ctx)
+      authMutations.requestMagicLink(null, { email: "reader@example.test", consentVersion: {}, locale: "ru" }, ctx)
     ).rejects.toMatchObject({
       extensions: { code: "PROVIDER_UNAVAILABLE", provider: "mail", requestId: "request-21" }
     })

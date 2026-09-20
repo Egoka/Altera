@@ -444,7 +444,7 @@ export async function createStaff(
 
   // Письмо ставится после создания: недоступная почта не отменяет запись — ссылку
   // сотрудник запрашивает заново с `/login` (`appoint-admin.md` §5).
-  await issueMagicLink(ctx.prisma, ctx.mail, { userId: created.id, email, locale: "ru", requestId: ctx.requestId, now })
+  await issueMagicLink(ctx.prisma, ctx.mail, { email, locale: "ru", requestId: ctx.requestId, now })
 
   return presentMember(staff, { now, revealEmail: true, createdByName: actor.name ?? null })
 }

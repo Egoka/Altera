@@ -123,7 +123,7 @@ class MemoryPrisma {
   sessions: MemorySession[] = []
   audits: Array<Record<string, any>> = []
   handles: Array<{ handle: string; userId: string | null }> = []
-  magicLinks: Array<{ userId: string }> = []
+  magicLinks: Array<{ email: string }> = []
   private auditSequence = 0
 
   constructor(users: MemoryUser[], options: { exceptions?: MemoryException[]; sessions?: MemorySession[] } = {}) {
@@ -215,8 +215,8 @@ class MemoryPrisma {
   }
 
   magicLinkToken = {
-    upsert: async ({ where }: { where: { userId: string } }) => {
-      this.magicLinks.push({ userId: where.userId })
+    upsert: async ({ where }: { where: { email: string } }) => {
+      this.magicLinks.push({ email: where.email })
       return where
     }
   }

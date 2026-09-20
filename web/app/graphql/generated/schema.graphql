@@ -636,6 +636,11 @@ type CatalogTag {
   slug: String!
 }
 
+input ConsentVersionsInput {
+  privacyVersion: Int
+  termsVersion: Int
+}
+
 input CreateArticleInput {
   locale: Locale
   sectionId: ID
@@ -824,9 +829,31 @@ input GrantPlanInput {
 
 scalar JSON
 
+"""
+Действующие версии оферты и политики персональных данных для локали страницы входа
+(docs/spec/20-public/login.md §4). `null` означает, что действующий текст ещё не опубликован:
+согласие в этом случае невалидно и форма показывает состояние ошибки данных (§8).
+"""
+type LegalVersions {
+  privacyPath: String!
+  privacyVersion: Int
+  termsPath: String!
+  termsVersion: Int
+}
+
 enum Locale {
   en
   ru
+}
+
+"""
+Ответ на запрос ссылки одинаков для существующего и неизвестного адреса
+(docs/spec/20-public/login.md §4). `retryAfterSec` — пауза до повторного запроса; пока
+серверные лимиты не заданы (T-024), поле остаётся `null`.
+"""
+type MagicLinkRequestResult {
+  ok: Boolean!
+  retryAfterSec: Int
 }
 
 input MergeTagsInput {
@@ -836,6 +863,7 @@ input MergeTagsInput {
 
 type Mutation {
   _empty: String
+  acceptConsent(privacyVersion: Int, termsVersion: Int, token: String!): VerifyMagicLinkResult!
   addBookmark(articleId: ID!): BookmarkState!
   archiveArticle(id: ID!): Article!
   archiveFormat(id: ID!): AdminFormat!
@@ -864,7 +892,7 @@ type Mutation {
   refreshSession(refreshToken: String!): AuthPayload!
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
-  requestMagicLink(email: String!, locale: Locale!): Boolean!
+  requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
   requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
@@ -885,7 +913,7 @@ type Mutation {
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
-  verifyMagicLink(token: String!): AuthPayload!
+  verifyMagicLink(token: String!): VerifyMagicLinkResult!
 }
 
 type MyArticle {
@@ -1029,6 +1057,7 @@ type Query {
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   jobsSummary: AdminJobsSummary!
+  legalVersions(locale: Locale!): LegalVersions!
   mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
@@ -1357,4 +1386,34 @@ type UsersResponse {
   search: SearchInfo
   sort: SortInfo!
   users: [AccountUser!]!
+}
+
+type VerifyMagicLinkResult {
+  """Токен формы оспаривания — тот же токен входа (журнал #48)."""
+  appealToken: String
+  isNewAccount: Boolean!
+  next: String
+  outcome: VerifyOutcome!
+  privacyVersion: Int
+  session: AuthPayload
+  termsVersion: Int
+}
+
+"""Ветки подтверждения ссылки (docs/spec/20-public/verify.md §3–4)."""
+enum VerifyOutcome {
+  """
+  Аккаунт заблокирован администратором: сессии нет, переход к форме оспаривания.
+  """
+  archived_admin
+
+  """
+  Аккаунт архивирован самим пользователем: ограниченная сессия и экран `/me/archived`.
+  """
+  archived_self
+
+  """Сессия создана: переход на `next` или `/me`."""
+  authenticated
+
+  """Версия оферты или политики изменилась: экран повторного согласия."""
+  consent_required
 }

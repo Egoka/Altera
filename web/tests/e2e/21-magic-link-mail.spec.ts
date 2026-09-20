@@ -21,18 +21,37 @@ test("magic-link письмо появляется в локальном при�
   const email = `t021-${Date.now()}@example.test`
 
   await page.goto("/", { waitUntil: "networkidle" })
-  const response = await page.evaluate(async (address) => {
+  // Версии согласия читаются у сервера: запрос ссылки обязан совпасть с действующими (T-022).
+  const versions = await page.evaluate(async () => {
     const result = await fetch("/api/graphql", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        query: "mutation ($email: String!, $locale: Locale!) { requestMagicLink(email: $email, locale: $locale) }",
-        variables: { email: address, locale: "ru" }
+        query: "query { legalVersions(locale: ru) { termsVersion privacyVersion } }"
       })
     })
-    return { status: result.status, body: await result.json() }
-  }, email)
-  expect(response).toEqual({ status: 200, body: { data: { requestMagicLink: true } } })
+    return (await result.json()).data.legalVersions as { termsVersion: number | null; privacyVersion: number | null }
+  })
+
+  const response = await page.evaluate(
+    async ([address, consent]) => {
+      const result = await fetch("/api/graphql", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          query:
+            "mutation ($email: String!, $consentVersion: ConsentVersionsInput!, $locale: Locale!) { requestMagicLink(email: $email, consentVersion: $consentVersion, locale: $locale) { ok retryAfterSec } }",
+          variables: { email: address, consentVersion: consent, locale: "ru" }
+        })
+      })
+      return { status: result.status, body: await result.json() }
+    },
+    [email, versions] as const
+  )
+  expect(response).toEqual({
+    status: 200,
+    body: { data: { requestMagicLink: { ok: true, retryAfterSec: null } } }
+  })
 
   let found: MailpitSearch["messages"][number] | undefined
   await expect

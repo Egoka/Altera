@@ -66,11 +66,14 @@ function createSessionStore() {
 // Читатель с закончившимся базовым авторством: журнал #55 — сессия остаётся валидной.
 const reader = {
   id: "user-1",
+  email: "reader@example.test",
+  locale: "ru",
   role: "reader",
   handle: "reader",
   planTier: "free",
   planUntil: subDays(new Date(), 1),
-  archivedAt: null
+  archivedAt: null,
+  archiveMode: null
 }
 
 let resolver: {
@@ -78,12 +81,17 @@ let resolver: {
 }
 let store: ReturnType<typeof createSessionStore>
 let logger: { log: ReturnType<typeof vi.fn> }
+// Токен входа привязан к адресу, а не к учётной записи (контракт T-022).
 let magicLinkToken: {
   id: string
   tokenHash: string
+  email: string
+  locale: string
+  next: string | null
+  termsVersion: number | null
+  privacyVersion: number | null
   usedAt: Date | null
   expiresAt: Date
-  user: typeof reader
 } | null
 
 beforeAll(async () => {
@@ -101,14 +109,22 @@ const context = (overrides: Record<string, unknown> = {}) =>
   ({
     prisma: {
       ...store.client,
-      user: { findUnique: async ({ where }: { where: { id: string } }) => (where.id === reader.id ? reader : null) },
+      user: {
+        findUnique: async ({ where }: { where: { id?: string; email?: string } }) =>
+          where.id === reader.id || where.email === reader.email ? reader : null
+      },
       magicLinkToken: {
         findUnique: async () => magicLinkToken,
         update: async () => magicLinkToken
-      }
+      },
+      // Опубликованных текстов нет: согласие не требуется и ветка `consent_required` не включается.
+      legalText: { findFirst: async () => null },
+      userLegalConsent: { findMany: async () => [] }
     },
     currentUser: null,
     sessionId: null,
+    // Адрес в журнал попадает только хэшем (ADR-0027): тесту достаточно устойчивой заглушки.
+    piiHasher: { email: (value: string) => `hash:${value}` },
     requestMeta: { userAgent: "Chrome", ip: "203.0.113.10" },
     requestId: "11111111-1111-4111-8111-111111111111",
     logger,
@@ -124,15 +140,21 @@ describe("verifyMagicLink", () => {
     magicLinkToken = {
       id: "magic-1",
       tokenHash: hashOpaqueToken(token),
+      email: reader.email,
+      locale: reader.locale,
+      next: null,
+      termsVersion: null,
+      privacyVersion: null,
       usedAt: null,
-      expiresAt: addDays(new Date(), 1),
-      user: reader
+      expiresAt: addDays(new Date(), 1)
     }
 
-    const payload = (await resolver.Mutation.verifyMagicLink!(null, { token } as never, context())) as {
-      accessToken: string
-      refreshToken: string
+    const result = (await resolver.Mutation.verifyMagicLink!(null, { token } as never, context())) as {
+      outcome: string
+      session: { accessToken: string; refreshToken: string }
     }
+    expect(result.outcome).toBe("authenticated")
+    const payload = result.session
 
     const session = [...store.rows.values()][0]!
     expect(session).toMatchObject({ userId: reader.id, tokenHash: hashOpaqueToken(payload.refreshToken) })

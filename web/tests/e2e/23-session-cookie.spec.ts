@@ -35,12 +35,21 @@ async function magicLinkToken(
   email: string,
   expectedLetters = 1
 ): Promise<string> {
+  // T-022: ссылка запрашивается вместе с версиями согласия, принятыми на странице входа,
+  // а ответ одинаков для известного и неизвестного адреса (`20-public/login.md` §4).
+  const legal = await callGraphQL(
+    page,
+    "query ($locale: Locale!) { legalVersions(locale: $locale) { termsVersion privacyVersion } }",
+    { locale: "ru" }
+  )
+  const consentVersion = legal.body.data?.legalVersions
+
   const requested = await callGraphQL(
     page,
-    "mutation ($email: String!, $locale: Locale!) { requestMagicLink(email: $email, locale: $locale) }",
-    { email, locale: "ru" }
+    "mutation ($email: String!, $consentVersion: ConsentVersionsInput!, $locale: Locale!) { requestMagicLink(email: $email, consentVersion: $consentVersion, locale: $locale) { ok retryAfterSec } }",
+    { email, consentVersion, locale: "ru" }
   )
-  expect(requested.body.data).toEqual({ requestMagicLink: true })
+  expect(requested.body.data).toEqual({ requestMagicLink: { ok: true, retryAfterSec: null } })
 
   // Mailpit отдаёт письма от новых к старым; ждём именно то, которое запросил этот шаг.
   let messages: { ID: string }[] = []
@@ -63,8 +72,12 @@ async function magicLinkToken(
   return token!
 }
 
+// T-022: подтверждение ссылки отвечает исходом входа, а сессия лежит внутри него.
 const LOGIN = `mutation ($token: String!) {
-  verifyMagicLink(token: $token) { accessToken refreshToken user { id } }
+  verifyMagicLink(token: $token) {
+    outcome
+    session { accessToken refreshToken user { id } }
+  }
 }`
 const REFRESH = `mutation ($refreshToken: String! = "") {
   refreshSession(refreshToken: $refreshToken) { accessToken refreshToken user { id } }
@@ -80,7 +93,12 @@ test("вход выдаёт httpOnly-cookie, ротирует её и отзыв
   const token = await magicLinkToken(page, request, email)
 
   const login = await callGraphQL(page, LOGIN, { token })
-  const session = login.body.data?.verifyMagicLink as { accessToken: string; refreshToken: string | null }
+  const verified = login.body.data?.verifyMagicLink as {
+    outcome: string
+    session: { accessToken: string; refreshToken: string | null } | null
+  }
+  expect(verified.outcome, "первый вход заводит аккаунт и сразу открывает сессию").toBe("authenticated")
+  const session = verified.session!
   expect(session.accessToken).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/)
   expect(session.refreshToken, "BFF снимает refresh из ответа").toBeNull()
 
@@ -125,7 +143,7 @@ test("logoutAll стирает cookie и не оставляет активны�
   await page.goto("/", { waitUntil: "networkidle" })
 
   const first = await callGraphQL(page, LOGIN, { token: await magicLinkToken(page, request, email) })
-  const accessToken = (first.body.data?.verifyMagicLink as { accessToken: string }).accessToken
+  const accessToken = (first.body.data?.verifyMagicLink as { session: { accessToken: string } }).session.accessToken
   // Вторая сессия того же пользователя: её тоже обязан закрыть `logoutAll`.
   const second = await context.browser()!.newContext()
   const secondPage = await second.newPage()

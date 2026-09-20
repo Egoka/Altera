@@ -29,13 +29,21 @@ describe("auth persistence schema", () => {
     expect(history).toContain("@@index([userId])")
   })
 
-  it("defines hash-only magic-link storage without a duplicate index", () => {
+  it("defines hash-only magic-link storage keyed by address, not by account", () => {
     const magicLink = model("MagicLinkToken")
 
     expect(magicLink).toMatch(/^\s*tokenHash\s+String\s+@unique\s+@db\.VarChar\(64\)$/m)
     expect(magicLink).not.toMatch(/^\s*token\s+/m)
     expect(magicLink).not.toContain("@@index([tokenHash])")
-    expect(magicLink).toContain("onDelete: Cascade")
+    // Первый вход создаёт аккаунт при подтверждении ссылки, поэтому запрос по неизвестному
+    // адресу не может ссылаться на пользователя (session-lifecycle.md п. 2).
+    expect(magicLink).toMatch(/^\s*email\s+String\s+@unique$/m)
+    expect(magicLink).not.toMatch(/^\s*userId\s+/m)
+    expect(magicLink).not.toContain("references: [id]")
+    // Ссылка возвращает пользователя туда, откуда он ушёл, без открытого параметра в письме.
+    expect(magicLink).toMatch(/^\s*next\s+String\?$/m)
+    expect(magicLink).toMatch(/^\s*termsVersion\s+Int\?$/m)
+    expect(magicLink).toMatch(/^\s*privacyVersion\s+Int\?$/m)
   })
 
   it("defines sessions with raw IP and no derived GeoIP fields", () => {
@@ -48,6 +56,8 @@ describe("auth persistence schema", () => {
     expect(session).toContain("userAgent         String?")
     expect(session).toContain("ip                String?")
     expect(session).toContain("lastUsedAt        DateTime  @default(now())")
+    // Ограниченная сессия самостоятельно архивированного аккаунта (session-lifecycle.md п. 7).
+    expect(session).toContain("limited           Boolean   @default(false)")
     expect(session).toContain("@@index([userId])")
     expect(session).toContain("@@index([previousTokenHash])")
     expect(session).toContain("onDelete: Cascade")
@@ -77,6 +87,20 @@ describe("auth persistence schema", () => {
     expect(migration).toContain('CONSTRAINT "sessions_tokenHash_check"')
     expect(migration).toContain('CONSTRAINT "sessions_previousTokenHash_check"')
     expect(migration).toContain('CONSTRAINT "email_change_requests_codeHash_check"')
+    expect(migration).not.toMatch(/IF (NOT )?EXISTS/)
+  })
+
+  it("moves magic links onto the address key in a dedicated migration", () => {
+    const migration = readFileSync(
+      path.join(prismaDir, "migrations/20260920090000_magic_link_pending_registration/migration.sql"),
+      "utf8"
+    )
+
+    expect(migration).toContain('DELETE FROM "magic_link_tokens";')
+    expect(migration).toContain('DROP CONSTRAINT "magic_link_tokens_userId_fkey"')
+    expect(migration).toContain('DROP INDEX "magic_link_tokens_userId_key"')
+    expect(migration).toContain('CREATE UNIQUE INDEX "magic_link_tokens_email_key"')
+    expect(migration).toContain('ADD COLUMN "limited" BOOLEAN NOT NULL DEFAULT false')
     expect(migration).not.toMatch(/IF (NOT )?EXISTS/)
   })
 })

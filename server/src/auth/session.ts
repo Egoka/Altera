@@ -24,6 +24,7 @@ interface SessionWriteData {
   userAgent?: string | null
   ip?: string | null
   userId?: string
+  limited?: boolean
 }
 
 // Узкая часть Prisma, которой пользуются сессии: логика проверяется без живой базы.
@@ -58,11 +59,16 @@ export function sessionExpiry(now: Date): Date {
   return addDays(now, SESSION_TTL_DAYS)
 }
 
+/**
+ * `limited` — сессия самостоятельно архивированного аккаунта: она существует, но открывает
+ * только экран состояния (`docs/spec/50-access/session-lifecycle.md` п. 7, контракт T-022).
+ */
 export async function startSession(
   client: SessionClient,
   userId: string,
   meta: SessionMeta,
-  now: Date = new Date()
+  now: Date = new Date(),
+  options: { limited?: boolean } = {}
 ): Promise<IssuedSession> {
   const refreshToken = createRefreshToken()
   const session = await client.session.create({
@@ -72,7 +78,8 @@ export async function startSession(
       expiresAt: sessionExpiry(now),
       lastUsedAt: now,
       userAgent: meta.userAgent,
-      ip: meta.ip
+      ip: meta.ip,
+      limited: options.limited ?? false
     }
   })
 
