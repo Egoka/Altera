@@ -1,11 +1,10 @@
 import { expect, test, type Page } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient, type Role } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 // T-080: раздел `/admin/mail` — все строки состояний docs/spec/40-admin/mail.md §9,
 // разделение ролей §1 и отсутствие секретов в копии письма §3.
 const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
-const accessSecret = "t009-test-access-secret"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
 
 const template = "t080_notice"
@@ -15,14 +14,10 @@ type TestRole = (typeof roles)[number]
 
 const userIds = Object.fromEntries(roles.map((role) => [role, `t080-${role}`])) as Record<TestRole, string>
 
-const signToken = (role: TestRole) => {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const payload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role, userId: userIds[role] })
-  ).toString("base64url")
-  const unsigned = `${header}.${payload}`
-  return `${unsigned}.${createHmac("sha256", accessSecret).update(unsigned).digest("base64url")}`
-}
+// После T-023 токен авторизует запрос только вместе с живой сессией (ADR-0009 п. 3).
+const sessionIds = Object.fromEntries(roles.map((role) => [role, ""])) as Record<TestRole, string>
+
+const signToken = (role: TestRole) => signAccessToken(userIds[role], sessionIds[role])
 
 async function upsertUser(role: TestRole) {
   const id = userIds[role]
@@ -41,6 +36,7 @@ async function upsertUser(role: TestRole) {
     }
   })
   await prisma.handleHistory.update({ where: { handle }, data: { userId: id } })
+  sessionIds[role] = await createSessionId(prisma, id)
 }
 
 async function seedMail() {
