@@ -97,7 +97,17 @@ export const buildBaseWhereClause = (filters: BaseFilters, search?: SearchInput)
 }
 
 export const buildOrderBy = (sort: SortInput) => {
-  return { [sort.field]: sort.direction.toLowerCase() }
+  const direction = sort.direction.toLowerCase()
+  // Составное поле разрешено `validateSort`, но плоский ключ с точкой Prisma не понимает.
+  // Счётчик связи сортируется как `{ <связь>: { _count } }`, остальное — вложенным объектом.
+  const [root, nested] = sort.field.split(".")
+  if (root === "_count" && nested) {
+    return { [nested]: { _count: direction } }
+  }
+  if (root && nested) {
+    return { [root]: { [nested]: direction } }
+  }
+  return { [sort.field]: direction }
 }
 
 // Утилиты для пагинации

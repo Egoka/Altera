@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest"
 import { GraphQLError } from "graphql"
-import { calculatePagination, handleAdminError, validatePagination, validateSort } from "../src/utils/admin"
+import {
+  buildOrderBy,
+  calculatePagination,
+  handleAdminError,
+  validatePagination,
+  validateSort
+} from "../src/utils/admin"
 
 // Хелперы админских запросов (docs/guides/admin_query_standards.md).
 // Из `../prisma` здесь импортируется только тип, поэтому подключения к Redis не происходит.
@@ -75,5 +81,19 @@ describe("calculatePagination", () => {
 
   it("срезает лимит до сотни", () => {
     expect(calculatePagination(1, 500, 1000).take).toBe(100)
+  })
+})
+
+describe("buildOrderBy", () => {
+  it("строит простую сортировку по полю", () => {
+    expect(buildOrderBy({ field: "name", direction: "ASC" })).toEqual({ name: "asc" })
+  })
+
+  it("сортирует по числу связанных материалов синтаксисом Prisma", () => {
+    expect(buildOrderBy({ field: "_count.articles", direction: "DESC" })).toEqual({ articles: { _count: "desc" } })
+  })
+
+  it("разворачивает прочие составные поля во вложенный объект", () => {
+    expect(buildOrderBy({ field: "author.name", direction: "ASC" })).toEqual({ author: { name: "asc" } })
   })
 })

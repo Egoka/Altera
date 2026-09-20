@@ -1,11 +1,20 @@
 query GetAdminTags(
   $pagination: PaginationInput! = { page: 1, limit: 50 }
-  $sort: SortInput! = { field: "createdAt", direction: DESC }
-  $filters: TagFiltersInput! = { base: {} }
+  $sort: SortInput! = { field: "_count.articles", direction: DESC }
+  $filters: TagFiltersInput! = { base: {}, status: [active] }
 ) {
   tags(pagination: $pagination, sort: $sort, filters: $filters) {
     tags {
       ...TagSummary
+      nameEn
+      status
+      archivedAt
+      archivedByRole
+      mergedInto {
+        id
+        name
+        slug
+      }
       _count {
         articles
       }
@@ -47,5 +56,19 @@ mutation MergeTags($input: MergeTagsInput!) {
     id
     name
     slug
+  }
+}
+
+mutation ArchiveTag($id: ID!) {
+  archiveTag(id: $id) {
+    id
+    status
+  }
+}
+
+mutation RestoreTag($id: ID!) {
+  restoreTag(id: $id) {
+    id
+    status
   }
 }
