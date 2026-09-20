@@ -78,6 +78,14 @@ export const getAdminNavigation = (role: Role): AdminNavigationItem[] =>
 
 export const canManageTaxonomy = (role: Role): boolean => role === "admin" || role === "owner"
 
+// Настройки системы: `admin` читает без секретов (журнал §28.11), `owner` — владелец раздела.
+export const canReadSystemSettings = (role: Role): boolean => role === "admin" || role === "owner"
+
+export const SYSTEM_SETTINGS_GROUPS = ["ai", "payments", "mail", "storage", "domains", "limits"] as const
+
+export const parseSystemSettingsGroup = (value: unknown): (typeof SYSTEM_SETTINGS_GROUPS)[number] =>
+  SYSTEM_SETTINGS_GROUPS.find((group) => group === value) ?? "ai"
+
 export const parseAdminPeriod = (value: unknown): 7 | 30 => (value === "30d" ? 30 : 7)
 
 interface GraphQLErrorLike {

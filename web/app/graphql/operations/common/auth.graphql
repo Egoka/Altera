@@ -2,6 +2,8 @@ mutation RequestMagicLink($email: String!, $locale: Locale!) {
   requestMagicLink(email: $email, locale: $locale)
 }
 
+# `refreshToken` выбирается ради BFF: маршрут `/api/graphql` переносит его в httpOnly-cookie
+# и возвращает браузеру null (ADR-0023 п. 2).
 mutation VerifyMagicLink($token: String!) {
   verifyMagicLink(token: $token) {
     accessToken
@@ -14,4 +16,27 @@ mutation VerifyMagicLink($token: String!) {
       handle
     }
   }
+}
+
+# Значение переменной подставляет BFF из cookie; клиент её не передаёт.
+mutation RefreshSession($refreshToken: String! = "") {
+  refreshSession(refreshToken: $refreshToken) {
+    accessToken
+    refreshToken
+    user {
+      id
+      name
+      email
+      role
+      handle
+    }
+  }
+}
+
+mutation Logout($refreshToken: String) {
+  logout(refreshToken: $refreshToken)
+}
+
+mutation LogoutAll {
+  logoutAll
 }

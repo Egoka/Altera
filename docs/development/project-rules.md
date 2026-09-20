@@ -63,8 +63,7 @@ docs/     планы, отчёты, решения, спецификации, б
 
 Переменные окружения сервера перечисляются по именам, без значений:
 `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `REDIS_URL`, `JWT_ACCESS_SECRET`,
-`JWT_REFRESH_SECRET`, `JWT_ACCESS_TOKEN_EXPIRY`, `JWT_REFRESH_TOKEN_EXPIRY`,
-`MAGIC_LINK_EXPIRY_MINUTES`, `MAGIC_LINK_BASE_URL`, `FRONTEND_URL`, `CACHE_TTL`, `PORT`.
+`JWT_ACCESS_TOKEN_EXPIRY`, `MAGIC_LINK_EXPIRY_MINUTES`, `MAGIC_LINK_BASE_URL`, `FRONTEND_URL`, `CACHE_TTL`, `PORT`.
 Секреты, ключи и строки подключения нельзя читать без необходимости, сохранять в репозитории
 или включать в вывод, evidence и trace.
 

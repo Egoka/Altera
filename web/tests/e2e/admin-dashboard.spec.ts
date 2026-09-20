@@ -1,9 +1,8 @@
 import { expect, test } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient, type Role } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
-const accessSecret = "t009-test-access-secret"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
 const serviceRoles = ["editor", "moderator", "analyst", "admin", "owner"] as const satisfies readonly Role[]
 const userIds = Object.fromEntries([...serviceRoles, "author"].map((role) => [role, `t069-${role}`])) as Record<
@@ -11,15 +10,9 @@ const userIds = Object.fromEntries([...serviceRoles, "author"].map((role) => [ro
   string
 >
 
-const signToken = (role: (typeof serviceRoles)[number] | "author") => {
-  const encodedHeader = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const encodedPayload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role, userId: userIds[role] })
-  ).toString("base64url")
-  const unsigned = `${encodedHeader}.${encodedPayload}`
-  const signature = createHmac("sha256", accessSecret).update(unsigned).digest("base64url")
-  return `${unsigned}.${signature}`
-}
+const sessionIds = {} as Record<(typeof serviceRoles)[number] | "author", string>
+
+const signToken = (role: (typeof serviceRoles)[number] | "author") => signAccessToken(userIds[role], sessionIds[role])
 
 async function upsertUser(role: (typeof serviceRoles)[number] | "author") {
   const id = userIds[role]
@@ -39,6 +32,7 @@ async function upsertUser(role: (typeof serviceRoles)[number] | "author") {
     }
   })
   await prisma.handleHistory.update({ where: { handle }, data: { userId: id } })
+  sessionIds[role] = await createSessionId(prisma, id)
 }
 
 async function seedWorkingData() {
