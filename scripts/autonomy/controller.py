@@ -204,8 +204,11 @@ class Live:
         """Отпечаток патча ветки от точки ответвления от app; финализация задачи не входит."""
         fork = command(["git", "merge-base", sha, base], self.repo, False)
         # Итог и отчёт пишутся после review, поэтому одобрение кода они не отменяют.
-        # `:(glob)` не даёт `*` перейти через `/`: подкаталоги `docs/reports/` остаются в патче.
-        own_receipt = [f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")] + [":(glob,exclude)docs/reports/*"]
+        # `web/app/graphql/generated/` выводится из схемы и операций: обязательная проверка CI
+        # `pnpm codegen --check` на том же head доказывает это, а сами исходники в патче остаются.
+        # `:(glob)` не даёт `*` перейти через `/`: подкаталоги остаются в патче.
+        own_receipt = ([f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")]
+                       + [":(glob,exclude)docs/reports/*", ":(glob,exclude)web/app/graphql/generated/*"])
         diff = subprocess.run(["git", "diff", "--no-color", "--no-ext-diff", "--full-index", "--binary", fork, sha, "--", ".", *own_receipt],
                               cwd=self.repo, capture_output=True, timeout=120, check=True).stdout
         if not diff:
