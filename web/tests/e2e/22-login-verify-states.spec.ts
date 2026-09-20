@@ -35,7 +35,10 @@ const readOperation = (postData: string | null): string => {
   }
 }
 
+// До гидратации Vue не видит введённых значений и кнопка остаётся неактивной, поэтому
+// заполнение всегда начинается с ожидания состояния `form`.
 const requestLinkFrom = async (page: Page, email: string) => {
+  await expect(page.locator("[data-login-state='form']")).toBeVisible()
   await page.getByLabel(/адрес электронной почты/i).fill(email)
   await page.getByRole("checkbox").check()
   await page.getByRole("button", { name: /получить ссылку входа/i }).click()

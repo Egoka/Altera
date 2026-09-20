@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
 import {
   createArchivedUser,
   ensurePublishedLegalVersions,
@@ -7,6 +7,19 @@ import {
   withPrisma
 } from "./helpers/auth-fixtures"
 
+/**
+ * Форма становится рабочей только после гидратации: до неё Vue не видит введённых значений,
+ * а кнопка остаётся неактивной. Состояние `form` наступает после загрузки версий согласия,
+ * то есть уже на гидрированной странице.
+ */
+const requestLink = async (page: Page, email: string) => {
+  await expect(page.locator("[data-login-state='form']")).toBeVisible()
+  await page.getByLabel(/адрес электронной почты/i).fill(email)
+  await page.getByRole("checkbox").check()
+  await page.getByRole("button", { name: /получить ссылку входа/i }).click()
+  await expect(page.locator("[data-login-state='sent']")).toBeVisible()
+}
+
 // Flow #1: docs/spec/10-flows/register-and-login.md.
 test("flow #1 registers or logs in without disclosing whether the account exists", async ({ page, request }) => {
   await ensurePublishedLegalVersions()
@@ -14,11 +27,7 @@ test("flow #1 registers or logs in without disclosing whether the account exists
 
   await test.step("Шаг 1: запросить ссылку с e-mail и актуальным согласием", async () => {
     await page.goto("/login")
-    await expect(page.locator("[data-login-state='form']")).toBeVisible()
-    await page.getByLabel(/адрес электронной почты/i).fill(email)
-    await page.getByRole("checkbox").check()
-    await page.getByRole("button", { name: /получить ссылку входа/i }).click()
-    await expect(page.locator("[data-login-state='sent']")).toBeVisible()
+    await requestLink(page, email)
     await expect(page.getByText(email)).toBeVisible()
   })
 
@@ -47,10 +56,7 @@ test("flow #1 registers or logs in without disclosing whether the account exists
   await test.step("Шаг 4: повторный вход существующего аккаунта не создаёт второй", async () => {
     await page.context().clearCookies()
     await page.goto("/login")
-    await page.getByLabel(/адрес электронной почты/i).fill(email)
-    await page.getByRole("checkbox").check()
-    await page.getByRole("button", { name: /получить ссылку входа/i }).click()
-    await expect(page.locator("[data-login-state='sent']")).toBeVisible()
+    await requestLink(page, email)
 
     const repeatToken = await readMagicLinkToken(request, email, token)
     await page.goto(`/auth/verify?token=${repeatToken}`)
@@ -66,10 +72,7 @@ test("flow #1 registers or logs in without disclosing whether the account exists
 
     await page.context().clearCookies()
     await page.goto("/login")
-    await page.getByLabel(/адрес электронной почты/i).fill(archivedEmail)
-    await page.getByRole("checkbox").check()
-    await page.getByRole("button", { name: /получить ссылку входа/i }).click()
-    await expect(page.locator("[data-login-state='sent']")).toBeVisible()
+    await requestLink(page, archivedEmail)
 
     const archivedToken = await readMagicLinkToken(request, archivedEmail)
     await page.goto(`/auth/verify?token=${archivedToken}`)
