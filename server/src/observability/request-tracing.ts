@@ -12,6 +12,8 @@ interface RequestTraceState {
   requestId: string
   startedAt: number
   user: RequestUserSnapshot | null
+  /** Запрос пришёл от BFF: подпись пересланного идентификатора сошлась с общим секретом. */
+  forwarded: boolean
 }
 
 interface RequestTracingOptions {
@@ -42,6 +44,16 @@ export function setRequestUserSnapshot(user: RequestUserSnapshot | null): void {
   if (state) state.user = user
 }
 
+/**
+ * Пришёл ли запрос через собственный BFF. Подпись считается общим секретом
+ * `REQUEST_ID_FORWARD_SECRET`, поэтому её нельзя подделать снаружи — а значит только для таких
+ * запросов заголовку `x-forwarded-for` можно верить как источнику адреса клиента. Прямой вызов
+ * API отвечает `false` и в лимитах считается одной корзиной (`rate-limits.md` §2 п. 2).
+ */
+export function isForwardedByBff(): boolean {
+  return requestTraceStorage.getStore()?.forwarded ?? false
+}
+
 export function createRequestTracingPlugin(options: RequestTracingOptions): Plugin {
   const now = options.now ?? Date.now
   const requestIdFactory = options.requestIdFactory ?? randomUUID
@@ -51,14 +63,14 @@ export function createRequestTracingPlugin(options: RequestTracingOptions): Plug
       request({ request }, wrapped) {
         const forwardedRequestId = request.headers.get("x-request-id")
         const forwardedSignature = request.headers.get("x-request-id-signature")
-        const requestId =
+        const forwarded = Boolean(
           forwardedRequestId &&
-          uuidV4Pattern.test(forwardedRequestId) &&
-          hasValidForwardedSignature(forwardedRequestId, forwardedSignature, options.forwardedRequestSecret)
-            ? forwardedRequestId
-            : requestIdFactory()
+            uuidV4Pattern.test(forwardedRequestId) &&
+            hasValidForwardedSignature(forwardedRequestId, forwardedSignature, options.forwardedRequestSecret)
+        )
+        const requestId = forwarded && forwardedRequestId ? forwardedRequestId : requestIdFactory()
 
-        return requestTraceStorage.run({ requestId, startedAt: now(), user: null }, wrapped)
+        return requestTraceStorage.run({ requestId, startedAt: now(), user: null, forwarded }, wrapped)
       }
     },
     onResponse({ request, response }) {

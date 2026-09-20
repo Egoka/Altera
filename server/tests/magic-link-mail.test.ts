@@ -4,6 +4,7 @@ import { createFakeTransport } from "../src/mail/transports/fake"
 import { createMailService } from "../src/mail/service"
 import type { AppLogger, LogEntry } from "../src/observability/logger"
 import { createMemoryStore } from "./helpers/mail-memory-store"
+import { createTestRateLimiter } from "./helpers/rate-limit"
 
 let authMutations: typeof import("../src/graphql/auth/resolver").default.Mutation
 
@@ -36,6 +37,7 @@ function createContext(locale: "ru" | "en" = "ru") {
     logger,
     piiHasher: { email: vi.fn().mockReturnValue("email-hash") },
     requestId: "request-21",
+    rateLimiter: createTestRateLimiter({ logger }),
     mail
   } as never
   return { ctx, entries, messages, transport }

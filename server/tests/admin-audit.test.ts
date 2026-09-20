@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
+import { RATE_LIMIT_RULES } from "../src/rate-limits"
 import {
   AUDIT_CSV_COLUMNS,
   AUDIT_EXPORT_LIMIT_PER_HOUR,
+  AUDIT_EXPORT_WINDOW_MS,
   buildAuditCsv,
   exportAuditCsv,
   getAuditEntry,
@@ -361,6 +363,28 @@ describe("экспорт CSV", () => {
     await exportAuditCsv(ctx, {}, NOW)
 
     expect(auditCreate).toHaveBeenCalledOnce()
+  })
+
+  // Журнал #57: лимит един и не снимается ни для служебной роли, ни для `owner`.
+  it.each(["admin", "owner"] as const)("упирается в один и тот же порог у роли %s", async (role) => {
+    const recentExports = Array.from({ length: AUDIT_EXPORT_LIMIT_PER_HOUR }, () => ({ createdAt: NOW }))
+    const { ctx, auditCreate } = context(role, { rows: [row()], recentExports })
+
+    await expect(exportAuditCsv(ctx, {}, NOW)).rejects.toMatchObject({
+      extensions: { code: "RATE_LIMITED" }
+    })
+    expect(auditCreate).not.toHaveBeenCalled()
+    // Попадание видно в логах так же, как у остальных корзин (реестр событий #44).
+    expect(vi.mocked(ctx.logger.log).mock.calls[0][0]).toMatchObject({
+      level: "warn",
+      event: "rate_limit.hit",
+      data: { bucket: "admin.export.user", ipHash: null }
+    })
+  })
+
+  it("берёт порог экспорта из единого реестра корзин, а не из второго числа", () => {
+    expect(AUDIT_EXPORT_LIMIT_PER_HOUR).toBe(RATE_LIMIT_RULES["admin.export.user"].limit)
+    expect(AUDIT_EXPORT_WINDOW_MS).toBe(RATE_LIMIT_RULES["admin.export.user"].windowSeconds * 1000)
   })
 })
 

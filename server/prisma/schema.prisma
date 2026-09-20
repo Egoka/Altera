@@ -679,6 +679,20 @@ model PermissionException {
   @@map("permission_exceptions")
 }
 
+/// Счётчики корзин лимитов частоты для режима без Redis (`docs/spec/50-access/rate-limits.md`
+/// §2 п. 13, ADR-0019). Персональных данных нет: `key` — HMAC адреса, e-mail или аккаунта.
+/// Строка живёт до конца своего окна, закрытые окна удаляет расписание API.
+model RateLimitCounter {
+  bucket    String
+  key       String
+  hits      Int      @default(0)
+  expiresAt DateTime
+
+  @@id([bucket, key])
+  @@index([expiresAt])
+  @@map("rate_limit_counters")
+}
+
 enum Role {
   reader
   author

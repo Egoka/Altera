@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest"
 import { sanitizeNextPath } from "../src/auth/next-path"
+import { createTestRateLimiter } from "./helpers/rate-limit"
 
 // Резолвер импортируется динамически: он читает секреты из env на уровне модуля.
 let resolver: typeof import("../src/graphql/auth/resolver").default
@@ -137,14 +138,16 @@ function createWorld(options: WorldOptions = {}) {
     $transaction: vi.fn(async (run: (client: any) => unknown) => run(prisma))
   }
 
+  const logger = {
+    log: (entry: { event: string; level: string; data?: Record<string, unknown> }) => {
+      logs.push({ event: entry.event, level: entry.level, data: entry.data })
+    }
+  }
   const ctx = {
     prisma,
     requestId: "req-t022",
-    logger: {
-      log: (entry: { event: string; level: string; data?: Record<string, unknown> }) => {
-        logs.push({ event: entry.event, level: entry.level, data: entry.data })
-      }
-    },
+    logger,
+    rateLimiter: createTestRateLimiter({ logger: logger as never }),
     piiHasher: { email: (value: string) => `hash(${value})` },
     mail: {
       send: vi.fn(async (input: { to: string; content: { subject: string; text: string } }) => {

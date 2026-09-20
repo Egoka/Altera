@@ -5,6 +5,7 @@ import type { Cache } from "./cache"
 import type { MailService } from "./mail/service"
 import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
+import type { RateLimiter } from "./rate-limits"
 import type { SessionMeta } from "./auth/session"
 import { getRequestId, setRequestUserSnapshot } from "./observability/request-tracing"
 
@@ -28,6 +29,9 @@ export interface GraphQLContext {
   logger: AppLogger
   piiHasher: PiiHasher
   mail: MailService
+  // Единые пороги лимитов частоты: корзины по e-mail и аккаунту применяются в резолверах,
+  // корзины по адресу — middleware до резолвера (`50-access/rate-limits.md` §2 п. 13).
+  rateLimiter: RateLimiter
 }
 
 // Браузер ходит только через BFF, поэтому адрес приходит заголовком прокси; поле
@@ -47,7 +51,8 @@ export async function createContext(
   cache: Cache,
   logger: AppLogger,
   piiHasher: PiiHasher,
-  mail: MailService
+  mail: MailService,
+  rateLimiter: RateLimiter
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const requestMeta = readRequestMeta(initialContext.request)
@@ -100,5 +105,5 @@ export async function createContext(
   }
 
   setRequestUserSnapshot(currentUser ? { id: currentUser.id, role: currentUser.role } : null)
-  return { prisma, currentUser, sessionId, requestMeta, cache, requestId, logger, piiHasher, mail }
+  return { prisma, currentUser, sessionId, requestMeta, cache, requestId, logger, piiHasher, mail, rateLimiter }
 }
