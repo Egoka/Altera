@@ -189,6 +189,16 @@ describe("ensureActiveAuthor", () => {
     }
   })
 
+  it("пропускает бессрочную базовую выдачу первого запуска: planUntil отсутствует", () => {
+    for (const role of ["reader", "author"] as const) {
+      expect(() =>
+        ensureActiveAuthor(user(role, { planTier: "standard", planUntil: null }), "article.create", "req-1", {
+          now: NOW
+        })
+      ).not.toThrow()
+    }
+  })
+
   it("возвращает PLAN_LIMIT и пишет безопасный структурированный лог при неактивном плане", () => {
     const log = vi.fn()
     const logger: AppLogger = { log }

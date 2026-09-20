@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task_id": "T-023",
+  "issue_id": "01a0be48-795c-7a86-8591-ff6f422dc8ec",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-023-session-rotation-logout-cookie.md",
+    "sha": "51a49b8b7172dc23e541a67c2933c415b2fe570d"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "948f41502a25a5c19d576769fffc8beb6a0d0362",
+  "branch": "feat/t023-sessions",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t023-sessions",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0be4a-45f0-7066-bf37-e31af32e2285",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "rotateSession moves the presented hash to previousTokenHash; presenting a rotated token revokes every session of that user and logs session.reuse_detected and session.revoked. Covered by server/tests/session-rotation.test.ts, server/tests/session-mutations.test.ts and the Playwright scenario, which confirms revocation with a direct database query."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "The BFF moves the issued refresh token into an httpOnly/Secure/SameSite=Lax cookie and returns refreshToken: null. Playwright web/tests/e2e/23-session-cookie.spec.ts asserts document.cookie holds neither the cookie name nor its value and that the jar entry is httpOnly. Executed in CI only — no Docker daemon locally."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "logoutAll revokes all sessions of the user including the current one (ADR-0009 п. 4); no active session remains and another user's session is untouched. Covered by server/tests/session-mutations.test.ts and the Playwright scenario with two browser contexts."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 284 passed / 24 skipped; web 203 passed",
+    "server_build": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "not run locally (no Docker daemon, so no PostgreSQL and no Mailpit); CI job web-smoke: 42 tests, 32 passed, 10 skipped, 0 failed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35505570781",
+    "preflight": "seven repository/runtime checks passed, ok: true; no live server or database probe was run",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 168,
+    "url": "https://github.com/Egoka/Altera/pull/168",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "948f41502a25a5c19d576769fffc8beb6a0d0362",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "New server session contract and BFF cookie handling need controller-managed development deployment and health verification after CI and independent review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-023.md",
+    "sha256": "41be6f06737e80ca499c341480664f721a3113cf7ee3a71ec1a18feb658e6a0a"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA, controller-managed merge into app and the Done transition",
+    "Playwright evidence exists only from CI: the local environment has no Docker daemon",
+    "The branch head after the tested SHA adds only docs/reports/2026-09-20-t023-session-rotation-logout-cookie-report.md and docs/reports/tasks/T-023.{json,md}; the controller re-points tested_sha/head_sha at that head"
+  ],
+  "usage": null
+}

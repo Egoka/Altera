@@ -1,0 +1,15 @@
+query GetSystemSettings($group: SystemSettingsGroup!) {
+  systemSettings(group: $group) {
+    group
+    adapter
+    canChange
+    settings {
+      key
+      source
+      secret
+      configured
+      value
+      mask
+    }
+  }
+}

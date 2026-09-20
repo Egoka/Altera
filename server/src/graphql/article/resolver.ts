@@ -1,5 +1,6 @@
 import { GraphQLContext } from "../../prisma"
 import { ensureActiveAuthor, ensureAuthenticated, ensurePermission, ensureRole } from "../../exceptions/permissions"
+import { enableBaseAuthorship } from "../../authorship/base-authorship"
 import { createApiError } from "../../errors/graphql-error"
 import {
   validatePagination,
@@ -111,8 +112,8 @@ function ensureActiveSection(
   }
 }
 
-function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string) {
-  const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string, currentUser = ctx.currentUser) {
+  const user = ensureAuthenticated(currentUser, ctx.requestId)
   if (user.role === "reader" || user.role === "author") {
     ensureActiveAuthor(user, action, ctx.requestId, { logger: ctx.logger })
   } else {
@@ -559,7 +560,10 @@ export default {
   },
   Mutation: {
     createArticle: async (_parent: any, { input }: { input: any }, ctx: GraphQLContext) => {
-      const user = ensureArticleAuthoringAccess(ctx, "article.create")
+      // Первое нажатие читателя включает базовые авторские возможности до проверки плана
+      // (become-author.md шаг 1, article-new.md §2); проверки идут в порядке permission-checks.md п. 3.
+      const actor = await enableBaseAuthorship(ctx, "article.create")
+      const user = ensureArticleAuthoringAccess(ctx, "article.create", actor)
       // Из служебных ролей материал создаёт только editor — редакционный (article-new.md §2, журнал §17, §25.2).
       if (!articleCreatorRoles.has(user.role)) {
         throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.create" })
