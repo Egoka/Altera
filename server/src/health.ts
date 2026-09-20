@@ -116,12 +116,12 @@ export const createHealthCheck = (dependencies: Dependencies, commit?: string): 
   }
 }
 
-// Render ищет открытый порт запросом `GET /` без строки запроса и без `Accept: text/html`.
-// Для Yoga это GraphQL-запрос без заголовка CSRF: он отвергается, и отказ попадает в журнал
+// Проба платформы — `GET` или `HEAD` на `/` без строки запроса и без `Accept: text/html`.
+// Для Yoga это запрос без заголовка CSRF: он отвергается, и отказ попадает в журнал
 // как `error.unhandled`, хотя сервер исправен. Отвечаем на такую пробу сами; GraphiQL
 // (`Accept: text/html`) и запросы GraphQL по адресу `/` по-прежнему уходят в Yoga.
 const isPortProbe = (request: IncomingMessage): boolean => {
-  if (request.method !== "GET") return false
+  if (request.method !== "GET" && request.method !== "HEAD") return false
   const [path, query] = (request.url ?? "").split("?", 2)
   if (path !== "/" || query !== undefined) return false
   return !(request.headers.accept ?? "").toLowerCase().includes("text/html")
