@@ -131,11 +131,16 @@ async function openAdmins(page: Page, options: { waitForList?: boolean } = {}) {
           response.url().includes("/api/graphql") && response.request().postData()?.includes("GetAdminStaff") === true
       )
     : null
-  await page.evaluate(() => {
-    window.history.pushState({}, "", "/admin/admins")
-    window.dispatchEvent(new PopStateEvent("popstate"))
-  })
-  await expect(page).toHaveURL(/\/admin\/admins/)
+  // Переход клиентский: моки `page.route` ловят только браузерные запросы, поэтому
+  // полная загрузка не подходит. До гидратации роутер ещё не слушает popstate и
+  // возвращает адрес на «/», поэтому переход повторяется, пока не закрепится.
+  await expect(async () => {
+    await page.evaluate(() => {
+      window.history.pushState({}, "", "/admin/admins")
+      window.dispatchEvent(new PopStateEvent("popstate"))
+    })
+    await expect(page).toHaveURL(/\/admin\/admins/, { timeout: 1000 })
+  }).toPass()
   if (listResponse) await listResponse
 }
 
