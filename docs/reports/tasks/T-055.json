@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "task_id": "T-055",
+  "issue_id": "01a0bc94-1ac0-75c9-a480-eade2f91e940",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-055-feeds-and-indexes.md",
+    "sha": "8001eaeaec27b10f443e7fb64cde5d52878d2134"
+  },
+  "baseline_sha": "f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54",
+  "tested_sha": "14d34bede921c77fcd99639a0f5a847ea71cd580",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bf5e-4bc4-73d9-9ab5-e2e6323ae01c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "https://github.com/Egoka/Altera/actions/runs/35520495868 — все семь проверок SUCCESS; джоб «Браузерная проверка веба» pass: 70 тестов (60 passed, 10 skipped), на app и на ветке T-054 было 51 passed — девять сценариев web/tests/e2e/public-feeds.spec.ts прошли; строки состояний §8 пяти спецификаций дополнительно закрыты web/tests/public-pages.nuxt.test.ts"
+    },
+    {
+      "id": "AC-2",
+      "status": "blocked",
+      "evidence": "Поведение реализовано и покрыто: server/tests/public-feeds.test.ts («архивированная рубрика ведёт на преемника», «прежний слаг рубрики ведёт на нынешний») и сценарий переезда в run 35520495868. Запрос curl к живой архивированной рубрике требует доступного в app архивирования, то есть слияния T-070 — так критерий и сформулирован в задаче; T-070 сейчас in_review"
+    }
+  ],
+  "pr": {
+    "number": 169,
+    "url": "https://github.com/Egoka/Altera/pull/169",
+    "base_ref": "app",
+    "base_sha": "f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54",
+    "head_sha": "14d34bede921c77fcd99639a0f5a847ea71cd580",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Новый публичный домен GraphQL в server/ (catalog и значения FeedScope section/tag) требует deploy evidence после merge",
+    "probe_actor_id": null,
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-055.md",
+    "sha256": "a93ea479bbafeb08ee4ec896f096a53c04a631dee629327ee9003d42efd66a0e"
+  },
+  "usage": null
+}
