@@ -39,6 +39,81 @@ enum AdminGrantStatus {
   revoked
 }
 
+type AdminMail {
+  """Сохранённая копия письма без секретов; для editor и moderator — null."""
+  body: String
+  canResend: Boolean!
+  createdAt: String!
+  deliveryErrorClass: String
+  deliveryEvents: [AdminMailDeliveryEvent!]!
+  id: ID!
+  jobId: ID
+  messageId: String
+  objectId: ID
+  objectType: String
+  provider: String
+  queuedAt: String!
+
+  """Адрес получателя: только analyst, admin и owner (журнал §27.6)."""
+  recipientEmail: String
+  recipientHandle: String
+  sentAt: String
+  status: AdminMailStatus!
+  subject: String!
+  template: String!
+}
+
+enum AdminMailAccess {
+  full
+  scoped
+}
+
+type AdminMailDeliveryEvent {
+  errorClass: String
+  id: ID!
+  occurredAt: String!
+  providerEventId: String
+  status: AdminMailStatus!
+}
+
+input AdminMailFiltersInput {
+  objectId: ID
+  period: DateRangeInput
+  query: String
+  recipient: String
+  status: [AdminMailStatus!]
+  template: String
+}
+
+type AdminMailList {
+  access: AdminMailAccess!
+  items: [AdminMail!]!
+  pagination: PaginationInfo!
+
+  """Письма ждут в очереди: почтовый провайдер их не забрал."""
+  providerWaiting: Boolean!
+}
+
+type AdminMailResendResult {
+  resent: Int!
+  skipped: Int!
+}
+
+enum AdminMailStatus {
+  bounced
+  failed
+  queued
+  sent
+}
+
+type AdminMailSummaryRow {
+  bounced: Int!
+  failed: Int!
+  queued: Int!
+  sent: Int!
+  template: String!
+}
+
 type AdminPlanGrant {
   createdAt: String!
   endsAt: String
@@ -181,10 +256,96 @@ type ArticlesResponse {
   sort: SortInfo!
 }
 
+type AuditActor {
+  id: ID
+  isSystem: Boolean!
+  name: String
+  role: Role
+}
+
+type AuditEntry {
+  action: String!
+  actor: AuditActor!
+  changedFields: [String!]!
+  createdAt: String!
+  entityId: ID!
+  entityType: String!
+  id: ID!
+  requestId: String
+  zones: [AuditZone!]!
+}
+
+type AuditEntryDetail {
+  action: String!
+  actor: AuditActor!
+  changedFields: [String!]!
+  context: String
+  createdAt: String!
+  diff: JSON
+  entityId: ID!
+  entityType: String!
+  id: ID!
+  purpose: String
+  requestId: String
+  subject: String
+  zones: [AuditZone!]!
+}
+
+type AuditExport {
+  contentType: String!
+  csv: String!
+  filename: String!
+  rows: Int!
+}
+
+input AuditLogFilters {
+  action: String
+  actorId: ID
+  actorSystem: Boolean
+  entityId: ID
+  entityType: String
+  from: String
+  requestId: String
+  subject: String
+  to: String
+  zone: AuditZone
+}
+
+type AuditLogPage {
+  availableActions: [String!]!
+  canExport: Boolean!
+  entries: [AuditEntry!]!
+  nextCursor: String
+  zone: AuditZone
+}
+
+type AuditSummary {
+  byAction: [AuditSummaryBucket!]!
+  byActor: [AuditSummaryBucket!]!
+  total: Int!
+}
+
+type AuditSummaryBucket {
+  count: Int!
+  key: String!
+  label: String
+}
+
+enum AuditZone {
+  editorial
+  financeAndPd
+  moderation
+}
+
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
   user: AccountUser!
+}
+
+enum AuthorGrade {
+  pro
+  standard
 }
 
 type AuthorStats {
@@ -249,6 +410,51 @@ type DateRangeInfo {
 input DateRangeInput {
   from: String
   to: String
+}
+
+type Feed {
+  locale: Locale!
+  scope: FeedScope!
+  sections: [FeedSection!]!
+}
+
+type FeedAuthor {
+  grade: AuthorGrade!
+  handle: String!
+  name: String!
+}
+
+enum FeedCaption {
+  by_publication_date
+}
+
+type FeedItem {
+  author: FeedAuthor!
+  cover: String
+  dek: String
+  id: ID!
+  isTranslation: Boolean!
+  publishedAt: String
+  sectionName: String!
+  sectionSlug: String!
+  slug: String!
+  title: String!
+}
+
+enum FeedScope {
+  home
+}
+
+type FeedSection {
+  caption: FeedCaption!
+  items: [FeedItem!]!
+  key: FeedSectionKey!
+}
+
+enum FeedSectionKey {
+  new
+  popular
+  top
 }
 
 type Format {
@@ -351,12 +557,15 @@ type Mutation {
   createTag(input: CreateTagInput!): Tag!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
+  exportAudit(filters: AuditLogFilters): AuditExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
   mergeTags(input: MergeTagsInput!): Tag!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
   requestReview(id: ID!): Article!
+  resendMail(id: ID!): AdminMail!
+  resendMails(ids: [ID!]!): AdminMailResendResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
   restoreSection(id: ID!): Section!
@@ -482,6 +691,8 @@ type Query {
   _empty: String
   adminGrant(id: ID!): AdminPlanGrant
   adminGrants: [AdminPlanGrant!]!
+  adminMail(id: ID!): AdminMail
+  adminMails(filters: AdminMailFiltersInput, pagination: PaginationInput): AdminMailList!
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
   adminUser(id: ID!): AccountUser
   article(slug: String!): Article
@@ -491,18 +702,20 @@ type Query {
   articlesByAuthor(authorHandle: String!, limit: Int = 10, page: Int = 1): ArticlesByAuthorResponse!
   articlesBySection(limit: Int = 10, page: Int = 1, sectionSlug: String!): ArticlesBySectionResponse!
   articlesByTag(limit: Int = 10, page: Int = 1, tagSlug: String!): ArticlesByTagResponse!
+  auditEntry(id: ID!): AuditEntryDetail!
+  auditLog(cursor: String, filters: AuditLogFilters, limit: Int): AuditLogPage!
+  auditSummary(filters: AuditLogFilters): AuditSummary!
   author(handle: String!): User
   authorStats(authorHandle: String!): AuthorStats
-  featuredArticles(limit: Int = 5): [Article!]!
+  feed(locale: Locale!, scope: FeedScope! = home): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
-  latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
   legalVersions(locale: Locale!): LegalVersions!
+  mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
   permissionExceptions(userId: ID): [PermissionException!]!
-  popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
   publicSections: [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!

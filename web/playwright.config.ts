@@ -11,7 +11,9 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://127.0.0.1:${port}`,
-    trace: "on-first-retry"
+    // Повторов в CI нет, поэтому `on-first-retry` там не срабатывал: диагностика собирается по отказу.
+    trace: process.env.CI ? "retain-on-failure" : "on-first-retry",
+    screenshot: "only-on-failure"
   },
   projects: [
     {

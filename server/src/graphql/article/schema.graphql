@@ -158,10 +158,7 @@ extend type Query {
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
   articleStats(slug: String!): ArticleStats
 
-  # Запросы для главной страницы
-  featuredArticles(limit: Int = 5): [Article!]!
-  latestArticles(limit: Int = 20, excludeFeatured: Boolean = false): [Article!]!
-  popularArticles(timeRange: String = "week", limit: Int = 10): [Article!]!
+  # Подборки главной отдаёт `feed(scope: home, locale)` — `graphql/feed/schema.graphql`.
 
   # Запросы для управления статьями (требуют права admin)
   articles(
