@@ -1,11 +1,9 @@
-import { addMinutes } from "date-fns"
-import crypto from "crypto"
 import jwt from "jsonwebtoken"
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
+import { issueMagicLink } from "../../auth/magic-link"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
-import { createMagicLinkMail, MAGIC_LINK_TEMPLATE } from "../../mail/messages"
 import type { Locale, User } from "../../generated/prisma"
 
 if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
@@ -16,15 +14,6 @@ const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET
 const JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || "15m"
 const JWT_REFRESH_TOKEN_EXPIRY = process.env.JWT_REFRESH_TOKEN_EXPIRY || "7d"
-const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
-const MAGIC_LINK_BASE_URL = process.env.MAGIC_LINK_BASE_URL || "http://localhost:3000/auth/verify"
-
-const buildMagicLinkUrl = (token: string): string => {
-  const url = new URL(MAGIC_LINK_BASE_URL)
-  url.searchParams.set("token", token)
-  return url.toString()
-}
-
 export default {
   Mutation: {
     requestMagicLink: async (_: unknown, { email, locale }: { email: string; locale: Locale }, ctx: GraphQLContext) => {
@@ -49,32 +38,7 @@ export default {
         targetUser = user
       }
 
-      const token = crypto.randomBytes(32).toString("hex")
-      const tokenHash = hashOpaqueToken(token)
-      const expiresAt = addMinutes(new Date(), MAGIC_LINK_EXPIRY_MINUTES)
-
-      await prisma.magicLinkToken.upsert({
-        where: { userId: targetUser.id },
-        update: {
-          tokenHash,
-          expiresAt,
-          usedAt: null // Ensure the token is marked as not used on update
-        },
-        create: {
-          tokenHash,
-          userId: targetUser.id,
-          expiresAt
-        }
-      })
-
-      const { message, sanitizedBody } = createMagicLinkMail(locale, buildMagicLinkUrl(token))
-      await mail.send({
-        template: MAGIC_LINK_TEMPLATE,
-        to: email,
-        content: { subject: message.subject, text: message.text, html: message.html },
-        sanitizedBody,
-        requestId
-      })
+      await issueMagicLink(prisma, mail, { userId: targetUser.id, email, locale, requestId })
 
       logger.log({
         level: "info",
