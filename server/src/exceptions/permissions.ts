@@ -142,6 +142,16 @@ export function ensurePermission(
   }
 }
 
+/**
+ * Активность плана для авторских действий (permission-checks.md п. 6). Бессрочная базовая выдача
+ * первого запуска представлена как `planTier = standard` с `planUntil = NULL` (plan-free.md п. 6а),
+ * поэтому отсутствие срока означает не истёкший план, а выдачу без срока.
+ */
+export function hasActiveAuthorPlan(user: Pick<PermissionUser, "planTier" | "planUntil">, now: Date): boolean {
+  if (user.planTier === "free") return false
+  return user.planUntil === null || user.planUntil > now
+}
+
 export function ensureActiveAuthor(
   currentUser: PermissionUser | null,
   action: string,
@@ -156,8 +166,7 @@ export function ensureActiveAuthor(
   }
 
   const now = options.now ?? new Date()
-  const hasActivePlan = user.planTier !== "free" && user.planUntil !== null && user.planUntil > now
-  if (hasActivePlan) return
+  if (hasActiveAuthorPlan(user, now)) return
 
   options.logger?.log({
     level: "warn",
