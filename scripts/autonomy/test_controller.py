@@ -173,6 +173,15 @@ class HeadReceiptOnlyTests(unittest.TestCase):
         rewritten = self.commit("docs/reports/tasks/T-123.json", '{"task_id": "T-123"}\n')
         self.assertFalse(self.live.head_receipt_only(self.tested, rewritten, "T-123"))
 
+    def test_review_survives_regenerated_graphql_artifacts(self):
+        # Сгенерированное подтверждается проверкой codegen в CI, а исходники остаются в патче.
+        self.commit("web/app/graphql/generated/schema.graphql", "type Query { a: Int }\n")
+        reviewed = self.live.patch_fingerprint(self.git("rev-parse", "HEAD"), self.base, "T-123")
+        regenerated = self.commit("web/app/graphql/generated/schema.graphql", "type Query { a: Int, b: Int }\n")
+        self.assertEqual(self.live.patch_fingerprint(regenerated, self.base, "T-123"), reviewed)
+        changed_source = self.commit("web/app/graphql/operations/pages/home.graphql", "query Home { b }\n")
+        self.assertNotEqual(self.live.patch_fingerprint(changed_source, self.base, "T-123"), reviewed)
+
     def test_review_survives_its_own_finalization_but_not_other_changes(self):
         reviewed = self.live.patch_fingerprint(self.tested, self.base, "T-123")
         self.assertIsNotNone(reviewed)
