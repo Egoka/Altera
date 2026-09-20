@@ -38,9 +38,10 @@ async function upsertUser(role: JobsRole) {
   await prisma.handleHistory.update({ where: { handle }, data: { userId: id } })
 }
 
+// Записи аудита неизменяемы на уровне базы, поэтому пересев их не удаляет:
+// проверки ищут запись, созданную после текущего пересева.
 async function seedJobs() {
   const now = new Date()
-  await prisma.auditLog.deleteMany({ where: { entityType: "Job", entityId: { in: seededJobs } } })
   await prisma.job.deleteMany({ where: { id: { in: seededJobs } } })
   await prisma.job.createMany({
     data: [
@@ -116,12 +117,21 @@ test.describe("admin jobs section", () => {
     for (const role of roles) await upsertUser(role)
   })
 
+  let seededAt = new Date()
+
   test.beforeEach(async () => {
     await seedJobs()
+    // Секунда запаса: отметка берётся с машины теста, а `createdAt` — с часов базы.
+    seededAt = new Date(Date.now() - 1_000)
   })
 
+  const lastAudit = (entityId: string) =>
+    prisma.auditLog.findFirst({
+      where: { entityType: "Job", entityId, createdAt: { gte: seededAt } },
+      orderBy: { createdAt: "desc" }
+    })
+
   test.afterAll(async () => {
-    await prisma.auditLog.deleteMany({ where: { entityType: "Job", entityId: { in: seededJobs } } })
     await prisma.job.deleteMany({ where: { id: { in: seededJobs } } })
     await prisma.$disconnect()
   })
@@ -213,7 +223,7 @@ test.describe("admin jobs section", () => {
 
     const job = await prisma.job.findUniqueOrThrow({ where: { id: FAILED_JOB }, select: { status: true } })
     expect(job.status).toBe("queued")
-    const audit = await prisma.auditLog.findFirst({ where: { entityType: "Job", entityId: FAILED_JOB } })
+    const audit = await lastAudit(FAILED_JOB)
     expect(audit?.action).toBe("job.retry")
     expect(audit?.actorRole).toBe("owner")
   })
@@ -230,7 +240,7 @@ test.describe("admin jobs section", () => {
     await expect(page.locator(`[data-job-row="${RUNNING_JOB}"]`)).toHaveCount(0)
     const job = await prisma.job.findUniqueOrThrow({ where: { id: RUNNING_JOB }, select: { status: true } })
     expect(job.status).toBe("cancelled")
-    const audit = await prisma.auditLog.findFirst({ where: { entityType: "Job", entityId: RUNNING_JOB } })
+    const audit = await lastAudit(RUNNING_JOB)
     expect(audit?.action).toBe("job.cancel")
     expect(audit?.diff).toMatchObject({ reason: "дубль выгрузки" })
   })
