@@ -1,0 +1,74 @@
+fragment AdminMailRow on AdminMail {
+  id
+  template
+  recipientEmail
+  recipientHandle
+  subject
+  status
+  provider
+  messageId
+  deliveryErrorClass
+  objectType
+  objectId
+  createdAt
+  sentAt
+  canResend
+}
+
+query GetAdminMails($filters: AdminMailFiltersInput, $pagination: PaginationInput) {
+  adminMails(filters: $filters, pagination: $pagination) {
+    access
+    providerWaiting
+    items {
+      ...AdminMailRow
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+query GetAdminMail($id: ID!) {
+  adminMail(id: $id) {
+    ...AdminMailRow
+    body
+    jobId
+    queuedAt
+    deliveryEvents {
+      id
+      status
+      providerEventId
+      errorClass
+      occurredAt
+    }
+  }
+}
+
+query GetMailSummary($period: AdminSummaryPeriod!) {
+  mailSummary(period: $period) {
+    template
+    queued
+    sent
+    bounced
+    failed
+  }
+}
+
+mutation ResendMail($id: ID!) {
+  resendMail(id: $id) {
+    id
+    status
+  }
+}
+
+mutation ResendMails($ids: [ID!]!) {
+  resendMails(ids: $ids) {
+    resent
+    skipped
+  }
+}

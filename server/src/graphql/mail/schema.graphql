@@ -1,0 +1,83 @@
+enum AdminMailStatus {
+  queued
+  sent
+  bounced
+  failed
+}
+
+enum AdminMailAccess {
+  full
+  scoped
+}
+
+type AdminMailDeliveryEvent {
+  id: ID!
+  status: AdminMailStatus!
+  providerEventId: String
+  errorClass: String
+  occurredAt: String!
+}
+
+type AdminMail {
+  id: ID!
+  template: String!
+  "Адрес получателя: только analyst, admin и owner (журнал §27.6)."
+  recipientEmail: String
+  recipientHandle: String
+  subject: String!
+  "Сохранённая копия письма без секретов; для editor и moderator — null."
+  body: String
+  status: AdminMailStatus!
+  provider: String
+  messageId: String
+  deliveryErrorClass: String
+  objectType: String
+  objectId: ID
+  jobId: ID
+  queuedAt: String!
+  sentAt: String
+  createdAt: String!
+  deliveryEvents: [AdminMailDeliveryEvent!]!
+  canResend: Boolean!
+}
+
+type AdminMailList {
+  items: [AdminMail!]!
+  pagination: PaginationInfo!
+  access: AdminMailAccess!
+  "Письма ждут в очереди: почтовый провайдер их не забрал."
+  providerWaiting: Boolean!
+}
+
+type AdminMailSummaryRow {
+  template: String!
+  queued: Int!
+  sent: Int!
+  bounced: Int!
+  failed: Int!
+}
+
+type AdminMailResendResult {
+  resent: Int!
+  skipped: Int!
+}
+
+input AdminMailFiltersInput {
+  template: String
+  status: [AdminMailStatus!]
+  period: DateRangeInput
+  recipient: String
+  objectId: ID
+  query: String
+}
+
+extend type Query {
+  adminMails(filters: AdminMailFiltersInput, pagination: PaginationInput): AdminMailList!
+  adminMail(id: ID!): AdminMail
+  mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
+}
+
+extend type Mutation {
+  resendMail(id: ID!): AdminMail!
+  resendMails(ids: [ID!]!): AdminMailResendResult!
+}
