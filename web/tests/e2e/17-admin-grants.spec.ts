@@ -91,11 +91,16 @@ async function navigateToAdminPage(page: Page, path: "/admin/grants" | "/admin/s
     (response) =>
       response.url().includes("/api/graphql") && response.request().postData()?.includes("GetAdminGrants") === true
   )
-  await page.evaluate((target) => {
-    window.history.pushState({}, "", target)
-    window.dispatchEvent(new PopStateEvent("popstate"))
-  }, path)
-  await expect(page).toHaveURL(path)
+  // Переход клиентский: моки `page.route` ловят только браузерные запросы, поэтому
+  // полная загрузка не подходит. До гидратации роутер ещё не слушает popstate и
+  // возвращает адрес на «/», поэтому переход повторяется, пока не закрепится.
+  await expect(async () => {
+    await page.evaluate((target) => {
+      window.history.pushState({}, "", target)
+      window.dispatchEvent(new PopStateEvent("popstate"))
+    }, path)
+    await expect(page).toHaveURL(path, { timeout: 1000 })
+  }).toPass()
   await grantsResponse
 }
 
