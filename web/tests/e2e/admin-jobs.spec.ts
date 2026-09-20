@@ -195,6 +195,8 @@ test.describe("admin jobs section", () => {
   test("keeps the stuck filter in the address and narrows the list", async ({ page }) => {
     await signIn(page, "admin")
     await page.goto("/admin/jobs")
+    // Переключатель есть и в серверной разметке: без дождавшейся списка гидратации клик уходит в пустоту.
+    await expect(page.locator(`[data-job-row="${FAILED_JOB}"]`)).toBeVisible()
 
     await page.locator("[data-jobs-stuck]").click()
 
