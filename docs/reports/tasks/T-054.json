@@ -8,7 +8,7 @@
     "sha": "869c1f5c43421828b720049f63125a838924dc18"
   },
   "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
-  "tested_sha": "2cca7eb4b7e3d79f687a4625a9bec9fe172bec43",
+  "tested_sha": "2da54651c3c8d83963635c37134be4c497921eae",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0beff-7394-76f8-862e-bd5db8efcd68",
   "criteria": [
@@ -32,8 +32,8 @@
     "number": 160,
     "url": "https://github.com/Egoka/Altera/pull/160",
     "base_ref": "app",
-    "base_sha": "f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54",
-    "head_sha": "2cca7eb4b7e3d79f687a4625a9bec9fe172bec43",
+    "base_sha": "77a7768b83af136d5b0b2d5a5ac30276b0026a19",
+    "head_sha": "2da54651c3c8d83963635c37134be4c497921eae",
     "merge_sha": null
   },
   "review": {
