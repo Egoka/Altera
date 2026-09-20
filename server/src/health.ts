@@ -1,4 +1,4 @@
-import type { RequestListener } from "node:http"
+import type { IncomingMessage, RequestListener } from "node:http"
 import { readdir } from "node:fs/promises"
 import { resolve } from "node:path"
 import type { Cache } from "./cache"
@@ -116,9 +116,27 @@ export const createHealthCheck = (dependencies: Dependencies, commit?: string): 
   }
 }
 
+// Render ищет открытый порт запросом `GET /` без строки запроса и без `Accept: text/html`.
+// Для Yoga это GraphQL-запрос без заголовка CSRF: он отвергается, и отказ попадает в журнал
+// как `error.unhandled`, хотя сервер исправен. Отвечаем на такую пробу сами; GraphiQL
+// (`Accept: text/html`) и запросы GraphQL по адресу `/` по-прежнему уходят в Yoga.
+const isPortProbe = (request: IncomingMessage): boolean => {
+  if (request.method !== "GET") return false
+  const [path, query] = (request.url ?? "").split("?", 2)
+  if (path !== "/" || query !== undefined) return false
+  return !(request.headers.accept ?? "").toLowerCase().includes("text/html")
+}
+
 export const withHealth =
   (fallback: RequestListener, check: () => Promise<Health>): RequestListener =>
   (request, response) => {
+    if (isPortProbe(request)) {
+      response.statusCode = 200
+      response.setHeader("content-type", "text/plain; charset=utf-8")
+      response.setHeader("cache-control", "no-store")
+      response.end("ok")
+      return
+    }
     if (request.method !== "GET" || request.url?.split("?", 1)[0] !== "/health") {
       fallback(request, response)
       return
