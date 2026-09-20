@@ -20,6 +20,8 @@ const cookieOptions = (maxAge: number) => ({
 })
 
 export const useAuthSession = () => {
+  // Событие запроса захватывается в setup: внутри обработчика загрузки его уже не достать.
+  const event = import.meta.server ? useRequestEvent() : null
   const access = useCookie(SESSION_ACCESS_COOKIE, cookieOptions(ACCESS_MAX_AGE_SECONDS))
   const refresh = useCookie(SESSION_REFRESH_COOKIE, cookieOptions(REFRESH_MAX_AGE_SECONDS))
 
@@ -30,7 +32,6 @@ export const useAuthSession = () => {
      * прямо в ответ: после редиректа хук отрисовки страницы уже не срабатывает.
      */
     start(tokens: SessionTokens) {
-      const event = import.meta.server ? useRequestEvent() : null
       if (event) {
         setCookie(event, SESSION_ACCESS_COOKIE, tokens.accessToken, cookieOptions(ACCESS_MAX_AGE_SECONDS))
         setCookie(event, SESSION_REFRESH_COOKIE, tokens.refreshToken, cookieOptions(REFRESH_MAX_AGE_SECONDS))

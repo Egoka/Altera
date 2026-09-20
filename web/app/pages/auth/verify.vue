@@ -19,6 +19,16 @@
     errors?: readonly GraphQLErrorLike[]
   }
 
+  /**
+   * Результат обмена переносится в payload страницы и переживает гидратацию. Токены сессии
+   * в него не попадают: они уходят в httpOnly-cookie на сервере (ADR-0023).
+   */
+  type VerifyResolution =
+    | { kind: "redirect"; to: string }
+    | { kind: "state"; state: VerifyState; requestId: string | null }
+    | { kind: "consent"; termsVersion: number | null; privacyVersion: number | null }
+    | { kind: "blocked"; appealToken: string | null }
+
   const { t } = useI18n()
   const route = useRoute()
   const session = useAuthSession()
@@ -32,54 +42,38 @@
 
   const token = computed(() => queryValue("token"))
 
-  const state = ref<VerifyState>("loading")
-  const requestId = ref<string | null>(null)
-  const consentVersions = ref<{ termsVersion: number | null; privacyVersion: number | null }>({
-    termsVersion: null,
-    privacyVersion: null
-  })
-  const appealToken = ref<string | null>(null)
-
   const readExtension = (errors: readonly GraphQLErrorLike[] | undefined, key: string) => errors?.[0]?.extensions?.[key]
 
-  const applyFailure = (errors: readonly GraphQLErrorLike[] | undefined) => {
+  const failure = (errors: readonly GraphQLErrorLike[] | undefined): VerifyResolution => {
     const id = readExtension(errors, "requestId")
-    requestId.value = typeof id === "string" ? id : null
-    state.value = verifyErrorState(readExtension(errors, "code"))
+    return {
+      kind: "state",
+      state: verifyErrorState(readExtension(errors, "code")),
+      requestId: typeof id === "string" ? id : null
+    }
   }
 
-  const applyOutcome = async (result: VerifyOutcomeFragment) => {
-    if (result.outcome === "archived_admin") {
-      appealToken.value = result.appealToken
-      state.value = "blocked"
-      return
-    }
+  const resolveOutcome = (result: VerifyOutcomeFragment): VerifyResolution => {
+    if (result.outcome === "archived_admin") return { kind: "blocked", appealToken: result.appealToken }
 
     if (result.outcome === "consent_required") {
-      consentVersions.value = { termsVersion: result.termsVersion, privacyVersion: result.privacyVersion }
-      state.value = "consent"
-      return
+      return { kind: "consent", termsVersion: result.termsVersion, privacyVersion: result.privacyVersion }
     }
 
-    if (!result.session) {
-      state.value = "error"
-      return
-    }
+    if (!result.session) return { kind: "state", state: "error", requestId: null }
 
     session.start(result.session)
 
     // Самостоятельный архив: ограниченная сессия и экран состояния (журнал §5.2).
-    const destination = result.outcome === "archived_self" ? "/me/archived" : (result.next ?? "/me")
-    await navigateTo(destination, { replace: true, redirectCode: 302 })
+    return {
+      kind: "redirect",
+      to: result.outcome === "archived_self" ? "/me/archived" : (result.next ?? "/me")
+    }
   }
 
-  // Обмен токена и принятие новых условий выполняет SSR до рендера (verify.md §8):
-  // токены сессии не попадают в браузерный JS (ADR-0023).
-  await useAsyncData("auth-verify", async () => {
-    if (!token.value) {
-      await navigateTo("/login", { replace: true, redirectCode: 302 })
-      return null
-    }
+  // Обмен токена и принятие новых условий выполняет SSR до рендера (verify.md §8).
+  const { data: resolution } = await useAsyncData<VerifyResolution>("auth-verify", async () => {
+    if (!token.value) return { kind: "redirect", to: "/login" }
 
     const accepting = queryValue("consent") === "accept"
 
@@ -94,23 +88,35 @@
             token: token.value
           })) as GraphQLEnvelope<VerifyMagicLinkMutation>)
 
-      const result =
-        "acceptConsent" in (envelope.data ?? {})
-          ? (envelope.data as AcceptConsentMutation).acceptConsent
-          : (envelope.data as VerifyMagicLinkMutation | null | undefined)?.verifyMagicLink
+      const result = accepting
+        ? (envelope.data as AcceptConsentMutation | null | undefined)?.acceptConsent
+        : (envelope.data as VerifyMagicLinkMutation | null | undefined)?.verifyMagicLink
 
-      if (!result) {
-        applyFailure(envelope.errors)
-        return null
-      }
-
-      await applyOutcome(result)
+      return result ? resolveOutcome(result) : failure(envelope.errors)
     } catch {
-      state.value = "error"
+      return { kind: "state", state: "error", requestId: null }
     }
-
-    return null
   })
+
+  if (resolution.value?.kind === "redirect") {
+    await navigateTo(resolution.value.to, { replace: true, redirectCode: 302 })
+  }
+
+  const state = computed<VerifyState>(() => {
+    const current = resolution.value
+    if (!current || current.kind === "redirect") return "loading"
+    if (current.kind === "consent") return "consent"
+    if (current.kind === "blocked") return "blocked"
+    return current.state
+  })
+
+  const consentVersions = computed(() =>
+    resolution.value?.kind === "consent"
+      ? { termsVersion: resolution.value.termsVersion, privacyVersion: resolution.value.privacyVersion }
+      : { termsVersion: null, privacyVersion: null }
+  )
+  const appealToken = computed(() => (resolution.value?.kind === "blocked" ? resolution.value.appealToken : null))
+  const requestId = computed(() => (resolution.value?.kind === "state" ? resolution.value.requestId : null))
 
   useSeoMeta({
     title: () => `${t("auth.login.title")} — Altera`,
@@ -177,7 +183,7 @@
     </template>
 
     <template v-else>
-      <h1 class="text-2xl font-semibold" role="alert">{{ t("auth.verify.error.title") }}</h1>
+      <h1 class="text-2xl font-semibold">{{ t("auth.verify.error.title") }}</h1>
       <p>{{ t("auth.verify.error.body", { requestId: requestId ?? "—" }) }}</p>
       <NuxtLink to="/login" class="font-semibold underline">{{ t("auth.verify.error.action") }}</NuxtLink>
     </template>

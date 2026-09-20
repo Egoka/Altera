@@ -24,7 +24,8 @@
 
   const nextPath = computed(() => sanitizeNextPath(route.query.next))
 
-  // С сессией страница входа не показывается (login.md §2).
+  // С сессией страница входа не показывается (login.md §2). Cookie сессии httpOnly,
+  // поэтому её видит только серверный рендер — на клиенте проверять нечего.
   if (hasSession.value) {
     // У кабинета нет языковых вариантов (`i18n: false`), поэтому адрес один для обеих локалей.
     await navigateTo(nextPath.value ?? "/me", { replace: true, redirectCode: 302 })

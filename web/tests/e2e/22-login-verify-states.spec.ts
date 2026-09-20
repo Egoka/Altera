@@ -13,6 +13,10 @@ import {
 
 const GRAPHQL_ROUTE = "**/api/graphql"
 
+// У Nuxt есть собственный route announcer с role="alert", поэтому сообщения страницы
+// ищутся внутри её секции.
+const pageAlert = (page: Page) => page.locator("[data-login-state] [role='alert']")
+
 const graphqlErrorBody = (operation: string, extensions: Record<string, unknown>) => ({
   status: 200,
   contentType: "application/json",
@@ -87,7 +91,7 @@ test.describe("страница входа по таблице состояни�
     await expect(page.locator("[data-login-state='form']")).toBeVisible()
     await requestLinkFrom(page, uniqueEmail("t022-rate"))
 
-    await expect(page.getByRole("alert")).toContainText(/слишком много запросов/i)
+    await expect(pageAlert(page)).toContainText(/слишком много запросов/i)
     await expect(page.locator("[data-login-state='form']")).toBeVisible()
   })
 
@@ -110,7 +114,7 @@ test.describe("страница входа по таблице состояни�
     await expect(page.locator("[data-login-state='form']")).toBeVisible()
     await requestLinkFrom(page, uniqueEmail("t022-provider"))
 
-    await expect(page.getByRole("alert")).toContainText(/не удалось отправить/i)
+    await expect(pageAlert(page)).toContainText(/не удалось отправить/i)
   })
 
   test("проверка формата и согласия выполняется до отправки", async ({ page }) => {
@@ -125,7 +129,7 @@ test.describe("страница входа по таблице состояни�
     await page.getByLabel(/адрес электронной почты/i).fill("not-an-address")
     await page.getByRole("button", { name: /получить ссылку входа/i }).click()
 
-    await expect(page.getByRole("alert")).toContainText(/корректный адрес/i)
+    await expect(pageAlert(page)).toContainText(/корректный адрес/i)
   })
 
   test("«Заблокирован»: для архивированного адреса форма отвечает как обычно", async ({ page }) => {
@@ -137,7 +141,7 @@ test.describe("страница входа по таблице состояни�
     await requestLinkFrom(page, email)
 
     await expect(page.locator("[data-login-state='sent']")).toBeVisible()
-    await expect(page.getByRole("alert")).toHaveCount(0)
+    await expect(pageAlert(page)).toHaveCount(0)
   })
 
   test("«Нет доступа»: с сессией /login отвечает редиректом", async ({ page, request }) => {
