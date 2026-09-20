@@ -31,7 +31,7 @@
 
 ## Суточные отчёты
 
-- [2026-09-20](docs/reports/autonomy/2026-09-20.md) · ревизия 1
+- [2026-09-20](docs/reports/autonomy/2026-09-20.md) · ревизия 2
 - [2026-09-19](docs/reports/autonomy/2026-09-19.md) · ревизия 1
 - [2026-09-18](docs/reports/autonomy/2026-09-18.md) · ревизия 1
 - [2026-09-16](docs/reports/autonomy/2026-09-16.md) · ревизия 1
