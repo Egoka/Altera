@@ -159,11 +159,14 @@
   },
   "home": {
     "featured": "Главные материалы",
-    "latest": "Последние статьи",
-    "popular": "Популярные статьи",
+    "latest": "Новое",
+    "popular": "Популярное за неделю",
     "trending": "Тренды",
     "viewAll": "Посмотреть все",
-    "demanded": "Востребованное"
+    "captionByDate": "по дате публикации",
+    "emptyTitle": "Здесь пока пусто",
+    "emptyDescription": "Станьте первым автором Altera.",
+    "emptyAction": "Стать автором"
   },
   "article": {
     "readMore": "Читать далее",

@@ -159,11 +159,14 @@
   },
   "home": {
     "featured": "Featured",
-    "latest": "Latest Articles",
-    "popular": "Popular Articles",
+    "latest": "New",
+    "popular": "Popular this week",
     "trending": "Trending",
     "viewAll": "View All",
-    "demanded": "In demand"
+    "captionByDate": "by publication date",
+    "emptyTitle": "Nothing here yet",
+    "emptyDescription": "Be the first author of Altera.",
+    "emptyAction": "Become an author"
   },
   "article": {
     "readMore": "Read More",

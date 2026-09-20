@@ -268,6 +268,11 @@ type AuthPayload {
   user: AccountUser!
 }
 
+enum AuthorGrade {
+  pro
+  standard
+}
+
 type AuthorStats {
   articlesThisMonth: Int!
   popularTags: [Tag!]
@@ -325,6 +330,51 @@ type DateRangeInfo {
 input DateRangeInput {
   from: String
   to: String
+}
+
+type Feed {
+  locale: Locale!
+  scope: FeedScope!
+  sections: [FeedSection!]!
+}
+
+type FeedAuthor {
+  grade: AuthorGrade!
+  handle: String!
+  name: String!
+}
+
+enum FeedCaption {
+  by_publication_date
+}
+
+type FeedItem {
+  author: FeedAuthor!
+  cover: String
+  dek: String
+  id: ID!
+  isTranslation: Boolean!
+  publishedAt: String
+  sectionName: String!
+  sectionSlug: String!
+  slug: String!
+  title: String!
+}
+
+enum FeedScope {
+  home
+}
+
+type FeedSection {
+  caption: FeedCaption!
+  items: [FeedItem!]!
+  key: FeedSectionKey!
+}
+
+enum FeedSectionKey {
+  new
+  popular
+  top
 }
 
 type Format {
@@ -550,15 +600,13 @@ type Query {
   auditSummary(filters: AuditLogFilters): AuditSummary!
   author(handle: String!): User
   authorStats(authorHandle: String!): AuthorStats
-  featuredArticles(limit: Int = 5): [Article!]!
+  feed(locale: Locale!, scope: FeedScope! = home): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
-  latestArticles(excludeFeatured: Boolean = false, limit: Int = 20): [Article!]!
   me: AccountUser
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
   permissionExceptions(userId: ID): [PermissionException!]!
-  popularArticles(limit: Int = 10, timeRange: String = "week"): [Article!]!
   publicSections: [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!

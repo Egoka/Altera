@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "task_id": "T-054",
+  "issue_id": "01a0bbbb-857b-76e6-9191-eba5a7fcbb43",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-054-home-page-launch.md",
+    "sha": "869c1f5c43421828b720049f63125a838924dc18"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "2cca7eb4b7e3d79f687a4625a9bec9fe172bec43",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0beff-7394-76f8-862e-bd5db8efcd68",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "https://github.com/Egoka/Altera/actions/runs/35513768558 — 7 checks SUCCESS; джоб «Браузерная проверка веба» pass: 61 тест (51 passed, 10 skipped), на app того же дня было 56 (46 passed, 10 skipped) — пять новых сценариев web/tests/e2e/homepage-feed.spec.ts прошли; строки состояний home.md §8 дополнительно закрыты web/tests/home-page.nuxt.test.ts"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/home-feed.test.ts — «не повторяет материал в двух подборках и добирает освободившееся место»: срезы кандидатов не пересекаются, уникальность проверяется по Set; 11 проверок домена feed в джобе «Формат, линт и тесты» run 35513768558"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "web/tests/homeFeed.test.ts → «главная без фикстур»: в web/app/pages/index.vue и web/app/components/pages/start/* нет demoFeed|DEMO_|mock|picsum|unsplash; Demanded.vue удалён; run 35513768558"
+    }
+  ],
+  "pr": {
+    "number": 160,
+    "url": "https://github.com/Egoka/Altera/pull/160",
+    "base_ref": "app",
+    "base_sha": "f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54",
+    "head_sha": "2cca7eb4b7e3d79f687a4625a9bec9fe172bec43",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0bebc-c35c-7dcf-a5a6-2d3face02b9f",
+    "sha": "0809ed086e7ad85e4557c2a033dd1de6abb15264",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Новый публичный домен GraphQL в server/ (feed) требует deploy evidence после merge",
+    "probe_actor_id": null,
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-054.md",
+    "sha256": "b1abe833d1b20c5eab986223015716715144f98d9632cce41a9019b4c30d7536"
+  },
+  "usage": null
+}
