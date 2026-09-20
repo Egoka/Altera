@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import type { PopularArticleFragment } from "~/graphql/generated/graphql"
+  import type { ReadingArticle } from "~/types/reading"
 
-  defineProps<{ index: number; article: PopularArticleFragment }>()
+  defineProps<{ index: number; article: ReadingArticle }>()
 </script>
 
 <template>
