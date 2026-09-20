@@ -6,7 +6,7 @@ import { expect, test, type Page } from "@playwright/test"
 // «не найдено». Наполненные строки задаются перехватом ответа GraphQL: SSR-запрос уходит
 // мимо браузера, а клиентский переход из списка авторов выполняет его уже в странице.
 
-const feedItem = (id: string, publishedAt: string) => ({
+const feedItem = (id: string, publishedAt: string, grade: "standard" | "pro" = "pro") => ({
   id,
   slug: `slug-${id}`,
   sectionSlug: "culture",
@@ -16,7 +16,7 @@ const feedItem = (id: string, publishedAt: string) => ({
   cover: null,
   publishedAt,
   isTranslation: false,
-  author: { name: "Вера Орлова", handle: "vera", grade: "pro" }
+  author: { name: "Вера Орлова", handle: "vera", grade }
 })
 
 const navigation = {
@@ -127,15 +127,28 @@ test("страница автора: шапка, хроника по месяц�
 })
 
 test("страница автора: истёкший план оставляет страницу, но снимает бейдж pro", async ({ page }) => {
+  // Уровень автора приходит и в карточках ленты, поэтому у истёкшего плана он снят везде:
+  // страница и материалы остаются, бейджа pro на них нет (журнал #5, ADR-0037).
   await stubGraphQL(page, {
     GetNavigation: { data: navigation },
     GetAuthorCatalog: authorCatalog,
-    GetAuthorPage: { data: { author: authorProfile({ grade: "standard" }), feed: authorFeed() } }
+    GetAuthorPage: {
+      data: {
+        author: authorProfile({ grade: "standard" }),
+        feed: authorFeed({
+          items: [
+            feedItem("1", "2026-09-18T10:00:00.000Z", "standard"),
+            feedItem("2", "2026-08-12T10:00:00.000Z", "standard")
+          ]
+        })
+      }
+    }
   })
 
   await openAuthorPage(page)
 
   await expect(page.getByRole("heading", { level: 1, name: "Вера Орлова" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Материал 1" }).first()).toBeVisible()
   await expect(page.getByLabel("Автор уровня pro")).toHaveCount(0)
 })
 
