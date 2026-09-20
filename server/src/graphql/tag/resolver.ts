@@ -21,6 +21,8 @@ import { readThroughPublicCache } from "../../cache/read-through"
 import { archiveTag, createTag, mergeTags, restoreTag, updateTag } from "../../taxonomy/service"
 import { publicArticleSelect, publicArticleWhere, publicTagSelect, publicUserSelect } from "../../visibility/article"
 
+const MERGE_SOURCES_LIMIT = 50
+
 export default {
   Query: {
     tagAutocomplete: async (_parent: any, args: { q: string; limit?: number | null }, ctx: GraphQLContext) => {
@@ -74,9 +76,14 @@ export default {
           cache: ctx.cache,
           key: buildCacheKey("query.tag", args),
           tags: [`tag:${args.slug}`],
-          ttlSeconds: CACHE_TTL_SECONDS.publicList
+          ttlSeconds: CACHE_TTL_SECONDS.publicList,
+          cacheWhen: (tag) => tag?.status === "active"
         },
-        () => ctx.prisma.tag.findUnique({ where: { slug: args.slug }, select: publicTagSelect })
+        () =>
+          ctx.prisma.tag.findUnique({
+            where: { slug: args.slug },
+            select: { ...publicTagSelect, mergedInto: { select: publicTagSelect } }
+          })
       )
     },
 
@@ -191,6 +198,7 @@ export default {
         sort: SortInput
         filters: {
           base: BaseFilters
+          status?: string[]
           hasArticles?: boolean
         }
         search?: SearchInput
@@ -204,7 +212,7 @@ export default {
 
       // Валидация входных параметров
       validatePagination(pagination, ctx.requestId)
-      validateSort(sort, ["id", "name", "slug", "createdAt", "updatedAt", "_count.articles"], ctx.requestId)
+      validateSort(sort, ["id", "name", "slug", "status", "createdAt", "updatedAt", "_count.articles"], ctx.requestId)
 
       if (search) {
         validateSearchInput(search, ["name", "description", "slug"], ctx.requestId)
@@ -222,6 +230,10 @@ export default {
       const where: any = buildBaseWhereClause(filters.base, search)
 
       // Добавляем специфичные фильтры для тегов
+      if (filters.status?.length) {
+        where.status = { in: filters.status }
+      }
+
       if (filters.hasArticles !== undefined) {
         if (filters.hasArticles) {
           where.articles = { some: {} }
@@ -244,6 +256,11 @@ export default {
         include: {
           _count: {
             select: { articles: true }
+          },
+          // Цель слияния читает раздел админки: архивированный источник помечается
+          // «слит в …» и теряет восстановление (`40-admin/tags.md` §5).
+          mergedInto: {
+            select: { id: true, name: true, slug: true }
           }
         }
       })
@@ -257,6 +274,7 @@ export default {
             createdAt: filters.base.createdAt,
             updatedAt: filters.base.updatedAt
           },
+          status: filters.status,
           hasArticles: filters.hasArticles
         },
         sort: { field: sort.field, direction: sort.direction },
@@ -366,8 +384,8 @@ export default {
 
       const { sourceTagIds, targetTagId } = input
 
-      // Валидация входных параметров
-      validateBulkOperation(sourceTagIds, ctx.requestId, 10)
+      // Максимум массового слияния задаёт `40-admin/tags.md` §6 — 50 источников за операцию.
+      validateBulkOperation(sourceTagIds, ctx.requestId, MERGE_SOURCES_LIMIT)
 
       if (sourceTagIds.includes(targetTagId)) {
         throw createApiError("VALIDATION_ERROR", {

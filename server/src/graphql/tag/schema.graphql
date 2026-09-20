@@ -28,6 +28,7 @@ input TagFiltersInput {
   base: BaseFiltersInput
 
   # Специфичные для тегов
+  status: [TaxonomyStatus!]
   hasArticles: Boolean
 }
 
@@ -41,6 +42,7 @@ type TagsResponse {
 
 type TagFilters {
   base: BaseFiltersInfo
+  status: [TaxonomyStatus!]
   hasArticles: Boolean
 }
 

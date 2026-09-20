@@ -10,7 +10,9 @@ for (const theme of themes) {
       localStorage.setItem("nuxt-color-mode", selectedTheme)
     }, theme)
 
-    await page.goto("/admin/tags")
+    // Раздел тегов переведён на собственную вёрстку (T-071); токены `AppTable`
+    // проверяются на разделе типов контента — он остаётся на этом компоненте.
+    await page.goto("/admin/types")
 
     const root = page.locator("html")
     const table = page.locator("[data-app-table]")

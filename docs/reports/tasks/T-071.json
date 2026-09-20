@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "T-071",
+  "issue_id": "01a0bb80-a518-76ea-ad37-d6a84bba7158",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-071-admin-tags.md",
+    "sha": "6de56b551d8bdbff367f2e61218ae2bdfcbe6da1"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "ebb539cd2fed1d39f3e4f11d2bbe1a4fdf6847b5",
+  "branch": "feat/t071-tags-admin",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bc94-b47b-74e4-90dc-8e1afb29277c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/admin-tags.spec.ts (3 scenarios); CI run 35484954012 on ebb539cd — browser job pass, aggregate test pass"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Same spec: article link moves to the merge target; GET /tags/t071-kino answers 301 Location /tags/t071-cinema; CI run 35484954012"
+    }
+  ],
+  "pr": {
+    "number": 162,
+    "url": "https://github.com/Egoka/Altera/pull/162",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "ebb539cd2fed1d39f3e4f11d2bbe1a4fdf6847b5",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "Server and web code changes require controller-managed deployment/health after merge",
+    "probe_actor_id": null,
+    "probe_run_id": null
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-071.md",
+    "sha256": "cacc15679c24bf1c8bebfa6a9cc04a1efef6492cbd2426e49e3c5507c6bbec90"
+  },
+  "usage": null
+}
