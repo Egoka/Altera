@@ -251,7 +251,47 @@
   "admin": {
     "dashboard": "Dashboard",
     "articles": "Articles",
-    "tags": "Tags",
+    "tags": {
+      "eyebrow": "Tag registry",
+      "title": "Tags",
+      "description": "Merge duplicates, archive and restore. New tags are created by authors in the editor.",
+      "search": "Search by name or slug",
+      "status": "Status",
+      "active": "Active",
+      "archived": "Archived",
+      "all": "All",
+      "materials": "articles",
+      "select": "Select tag",
+      "selected": "Selected: {count}",
+      "merge": "Merge selected",
+      "mergeTitle": "Merge tags",
+      "mergeHint": "Sources move to the archive without restore, and their addresses redirect to the target.",
+      "mergeSources": "Sources",
+      "mergeTarget": "Merge target",
+      "chooseTarget": "Choose an active tag",
+      "mergeTotal": "Articles in sources: {count}",
+      "confirmMerge": "Merge",
+      "archive": "Archive",
+      "archiveTitle": "Archive tag",
+      "archiveHint": "The tag disappears from autocomplete and public feeds. Articles keep the link until it is restored.",
+      "archiveCount": "Articles with this tag: {count}",
+      "restore": "Restore",
+      "cancel": "Cancel",
+      "mergedInto": "Merged into {name}",
+      "mergedNoRestore": "A merged tag cannot be restored",
+      "ownerArchiveNote": "Only the owner restores an owner archive",
+      "empty": "No tags yet",
+      "emptyFilter": "Nothing matches this filter",
+      "error": "Could not load the tag registry.",
+      "conflict": "Another administrator changed the tag. Refresh the list and try again.",
+      "forbidden": "Not enough rights for this action.",
+      "limit": "Select no more than {count} tags",
+      "desktopOnly": "Merging is available on desktop",
+      "events": "Event log",
+      "emptyEvents": "No changes yet",
+      "openMaterials": "Open articles",
+      "close": "Close"
+    },
     "contentTypes": "Content Types",
     "users": "Users",
     "statistics": "Statistics",
@@ -259,15 +299,16 @@
     "settings": "Settings",
     "articlesTitle": "Article management",
     "articlesDescription": "View and manage system articles",
-    "tagsTitle": "Tag management",
-    "tagsDescription": "Create and edit article tags",
     "typesTitle": "Content type management",
     "typesDescription": "Create and edit article content types",
     "categories": {
       "eyebrow": "Editorial catalogue",
       "title": "Sections and formats",
       "description": "Publication structure, public addresses, and change history.",
-      "tabs": { "sections": "Sections", "formats": "Formats" },
+      "tabs": {
+        "sections": "Sections",
+        "formats": "Formats"
+      },
       "createSection": "New section",
       "createFormat": "New format",
       "create": "Create",
@@ -356,14 +397,30 @@
       "settings": "System settings"
     },
     "cards": {
-      "editorial": { "title": "Editorial articles" },
-      "editorialProcesses": { "title": "Editorial processes" },
-      "reviewQueue": { "title": "Manual review queue" },
-      "profileChecks": { "title": "Profile checks" },
-      "growth": { "title": "Registrations and plans" },
-      "operationalQueue": { "title": "Operations queue" },
-      "health": { "title": "Health and errors" },
-      "ownership": { "title": "Service accounts" }
+      "editorial": {
+        "title": "Editorial articles"
+      },
+      "editorialProcesses": {
+        "title": "Editorial processes"
+      },
+      "reviewQueue": {
+        "title": "Manual review queue"
+      },
+      "profileChecks": {
+        "title": "Profile checks"
+      },
+      "growth": {
+        "title": "Registrations and plans"
+      },
+      "operationalQueue": {
+        "title": "Operations queue"
+      },
+      "health": {
+        "title": "Health and errors"
+      },
+      "ownership": {
+        "title": "Service accounts"
+      }
     },
     "metrics": {
       "drafts": "Drafts",

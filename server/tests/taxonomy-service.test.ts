@@ -9,6 +9,7 @@ import {
   mergeTags,
   restoreFormat,
   restoreSection,
+  restoreTag,
   updateFormat,
   updateSection,
   updateTag
@@ -424,6 +425,216 @@ describe("taxonomy service", () => {
 
     expect(createAudit).toHaveBeenCalledWith({
       data: expect.objectContaining({ action: "section.restore", entityId: "section-1", requestId: "request-6" })
+    })
+  })
+  it("moves tag links, redirects source slugs and records tag.merge for each source", async () => {
+    const executeRaw = vi
+      .fn()
+      .mockResolvedValueOnce(2)
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(1)
+    const updateHistory = vi.fn().mockResolvedValue({ count: 2 })
+    const updateTags = vi.fn().mockResolvedValue({ count: 2 })
+    const createAudit = vi.fn().mockResolvedValue({})
+    const target = { id: "target", slug: "cinema" }
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn().mockResolvedValue([
+          { id: "source-a", status: "active" },
+          { id: "source-b", status: "archived" },
+          { id: "target", status: "active" }
+        ]),
+        $executeRaw: executeRaw,
+        tagSlugHistory: { updateMany: updateHistory },
+        tag: { updateMany: updateTags, findUnique: vi.fn().mockResolvedValue(target) },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      mergeTags({ $transaction: transaction } as never, {
+        sourceTagIds: ["source-a", "source-b"],
+        targetTagId: "target",
+        actor: actor("admin"),
+        requestId: "request-7"
+      })
+    ).resolves.toEqual(target)
+
+    expect(updateHistory).toHaveBeenCalledWith({
+      where: { ownerTagId: { in: ["source-a", "source-b"] } },
+      data: { redirectToTagId: "target" }
+    })
+    expect(updateTags).toHaveBeenCalledWith({
+      where: { id: { in: ["source-a", "source-b"] } },
+      data: expect.objectContaining({ status: "archived", mergedIntoId: "target" })
+    })
+    expect(createAudit).toHaveBeenCalledTimes(2)
+    expect(createAudit).toHaveBeenNthCalledWith(1, {
+      data: expect.objectContaining({
+        action: "tag.merge",
+        entityType: "Tag",
+        entityId: "source-a",
+        diff: { sourceTagIds: ["source-a", "source-b"], targetTagId: "target", movedArticles: 2 },
+        requestId: "request-7"
+      })
+    })
+    expect(createAudit).toHaveBeenNthCalledWith(2, {
+      data: expect.objectContaining({
+        entityId: "source-b",
+        diff: { sourceTagIds: ["source-a", "source-b"], targetTagId: "target", movedArticles: 0 }
+      })
+    })
+  })
+
+  it("records tag.archive with the number of linked articles and drops the redirect", async () => {
+    const updateHistory = vi.fn().mockResolvedValue({ count: 1 })
+    const update = vi.fn().mockResolvedValue({ id: "tag-1", status: "archived" })
+    const createAudit = vi.fn().mockResolvedValue({})
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "tag-1" }]),
+        tag: {
+          findUnique: vi.fn().mockResolvedValue({ status: "active", _count: { articles: 4 } }),
+          update
+        },
+        tagSlugHistory: { updateMany: updateHistory },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      archiveTag({ $transaction: transaction } as never, {
+        tagId: "tag-1",
+        actor: actor("admin"),
+        requestId: "request-8"
+      })
+    ).resolves.toEqual({ id: "tag-1", status: "archived" })
+
+    expect(updateHistory).toHaveBeenCalledWith({ where: { ownerTagId: "tag-1" }, data: { redirectToTagId: null } })
+    expect(createAudit).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: "tag.archive",
+        entityType: "Tag",
+        entityId: "tag-1",
+        diff: { articles: 4 },
+        requestId: "request-8"
+      })
+    })
+  })
+
+  it("does not archive a tag that is already archived", async () => {
+    const update = vi.fn()
+    const createAudit = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "tag-1" }]),
+        tag: {
+          findUnique: vi.fn().mockResolvedValue({ status: "archived", _count: { articles: 0 } }),
+          update
+        },
+        tagSlugHistory: { updateMany: vi.fn() },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      archiveTag({ $transaction: transaction } as never, {
+        tagId: "tag-1",
+        actor: actor("admin"),
+        requestId: "request-9"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "CONFLICT" } })
+
+    expect(update).not.toHaveBeenCalled()
+    expect(createAudit).not.toHaveBeenCalled()
+  })
+
+  it("refuses to restore a merged tag", async () => {
+    const update = vi.fn()
+    const updateHistory = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "tag-1" }]),
+        tag: {
+          findUnique: vi
+            .fn()
+            .mockResolvedValue({ status: "archived", mergedIntoId: "target", archivedByRole: "admin" }),
+          update
+        },
+        tagSlugHistory: { updateMany: updateHistory },
+        auditLog: { create: vi.fn() }
+      })
+    )
+
+    await expect(
+      restoreTag({ $transaction: transaction } as never, {
+        tagId: "tag-1",
+        actor: actor("owner"),
+        requestId: "request-10"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "CONFLICT" } })
+
+    expect(updateHistory).not.toHaveBeenCalled()
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it("does not let an admin restore an archive made by the owner", async () => {
+    const update = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "tag-1" }]),
+        tag: {
+          findUnique: vi.fn().mockResolvedValue({ status: "archived", mergedIntoId: null, archivedByRole: "owner" }),
+          update
+        },
+        tagSlugHistory: { updateMany: vi.fn() },
+        auditLog: { create: vi.fn() }
+      })
+    )
+
+    await expect(
+      restoreTag({ $transaction: transaction } as never, {
+        tagId: "tag-1",
+        actor: actor("admin"),
+        requestId: "request-11"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "FORBIDDEN" } })
+
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it("restores an archived tag, returns its redirect and records tag.restore", async () => {
+    const updateHistory = vi.fn().mockResolvedValue({ count: 1 })
+    const update = vi.fn().mockResolvedValue({ id: "tag-1", status: "active" })
+    const createAudit = vi.fn().mockResolvedValue({})
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "tag-1" }]),
+        tag: {
+          findUnique: vi.fn().mockResolvedValue({ status: "archived", mergedIntoId: null, archivedByRole: "admin" }),
+          update
+        },
+        tagSlugHistory: { updateMany: updateHistory },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      restoreTag({ $transaction: transaction } as never, {
+        tagId: "tag-1",
+        actor: actor("admin"),
+        requestId: "request-12"
+      })
+    ).resolves.toEqual({ id: "tag-1", status: "active" })
+
+    expect(updateHistory).toHaveBeenCalledWith({ where: { ownerTagId: "tag-1" }, data: { redirectToTagId: "tag-1" } })
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "tag-1" },
+      data: { status: "active", archivedAt: null, archivedByActorId: null, archivedByRole: null }
+    })
+    expect(createAudit).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "tag.restore", entityType: "Tag", entityId: "tag-1" })
     })
   })
 })

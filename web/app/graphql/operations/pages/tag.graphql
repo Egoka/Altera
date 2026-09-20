@@ -29,3 +29,12 @@ query GetTagPage($slug: String!, $page: Int = 1, $limit: Int = 20) {
     currentPage
   }
 }
+
+query GetTagRedirect($slug: String!) {
+  tag(slug: $slug) {
+    status
+    mergedInto {
+      slug
+    }
+  }
+}

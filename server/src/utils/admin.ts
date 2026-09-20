@@ -97,7 +97,14 @@ export const buildBaseWhereClause = (filters: BaseFilters, search?: SearchInput)
 }
 
 export const buildOrderBy = (sort: SortInput) => {
-  return { [sort.field]: sort.direction.toLowerCase() }
+  const direction = sort.direction.toLowerCase()
+  // Составное поле вида `_count.articles` разрешено `validateSort`, но Prisma принимает
+  // его только вложенным объектом: плоский ключ с точкой роняет запрос.
+  const [root, nested] = sort.field.split(".")
+  if (root && nested) {
+    return { [root]: { [nested]: direction } }
+  }
+  return { [sort.field]: direction }
 }
 
 // Утилиты для пагинации

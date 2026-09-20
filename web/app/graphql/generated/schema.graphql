@@ -624,11 +624,13 @@ type TagCount {
 type TagFilters {
   base: BaseFiltersInfo
   hasArticles: Boolean
+  status: [TaxonomyStatus!]
 }
 
 input TagFiltersInput {
   base: BaseFiltersInput
   hasArticles: Boolean
+  status: [TaxonomyStatus!]
 }
 
 type TagStats {

@@ -234,8 +234,26 @@ export async function archiveTag(
 
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "tags" WHERE "id" = ${input.tagId} FOR UPDATE`)
+    const current = await tx.tag.findUnique({
+      where: { id: input.tagId },
+      select: { status: true, _count: { select: { articles: true } } }
+    })
+    if (!current) {
+      throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "tag" })
+    }
+    // Повторный архив уже архивированного тега — конфликт состояния (`40-admin/tags.md` §9),
+    // иначе он молча переписал бы автора и дату исходного архивирования.
+    if (current.status !== "active") {
+      throw createApiError("CONFLICT", {
+        requestId: input.requestId,
+        entity: "tag",
+        expected: "active tag",
+        actual: current.status
+      })
+    }
+
     await tx.tagSlugHistory.updateMany({ where: { ownerTagId: input.tagId }, data: { redirectToTagId: null } })
-    return tx.tag.update({
+    const tag = await tx.tag.update({
       where: { id: input.tagId },
       data: {
         status: "archived",
@@ -245,6 +263,18 @@ export async function archiveTag(
         archivedByRole: input.actor.role
       }
     })
+    await tx.auditLog.create({
+      data: {
+        action: "tag.archive",
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        entityType: "Tag",
+        entityId: input.tagId,
+        diff: { articles: current._count.articles },
+        requestId: input.requestId
+      }
+    })
+    return tag
   })
 }
 
@@ -282,8 +312,11 @@ export async function mergeTags(
       })
     }
 
+    const movedLinks: Record<string, number> = {}
     for (const sourceTagId of sourceTagIds) {
-      await tx.$executeRaw(Prisma.sql`
+      // Число вставленных строк — это и есть перенесённые связи: материалы, уже помеченные
+      // целевым тегом, отсекает ON CONFLICT и они не считаются перенесёнными (§8).
+      movedLinks[sourceTagId] = await tx.$executeRaw(Prisma.sql`
         INSERT INTO "_ArticleToTag" ("A", "B")
         SELECT "A", ${input.targetTagId} FROM "_ArticleToTag" WHERE "B" = ${sourceTagId}
         ON CONFLICT DO NOTHING
@@ -305,6 +338,25 @@ export async function mergeTags(
         archivedByRole: input.actor.role
       }
     })
+    // Отдельная запись на каждый источник: журнал раздела читается по архивированному тегу,
+    // а `40-admin/tags.md` §6 требует `tag.merge` на каждый источник массовой операции.
+    for (const sourceTagId of sourceTagIds) {
+      await tx.auditLog.create({
+        data: {
+          action: "tag.merge",
+          actorId: input.actor.id,
+          actorRole: input.actor.role,
+          entityType: "Tag",
+          entityId: sourceTagId,
+          diff: {
+            sourceTagIds,
+            targetTagId: input.targetTagId,
+            movedArticles: movedLinks[sourceTagId] ?? 0
+          },
+          requestId: input.requestId
+        }
+      })
+    }
     return tx.tag.findUnique({ where: { id: input.targetTagId }, include: { _count: { select: { articles: true } } } })
   })
 }
@@ -524,11 +576,53 @@ export async function restoreTag(
   requireRole(input.actor, editorialRoles, "tag.restore", input.requestId)
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "tags" WHERE "id" = ${input.tagId} FOR UPDATE`)
-    await tx.tagSlugHistory.updateMany({ where: { ownerTagId: input.tagId }, data: { redirectToTagId: input.tagId } })
-    return tx.tag.update({
+    const current = await tx.tag.findUnique({
       where: { id: input.tagId },
-      data: { status: "active", mergedIntoId: null, archivedAt: null, archivedByActorId: null, archivedByRole: null }
+      select: { status: true, mergedIntoId: true, archivedByRole: true }
     })
+    if (!current) {
+      throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "tag" })
+    }
+    if (current.status !== "archived") {
+      throw createApiError("CONFLICT", {
+        requestId: input.requestId,
+        entity: "tag",
+        expected: "archived tag",
+        actual: current.status
+      })
+    }
+    // Слияние необратимо: связи материалов уже перенесены в цель, возвращать пустой тег
+    // из архива нельзя (`40-admin/tags.md` §5, §7).
+    if (current.mergedIntoId) {
+      throw createApiError("CONFLICT", {
+        requestId: input.requestId,
+        entity: "tag",
+        expected: "archived tag",
+        actual: "merged tag"
+      })
+    }
+    // `admin` восстанавливает только свой архив, `owner` — любой (`40-admin/tags.md` §5).
+    if (input.actor.role !== "owner" && current.archivedByRole === "owner") {
+      throw createApiError("FORBIDDEN", { requestId: input.requestId, action: "tag.restore" })
+    }
+
+    await tx.tagSlugHistory.updateMany({ where: { ownerTagId: input.tagId }, data: { redirectToTagId: input.tagId } })
+    const tag = await tx.tag.update({
+      where: { id: input.tagId },
+      data: { status: "active", archivedAt: null, archivedByActorId: null, archivedByRole: null }
+    })
+    await tx.auditLog.create({
+      data: {
+        action: "tag.restore",
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        entityType: "Tag",
+        entityId: input.tagId,
+        diff: { status: { before: "archived", after: "active" } },
+        requestId: input.requestId
+      }
+    })
+    return tag
   })
 }
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import type { ArticleCardFragment, TagSummaryFragment } from "~/graphql/generated/graphql"
+  import { GetTagRedirectDocument } from "~/graphql/generated/graphql"
   import { DEMO_DEMANDED, DEMO_LATEST } from "~/utils/demoFeed"
   import { findDemoTag } from "~/utils/demoTags"
 
@@ -8,6 +9,20 @@
   })
 
   const route = useRoute()
+
+  /**
+   * Слияние тегов необратимо архивирует источники и указывает цель: адрес источника
+   * отвечает 301 на слаг цели (`40-admin/tags.md` §5, ADR-0004). Слаг остаётся занят
+   * навсегда (журнал §26.10), поэтому перенаправление строится по самому тегу.
+   */
+  const requestedSlug = String(route.params.slug ?? "")
+  const redirectResult = await useGraphQL(GetTagRedirectDocument, { slug: requestedSlug })
+  const redirectTag = redirectResult.data?.tag
+  const successorSlug = redirectTag?.mergedInto?.slug
+
+  if (redirectTag?.status === "archived" && successorSlug) {
+    await navigateTo(`/tags/${successorSlug}`, { redirectCode: 301, replace: true })
+  }
 
   /**
    * Тег берётся из маршрута по демо-справочнику: раньше страница любого слага

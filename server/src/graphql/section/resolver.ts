@@ -326,11 +326,11 @@ export default {
 
     taxonomyAudit: async (_parent: unknown, args: { entityType: string; entityId: string }, ctx: GraphQLContext) => {
       ensurePermission(ctx.currentUser, "taxonomy", "admin.taxonomy.audit", ctx.requestId)
-      if (!new Set(["Section", "Format"]).has(args.entityType)) {
+      if (!new Set(["Section", "Format", "Tag"]).has(args.entityType)) {
         throw createApiError("VALIDATION_ERROR", {
           requestId: ctx.requestId,
           field: "entityType",
-          rule: "Section-or-Format"
+          rule: "Section-Format-or-Tag"
         })
       }
       return ctx.prisma.auditLog.findMany({
