@@ -137,7 +137,9 @@ export const useAdminMailList = () => {
     providerWaiting: computed(() => data.value?.providerWaiting === true),
     pagination: computed(() => data.value?.pagination ?? null),
     pending: computed(() => pending.value || actionPending.value),
-    failed: computed(() => error.value !== null),
+    // `useAsyncData` держит в `error` значение `undefined`, а не `null`: сравнение с `null` дало бы
+    // вечное состояние ошибки и скрыло таблицу (nuxt@4 `asyncData.js`: `_errors[key] ??= void 0`).
+    failed: computed(() => Boolean(error.value)),
     requestId,
     errorCode,
     period,
