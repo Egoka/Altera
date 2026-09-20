@@ -256,6 +256,11 @@ export default {
         include: {
           _count: {
             select: { articles: true }
+          },
+          // Цель слияния читает раздел админки: архивированный источник помечается
+          // «слит в …» и теряет восстановление (`40-admin/tags.md` §5).
+          mergedInto: {
+            select: { id: true, name: true, slug: true }
           }
         }
       })
