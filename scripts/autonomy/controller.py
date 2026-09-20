@@ -47,9 +47,14 @@ def validate(receipt, facts, phase="done"):
     criteria = receipt.get("criteria", [])
     if not criteria or any(x.get("status") != "passed" or not x.get("id") or not x.get("evidence") for x in criteria):
         errors.append("criteria")
-    if not pr.get("number") or pr.get("base_ref") != "app" or pr.get("head_sha") != sha or any(pr.get(k) != live_pr.get(k) for k in ("number", "head_sha", "base_ref", "base_sha")):
+    # Итог задачи, дописанный в ветку после зелёного CI, не может назвать собственный SHA.
+    # Такой head принимается, только если отличается от проверенного ровно файлами этого итога,
+    # является его потомком и сам проверен CI (см. `head_receipt_only`).
+    live_head = live_pr.get("head_sha")
+    head_ok = live_head == sha or facts.get("head_receipt_only") is True
+    if not pr.get("number") or pr.get("base_ref") != "app" or pr.get("head_sha") != sha or not head_ok or any(pr.get(k) != live_pr.get(k) for k in ("number", "base_ref", "base_sha")):
         errors.append("pr")
-    if facts.get("ci", {}).get("sha") != sha or facts.get("ci", {}).get("passed") is not True:
+    if not isinstance(live_head, str) or facts.get("ci", {}).get("sha") != live_head or facts.get("ci", {}).get("passed") is not True:
         errors.append("ci")
     # Review более раннего SHA действует, только если контроллер подтвердил тот же патч ветки.
     reviewed_sha = review.get("sha")
@@ -196,9 +201,11 @@ class Live:
             return False
 
     def patch_fingerprint(self, sha, base, task_id):
-        """Отпечаток патча ветки от точки ответвления от app; собственный итог задачи не входит."""
+        """Отпечаток патча ветки от точки ответвления от app; финализация задачи не входит."""
         fork = command(["git", "merge-base", sha, base], self.repo, False)
-        own_receipt = [f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")]
+        # Итог и отчёт пишутся после review, поэтому одобрение кода они не отменяют.
+        # `:(glob)` не даёт `*` перейти через `/`: подкаталоги `docs/reports/` остаются в патче.
+        own_receipt = [f":(exclude)docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")] + [":(glob,exclude)docs/reports/*"]
         diff = subprocess.run(["git", "diff", "--no-color", "--no-ext-diff", "--full-index", "--binary", fork, sha, "--", ".", *own_receipt],
                               cwd=self.repo, capture_output=True, timeout=120, check=True).stdout
         if not diff:
@@ -206,6 +213,35 @@ class Live:
         # Номера строк не входят в patch-id; контекст, содержимое и бинарные данные входят.
         patch = subprocess.run(["git", "patch-id", "--stable"], input=diff, cwd=self.repo, capture_output=True, timeout=120, check=True).stdout.split()
         return patch[0].decode() if patch else None
+
+    def head_receipt_only(self, tested_sha, head_sha, task_id):
+        """Коммит с собственным итогом задачи поверх проверенного head не отменяет проверку."""
+        shas = (tested_sha, head_sha)
+        if not all(isinstance(x, str) and re.fullmatch(r"[0-9a-f]{40}", x) for x in shas) or not isinstance(task_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", task_id):
+            return False
+        if tested_sha == head_sha:
+            return True
+        own = {f"docs/reports/tasks/{task_id}.{ext}" for ext in ("json", "md")}
+
+        def own_finalization(name):
+            # Отчёт задачи пишется после работы, поэтому ложится поверх проверенного head.
+            # Допускается только прямой файл `docs/reports/`: чужие итоги в `tasks/`,
+            # evidence и суточные отчёты проверяются своими цепочками.
+            prefix = "docs/reports/"
+            return name in own or (name.startswith(prefix) and "/" not in name[len(prefix):])
+
+        try:
+            for sha in shas:
+                if subprocess.run(["git", "cat-file", "-e", sha + "^{commit}"], cwd=self.repo, capture_output=True).returncode:
+                    command(["git", "fetch", "--no-tags", "--refmap=", "origin", sha], self.repo, False)
+            # Только надстройка над проверенным коммитом: переписанная история сюда не проходит.
+            if subprocess.run(["git", "merge-base", "--is-ancestor", tested_sha, head_sha], cwd=self.repo, capture_output=True).returncode:
+                return False
+            changed = subprocess.run(["git", "diff", "--name-only", "-z", tested_sha, head_sha], cwd=self.repo,
+                                     capture_output=True, text=True, timeout=120, check=True).stdout.split("\0")
+            return all(own_finalization(name) for name in changed if name)
+        except (RuntimeError, OSError, subprocess.SubprocessError):
+            return False
 
     def review_equivalent(self, reviewed_sha, head_sha, base_sha, task_id):
         """Обновление ветки от app не отменяет review, если её патч не изменился."""
@@ -314,6 +350,7 @@ class Live:
                          and pr.get("mergeable") is True and pr.get("mergeable_state") != "dirty"
                          and self.fetch_matches(f"refs/pull/{number}/head", sha))
         review_equivalent = self.review_equivalent(review.get("sha"), sha, pr["base"]["sha"], receipt.get("task_id"))
+        head_receipt_only = self.head_receipt_only(receipt.get("tested_sha"), sha, receipt.get("task_id"))
         if path.startswith("docs/reports/") and ".." not in Path(path).parts:
             p = subprocess.run(["git", "show", f"{base}:{path}"], cwd=self.repo, capture_output=True, check=False)
             if p.returncode == 0 and receipt["task_id"].encode() in p.stdout and sha.encode() in p.stdout:
@@ -326,7 +363,7 @@ class Live:
         facts = {"issue_scope_valid": True, "pr": {"number": number, "head_sha": sha, "base_ref": pr["base"]["ref"], "base_sha": pr["base"]["sha"], "merge_sha": merge_sha},
                  "state": "MERGED" if pr.get("merged") else pr["state"].upper(), "ci": {"sha": sha, "passed": bool(aggregate and aggregate[0].get("conclusion") == "success")},
                  "review": review, "review_completed": selected.get("status") == "completed", "review_trusted": actor == review.get("actor_id") and actor in self.config.get("reviewer_ids", []) and review_approved(content, review.get("sha")),
-                 "review_equivalent": review_equivalent,
+                 "review_equivalent": review_equivalent, "head_receipt_only": head_receipt_only,
                  "implementer_trusted": implementer.get("status") == "completed" and bool(receipt.get("implementer_id")) and implementer.get("agent_id") == receipt.get("implementer_id"),
                  "files_complete": len(names) == pr.get("changed_files"),
                  "mergeable": mergeable, "merge_in_app": merged,
@@ -365,7 +402,9 @@ class Live:
             # До внешнего вызова запись running. Неопределённый сбой оставляет её для сверки.
             if phase == "merge":
                 # Обычный merge-коммит: проверенный head становится предком app (решение владельца 2026-09-19).
-                command(["gh", "pr", "merge", str(receipt["pr"]["number"]), "--repo", self.gh_repo, "--merge", "--match-head-commit", receipt["tested_sha"]], as_json=False)
+                # `--match-head-commit` сверяет живой head: он равен tested_sha либо отличается
+                # от него ровно файлами итога задачи, что validate уже подтвердил.
+                command(["gh", "pr", "merge", str(receipt["pr"]["number"]), "--repo", self.gh_repo, "--merge", "--match-head-commit", facts["pr"]["head_sha"]], as_json=False)
             else:
                 self.multica("issue", "status", receipt["issue_id"], "done", "--no-start")
                 issue = self.multica("issue", "get", receipt["issue_id"])
