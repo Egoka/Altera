@@ -1,4 +1,4 @@
-query GetNavigation {
+query GetNavigation($locale: Locale!) {
   publicSections {
     id
     name
@@ -7,15 +7,12 @@ query GetNavigation {
     order
     articleCount
   }
-  popularTags: tags(
-    pagination: { page: 1, limit: 10 }
-    sort: { field: "createdAt", direction: DESC }
-    filters: { base: {}, hasArticles: true }
-  ) {
-    tags {
-      name
-      slug
-    }
+  # Популярные теги шапки — публичный каталог: прежний `tags` требует прав админа,
+  # и весь запрос навигации падал для гостя.
+  popularTags(locale: $locale, limit: 10) {
+    slug
+    name
+    articleCount
   }
 }
 

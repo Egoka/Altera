@@ -1,0 +1,23 @@
+# Лента тега: шапка без счётчика на странице, ровный каталог материалов и пагинация
+# (`docs/spec/20-public/tag-feed.md` §4).
+query GetTagFeed($locale: Locale!, $slug: String!, $page: Int!) {
+  feed(scope: tag, locale: $locale, slug: $slug, page: $page) {
+    redirect {
+      slug
+    }
+    caption
+    tag {
+      slug
+      name
+      articleCount
+    }
+    items {
+      ...FeedCard
+    }
+    pageInfo {
+      page
+      totalPages
+      hasNext
+    }
+  }
+}

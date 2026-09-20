@@ -1,0 +1,84 @@
+# Списочные публичные страницы: каталог рубрик, каталог тегов и каталог авторов
+# (`docs/spec/20-public/sections-index.md`, `tags-index.md`, `authors-index.md`).
+# Ленты живут в `feed`; здесь — перечни сущностей со счётчиками локали.
+
+type CatalogPageInfo {
+  page: Int!
+  totalPages: Int!
+  totalCount: Int!
+  hasNext: Boolean!
+}
+
+# Ссылка на материал в превью карточки: публичных полей сверх заголовка и пути не нужно.
+type CatalogArticleLink {
+  title: String!
+  path: String!
+  author: String!
+}
+
+type CatalogSection {
+  slug: String!
+  name: String!
+  description: String
+  cover: String
+  order: Int!
+  articleCount: Int!
+  # До трёх последних материалов рубрики в локали (`sections-index.md` §4 `[ДОПУЩЕНИЕ]`).
+  preview: [CatalogArticleLink!]!
+}
+
+type CatalogTag {
+  slug: String!
+  name: String!
+  articleCount: Int!
+}
+
+enum TagCatalogSort {
+  popular
+  name
+}
+
+type TagCatalog {
+  items: [CatalogTag!]!
+  pageInfo: CatalogPageInfo!
+  # Первые буквы имён всех видимых тегов — алфавитный указатель панели.
+  letters: [String!]!
+}
+
+enum AuthorCatalogSort {
+  recent
+  name
+}
+
+type CatalogAuthor {
+  id: ID!
+  handle: String!
+  name: String!
+  avatar: String
+  grade: AuthorGrade!
+  # Первое предложение «о себе»: ПДн и служебные поля в публичный тип не входят (ADR-0018).
+  bioShort: String
+  publishedCount: Int!
+  lastPublishedAt: String
+  isEditorial: Boolean!
+  recent: [CatalogArticleLink!]!
+}
+
+type AuthorCatalog {
+  items: [CatalogAuthor!]!
+  pageInfo: CatalogPageInfo!
+  letters: [String!]!
+}
+
+extend type Query {
+  sectionCatalog(locale: Locale!): [CatalogSection!]!
+  tagCatalog(locale: Locale!, q: String, letter: String, sort: TagCatalogSort! = popular, page: Int! = 1): TagCatalog!
+  popularTags(locale: Locale!, limit: Int! = 30): [CatalogTag!]!
+  authorCatalog(
+    locale: Locale!
+    sort: AuthorCatalogSort! = recent
+    section: String
+    letter: String
+    page: Int! = 1
+  ): AuthorCatalog!
+}

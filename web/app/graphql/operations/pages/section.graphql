@@ -1,0 +1,39 @@
+# Лента рубрики: шапка, страница материалов, значения фильтров и соседние рубрики
+# одним запросом (`docs/spec/20-public/section-feed.md` §4).
+query GetSectionFeed($locale: Locale!, $slug: String!, $format: String, $tag: String, $page: Int!) {
+  feed(scope: section, locale: $locale, slug: $slug, format: $format, tag: $tag, page: $page) {
+    redirect {
+      slug
+    }
+    caption
+    section {
+      slug
+      name
+      description
+      articleCount
+    }
+    items {
+      ...FeedCard
+    }
+    pageInfo {
+      page
+      totalPages
+      hasNext
+    }
+    formats {
+      slug
+      name
+      count
+    }
+    topTags {
+      slug
+      name
+      count
+    }
+    otherSections {
+      slug
+      name
+      count
+    }
+  }
+}

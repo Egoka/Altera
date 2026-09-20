@@ -1,8 +1,10 @@
-# Подборки публичных страниц. Первый этап описывает только главную
-# (`docs/spec/20-public/home.md`, `docs/spec/60-ranking/home-sections.md`); ленты рубрики,
-# тега и автора получат свои значения `FeedScope` в своих задачах.
+# Подборки и ленты публичных страниц. `home` — главная (`docs/spec/20-public/home.md`,
+# `docs/spec/60-ranking/home-sections.md`); `section` и `tag` — ленты рубрики и тега
+# (`section-feed.md`, `tag-feed.md`). Лента автора получит своё значение в T-057.
 enum FeedScope {
   home
+  section
+  tag
 }
 
 # Ключи подборок главной в фиксированном порядке отбора (журнал §22.4).
@@ -52,13 +54,64 @@ type FeedSection {
   items: [FeedItem!]!
 }
 
+# Пагинация лент: страницами, без бесконечной прокрутки (`section-feed.md` §5).
+type FeedPageInfo {
+  page: Int!
+  totalPages: Int!
+  hasNext: Boolean!
+}
+
+# Значение фильтра или ссылка соседней зоны: слаг, слово локали и число материалов.
+type FeedFacet {
+  slug: String!
+  name: String!
+  count: Int!
+}
+
+# Шапка ленты рубрики (`section-feed.md` §5 зона 2).
+type FeedSectionHeader {
+  slug: String!
+  name: String!
+  description: String
+  articleCount: Int!
+}
+
+# Шапка ленты тега: описания у тега нет (ADR-0005), счётчик отдаётся для SEO и зон,
+# которые владелец оставил на отдельные заходы (`tag-feed.md` §12).
+type FeedTagHeader {
+  slug: String!
+  name: String!
+  articleCount: Int!
+}
+
+# Адрес сменился: архивированная рубрика ведёт на преемника, слитый тег — на целевой,
+# прежний слаг — на нынешний (ADR-0004). Страница отвечает 301, а не рисует ленту.
+type FeedRedirect {
+  scope: FeedScope!
+  slug: String!
+}
+
 type Feed {
   scope: FeedScope!
   locale: Locale!
   # Только непустые подборки в порядке отбора: пустая зона на странице не показывается.
+  # Заполняется для `home`.
   sections: [FeedSection!]!
+  # Страница ленты рубрики или тега в порядке новизны.
+  items: [FeedItem!]!
+  # Подпись принципа порядка; у главной подписи живут внутри подборок.
+  caption: FeedCaption
+  pageInfo: FeedPageInfo
+  section: FeedSectionHeader
+  tag: FeedTagHeader
+  # Значения фильтров ленты рубрики: форматы и частые теги её опубликованных материалов.
+  formats: [FeedFacet!]!
+  topTags: [FeedFacet!]!
+  # Зона «другие рубрики» ленты рубрики (`section-feed.md` §5 зона 6).
+  otherSections: [FeedFacet!]!
+  redirect: FeedRedirect
 }
 
 extend type Query {
-  feed(scope: FeedScope! = home, locale: Locale!): Feed!
+  feed(scope: FeedScope! = home, locale: Locale!, slug: String, format: String, tag: String, page: Int! = 1): Feed!
 }

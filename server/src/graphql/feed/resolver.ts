@@ -1,10 +1,11 @@
 import type { GraphQLContext } from "../../prisma"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
+import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
 
 type FeedLocale = "ru" | "en"
-type FeedScope = "home"
+type FeedScope = "home" | "section" | "tag"
 type FeedSectionKey = "top" | "new" | "popular"
 type FeedCaption = "by_publication_date"
 type AuthorGrade = "standard" | "pro"
@@ -15,6 +16,10 @@ export const HOME_TOP_SIZE = 5
 export const HOME_NEW_SIZE = 12
 /** Окно новизны — трое суток (`home-sections.md` §3 `[ДОПУЩЕНИЕ]`). */
 export const HOME_NEW_WINDOW_DAYS = 3
+/** Страница ленты рубрики и тега — 24 материала (`section-feed.md` §5 `[ДОПУЩЕНИЕ]`). */
+export const FEED_PAGE_SIZE = 24
+/** Сколько частых тегов рубрики предлагается фильтром (`section-feed.md` §5 зона 3). */
+export const SECTION_TOP_TAGS = 12
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -49,10 +54,31 @@ interface FeedSection {
   items: FeedItem[]
 }
 
+interface FeedPageInfo {
+  page: number
+  totalPages: number
+  hasNext: boolean
+}
+
+interface FeedFacet {
+  slug: string
+  name: string
+  count: number
+}
+
 export interface Feed {
   scope: FeedScope
   locale: FeedLocale
   sections: FeedSection[]
+  items: FeedItem[]
+  caption: FeedCaption | null
+  pageInfo: FeedPageInfo | null
+  section: { slug: string; name: string; description: string | null; articleCount: number } | null
+  tag: { slug: string; name: string; articleCount: number } | null
+  formats: FeedFacet[]
+  topTags: FeedFacet[]
+  otherSections: FeedFacet[]
+  redirect: { scope: FeedScope; slug: string } | null
 }
 
 /**
@@ -75,11 +101,15 @@ const feedArticleSelect = {
 /** Бейдж уровня автора; чисел рейтинга и плана публичный ответ не содержит (журнал §21.18). */
 const gradeOf = (planTier: string): AuthorGrade => (planTier === "pro" ? "pro" : "standard")
 
+/** Слово локали с откатом на русское: `nameEn` у рубрики необязателен. */
+export const localizedName = (name: string, nameEn: string | null | undefined, locale: FeedLocale): string =>
+  (locale === "en" ? nameEn : name) || name
+
 const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale): FeedItem => ({
   id: article.id,
   slug: article.slug,
   sectionSlug: article.section!.slug,
-  sectionName: (locale === "en" ? article.section!.nameEn : article.section!.name) || article.section!.name,
+  sectionName: localizedName(article.section!.name, article.section!.nameEn, locale),
   title: article.title,
   dek: article.dek,
   cover: article.featuredImage,
@@ -127,38 +157,275 @@ export const buildHomeSections = (
   return sections
 }
 
+/** Пустой каркас ответа: ленты заполняют только свои поля, остальные остаются пустыми. */
+const emptyFeed = (scope: FeedScope, locale: FeedLocale): Feed => ({
+  scope,
+  locale,
+  sections: [],
+  items: [],
+  caption: null,
+  pageInfo: null,
+  section: null,
+  tag: null,
+  formats: [],
+  topTags: [],
+  otherSections: [],
+  redirect: null
+})
+
+/**
+ * Номер страницы из запроса. Дробное и меньшее единицы значение — отказ `VALIDATION_ERROR`,
+ * из которого страница делает 404 (`section-feed.md` §8): дальше по ленте такой адрес не
+ * ведёт никуда, и молча подменять его первой страницей значит показывать не то, что в URL.
+ */
+export const requireValidPage = (page: number, requestId: string): number => {
+  if (!Number.isInteger(page) || page < 1) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "page", rule: "positive-integer" })
+  }
+  return page
+}
+
+/**
+ * Разбивка на страницы по числу найденных материалов. Пустая лента даёт ноль страниц —
+ * состояние «пусто», а не отказ; запрошенная страница за последней — 404 (`page` вне
+ * диапазона, `section-feed.md` §12).
+ */
+export const feedPageInfo = (totalCount: number, page: number, requestId: string): FeedPageInfo => {
+  const totalPages = Math.ceil(totalCount / FEED_PAGE_SIZE)
+  if (totalPages > 0 && page > totalPages) {
+    throw createApiError("NOT_FOUND", { requestId, entity: "feedPage" })
+  }
+  return { page, totalPages, hasNext: page < totalPages }
+}
+
+const toFacet = (
+  entity: { slug: string; name: string; nameEn?: string | null },
+  count: number,
+  locale: FeedLocale
+): FeedFacet => ({ slug: entity.slug, name: localizedName(entity.name, entity.nameEn, locale), count })
+
+/**
+ * Материалы ленты одной страницей. Порядок — новизна, затем `id`: без второго ключа две
+ * публикации одной секунды могли бы разойтись по страницам и потеряться при листании
+ * (`section-feed.md` §5).
+ */
+const readFeedPage = async (
+  ctx: GraphQLContext,
+  where: object,
+  page: number,
+  locale: FeedLocale
+): Promise<FeedItem[]> => {
+  const articles = (await ctx.prisma.article.findMany({
+    where,
+    orderBy: [{ firstPublishedAt: "desc" }, { id: "asc" }],
+    skip: (page - 1) * FEED_PAGE_SIZE,
+    take: FEED_PAGE_SIZE,
+    select: feedArticleSelect
+  })) as unknown as FeedArticleRecord[]
+
+  // Материал без рубрики в ленту не попадает: путь его карточки без неё не собрать.
+  return articles.filter((article) => article.section !== null).map((article) => toFeedItem(article, locale))
+}
+
+const buildSectionFeed = async (
+  ctx: GraphQLContext,
+  locale: FeedLocale,
+  slug: string,
+  format: string | null,
+  tag: string | null,
+  page: number
+): Promise<Feed> => {
+  const section = await ctx.prisma.section.findUnique({
+    where: { slug },
+    select: {
+      name: true,
+      nameEn: true,
+      description: true,
+      descriptionEn: true,
+      status: true,
+      successor: { select: { slug: true } }
+    }
+  })
+
+  if (!section) {
+    // Прежний слаг рубрики ведёт на нынешний: реестр слагов никогда не чистится (ADR-0004).
+    const history = await ctx.prisma.sectionSlugHistory.findUnique({
+      where: { slug },
+      select: { redirectToSection: { select: { slug: true } } }
+    })
+    const target = history?.redirectToSection?.slug
+    if (!target) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "section" })
+    return { ...emptyFeed("section", locale), redirect: { scope: "section", slug: target } }
+  }
+
+  // Архивируется только пустая рубрика и только с преемником (`admin-sections.md` #2):
+  // её адрес остаётся рабочим и ведёт туда, куда переехали материалы.
+  if (section.status === "archived") {
+    const target = section.successor?.slug
+    if (!target) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "section" })
+    return { ...emptyFeed("section", locale), redirect: { scope: "section", slug: target } }
+  }
+
+  const sectionWhere = publicArticleWhere({ sourceLocale: locale, section: { slug } })
+  const articleCount = await ctx.prisma.article.count({ where: sectionWhere })
+  // Рубрика без публикаций в локали не публична и отвечает 404 (журнал §20.9).
+  if (articleCount === 0) {
+    throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "section" })
+  }
+
+  const filtered = {
+    ...sectionWhere,
+    ...(format ? { format: { slug: format } } : {}),
+    ...(tag ? { tags: { some: { slug: tag } } } : {})
+  }
+
+  const [totalCount, formatGroups, tags, otherSections] = await Promise.all([
+    ctx.prisma.article.count({ where: filtered }),
+    ctx.prisma.article.groupBy({ by: ["formatId"], where: sectionWhere, _count: { _all: true } }),
+    ctx.prisma.tag.findMany({
+      where: { status: "active", mergedIntoId: null, articles: { some: sectionWhere } },
+      select: { slug: true, name: true, nameEn: true, _count: { select: { articles: { where: sectionWhere } } } }
+    }),
+    ctx.prisma.section.findMany({
+      where: {
+        status: "active",
+        slug: { not: slug },
+        articles: { some: publicArticleWhere({ sourceLocale: locale }) }
+      },
+      orderBy: { order: "asc" },
+      select: {
+        slug: true,
+        name: true,
+        nameEn: true,
+        _count: { select: { articles: { where: publicArticleWhere({ sourceLocale: locale }) } } }
+      }
+    })
+  ])
+
+  const pageInfo = feedPageInfo(totalCount, page, ctx.requestId)
+  const formatIds = formatGroups.map((group) => group.formatId).filter((id): id is string => id !== null)
+  const formats = formatIds.length
+    ? await ctx.prisma.format.findMany({
+        where: { id: { in: formatIds }, status: "active" },
+        select: { id: true, slug: true, name: true, nameEn: true }
+      })
+    : []
+  const countByFormat = new Map(formatGroups.map((group) => [group.formatId, group._count._all]))
+
+  return {
+    ...emptyFeed("section", locale),
+    items: totalCount > 0 ? await readFeedPage(ctx, filtered, page, locale) : [],
+    caption: "by_publication_date",
+    pageInfo,
+    section: {
+      slug,
+      name: localizedName(section.name, section.nameEn, locale),
+      description: (locale === "en" ? section.descriptionEn : section.description) ?? section.description,
+      articleCount
+    },
+    formats: formats.map((format) => toFacet(format, countByFormat.get(format.id) ?? 0, locale)),
+    topTags: tags
+      .map((entity) => toFacet(entity, entity._count.articles, locale))
+      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+      .slice(0, SECTION_TOP_TAGS),
+    otherSections: otherSections.map((entity) => toFacet(entity, entity._count.articles, locale))
+  }
+}
+
+const buildTagFeed = async (ctx: GraphQLContext, locale: FeedLocale, slug: string, page: number): Promise<Feed> => {
+  const tag = await ctx.prisma.tag.findUnique({
+    where: { slug },
+    select: { name: true, nameEn: true, status: true, mergedInto: { select: { slug: true } } }
+  })
+
+  if (!tag) {
+    const history = await ctx.prisma.tagSlugHistory.findUnique({
+      where: { slug },
+      select: { redirectToTag: { select: { slug: true } } }
+    })
+    const target = history?.redirectToTag?.slug
+    if (!target) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "tag" })
+    return { ...emptyFeed("tag", locale), redirect: { scope: "tag", slug: target } }
+  }
+
+  // Слитый тег переехал в целевой и отвечает 301; архивированный — 404 (`tag-feed.md` §2).
+  if (tag.mergedInto) {
+    return { ...emptyFeed("tag", locale), redirect: { scope: "tag", slug: tag.mergedInto.slug } }
+  }
+  if (tag.status === "archived") {
+    throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "tag" })
+  }
+
+  // Тег без публикаций в этой локали остаётся страницей с пустым состоянием: материалы
+  // другого языка не подмешиваются (журнал §20.5), а тег с одной статьёй виден (§20.10).
+  const where = publicArticleWhere({ sourceLocale: locale, tags: { some: { slug } } })
+  const articleCount = await ctx.prisma.article.count({ where })
+  const pageInfo = feedPageInfo(articleCount, page, ctx.requestId)
+
+  return {
+    ...emptyFeed("tag", locale),
+    items: articleCount > 0 ? await readFeedPage(ctx, where, page, locale) : [],
+    caption: "by_publication_date",
+    pageInfo,
+    tag: { slug, name: localizedName(tag.name, tag.nameEn, locale), articleCount }
+  }
+}
+
+const buildHomeFeed = async (ctx: GraphQLContext, locale: FeedLocale): Promise<Feed> => {
+  const articles = (await ctx.prisma.article.findMany({
+    where: publicArticleWhere({
+      sourceLocale: locale,
+      sectionId: { not: null },
+      firstPublishedAt: { not: null }
+    }),
+    orderBy: { firstPublishedAt: "desc" },
+    take: HOME_TOP_SIZE + HOME_NEW_SIZE,
+    select: feedArticleSelect
+  })) as unknown as FeedArticleRecord[]
+
+  return { ...emptyFeed("home", locale), sections: buildHomeSections(articles, locale, new Date()) }
+}
+
 export default {
   Query: {
     feed: async (
       _parent: unknown,
-      args: { scope?: FeedScope; locale: FeedLocale },
+      args: {
+        scope?: FeedScope
+        locale: FeedLocale
+        slug?: string | null
+        format?: string | null
+        tag?: string | null
+        page?: number
+      },
       ctx: GraphQLContext
     ): Promise<Feed> => {
       const scope = args.scope ?? "home"
       const locale = args.locale
+      const page = requireValidPage(args.page ?? 1, ctx.requestId)
+      const slug = args.slug?.trim() ?? ""
+      const format = args.format?.trim() || null
+      const tag = args.tag?.trim() || null
 
-      // Ответ одинаков для всех и не зависит от сессии (ADR-0019): кеш общий, тег `home`
-      // уже инвалидируют публикация, снятие и массовые операции над материалами.
+      if (scope !== "home" && !slug) {
+        throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "slug", rule: "required" })
+      }
+
+      // Ответ одинаков для всех и не зависит от сессии (ADR-0019): кеш общий, а теги
+      // публикации уже сбрасывают и главную, и ленты рубрики и тега затронутого материала.
+      const tags = scope === "section" ? [`section:${slug}`] : scope === "tag" ? [`tag:${slug}`] : ["home"]
+
       return readThroughPublicCache(
         {
           cache: ctx.cache,
-          key: buildCacheKey("query.feed", { scope, locale }),
-          tags: ["home"],
+          key: buildCacheKey("query.feed", { scope, locale, slug, format, tag, page }),
+          tags,
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {
-          const articles = (await ctx.prisma.article.findMany({
-            where: publicArticleWhere({
-              sourceLocale: locale,
-              sectionId: { not: null },
-              firstPublishedAt: { not: null }
-            }),
-            orderBy: { firstPublishedAt: "desc" },
-            take: HOME_TOP_SIZE + HOME_NEW_SIZE,
-            select: feedArticleSelect
-          })) as unknown as FeedArticleRecord[]
-
-          return { scope, locale, sections: buildHomeSections(articles, locale, new Date()) }
+          if (scope === "section") return buildSectionFeed(ctx, locale, slug, format, tag, page)
+          if (scope === "tag") return buildTagFeed(ctx, locale, slug, page)
+          return buildHomeFeed(ctx, locale)
         }
       )
     }

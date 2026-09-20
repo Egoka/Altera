@@ -1,0 +1,69 @@
+# Списочные страницы: каталоги рубрик, тегов и авторов
+# (`sections-index.md`, `tags-index.md`, `authors-index.md` §4).
+query GetSectionCatalog($locale: Locale!) {
+  sectionCatalog(locale: $locale) {
+    slug
+    name
+    description
+    cover
+    articleCount
+    preview {
+      title
+      path
+      author
+    }
+  }
+}
+
+query GetTagCatalog($locale: Locale!, $q: String, $letter: String, $sort: TagCatalogSort!, $page: Int!) {
+  popularTags(locale: $locale) {
+    slug
+    name
+    articleCount
+  }
+  tagCatalog(locale: $locale, q: $q, letter: $letter, sort: $sort, page: $page) {
+    letters
+    items {
+      slug
+      name
+      articleCount
+    }
+    pageInfo {
+      page
+      totalPages
+      totalCount
+      hasNext
+    }
+  }
+}
+
+query GetAuthorCatalog($locale: Locale!, $sort: AuthorCatalogSort!, $section: String, $letter: String, $page: Int!) {
+  authorCatalog(locale: $locale, sort: $sort, section: $section, letter: $letter, page: $page) {
+    letters
+    items {
+      id
+      handle
+      name
+      avatar
+      grade
+      bioShort
+      publishedCount
+      isEditorial
+      recent {
+        title
+        path
+        author
+      }
+    }
+    pageInfo {
+      page
+      totalPages
+      totalCount
+      hasNext
+    }
+  }
+  sectionCatalog(locale: $locale) {
+    slug
+    name
+  }
+}
