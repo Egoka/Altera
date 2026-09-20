@@ -79,8 +79,24 @@ describe("HTTP readiness", () => {
       revision,
       checks: { postgres: true, redis: true, migrations: true }
     })
-    expect((await fetch(`${url}/`)).status).toBe(418)
+    expect((await fetch(`${url}/`, { headers: { accept: "text/html" } })).status).toBe(418)
     expect((await fetch(`${url}/health`, { method: "POST" })).status).toBe(418)
+  })
+
+  it("answers the platform port probe on / without handing it to GraphQL", async () => {
+    const check = createHealthCheck({
+      postgres: async () => [{ ok: 1 }],
+      migrations: async () => true,
+      redis: async () => true
+    })
+    const url = await serve(check)
+    const probe = await fetch(url)
+    expect(probe.status).toBe(200)
+    expect(await probe.text()).toBe("ok")
+    expect(probe.headers.get("cache-control")).toBe("no-store")
+    expect((await fetch(url, { headers: { accept: "text/html" } })).status).toBe(418)
+    expect((await fetch(`${url}/?query=%7B__typename%7D`)).status).toBe(418)
+    expect((await fetch(url, { method: "POST" })).status).toBe(418)
   })
 
   it("returns 503 and no driver errors or invalid revision", async () => {
