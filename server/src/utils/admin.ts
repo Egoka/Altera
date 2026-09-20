@@ -98,9 +98,12 @@ export const buildBaseWhereClause = (filters: BaseFilters, search?: SearchInput)
 
 export const buildOrderBy = (sort: SortInput) => {
   const direction = sort.direction.toLowerCase()
-  // Составное поле вида `_count.articles` разрешено `validateSort`, но Prisma принимает
-  // его только вложенным объектом: плоский ключ с точкой роняет запрос.
+  // Составное поле разрешено `validateSort`, но плоский ключ с точкой Prisma не понимает.
+  // Счётчик связи сортируется как `{ <связь>: { _count } }`, остальное — вложенным объектом.
   const [root, nested] = sort.field.split(".")
+  if (root === "_count" && nested) {
+    return { [nested]: { _count: direction } }
+  }
   if (root && nested) {
     return { [root]: { [nested]: direction } }
   }

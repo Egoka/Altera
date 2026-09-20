@@ -89,7 +89,11 @@ describe("buildOrderBy", () => {
     expect(buildOrderBy({ field: "name", direction: "ASC" })).toEqual({ name: "asc" })
   })
 
-  it("разворачивает составное поле счётчика во вложенный объект Prisma", () => {
-    expect(buildOrderBy({ field: "_count.articles", direction: "DESC" })).toEqual({ _count: { articles: "desc" } })
+  it("сортирует по числу связанных материалов синтаксисом Prisma", () => {
+    expect(buildOrderBy({ field: "_count.articles", direction: "DESC" })).toEqual({ articles: { _count: "desc" } })
+  })
+
+  it("разворачивает прочие составные поля во вложенный объект", () => {
+    expect(buildOrderBy({ field: "author.name", direction: "ASC" })).toEqual({ author: { name: "asc" } })
   })
 })
