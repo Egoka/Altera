@@ -171,7 +171,11 @@ test.describe("admin tags", () => {
     await page.setExtraHTTPHeaders({ authorization: `Bearer ${token()}` })
     await page.goto("/admin/tags?status=all")
 
-    await page.locator("[data-tag-search]").fill("t071-no-such-tag")
-    await expect(page.locator("[data-tag-empty]")).toBeVisible()
+    // Ввод до гидратации теряется: Vue перерисовывает поле из пустого `search`.
+    // Поэтому ввод повторяется, пока фильтр не применится.
+    await expect(async () => {
+      await page.locator("[data-tag-search]").fill("t071-no-such-tag")
+      await expect(page.locator("[data-tag-empty]")).toBeVisible({ timeout: 1000 })
+    }).toPass()
   })
 })
