@@ -1,0 +1,110 @@
+fragment AdminJobRow on AdminJob {
+  id
+  kind
+  status
+  objectType
+  objectId
+  createdAt
+  startedAt
+  finishedAt
+  cancelledAt
+  attemptCount
+  maxAttempts
+  durationMs
+  manualRetryAllowed
+  retryable
+  cancellable
+  lastErrorClass
+  lastErrorRequestId
+}
+
+query GetAdminJobs($filters: AdminJobsFilterInput, $sort: AdminJobsSortInput, $page: Int, $limit: Int) {
+  adminJobs(filters: $filters, sort: $sort, page: $page, limit: $limit) {
+    jobs {
+      ...AdminJobRow
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+    kinds
+    viewer {
+      canRetry
+      canCancel
+    }
+    appliedFrom
+    appliedTo
+  }
+}
+
+query GetAdminJob($id: ID!) {
+  adminJob(id: $id) {
+    job {
+      ...AdminJobRow
+    }
+    parameters {
+      key
+      value
+    }
+    attempts {
+      number
+      status
+      startedAt
+      finishedAt
+      errorClass
+      errorRequestId
+    }
+    actions {
+      action
+      actorId
+      actorRole
+      actorName
+      reason
+      createdAt
+    }
+    objectHref
+    viewer {
+      canRetry
+      canCancel
+    }
+  }
+}
+
+query GetJobsSummary {
+  jobsSummary {
+    depthByKind {
+      kind
+      depth
+    }
+    oldestPendingAgeSec
+    finishedInPeriod
+    failedInPeriod
+    failureRate
+    periodFrom
+    periodTo
+  }
+}
+
+mutation RetryJob($id: ID!) {
+  retryJob(id: $id) {
+    ...AdminJobRow
+  }
+}
+
+mutation CancelJob($id: ID!, $reason: String!) {
+  cancelJob(id: $id, reason: $reason) {
+    ...AdminJobRow
+  }
+}
+
+mutation RetryJobs($ids: [ID!]!) {
+  retryJobs(ids: $ids) {
+    requested
+    retried
+    skipped
+  }
+}
