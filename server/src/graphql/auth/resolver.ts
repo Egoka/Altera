@@ -153,12 +153,18 @@ export default {
       }: { email: string; consentVersion: ConsentVersionsInput; locale: Locale; next?: string | null },
       ctx: GraphQLContext
     ) => {
-      const { prisma, logger, piiHasher, requestId, mail } = ctx
+      const { prisma, logger, piiHasher, requestId, mail, rateLimiter } = ctx
       const address = normalizeEmail(email)
 
       if (!EMAIL_PATTERN.test(address)) {
         throw createApiError("VALIDATION_ERROR", { requestId, field: "email", rule: "email format" })
       }
+
+      // Корзина адреса — на первом же шаге, до любого чтения о существовании аккаунта
+      // (`rate-limits.md` §2 п. 3: 5 в час на e-mail). Прав у гостя нет, проверять перед лимитом
+      // нечего, а ответ `RATE_LIMITED` одинаков для известного и неизвестного адреса.
+      // Корзину по IP применяет middleware до резолвера.
+      const limit = await rateLimiter.enforce("auth.link.email", address, { requestId, ip: ctx.requestMeta?.ip })
 
       // Согласие требуется всегда при отсутствии сессии и сверяется с действующими версиями
       // (docs/spec/20-public/login.md §4, ADR-0028).
@@ -218,7 +224,10 @@ export default {
       })
 
       // Одинаков для существующего и неизвестного адреса: ни поля, ни ветка не различаются.
-      return { ok: true, retryAfterSec: null }
+      // Таймер кнопки «отправить ещё раз» (docs/spec/20-public/login.md §5) показывается, когда
+      // запрос израсходовал последнее обращение окна: отдельного значения паузы спецификация не
+      // задаёт, поэтому иначе поле остаётся пустым.
+      return { ok: true, retryAfterSec: limit.remaining === 0 ? limit.retryAfter : null }
     },
 
     verifyMagicLink: async (

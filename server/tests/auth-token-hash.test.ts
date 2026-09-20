@@ -1,5 +1,6 @@
 import crypto from "crypto"
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import { createTestRateLimiter } from "./helpers/rate-limit"
 
 let authMutations: typeof import("../src/graphql/auth/resolver").default.Mutation
 
@@ -59,6 +60,7 @@ describe("magic-link persistence", () => {
       logger: { log: vi.fn() },
       piiHasher: { email: vi.fn().mockReturnValue("email-hash") },
       requestId: "request-1",
+      rateLimiter: createTestRateLimiter(),
       mail: { send: vi.fn().mockResolvedValue({ mailId: "mail-1", messageId: "fake-1" }) }
     } as never
 

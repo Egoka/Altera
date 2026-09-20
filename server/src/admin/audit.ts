@@ -17,15 +17,21 @@ import {
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission, ensureRole } from "../exceptions/permissions"
 import type { GraphQLContext } from "../prisma"
+import { RATE_LIMIT_RULES } from "../rate-limits"
 
 /** `audit-log.md` §4: период по умолчанию — 7 дней `[ДОПУЩЕНИЕ]`. */
 export const AUDIT_DEFAULT_PERIOD_DAYS = 7
 /** `audit-log.md` §4: `limit` 20, максимум 100. */
 export const AUDIT_DEFAULT_LIMIT = 20
 export const AUDIT_MAX_LIMIT = 100
-/** `rate-limits.md` п. 12: экспорт CSV — 10 в час на сотрудника `[ДОПУЩЕНИЕ]`. */
-export const AUDIT_EXPORT_LIMIT_PER_HOUR = 10
-export const AUDIT_EXPORT_WINDOW_MS = 60 * 60 * 1000
+/**
+ * `rate-limits.md` §2 п. 12: экспорт CSV — 10 в час на сотрудника `[ДОПУЩЕНИЕ]`. Порог и окно
+ * берутся из единого реестра корзин: второго числа для того же лимита в проекте нет.
+ * Счёт идёт по собственным записям `stats.export` в журнале аудита — это уже неизменяемый след
+ * действия, и скользящее окно по нему точнее фиксированного окна счётчика.
+ */
+export const AUDIT_EXPORT_LIMIT_PER_HOUR = RATE_LIMIT_RULES["admin.export.user"].limit
+export const AUDIT_EXPORT_WINDOW_MS = RATE_LIMIT_RULES["admin.export.user"].windowSeconds * 1000
 /** Код экспорта аудита — `stats.export` (#40, `audit-log.md` §4 `[ДОПУЩЕНИЕ: тот же]`). */
 export const AUDIT_EXPORT_ACTION = "stats.export"
 /** Верхняя граница выгрузки одного файла `[ДОПУЩЕНИЕ]`: спецификация числа строк не задаёт. */
@@ -400,6 +406,15 @@ export async function exportAuditCsv(
   if (recentExports.length >= AUDIT_EXPORT_LIMIT_PER_HOUR) {
     const oldest = recentExports[0]?.createdAt ?? windowStart
     const retryAfter = Math.max(1, Math.ceil((oldest.getTime() + AUDIT_EXPORT_WINDOW_MS - now.getTime()) / 1000))
+    // Попадание в корзину логируется так же, как у остальных лимитов (`rate-limits.md` §2 п. 1,
+    // реестр событий #44). Адреса у административного действия в корзине нет: ключ — сотрудник.
+    ctx.logger.log({
+      level: "warn",
+      event: "rate_limit.hit",
+      requestId: ctx.requestId,
+      message: "Rate limit exceeded",
+      data: { bucket: RATE_LIMIT_RULES["admin.export.user"].bucket, ipHash: null }
+    })
     throw createApiError("RATE_LIMITED", { requestId: ctx.requestId, retryAfter })
   }
 

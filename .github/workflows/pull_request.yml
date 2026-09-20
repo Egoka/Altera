@@ -207,6 +207,12 @@ jobs:
         run: pnpm --filter server exec vitest run tests/media-asset-migration-database.test.ts
       - name: Test database job queue
         run: pnpm --filter server exec vitest run tests/job-queue-database.test.ts
+      # T-024: правильность счёта лимитов держится на ON CONFLICT DO UPDATE, поэтому она
+      # проверяется на настоящем PostgreSQL, а не на двойнике.
+      - name: Проверить счётчики лимитов частоты T-024
+        env:
+          T024_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/rate-limits-database.test.ts
       - name: Check build output
         run: test -f server/dist/server.js
       - name: Deploy migrations to isolated CI database

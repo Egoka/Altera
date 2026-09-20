@@ -4,6 +4,12 @@ import { isIP } from "node:net"
 export interface PiiHasher {
   email(value: string): string
   ip(value: string, day: string): string
+  /**
+   * Обезличенный ключ корзины лимита (`50-access/rate-limits.md` §2 п. 2). Соли дня здесь нет
+   * намеренно: она есть у логов, а счётчик с ней сбрасывался бы в полночь и открывал часовое
+   * окно на границе суток.
+   */
+  limitKey(value: string): string
 }
 
 const redacted = "[REDACTED]"
@@ -83,6 +89,9 @@ export function createPiiHasher(secret: string | undefined): PiiHasher {
     },
     ip(value, day) {
       return digest(`ip:${day}`, value)
+    },
+    limitKey(value) {
+      return digest("limit", value)
     }
   }
 }

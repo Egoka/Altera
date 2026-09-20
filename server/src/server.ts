@@ -18,6 +18,13 @@ import { createJobWorker } from "./jobs/job-worker"
 import { createPrismaJobStore } from "./jobs/prisma-job-store"
 import { startPermissionExceptionExpiry } from "./permission-exceptions/scheduler"
 import type { PermissionExceptionClient } from "./permission-exceptions/service"
+import {
+  createRateLimiter,
+  createRateLimitPlugin,
+  createRateLimitStore,
+  startRateLimitCounterPrune,
+  type RateLimitDatabaseClient
+} from "./rate-limits"
 
 const PORT = process.env.PORT || 4000
 const cache = createCache({ redisUrl: process.env.REDIS_URL })
@@ -28,10 +35,21 @@ if (!forwardedRequestSecret) throw new Error("REQUEST_ID_FORWARD_SECRET must be 
 const mailConfig = createMailConfigFromEnv(process.env)
 const mail = createMailService({ store: prisma, transport: mailConfig.transport, logger, from: mailConfig.from })
 const maskError = createErrorMasker({ logger, requestIdFactory: getRequestId })
+// Счётчики лимитов: Redis при заданном `REDIS_URL`, иначе таблица (`rate-limits.md` §2 п. 13).
+const rateLimitClient = prisma as unknown as RateLimitDatabaseClient
+const rateLimiter = createRateLimiter({
+  store: createRateLimitStore({
+    redisUrl: process.env.REDIS_URL,
+    client: rateLimitClient,
+    warn: (message) => logger.log({ level: "warn", event: "backend.error", requestId: getRequestId(), message })
+  }),
+  logger,
+  piiHasher
+})
 
 const yoga = createYoga<GraphQLContext>({
   schema,
-  context: (initialContext) => createContext(initialContext, cache, logger, piiHasher, mail),
+  context: (initialContext) => createContext(initialContext, cache, logger, piiHasher, mail, rateLimiter),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {
@@ -43,6 +61,7 @@ const yoga = createYoga<GraphQLContext>({
   plugins: [
     createRequestTracingPlugin({ logger, forwardedRequestSecret }),
     useCSRFPrevention(),
+    createRateLimitPlugin(),
     process.env.NODE_ENV === "production" && blockFieldSuggestionsPlugin()
   ].filter(Boolean)
 })
@@ -63,4 +82,5 @@ const jobWorker = createJobWorker({ store: createPrismaJobStore(prisma), handler
 jobWorker.start()
 server.on("close", () => jobWorker.stop())
 startPermissionExceptionExpiry(prisma as unknown as PermissionExceptionClient, logger)
+startRateLimitCounterPrune(rateLimitClient, logger)
 server.listen(PORT)

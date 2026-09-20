@@ -3,10 +3,16 @@ import { createSchema, createYoga } from "graphql-yoga"
 import { describe, expect, it } from "vitest"
 import { createErrorMasker } from "../src/errors/graphql-error"
 import { createAppLogger } from "../src/observability/logger"
-import { createRequestTracingPlugin, getRequestId, setRequestUserSnapshot } from "../src/observability/request-tracing"
+import {
+  createRequestTracingPlugin,
+  getRequestId,
+  isForwardedByBff,
+  setRequestUserSnapshot
+} from "../src/observability/request-tracing"
 
 interface TestContext {
   requestId: string
+  forwarded: boolean
 }
 
 const nuxtRequestId = "11111111-1111-4111-8111-111111111111"
@@ -28,12 +34,14 @@ function createTestServer() {
       typeDefs: /* GraphQL */ `
         type Query {
           requestId: String!
+          forwarded: Boolean!
           explode: String
         }
       `,
       resolvers: {
         Query: {
           requestId: (_root, _args, context: TestContext) => context.requestId,
+          forwarded: (_root, _args, context: TestContext) => context.forwarded,
           explode: () => {
             throw new Error("database unavailable")
           }
@@ -42,7 +50,7 @@ function createTestServer() {
     }),
     context: () => {
       setRequestUserSnapshot({ id: "user-1", role: "admin" })
-      return { requestId: getRequestId() }
+      return { requestId: getRequestId(), forwarded: isForwardedByBff() }
     },
     graphqlEndpoint: "/",
     logging: false,
@@ -124,6 +132,37 @@ describe("request tracing", () => {
     expect(response.headers.get("x-request-id")).toBe(generatedRequestId)
     await expect(response.json()).resolves.toEqual({ data: { requestId: generatedRequestId } })
     expect(lines.join("")).not.toContain(untrustedId)
+  })
+
+  /**
+   * Подпись пересланного идентификатора — единственный признак, по которому сервер отличает
+   * запрос своего BFF от прямого вызова. На нём держится доверие к `x-forwarded-for` в лимитах
+   * частоты (`50-access/rate-limits.md` §2 п. 2).
+   */
+  it("признаёт доверенным только запрос с сошедшейся подписью", async () => {
+    const { yoga } = createTestServer()
+
+    const signed = await execute(yoga, "query { forwarded }")
+    await expect(signed.json()).resolves.toEqual({ data: { forwarded: true } })
+
+    const forged = await yoga.fetch("http://localhost/", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-graphql-yoga-csrf": "bff",
+        "x-request-id": nuxtRequestId,
+        "x-request-id-signature": "0".repeat(64)
+      },
+      body: JSON.stringify({ query: "query { forwarded }" })
+    })
+    await expect(forged.json()).resolves.toEqual({ data: { forwarded: false } })
+
+    const bare = await yoga.fetch("http://localhost/", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-graphql-yoga-csrf": "bff" },
+      body: JSON.stringify({ query: "query { forwarded }" })
+    })
+    await expect(bare.json()).resolves.toEqual({ data: { forwarded: false } })
   })
 
   it("isolates IDs across overlapping requests", async () => {
