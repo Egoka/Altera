@@ -84,9 +84,15 @@ const stubGraphQL = async (page: Page, responses: Record<string, unknown>) => {
   })
 }
 
-/** Клиентский переход на страницу автора по карточке каталога. */
+/**
+ * Клиентский переход на страницу автора: прямой заход отдал бы SSR-ответ настоящего API с
+ * пустой базой, поэтому список авторов открывается ссылкой шапки, а уже его карточка —
+ * перехваченная в браузере — ведёт на страницу автора.
+ */
 const openAuthorPage = async (page: Page) => {
-  await page.goto("/authors")
+  await page.goto("/sections")
+  await page.getByRole("link", { name: "Авторы", exact: true }).click()
+  await expect(page).toHaveURL(/\/authors$/)
   await page
     .getByRole("link", { name: /Вера Орлова/ })
     .first()
