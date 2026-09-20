@@ -399,13 +399,6 @@ enum ArticleStatus {
   rework
 }
 
-type ArticlesByAuthorResponse {
-  articles: [Article!]!
-  currentPage: Int!
-  totalCount: Int!
-  totalPages: Int!
-}
-
 type ArticlesBySectionResponse {
   articles: [Article!]!
   currentPage: Int!
@@ -541,10 +534,22 @@ enum AuthorGrade {
   standard
 }
 
-type AuthorStats {
-  articlesThisMonth: Int!
-  popularTags: [Tag!]
-  totalArticles: Int!
+type AuthorLink {
+  kind: String!
+  url: String!
+}
+
+type AuthorProfile {
+  avatar: String
+  bio: String
+  firstPublishedAt: String
+  grade: AuthorGrade!
+  handle: String!
+  id: ID!
+  links: [AuthorLink!]!
+  name: String!
+  publishedCount: Int!
+  redirect: String
 }
 
 type BaseFiltersInfo {
@@ -746,6 +751,7 @@ type FeedRedirect {
 }
 
 enum FeedScope {
+  author
   home
   latest
   section
@@ -1045,16 +1051,14 @@ type Query {
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
   articles(filters: ArticleFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): ArticlesResponse!
-  articlesByAuthor(authorHandle: String!, limit: Int = 10, page: Int = 1): ArticlesByAuthorResponse!
   articlesBySection(limit: Int = 10, page: Int = 1, sectionSlug: String!): ArticlesBySectionResponse!
   articlesByTag(limit: Int = 10, page: Int = 1, tagSlug: String!): ArticlesByTagResponse!
   auditEntry(id: ID!): AuditEntryDetail!
   auditLog(cursor: String, filters: AuditLogFilters, limit: Int): AuditLogPage!
   auditSummary(filters: AuditLogFilters): AuditSummary!
-  author(handle: String!): User
+  author(handle: String!): AuthorProfile!
   authorCatalog(letter: String, locale: Locale!, page: Int! = 1, section: String, sort: AuthorCatalogSort! = recent): AuthorCatalog!
-  authorStats(authorHandle: String!): AuthorStats
-  feed(format: String, limit: Int! = 50, locale: Locale!, page: Int! = 1, scope: FeedScope! = home, slug: String, tag: String): Feed!
+  feed(format: String, handle: String, limit: Int! = 50, locale: Locale!, page: Int! = 1, scope: FeedScope! = home, slug: String, tag: String): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   jobsSummary: AdminJobsSummary!

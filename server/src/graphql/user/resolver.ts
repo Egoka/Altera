@@ -1,6 +1,5 @@
 import { GraphQLContext } from "../../prisma"
 import { ensureAuthenticated, ensurePermission } from "../../exceptions/permissions"
-import { createApiError } from "../../errors/graphql-error"
 import type { PrismaClient } from "../../generated/prisma"
 
 async function auditPersonalDataRead(
@@ -38,9 +37,7 @@ import {
   BaseFilters,
   SearchInput
 } from "../../utils/admin"
-import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
-import { readThroughPublicCache } from "../../cache/read-through"
-import { publicArticleSelect, publicArticleWhere, publicUserSelect } from "../../visibility/article"
+import { publicUserSelect } from "../../visibility/article"
 
 export default {
   Query: {
@@ -49,120 +46,6 @@ export default {
         where: { handle: args.handle },
         select: publicUserSelect
       })
-    },
-
-    author: async (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => {
-      return ctx.prisma.user.findUnique({
-        where: { handle: args.handle, role: "author" },
-        select: publicUserSelect
-      })
-    },
-
-    articlesByAuthor: async (
-      _parent: any,
-      { authorHandle, page = 1, limit = 10 }: { authorHandle: string; page: number; limit: number },
-      ctx: GraphQLContext
-    ) => {
-      const effectiveArgs = { authorHandle, page, limit }
-      const cacheKey = buildCacheKey("query.articlesByAuthor", effectiveArgs)
-
-      return readThroughPublicCache(
-        {
-          cache: ctx.cache,
-          key: cacheKey,
-          tags: [`author:${authorHandle}`],
-          ttlSeconds: CACHE_TTL_SECONDS.publicList
-        },
-        async () => {
-          const author = await ctx.prisma.user.findUnique({
-            where: { handle: authorHandle },
-            select: { id: true }
-          })
-          if (!author) {
-            throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
-          }
-
-          const totalCount = await ctx.prisma.article.count({ where: publicArticleWhere({ authorId: author.id }) })
-          const articles = await ctx.prisma.article.findMany({
-            where: publicArticleWhere({ authorId: author.id }),
-            skip: (page - 1) * limit,
-            take: limit,
-            orderBy: { publishedAt: "desc" },
-            select: publicArticleSelect
-          })
-
-          const response = {
-            articles,
-            totalCount,
-            totalPages: Math.ceil(totalCount / limit),
-            currentPage: page
-          }
-
-          return response
-        }
-      )
-    },
-
-    authorStats: async (_parent: unknown, { authorHandle }: { authorHandle: string }, ctx: GraphQLContext) => {
-      const cacheKey = buildCacheKey("query.authorStats", { authorHandle })
-      return readThroughPublicCache(
-        {
-          cache: ctx.cache,
-          key: cacheKey,
-          tags: [`author:${authorHandle}`],
-          ttlSeconds: CACHE_TTL_SECONDS.publicList
-        },
-        async () => {
-          const author = await ctx.prisma.user.findUnique({
-            where: { handle: authorHandle },
-            select: { id: true }
-          })
-          if (!author) {
-            throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "author" })
-          }
-
-          const totalArticles = await ctx.prisma.article.count({
-            where: publicArticleWhere({ authorId: author.id })
-          })
-
-          const oneMonthAgo = new Date()
-          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
-
-          const articlesThisMonth = await ctx.prisma.article.count({
-            where: publicArticleWhere({
-              authorId: author.id,
-              publishedAt: { gte: oneMonthAgo }
-            })
-          })
-
-          const articlesWithTags = await ctx.prisma.article.findMany({
-            where: publicArticleWhere({ authorId: author.id }),
-            select: { tags: { select: { name: true, slug: true } } }
-          })
-
-          const tagCounts: { [slug: string]: { name: string; slug: string; count: number } } = {}
-          articlesWithTags
-            .flatMap((a) => a.tags)
-            .forEach((tag) => {
-              if (!tagCounts[tag.slug]) {
-                tagCounts[tag.slug] = { ...tag, count: 0 }
-              }
-              tagCounts[tag.slug].count++
-            })
-
-          const popularTags = Object.values(tagCounts)
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5) // Top 5 tags
-
-          const stats = {
-            totalArticles,
-            articlesThisMonth,
-            popularTags
-          }
-
-          return stats
-        }
-      )
     },
 
     me: async (_parent: any, _args: any, ctx: GraphQLContext) => {

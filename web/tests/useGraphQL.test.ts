@@ -1,6 +1,6 @@
 import { print } from "graphql"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { ArticleCardFragmentDoc } from "../app/graphql/generated/graphql"
+import { FeedCardFragmentDoc } from "../app/graphql/generated/graphql"
 import { useGraphQL } from "../app/composables/useGraphQL"
 
 afterEach(() => {
@@ -13,12 +13,12 @@ describe("useGraphQL", () => {
     const requestFetch = vi.fn().mockResolvedValue(envelope)
     vi.stubGlobal("useRequestFetch", () => requestFetch)
 
-    const result = await useGraphQL(ArticleCardFragmentDoc, { articleId: "article-1" })
+    const result = await useGraphQL(FeedCardFragmentDoc, { articleId: "article-1" })
 
     expect(requestFetch).toHaveBeenCalledWith("/api/graphql", {
       method: "POST",
       body: {
-        query: print(ArticleCardFragmentDoc),
+        query: print(FeedCardFragmentDoc),
         variables: { articleId: "article-1" }
       }
     })

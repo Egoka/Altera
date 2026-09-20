@@ -1,21 +1,6 @@
-fragment ArticleCard on Article {
-  id
-  title
-  slug
-  dek
-  excerpt
-  featuredImage
-  publishedAt
-  author {
-    name
-    slug: handle
-    photoUrl
-  }
-  section {
-    name
-    slug
-  }
-}
+# Фрагмент `ArticleCard` снят вместе с T-057: последняя публичная страница на
+# административном `Article` — страница автора — перешла на `author` и `feed(scope: author)`.
+# Форма карточки показа живёт в `~/types/reading` как `DemoArticleCard`.
 
 fragment ArticleStatusValue on Article {
   status

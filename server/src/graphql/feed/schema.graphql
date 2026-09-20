@@ -1,11 +1,12 @@
 # Подборки и ленты публичных страниц. `home` — главная (`docs/spec/20-public/home.md`,
 # `docs/spec/60-ranking/home-sections.md`); `section` и `tag` — ленты рубрики и тега
-# (`section-feed.md`, `tag-feed.md`); `latest` — плоский список последних публикаций локали
-# для RSS (`feeds-and-sitemap.md` §4). Лента автора получит своё значение в T-057.
+# (`section-feed.md`, `tag-feed.md`); `author` — лента страницы автора (`author.md` §4);
+# `latest` — плоский список последних публикаций локали для RSS (`feeds-and-sitemap.md` §4).
 enum FeedScope {
   home
   section
   tag
+  author
   latest
 }
 
@@ -87,7 +88,8 @@ type FeedTagHeader {
 }
 
 # Адрес сменился: архивированная рубрика ведёт на преемника, слитый тег — на целевой,
-# прежний слаг — на нынешний (ADR-0004). Страница отвечает 301, а не рисует ленту.
+# прежний слаг — на нынешний (ADR-0004), прежний хэндл автора — на нынешний
+# (`00-registries/routes.md` #7). Страница отвечает 301, а не рисует ленту.
 type FeedRedirect {
   scope: FeedScope!
   slug: String!
@@ -116,10 +118,13 @@ type Feed {
 
 extend type Query {
   # `limit` читает только `latest`: остальные области отдают страницу фиксированного размера.
+  # `slug` называет рубрику или тег, `handle` — автора (`author.md` §4): у ленты автора нет
+  # слага, а у рубрики и тега нет хэндла, поэтому адрес сущности не сводится в одно поле.
   feed(
     scope: FeedScope! = home
     locale: Locale!
     slug: String
+    handle: String
     format: String
     tag: String
     page: Int! = 1

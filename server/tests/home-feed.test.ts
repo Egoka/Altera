@@ -124,7 +124,9 @@ describe("резолвер feed", () => {
    * ещё слаг, фильтры и страница, и один построитель ключа держит их все.
    */
   const homeCacheKey = (locale: "ru" | "en") =>
-    buildCacheKey("query.feed", { scope: "home", locale, slug: "", format: null, tag: null, page: 1 })
+    // `handle` вошёл в ключ вместе с лентой автора (T-057): у главной он пуст, но
+    // разные аргументы запроса по-прежнему разводят ответы по разным записям кеша.
+    buildCacheKey("query.feed", { scope: "home", locale, slug: "", handle: "", format: null, tag: null, page: 1 })
 
   const callFeed = async (cache: Cache, findMany: ReturnType<typeof vi.fn>, locale: "ru" | "en" = "ru") =>
     feedResolver.Query.feed({}, { scope: "home", locale }, {
