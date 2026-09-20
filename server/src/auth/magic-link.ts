@@ -17,7 +17,6 @@ export const buildMagicLinkUrl = (token: string): string => {
 }
 
 export interface IssueMagicLinkInput {
-  userId: string
   email: string
   locale: Locale
   requestId: string
@@ -37,18 +36,13 @@ export async function issueMagicLink(
   const tokenHash = hashOpaqueToken(token)
   const expiresAt = addMinutes(input.now ?? new Date(), MAGIC_LINK_EXPIRY_MINUTES)
 
+  // Токен принадлежит адресу, а не записи (T-022): повторная выдача отзывает прежний
+  // токен того же адреса (`20-public/login.md` §7).
+  const payload = { tokenHash, locale: input.locale, expiresAt, usedAt: null }
   await store.magicLinkToken.upsert({
-    where: { userId: input.userId },
-    update: {
-      tokenHash,
-      expiresAt,
-      usedAt: null // Ensure the token is marked as not used on update
-    },
-    create: {
-      tokenHash,
-      userId: input.userId,
-      expiresAt
-    }
+    where: { email: input.email },
+    update: payload,
+    create: { email: input.email, ...payload }
   })
 
   const { message, sanitizedBody } = createMagicLinkMail(input.locale, buildMagicLinkUrl(token))
