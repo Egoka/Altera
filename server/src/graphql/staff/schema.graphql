@@ -1,0 +1,85 @@
+enum AdminStaffStatus {
+  active
+  archived
+}
+
+"Роли, которые выдаются служебной записи напрямую; owner назначается вторым шагом."
+enum AssignableStaffRole {
+  editor
+  moderator
+  analyst
+  admin
+}
+
+enum AdminStaffExceptionTerm {
+  indefinite
+  expiring
+}
+
+type AdminStaffRoleChange {
+  id: ID!
+  action: String!
+  before: Role
+  after: Role
+  actorName: String
+  reason: String
+  createdAt: String!
+}
+
+type AdminStaffMember {
+  id: ID!
+  name: String!
+  "Маскированный адрес в списке, полный — в карточке."
+  email: String!
+  emailMasked: Boolean!
+  role: Role!
+  status: AdminStaffStatus!
+  createdAt: String!
+  createdByName: String
+  lastActiveAt: String
+  activeExceptionCount: Int!
+  archivedAt: String
+  archiveReason: String
+  roleHistory: [AdminStaffRoleChange!]!
+  exceptions: [PermissionException!]!
+  sessionCount: Int!
+}
+
+type AdminOwner {
+  id: ID!
+  name: String!
+  email: String!
+  status: AdminStaffStatus!
+  assignedAt: String
+}
+
+input AdminStaffFiltersInput {
+  role: Role
+  status: AdminStaffStatus
+  hasExceptions: Boolean
+  term: AdminStaffExceptionTerm
+  search: String
+}
+
+input CreateStaffInput {
+  email: String!
+  role: AssignableStaffRole!
+  name: String!
+}
+
+extend type Query {
+  adminStaff(filters: AdminStaffFiltersInput): [AdminStaffMember!]!
+  adminStaffMember(id: ID!): AdminStaffMember
+  owners: [AdminOwner!]!
+}
+
+extend type Mutation {
+  createStaff(input: CreateStaffInput!): AdminStaffMember!
+  changeStaffRole(id: ID!, role: AssignableStaffRole!, reason: String!): AdminStaffMember!
+  revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
+  assignOwner(id: ID!): AdminStaffMember!
+  revokeOwner(id: ID!, reason: String!): AdminStaffMember!
+  deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
+  archiveStaffAccount(id: ID!, reason: String!): AdminStaffMember!
+  restoreStaffAccount(id: ID!, reason: String!): AdminStaffMember!
+}
