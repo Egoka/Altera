@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task_id": "T-060",
+  "issue_id": "01a0be48-9215-7039-bf6e-d8b54ede8f26",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-060-pricing-page-launch.md",
+    "sha": "b8ff8c1b9be48e856daf23c927f27469541b8a0d"
+  },
+  "baseline_sha": "c35027c011800104a103dd6c42bd8a3bba70cd24",
+  "tested_sha": "253318087c36319402d436811f3e13340179f005",
+  "branch": "web/t060-pricing",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t060-pricing",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bfdf-0693-76c3-a833-51ca2d994a0b",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "tests/e2e/pricing-launch.spec.ts — 7 passed locally and inside the CI job «Браузерная проверка веба» (run 35527100516) on the full stack: the built /pricing page carries no number next to a currency sign or period and no payment action. Component level: plan cards and the comparison table render no digit, no button and no link."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "tests/pricing-launch-states.nuxt.test.ts walks every state row of docs/spec/20-public/pricing.md §8 — one test per row; the row-by-row table lives in docs/reports/2026-09-20-t060-pricing-launch-report.md §3."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen": "passed",
+    "tests": "server 321 passed / 24 skipped; web 238 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "web_smoke": "passed",
+    "playwright": "tests/e2e/pricing-launch.spec.ts — 7 passed; full test:e2e with a database ran in CI",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35527100516",
+    "preflight": "ok: true, all seven repository and runtime checks passed on the baseline",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 174,
+    "url": "https://github.com/Egoka/Altera/pull/174",
+    "base_ref": "app",
+    "base_sha": "c35027c011800104a103dd6c42bd8a3bba70cd24",
+    "head_sha": "253318087c36319402d436811f3e13340179f005",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Изменения только в web/: страница, компоненты, словари локалей и конфигурация Nuxt. Серверных файлов, манифестов и lock-файлов PR не трогает."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-060.md",
+    "sha256": "fe7a970010d3d028f4a0cacf906f424ea21d11a1c59cb3f37d29fcedba2b7c9f"
+  },
+  "remaining": ["Independent native review of the tested SHA and the controller-managed Done transition are pending"],
+  "usage": null
+}
