@@ -1,20 +1,13 @@
 import { expect, test } from "@playwright/test"
-import { createHmac } from "node:crypto"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 const databaseUrl =
   process.env.T070_TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
-const accessSecret = "t009-test-access-secret"
+let adminSessionId = ""
 
-const token = () => {
-  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
-  const payload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, role: "admin", userId: "t070-admin" })
-  ).toString("base64url")
-  const unsigned = `${header}.${payload}`
-  return `${unsigned}.${createHmac("sha256", accessSecret).update(unsigned).digest("base64url")}`
-}
+const token = () => signAccessToken("t070-admin", adminSessionId)
 
 test.describe("admin categories", () => {
   test.describe.configure({ mode: "serial" })
@@ -51,6 +44,7 @@ test.describe("admin categories", () => {
     })
     await prisma.handleHistory.update({ where: { handle: "t070-admin" }, data: { userId: "t070-admin" } })
     await prisma.handleHistory.update({ where: { handle: "t070-author" }, data: { userId: "t070-author" } })
+    adminSessionId = await createSessionId(prisma, "t070-admin")
     await prisma.sectionSlugHistory.upsert({
       where: { slug: "t070-culture" },
       create: { slug: "t070-culture" },

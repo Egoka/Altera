@@ -126,6 +126,15 @@ jobs:
         run: pnpm --filter nuxt-app exec playwright install --with-deps chromium
       - name: Smoke check homepage
         run: pnpm --filter nuxt-app run test:e2e
+      # Состояние страницы на момент отказа: без этого шага разбор падения идёт по одному стеку.
+      - name: Сохранить артефакты Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
 
   server-smoke:
     name: Сборка сервера и дымовая проверка старта
@@ -168,7 +177,6 @@ jobs:
       REDIS_URL: "redis://127.0.0.1:6379/0"
       CACHE_TTL: 21600
       JWT_ACCESS_SECRET: "test-access-secret"
-      JWT_REFRESH_SECRET: "test-refresh-secret"
       LOG_HASH_SECRET: "ci-log-hash-secret"
       REQUEST_ID_FORWARD_SECRET: "ci-request-id-secret"
       T016_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
@@ -176,7 +184,6 @@ jobs:
       MAGIC_LINK_EXPIRY_MINUTES: 15
       MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
       JWT_ACCESS_TOKEN_EXPIRY: "15m"
-      JWT_REFRESH_TOKEN_EXPIRY: "7d"
 
     steps:
       - name: Checkout repository

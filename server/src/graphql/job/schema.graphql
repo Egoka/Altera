@@ -1,0 +1,127 @@
+enum AdminJobStatus {
+  queued
+  running
+  completed
+  failed
+  cancelled
+  stuck
+}
+
+enum AdminJobSortField {
+  createdAt
+  duration
+  attempts
+}
+
+type AdminJob {
+  id: ID!
+  kind: String!
+  status: AdminJobStatus!
+  objectType: String
+  objectId: String
+  createdAt: String!
+  startedAt: String
+  finishedAt: String
+  cancelledAt: String
+  attemptCount: Int!
+  maxAttempts: Int!
+  durationMs: Int
+  manualRetryAllowed: Boolean!
+  retryable: Boolean!
+  cancellable: Boolean!
+  lastErrorClass: String
+  lastErrorRequestId: String
+}
+
+type AdminJobViewer {
+  canRetry: Boolean!
+  canCancel: Boolean!
+}
+
+type AdminJobsResponse {
+  jobs: [AdminJob!]!
+  pagination: PaginationInfo!
+  kinds: [String!]!
+  viewer: AdminJobViewer!
+  appliedFrom: String!
+  appliedTo: String!
+}
+
+type AdminJobParameter {
+  key: String!
+  value: String!
+}
+
+type AdminJobAttempt {
+  number: Int!
+  status: AdminJobStatus!
+  startedAt: String
+  finishedAt: String
+  errorClass: String
+  errorRequestId: String
+}
+
+type AdminJobAction {
+  action: String!
+  actorId: ID
+  actorRole: Role
+  actorName: String
+  reason: String
+  createdAt: String!
+}
+
+type AdminJobCard {
+  job: AdminJob!
+  parameters: [AdminJobParameter!]!
+  attempts: [AdminJobAttempt!]!
+  actions: [AdminJobAction!]!
+  objectHref: String
+  viewer: AdminJobViewer!
+}
+
+type AdminJobsSummaryKind {
+  kind: String!
+  depth: Int!
+}
+
+type AdminJobsSummary {
+  depthByKind: [AdminJobsSummaryKind!]!
+  oldestPendingAgeSec: Int
+  finishedInPeriod: Int!
+  failedInPeriod: Int!
+  failureRate: Float!
+  periodFrom: String!
+  periodTo: String!
+}
+
+type AdminJobsRetryResult {
+  requested: Int!
+  retried: [ID!]!
+  skipped: [ID!]!
+}
+
+input AdminJobsFilterInput {
+  kinds: [String!]
+  statuses: [AdminJobStatus!]
+  from: String
+  to: String
+  objectId: String
+  stuckOnly: Boolean
+}
+
+input AdminJobsSortInput {
+  field: AdminJobSortField! = createdAt
+  direction: SortDirection! = DESC
+}
+
+extend type Query {
+  adminJobs(filters: AdminJobsFilterInput, sort: AdminJobsSortInput, page: Int = 1, limit: Int = 20): AdminJobsResponse!
+  adminJob(id: ID!): AdminJobCard
+  jobsSummary: AdminJobsSummary!
+}
+
+extend type Mutation {
+  retryJob(id: ID!): AdminJob!
+  cancelJob(id: ID!, reason: String!): AdminJob!
+  retryJobs(ids: [ID!]!): AdminJobsRetryResult!
+}

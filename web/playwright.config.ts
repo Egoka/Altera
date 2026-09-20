@@ -11,7 +11,9 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://127.0.0.1:${port}`,
-    trace: "on-first-retry"
+    // Повторов в CI нет, поэтому `on-first-retry` там не срабатывал: диагностика собирается по отказу.
+    trace: process.env.CI ? "retain-on-failure" : "on-first-retry",
+    screenshot: "only-on-failure"
   },
   projects: [
     {
@@ -28,7 +30,6 @@ export default defineConfig({
         DATABASE_URL_UNPOOLED: databaseUrl,
         FRONTEND_URL: `http://127.0.0.1:${port}`,
         JWT_ACCESS_SECRET: "t009-test-access-secret",
-        JWT_REFRESH_SECRET: "t009-test-refresh-secret",
         LOG_HASH_SECRET: "t053-test-log-hash-secret",
         MAGIC_LINK_BASE_URL: `http://127.0.0.1:${port}/auth/verify`,
         MAIL_TRANSPORT: "smtp",

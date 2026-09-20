@@ -25,6 +25,8 @@ interface ProxyGraphQLRequestOptions {
   graphqlApiUrl: string
   body: unknown
   authorization?: string
+  userAgent?: string
+  clientIp?: string
   requestId: string
   requestIdForwardSecret: string
   fetchRaw: FetchRaw
@@ -124,6 +126,8 @@ export const proxyGraphQLRequest = async ({
   graphqlApiUrl,
   body,
   authorization,
+  userAgent,
+  clientIp,
   requestId,
   requestIdForwardSecret,
   fetchRaw
@@ -142,6 +146,15 @@ export const proxyGraphQLRequest = async ({
 
   if (authorization) {
     headers.authorization = authorization
+  }
+
+  // Устройство и адрес записываются в сессию пользователя (ADR-0009 п. 1).
+  if (userAgent) {
+    headers["user-agent"] = userAgent
+  }
+
+  if (clientIp) {
+    headers["x-forwarded-for"] = clientIp
   }
 
   try {

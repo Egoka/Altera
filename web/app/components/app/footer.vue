@@ -8,6 +8,8 @@
     { labelKey: "footer.tags", to: "/tags" },
     { labelKey: "footer.authors", to: "/authors" },
     { labelKey: "footer.about", to: "/about" },
+    // Футер — один из входов на «Цены и планы» (`docs/spec/20-public/pricing.md` §3).
+    { labelKey: "footer.pricing", to: "/pricing" },
     { labelKey: "footer.contentRules", to: "/legal/content-rules" },
     { labelKey: "footer.offer", to: "/legal/paid-services" },
     { labelKey: "footer.privacy", to: "/legal/privacy" },

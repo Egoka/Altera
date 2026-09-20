@@ -194,6 +194,123 @@
     "loading": "Articles are loading",
     "proAuthor": "Pro author"
   },
+  "pricing": {
+    "meta": {
+      "title": "Plans and pricing — Altera",
+      "description": "Reading is free for everyone. At the first launch you can write and publish without paying; paid plans arrive later."
+    },
+    "hero": {
+      "kicker": "Plans",
+      "title": "A subscription is the path to authorship",
+      "lede": "Reading is free for everyone. A plan decides what you can create and publish.",
+      "launchNote": "There is no billing at the first launch: this page shows no prices and no payment buttons. Basic authoring opens by itself the first time you press «Create article» — without payment and without manual approval. Paid plans arrive later.",
+      "cta": "Create article"
+    },
+    "plansLabel": "Subscription plans",
+    "availability": {
+      "now": "Available now",
+      "later": "Paid plans arrive later"
+    },
+    "plans": {
+      "free": {
+        "name": "free",
+        "summary": "The plan every account starts with: read everything published, at no cost.",
+        "features": {
+          "read": "Reading every published article",
+          "bookmarks": "Bookmarks",
+          "follow": "Following authors"
+        }
+      },
+      "standard": {
+        "name": "standard",
+        "summary": "Write and publish: the editor, media, and a second language version made by hand.",
+        "features": {
+          "write": "Creating and publishing articles",
+          "editor": "Article editor",
+          "media": "Media inside articles",
+          "translation": "Second language version made by hand"
+        }
+      },
+      "pro": {
+        "name": "pro",
+        "summary": "Everything in standard, stronger visibility and author standing, professional tools.",
+        "features": {
+          "standard": "Everything in standard",
+          "visibility": "Stronger visibility and author standing",
+          "aiTranslation": "AI translation",
+          "stats": "Daily statistics",
+          "tools": "Professional author tools"
+        }
+      }
+    },
+    "compare": {
+      "title": "What the plans include",
+      "note": "The table only says what each plan includes: prices, limits, and payment rules arrive together with billing.",
+      "caption": "Comparison of the free, standard, and pro plans",
+      "feature": "Capability",
+      "included": "included",
+      "excluded": "not included",
+      "rows": {
+        "read": "Reading every published article",
+        "bookmarks": "Bookmarks",
+        "follow": "Following authors",
+        "write": "Creating and publishing articles",
+        "editor": "Article editor",
+        "media": "Media inside articles",
+        "translation": "Second language version made by hand",
+        "aiTranslation": "AI translation",
+        "stats": "Daily statistics",
+        "visibility": "Stronger visibility and author standing"
+      }
+    },
+    "legal": {
+      "title": "Rules",
+      "offer": "Offer",
+      "refunds": "Refunds",
+      "requisites": "Legal details",
+      "notes": {
+        "noPayment": "There is no payment at the first launch: a subscription cannot be bought, and a promo code is not checked on this page.",
+        "readingFree": "Reading stays free for everyone.",
+        "articlesStay": "Published articles, author sections, and personal analytics stay available to read.",
+        "laterRules": "The rules for paid periods, renewals, and refunds take effect together with billing."
+      }
+    },
+    "faq": {
+      "title": "Frequent questions",
+      "items": {
+        "whyAccount": {
+          "question": "Why do I need an account if reading is free?",
+          "answer": "An account is for bookmarks, following authors, and your own articles. Published material can be read without one."
+        },
+        "howToWrite": {
+          "question": "How do I start writing at the first launch?",
+          "answer": "Press «Create article»: basic authoring opens without payment and without manual approval."
+        },
+        "prices": {
+          "question": "Why are there no prices on this page?",
+          "answer": "The first launch is free. The plans are shown so the future paid tiers are visible; prices arrive together with billing."
+        },
+        "myArticles": {
+          "question": "What happens to my articles once paid plans arrive?",
+          "answer": "Published articles stay published, and your own articles, rating, and personal analytics stay readable."
+        },
+        "moderation": {
+          "question": "How does review work?",
+          "answer": "The review procedure is described in the publication rules and does not depend on the plan."
+        },
+        "refunds": {
+          "question": "Can I get my money back?",
+          "answer": "There are no payments at the first launch, so there is nothing to refund. The refund procedure is described separately and starts working together with billing."
+        }
+      }
+    },
+    "states": {
+      "empty": {
+        "title": "Plans are temporarily unavailable",
+        "description": "Refresh the page or contact the editorial team."
+      }
+    }
+  },
   "myArticles": {
     "pageTitle": "My articles",
     "eyebrow": "Author workspace",
@@ -241,6 +358,7 @@
   },
   "footer": {
     "about": "About",
+    "pricing": "Plans and pricing",
     "contentRules": "Publication rules",
     "offer": "Offer",
     "privacy": "Privacy policy",
@@ -256,6 +374,67 @@
     "authors": "Authors"
   },
   "admin": {
+    "jobs": {
+      "title": "Background jobs",
+      "description": "Queue-wide job list with statuses, queue metrics and a job card.",
+      "refresh": "Refresh",
+      "metricDepth": "Queue depth",
+      "metricOldest": "Oldest pending job",
+      "metricFailureRate": "Failure rate for 24 hours",
+      "noPending": "The queue is empty",
+      "filterKind": "Kind",
+      "filterStatus": "Status",
+      "filterPeriod": "Period",
+      "filterObject": "Object identifier",
+      "filterStuck": "Stuck only",
+      "allKinds": "All kinds",
+      "sort": "Sorting",
+      "sortCreatedAt": "By creation",
+      "sortDuration": "By duration",
+      "sortAttempts": "By attempts",
+      "created": "Created",
+      "attempts": "Attempts",
+      "duration": "Duration",
+      "empty": "No failed or stuck jobs",
+      "error": "Could not load the job queue.",
+      "conflict": "The job has already been retried or finished — refresh the list.",
+      "limit": "No more than {limit} jobs can be retried at once.",
+      "ownerOnly": "Actions belong to the owner.",
+      "retry": "Retry",
+      "cancel": "Cancel",
+      "close": "Close",
+      "confirm": "Confirm",
+      "reason": "Cancellation reason",
+      "cancelTitle": "Cancel the job",
+      "cancelHint": "Cancelling the “{kind}” job can leave the object in an intermediate state.",
+      "bulkRetry": "Retry selected ({count})",
+      "bulkRetryTitle": "Retry failed jobs",
+      "bulkRetryHint": "{count} jobs will be retried: {kinds}. This puts load on external providers.",
+      "openObject": "Open the object",
+      "parameters": "Parameters",
+      "noParameters": "No parameters",
+      "attemptsHistory": "Attempt history",
+      "noAttempts": "No attempts yet",
+      "actionsHistory": "Retries and cancellations",
+      "noActions": "No actions were taken",
+      "period": {
+        "24h": "24 hours",
+        "7d": "7 days",
+        "30d": "30 days"
+      },
+      "status": {
+        "queued": "Queued",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "stuck": "Stuck"
+      },
+      "action": {
+        "job.retry": "Retry",
+        "job.cancel": "Cancellation"
+      }
+    },
     "dashboard": "Dashboard",
     "articles": "Articles",
     "tags": "Tags",
@@ -264,6 +443,40 @@
     "statistics": "Statistics",
     "moderation": "Moderation",
     "settings": "Settings",
+    "systemSettings": {
+      "eyebrow": "Operations",
+      "title": "System settings",
+      "description": "Providers, domains and parameters the system currently runs with. Secrets are never shown: only presence and a mask.",
+      "readOnly": "Read only: until stage 4 settings come from environment variables and releases.",
+      "adminNote": "Changes are made by the owner.",
+      "ownerNote": "Changing settings from the interface arrives in stage 4.",
+      "groups": {
+        "ai": "AI",
+        "payments": "Payments",
+        "mail": "Mail",
+        "storage": "Storage",
+        "domains": "Domains and locales",
+        "limits": "Limits"
+      },
+      "error": "Could not load settings.",
+      "retry": "Retry",
+      "adapter": "Active adapter",
+      "adapterMissing": "The provider for this group is not connected yet.",
+      "source": {
+        "ENV": "environment variable",
+        "CODE": "code parameter"
+      },
+      "secret": "secret",
+      "notSet": "not set",
+      "none": {
+        "ai": "No AI parameters yet: the provider is connected in a separate stage.",
+        "payments": "No payment parameters yet: paid launch is a separate stage.",
+        "mail": "No mail parameters.",
+        "storage": "No storage parameters yet: object storage is not connected.",
+        "domains": "No domain parameters.",
+        "limits": "Rate limits are not implemented in code yet; values ship with releases, not settings."
+      }
+    },
     "articlesTitle": "Article management",
     "articlesDescription": "View and manage system articles",
     "tagsTitle": "Tag management",
@@ -436,6 +649,56 @@
     "userHandleLabel": "User handle",
     "reasonPlaceholder": "Enter grant reason",
     "revokeReasonPlaceholder": "Revoke reason",
+    "mail": {
+      "title": "Mail",
+      "description": "History of sent mail and its delivery status. Secrets are never shown.",
+      "providerWaiting": "The mail provider is unavailable, messages are waiting in the queue.",
+      "filterTemplate": "Template",
+      "filterStatus": "Status",
+      "filterPeriod": "Period",
+      "filterRecipient": "Recipient",
+      "filterQuery": "Subject or messageId",
+      "allStatuses": "All statuses",
+      "period7": "7 days",
+      "period30": "30 days",
+      "status": {
+        "queued": "Queued",
+        "sent": "Sent",
+        "bounced": "Not delivered",
+        "failed": "Failed"
+      },
+      "columnTime": "Time",
+      "columnTemplate": "Template",
+      "columnRecipient": "Recipient",
+      "columnSubject": "Subject",
+      "columnStatus": "Status",
+      "columnProvider": "Provider",
+      "recipientHidden": "Address is not shown",
+      "loading": "Loading mail",
+      "empty": "No mail matches this filter",
+      "loadError": "The mail history could not be loaded.",
+      "retry": "Try again",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}",
+      "resendSelected": "Resend selected ({count})",
+      "resend": "Resend",
+      "resendDone": "Messages resent: {count}",
+      "limitExceeded": "No more than {limit} messages can be resent at once.",
+      "conflict": "This message has already been resent.",
+      "confirmTitle": "Resend",
+      "confirmBody": "Messages to send: {count}. Templates: {templates}. Recipients may receive duplicates.",
+      "confirmSecrets": "Messages with one-time codes and login links are excluded automatically.",
+      "confirmSubmit": "Send",
+      "cancel": "Cancel",
+      "backToList": "Back to the mail list",
+      "queuedAt": "Queued at",
+      "sentAt": "Sent at",
+      "errorClass": "Error class",
+      "bodyTitle": "Message body",
+      "bodyHidden": "The message body is available to analyst, admin and owner only.",
+      "eventsTitle": "Delivery history"
+    },
     "audit": {
       "eyebrow": "Service journal",
       "title": "Audit",
