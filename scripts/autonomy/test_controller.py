@@ -111,6 +111,72 @@ class CompletionTests(unittest.TestCase):
         self.receipt["criteria"] = []
         self.assertIn("criteria", c.validate(self.receipt, self.facts))
 
+    def test_receipt_commit_on_top_of_tested_head_needs_controller_confirmation(self):
+        # Итог задачи, дописанный в ветку, сдвигает head: сам контроллер решает, что сдвинули.
+        facts = copy.deepcopy(self.facts)
+        facts["pr"]["head_sha"] = "f" * 40
+        facts["ci"] = {"sha": "f" * 40, "passed": True}
+        self.assertIn("pr", c.validate(self.receipt, facts))
+        facts["head_receipt_only"] = True
+        self.assertEqual(c.validate(self.receipt, facts), [])
+        self.assertEqual(c.validate(self.receipt, {**facts, "state": "OPEN"}, "merge"), [])
+
+    def test_ci_must_be_green_on_the_live_head_not_on_the_earlier_tested_sha(self):
+        facts = copy.deepcopy(self.facts)
+        facts["pr"]["head_sha"] = "f" * 40
+        facts["head_receipt_only"] = True
+        self.assertIn("ci", c.validate(self.receipt, facts))
+
+
+class HeadReceiptOnlyTests(unittest.TestCase):
+    """Что именно дописали в ветку поверх проверенного head, читается из git, не из текста агента."""
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.root, capture_output=True, text=True, check=True).stdout.strip()
+
+    def commit(self, path, body):
+        target = Path(self.root) / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body)
+        self.git("add", "-A")
+        self.git("-c", "user.email=test@example.invalid", "-c", "user.name=test", "commit", "-q", "-m", path)
+        return self.git("rev-parse", "HEAD")
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = self.directory.name
+        self.git("init", "-q", "-b", "app")
+        self.live = c.Live({"repo": self.root})
+        self.tested = self.commit("server/src/feature.ts", "export const feature = 1\n")
+
+    def test_own_finalization_written_after_the_work_is_accepted(self):
+        for path in ("docs/reports/tasks/T-123.json", "docs/reports/tasks/T-123.md",
+                     "docs/reports/2026-09-20-t123-report.md"):
+            with self.subTest(path=path):
+                self.git("reset", "-q", "--hard", self.tested)
+                head = self.commit(path, "финализация\n")
+                self.assertTrue(self.live.head_receipt_only(self.tested, head, "T-123"))
+
+    def test_code_or_another_task_receipt_on_top_is_rejected(self):
+        for path in ("server/src/feature.ts", "docs/reports/tasks/T-456.json",
+                     "docs/spec/00-registries/roles.md", "docs/plans/2026-09-20-plan.md",
+                     "docs/reports/autonomy/2026-09-20.md", "docs/reports/evidence/probe.json"):
+            with self.subTest(path=path):
+                self.git("reset", "-q", "--hard", self.tested)
+                head = self.commit(path, "changed\n")
+                self.assertFalse(self.live.head_receipt_only(self.tested, head, "T-123"))
+
+    def test_head_that_does_not_build_on_the_tested_commit_is_rejected(self):
+        self.git("checkout", "-q", "--orphan", "rewritten")
+        rewritten = self.commit("docs/reports/tasks/T-123.json", '{"task_id": "T-123"}\n')
+        self.assertFalse(self.live.head_receipt_only(self.tested, rewritten, "T-123"))
+
+    def test_unknown_or_malformed_shas_are_rejected_without_network(self):
+        for tested, head in [(None, "f" * 40), ("b" * 40, "short"), ("b" * 40, "f" * 40)]:
+            with self.subTest(tested=tested, head=head):
+                self.assertFalse(self.live.head_receipt_only(tested, head, "T-123"))
+
 
 class LedgerTests(unittest.TestCase):
     def test_completed_duplicate_never_readmitted(self):
@@ -161,6 +227,23 @@ class ReconciliationTests(unittest.TestCase):
         self.assertIn("--merge", calls[0])
         self.assertNotIn("--squash", calls[0])
         self.assertEqual(calls[0][calls[0].index("--match-head-commit") + 1], "b" * 40)
+
+    def test_merge_matches_the_live_head_carrying_the_receipt_commit(self):
+        open_facts = copy.deepcopy(self.facts)
+        open_facts["state"] = "OPEN"
+        open_facts["pr"]["head_sha"] = "f" * 40
+        open_facts["ci"] = {"sha": "f" * 40, "passed": True}
+        open_facts["head_receipt_only"] = True
+        class OpenLive(c.Live):
+            def facts(inner, receipt):
+                return open_facts
+        calls = []
+        with tempfile.TemporaryDirectory() as root:
+            live = OpenLive({"repo": root, "github_repo": "example/project"})
+            with patch.object(c, "command", side_effect=lambda args, *rest, **kw: calls.append(args)):
+                result = live.transition(self.receipt, "merge", root)
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(calls[0][calls[0].index("--match-head-commit") + 1], "f" * 40)
 
     def test_unconfirmed_running_action_is_not_replayed_after_restart(self):
         with tempfile.TemporaryDirectory() as directory:
