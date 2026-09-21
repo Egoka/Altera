@@ -142,6 +142,12 @@ const graphQLError = (code: string) =>
 
 const stateOf = (page: Page) => page.locator("[data-dashboard-state]")
 
+// Опубликованные материалы фикстур убираются: следующие файлы проверяют пустые каталоги на
+// той же базе (`public-feeds.spec.ts`, «пустая база»).
+test.afterAll(async () => {
+  await withPrisma((prisma) => prisma.article.deleteMany({ where: { slug: { startsWith: "t030-" } } }))
+})
+
 test.describe("сводка кабинета: строки состояний §8", () => {
   test("«Нет доступа»: гость уходит на вход с путём возврата", async ({ page }) => {
     await page.goto("/me")

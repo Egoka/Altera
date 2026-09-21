@@ -20,6 +20,7 @@ export const useAccountDashboardState = () => useState<AccountDashboard | null>(
  */
 export default defineNuxtRouteMiddleware(async () => {
   const state = useAccountDashboardState()
+  const session = useAuthSession()
   // Сервер уже прочитал сводку и передал её в `useState`: при гидратации второй запрос не нужен.
   if (import.meta.client && useNuxtApp().isHydrating && state.value) return
 
@@ -27,7 +28,7 @@ export default defineNuxtRouteMiddleware(async () => {
   try {
     envelope = (await useGraphQL(GetAccountDashboardDocument)) as GraphQLEnvelope
   } catch {
-    throw createError({ statusCode: 500, statusMessage: "Account dashboard is unavailable" })
+    throw createError({ statusCode: 500, statusMessage: "Account dashboard is unavailable", fatal: true })
   }
 
   const account = envelope.data?.me
@@ -35,6 +36,7 @@ export default defineNuxtRouteMiddleware(async () => {
   if (!account) {
     if (extensions?.code === "FORBIDDEN") return navigateTo("/me/archived", { replace: true, redirectCode: 302 })
     if (extensions?.code === "UNAUTHENTICATED") {
+      session.clear()
       return navigateTo({ path: "/login", query: { next: "/me" } }, { replace: true, redirectCode: 302 })
     }
   }
@@ -46,10 +48,12 @@ export default defineNuxtRouteMiddleware(async () => {
 
   if (!account?.subscription || envelope.errors?.length) {
     const requestId = typeof extensions?.requestId === "string" ? extensions.requestId : null
+    // `fatal`: без него клиентский переход только отменяется и страница ошибки не показывается.
     throw createError({
       statusCode: 500,
       statusMessage: "Account dashboard is unavailable",
-      data: requestId ? { requestId } : undefined
+      data: requestId ? { requestId } : undefined,
+      fatal: true
     })
   }
 
