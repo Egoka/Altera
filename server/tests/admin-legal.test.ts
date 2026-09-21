@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import { Prisma } from "../src/generated/prisma"
 import type { GraphQLContext } from "../src/prisma"
 import {
   createLegalDraft,
@@ -35,8 +36,12 @@ const row = (overrides: Record<string, unknown> = {}) => ({
   ...overrides
 })
 
-function context(role: TestRole | null, options: { draft?: Record<string, unknown> | null; latest?: number } = {}) {
+function context(
+  role: TestRole | null,
+  options: { draft?: Record<string, unknown> | null; latest?: number; staleWrite?: boolean } = {}
+) {
   const calls: string[] = []
+  let written: Record<string, unknown> = {}
   const legalText = {
     findMany: vi.fn(async () => [
       { kind: "terms", locale: "ru", version: 2, status: "published", publishedAt: updatedAt },
@@ -53,14 +58,15 @@ function context(role: TestRole | null, options: { draft?: Record<string, unknow
       calls.push("create")
       return row(data)
     }),
-    update: vi.fn(async ({ data }: { data: Record<string, unknown> }) => {
-      calls.push(`update ${JSON.stringify(data)}`)
-      return row({ ...options.draft, ...data })
-    }),
-    updateMany: vi.fn(async (args: unknown) => {
+    updateMany: vi.fn(async (args: { where: { id?: string }; data: Record<string, unknown> }) => {
       calls.push(`updateMany ${JSON.stringify(args)}`)
+      if (args.where.id) {
+        if (options.staleWrite) return { count: 0 }
+        written = { ...written, ...args.data }
+      }
       return { count: 1 }
-    })
+    }),
+    findUniqueOrThrow: vi.fn(async () => row({ ...options.draft, ...written }))
   }
   const auditLog = { create: vi.fn(async () => ({ id: "audit-1" })) }
   const user = {
@@ -191,6 +197,19 @@ describe("черновик", () => {
     expect(world.calls).toEqual([expect.stringContaining('"summaryOfChanges":"Правка"')])
   })
 
+  it("два owner одновременно создают первый черновик: уникальный номер даёт CONFLICT, а не 500", async () => {
+    const world = context("owner")
+    world.ctx.prisma.$transaction = vi.fn(async () => {
+      throw new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test"
+      })
+    }) as never
+    await expect(createLegalDraft(world.ctx, draftInput)).rejects.toMatchObject({
+      extensions: { code: "CONFLICT", expected: "new-draft", actual: "draft-exists" }
+    })
+  })
+
   it("правка уже опубликованного черновика — CONFLICT", async () => {
     await expect(
       createLegalDraft(context("owner").ctx, { ...draftInput, draftUpdatedAt: updatedAt.toISOString() })
@@ -258,6 +277,16 @@ describe("публикация", () => {
       expect(world.auditLog.create).not.toHaveBeenCalled()
       expect(world.cache.delByTags).not.toHaveBeenCalled()
     }
+  })
+
+  it("параллельная публикация того же черновика: условный UPDATE не проходит — CONFLICT без аудита", async () => {
+    const world = context("owner", { draft: row({ body: "<p>v3</p>" }), staleWrite: true })
+    await expect(publishLegalDraft(world.ctx, publishInput, now)).rejects.toMatchObject({
+      extensions: { code: "CONFLICT", actual: "changed" }
+    })
+    expect(world.calls[1]).toContain(`"updatedAt":"${updatedAt.toISOString()}"`)
+    expect(world.auditLog.create).not.toHaveBeenCalled()
+    expect(world.cache.delByTags).not.toHaveBeenCalled()
   })
 
   it("неизвестная версия — NOT_FOUND", async () => {

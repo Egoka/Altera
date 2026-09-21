@@ -1,4 +1,11 @@
-import type { LegalText, LegalTextKind, LegalTextStatus, Locale, Prisma, Role } from "../generated/prisma"
+import {
+  Prisma,
+  type LegalText,
+  type LegalTextKind,
+  type LegalTextStatus,
+  type Locale,
+  type Role
+} from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission, ensureRole } from "../exceptions/permissions"
 import type { GraphQLContext } from "../prisma"
@@ -271,6 +278,28 @@ function safeBody(body: string, requestId: string): string {
 const conflict = (requestId: string, expected: string, actual: string) =>
   createApiError("CONFLICT", { requestId, entity: "legalText", expected, actual })
 
+/** Два `owner` одновременно создали первый черновик вида: второй упирается в уникальный номер. */
+const isUniqueViolation = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002"
+
+/**
+ * Правка черновика только при неизменной метке `updatedAt`: условие в самом `UPDATE`, чтобы
+ * параллельная правка или публикация не проскочила между чтением и записью.
+ */
+async function updateDraft(
+  tx: LegalTx,
+  draft: { id: string; updatedAt: Date },
+  data: Prisma.LegalTextUpdateManyMutationInput,
+  requestId: string
+): Promise<SelectedRow> {
+  const { count } = await tx.legalText.updateMany({
+    where: { id: draft.id, status: "draft", updatedAt: draft.updatedAt },
+    data
+  })
+  if (count === 0) throw conflict(requestId, draft.updatedAt.toISOString(), "changed")
+  return tx.legalText.findUniqueOrThrow({ where: { id: draft.id }, select: rowSelect })
+}
+
 async function nextVersion(tx: LegalTx, kind: LegalTextKind, locale: Locale): Promise<number> {
   const latest = await tx.legalText.findFirst({
     where: { kind, locale, status: { not: "draft" } },
@@ -292,7 +321,7 @@ export async function createLegalDraft(
   const body = safeBody(input.body, ctx.requestId)
   const summaryOfChanges = requiredText(input.summaryOfChanges, "summaryOfChanges", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  const save = ctx.prisma.$transaction(async (tx) => {
     const existing = await tx.legalText.findFirst({
       where: { kind: input.kind, locale: input.locale, status: "draft" },
       select: { id: true, updatedAt: true }
@@ -303,7 +332,7 @@ export async function createLegalDraft(
     if (!existing && input.draftUpdatedAt) throw conflict(ctx.requestId, "draft", "missing")
 
     const saved = existing
-      ? await tx.legalText.update({ where: { id: existing.id }, data: { body, summaryOfChanges }, select: rowSelect })
+      ? await updateDraft(tx, existing, { body, summaryOfChanges }, ctx.requestId)
       : await tx.legalText.create({
           data: {
             kind: input.kind,
@@ -337,6 +366,13 @@ export async function createLegalDraft(
     })
     return toRow(saved)
   })
+
+  try {
+    return await save
+  } catch (error: unknown) {
+    if (isUniqueViolation(error)) throw conflict(ctx.requestId, "new-draft", "draft-exists")
+    throw error
+  }
 }
 
 /**
@@ -369,9 +405,10 @@ export async function publishLegalDraft(
       where: { kind: input.kind, locale: input.locale, status: "published" },
       data: { status: "previous" }
     })
-    const saved = await tx.legalText.update({
-      where: { id: draft.id },
-      data: {
+    const saved = await updateDraft(
+      tx,
+      draft,
+      {
         status: "published",
         version,
         isMaterial: input.isMaterial,
@@ -379,8 +416,8 @@ export async function publishLegalDraft(
         publishedByActorId: actor.id,
         publishedByRole: actor.role as Role
       },
-      select: rowSelect
-    })
+      ctx.requestId
+    )
 
     await tx.auditLog.create({
       data: {

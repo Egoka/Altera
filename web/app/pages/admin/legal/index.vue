@@ -16,7 +16,7 @@
   const { t } = useI18n()
   const route = useRoute()
   const { summary } = useAdminDashboard()
-  const { loading, failed, requestId, loadKinds, loadVersions } = useAdminLegal()
+  const { loading, failed, requestId, loadIndex } = useAdminLegal()
 
   definePageMeta({ i18n: false, layout: "admin", middleware: ["admin", "admin-legal"] })
   useHead({ meta: [{ name: "robots", content: "noindex,nofollow" }] })
@@ -34,14 +34,10 @@
   const stateOf = (item: AdminLegalKind) => item.locales.find((state) => state.locale === locale.value)
 
   const load = async () => {
-    const [loadedKinds, loadedVersions] = await Promise.all([
-      loadKinds(),
-      loadVersions({ kind: kind.value, locale: locale.value, status: status.value })
-    ])
-    if (loadedKinds && loadedVersions) {
-      kinds.value = loadedKinds
-      versions.value = loadedVersions
-    }
+    const loaded = await loadIndex({ kind: kind.value, locale: locale.value, status: status.value })
+    if (!loaded) return
+    kinds.value = loaded.adminLegalKinds
+    versions.value = loaded.adminLegalVersions
   }
 
   const applyFilters = async () => {

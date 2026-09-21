@@ -85,7 +85,21 @@ export const useAdminLegal = () => {
     }
   }
 
-  const loadKinds = async () => (await read(() => useGraphQL(GetAdminLegalKindsDocument, {})))?.adminLegalKinds ?? null
+  /**
+   * Список раздела: виды и версии одним состоянием — отказ любого запроса показывает ошибку с
+   * его `requestId`, а скелет держится до ответа обоих.
+   */
+  const loadIndex = (filter: GetAdminLegalVersionsQueryVariables) =>
+    read(async () => {
+      const [kinds, versions] = await Promise.all([
+        useGraphQL(GetAdminLegalKindsDocument, {}),
+        useGraphQL(GetAdminLegalVersionsDocument, filter)
+      ])
+      return {
+        data: kinds.data && versions.data ? { ...kinds.data, ...versions.data } : null,
+        errors: [...(kinds.errors ?? []), ...(versions.errors ?? [])]
+      }
+    })
 
   const loadVersions = async (filter: GetAdminLegalVersionsQueryVariables) =>
     (await read(() => useGraphQL(GetAdminLegalVersionsDocument, filter)))?.adminLegalVersions ?? null
@@ -102,5 +116,5 @@ export const useAdminLegal = () => {
   const publish = async (input: PublishLegalVersionInput) =>
     (await write(() => useGraphQL(PublishLegalVersionDocument, { input })))?.publishLegalVersion ?? null
 
-  return { loading, failed, requestId, saving, failure, loadKinds, loadVersions, loadVersion, saveDraft, publish }
+  return { loading, failed, requestId, saving, failure, loadIndex, loadVersions, loadVersion, saveDraft, publish }
 }

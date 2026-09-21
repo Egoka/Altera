@@ -97,7 +97,7 @@ const requestId = ref<string | null>(null)
 const saving = ref(false)
 const failure = ref<Record<string, unknown> | null>(null)
 const legal = {
-  loadKinds: vi.fn(),
+  loadIndex: vi.fn(),
   loadVersions: vi.fn(),
   loadVersion: vi.fn(),
   saveDraft: vi.fn(),
@@ -116,7 +116,7 @@ beforeEach(() => {
   failure.value = null
   route = { query: {}, params: {} }
   vi.clearAllMocks()
-  legal.loadKinds.mockResolvedValue(kindsFixture)
+  legal.loadIndex.mockResolvedValue({ adminLegalKinds: kindsFixture, adminLegalVersions: [versionRow()] })
   legal.loadVersions.mockResolvedValue([versionRow(), versionRow({ id: "text-2", version: 2, status: "published" })])
   legal.loadVersion.mockResolvedValue(detailFixture())
   vi.stubGlobal("definePageMeta", vi.fn())
@@ -170,7 +170,7 @@ describe("список /admin/legal", () => {
     const wrapper = mount(AdminLegalIndex, { global: { stubs } })
     await flushPromises()
 
-    expect(legal.loadVersions).toHaveBeenCalledWith({ kind: "terms", locale: "ru", status: "draft" })
+    expect(legal.loadIndex).toHaveBeenCalledWith({ kind: "terms", locale: "ru", status: "draft" })
     expect(wrapper.findAll("[data-legal-kind]")).toHaveLength(1)
     const card = wrapper.get('[data-legal-kind="terms"]')
     expect(card.find("[data-legal-current]").exists()).toBe(true)
