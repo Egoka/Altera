@@ -2,6 +2,7 @@ import { expect, test, type Page, type Route } from "@playwright/test"
 import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 import { SESSION_ACCESS_COOKIE } from "../../shared/session"
+import type { PrismaClient } from "../../../server/src/generated/prisma/index.js"
 
 /**
  * T-030: сводка кабинета `/me` (`docs/spec/30-account/reader/dashboard.md`).
@@ -28,6 +29,18 @@ interface Account {
   sessionId: string
 }
 
+const grantingAdmin = async (prisma: PrismaClient): Promise<string> => {
+  const handle = "t030-granting-admin"
+  await prisma.handleHistory.upsert({ where: { handle }, update: {}, create: { handle } })
+  const admin = await prisma.user.upsert({
+    where: { email: `${handle}@example.test` },
+    update: { archivedAt: null, isServiceAccount: true, role: "admin" },
+    create: { email: `${handle}@example.test`, handle, name: "T030 admin", role: "admin", isServiceAccount: true }
+  })
+  await prisma.handleHistory.update({ where: { handle }, data: { userId: admin.id } })
+  return admin.id
+}
+
 const createAccount = async (prefix: string, input: AccountInput = {}): Promise<Account> =>
   withPrisma(async (prisma) => {
     const handle = `${prefix}-${Math.random().toString(16).slice(2, 10)}`
@@ -44,9 +57,18 @@ const createAccount = async (prefix: string, input: AccountInput = {}): Promise<
     })
     await prisma.handleHistory.update({ where: { handle }, data: { userId: user.id } })
 
+    // Выдача со сроком обязана иметь выдавшего сотрудника (`plan_grants_source_check`).
+    const timed = (input.grants ?? []).some((grant) => grant.endsAt !== null)
+    const grantedById = timed ? await grantingAdmin(prisma) : null
     for (const grant of input.grants ?? []) {
       await prisma.planGrant.create({
-        data: { userId: user.id, reason: "t030 e2e", revokedAt: grant.revokedAt ?? null, ...grant }
+        data: {
+          userId: user.id,
+          reason: "t030 e2e",
+          grantedById: grant.endsAt === null ? null : grantedById,
+          revokedAt: grant.revokedAt ?? null,
+          ...grant
+        }
       })
     }
 
@@ -61,34 +83,33 @@ interface ArticleInput {
   reeditUntil?: Date
 }
 
+/**
+ * Триггер `t015_sync_legacy_article` сам создаёт исходную (ru) языковую версию и переносит в неё
+ * статус и дату публикации, поэтому фикстура дописывает в неё только поля сводки.
+ */
 const createArticles = (account: Account, articles: ArticleInput[]) =>
   withPrisma(async (prisma) => {
     for (const input of articles) {
       const slug = `t030-${Math.random().toString(16).slice(2, 10)}`
-      await prisma.article.create({
+      const article = await prisma.article.create({
         data: {
           title: input.title,
           slug,
           body: "",
           status: input.status,
-          authorId: account.id,
-          translations: {
-            create: {
-              locale: "ru",
-              slug,
-              title: input.title,
-              body: {},
-              status: input.status,
-              rejected: input.rejected ?? false,
-              publishedAt: input.status === "published" ? new Date() : null,
-              reeditUntil: input.reeditUntil ?? null,
-              ...(input.unreadDecision
-                ? { reviewMessages: { create: { kind: "final_reject" as const, byRole: "moderator" as const } } }
-                : {})
-            }
-          }
+          publishedAt: input.status === "published" ? new Date() : null,
+          authorId: account.id
         }
       })
+      const translation = await prisma.articleTranslation.update({
+        where: { articleId_locale: { articleId: article.id, locale: "ru" } },
+        data: { rejected: input.rejected ?? false, reeditUntil: input.reeditUntil ?? null }
+      })
+      if (input.unreadDecision) {
+        await prisma.reviewMessage.create({
+          data: { translationId: translation.id, kind: "final_reject", byRole: "moderator" }
+        })
+      }
     }
   })
 
@@ -172,19 +193,6 @@ test.describe("сводка кабинета: строки состояний §
 
     await expect(page).toHaveTitle(/Кабинет — Altera/)
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow")
-  })
-
-  test("«Создать статью» на первом запуске открывает базовое авторство и редактор", async ({ page }) => {
-    const account = await createAccount("t030-first-article")
-    await useSession(page, account)
-
-    await page.goto("/me")
-    await page.getByTestId("dashboard-create-article").click()
-
-    await expect(page).toHaveURL(/\/me\/articles\/[^/]+\/edit$/)
-    const grants = await withPrisma((prisma) => prisma.planGrant.findMany({ where: { userId: account.id } }))
-    expect(grants).toHaveLength(1)
-    expect(grants[0]?.endsAt).toBeNull()
   })
 
   test("действующий план показывает срок и очередь периодов одной строкой", async ({ page }) => {

@@ -72,4 +72,17 @@ describe("selectAttention", () => {
 
     expect(items).toEqual([])
   })
+
+  it("checks every language version of a material", () => {
+    const base = article("bilingual", { locale: "en", status: "published" })
+    const withRussian = {
+      ...base,
+      translations: [
+        ...base.translations,
+        { ...base.translations[0]!, id: "bilingual-ru", locale: "ru", status: "review" }
+      ]
+    } as DashboardArticleFieldsFragment
+
+    expect(selectAttention([withRussian], NOW).map((item) => item.translation.id)).toEqual(["bilingual-ru"])
+  })
 })

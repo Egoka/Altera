@@ -20,6 +20,8 @@ export const useAccountDashboardState = () => useState<AccountDashboard | null>(
  */
 export default defineNuxtRouteMiddleware(async () => {
   const state = useAccountDashboardState()
+  // Сервер уже прочитал сводку и передал её в `useState`: при гидратации второй запрос не нужен.
+  if (import.meta.client && useNuxtApp().isHydrating && state.value) return
 
   let envelope: GraphQLEnvelope
   try {
@@ -29,23 +31,26 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   const account = envelope.data?.me
+  const extensions = envelope.errors?.[0]?.extensions
   if (!account) {
-    const extensions = envelope.errors?.[0]?.extensions
     if (extensions?.code === "FORBIDDEN") return navigateTo("/me/archived", { replace: true, redirectCode: 302 })
     if (extensions?.code === "UNAUTHENTICATED") {
       return navigateTo({ path: "/login", query: { next: "/me" } }, { replace: true, redirectCode: 302 })
     }
+  }
 
+  // Служебную запись определяет роль, а не пустой план: `subscription` пуст и при отказе поля.
+  if (account && !personalRoles.has(account.role)) {
+    return navigateTo("/admin", { replace: true, redirectCode: 302 })
+  }
+
+  if (!account?.subscription || envelope.errors?.length) {
     const requestId = typeof extensions?.requestId === "string" ? extensions.requestId : null
     throw createError({
       statusCode: 500,
       statusMessage: "Account dashboard is unavailable",
       data: requestId ? { requestId } : undefined
     })
-  }
-
-  if (!personalRoles.has(account.role) || !account.subscription) {
-    return navigateTo("/admin", { replace: true, redirectCode: 302 })
   }
 
   state.value = account
