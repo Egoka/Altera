@@ -12,10 +12,14 @@
   const localePath = useLocalePath()
   const { locale, t } = useI18n()
 
+  // `fatal: true` нужен клиентскому переходу: без него отказ API на уже открытом сайте не
+  // показывает ни 404, ни 500, и читатель остаётся на прежней странице. `error.md` §3 обещает
+  // страницу 500 на любом маршруте при `INTERNAL_ERROR`, `not-found.md` §3 — 404 по месту адреса.
   const throwRouteError = (routeError: { statusCode: 404 | 500; code: string; requestId?: string }) => {
     throw createError({
       statusCode: routeError.statusCode,
       statusMessage: routeError.code,
+      fatal: true,
       data: routeError.requestId ? { requestId: routeError.requestId } : undefined
     })
   }

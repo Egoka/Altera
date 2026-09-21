@@ -1,4 +1,4 @@
-import { computed, onMounted, onUnmounted, ref } from "vue"
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue"
 
 export interface CachedPage {
   path: string
@@ -106,14 +106,19 @@ export const useOfflinePage = () => {
     }
   }
 
-  const retry = () => {
+  const retry = async () => {
     if (typeof window === "undefined") return
     retrying.value = true
+    // Индикатор попытки (§8 «Загрузка») успевает отрисоваться только до начала перехода:
+    // после `assign` документ уже уходит, и обновление DOM читателю не достаётся.
+    await nextTick()
     window.location.assign(requestedPath.value ?? "/")
   }
 
   // Сеть вернулась — страница сама уходит на исходный адрес (§3, §7).
-  const onOnline = () => retry()
+  const onOnline = () => {
+    void retry()
+  }
 
   onMounted(() => {
     load()

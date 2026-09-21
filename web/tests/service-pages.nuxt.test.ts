@@ -311,6 +311,24 @@ describe("офлайн-страница", () => {
     expect(wrapper.get('[data-zone="header"]').attributes("data-static")).toBe("true")
   })
 
+  it("строка «Загрузка»: повтор показывает индикатор попытки до перехода", async () => {
+    const assign = vi.fn()
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { assign, origin: "http://localhost", reload: vi.fn() }
+    })
+    routeQuery.value = { from: "/culture/essay" }
+
+    const wrapper = await render(OfflinePage)
+    await flushPromises()
+
+    await wrapper.get('[data-testid="offline-retry"]').trigger("click")
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="offline-retrying"]').exists()).toBe(true)
+    expect(assign).toHaveBeenCalledWith("/culture/essay")
+  })
+
   it("запрошенный адрес вне кеша получает свою строку", async () => {
     const cache = { match: vi.fn().mockResolvedValue(undefined), keys: vi.fn().mockResolvedValue([]) }
     vi.stubGlobal("caches", { keys: vi.fn().mockResolvedValue([]), match: cache.match, open: vi.fn() })

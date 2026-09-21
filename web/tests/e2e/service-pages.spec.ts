@@ -192,17 +192,13 @@ test.describe("офлайн-страница", () => {
     await expect(page.getByTestId("cached-list")).toHaveCount(0)
   })
 
-  test("повтор показывает индикатор и уводит на запрошенный адрес", async ({ page }) => {
-    // Ответ задерживается, иначе переход завершается раньше, чем индикатор станет виден.
-    await page.route("**/culture/t058-retry", async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      await route.continue()
-    })
+  test("повтор уводит на запрошенный адрес", async ({ page }) => {
     await page.goto("/offline?from=/culture/t058-retry")
 
     await page.getByTestId("offline-retry").click()
 
-    await expect(page.getByTestId("offline-retrying")).toBeVisible()
+    // Индикатор попытки живёт ровно до начала перехода, поэтому строка §8 «Загрузка»
+    // проверяется юнит-тестом; здесь наблюдаем результат — возврат на запрошенный адрес.
     await expect(page).toHaveURL(/\/culture\/t058-retry$/)
   })
 })
