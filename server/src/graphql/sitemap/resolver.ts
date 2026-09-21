@@ -2,6 +2,7 @@ import type { GraphQLContext } from "../../prisma"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { publicArticleWhere } from "../../visibility/article"
+import { legalPath, PUBLIC_LEGAL_KINDS, type PublicLegalKind } from "../../legal/texts"
 
 type SitemapLocale = "ru" | "en"
 
@@ -19,8 +20,9 @@ export const SITEMAP_MAX_URLS = 50_000
 
 /**
  * Статические публичные страницы. `/me`, `/admin`, `/auth`, `/search`, предпросмотр и адреса
- * с параметрами в карту не попадают (§4); `/about` и `/legal/*` появятся здесь вместе со
- * своими страницами — сейчас таких маршрутов в вебе нет.
+ * с параметрами в карту не попадают (§4); `/about` появится здесь вместе со своей страницей.
+ * `/legal/*` перечисляются по опубликованным текстам локали, прежние редакции (`?version=`) —
+ * нет (`legal-terms.md` §10).
  */
 const STATIC_PATHS = ["/sections", "/tags", "/authors", "/pricing"] as const
 
@@ -50,7 +52,7 @@ export const collectLocaleEntries = async (ctx: GraphQLContext, locale: SitemapL
   const withSection = publicArticleWhere({ sourceLocale: locale, sectionId: { not: null } })
   const latestArticle = { where, orderBy: { updatedAt: "desc" }, take: 1, select: { updatedAt: true } } as const
 
-  const [newest, articles, sections, tags, authors] = await Promise.all([
+  const [newest, articles, sections, tags, authors, legalTexts] = await Promise.all([
     ctx.prisma.article.findFirst({ where, orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
     ctx.prisma.article.findMany({
       where: withSection,
@@ -72,15 +74,26 @@ export const collectLocaleEntries = async (ctx: GraphQLContext, locale: SitemapL
       where: { archivedAt: null, articles: { some: where } },
       orderBy: { handle: "asc" },
       select: { handle: true, articles: latestArticle }
+    }),
+    ctx.prisma.legalText.findMany({
+      where: { locale, status: "published", kind: { in: [...PUBLIC_LEGAL_KINDS] } },
+      orderBy: { kind: "asc" },
+      select: { kind: true, publishedAt: true }
     })
   ])
 
   const home: LocaleEntry = { path: "/", lastmod: iso(newest?.updatedAt), priority: SITEMAP_PRIORITY.home }
   const statics = STATIC_PATHS.map((path) => ({ path, lastmod: null, priority: SITEMAP_PRIORITY.list }))
+  const legal = legalTexts.map((text) => ({
+    path: legalPath(text.kind as PublicLegalKind),
+    lastmod: iso(text.publishedAt),
+    priority: SITEMAP_PRIORITY.list
+  }))
 
   return [
     home,
     ...statics,
+    ...legal,
     // Материал без рубрики в карту не попадает: без неё не собрать адрес его страницы.
     ...articles
       .filter((article) => article.section !== null)

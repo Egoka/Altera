@@ -516,7 +516,9 @@
     "copyright": "© 2026 Altera",
     "sections": "Sections",
     "tags": "Tags",
-    "authors": "Authors"
+    "authors": "Authors",
+    "terms": "Terms of Use",
+    "license": "Content License"
   },
   "admin": {
     "dashboard": "Dashboard",
@@ -1132,5 +1134,68 @@
     "offlineStorageUnavailable": "The browser does not allow reading saved pages.",
     "offlineSavedTitle": "Saved",
     "offlineSavedEmpty": "Nothing saved yet: the pieces you open will be available without a network."
+  },
+  "legal": {
+    "kicker": "Legal document",
+    "titles": {
+      "terms": "Terms of Use",
+      "privacy": "Personal Data Policy",
+      "content_rules": "Publishing Rules",
+      "license": "Content License"
+    },
+    "meta": {
+      "title": "{title} — Altera"
+    },
+    "versionLine": "Version {version} of {date}",
+    "changes": "What changed: {summary}",
+    "fallback": "The text is not yet published in {requested}; the {shown} version is shown.",
+    "languages": {
+      "ru": "Russian",
+      "en": "English"
+    },
+    "previous": "This is superseded version {version}. Version {current} is in effect.",
+    "openCurrent": "Open the current one",
+    "consent": {
+      "accepted": "You accepted version {version} on {date}.",
+      "reconsent": "Material version {version} has been published since: we will ask for your consent at your next sign-in."
+    },
+    "print": "Print",
+    "toc": "Contents",
+    "archive": "Version archive",
+    "archiveCurrent": "Version {version} — current",
+    "archiveItem": "Version {version} of {date}",
+    "unpublished": {
+      "title": "This document is being prepared",
+      "description": "The text will appear on this page once it is published."
+    },
+    "related": {
+      "title": "Related documents",
+      "paidServices": "Paid services terms",
+      "refunds": "Refunds",
+      "privacyContact": "Personal data question",
+      "writeEditorial": "Write to the editors"
+    },
+    "yourData": {
+      "title": "Your data",
+      "linksTitle": "In your account",
+      "export": "Export data",
+      "email": "Change email",
+      "delete": "Delete account",
+      "contact": "Questions about an archived account's data — via the editors"
+    },
+    "license": {
+      "summaryLabel": "In short",
+      "summary": {
+        "authorRights": "Rights to the work stay with the author.",
+        "platformLicense": "The platform only gets a license to publish and display it.",
+        "codeMit": "The code is MIT-licensed; the works are not."
+      },
+      "aiTraining": {
+        "title": "AI training",
+        "ban": "Using Altera's public works to train artificial intelligence models is prohibited — for the platform and for third parties alike.",
+        "allowed": "Reading, quoting and indexing by search engines are allowed.",
+        "nature": "The ban is a license condition, not a technical protection against copying. Sending text to an AI provider for review and translation is described separately and is not training."
+      }
+    }
   }
 }
