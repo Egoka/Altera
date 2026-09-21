@@ -12,6 +12,20 @@
 - `REDIS_URL` - URL подключения к Redis
 - `CACHE_TTL` - время жизни кэша в секундах (по умолчанию: 21600 = 6 часов)
 
+### Хранилище медиа (T-062)
+
+- `STORAGE_DRIVER` - `local` или `s3`. Вне production без значения используется `local`:
+  объекты лежат в `STORAGE_LOCAL_DIR` (по умолчанию `.storage`), сервер сам раздаёт их по
+  `/media/<ключ>`. В production `local` запрещён, а без значения каждая операция хранилища
+  возвращает `PROVIDER_UNAVAILABLE: storage`.
+- `STORAGE_MEDIA_BASE_URL` - префикс публичных ссылок на варианты: CDN-домен провайдера для `s3`
+  (обязателен), для `local` по умолчанию `http://localhost:$PORT/media`.
+- `STORAGE_SIGNING_SECRET` - ключ подписи ссылок локальной реализации; без него ссылки
+  действуют до перезапуска процесса.
+- `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+  `S3_FORCE_PATH_STYLE` (`true` — адрес вида `endpoint/bucket/key`) - параметры `s3`. Провайдер
+  не выбран (Q-01): адаптер работает с любым S3-совместимым API.
+
 ### JWT токены
 
 - `JWT_ACCESS_SECRET` - секретный ключ для access токенов
@@ -43,6 +57,20 @@
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` (`true`/`false`), `SMTP_USER` и `SMTP_PASSWORD`
   (задаются вместе) - параметры `smtp`. Локально это Mailpit из `docker-compose.yml`:
   SMTP `localhost:21025`, веб-интерфейс `http://localhost:28025`. Реальный провайдер — Q-01.
+
+### Хранилище медиа (T-062)
+
+- `STORAGE_DRIVER` - `local` или `s3`. Вне production без значения используется `local`:
+  объекты лежат в `STORAGE_LOCAL_DIR` (по умолчанию `.storage`), сервер сам раздаёт их по
+  `/media/<ключ>`. В production `local` запрещён, а без значения каждая операция хранилища
+  возвращает `PROVIDER_UNAVAILABLE: storage`.
+- `STORAGE_MEDIA_BASE_URL` - префикс публичных ссылок на варианты: CDN-домен провайдера для `s3`
+  (обязателен), для `local` по умолчанию `http://localhost:$PORT/media`.
+- `STORAGE_SIGNING_SECRET` - ключ подписи ссылок локальной реализации; без него ссылки
+  действуют до перезапуска процесса.
+- `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+  `S3_FORCE_PATH_STYLE` (`true` — адрес вида `endpoint/bucket/key`) - параметры `s3`. Провайдер
+  не выбран (Q-01): адаптер работает с любым S3-совместимым API.
 
 ### JWT токены
 
