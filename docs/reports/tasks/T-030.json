@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-030",
+  "issue_id": "01a0c182-339a-7810-b3f2-3c71feac0345",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-030-account-dashboard.md",
+    "sha": "ab3a96944070a5f093c3a9ea77cf3dfe37b1ef25"
+  },
+  "baseline_sha": "93b1fc2692fee9bbd0eedb91fa291483a4f43dfd",
+  "tested_sha": "01eab7b5f44e1debc66a53470b34a310662d8af7",
+  "branch": "feat/t030-account-dashboard",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t030-dashboard",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c1c5-a8ca-7084-b14c-80194c88a093",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/30-account-dashboard.spec.ts reproduces the §8 state rows of dashboard.md in Chromium against the live database: no access (guest redirected to /login?next=/me), blocked (GET /me of a self-archived session answers 302 to /me/archived), loading (bookmarks read held by a route stub so the skeleton is observable) and empty (base plan, Create article link to /me/articles/new, read invitation, no admin link, no e-mail), plan limit (expired grant: renew to /pricing, read-only note, no Create article), data error for a zone (bookmarks fail, other cards stay) and for me (500 page with requestId on client navigation); plus an active plan with its queue line and the needs-attention zone with the latest pieces. 'Not found' is not applicable per the spec and 'Paywall' is reserved. CI run 35555642245: the browser job went from 179 to 188 tests with skipped unchanged at 9 and passed rising from 170 to 179, so all nine new scenarios passed."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "The same file asserts that GET /me of an admin service record answers 302 with Location on /admin and the browser lands in the admin area. server/tests/account-dashboard.test.ts asserts that a service record gets no plan (subscription null) and that the dashboard fields are served to the owner only."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 679 passed / 25 skipped; web 481 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "server_build_ci": "passed",
+    "playwright": "not run locally: the local Docker daemon answers HTTP 500 to its own client and no local Postgres exists; the CI browser job ran the new scenarios — 179 passed / 9 skipped out of 188",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35555642245",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 193,
+    "url": "https://github.com/Egoka/Altera/pull/193",
+    "base_ref": "app",
+    "base_sha": "93b1fc2692fee9bbd0eedb91fa291483a4f43dfd",
+    "head_sha": "01eab7b5f44e1debc66a53470b34a310662d8af7",
+    "merge_sha": "2b258633dc02105431d1bd2329e34e69c268a40d"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The task adds no Prisma migration and does not change the database schema; the new resolvers ship with the ordinary server build"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-030.md",
+    "sha256": "afe74c03c997303a793cc7448ddf17f8f48da976fa342add257fe047505fdfb0"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller. A pre-merge review by a separate agent (not a native review) found three defects on 73ed819 that were fixed in 3c5f0d0",
+    "Out-of-scope defect: createArticle creates the article together with a nested source translation while the t015_sync_legacy_article insert trigger creates the same (articleId, locale) translation, so 'Create article' should fail on a real database; every existing browser scenario mocks the API. The click scenario was dropped from T-030; a separate task with a live-database check is needed",
+    "Side fix: an access cookie the API no longer recognises made SSR loop /me -> /login -> /me; useAuthSession().clear() now deletes the session cookies in the response before the redirect. noindex-meta.spec.ts now uses a real session instead of a token without sid",
+    "The /me/archived screen referenced by the blocked row still does not exist in the repository, as for T-022, T-025 and T-032",
+    "There is no reeditTranslation mutation yet, so the re-edit window row links to the piece instead of opening the confirmation dialog",
+    "/me/settings, /me/subscription, /me/export and /me/delete are not built yet; the links follow the routes registry",
+    "[ДОПУЩЕНИЕ] §9 collapsed plan card and phone bottom navigation are not implemented; unreadDecisions is not a separate field, the needs-attention zone derives unread decisions from myArticles (first 20 pieces under check, rejected or published by update time)"
+  ],
+  "usage": null
+}
