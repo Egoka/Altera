@@ -209,6 +209,59 @@
         "other": "Other browser",
         "unknown": "Unknown browser"
       }
+    },
+    "dashboard": {
+      "pageTitle": "Account",
+      "profileLink": "Edit profile",
+      "zoneError": "Couldn't load this.",
+      "retry": "Try again",
+      "plan": {
+        "title": "Plan",
+        "base": "Basic plan, free of charge",
+        "activeUntil": "{tier} until {date}",
+        "expiredOn": "Plan ended on {date}",
+        "expired": "Plan ended",
+        "readOnly": "Author sections are read-only.",
+        "renew": "Renew",
+        "queue": "Then: {periods}",
+        "periodUntil": "{tier} until {date}",
+        "tier": {
+          "free": "Basic",
+          "standard": "Standard",
+          "pro": "Pro"
+        }
+      },
+      "attention": {
+        "title": "Needs attention",
+        "checking": "Under review",
+        "rejected": "Rejected — unread explanation",
+        "reedit": "You can re-edit for {minutes} more min.",
+        "open": "Open",
+        "openExplanation": "Open explanation"
+      },
+      "articles": {
+        "title": "Recent pieces",
+        "all": "All pieces",
+        "invite": "You have no pieces yet. Your first piece is free to write.",
+        "create": "Create an article",
+        "planNeeded": "Renew your plan to write new pieces.",
+        "choosePlan": "Choose a plan"
+      },
+      "bookmarks": {
+        "title": "Bookmarks",
+        "all": "All bookmarks",
+        "empty": "No bookmarks yet.",
+        "read": "Start reading"
+      },
+      "links": {
+        "title": "Account",
+        "sessions": "Sessions and devices",
+        "email": "Change email",
+        "export": "Export data",
+        "delete": "Delete account",
+        "terms": "Terms of use",
+        "privacy": "Privacy policy"
+      }
     }
   },
   "mail": {

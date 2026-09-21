@@ -1,0 +1,43 @@
+enum PlanTier {
+  free
+  standard
+  pro
+}
+
+"""
+Вариант карточки плана сводки кабинета (`30-account/reader/dashboard.md` §5 зона 3):
+`free` — выдач не было, `base` — бессрочная базовая выдача первого запуска (журнал §25.1),
+`active` — выдача со сроком, `expired` — последняя выдача закончилась или отозвана.
+Платежей на первом запуске нет (журнал §24.1), поэтому варианта «серия списаний» нет.
+"""
+enum AccountPlanState {
+  free
+  base
+  active
+  expired
+}
+
+type AccountPlanPeriod {
+  tier: PlanTier!
+  startsAt: String!
+  endsAt: String
+}
+
+type AccountSubscription {
+  state: AccountPlanState!
+  tier: PlanTier!
+  until: String
+  endedAt: String
+  "Очередь периодов одной строкой «затем: …» (журнал §8.22)."
+  queue: [AccountPlanPeriod!]!
+}
+
+extend type AccountUser {
+  "Есть ли у аккаунта хотя бы одна статья: без неё авторские разделы скрыты (журнал §8.21)."
+  hasArticles: Boolean!
+  """
+  План своего аккаунта. `null` у служебной записи: она плана не покупает (§8.17), а её `/me`
+  ведёт в админку (журнал §25.2).
+  """
+  subscription: AccountSubscription
+}
