@@ -38,9 +38,9 @@
     },
     "timings": {
       "execution_seconds": {
-        "count": 702,
+        "count": 703,
         "median": 165.0,
-        "p90": 1102.0,
+        "p90": 1113.0,
         "samples": [
           1.0,
           1.0,
@@ -738,6 +738,7 @@
           2932.0,
           2940.0,
           3092.0,
+          3187.0,
           3221.0,
           3225.0,
           3755.0,
@@ -1482,26 +1483,26 @@
     "tokens": {
       "cache_read_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 2299825076,
+        "known_runs": 659,
+        "observed": 2333959593,
         "total_runs": 715
       },
       "cache_write_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 42227175,
+        "known_runs": 659,
+        "observed": 42781355,
         "total_runs": 715
       },
       "input_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 20823266,
+        "known_runs": 659,
+        "observed": 20823658,
         "total_runs": 715
       },
       "output_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 12975149,
+        "known_runs": 659,
+        "observed": 13129559,
         "total_runs": 715
       }
     }
@@ -1522,9 +1523,9 @@
     },
     "timings": {
       "execution_seconds": {
-        "count": 702,
+        "count": 703,
         "median": 165.0,
-        "p90": 1102.0,
+        "p90": 1113.0,
         "samples": [
           1.0,
           1.0,
@@ -2222,6 +2223,7 @@
           2932.0,
           2940.0,
           3092.0,
+          3187.0,
           3221.0,
           3225.0,
           3755.0,
@@ -2966,26 +2968,26 @@
     "tokens": {
       "cache_read_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 2299825076,
+        "known_runs": 659,
+        "observed": 2333959593,
         "total_runs": 715
       },
       "cache_write_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 42227175,
+        "known_runs": 659,
+        "observed": 42781355,
         "total_runs": 715
       },
       "input_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 20823266,
+        "known_runs": 659,
+        "observed": 20823658,
         "total_runs": 715
       },
       "output_tokens": {
         "complete": false,
-        "known_runs": 658,
-        "observed": 12975149,
+        "known_runs": 659,
+        "observed": 13129559,
         "total_runs": 715
       }
     }
