@@ -36,6 +36,7 @@ interface LocaleData {
   sections?: unknown[]
   tags?: unknown[]
   authors?: unknown[]
+  legal?: unknown[]
 }
 
 /**
@@ -54,7 +55,10 @@ const prismaStub = (data: Record<string, LocaleData>) => {
     },
     section: { findMany: vi.fn(async (args: never) => of(localeOf(args)).sections ?? []) },
     tag: { findMany: vi.fn(async (args: never) => of(localeOf(args)).tags ?? []) },
-    user: { findMany: vi.fn(async (args: never) => of(localeOf(args)).authors ?? []) }
+    user: { findMany: vi.fn(async (args: never) => of(localeOf(args)).authors ?? []) },
+    legalText: {
+      findMany: vi.fn(async (args: { where: { locale: string } }) => of(args.where.locale).legal ?? [])
+    }
   }
 }
 
@@ -217,5 +221,38 @@ describe("адреса личных и служебных разделов", () 
       expect(paths.some((path) => path === forbidden || path.startsWith(`${forbidden}/`))).toBe(false)
     }
     expect(paths.every((path) => !path.includes("?"))).toBe(true)
+  })
+})
+
+describe("юридические тексты в карте сайта", () => {
+  it("перечисляет только опубликованные в локали тексты и отмечает пару по второй локали", async () => {
+    const entries = await callSitemap(
+      {
+        ru: {
+          ...ruData,
+          legal: [
+            { kind: "terms", publishedAt: new Date("2026-09-10T00:00:00.000Z") },
+            { kind: "content_rules", publishedAt: new Date("2026-09-11T00:00:00.000Z") }
+          ]
+        },
+        en: { legal: [{ kind: "terms", publishedAt: new Date("2026-09-12T00:00:00.000Z") }] }
+      },
+      "ru"
+    )
+
+    const terms = entries.find((entry) => entry.path === "/legal/terms")
+    const rules = entries.find((entry) => entry.path === "/legal/content-rules")
+    expect(terms).toMatchObject({ lastmod: "2026-09-10T00:00:00.000Z", locales: ["ru", "en"] })
+    expect(rules).toMatchObject({ locales: ["ru"] })
+    expect(entries.some((entry) => entry.path === "/legal/privacy")).toBe(false)
+  })
+
+  it("запрашивает только действующие редакции четырёх видов страниц", async () => {
+    const prisma = prismaStub({ ru: ruData })
+    await collectLocaleEntries(context(prisma) as never, "ru")
+
+    expect(prisma.legalText.findMany.mock.calls[0]![0]).toMatchObject({
+      where: { locale: "ru", status: "published", kind: { in: ["terms", "privacy", "content_rules", "license"] } }
+    })
   })
 })

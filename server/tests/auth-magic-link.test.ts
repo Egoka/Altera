@@ -41,6 +41,8 @@ interface WorldOptions {
   publishedPrivacy?: number | null
   acceptedTerms?: number | null
   acceptedPrivacy?: number | null
+  /** Существенные редакции (`isMaterial`), вышедшие после первой. */
+  materialVersions?: { kind: "terms" | "privacy"; version: number }[]
   mailFails?: boolean
 }
 
@@ -85,7 +87,17 @@ function createWorld(options: WorldOptions = {}) {
           (text) => text.kind === where.kind && text.locale === where.locale && text.status === where.status
         )
       ),
-      findMany: vi.fn(async () => legalTexts.map(({ id }) => ({ id })))
+      findMany: vi.fn(async () => legalTexts.map(({ id }) => ({ id }))),
+      count: vi.fn(
+        async ({ where }: { where: { kind: string; isMaterial: boolean; version: { gt: number; lte: number } } }) =>
+          (options.materialVersions ?? []).filter(
+            (text) =>
+              where.isMaterial &&
+              text.kind === where.kind &&
+              text.version > where.version.gt &&
+              text.version <= where.version.lte
+          ).length
+      )
     },
     userLegalConsent: {
       findMany: vi.fn(async () => acceptedTexts),
@@ -460,12 +472,13 @@ describe("verifyMagicLink", () => {
     expect(world.ctx.prisma.user.create).not.toHaveBeenCalled()
   })
 
-  it("asks for consent again when the published version moved on", async () => {
+  it("asks for consent again when a material version was published after the accepted one", async () => {
     const world = createWorld({
       publishedTerms: 4,
       publishedPrivacy: 2,
       acceptedTerms: 3,
       acceptedPrivacy: 2,
+      materialVersions: [{ kind: "terms", version: 4 }],
       users: [
         {
           id: "user-1",
@@ -501,6 +514,67 @@ describe("verifyMagicLink", () => {
     expect(accepted.outcome).toBe("authenticated")
     expect(world.sessions).toHaveLength(1)
     expect(world.consents).toHaveLength(2)
+  })
+
+  it("lets the reader in without new consent when only non-material versions followed", async () => {
+    const world = createWorld({
+      publishedTerms: 5,
+      publishedPrivacy: 2,
+      acceptedTerms: 3,
+      acceptedPrivacy: 2,
+      // Существенной была принятая редакция 3; редакции 4 и 5 — уточнения.
+      materialVersions: [{ kind: "terms", version: 3 }],
+      users: [
+        {
+          id: "user-1",
+          email: "reader@example.test",
+          name: "reader",
+          handle: "u-1",
+          locale: "ru",
+          archivedAt: null,
+          archiveMode: null
+        }
+      ]
+    })
+    await resolver.Mutation.requestMagicLink(
+      {},
+      { email: "reader@example.test", consentVersion: consent(5, 2), locale: "ru" },
+      world.ctx as never
+    )
+    const token = world.sentMail.at(-1)!.text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)![1]!
+
+    const result = await resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
+
+    expect(result.outcome).toBe("authenticated")
+    expect(world.consents).toHaveLength(0)
+  })
+
+  it("asks for consent when the account never accepted a published text", async () => {
+    const world = createWorld({
+      publishedTerms: 1,
+      publishedPrivacy: 1,
+      users: [
+        {
+          id: "user-1",
+          email: "reader@example.test",
+          name: "reader",
+          handle: "u-1",
+          locale: "ru",
+          archivedAt: null,
+          archiveMode: null
+        }
+      ]
+    })
+    await resolver.Mutation.requestMagicLink(
+      {},
+      { email: "reader@example.test", consentVersion: consent(1, 1), locale: "ru" },
+      world.ctx as never
+    )
+    const token = world.sentMail.at(-1)!.text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)![1]!
+
+    const result = await resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
+
+    expect(result).toMatchObject({ outcome: "consent_required", termsVersion: 1, privacyVersion: 1 })
   })
 
   it("rejects acceptConsent for versions that are not the published ones", async () => {

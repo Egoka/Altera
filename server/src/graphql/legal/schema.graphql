@@ -1,0 +1,91 @@
+# Юридические тексты и согласия (`docs/spec/20-public/legal-*.md` §4, ADR-0028).
+
+"""
+Виды текстов со страницами `/legal/*`. Условия платных услуг и возвраты — F-01, «О проекте» —
+отдельная страница; их здесь нет.
+"""
+enum LegalDocumentKind {
+  terms
+  privacy
+  content_rules
+  license
+}
+
+"""
+Раздел текста с якорем: из него строится оглавление страницы (`TableOfContents`).
+"""
+type LegalAnchor {
+  id: String!
+  title: String!
+}
+
+type LegalVersionSummary {
+  version: Int!
+  publishedAt: String!
+  """
+  Существенная редакция требует повторного согласия при следующем входе.
+  """
+  isMaterial: Boolean!
+  summaryOfChanges: String!
+}
+
+"""
+Опубликованная редакция текста. Ответ одинаков для всех и не содержит ПДн (ADR-0019).
+"""
+type LegalDocument {
+  kind: LegalDocumentKind!
+  """
+  Локаль показанного текста; отличается от запрошенной, если в той текст ещё не опубликован.
+  """
+  locale: Locale!
+  requestedLocale: Locale!
+  isFallbackLocale: Boolean!
+  version: Int!
+  publishedAt: String!
+  isMaterial: Boolean!
+  summaryOfChanges: String!
+  """
+  `false` — прежняя редакция, открытая по `?version=N`: страница показывает плашку.
+  """
+  isCurrent: Boolean!
+  currentVersion: Int!
+  html: String!
+  anchors: [LegalAnchor!]!
+  """
+  Архив: опубликованные ранее редакции той же локали, новые сверху.
+  """
+  previousVersions: [LegalVersionSummary!]!
+  """
+  Локали, в которых вид опубликован, — источник `hreflang`.
+  """
+  availableLocales: [Locale!]!
+}
+
+"""
+Согласие аккаунта с офертой или политикой ПД в локали аккаунта.
+"""
+type LegalConsent {
+  kind: LegalDocumentKind!
+  locale: Locale!
+  currentVersion: Int
+  acceptedVersion: Int
+  acceptedAt: String
+  """
+  После принятой редакции вышла существенная: согласие запрашивается при следующем входе.
+  """
+  reconsentRequired: Boolean!
+}
+
+extend type AccountUser {
+  """
+  Свои согласия (`me.consents`, `legal-terms.md` §4). Чужие не отдаются никакой роли.
+  """
+  consents: [LegalConsent!]!
+}
+
+extend type Query {
+  """
+  `null` — текст вида ещё не опубликован ни в одной локали. Неизвестная версия — `NOT_FOUND`.
+  """
+  legalText(kind: LegalDocumentKind!, locale: Locale!, version: Int): LegalDocument
+}

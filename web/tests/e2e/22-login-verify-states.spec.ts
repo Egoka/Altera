@@ -237,6 +237,12 @@ test.describe("страница подтверждения по таблице �
     const email = uniqueEmail("t022-consent")
 
     await withPrisma(async (prisma) => {
+      // Повторное согласие требует существенной редакции (T-101, ADR-0028 п. 2).
+      await prisma.legalText.update({
+        where: { kind_locale_version: { kind: "terms", locale: "en", version: 2 } },
+        data: { isMaterial: true }
+      })
+
       const handle = `t022-consent-${Math.random().toString(16).slice(2, 10)}`
       await prisma.handleHistory.create({ data: { handle } })
       const user = await prisma.user.create({ data: { email, handle, locale: "en", name: "T022 consent" } })

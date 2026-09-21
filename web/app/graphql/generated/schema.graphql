@@ -51,6 +51,11 @@ type AccountUser {
   avatarAssetId: ID
   avatarCheckStatus: ProfileCheckStatus!
   bio: String
+
+  """
+  Свои согласия (`me.consents`, `legal-terms.md` §4). Чужие не отдаются никакой роли.
+  """
+  consents: [LegalConsent!]!
   createdAt: String!
   email: String!
 
@@ -933,6 +938,79 @@ input GrantPlanInput {
 scalar JSON
 
 """
+Раздел текста с якорем: из него строится оглавление страницы (`TableOfContents`).
+"""
+type LegalAnchor {
+  id: String!
+  title: String!
+}
+
+"""Согласие аккаунта с офертой или политикой ПД в локали аккаунта."""
+type LegalConsent {
+  acceptedAt: String
+  acceptedVersion: Int
+  currentVersion: Int
+  kind: LegalDocumentKind!
+  locale: Locale!
+
+  """
+  После принятой редакции вышла существенная: согласие запрашивается при следующем входе.
+  """
+  reconsentRequired: Boolean!
+}
+
+"""
+Опубликованная редакция текста. Ответ одинаков для всех и не содержит ПДн (ADR-0019).
+"""
+type LegalDocument {
+  anchors: [LegalAnchor!]!
+
+  """Локали, в которых вид опубликован, — источник `hreflang`."""
+  availableLocales: [Locale!]!
+  currentVersion: Int!
+  html: String!
+
+  """
+  `false` — прежняя редакция, открытая по `?version=N`: страница показывает плашку.
+  """
+  isCurrent: Boolean!
+  isFallbackLocale: Boolean!
+  isMaterial: Boolean!
+  kind: LegalDocumentKind!
+
+  """
+  Локаль показанного текста; отличается от запрошенной, если в той текст ещё не опубликован.
+  """
+  locale: Locale!
+
+  """Архив: опубликованные ранее редакции той же локали, новые сверху."""
+  previousVersions: [LegalVersionSummary!]!
+  publishedAt: String!
+  requestedLocale: Locale!
+  summaryOfChanges: String!
+  version: Int!
+}
+
+"""
+Виды текстов со страницами `/legal/*`. Условия платных услуг и возвраты — F-01, «О проекте» —
+отдельная страница; их здесь нет.
+"""
+enum LegalDocumentKind {
+  content_rules
+  license
+  privacy
+  terms
+}
+
+type LegalVersionSummary {
+  """Существенная редакция требует повторного согласия при следующем входе."""
+  isMaterial: Boolean!
+  publishedAt: String!
+  summaryOfChanges: String!
+  version: Int!
+}
+
+"""
 Действующие версии оферты и политики персональных данных для локали страницы входа
 (docs/spec/20-public/login.md §4). `null` означает, что действующий текст ещё не опубликован:
 согласие в этом случае невалидно и форма показывает состояние ошибки данных (§8).
@@ -1169,6 +1247,11 @@ type Query {
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
   jobsSummary: AdminJobsSummary!
+
+  """
+  `null` — текст вида ещё не опубликован ни в одной локали. Неизвестная версия — `NOT_FOUND`.
+  """
+  legalText(kind: LegalDocumentKind!, locale: Locale!, version: Int): LegalDocument
   legalVersions(locale: Locale!): LegalVersions!
   mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
   me: AccountUser

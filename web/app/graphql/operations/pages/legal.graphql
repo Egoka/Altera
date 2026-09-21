@@ -1,0 +1,46 @@
+# Страницы `/legal/*` (`docs/spec/20-public/legal-*.md` §4): публичный текст одинаков для всех
+# и не содержит ПДн, поэтому согласия аккаунта читаются отдельным запросом.
+fragment LegalVersionFields on LegalVersionSummary {
+  version
+  publishedAt
+  isMaterial
+  summaryOfChanges
+}
+
+query GetLegalText($kind: LegalDocumentKind!, $locale: Locale!, $version: Int) {
+  legalText(kind: $kind, locale: $locale, version: $version) {
+    kind
+    locale
+    requestedLocale
+    isFallbackLocale
+    version
+    publishedAt
+    isMaterial
+    summaryOfChanges
+    isCurrent
+    currentVersion
+    html
+    anchors {
+      id
+      title
+    }
+    previousVersions {
+      ...LegalVersionFields
+    }
+    availableLocales
+  }
+}
+
+query GetMyConsents {
+  me {
+    id
+    consents {
+      kind
+      locale
+      currentVersion
+      acceptedVersion
+      acceptedAt
+      reconsentRequired
+    }
+  }
+}
