@@ -20,11 +20,11 @@ export const SITEMAP_MAX_URLS = 50_000
 
 /**
  * Статические публичные страницы. `/me`, `/admin`, `/auth`, `/search`, предпросмотр и адреса
- * с параметрами в карту не попадают (§4); `/about` появится здесь вместе со своей страницей.
+ * с параметрами в карту не попадают (§4); `/contact` — без параметров (`contact.md` §10).
  * `/legal/*` перечисляются по опубликованным текстам локали, прежние редакции (`?version=`) —
  * нет (`legal-terms.md` §10).
  */
-const STATIC_PATHS = ["/sections", "/tags", "/authors", "/pricing"] as const
+const STATIC_PATHS = ["/sections", "/tags", "/authors", "/pricing", "/about", "/contact"] as const
 
 export interface SitemapEntry {
   path: string

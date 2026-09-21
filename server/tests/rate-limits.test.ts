@@ -81,6 +81,7 @@ describe("единые пороги корзин", () => {
     expect(middlewareRulesForField("requestMagicLink").map(({ bucket }) => bucket)).toEqual(["auth.link.ip"])
     expect(middlewareRulesForField("verifyMagicLink").map(({ bucket }) => bucket)).toEqual(["auth.verify.ip"])
     expect(middlewareRulesForField("acceptConsent").map(({ bucket }) => bucket)).toEqual(["auth.verify.ip"])
+    expect(middlewareRulesForField("createSupportRequest").map(({ bucket }) => bucket)).toEqual(["contact.ip"])
     expect(middlewareRulesForField("me")).toEqual([])
 
     for (const rule of Object.values(RATE_LIMIT_RULES)) {

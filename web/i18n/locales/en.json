@@ -1321,5 +1321,107 @@
         "nature": "The ban is a license condition, not a technical protection against copying. Sending text to an AI provider for review and translation is described separately and is not training."
       }
     }
+  },
+  "about": {
+    "meta": {
+      "title": "About — Altera",
+      "description": "Altera is a journal about the many sides of human life: registered authors publish, and reading is free."
+    },
+    "kicker": "About",
+    "title": "The Altera journal",
+    "lead": "Altera is a journal about the many sides of human life, where registered authors publish and reading is free.",
+    "how": {
+      "title": "How it works",
+      "read": {
+        "title": "Read for free",
+        "text": "Every piece in the journal is open without a subscription or payment."
+      },
+      "write": {
+        "title": "Write after signing up",
+        "text": "Registered authors publish without payment during the first launch."
+      },
+      "check": {
+        "title": "Review and ranking",
+        "text": "AI checks whether a piece can be published, a reviewer handles disputed cases; the order of the feed follows the ranking."
+      }
+    },
+    "sections": {
+      "title": "What we write about"
+    },
+    "text": {
+      "title": "More about the project",
+      "fallback": "The text is not yet published in the selected language — showing the version in: {shown}.",
+      "version": "Version {version} of {date}",
+      "unpublishedTitle": "The project text is on its way",
+      "unpublishedDescription": "The editors will tell more about the project soon. Meanwhile you can read the journal or write to us.",
+      "ownerHint": "The text is not published for this locale. Publish it in the legal texts section.",
+      "edit": "Edit the text"
+    },
+    "cta": {
+      "title": "Join us",
+      "becomeAuthor": "Become an author",
+      "writeEditorial": "Write to the editors"
+    }
+  },
+  "contact": {
+    "meta": {
+      "title": "Write to the editors — Altera",
+      "description": "A question, a broken link, a refund, rights to a piece or lost access — write to the Altera editors."
+    },
+    "kicker": "Contacts",
+    "title": "Write to us",
+    "lead": "Ask about the journal, report a broken link, rights to a piece or lost access to your account. We usually reply within two working days.",
+    "topics": {
+      "general": "General question",
+      "broken_link": "Broken link",
+      "refund": "Refund",
+      "copyright": "Rights to a piece",
+      "restore": "Account recovery",
+      "other": "Other"
+    },
+    "fields": {
+      "topic": "Topic",
+      "email": "E-mail for the reply",
+      "message": "Your message",
+      "messageHint": "From {min} to {max} characters",
+      "path": "Page",
+      "pathPlaceholder": "/page/address",
+      "pathLine": "Page: {path}",
+      "pathEdit": "Change",
+      "requestIdLine": "Request code: {requestId}",
+      "consent": "I agree to the processing of personal data under the",
+      "consentLink": "privacy policy",
+      "accountEmail": "We will reply to your account address: {email}"
+    },
+    "errors": {
+      "required": "Fill in this field",
+      "email": "Check the address: it needs an “{'@'}” and a domain",
+      "tooShort": "Write at least {min} characters",
+      "tooLong": "No more than {max} characters",
+      "consent": "Without consent we cannot reply to your message",
+      "path": "Give the address of a page on this site, starting with “/”"
+    },
+    "submit": "Send",
+    "sending": "Sending…",
+    "limited": "Too many requests in a row. Try again in {timer}.",
+    "failedTitle": "The request could not be sent",
+    "failedDescription": "Your text is kept in the form — try sending it again.",
+    "sent": {
+      "title": "Request No. {ticketNo} received",
+      "reply": "We will reply to {email}.",
+      "another": "Write another one"
+    },
+    "hints": {
+      "title": "Tips by topic",
+      "refund": "A refund is requested from your account next to the payment.",
+      "refundLink": "Open subscription",
+      "copyright": "Describe the piece and your rights to it: a link, what proves your rights and what you ask us to do.",
+      "restore": "Give the address the account was registered with, the author handle and what happened to your mailbox.",
+      "broken_link": "Give the page address and where you followed the link from."
+    },
+    "requisites": {
+      "title": "Requisites",
+      "text": "Seller requisites are published together with the terms of paid services. There are no paid services during the first launch: reading and publishing are free."
+    }
   }
 }

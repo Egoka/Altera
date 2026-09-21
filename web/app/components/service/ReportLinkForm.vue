@@ -8,7 +8,7 @@
    * Состояния компонента: свёрнута, развёрнута, отправка, отправлено, лимит.
    */
   const props = defineProps<{ path: string }>()
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
   const localePath = useLocalePath()
 
   const contactTo = computed(() => `${localePath("/contact")}?topic=broken_link&path=${encodeURIComponent(props.path)}`)
@@ -17,7 +17,7 @@
   const message = ref("")
   const { state, send } = useBrokenLinkReport()
 
-  const submit = () => send(props.path, message.value)
+  const submit = () => send(props.path, message.value, locale.value === "en" ? "en" : "ru")
 </script>
 
 <template>

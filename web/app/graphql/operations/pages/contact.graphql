@@ -1,0 +1,40 @@
+# Письмо в редакцию (`docs/spec/20-public/contact.md` §4) и кнопка «битая ссылка» страницы 404
+# (`not-found.md` §4): одна мутация обращения, матрица #117.
+mutation CreateSupportRequest(
+  $topic: SupportTopic!
+  $email: String
+  $message: String!
+  $path: String
+  $requestId: String
+  $locale: Locale!
+  $acceptPrivacy: Boolean
+) {
+  createSupportRequest(
+    topic: $topic
+    email: $email
+    message: $message
+    path: $path
+    requestId: $requestId
+    route: "/contact"
+    locale: $locale
+    acceptPrivacy: $acceptPrivacy
+  ) {
+    ok
+    ticketNo
+  }
+}
+
+mutation CreateBrokenLinkReport($topic: SupportTopic!, $path: String!, $message: String, $locale: Locale) {
+  createSupportRequest(topic: $topic, path: $path, message: $message, route: "/404", locale: $locale) {
+    ok
+  }
+}
+
+# Форма знает, аккаунт ли пишет: адрес аккаунта берётся из сессии и в форме не спрашивается (§5).
+query GetContactViewer {
+  me {
+    id
+    email
+    isArchived
+  }
+}

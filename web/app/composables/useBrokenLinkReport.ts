@@ -1,22 +1,15 @@
 import { ref } from "vue"
+import { print } from "graphql"
+import { CreateBrokenLinkReportDocument } from "~/graphql/generated/graphql"
 
 export type BrokenLinkReportState = "idle" | "sending" | "sent" | "limited" | "failed"
 
 /**
- * Обращение «битая ссылка» со страницы 404 (журнал §20.15, `not-found.md` §4, §7).
- *
- * Операция написана строкой, а не взята из `~/query`: резолвер `createSupportRequest`
- * входит в T-059 вместе со страницей `/contact` (`T-059` §3), поэтому в схеме её ещё нет
- * и codegen такой документ не соберёт. Когда резолвер появится, документ переезжает в
- * `web/app/graphql/operations/` без изменения этого состояния формы.
+ * Обращение «битая ссылка» со страницы 404 (журнал §20.15, `not-found.md` §4, §7). Мутация —
+ * та же, что у `/contact` (T-059): операция `CreateBrokenLinkReport` в
+ * `graphql/operations/pages/contact.graphql`. Адреса анонимная кнопка не просит.
  */
-const CREATE_SUPPORT_REQUEST = `
-  mutation CreateBrokenLinkReport($topic: SupportTopic!, $path: String!, $message: String) {
-    createSupportRequest(topic: $topic, path: $path, message: $message) {
-      ok
-    }
-  }
-`
+const CREATE_SUPPORT_REQUEST = print(CreateBrokenLinkReportDocument)
 
 interface GraphQLEnvelope {
   data?: { createSupportRequest?: { ok?: boolean } | null } | null
@@ -34,7 +27,7 @@ export const reportablePath = (fullPath: string): string => fullPath.split("?")[
 export const useBrokenLinkReport = () => {
   const state = ref<BrokenLinkReportState>("idle")
 
-  const send = async (path: string, message: string) => {
+  const send = async (path: string, message: string, locale: "ru" | "en" = "ru") => {
     if (state.value === "sending" || state.value === "sent") return
 
     state.value = "sending"
@@ -46,7 +39,8 @@ export const useBrokenLinkReport = () => {
           variables: {
             topic: "broken_link",
             path: reportablePath(path),
-            message: message.trim() ? message.trim() : null
+            message: message.trim() ? message.trim() : null,
+            locale
           }
         }
       })

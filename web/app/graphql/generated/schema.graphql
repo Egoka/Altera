@@ -68,6 +68,12 @@ type AccountUser {
   """
   hasArticles: Boolean!
   id: ID!
+
+  """
+  Запись архивирована: ограниченная сессия пишет в редакцию как гость и указывает адрес сама
+  (`contact.md` §8, строка «Заблокирован»).
+  """
+  isArchived: Boolean!
   locale: Locale!
   name: String!
   nameCheckStatus: ProfileCheckStatus!
@@ -1172,6 +1178,13 @@ type Mutation {
   createLegalDraft(input: CreateLegalDraftInput!): AdminLegalVersion!
   createSection(input: CreateSectionInput!): Section!
   createStaff(input: CreateStaffInput!): AdminStaffMember!
+
+  """
+  Доступно всем (матрица #117). Для аккаунта адрес берётся из сессии, переданный игнорируется;
+  гостю адрес и согласие с политикой ПД обязательны, кроме анонимной кнопки «битая ссылка».
+  `route` — шаблон формы (`/contact`, `/404`) для лога `support.request.created`.
+  """
+  createSupportRequest(acceptPrivacy: Boolean, email: String, locale: Locale, message: String, path: String, requestId: String, route: String, topic: SupportTopic!): SupportRequestResult!
   createTag(input: CreateTagInput!): Tag!
   deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
   deleteSection(id: ID!): Section!
@@ -1404,6 +1417,11 @@ type Query {
   sectionStats(sectionSlug: String!): SectionStats
   sections(filters: SectionFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): SectionsResponse!
   sitemapEntries(locale: Locale!): [SitemapEntry!]!
+
+  """
+  `null` — текст ещё не опубликован ни в одной локали: страница показывает статическую часть.
+  """
+  staticText(kind: StaticTextKind!, locale: Locale!): StaticText
   systemSettings(group: SystemSettingsGroup!): SystemSettings!
   tag(slug: String!): Tag
   tagAutocomplete(limit: Int = 10, q: String!): [Tag!]!
@@ -1562,6 +1580,54 @@ type SortInfo {
 input SortInput {
   direction: SortDirection! = ASC
   field: String!
+}
+
+"""
+Опубликованная редакция страничного текста. Ответ одинаков для всех и не содержит ПДн.
+"""
+type StaticText {
+  """Локали, в которых текст опубликован, — источник `hreflang`."""
+  availableLocales: [Locale!]!
+  html: String!
+  isFallbackLocale: Boolean!
+  kind: StaticTextKind!
+
+  """
+  Локаль показанного текста; отличается от запрошенной, если в той текст ещё не опубликован.
+  """
+  locale: Locale!
+  publishedAt: String!
+  requestedLocale: Locale!
+  version: Int!
+}
+
+"""
+Тексты страниц вне `/legal/*`, которые ведутся в `/admin/legal` тем же механизмом версий
+(`docs/spec/20-public/about.md` §4 `[ДОПУЩЕНИЕ]`).
+"""
+enum StaticTextKind {
+  about
+}
+
+type SupportRequestResult {
+  ok: Boolean!
+
+  """
+  Номер обращения для строки «Обращение №{ticketNo} принято» (`contact.md` §5 зона 4).
+  """
+  ticketNo: Int!
+}
+
+"""
+Справочник тем обращения (`contact.md` §3). `broken_link` — кнопка страницы 404 (журнал §20.15).
+"""
+enum SupportTopic {
+  broken_link
+  copyright
+  general
+  other
+  refund
+  restore
 }
 
 """Значение секрета не возвращается никогда: только факт наличия и маска."""
