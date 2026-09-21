@@ -41,3 +41,25 @@ extend type AccountUser {
   """
   subscription: AccountSubscription
 }
+
+enum BillingInterval {
+  month
+  year
+}
+
+enum PriceChangeDecision {
+  confirm
+  decline
+}
+
+# Платёжные мутации страниц «Подписка» и «Оплата» (`30-account/reader/subscription.md` §4,
+# `checkout.md` §4). Первый запуск идёт без платности (журнал §24.1): до её включения каждая
+# мутация отвечает `FORBIDDEN` (`subscription.md` §12 `[ДОПУЩЕНИЕ]`), гость — `UNAUTHENTICATED`.
+# Ответ `Boolean` — место под результат; его форма появится вместе с этапом платности.
+extend type Mutation {
+  startCheckout(tier: PlanTier!, interval: BillingInterval!, promo: String): Boolean!
+  cancelSubscription: Boolean!
+  resumeSubscription: Boolean!
+  requestRefund(paymentId: ID!, reason: String): Boolean!
+  confirmPriceChange(decision: PriceChangeDecision!): Boolean!
+}

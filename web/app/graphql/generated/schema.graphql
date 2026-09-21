@@ -635,6 +635,11 @@ input BaseFiltersInput {
   updatedAt: DateRangeInput
 }
 
+enum BillingInterval {
+  month
+  year
+}
+
 type BookmarkCounts {
   total: Int!
   unavailable: Int!
@@ -1056,8 +1061,10 @@ type Mutation {
   bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
   cancelEmailChange: EmailChangeState!
   cancelJob(id: ID!, reason: String!): AdminJob!
+  cancelSubscription: Boolean!
   changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
   confirmEmailChange(code: String!): EmailChangeResult!
+  confirmPriceChange(decision: PriceChangeDecision!): Boolean!
   createArticle(input: CreateArticleInput!): Article!
   createFormat(input: CreateFormatInput!): AdminFormat!
   createSection(input: CreateSectionInput!): Section!
@@ -1077,6 +1084,7 @@ type Mutation {
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   requestEmailChange(newEmail: String!): EmailChangeState!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
+  requestRefund(paymentId: ID!, reason: String): Boolean!
   requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
@@ -1085,6 +1093,7 @@ type Mutation {
   restoreSection(id: ID!): Section!
   restoreStaffAccount(id: ID!, reason: String!): AdminStaffMember!
   restoreTag(id: ID!): Tag!
+  resumeSubscription: Boolean!
   retryJob(id: ID!): AdminJob!
   retryJobs(ids: [ID!]!): AdminJobsRetryResult!
   revertToDraft(id: ID!): Article!
@@ -1095,6 +1104,7 @@ type Mutation {
   revokeSession(id: ID!): SessionRevokeResult!
   revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
+  startCheckout(interval: BillingInterval!, promo: String, tier: PlanTier!): Boolean!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(id: ID!, input: UpdateSectionInput!): Section!
@@ -1203,6 +1213,11 @@ enum PlanTier {
   free
   pro
   standard
+}
+
+enum PriceChangeDecision {
+  confirm
+  decline
 }
 
 enum ProfileCheckStatus {

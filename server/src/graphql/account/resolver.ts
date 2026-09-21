@@ -21,6 +21,15 @@ function accountOwner(parent: { id: string }, ctx: GraphQLContext, action: strin
   return user
 }
 
+/**
+ * Платёжная мутация до включения платности (журнал §24.1, `subscription.md` §12 `[ДОПУЩЕНИЕ]`):
+ * гость получает `UNAUTHENTICATED`, любой вошедший — `FORBIDDEN` с правом из матрицы.
+ */
+const paymentsDisabled = (action: string) => (_parent: unknown, _args: unknown, ctx: GraphQLContext) => {
+  ensureAuthenticated(ctx.currentUser, ctx.requestId)
+  throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action })
+}
+
 const toPeriod = (period: AccountPlanPeriod) => ({
   tier: period.tier,
   startsAt: period.startsAt.toISOString(),
@@ -28,6 +37,14 @@ const toPeriod = (period: AccountPlanPeriod) => ({
 })
 
 export default {
+  Mutation: {
+    startCheckout: paymentsDisabled("checkout.start"),
+    cancelSubscription: paymentsDisabled("subscription.cancel"),
+    resumeSubscription: paymentsDisabled("subscription.resume"),
+    requestRefund: paymentsDisabled("refund.request"),
+    confirmPriceChange: paymentsDisabled("subscription.price.confirm")
+  },
+
   AccountUser: {
     hasArticles: async (parent: { id: string }, _args: unknown, ctx: GraphQLContext) => {
       const user = accountOwner(parent, ctx, "account.dashboard")
