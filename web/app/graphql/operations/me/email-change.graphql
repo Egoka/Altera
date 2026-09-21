@@ -1,0 +1,37 @@
+fragment EmailChangeStateFields on EmailChangeState {
+  currentEmailMasked
+  pending {
+    newEmailMasked
+    expiresAt
+    attemptsLeft
+  }
+}
+
+query GetMyEmailChange {
+  me {
+    id
+    email
+    emailChange {
+      ...EmailChangeStateFields
+    }
+  }
+}
+
+mutation RequestEmailChange($newEmail: String!) {
+  requestEmailChange(newEmail: $newEmail) {
+    ...EmailChangeStateFields
+  }
+}
+
+mutation ConfirmEmailChange($code: String!) {
+  confirmEmailChange(code: $code) {
+    email
+    changedAt
+  }
+}
+
+mutation CancelEmailChange {
+  cancelEmailChange {
+    ...EmailChangeStateFields
+  }
+}

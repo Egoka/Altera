@@ -6,6 +6,9 @@ type AccountUser {
   bio: String
   createdAt: String!
   email: String!
+
+  """Состояние смены адреса своей записи (матрица #49)."""
+  emailChange: EmailChangeState!
   handle: String!
   id: ID!
   locale: Locale!
@@ -695,6 +698,34 @@ input DateRangeInput {
   to: String
 }
 
+"""
+Открытый запрос смены адреса (docs/spec/30-account/reader/email-change.md §4). Полного нового
+адреса здесь нет: письмо с кодом уже ушло на него, а экран показывает его маскированным.
+"""
+type EmailChangePending {
+  """
+  Сколько попыток ввода кода осталось; по исчерпании запрос закрывается (§8).
+  """
+  attemptsLeft: Int!
+  expiresAt: String!
+  newEmailMasked: String!
+}
+
+"""
+Результат подтверждения кода: адрес изменён сразу, сессии не отзываются (журнал §25.8).
+"""
+type EmailChangeResult {
+  changedAt: String!
+
+  """Новый адрес в маскированном виде — тот же формат, что у зоны 2 экрана."""
+  email: String!
+}
+
+type EmailChangeState {
+  currentEmailMasked: String!
+  pending: EmailChangePending
+}
+
 type Feed {
   caption: FeedCaption
   formats: [FeedFacet!]!
@@ -880,8 +911,10 @@ type Mutation {
   assignOwner(id: ID!): AdminStaffMember!
   bulkDeleteArticles(ids: [ID!]!): [Article!]!
   bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
+  cancelEmailChange: EmailChangeState!
   cancelJob(id: ID!, reason: String!): AdminJob!
   changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
+  confirmEmailChange(code: String!): EmailChangeResult!
   createArticle(input: CreateArticleInput!): Article!
   createFormat(input: CreateFormatInput!): AdminFormat!
   createSection(input: CreateSectionInput!): Section!
@@ -899,6 +932,7 @@ type Mutation {
   refreshSession(refreshToken: String!): AuthPayload!
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
+  requestEmailChange(newEmail: String!): EmailChangeState!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
   requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!

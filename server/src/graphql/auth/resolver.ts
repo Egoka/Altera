@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken"
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
+import { isEmailAddress, normalizeEmail } from "../../auth/email-address"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
 import {
   findSessionByRefreshToken,
@@ -27,9 +28,6 @@ const JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || "15m"
 const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
 const MAGIC_LINK_BASE_URL = process.env.MAGIC_LINK_BASE_URL || "http://localhost:3000/auth/verify"
 
-// Прагматичная проверка формата: адрес всё равно подтверждается переходом по ссылке из письма.
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/
-
 interface ConsentVersionsInput {
   termsVersion?: number | null
   privacyVersion?: number | null
@@ -46,8 +44,6 @@ const buildMagicLinkUrl = (token: string): string => {
   url.searchParams.set("token", token)
   return url.toString()
 }
-
-const normalizeEmail = (email: string): string => email.trim().toLowerCase()
 
 const sameVersion = (accepted: number | null | undefined, current: number | null): boolean =>
   current === null ? accepted === null || accepted === undefined : accepted === current
@@ -156,7 +152,7 @@ export default {
       const { prisma, logger, piiHasher, requestId, mail, rateLimiter } = ctx
       const address = normalizeEmail(email)
 
-      if (!EMAIL_PATTERN.test(address)) {
+      if (!isEmailAddress(address)) {
         throw createApiError("VALIDATION_ERROR", { requestId, field: "email", rule: "email format" })
       }
 

@@ -117,6 +117,9 @@ model EmailChangeRequest {
   newEmail  String
   codeHash  String   @db.VarChar(64)
   expiresAt DateTime
+  /// Израсходованные попытки ввода кода: по их исчерпании запрос закрывается
+  /// (`30-account/reader/email-change.md` §4).
+  attempts  Int      @default(0)
   createdAt DateTime @default(now())
 
   @@map("email_change_requests")
