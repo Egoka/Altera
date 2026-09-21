@@ -8,10 +8,12 @@ import { createPageErrorReporter, pageErrorReport } from "~/utils/pageErrorRepor
 export default defineNuxtPlugin((nuxtApp) => {
   const router = useRouter()
   // Код запроса страницы 500 кладёт `error.vue`; для падения рендера другого источника нет.
-  const pageRequestId = useState<string | null>("service.requestId", () => null)
+  // Без инициализатора: значение `null` здесь заняло бы ключ раньше `error.vue`, и страница 500
+  // потеряла бы код запроса.
+  const pageRequestId = useState<string | null | undefined>("service.requestId")
   const report = createPageErrorReporter((url, options) => $fetch(url, options))
   const capture = (error: unknown) =>
-    void report(pageErrorReport(error, router.currentRoute.value, pageRequestId.value))
+    void report(pageErrorReport(error, router.currentRoute.value, pageRequestId.value ?? null))
 
   nuxtApp.hook("app:error", capture)
   nuxtApp.hook("vue:error", capture)
