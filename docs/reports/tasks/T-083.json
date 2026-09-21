@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "task_id": "T-083",
+  "issue_id": "01a0c225-9b04-7ba7-a6df-91c69cd4fb50",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-083-admin-legal-texts.md",
+    "sha": "f0c7f0cbfde0c16c6e5a71ccf5562f5bbb8a7b67"
+  },
+  "baseline_sha": "ad5b69ecc5ef61b0d74c3ba7b18e597e5a73bcfd",
+  "tested_sha": "e5dd97b513de8399d2f70d0926b4a26686908310",
+  "branch": "feat/t083-admin-legal",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t083-admin-legal",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c275-7b79-7d7e-9f41-632479f2decc",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/admin-legal.spec.ts, AC-1 scenario in CI run https://github.com/Egoka/Altera/actions/runs/35566315938 (browser job): the owner creates an English content-rules draft through the UI and publishes it; /en/legal/content-rules then shows the new text and version number without the locale-fallback notice, and two legal.update audit rows (draft, published) exist. On PostgreSQL: the new T-083 case in server/tests/legal-versions-database.test.ts (step 'Проверить версии юридических текстов и согласия T-101', 3 passed) — the draft is invisible to the public page, legal:publish shifts an open draft, publication makes the version current, a material version requires re-consent, a repeated publish is CONFLICT."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/e2e/admin-legal.spec.ts: loading skeleton, empty ('Текст ещё не опубликован.'), error with requestId and retry, partial rights (admin reads without draft form or publish button; the mutation returns FORBIDDEN legal.update), conflict (CONFLICT with reload); the 'Лимит' row is not applicable per §9. Browser job 215 passed / 9 skipped versus 205 passed / 1 failed (02-become-author, untouched) / 9 skipped on baseline ad5b69e (run 35565067682), so all 9 new scenarios passed."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 726 passed / 29 skipped; web 529 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "server_build_ci": "passed",
+    "playwright": "not run locally: the local Docker daemon answers HTTP 500 and no local PostgreSQL exists; the CI browser job ran the new scenarios — 215 passed / 9 skipped",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35566315938",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 201,
+    "url": "https://github.com/Egoka/Altera/pull/201",
+    "base_ref": "app",
+    "base_sha": "ad5b69ecc5ef61b0d74c3ba7b18e597e5a73bcfd",
+    "head_sha": "e5dd97b513de8399d2f70d0926b4a26686908310",
+    "merge_sha": "a959d15160b61bed6579aab87602225c090c0b65"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The task adds no Prisma migration and does not change the database schema; the new resolvers and pages ship with the ordinary server and web builds"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-083.md",
+    "sha256": "d99e1ecd123e1ea2c2bda1af059b57751d9dd3e74180d0b1058a48807fff2186"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "A pre-merge code check by a subagent of the implementer run found three defects (shared loading flags on the list, a non-atomic publish, a 500 on concurrent first drafts); all were fixed in e5dd97b — this is not the independent review",
+    "The email about material changes ([ДОПУЩЕНИЕ] legal-texts.md §5) is deferred by journal §25.13; the list of users without consent (#6) is out of scope",
+    "The automatic 'material' flag on a price change (journal §28.10) arrives with paid plans; for now the owner sets it manually",
+    "Public pages for about, paid_services and refunds do not exist yet (F-01 and a separate About page); the section stores their versions",
+    "The merged branch feat/t083-admin-legal was not deleted: the environment denied permission for branch deletion"
+  ],
+  "usage": null
+}
