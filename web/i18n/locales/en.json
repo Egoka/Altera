@@ -860,26 +860,6 @@
   "language": {
     "switchTo": "Switch language to {language}"
   },
-  "errors": {
-    "notFound": {
-      "title": "Page not found",
-      "message": "The requested page does not exist or has moved."
-    },
-    "internal": {
-      "title": "Internal server error",
-      "message": "A server error occurred. Try refreshing the page."
-    },
-    "forbidden": {
-      "title": "Access denied",
-      "message": "You do not have permission to access this page."
-    },
-    "generic": {
-      "title": "An error occurred",
-      "message": "Something went wrong. Try refreshing the page."
-    },
-    "backHome": "Back to home",
-    "code": "Error code: {code}"
-  },
   "components": {
     "showcase": "Components Showcase",
     "buttons": "Buttons",
@@ -983,5 +963,43 @@
     "emptyLink": "Go to the home page",
     "loadingMore": "Loading…",
     "showMore": "Show more"
+  },
+  "service": {
+    "notFoundMetaTitle": "Page not found — Altera",
+    "notFoundTitle": "404 — no such page",
+    "notFoundDescription": "The address is outdated, has a typo, or the piece is not published yet.",
+    "notFoundWhereTo": "Where to go",
+    "notFoundHome": "Home",
+    "notFoundSections": "Sections",
+    "notFoundAuthors": "Authors",
+    "reportLink": "Report a broken link",
+    "reportLinkLabel": "What were you looking for? The comment is optional",
+    "reportLinkPlaceholder": "For example: the link came from a newsletter",
+    "reportLinkSubmit": "Send",
+    "reportLinkSending": "Sending…",
+    "reportLinkSent": "Thank you, we will check it.",
+    "reportLinkLimited": "You have reported links recently. Try again later.",
+    "reportLinkFailed": "The report could not be sent.",
+    "reportLinkContact": "Write to the editors",
+    "serverErrorMetaTitle": "Error — Altera",
+    "serverErrorTitle": "Something broke on our side",
+    "serverErrorDescription": "We could not build this page right now. Please try again.",
+    "serverErrorRepeated": "If the error lasts longer than a few minutes, write to us.",
+    "requestIdLabel": "Request code",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyUnavailable": "The clipboard is unavailable: the code is selected, copy it manually.",
+    "retry": "Retry",
+    "goHome": "Home",
+    "contactEditorial": "Write to the editors",
+    "offlineMetaTitle": "No connection — Altera",
+    "offlineTitle": "No connection",
+    "offlineDescription": "The page will open by itself once the network is back.",
+    "offlineNotCached": "This page is not saved. It will open once the network is back.",
+    "offlineRetry": "Try again",
+    "offlineRetrying": "Trying to open the page…",
+    "offlineStorageUnavailable": "The browser does not allow reading saved pages.",
+    "offlineSavedTitle": "Saved",
+    "offlineSavedEmpty": "Nothing saved yet: the pieces you open will be available without a network."
   }
 }

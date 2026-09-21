@@ -17,7 +17,13 @@ export interface PublicNavigationTag {
   articleCount: number
 }
 
-export const usePublicNavigation = () => {
+/**
+ * `enabled: false` оставляет меню пустым и не обращается к API: страница 500 и офлайн-страница
+ * обязаны рисоваться без единого запроса (`error.md` §4, `offline.md` §4) — иначе шапка упадёт
+ * вместе с тем, что уже сломалось.
+ */
+export const usePublicNavigation = (options: { enabled?: boolean } = {}) => {
+  const enabled = options.enabled ?? true
   const sections = ref<PublicNavigationSection[]>([])
   const popularTags = ref<PublicNavigationTag[]>([])
   const status = ref<"idle" | "pending" | "success" | "error">("idle")
@@ -40,7 +46,9 @@ export const usePublicNavigation = () => {
     }
   }
 
-  onMounted(load)
+  onMounted(() => {
+    if (enabled) load()
+  })
 
   return {
     sections: readonly(sections),
