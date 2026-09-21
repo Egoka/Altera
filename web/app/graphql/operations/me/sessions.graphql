@@ -1,0 +1,33 @@
+fragment AccountSessionFields on AccountSession {
+  id
+  deviceClass
+  browserClass
+  createdAt
+  lastActiveAt
+  isCurrent
+}
+
+query GetMySessions {
+  me {
+    id
+    sessions {
+      ...AccountSessionFields
+    }
+  }
+}
+
+mutation RevokeSession($id: ID!) {
+  revokeSession(id: $id) {
+    revoked
+  }
+}
+
+mutation RevokeAllSessions {
+  revokeAllSessions {
+    revokedCount
+  }
+}
+
+mutation LogoutSession {
+  logout
+}

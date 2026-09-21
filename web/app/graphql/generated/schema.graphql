@@ -1,3 +1,21 @@
+"""
+Активная сессия аккаунта (`docs/spec/30-account/reader/sessions.md` §4).
+Местоположение по IP не показывается и не вычисляется (журнал §25.9), поэтому полей
+`ip`, `country`, `city` и подобных в контракте нет и быть не должно.
+"""
+type AccountSession {
+  browserClass: SessionBrowserClass!
+  createdAt: String!
+  deviceClass: SessionDeviceClass!
+  id: ID!
+
+  """
+  Сессия, из которой пришёл запрос: её закрывает «выйти», а не «отозвать».
+  """
+  isCurrent: Boolean!
+  lastActiveAt: String!
+}
+
 type AccountUser {
   _count: UserCount
   articles: [Article!]
@@ -17,6 +35,13 @@ type AccountUser {
   photoUrl: String
   prevAvatarId: ID
   role: Role!
+
+  """
+  Свои сессии (матрица доступа #47). Чужие сессии здесь недоступны никакой роли:
+  аналитик к активным сессиям пользователей доступа не получает (журнал §26.6), а карточка
+  пользователя в админке в эту задачу не входит.
+  """
+  sessions: [AccountSession!]!
   socialLinks: JSON
   updatedAt: String!
 }
@@ -945,9 +970,11 @@ type Mutation {
   retryJob(id: ID!): AdminJob!
   retryJobs(ids: [ID!]!): AdminJobsRetryResult!
   revertToDraft(id: ID!): Article!
+  revokeAllSessions: SessionRevokeAllResult!
   revokeException(id: ID!, reason: String!): PermissionException!
   revokeOwner(id: ID!, reason: String!): AdminStaffMember!
   revokePlan(input: RevokePlanInput!): AdminPlanGrant!
+  revokeSession(id: ID!): SessionRevokeResult!
   revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
@@ -1217,6 +1244,39 @@ type SectionsResponse {
   search: SearchInfo
   sections: [Section!]!
   sort: SortInfo!
+}
+
+"""Класс браузера сессии — та же причина, что и у `SessionDeviceClass`."""
+enum SessionBrowserClass {
+  chrome
+  edge
+  firefox
+  opera
+  other
+  safari
+  unknown
+}
+
+"""
+Класс устройства сессии. Сырой `user-agent` наружу не отдаётся (ADR-0027,
+`50-access/rate-limits.md` п. 2), поэтому экран получает только класс.
+"""
+enum SessionDeviceClass {
+  desktop
+  mobile
+  tablet
+  unknown
+}
+
+"""
+Итог «выйти везде»: текущая сессия сохраняется, остальные отзываются (§7).
+"""
+type SessionRevokeAllResult {
+  revokedCount: Int!
+}
+
+type SessionRevokeResult {
+  revoked: Boolean!
 }
 
 type SitemapEntry {
