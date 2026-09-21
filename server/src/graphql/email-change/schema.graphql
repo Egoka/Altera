@@ -1,0 +1,41 @@
+"""
+Открытый запрос смены адреса (docs/spec/30-account/reader/email-change.md §4). Полного нового
+адреса здесь нет: письмо с кодом уже ушло на него, а экран показывает его маскированным.
+"""
+type EmailChangePending {
+  newEmailMasked: String!
+  expiresAt: String!
+  """
+  Сколько попыток ввода кода осталось; по исчерпании запрос закрывается (§8).
+  """
+  attemptsLeft: Int!
+}
+
+type EmailChangeState {
+  currentEmailMasked: String!
+  pending: EmailChangePending
+}
+
+"""
+Результат подтверждения кода: адрес изменён сразу, сессии не отзываются (журнал §25.8).
+"""
+type EmailChangeResult {
+  """
+  Новый адрес в маскированном виде — тот же формат, что у зоны 2 экрана.
+  """
+  email: String!
+  changedAt: String!
+}
+
+extend type AccountUser {
+  """
+  Состояние смены адреса своей записи (матрица #49).
+  """
+  emailChange: EmailChangeState!
+}
+
+extend type Mutation {
+  requestEmailChange(newEmail: String!): EmailChangeState!
+  confirmEmailChange(code: String!): EmailChangeResult!
+  cancelEmailChange: EmailChangeState!
+}

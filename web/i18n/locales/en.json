@@ -131,6 +131,41 @@
         "title": "Appeal submitted",
         "body": "We have received your appeal and will review it. A response will be sent to {email}."
       }
+    },
+    "email": {
+      "pageTitle": "E-mail change",
+      "currentLabel": "Current address",
+      "reveal": "Show",
+      "hide": "Hide",
+      "newLabel": "New e-mail address",
+      "newPlaceholder": "new{'@'}email.com",
+      "newHint": "The code goes to the new address. Enter it in this window — no second sign-in is needed.",
+      "send": "Send the code",
+      "sentTo": "The code has been sent to {email}.",
+      "codeLabel": "Code from the e-mail",
+      "expiresAt": "The code is valid until {time}.",
+      "expired": "The code has expired. Send a new one.",
+      "attemptsLeft": "Attempts left: {count}.",
+      "confirm": "Confirm",
+      "resend": "Send the code again",
+      "cancel": "Cancel",
+      "backToCode": "Back to the code",
+      "changed": "The address has been changed. Your sessions stayed active — no need to sign in again.",
+      "retry": "Retry",
+      "lostAccess": "Lost access to your mailbox?",
+      "lostAccessLink": "Write to the editors about access recovery",
+      "error": {
+        "invalidEmail": "Enter a valid e-mail address",
+        "sameEmail": "This is the current address of the account. Enter a different one",
+        "openRequest": "A request for another address is already open. Cancel it or enter the code from the e-mail",
+        "wrongCode": "The code is wrong. Check the e-mail and try again",
+        "expiredCode": "The code has expired. Send a new one",
+        "addressTaken": "This address belongs to another account. Choose a different one",
+        "rateLimited": "Too many requests. Try again in {retryAfter}.",
+        "providerUnavailable": "The e-mail with the code could not be sent. Try again later.",
+        "generic": "Something went wrong. Try again (code: {requestId})",
+        "dataUnavailable": "The e-mail change data could not be loaded. Try again later."
+      }
     }
   },
   "mail": {

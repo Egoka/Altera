@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test"
 
+/**
+ * Шаги 1–3 закрыты T-032 и проверяются в `32-email-change.spec.ts` на живой базе и почте.
+ * Здесь остаётся ветка восстановления доступа: она ждёт страницу обращений (`/contact`, T-073)
+ * и экран смены e-mail в карточке пользователя (`40-admin/users.md`, заход 7).
+ */
 test("flow #13 changes email without ending sessions and supports audited recovery", async ({ page }) => {
-  test.skip(true, "Requires T-021, T-032, and T-073 with mail, session, support, and audit fixtures")
+  test.skip(true, "Recovery branch requires /contact (T-073) and the admin e-mail change screen (matrix #50)")
 
   await test.step("Шаг 1: запросить одноразовый код на новый e-mail", async () => {
     await page.goto("/me/email")
