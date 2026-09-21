@@ -158,6 +158,8 @@ test.describe("страницы юридических текстов: стро�
     expect(known?.status()).toBe(200)
     await expect(page.locator("#forbidden")).toBeInViewport()
 
+    // Смена только якоря — переход внутри документа без ответа; нужна новая загрузка страницы.
+    await page.goto("about:blank")
     const unknown = await page.goto("/legal/content-rules#no-such-section")
     expect(unknown?.status()).toBe(200)
     await expect(page.getByRole("heading", { level: 1 })).toBeInViewport()
