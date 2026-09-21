@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "T-036",
+  "issue_id": "01a0c1f0-b80b-75db-8647-14c48f9906fe",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-036-subscription-page-launch-mode.md",
+    "sha": "ac8c9563012432f56903dcc812430678fec3a780"
+  },
+  "baseline_sha": "20002d3aa074de2d8c8cfa5f25b283f607be606f",
+  "tested_sha": "3b4ae0cb5b1b3fde30a195259991e72227a20e64",
+  "branch": "feat/t036-subscription-launch",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t036-subscription",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c25a-b485-776a-8e01-e51fbc2475f7",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "curl against the built nuxt server (node .output/server/index.mjs) on 02f8c53: /me/subscription/checkout, /me/subscription/checkout?plan=pro&interval=year and /me/subscription/result?payment=x answer 404; /me/billing and /me/plan answer 301 to /me/subscription. web/tests/e2e/36-account-subscription.spec.ts asserts the same 404s for a guest and a signed-in reader; it passed in CI run 35564210372."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/e2e/36-account-subscription.spec.ts reproduces the first-launch rows of subscription.md §8 in Chromium against the live database: no access (guest to /login?next=/me/subscription), blocked (GET of a self-archived session answers 302 to /me/archived), base plan without payment (card text, 'paid plans will come later', no payments, no checkout links, Cache-Control private, no-store, title and robots), an active grant with its queue, plan limit (expired grant, read-only, renew to /pricing), service record (§8.17 note and link to /admin/subscriptions), loading (skeleton on client navigation) and data error (request id and retry); plus the five payment mutations answering UNAUTHENTICATED to a guest and FORBIDDEN to an author, and the 301 of the old addresses. CI run 35564210372: the browser job went from 204 tests (195 passed / 9 skipped, baseline run 35561332480) to 215 (206 passed / 9 skipped), so all 11 new scenarios passed. 'Empty' and 'Not found' (?refund=) belong to the payments stage, Paywall is reserved."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 713 passed / 28 skipped; web 512 passed",
+    "web_typecheck": "passed (02f8c53 locally; 3b4ae0c in CI)",
+    "web_build": "passed (02f8c53 locally; 3b4ae0c in CI)",
+    "server_build_ci": "passed",
+    "playwright": "not run locally: the local Docker daemon does not answer and no local Postgres exists; the CI browser job ran the new scenarios — 206 passed / 9 skipped out of 215",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35564210372",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 199,
+    "url": "https://github.com/Egoka/Altera/pull/199",
+    "base_ref": "app",
+    "base_sha": "20002d3aa074de2d8c8cfa5f25b283f607be606f",
+    "head_sha": "3b4ae0cb5b1b3fde30a195259991e72227a20e64",
+    "merge_sha": "a9ac34ab1437aeb94ec99353f646f4ca98d84b65"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The task adds no Prisma migration and does not change the database schema; the new resolvers ship with the ordinary server build"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-036.md",
+    "sha256": "4645ecbceb3bf5b5b1615834067bf2d1ffa7ab97095ac858e06dcaa7bb5c1757"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller. A pre-merge review by a separate agent (not a native review) found on 02f8c53 that a restricted session got a 500 page instead of 302 to /me/archived (me arrives with a null subscription and a FORBIDDEN field error); fixed in 3b4ae0c",
+    "The /me/archived screen referenced by the blocked row still does not exist in the repository, as for T-022, T-025, T-030 and T-032",
+    "Payments (F-01) are out of scope: checkout, payments and receipts, refunds, price change, promo codes, /legal/paid-services and /legal/refunds pages; the payment mutations return Boolean! as a placeholder until that stage defines their payloads",
+    "[ДОПУЩЕНИЕ] card text of the base plan (§12), 301 of /me/billing and /me/plan (§3), FORBIDDEN of payment mutations (§12), checkout/result 404 (checkout.md §3); the two-column layout of §9 was not built"
+  ],
+  "usage": null
+}
