@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-059",
+  "issue_id": "01a0c225-9782-7011-bdee-512631a79291",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-059-about-and-contact.md",
+    "sha": "c241a3bf14ff8724d2e0d4380ec3b3b94b083b8b"
+  },
+  "baseline_sha": "a959d15160b61bed6579aab87602225c090c0b65",
+  "tested_sha": "9514c01c75f7cc87859d91a0dfcb3ea201db2a27",
+  "branch": "feat/t059-about-contact",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t059-about-contact",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c29a-be7d-7308-8e0f-24e45a2688a4",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/support-requests.test.ts asserts that a guest request saved with the requestId of the 500 page stores that requestId (with the path stripped of its query, email normalised and createdByRequestId set), and that without a passed requestId the field stays null. The browser scenario 'гость со страницы 500' in web/tests/e2e/59-about-contact.spec.ts submits the /contact?requestId=t059-request-id form against the live database, reads the support_requests row back through Prisma, asserts requestId = 't059-request-id', topic 'general' and userId null, and asserts that the number shown on screen equals the stored ticketNo. CI run 35569778630 on the tested SHA."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/e2e/59-about-contact.spec.ts has 14 Chromium scenarios. contact.md §8: field errors that are not sent to the server; the RATE_LIMITED row with an m:ss timer and a disabled button and no request code; the save-failure data-error row with ErrorState, request code and the text kept in the field; the blocked row (an archived account sees the guest form); an unknown topic becoming 'other'; account prefill from the session; the refund hint link; noindex, canonical and hreflang for parametrised addresses; the English mobile layout. about.md §8: loading skeleton on client navigation; the empty row (another locale shown with a note, 'text is being prepared' when nothing is published, the owner hint and edit link); the data-error row with the static zones 2 and 7 kept; the SSR render with JSON-LD AboutPage. The browser job of CI run 35569778630 on the tested SHA ran 238 tests: 229 passed, 9 skipped, 0 failed. The contact.md 'Загрузка: реквизиты — скелет' row does not occur because contactInfo is not implemented; see remaining."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 749 passed / 29 skipped; web 559 passed (on 6c3a4f3; the tested SHA only changes the e2e spec, and the pre-commit hook and CI passed on it)",
+    "web_typecheck": "passed (on 6c3a4f3; CI web build and typecheck green on the tested SHA)",
+    "web_build": "passed (on 6c3a4f3; CI green on the tested SHA)",
+    "server_build_ci": "passed (on 6c3a4f3; CI server build and start smoke green on the tested SHA)",
+    "playwright": "not run locally: the local Docker daemon answers HTTP 500 to its own client and no local PostgreSQL exists; CI browser job on the tested SHA: 229 passed / 9 skipped / 0 failed of 238. Attempts 1 and 2 of that run each failed one unrelated mocked scenario (02-become-author.spec.ts:54 length check right after the URL change; 22-admin-admins.spec.ts:155 waitForResponse(GetAdminStaff) timeout); attempt 3 passed in full",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35569778630",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 203,
+    "url": "https://github.com/Egoka/Altera/pull/203",
+    "base_ref": "app",
+    "base_sha": "a959d15160b61bed6579aab87602225c090c0b65",
+    "head_sha": "9514c01c75f7cc87859d91a0dfcb3ea201db2a27",
+    "merge_sha": "1043e76eae1d9dd04d67b88290c76b35d423f5ca"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": "9514c01c75f7cc87859d91a0dfcb3ea201db2a27",
+    "verdict": "approve"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "A new Prisma migration (20260921150000_support_requests) and a new mutation need controller-managed development deployment and health verification"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-059.md",
+    "sha256": "b054a2b6582e90f5439d404bb489df7dc162d15b1e4fff647071e976ed523261"
+  },
+  "remaining": [
+    "Independent review was done inside this native task by separate clean-context review agents, not by a native Multica reviewer. 79133cd: approve with one should-fix and several nits, fixed in 6c3a4f3. 6c3a4f3: approve, two nits left. Delta 6c3a4f3..9514c01 (e2e only): approve. review.actor_id and review.run_id are unknown",
+    "Deviation: contact.md §4 lists PROVIDER_UNAVAILABLE when the staff notification fails; the implementation still answers ok with the ticket number, because the request is already saved and an error would make the sender resubmit and create a duplicate. mail.failed and the failed row in /admin/mail record the failure",
+    "contactInfo (editorial address, seller requisites, response hours) is not implemented: these are owner facts absent from the journal. Zone 6 says requisites are published with the paid-services terms and that there are no paid services during the first launch (§24.1)",
+    "Owner questions stay open: the support queue screen in the admin and the request status in the cabinet (Q-08, OPEN-QUESTIONS #2); the About text and the 'what does not work yet' list (OPEN-QUESTIONS #1)",
+    "The 404 broken-link button shares the contact.ip bucket (3 per hour): the limit of 5 per hour in not-found.md §7 is not in the rate-limit registry",
+    "The recovery branch web/tests/e2e/13-email-change-recovery.spec.ts stays skipped: it also needs the admin e-mail change screen (matrix #50)",
+    "Flaky unrelated scenarios seen in CI: 02-become-author.spec.ts:54 and 22-admin-admins.spec.ts:155/205"
+  ],
+  "usage": null
+}
