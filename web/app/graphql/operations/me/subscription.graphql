@@ -1,0 +1,19 @@
+# Страница «Подписка» (`30-account/reader/subscription.md` §4): на первом запуске платежей нет
+# (журнал §24.1), поэтому состояние плана — та же выдача, что и в карточке сводки `/me`.
+query GetAccountSubscription {
+  me {
+    id
+    role
+    subscription {
+      state
+      tier
+      until
+      endedAt
+      queue {
+        tier
+        startsAt
+        endsAt
+      }
+    }
+  }
+}

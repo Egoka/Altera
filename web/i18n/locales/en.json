@@ -262,6 +262,43 @@
         "terms": "Terms of use",
         "privacy": "Privacy policy"
       }
+    },
+    "subscription": {
+      "pageTitle": "Subscription",
+      "loading": "Loading your subscription",
+      "plan": {
+        "title": "Current plan",
+        "base": "Base plan, free of charge",
+        "later": "Paid plans will come later.",
+        "activeUntil": "{tier} until {date}",
+        "source": "Granted by the editors, free of charge",
+        "expiredOn": "Plan ended on {date}",
+        "expired": "Plan ended",
+        "readOnly": "Author sections are read-only.",
+        "renew": "Renew"
+      },
+      "service": {
+        "title": "Service accounts do not purchase plans.",
+        "link": "Subscriptions in admin"
+      },
+      "queue": {
+        "title": "Queued periods",
+        "period": "{tier}: from {start} to {end}",
+        "periodOpen": "{tier}: from {start}"
+      },
+      "payments": {
+        "title": "Payments and receipts",
+        "empty": "No payments."
+      },
+      "help": {
+        "title": "Help",
+        "pricing": "Pricing and plans"
+      },
+      "error": {
+        "title": "Could not load your subscription",
+        "description": "Please try again a little later."
+      },
+      "retry": "Try again"
     }
   },
   "mail": {
