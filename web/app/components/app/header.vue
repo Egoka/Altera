@@ -7,9 +7,17 @@
   import { usePublicNavigation } from "~/composables/usePublicNavigation"
   import { useScroll } from "~/composables/useScroll"
 
+  // `static` — шапка служебной страницы: она рисуется без запросов к API (`error.md` §4,
+  // `offline.md` §4). `minimal` убирает вход и «Писать»: офлайн ни то, ни другое не выполнит
+  // (`offline.md` §6).
+  const props = withDefaults(defineProps<{ static?: boolean; minimal?: boolean }>(), {
+    static: false,
+    minimal: false
+  })
+
   const { isScrolled, isHeaderVisible } = useScroll()
   const { locale, t } = useI18n()
-  const { sections, popularTags, status } = usePublicNavigation()
+  const { sections, popularTags, status } = usePublicNavigation({ enabled: !props.static })
   const isMegaMenuOpen = ref(false)
 
   const toggleMegaMenu = () => {
@@ -82,6 +90,7 @@
       <div class="flex flex-1 items-center justify-end gap-1 sm:gap-2">
         <LanguageToggle compact />
         <NuxtLink
+          v-if="!minimal"
           to="/login"
           class="hidden px-2 py-3 font-sans text-sm font-semibold text-zinc-800 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:inline-flex dark:text-zinc-200">
           {{ t("common.login") }}
@@ -89,6 +98,7 @@
         <!-- Первый запуск бесплатный: «Писать» ведёт прямо в создание материала, а гостя
              страница создания перекладывает на вход с возвратом (журнал §25.1, `home.md` §7). -->
         <NuxtLink
+          v-if="!minimal"
           to="/me/articles/new"
           class="inline-flex min-h-10 items-center border border-zinc-900 px-3 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:border-orange-700 hover:bg-orange-700 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-100 dark:text-zinc-100">
           {{ t("common.write") }}
