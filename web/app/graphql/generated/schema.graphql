@@ -1,3 +1,22 @@
+type AccountPlanPeriod {
+  endsAt: String
+  startsAt: String!
+  tier: PlanTier!
+}
+
+"""
+Вариант карточки плана сводки кабинета (`30-account/reader/dashboard.md` §5 зона 3):
+`free` — выдач не было, `base` — бессрочная базовая выдача первого запуска (журнал §25.1),
+`active` — выдача со сроком, `expired` — последняя выдача закончилась или отозвана.
+Платежей на первом запуске нет (журнал §24.1), поэтому варианта «серия списаний» нет.
+"""
+enum AccountPlanState {
+  active
+  base
+  expired
+  free
+}
+
 """
 Активная сессия аккаунта (`docs/spec/30-account/reader/sessions.md` §4).
 Местоположение по IP не показывается и не вычисляется (журнал §25.9), поэтому полей
@@ -16,6 +35,16 @@ type AccountSession {
   lastActiveAt: String!
 }
 
+type AccountSubscription {
+  endedAt: String
+
+  """Очередь периодов одной строкой «затем: …» (журнал §8.22)."""
+  queue: [AccountPlanPeriod!]!
+  state: AccountPlanState!
+  tier: PlanTier!
+  until: String
+}
+
 type AccountUser {
   _count: UserCount
   articles: [Article!]
@@ -28,6 +57,11 @@ type AccountUser {
   """Состояние смены адреса своей записи (матрица #49)."""
   emailChange: EmailChangeState!
   handle: String!
+
+  """
+  Есть ли у аккаунта хотя бы одна статья: без неё авторские разделы скрыты (журнал §8.21).
+  """
+  hasArticles: Boolean!
   id: ID!
   locale: Locale!
   name: String!
@@ -43,6 +77,12 @@ type AccountUser {
   """
   sessions: [AccountSession!]!
   socialLinks: JSON
+
+  """
+  План своего аккаунта. `null` у служебной записи: она плана не покупает (§8.17), а её `/me`
+  ведёт в админку (журнал §25.2).
+  """
+  subscription: AccountSubscription
   updatedAt: String!
 }
 
@@ -1079,6 +1119,12 @@ type PermissionException {
 enum PermissionExceptionKind {
   deny
   grant
+}
+
+enum PlanTier {
+  free
+  pro
+  standard
 }
 
 enum ProfileCheckStatus {

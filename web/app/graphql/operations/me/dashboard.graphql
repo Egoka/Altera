@@ -1,0 +1,69 @@
+query GetAccountDashboard {
+  me {
+    id
+    name
+    handle
+    photoUrl
+    role
+    hasArticles
+    subscription {
+      state
+      tier
+      until
+      endedAt
+      queue {
+        tier
+        startsAt
+        endsAt
+      }
+    }
+  }
+}
+
+fragment DashboardArticleFields on MyArticle {
+  id
+  status
+  archivedBy
+  section {
+    id
+    name
+    slug
+  }
+  format {
+    id
+    name
+    slug
+  }
+  tags {
+    id
+    name
+    slug
+  }
+  translations {
+    id
+    locale
+    slug
+    title
+    status
+    rejected
+    publishedAt
+    updatedAt
+    reeditUntil
+    lastReviewMessageAt
+    unread
+  }
+}
+
+# Зоны 4 и 5 сводки: пять последних материалов и кандидаты в «требует внимания» (§5).
+query GetDashboardArticles {
+  latest: myArticles(limit: 5) {
+    items {
+      ...DashboardArticleFields
+    }
+  }
+  attention: myArticles(status: [ai_check, review, rejected, published], limit: 20) {
+    items {
+      ...DashboardArticleFields
+    }
+  }
+}
