@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "T-090",
+  "issue_id": "01a0c182-3784-7e79-b37a-18ca025aa32a",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-090-retention-housekeeping.md",
+    "sha": "4cf17e527c774d70761ffa0f6a476bd17e3b957f"
+  },
+  "baseline_sha": "023797f2f65415de96e93b75101e0daaf9f2d1cf",
+  "tested_sha": "c5b786eb5ee965f1d0cd805b72414ab9b5d57583",
+  "branch": "feat/t090-housekeeping",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t090-housekeeping",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c223-d9b9-721b-b13b-b313710b1fa1",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/housekeeping-database.test.ts runs runHousekeeping against a freshly migrated PostgreSQL database seeded with rows on both sides of every retention cutoff plus audit_logs rows aged 400 and 3650 days and a backend_error_status_history row; after the pass both audit rows, the status history and the decided error remain, only the expired rows are gone, and a second pass deletes nothing. The housekeeping client type exposes no audit or status-history table. CI run 35560543452 on c5b786e, step 'Проверить сроки хранения и housekeeping T-090': 1 passed."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "All retention periods and the run interval live in server/src/housekeeping/retention-policy.ts (RETENTION_POLICY); values without an owner decision are marked [ДОПУЩЕНИЕ]. server/tests/housekeeping.test.ts asserts every cutoff is derived from the policy passed in. Independent review verdict APPROVE on c5b786e confirms the criterion."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 702 passed / 28 skipped; web 499 passed",
+    "server_build_ci": "passed",
+    "database_test": "not run locally: no local PostgreSQL and the Docker daemon answers HTTP 500; CI ran tests/housekeeping-database.test.ts — 1 passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35560543452",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 197,
+    "url": "https://github.com/Egoka/Altera/pull/197",
+    "base_ref": "app",
+    "base_sha": "023797f2f65415de96e93b75101e0daaf9f2d1cf",
+    "head_sha": "c5b786eb5ee965f1d0cd805b72414ab9b5d57583",
+    "merge_sha": "916a14a305a7c991133f4803479561af7f7b1bac"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": "c5b786eb5ee965f1d0cd805b72414ab9b5d57583",
+    "verdict": "APPROVE (independent reviewer subagent af6faa9084e033fa6 spawned by the implementer run; REQUEST_CHANGES on 64b9f81 fixed in c5b786e)"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "No Prisma migration and no schema change; the job ships with the ordinary server build"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-090.md",
+    "sha256": "d41babca60ba15181c592ed8143ddfdac318e18f0925f60df7f44411062ef18d"
+  },
+  "remaining": [
+    "Owner question: approve a log event code (e.g. housekeeping.run, log/info, per-table counts only) for the info log that retention-and-pd.md §2 p.5 [ДОПУЩЕНИЕ] asks for; the approved events registry has none and the logger rejects unknown codes, so a successful pass is visible only as a completed job",
+    "Race: a staff status change on a backend error older than 90 days during the pass could be removed by cascade; low probability",
+    "The autosave pruning SQL compares a timestamp-without-time-zone column and is correct while the database session time zone is UTC (true in CI and on Neon)",
+    "With several API instances a duplicate housekeeping job is possible (check and enqueue are separate); the pass is idempotent; old rows of the jobs table are not pruned because no period is set",
+    "After a pass, re-clicking a used magic link logs reason 'unknown' instead of 'used'; the user response is the same NOT_FOUND",
+    "Engagement raw events, salts and data export files have no tables yet and are not covered; media orphans are T-068",
+    "Independent review ran as a subagent of the implementer run, not a separate native review run; Done stays with the controller"
+  ],
+  "usage": null
+}
