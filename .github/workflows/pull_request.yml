@@ -219,6 +219,12 @@ jobs:
         env:
           T101_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm --filter server exec vitest run tests/legal-versions-database.test.ts
+      # T-090: прореживание autosave написано на SQL, а сохранность аудита и истории решений
+      # держится на внешних ключах — это проверяется на PostgreSQL, а не на двойнике.
+      - name: Проверить сроки хранения и housekeeping T-090
+        env:
+          T090_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/housekeeping-database.test.ts
       - name: Check build output
         run: test -f server/dist/server.js
       - name: Deploy migrations to isolated CI database

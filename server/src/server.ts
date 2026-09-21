@@ -16,6 +16,7 @@ import { createRequestTracingPlugin, getRequestId } from "./observability/reques
 import { jobHandlers } from "./jobs/job-handlers"
 import { createJobWorker } from "./jobs/job-worker"
 import { createPrismaJobStore } from "./jobs/prisma-job-store"
+import { createHousekeepingQueue, registerHousekeepingJob, startHousekeepingSchedule } from "./housekeeping"
 import { startPermissionExceptionExpiry } from "./permission-exceptions/scheduler"
 import type { PermissionExceptionClient } from "./permission-exceptions/service"
 import {
@@ -78,9 +79,12 @@ const health = createHealthCheck(
   process.env.RENDER_GIT_COMMIT
 )
 const server = createServer(withHealth(yoga, health))
-const jobWorker = createJobWorker({ store: createPrismaJobStore(prisma), handlers: jobHandlers, logger })
+const jobStore = createPrismaJobStore(prisma)
+registerHousekeepingJob(prisma)
+const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger })
 jobWorker.start()
 server.on("close", () => jobWorker.stop())
 startPermissionExceptionExpiry(prisma as unknown as PermissionExceptionClient, logger)
 startRateLimitCounterPrune(rateLimitClient, logger)
+startHousekeepingSchedule(createHousekeepingQueue(prisma, jobStore), logger)
 server.listen(PORT)
