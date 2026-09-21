@@ -1,0 +1,4 @@
+# Ошибка страницы `page.error` (реестр событий #64, `80-observability/error-collector.md` §2 п. 1).
+mutation ReportPageError($route: String!, $code: String!, $requestId: String) {
+  reportPageError(route: $route, code: $code, requestId: $requestId)
+}

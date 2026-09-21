@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from "./generated/prisma"
 import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
+import type { ErrorCollector } from "./error-collector"
 import type { MailService } from "./mail/service"
 import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
@@ -32,6 +33,8 @@ export interface GraphQLContext {
   // Единые пороги лимитов частоты: корзины по e-mail и аккаунту применяются в резолверах,
   // корзины по адресу — middleware до резолвера (`50-access/rate-limits.md` §2 п. 13).
   rateLimiter: RateLimiter
+  // История `backend.error` и адаптер внешнего сборщика (`80-observability/error-collector.md`).
+  errorCollector: ErrorCollector
 }
 
 // Браузер ходит только через BFF, поэтому адрес приходит заголовком прокси; поле
@@ -52,7 +55,8 @@ export async function createContext(
   logger: AppLogger,
   piiHasher: PiiHasher,
   mail: MailService,
-  rateLimiter: RateLimiter
+  rateLimiter: RateLimiter,
+  errorCollector: ErrorCollector
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const requestMeta = readRequestMeta(initialContext.request)
@@ -105,5 +109,17 @@ export async function createContext(
   }
 
   setRequestUserSnapshot(currentUser ? { id: currentUser.id, role: currentUser.role } : null)
-  return { prisma, currentUser, sessionId, requestMeta, cache, requestId, logger, piiHasher, mail, rateLimiter }
+  return {
+    prisma,
+    currentUser,
+    sessionId,
+    requestMeta,
+    cache,
+    requestId,
+    logger,
+    piiHasher,
+    mail,
+    rateLimiter,
+    errorCollector
+  }
 }

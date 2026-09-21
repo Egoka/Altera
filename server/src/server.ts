@@ -8,6 +8,12 @@ import { createContext, GraphQLContext, prisma } from "./prisma"
 import { checkMigrations, createHealthCheck, redisReadiness, withHealth } from "./health"
 import { createCache } from "./cache"
 import { createErrorMasker } from "./errors/graphql-error"
+import {
+  createErrorCollector,
+  createErrorCollectorAdapterFromEnv,
+  createPrismaErrorHistory,
+  type ErrorHistoryClient
+} from "./error-collector"
 import { createMailConfigFromEnv } from "./mail/config"
 import { createMailService } from "./mail/service"
 import { createPrismaPublicAccessResolver, type MediaUsageClient } from "./storage/access"
@@ -39,7 +45,13 @@ if (!forwardedRequestSecret) throw new Error("REQUEST_ID_FORWARD_SECRET must be 
 const mailConfig = createMailConfigFromEnv(process.env)
 const mail = createMailService({ store: prisma, transport: mailConfig.transport, logger, from: mailConfig.from })
 const storageConfig = createStorageConfigFromEnv(process.env)
-const maskError = createErrorMasker({ logger, requestIdFactory: getRequestId })
+// История `backend.error` своя, внешний сборщик — через адаптер; до выбора поставщика — `noop` (Q-01).
+const errorCollector = createErrorCollector({
+  history: createPrismaErrorHistory(prisma as unknown as ErrorHistoryClient),
+  adapter: createErrorCollectorAdapterFromEnv(process.env),
+  logger
+})
+const maskError = createErrorMasker({ logger, requestIdFactory: getRequestId, collector: errorCollector })
 // Счётчики лимитов: Redis при заданном `REDIS_URL`, иначе таблица (`rate-limits.md` §2 п. 13).
 const rateLimitClient = prisma as unknown as RateLimitDatabaseClient
 const rateLimiter = createRateLimiter({
@@ -54,7 +66,8 @@ const rateLimiter = createRateLimiter({
 
 const yoga = createYoga<GraphQLContext>({
   schema,
-  context: (initialContext) => createContext(initialContext, cache, logger, piiHasher, mail, rateLimiter),
+  context: (initialContext) =>
+    createContext(initialContext, cache, logger, piiHasher, mail, rateLimiter, errorCollector),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {
@@ -92,7 +105,7 @@ const media = storageConfig.local
 const server = createServer(withHealth(media, health))
 const jobStore = createPrismaJobStore(prisma)
 registerHousekeepingJob(prisma)
-const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger })
+const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger, errorCollector })
 jobWorker.start()
 server.on("close", () => jobWorker.stop())
 startPermissionExceptionExpiry(prisma as unknown as PermissionExceptionClient, logger)

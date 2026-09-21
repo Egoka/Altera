@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { GraphQLError } from "graphql"
+import type { ErrorCollector } from "../error-collector/collector"
 import type { AppLogger } from "../observability/logger"
 import { ERROR_DEFINITIONS, pickValidExtensions, type ApiErrorFields, type ErrorCode } from "./dictionary"
 
@@ -79,9 +80,18 @@ export function isApiError(error: unknown): boolean {
   return findKnownError(error) !== null
 }
 
+/** Маршрут сбоя для сигнатуры: корневое поле операции, без аргументов и индексов списков. */
+function rootFieldRoute(error: unknown): string | null {
+  const path = error instanceof GraphQLError ? error.path : undefined
+  const root = path?.[0]
+  return typeof root === "string" ? `graphql:${root}` : null
+}
+
 export function createErrorMasker(options: {
   logger: AppLogger
   requestIdFactory?: () => string
+  /** История `backend.error` и внешний сборщик (`error-collector.md` §2 п. 1). */
+  collector?: ErrorCollector
 }): (error: unknown, message: string, isDev?: boolean) => GraphQLError {
   const requestIdFactory = options.requestIdFactory ?? randomUUID
 
@@ -98,6 +108,16 @@ export function createErrorMasker(options: {
       requestId,
       message: "Unhandled GraphQL error",
       error
+    })
+    // Ответ не ждёт записи: сборщик сам глотает и журналирует свои сбои.
+    void options.collector?.capture({
+      event: "error.unhandled",
+      service: "api",
+      code: "INTERNAL_ERROR",
+      route: rootFieldRoute(error),
+      requestId,
+      // Стек обёртки GraphQL одинаков у всех сбоев; группировать нужно по стеку исходного исключения.
+      error: error instanceof GraphQLError && error.originalError ? error.originalError : error
     })
     return createApiError("INTERNAL_ERROR", { requestId })
   }
