@@ -887,3 +887,39 @@ enum ReviewMessageKind {
   published_auto
   author_reply
 }
+
+/// Поток истории ошибок: сбои бэкенда и отдельная вкладка ошибок фронта `page.error`
+/// (`80-observability/error-collector.md` §2 п. 1).
+enum ErrorStream {
+  backend
+  page
+}
+
+/// Неизменяемая история `backend.error` (#81, `error-collector.md` §2 п. 2): запись не
+/// редактируется — UPDATE запрещён триггером. Рабочие статусы групп ведутся отдельно (T-081).
+/// Идентификатора пользователя нет намеренно (§2 п. 8): мост к обращению — только `requestId`.
+model BackendErrorEvent {
+  id         String      @id @default(uuid())
+  /// Событие-источник: `error.unhandled`, `backend.error`, `job.failed` или `page.error`.
+  event      String
+  stream     ErrorStream
+  /// `api`, `web` или `worker`.
+  service    String
+  code       String
+  /// Маршрут по шаблону или вид задания — без значений параметров (§2 п. 5).
+  route      String?
+  requestId  String?
+  jobId      String?
+  errorType  String?
+  message    String?     @db.Text
+  /// Стек после маскирования ПДн.
+  stack      String?     @db.Text
+  /// Сигнатура группы: сервис, код, маршрут и первые кадры стека без адресов (§2 п. 3).
+  signature  String
+  occurredAt DateTime    @default(now())
+
+  @@index([signature, occurredAt])
+  @@index([stream, occurredAt])
+  @@index([requestId])
+  @@map("backend_error_events")
+}

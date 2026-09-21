@@ -1,0 +1,11 @@
+# Ошибки фронта `page.error` (реестр событий #64, `80-observability/error-collector.md` §2 п. 1).
+
+extend type Mutation {
+  """
+  Ошибка рендера или запроса на странице. Доступно всем: фронт сообщает о сбое любого
+  посетителя. Поля — только из реестра (#64): `route` — шаблон маршрута без query и hash,
+  `code` — HTTP-статус или код ошибки, `requestId` — связь с записью сбоя бэкенда. Стек,
+  адрес и пользователь не передаются (§2 п. 5, п. 8).
+  """
+  reportPageError(route: String!, code: String!, requestId: String): Boolean!
+}

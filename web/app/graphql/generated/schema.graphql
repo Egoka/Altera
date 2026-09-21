@@ -1201,6 +1201,14 @@ type Mutation {
   refreshSession(refreshToken: String!): AuthPayload!
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
+
+  """
+  Ошибка рендера или запроса на странице. Доступно всем: фронт сообщает о сбое любого
+  посетителя. Поля — только из реестра (#64): `route` — шаблон маршрута без query и hash,
+  `code` — HTTP-статус или код ошибки, `requestId` — связь с записью сбоя бэкенда. Стек,
+  адрес и пользователь не передаются (§2 п. 5, п. 8).
+  """
+  reportPageError(code: String!, requestId: String, route: String!): Boolean!
   requestEmailChange(newEmail: String!): EmailChangeState!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
   requestRefund(paymentId: ID!, reason: String): Boolean!

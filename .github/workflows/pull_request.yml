@@ -225,6 +225,12 @@ jobs:
         env:
           T090_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm --filter server exec vitest run tests/housekeeping-database.test.ts
+      # T-089: группировка истории `backend.error` идёт через groupBy, а запрет правки записи —
+      # триггер PostgreSQL; двойник ни то ни другое не проверяет.
+      - name: Проверить историю ошибок backend.error T-089
+        env:
+          T089_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/error-history-database.test.ts
       - name: Check build output
         run: test -f server/dist/server.js
       - name: Deploy migrations to isolated CI database

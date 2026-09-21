@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto"
+import type { ErrorCollector } from "../error-collector/collector"
 import type { AppLogger } from "../observability/logger"
 
 export const DEFAULT_JOB_MAX_ATTEMPTS = 3
@@ -50,6 +51,8 @@ interface JobWorkerOptions {
   store: JobStore
   logger: AppLogger
   handlers: ReadonlyMap<string, JobHandler>
+  /** Исчерпанное задание — источник истории `backend.error` (`error-collector.md` §2 п. 1). */
+  errorCollector?: ErrorCollector
   now?: () => Date
   retryDelayMs?: number
   stuckTimeoutMs?: number
@@ -115,6 +118,15 @@ export function createJobWorker(options: JobWorkerOptions): JobWorker {
               attempts: job.attemptCount,
               ageSec: ageSeconds(job.createdAt, failedAt)
             }
+          })
+          await options.errorCollector?.capture({
+            event: "job.failed",
+            service: "worker",
+            code: failure.errorClass,
+            route: job.kind,
+            jobId: job.id,
+            requestId: job.originRequestId ?? null,
+            error
           })
         }
       } else {
