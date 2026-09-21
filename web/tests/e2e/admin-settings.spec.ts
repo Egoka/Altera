@@ -90,10 +90,10 @@ test.describe("admin system settings", () => {
       "Изменение настроек из интерфейса появится на этапе 4."
     )
 
-    await page.locator('[data-settings-group="storage"]').click()
+    await page.locator('[data-settings-group="payments"]').click()
 
-    await expect(page).toHaveURL((url) => url.searchParams.get("group") === "storage")
-    await expect(page.locator('[data-settings-panel="storage"]')).toContainText("Провайдер группы ещё не подключён.")
+    await expect(page).toHaveURL((url) => url.searchParams.get("group") === "payments")
+    await expect(page.locator('[data-settings-panel="payments"]')).toContainText("Провайдер группы ещё не подключён.")
     await expect(page.locator("[data-settings-none]")).toBeVisible()
   })
 
