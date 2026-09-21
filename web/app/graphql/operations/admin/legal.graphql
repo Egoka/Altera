@@ -1,0 +1,80 @@
+query GetAdminLegalKinds {
+  adminLegalKinds {
+    kind
+    requiresConsent
+    locales {
+      locale
+      currentVersion
+      publishedAt
+      draftVersion
+      usersTotal
+      usersWithCurrentConsent
+    }
+  }
+}
+
+query GetAdminLegalVersions($kind: LegalTextKind, $locale: Locale, $status: LegalTextStatus) {
+  adminLegalVersions(kind: $kind, locale: $locale, status: $status) {
+    id
+    kind
+    locale
+    version
+    status
+    isMaterial
+    summaryOfChanges
+    publishedAt
+    publishedByRole
+    updatedAt
+    consentCount
+  }
+}
+
+query GetAdminLegalVersion($kind: LegalTextKind!, $locale: Locale!, $version: Int!) {
+  adminLegalVersion(kind: $kind, locale: $locale, version: $version) {
+    id
+    kind
+    locale
+    version
+    status
+    isMaterial
+    summaryOfChanges
+    publishedAt
+    publishedByRole
+    updatedAt
+    consentCount
+    body
+    anchors {
+      id
+      title
+    }
+    current {
+      version
+      body
+    }
+    requiresConsent
+    affectedUsers
+    pendingConsentCount
+  }
+}
+
+mutation CreateLegalDraft($input: CreateLegalDraftInput!) {
+  createLegalDraft(input: $input) {
+    id
+    kind
+    locale
+    version
+    status
+    updatedAt
+  }
+}
+
+mutation PublishLegalVersion($input: PublishLegalVersionInput!) {
+  publishLegalVersion(input: $input) {
+    id
+    kind
+    locale
+    version
+    status
+    isMaterial
+  }
+}

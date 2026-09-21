@@ -228,6 +228,77 @@ type AdminJobsSummaryKind {
   kind: String!
 }
 
+type AdminLegalCurrentText {
+  body: String!
+  version: Int!
+}
+
+type AdminLegalKind {
+  kind: LegalTextKind!
+  locales: [AdminLegalLocaleState!]!
+  requiresConsent: Boolean!
+}
+
+type AdminLegalLocaleState {
+  currentVersion: Int
+  draftVersion: Int
+  locale: Locale!
+  publishedAt: String
+
+  """
+  Только для оферты и политики ПД: активные аккаунты локали и принявшие актуальную редакцию.
+  """
+  usersTotal: Int
+  usersWithCurrentConsent: Int
+}
+
+type AdminLegalVersion {
+  consentCount: Int!
+  createdAt: String!
+  id: ID!
+  isMaterial: Boolean!
+  kind: LegalTextKind!
+  locale: Locale!
+  publishedAt: String
+  publishedByRole: Role
+  status: LegalTextStatus!
+  summaryOfChanges: String!
+
+  """
+  Метка правки черновика: публикация и повторное сохранение сверяют её (`CONFLICT`).
+  """
+  updatedAt: String!
+  version: Int!
+}
+
+type AdminLegalVersionDetail {
+  """
+  Сколько аккаунтов попросит согласия публикация существенной версии; `null` — вид без согласия.
+  """
+  affectedUsers: Int
+  anchors: [LegalAnchor!]!
+  body: String!
+  consentCount: Int!
+  createdAt: String!
+
+  """
+  Действующая редакция той же локали для сравнения; `null` — это она или её ещё нет.
+  """
+  current: AdminLegalCurrentText
+  id: ID!
+  isMaterial: Boolean!
+  kind: LegalTextKind!
+  locale: Locale!
+  pendingConsentCount: Int
+  publishedAt: String
+  publishedByRole: Role
+  requiresConsent: Boolean!
+  status: LegalTextStatus!
+  summaryOfChanges: String!
+  updatedAt: String!
+  version: Int!
+}
+
 type AdminMail {
   """Сохранённая копия письма без секретов; для editor и moderator — null."""
   body: String
@@ -737,6 +808,16 @@ input CreateFormatInput {
   slug: String!
 }
 
+input CreateLegalDraftInput {
+  body: String!
+
+  """`updatedAt` правимого черновика; пусто — новый черновик."""
+  draftUpdatedAt: String
+  kind: LegalTextKind!
+  locale: Locale!
+  summaryOfChanges: String!
+}
+
 input CreateSectionInput {
   description: String
   descriptionEn: String
@@ -1007,6 +1088,25 @@ enum LegalDocumentKind {
   terms
 }
 
+"""
+Все виды текстов раздела, включая условия платных услуг, возвраты и «О проекте».
+"""
+enum LegalTextKind {
+  about
+  content_rules
+  license
+  paid_services
+  privacy
+  refunds
+  terms
+}
+
+enum LegalTextStatus {
+  draft
+  previous
+  published
+}
+
 type LegalVersionSummary {
   """Существенная редакция требует повторного согласия при следующем входе."""
   isMaterial: Boolean!
@@ -1067,6 +1167,9 @@ type Mutation {
   confirmPriceChange(decision: PriceChangeDecision!): Boolean!
   createArticle(input: CreateArticleInput!): Article!
   createFormat(input: CreateFormatInput!): AdminFormat!
+
+  """Только `owner`; аудит `legal.update`."""
+  createLegalDraft(input: CreateLegalDraftInput!): AdminLegalVersion!
   createSection(input: CreateSectionInput!): Section!
   createStaff(input: CreateStaffInput!): AdminStaffMember!
   createTag(input: CreateTagInput!): Tag!
@@ -1079,6 +1182,9 @@ type Mutation {
   logout(refreshToken: String): Boolean!
   logoutAll: Boolean!
   mergeTags(input: MergeTagsInput!): Tag!
+
+  """Только `owner`; аудит `legal.update`, сброс кеша публичной страницы."""
+  publishLegalVersion(input: PublishLegalVersionInput!): AdminLegalVersion!
   refreshSession(refreshToken: String!): AuthPayload!
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
@@ -1235,12 +1341,25 @@ type PublicSection {
   slug: String!
 }
 
+input PublishLegalVersionInput {
+  draftUpdatedAt: String!
+  isMaterial: Boolean!
+  kind: LegalTextKind!
+  locale: Locale!
+  version: Int!
+}
+
 type Query {
   _empty: String
   adminGrant(id: ID!): AdminPlanGrant
   adminGrants: [AdminPlanGrant!]!
   adminJob(id: ID!): AdminJobCard
   adminJobs(filters: AdminJobsFilterInput, limit: Int = 20, page: Int = 1, sort: AdminJobsSortInput): AdminJobsResponse!
+
+  """`admin` и `owner`."""
+  adminLegalKinds: [AdminLegalKind!]!
+  adminLegalVersion(kind: LegalTextKind!, locale: Locale!, version: Int!): AdminLegalVersionDetail
+  adminLegalVersions(kind: LegalTextKind, locale: Locale, status: LegalTextStatus): [AdminLegalVersion!]!
   adminMail(id: ID!): AdminMail
   adminMails(filters: AdminMailFiltersInput, pagination: PaginationInput): AdminMailList!
   adminStaff(filters: AdminStaffFiltersInput): [AdminStaffMember!]!

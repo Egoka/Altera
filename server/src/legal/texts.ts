@@ -185,7 +185,8 @@ export interface PublishLegalVersionInput {
 
 /**
  * Публикация новой редакции: следующий номер вида и локали, прежняя действующая — в `previous`.
- * До раздела `/admin/legal` (T-083) версии публикуются релизом кода через `legal:publish`.
+ * Так публикует релиз кода через `legal:publish`; раздел `/admin/legal` публикует черновик
+ * (`src/admin/legal.ts`) по тому же правилу номеров.
  */
 export async function publishLegalVersion(
   prisma: Pick<PrismaClient, "$transaction">,
@@ -196,21 +197,28 @@ export async function publishLegalVersion(
 
   return prisma.$transaction(async (tx) => {
     const latest = await tx.legalText.findFirst({
-      where: { kind: input.kind, locale: input.locale },
+      where: { kind: input.kind, locale: input.locale, status: { not: "draft" } },
       orderBy: { version: "desc" },
       select: { version: true }
     })
+    const version = (latest?.version ?? 0) + 1
 
     await tx.legalText.updateMany({
       where: { kind: input.kind, locale: input.locale, status: "published" },
       data: { status: "previous" }
+    })
+    // Черновик раздела `/admin/legal` всегда следует за последней опубликованной редакцией:
+    // публикация релизом кода занимает его номер, и черновик сдвигается на следующий.
+    await tx.legalText.updateMany({
+      where: { kind: input.kind, locale: input.locale, status: "draft" },
+      data: { version: version + 1 }
     })
 
     return tx.legalText.create({
       data: {
         kind: input.kind,
         locale: input.locale,
-        version: (latest?.version ?? 0) + 1,
+        version,
         status: "published",
         body: input.body,
         summaryOfChanges: input.summaryOfChanges.trim(),
