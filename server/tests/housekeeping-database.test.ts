@@ -83,18 +83,28 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
         data: { userId: user.id, newEmail: "new@example.test", codeHash: "0".repeat(64), expiresAt: daysBefore(1) }
       })
 
+      // Триггер t015 создаёт при вставке статьи перевод `translation-<id>` и ручную ревизию
+      // `revision-<id>` с датой `updatedAt` статьи; дата в прошлом делает её самой старой ревизией.
+      const article = (id: string) =>
+        db.article.create({
+          data: {
+            id,
+            title: "T",
+            slug: id,
+            body: "",
+            authorId: user.id,
+            createdAt: daysBefore(100),
+            updatedAt: daysBefore(100)
+          }
+        })
+
       // Ревизии одного перевода, от старых к новым.
-      await db.article.create({
-        data: { id: "article-1", title: "T", slug: "article-1", body: "", authorId: user.id }
-      })
-      await db.articleTranslation.create({
-        data: { id: "translation-1", articleId: "article-1", locale: "ru", slug: "t-1", title: "T", body: {} }
-      })
+      await article("article-1")
       const revision = (id: string, kind: "autosave" | "manual", days: number, restoredFromId?: string) =>
         db.articleRevision.create({
           data: {
             id,
-            translationId: "translation-1",
+            translationId: "translation-article-1",
             title: "T",
             body: {},
             kind,
@@ -113,20 +123,17 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
         data: { revisionId: "autosave-noted", blockId: "b1", text: "note", createdById: user.id }
       })
       await db.articleTranslation.update({
-        where: { id: "translation-1" },
+        where: { id: "translation-article-1" },
         data: { sourceRevisionId: "autosave-source" }
       })
 
       // Второй перевод давно не правился: последняя ревизия — старое автосохранение, она остаётся.
-      await db.article.create({ data: { id: "article-2", title: "T", slug: "article-2", body: "", authorId: user.id } })
-      await db.articleTranslation.create({
-        data: { id: "translation-2", articleId: "article-2", locale: "ru", slug: "t-2", title: "T", body: {} }
-      })
+      await article("article-2")
       await db.articleRevision.createMany({
         data: [
           {
             id: "dormant-older",
-            translationId: "translation-2",
+            translationId: "translation-article-2",
             title: "T",
             body: {},
             kind: "autosave",
@@ -135,7 +142,7 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
           },
           {
             id: "dormant-latest",
-            translationId: "translation-2",
+            translationId: "translation-article-2",
             title: "T",
             body: {},
             kind: "autosave",
@@ -207,7 +214,9 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
           "autosave-restored",
           "autosave-source",
           "dormant-latest",
-          "manual-old"
+          "manual-old",
+          "revision-article-1",
+          "revision-article-2"
         ].sort()
       )
       expect(await ids(db.backendError.findMany({ select: { id: true } }))).toEqual(["error-decided", "error-recent"])
