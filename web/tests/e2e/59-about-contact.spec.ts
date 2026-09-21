@@ -1,5 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
-import { setSessionCookie, uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
+import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
+import { SESSION_ACCESS_COOKIE } from "../../shared/session"
 
 /**
  * T-059: «О проекте» и «Письмо в редакцию» (`docs/spec/20-public/about.md`, `contact.md`).
@@ -22,10 +24,11 @@ const navigateInPage = async (page: Page, path: string) => {
   }).toPass()
 }
 
+// `fallback`, а не `continue`: чужой запрос уходит к ранее зарегистрированной подстановке, а не мимо неё.
 const fulfillOperation = (page: Page, operation: string, body: unknown) =>
   page.route("**/api/graphql", async (route: Route) => {
     const payload = JSON.parse(route.request().postData() ?? "{}")
-    if (!String(payload.query ?? "").includes(operation)) return route.continue()
+    if (!String(payload.query ?? "").includes(operation)) return route.fallback()
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) })
   })
 
@@ -62,14 +65,24 @@ test.describe("«Письмо в редакцию»", () => {
 
   test("аккаунт пишет с адреса сессии; тема «возврат» ведёт в кабинет", async ({ page }) => {
     const email = uniqueEmail("t059-account")
-    const userId = await withPrisma(async (prisma) => {
+    // После T-023 токен действует только вместе с живой записью сессии.
+    const { userId, sessionId } = await withPrisma(async (prisma) => {
       const handle = `t059-${Math.random().toString(16).slice(2, 10)}`
       await prisma.handleHistory.upsert({ where: { handle }, update: {}, create: { handle } })
       const user = await prisma.user.create({ data: { email, handle, name: "T059 account" } })
       await prisma.handleHistory.update({ where: { handle }, data: { userId: user.id } })
-      return user.id
+      return { userId: user.id, sessionId: await createSessionId(prisma, user.id) }
     })
-    await setSessionCookie(page, userId)
+    await page.context().addCookies([
+      {
+        name: SESSION_ACCESS_COOKIE,
+        value: signAccessToken(userId, sessionId),
+        domain: "127.0.0.1",
+        path: "/",
+        httpOnly: true,
+        sameSite: "Lax"
+      }
+    ])
 
     await page.goto("/contact?topic=refund")
     await expect(page.getByTestId("contact-account-email")).toContainText(email)
@@ -209,7 +222,8 @@ test.describe("«О проекте»", () => {
     await expect(page).toHaveTitle(/О проекте/)
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /^index/)
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/about$/)
-    await expect(page.locator('script[type="application/ld+json"]')).toContainText("AboutPage")
+    // Текст `<script>` не входит в видимый текст страницы — читается как `textContent`.
+    expect(await page.locator('script[type="application/ld+json"]').textContent()).toContain("AboutPage")
     await expect(page.getByTestId("about-lead")).toContainText("чтение бесплатно")
     await expect(page.locator('[data-testid^="about-column-"]')).toHaveCount(3)
     await expect(page.locator("[data-about-state]")).toHaveAttribute("data-about-state", /ready|unpublished/)
@@ -259,7 +273,7 @@ test.describe("«О проекте»", () => {
     const released = new Promise<void>((resolve) => (release = resolve))
     await page.route("**/api/graphql", async (route) => {
       const payload = JSON.parse(route.request().postData() ?? "{}")
-      if (!String(payload.query ?? "").includes("GetAboutPage")) return route.continue()
+      if (!String(payload.query ?? "").includes("GetAboutPage")) return route.fallback()
       await released
       await route.fulfill({
         status: 200,
