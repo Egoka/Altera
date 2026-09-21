@@ -1,21 +1,52 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test"
-import {
-  ensurePublishedLegalVersions,
-  readMagicLinkToken,
-  setSessionCookie,
-  uniqueEmail,
-  withPrisma
-} from "./helpers/auth-fixtures"
+import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
+import { createSessionId, signAccessToken } from "./helpers/session-token"
+import { SESSION_ACCESS_COOKIE } from "../../shared/session"
 
 /**
  * T-032: смена почты по коду (docs/spec/30-account/reader/email-change.md).
- * AC-1 проверяется сквозным сценарием на живой базе: после смены адреса ни одна сессия не
- * отозвана. AC-2 — строки состояний §8; те из них, что зависят от отказа сервера, снимаются
- * подстановкой ответа на `/api/graphql`, потому что лимит «1 запрос в сутки» иначе
- * воспроизводится только ожиданием суток.
+ * AC-1 проверяется на живой базе и живой почте: после смены адреса ни одна сессия не отозвана.
+ * AC-2 — строки состояний §8; те из них, что зависят от отказа сервера, снимаются подстановкой
+ * ответа на `/api/graphql`: лимит «1 запрос в сутки» иначе воспроизводится только ожиданием суток.
+ *
+ * Вход здесь не проходит по ссылке намеренно: сессия кладётся в базу напрямую, чтобы сценарий не
+ * расходовал общую корзину `auth.verify.ip` (`rate-limits.md` §2 п. 3) вместе со сценариями T-022.
  */
 
 const mailpitUrl = process.env.T021_MAILPIT_URL ?? "http://127.0.0.1:28025"
+
+interface AuthenticatedAccount {
+  id: string
+  email: string
+  sessionIds: string[]
+}
+
+/** Несколько сессий одного аккаунта: AC-1 требует, чтобы после смены выжили все. */
+const createAccountWithSessions = async (prefix: string, sessions = 2): Promise<AuthenticatedAccount> =>
+  withPrisma(async (prisma) => {
+    const handle = `${prefix}-${Math.random().toString(16).slice(2, 10)}`
+    await prisma.handleHistory.upsert({ where: { handle }, update: {}, create: { handle } })
+    const user = await prisma.user.create({ data: { email: uniqueEmail(prefix), handle, name: "T032 account" } })
+    await prisma.handleHistory.update({ where: { handle }, data: { userId: user.id } })
+
+    const sessionIds: string[] = []
+    for (let index = 0; index < sessions; index += 1) sessionIds.push(await createSessionId(prisma, user.id))
+
+    return { id: user.id, email: user.email, sessionIds }
+  })
+
+const useSession = async (page: Page, account: AuthenticatedAccount): Promise<void> => {
+  await page.context().addCookies([
+    {
+      name: SESSION_ACCESS_COOKIE,
+      value: signAccessToken(account.id, account.sessionIds[0]!),
+      domain: "127.0.0.1",
+      path: "/",
+      httpOnly: true,
+      sameSite: "Lax"
+    }
+  ])
+}
 
 const readEmailChangeCode = async (request: APIRequestContext, email: string): Promise<string> => {
   const deadline = Date.now() + 20_000
@@ -37,28 +68,12 @@ const readEmailChangeCode = async (request: APIRequestContext, email: string): P
   }
 }
 
-const signIn = async (page: Page, request: APIRequestContext, email: string): Promise<void> => {
-  await ensurePublishedLegalVersions()
-  await page.goto("/login")
-  await expect(page.locator("[data-login-state='form']")).toBeVisible()
-  await page.getByLabel(/адрес электронной почты/i).fill(email)
-  await page.getByRole("checkbox").check()
-  await page.getByRole("button", { name: /получить ссылку входа/i }).click()
-  await expect(page.locator("[data-login-state='sent']")).toBeVisible()
-
-  await page.goto(`/auth/verify?token=${await readMagicLinkToken(request, email)}`)
-  await expect(page).toHaveURL(/\/me(?:\?|$)/)
-}
-
-// Шаги 1–3 flow #13: смена адреса самообслуживанием. Шаги Р1–Р3 (обращение в редакцию и
-// ручная процедура сотрудника) в T-032 не входят и остаются в `13-email-change-recovery.spec.ts`.
+// Шаги 1–3 flow #13: смена адреса самообслуживанием. Шаги Р1–Р3 (обращение в редакцию и ручная
+// процедура сотрудника) в T-032 не входят и остаются в `13-email-change-recovery.spec.ts`.
 test("flow #13 шаги 1–3: адрес меняется по коду, сессии остаются активными", async ({ page, request }) => {
-  const email = uniqueEmail("t032-change")
+  const account = await createAccountWithSessions("t032-change")
   const newEmail = uniqueEmail("t032-new")
-  await signIn(page, request, email)
-
-  const before = await withPrisma((prisma) => prisma.session.findMany({ where: { user: { email } } }))
-  expect(before.length).toBeGreaterThan(0)
+  await useSession(page, account)
 
   await test.step("Шаг 1: запросить код на новый адрес", async () => {
     await page.goto("/me/email")
@@ -83,21 +98,21 @@ test("flow #13 шаги 1–3: адрес меняется по коду, сес
     await expect(page.locator("[data-email-change-state='ready']")).toBeVisible()
     await expect(page.locator("[data-email-change-variant='address']")).toBeVisible()
 
-    const account = await withPrisma((prisma) => prisma.user.findUnique({ where: { email: newEmail } }))
-    expect(account).not.toBeNull()
+    const changed = await withPrisma((prisma) => prisma.user.findUnique({ where: { id: account.id } }))
+    expect(changed!.email).toBe(newEmail)
 
     // AC-1: ни одна сессия не отозвана и новых не выдано.
-    const after = await withPrisma((prisma) => prisma.session.findMany({ where: { userId: account!.id } }))
-    expect(after.map((session) => session.id).sort()).toEqual(before.map((session) => session.id).sort())
+    const after = await withPrisma((prisma) => prisma.session.findMany({ where: { userId: account.id } }))
+    expect(after.map((session) => session.id).sort()).toEqual([...account.sessionIds].sort())
     expect(after.every((session) => session.revokedAt === null)).toBe(true)
 
     const audited = await withPrisma((prisma) =>
-      prisma.auditLog.findMany({ where: { action: "user.email.change", entityId: account!.id } })
+      prisma.auditLog.findMany({ where: { action: "user.email.change", entityId: account.id } })
     )
     expect(audited).toHaveLength(1)
     expect(audited[0]!.diff).toMatchObject({ via: "self", newEmail })
 
-    const notice = await request.get(`${mailpitUrl}/api/v1/search`, { params: { query: `to:"${email}"` } })
+    const notice = await request.get(`${mailpitUrl}/api/v1/search`, { params: { query: `to:"${account.email}"` } })
     const subjects = ((await notice.json()) as { messages: { Subject: string }[] }).messages.map(
       (message) => message.Subject
     )
@@ -105,7 +120,7 @@ test("flow #13 шаги 1–3: адрес меняется по коду, сес
 
     // Открытый запрос закрыт: повторного кода на экране нет.
     const pending = await withPrisma((prisma) =>
-      prisma.emailChangeRequest.findUnique({ where: { userId: account!.id } })
+      prisma.emailChangeRequest.findUnique({ where: { userId: account.id } })
     )
     expect(pending).toBeNull()
   })
@@ -114,29 +129,22 @@ test("flow #13 шаги 1–3: адрес меняется по коду, сес
 test("строка «Нет доступа»: гость уводится на вход с путём возврата", async ({ page }) => {
   await page.goto("/me/email")
 
-  await expect(page).toHaveURL(/\/login\?next=%2Fme%2Femail$/)
+  await expect(page).toHaveURL(/\/login\?next=\/me\/email$/)
 })
 
 test("строки состояний §8: ошибка данных, лимит, истёкший код и занятый адрес", async ({ page }) => {
-  const account = await withPrisma(async (prisma) => {
-    const handle = `t032-states-${Math.random().toString(16).slice(2, 10)}`
-    await prisma.handleHistory.upsert({ where: { handle }, update: {}, create: { handle } })
-    const user = await prisma.user.create({
-      data: { email: uniqueEmail("t032-states"), handle, name: "T032 states" }
-    })
-    await prisma.handleHistory.update({ where: { handle }, data: { userId: user.id } })
-    return user
-  })
-  await setSessionCookie(page, account.id)
+  const account = await createAccountWithSessions("t032-states", 1)
+  await useSession(page, account)
 
   const state = (pending: Record<string, unknown> | null) => ({
     currentEmailMasked: "t•••@example.test",
     pending
   })
+  const meWith = (pending: Record<string, unknown> | null) => ({
+    data: { me: { id: account.id, email: account.email, emailChange: state(pending) } }
+  })
   let reply: Record<string, unknown> = { data: null, errors: [{ extensions: { code: "INTERNAL_ERROR" } }] }
-  let read: Record<string, unknown> = {
-    data: { me: { id: account.id, email: account.email, emailChange: state(null) } }
-  }
+  let read: Record<string, unknown> = meWith(null)
 
   await page.route("**/api/graphql", async (route) => {
     const body = route.request().postDataJSON() as { query: string }
@@ -151,7 +159,7 @@ test("строки состояний §8: ошибка данных, лимит
   })
 
   await test.step("Ограничение: лимит запросов кода называет время следующей попытки", async () => {
-    read = { data: { me: { id: account.id, email: account.email, emailChange: state(null) } } }
+    read = meWith(null)
     reply = { data: null, errors: [{ extensions: { code: "RATE_LIMITED", retryAfter: 3600 } }] }
     await page.goto("/me/email")
     await page.getByTestId("email-change-address").fill("taken@example.test")
@@ -160,19 +168,11 @@ test("строки состояний §8: ошибка данных, лимит
   })
 
   await test.step("Не найдено: истёкший код остаётся в зоне 4 с предложением отправить ещё раз", async () => {
-    read = {
-      data: {
-        me: {
-          id: account.id,
-          email: account.email,
-          emailChange: state({
-            newEmailMasked: "n•••@example.test",
-            expiresAt: new Date(Date.now() - 60_000).toISOString(),
-            attemptsLeft: 10
-          })
-        }
-      }
-    }
+    read = meWith({
+      newEmailMasked: "n•••@example.test",
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      attemptsLeft: 10
+    })
     await page.goto("/me/email")
     await expect(page.getByTestId("email-change-expired")).toBeVisible()
     await expect(page.getByTestId("email-change-confirm")).toBeDisabled()
@@ -180,19 +180,11 @@ test("строки состояний §8: ошибка данных, лимит
   })
 
   await test.step("Конфликт: адрес занят другим аккаунтом — сообщение на шаге кода", async () => {
-    read = {
-      data: {
-        me: {
-          id: account.id,
-          email: account.email,
-          emailChange: state({
-            newEmailMasked: "n•••@example.test",
-            expiresAt: new Date(Date.now() + 600_000).toISOString(),
-            attemptsLeft: 10
-          })
-        }
-      }
-    }
+    read = meWith({
+      newEmailMasked: "n•••@example.test",
+      expiresAt: new Date(Date.now() + 600_000).toISOString(),
+      attemptsLeft: 10
+    })
     reply = { data: null, errors: [{ extensions: { code: "CONFLICT", entity: "user" } }] }
     await page.goto("/me/email")
     await page.getByTestId("email-change-code").fill("123456")
