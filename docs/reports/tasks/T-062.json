@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "task_id": "T-062",
+  "issue_id": "01a0c301-c295-710d-9d4c-e1fe579a4580",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-062-storage-adapter-signed-urls.md",
+    "sha": "7ec1ca1223f768020e3a5213a57e9baa36102f8f"
+  },
+  "baseline_sha": "c4bc83b57c6f74f3609b8e2cbd25a349a0ff2152",
+  "tested_sha": "3af35d79f458ecfa82e8373fb73109eaff6b512a",
+  "branch": "feat/t062-storage-adapter",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t062-storage",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c302-8fae-78c3-ba78-acf154cf70bd",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/storage-access.test.ts ('criterion 1') runs the local implementation behind a real HTTP server: the original without a signature answers 404 with no content, a signed link answers 200 with private, no-store, and an expired link, a link with a forged expiry and a signature issued for another key all answer 403. Removing the public-access check from gateway.ts makes all 6 access scenarios fail. CI run 35577671525 green on 3af35d79."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/storage-access.test.ts ('criterion 2'): the public variant of a published article's cover answers 200, after the article is archived the same URL answers 404, after restoring to published it answers 200 again; the same file closes the avatar of an archived account and the media of a draft. Access is re-resolved from Prisma on every request, so there is no cached open state. CI run 35577671525 green on 3af35d79."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 776 passed / 29 skipped; web 559 passed",
+    "server_build_ci": "passed",
+    "playwright": "not run locally; CI browser job 229 passed / 9 skipped",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35577671525",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 206,
+    "url": "https://github.com/Egoka/Altera/pull/206",
+    "base_ref": "app",
+    "base_sha": "c4bc83b57c6f74f3609b8e2cbd25a349a0ff2152",
+    "head_sha": "3af35d79f458ecfa82e8373fb73109eaff6b512a",
+    "merge_sha": "16690a1615cc20c6d8c3b2a247036f82e8b4b01f"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The task adds no Prisma migration; the storage module ships with the ordinary server build and without STORAGE_DRIVER a production server keeps storage unconfigured"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-062.md",
+    "sha256": "cd536094a2a8c823bd2e77f8a7c20d87d1e089d940516678c54d12b57549879d"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "The real S3 provider is owner question Q-01; the S3 adapter was verified against the AWS SigV4 reference vectors and a fetch double, not against a live bucket",
+    "Closing public files in the provider CDN on archive depends on the provider (Q-01); today it is enforced by API-issued links and by the local /media gateway",
+    "Links between media and document nodes (attrs.assetId) are not stored in the database yet; the access resolver covers covers and avatars, body illustrations follow with the upload pipeline (T-063)",
+    "Signed-link lifetimes are passed by callers (upper bound 7 days, the SigV4 limit); the journal fixes no numbers and the spec keeps them as [ДОПУЩЕНИЕ]",
+    "No mutation issues signed links yet (preview, editor, exports); they arrive with T-063 and T-034"
+  ],
+  "usage": null
+}
