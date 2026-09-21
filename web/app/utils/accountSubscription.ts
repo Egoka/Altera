@@ -24,10 +24,10 @@ const personalRoles = new Set(["reader", "author"])
 export function resolveSubscriptionOutcome(envelope: GraphQLEnvelope): SubscriptionOutcome {
   const account = envelope.data?.me
   const extensions = envelope.errors?.[0]?.extensions
-  if (!account) {
-    if (extensions?.code === "FORBIDDEN") return { kind: "archived" }
-    if (extensions?.code === "UNAUTHENTICATED") return { kind: "signIn" }
-  }
+  // `me` ограниченной сессии приходит без плана: `FORBIDDEN` отказывает только полю
+  // `subscription`, оно допускает `null`, поэтому код ошибки проверяется и при непустом `me`.
+  if (extensions?.code === "FORBIDDEN") return { kind: "archived" }
+  if (extensions?.code === "UNAUTHENTICATED") return { kind: "signIn" }
 
   const personal = account ? personalRoles.has(account.role) : false
   if (!account || envelope.errors?.length || (personal && !account.subscription)) {

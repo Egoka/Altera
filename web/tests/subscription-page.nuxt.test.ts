@@ -173,7 +173,8 @@ describe("страница подписки: строки состояний §8
   })
 
   it("«Заблокирован»: ограниченная сессия уходит на `/me/archived`", async () => {
-    response = envelope(null, { code: "FORBIDDEN" })
+    // Так отвечает API: `me` есть, отказано только полю `subscription`.
+    response = envelope(account(null), { code: "FORBIDDEN" })
 
     await render()
 
