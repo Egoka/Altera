@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest"
 import { PrismaClient } from "../src/generated/prisma"
 import { publishLegalVersion, readPublicLegalText } from "../src/legal/texts"
 import { readConsentStates } from "../src/auth/legal"
+import { createLegalDraft, listAdminLegalKinds, publishLegalDraft } from "../src/admin/legal"
 import { applyBaselineMigrations } from "./helpers/migration-database"
 import { createTestRateLimiter } from "./helpers/rate-limit"
 
@@ -233,6 +234,73 @@ describe.skipIf(!testDatabaseUrl)("T-101 версии юридических т�
           data: { kind: "license", locale: "ru", version: 2, body: "<p>x</p>", summaryOfChanges: "dup" }
         })
       ).rejects.toThrow()
+    })
+  })
+
+  it("T-083: черновик раздела /admin/legal публикуется, становится действующим и пишет legal.update", async () => {
+    await withDatabase(async (prisma) => {
+      await publish(prisma, "terms")
+      const account = async (handle: string, role: "owner" | "reader") => {
+        await prisma.handleHistory.create({ data: { handle } })
+        const user = await prisma.user.create({ data: { email: `${handle}@example.test`, handle, name: handle, role } })
+        await prisma.handleHistory.update({ where: { handle }, data: { userId: user.id } })
+        return user
+      }
+      const owner = await account("owner-t083", "owner")
+      const reader = await account("reader-t083", "reader")
+      const v1 = await prisma.legalText.findFirstOrThrow({ where: { kind: "terms", locale: "ru", version: 1 } })
+      await prisma.userLegalConsent.create({ data: { userId: reader.id, legalTextId: v1.id } })
+      const ctx = { ...contextFor(prisma).ctx, currentUser: { ...owner, permissionExceptions: [] } } as never
+
+      const draft = await createLegalDraft(ctx, {
+        kind: "terms",
+        locale: "ru",
+        body: '<h2 id="subject">Предмет</h2><p>черновик</p>',
+        summaryOfChanges: "Новый раздел"
+      })
+      expect(draft).toMatchObject({ version: 2, status: "draft" })
+      // Черновик не виден публичной странице.
+      expect(await readPublicLegalText(prisma, { kind: "terms", locale: "ru" })).toMatchObject({ version: 1 })
+
+      // Публикация релизом кода, пока черновик открыт: черновик уступает номер.
+      await publish(prisma, "terms")
+      const moved = await prisma.legalText.findFirstOrThrow({ where: { id: draft.id } })
+      expect(moved).toMatchObject({ version: 3, status: "draft" })
+
+      const published = await publishLegalDraft(ctx, {
+        kind: "terms",
+        locale: "ru",
+        version: 3,
+        isMaterial: true,
+        draftUpdatedAt: moved.updatedAt.toISOString()
+      })
+      expect(published).toMatchObject({ version: 3, status: "published", isMaterial: true, publishedByRole: "owner" })
+
+      const page = await readPublicLegalText(prisma, { kind: "terms", locale: "ru" })
+      expect(page).toMatchObject({ version: 3, isCurrent: true, summaryOfChanges: "Новый раздел" })
+      expect(page!.html).toContain("черновик")
+      expect(page!.previousVersions.map((item) => item.version)).toEqual([2, 1])
+
+      // Существенная версия: согласие читателя стало неактуальным.
+      const [terms] = await readConsentStates(prisma, reader.id, "ru")
+      expect(terms).toMatchObject({ currentVersion: 3, acceptedVersion: 1, reconsentRequired: true })
+      const kinds = await listAdminLegalKinds(ctx)
+      expect(kinds[0]!.locales[0]).toMatchObject({ currentVersion: 3, usersWithCurrentConsent: 0 })
+
+      const audit = await prisma.auditLog.findMany({ where: { action: "legal.update" }, orderBy: { createdAt: "asc" } })
+      expect(audit.map((entry) => (entry.diff as { stage: string }).stage)).toEqual(["draft", "published"])
+      expect(audit.every((entry) => entry.actorId === owner.id && entry.entityId === draft.id)).toBe(true)
+
+      // Опубликованная версия не правится: повторная публикация — конфликт.
+      await expect(
+        publishLegalDraft(ctx, {
+          kind: "terms",
+          locale: "ru",
+          version: 3,
+          isMaterial: false,
+          draftUpdatedAt: moved.updatedAt.toISOString()
+        })
+      ).rejects.toMatchObject({ extensions: { code: "CONFLICT" } })
     })
   })
 })

@@ -81,6 +81,11 @@ export const canManageTaxonomy = (role: Role): boolean => role === "admin" || ro
 // Настройки системы: `admin` читает без секретов (журнал §28.11), `owner` — владелец раздела.
 export const canReadSystemSettings = (role: Role): boolean => role === "admin" || role === "owner"
 
+// Юридические тексты (`40-admin/legal-texts.md` §1): `admin` читает версии и статистику согласий,
+// черновик и публикацию делает только `owner` (матрица #96).
+export const canReadLegalTexts = (role: Role): boolean => role === "admin" || role === "owner"
+export const canPublishLegalTexts = (role: Role): boolean => role === "owner"
+
 export const SYSTEM_SETTINGS_GROUPS = ["ai", "payments", "mail", "storage", "domains", "limits"] as const
 
 export const parseSystemSettingsGroup = (value: unknown): (typeof SYSTEM_SETTINGS_GROUPS)[number] =>

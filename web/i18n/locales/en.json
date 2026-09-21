@@ -1025,6 +1025,93 @@
         "domains": "No domain parameters.",
         "limits": "Rate limits are not implemented in code yet; values ship with releases, not settings."
       }
+    },
+    "legalTexts": {
+      "eyebrow": "Documents",
+      "title": "Legal texts",
+      "description": "Versions of public texts: terms, privacy policy, content rules, license, paid services terms, refunds and About. The section stores and publishes texts; it does not write them.",
+      "adminNote": "Read and preview only. The owner publishes.",
+      "ownerNote": "A published version cannot be edited or deleted — only superseded by a new one.",
+      "mobileNote": "Drafting and publishing are available on a desktop.",
+      "kinds": {
+        "terms": "Terms of use",
+        "privacy": "Privacy policy",
+        "content_rules": "Content rules",
+        "license": "Content license",
+        "paid_services": "Paid services terms",
+        "refunds": "Refund policy",
+        "about": "About"
+      },
+      "locales": {
+        "ru": "Русский",
+        "en": "English"
+      },
+      "statuses": {
+        "draft": "Draft",
+        "published": "Published",
+        "previous": "Previous"
+      },
+      "filters": {
+        "kind": "Kind",
+        "locale": "Locale",
+        "status": "Status",
+        "all": "All"
+      },
+      "columns": {
+        "kind": "Kind",
+        "version": "Version",
+        "status": "Status",
+        "publishedAt": "Published",
+        "summary": "What changed",
+        "material": "Change",
+        "consents": "Consents"
+      },
+      "currentLine": "Version {version} in force",
+      "draftLine": "Draft: version {version}",
+      "consentShare": "Up-to-date consent: {current} of {total}",
+      "notPublished": "The text is not published yet.",
+      "versionsTitle": "Versions",
+      "versionsEmpty": "No versions match these filters.",
+      "material": "Material",
+      "minor": "Minor",
+      "error": "Could not load legal texts.",
+      "retry": "Retry",
+      "back": "All texts",
+      "paidNotice": "Paid services are not offered yet: the text is published before paid plans launch and is shown with this notice.",
+      "newDraft": "New draft",
+      "editDraft": "Draft of version {version}",
+      "bodyLabel": "Text (HTML)",
+      "bodyHint": "Russian is the official version; English is a translation. Scripts, frames, styles and event handlers are rejected.",
+      "summaryLabel": "What changed",
+      "saveDraft": "Save draft",
+      "saveError": "Could not save the draft. The text is kept in the form.",
+      "validation": {
+        "body": "The text is empty or contains disallowed markup.",
+        "summary": "Describe what changed."
+      },
+      "conflict": "Another owner changed the draft or the version is already published. Reload the data.",
+      "reload": "Reload",
+      "versionTitle": "Version {version}",
+      "versionMissing": "This version does not exist.",
+      "pending": "Awaiting renewed consent",
+      "edit": "Edit draft",
+      "publish": "Publish",
+      "tabs": {
+        "preview": "Preview",
+        "compare": "Compare"
+      },
+      "compareWith": "Compared with version {version} in force",
+      "compareNone": "Nothing to compare with: this is the version in force or the first publication.",
+      "publishTitle": "Publish version {version}",
+      "publishSummary": "What changed: {summary}. The version takes effect immediately.",
+      "materialLabel": "Material change: every user gives consent again at the next sign-in.",
+      "materialAffected": "{count} users will be asked for renewed consent at the next sign-in.",
+      "materialNoConsent": "Consent is not requested for this kind; the mark stays in the version history.",
+      "materialDiff": "Lines changed against version {version}: {count}.",
+      "next": "Next",
+      "confirmPublish": "Publish version",
+      "cancel": "Cancel",
+      "publishError": "Could not publish the version. The draft is kept."
     }
   },
   "language": {

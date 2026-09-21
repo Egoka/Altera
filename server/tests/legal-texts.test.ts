@@ -165,9 +165,15 @@ describe("публикация редакции", () => {
       isMaterial: true,
       summaryOfChanges: "Раздел о cookie"
     })
+    expect(tx.legalText.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { kind: "privacy", locale: "ru", status: { not: "draft" } } })
+    )
     expect(calls[0]).toContain('"status":"published"')
     expect(calls[0]).toContain('"data":{"status":"previous"}')
-    expect(calls[1]).toBe("create")
+    // Черновик раздела `/admin/legal` уступает номер 3 и становится четвёртым.
+    expect(calls[1]).toContain('"status":"draft"')
+    expect(calls[1]).toContain('"data":{"version":4}')
+    expect(calls[2]).toBe("create")
   })
 
   it("не публикует небезопасную разметку и редакцию без описания изменений", async () => {

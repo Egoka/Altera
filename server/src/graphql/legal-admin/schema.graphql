@@ -1,0 +1,127 @@
+# Раздел админки «Юридические тексты» (`docs/spec/40-admin/legal-texts.md` §3, §5).
+
+"""
+Все виды текстов раздела, включая условия платных услуг, возвраты и «О проекте».
+"""
+enum LegalTextKind {
+  terms
+  privacy
+  content_rules
+  license
+  paid_services
+  refunds
+  about
+}
+
+enum LegalTextStatus {
+  draft
+  published
+  previous
+}
+
+type AdminLegalLocaleState {
+  locale: Locale!
+  currentVersion: Int
+  publishedAt: String
+  draftVersion: Int
+  """
+  Только для оферты и политики ПД: активные аккаунты локали и принявшие актуальную редакцию.
+  """
+  usersTotal: Int
+  usersWithCurrentConsent: Int
+}
+
+type AdminLegalKind {
+  kind: LegalTextKind!
+  requiresConsent: Boolean!
+  locales: [AdminLegalLocaleState!]!
+}
+
+type AdminLegalVersion {
+  id: ID!
+  kind: LegalTextKind!
+  locale: Locale!
+  version: Int!
+  status: LegalTextStatus!
+  isMaterial: Boolean!
+  summaryOfChanges: String!
+  publishedAt: String
+  publishedByRole: Role
+  createdAt: String!
+  """
+  Метка правки черновика: публикация и повторное сохранение сверяют её (`CONFLICT`).
+  """
+  updatedAt: String!
+  consentCount: Int!
+}
+
+type AdminLegalCurrentText {
+  version: Int!
+  body: String!
+}
+
+type AdminLegalVersionDetail {
+  id: ID!
+  kind: LegalTextKind!
+  locale: Locale!
+  version: Int!
+  status: LegalTextStatus!
+  isMaterial: Boolean!
+  summaryOfChanges: String!
+  publishedAt: String
+  publishedByRole: Role
+  createdAt: String!
+  updatedAt: String!
+  consentCount: Int!
+  body: String!
+  anchors: [LegalAnchor!]!
+  """
+  Действующая редакция той же локали для сравнения; `null` — это она или её ещё нет.
+  """
+  current: AdminLegalCurrentText
+  requiresConsent: Boolean!
+  """
+  Сколько аккаунтов попросит согласия публикация существенной версии; `null` — вид без согласия.
+  """
+  affectedUsers: Int
+  pendingConsentCount: Int
+}
+
+input CreateLegalDraftInput {
+  kind: LegalTextKind!
+  locale: Locale!
+  body: String!
+  summaryOfChanges: String!
+  """
+  `updatedAt` правимого черновика; пусто — новый черновик.
+  """
+  draftUpdatedAt: String
+}
+
+input PublishLegalVersionInput {
+  kind: LegalTextKind!
+  locale: Locale!
+  version: Int!
+  isMaterial: Boolean!
+  draftUpdatedAt: String!
+}
+
+extend type Query {
+  """
+  `admin` и `owner`.
+  """
+  adminLegalKinds: [AdminLegalKind!]!
+  adminLegalVersions(kind: LegalTextKind, locale: Locale, status: LegalTextStatus): [AdminLegalVersion!]!
+  adminLegalVersion(kind: LegalTextKind!, locale: Locale!, version: Int!): AdminLegalVersionDetail
+}
+
+extend type Mutation {
+  """
+  Только `owner`; аудит `legal.update`.
+  """
+  createLegalDraft(input: CreateLegalDraftInput!): AdminLegalVersion!
+  """
+  Только `owner`; аудит `legal.update`, сброс кеша публичной страницы.
+  """
+  publishLegalVersion(input: PublishLegalVersionInput!): AdminLegalVersion!
+}
