@@ -116,3 +116,54 @@ export const createEmailChangeNoticeMessage = (locale: Locale): MailMessage => {
     html: "<p>Здравствуйте,</p><p>адрес электронной почты вашего аккаунта Altera изменён. Ссылки входа теперь приходят на новый адрес.</p><p>Если это были не вы — напишите в редакцию со страницы контактов и укажите, что потеряли доступ к почте.</p><p>Altera — журнал о жизни.</p>"
   }
 }
+
+export const SUPPORT_REQUEST_STAFF_TEMPLATE = "support_request_staff"
+
+export interface SupportRequestNotice {
+  ticketNo: number
+  topic: string
+  email: string | null
+  message: string | null
+  path: string | null
+  requestId: string | null
+}
+
+const noticeLines = (locale: Locale, notice: SupportRequestNotice, hidePersonal: boolean): string[] => {
+  const en = locale === "en"
+  const hidden = en ? "[in the request record]" : "[в записи обращения]"
+  const none = "—"
+  return [
+    `${en ? "Topic" : "Тема"}: ${notice.topic}`,
+    `${en ? "Reply to" : "Ответить на"}: ${hidePersonal && notice.email ? hidden : (notice.email ?? none)}`,
+    `${en ? "Page" : "Страница"}: ${notice.path ?? none}`,
+    `requestId: ${notice.requestId ?? none}`,
+    "",
+    hidePersonal && notice.message ? hidden : (notice.message ?? none)
+  ]
+}
+
+/**
+ * [ДОПУЩЕНИЕ] Уведомление сотрудникам о новом обращении (`20-public/contact.md` §4): состав писем
+ * отложен до прохода почты (журнал §25.13). Экрана очереди в админке ещё нет (Q-08), поэтому
+ * письмо несёт адрес ответа и текст — иначе ответить было бы не из чего. Копия для истории писем
+ * их не повторяет: ПДн отправителя остаются в одной записи обращения.
+ */
+export const createSupportRequestNoticeMail = (
+  locale: Locale,
+  notice: SupportRequestNotice
+): { message: MailMessage; sanitizedBody: string } => {
+  const en = locale === "en"
+  const intro = en
+    ? `A new request No. ${notice.ticketNo} has arrived from the contact form. Reply by e-mail to the address below.`
+    : `Поступило обращение №${notice.ticketNo} из формы «Письмо в редакцию». Ответ — письмом на указанный адрес.`
+  const lines = noticeLines(locale, notice, false)
+  return {
+    message: {
+      subject: en ? `Altera: request No. ${notice.ticketNo}` : `Altera: обращение №${notice.ticketNo}`,
+      preheader: en ? "New support request" : "Новое обращение в поддержку",
+      text: `${intro}\n\n${lines.join("\n")}`,
+      html: `<p>${escapeHtml(intro)}</p>${lines.map((line) => (line ? `<p>${escapeHtml(line).replace(/\n/g, "<br>")}</p>` : "")).join("")}`
+    },
+    sanitizedBody: `${intro}\n\n${noticeLines(locale, notice, true).join("\n")}`
+  }
+}

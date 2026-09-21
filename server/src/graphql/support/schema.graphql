@@ -1,0 +1,47 @@
+# Обращения в поддержку и редакцию (`docs/spec/20-public/contact.md` §4, матрица #117).
+
+"""
+Справочник тем обращения (`contact.md` §3). `broken_link` — кнопка страницы 404 (журнал §20.15).
+"""
+enum SupportTopic {
+  general
+  broken_link
+  refund
+  copyright
+  restore
+  other
+}
+
+type SupportRequestResult {
+  ok: Boolean!
+  """
+  Номер обращения для строки «Обращение №{ticketNo} принято» (`contact.md` §5 зона 4).
+  """
+  ticketNo: Int!
+}
+
+extend type Mutation {
+  """
+  Доступно всем (матрица #117). Для аккаунта адрес берётся из сессии, переданный игнорируется;
+  гостю адрес и согласие с политикой ПД обязательны, кроме анонимной кнопки «битая ссылка».
+  `route` — шаблон формы (`/contact`, `/404`) для лога `support.request.created`.
+  """
+  createSupportRequest(
+    topic: SupportTopic!
+    email: String
+    message: String
+    path: String
+    requestId: String
+    route: String
+    locale: Locale
+    acceptPrivacy: Boolean
+  ): SupportRequestResult!
+}
+
+extend type AccountUser {
+  """
+  Запись архивирована: ограниченная сессия пишет в редакцию как гость и указывает адрес сама
+  (`contact.md` §8, строка «Заблокирован»).
+  """
+  isArchived: Boolean!
+}

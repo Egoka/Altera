@@ -89,3 +89,38 @@ extend type Query {
   """
   legalText(kind: LegalDocumentKind!, locale: Locale!, version: Int): LegalDocument
 }
+
+"""
+Тексты страниц вне `/legal/*`, которые ведутся в `/admin/legal` тем же механизмом версий
+(`docs/spec/20-public/about.md` §4 `[ДОПУЩЕНИЕ]`).
+"""
+enum StaticTextKind {
+  about
+}
+
+"""
+Опубликованная редакция страничного текста. Ответ одинаков для всех и не содержит ПДн.
+"""
+type StaticText {
+  kind: StaticTextKind!
+  """
+  Локаль показанного текста; отличается от запрошенной, если в той текст ещё не опубликован.
+  """
+  locale: Locale!
+  requestedLocale: Locale!
+  isFallbackLocale: Boolean!
+  version: Int!
+  publishedAt: String!
+  html: String!
+  """
+  Локали, в которых текст опубликован, — источник `hreflang`.
+  """
+  availableLocales: [Locale!]!
+}
+
+extend type Query {
+  """
+  `null` — текст ещё не опубликован ни в одной локали: страница показывает статическую часть.
+  """
+  staticText(kind: StaticTextKind!, locale: Locale!): StaticText
+}

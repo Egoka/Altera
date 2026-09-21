@@ -90,6 +90,8 @@ describe("состав карты сайта", () => {
       "/tags",
       "/authors",
       "/pricing",
+      "/about",
+      "/contact",
       "/culture/letter",
       "/culture/essay",
       "/culture",
@@ -146,7 +148,15 @@ describe("состав карты сайта", () => {
   it("пустая выдача оставляет главную и статические страницы", async () => {
     const entries = await callSitemap({ ru: {} })
 
-    expect(entries.map((entry) => entry.path)).toEqual(["/", "/sections", "/tags", "/authors", "/pricing"])
+    expect(entries.map((entry) => entry.path)).toEqual([
+      "/",
+      "/sections",
+      "/tags",
+      "/authors",
+      "/pricing",
+      "/about",
+      "/contact"
+    ])
     expect(entries[0]!.lastmod).toBeNull()
   })
 
@@ -165,6 +175,8 @@ describe("языковые версии адреса", () => {
 
     expect(localesOf("/")).toEqual(["ru", "en"])
     expect(localesOf("/pricing")).toEqual(["ru", "en"])
+    expect(localesOf("/about")).toEqual(["ru", "en"])
+    expect(localesOf("/contact")).toEqual(["ru", "en"])
   })
 
   it("рубрика получает альтернативу только там, где у неё есть публикации", async () => {

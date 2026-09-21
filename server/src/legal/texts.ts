@@ -35,8 +35,8 @@ export interface LegalVersionSummary {
   summaryOfChanges: string
 }
 
-export interface LegalDocumentView extends LegalVersionSummary {
-  kind: PublicLegalKind
+export interface LegalDocumentView<K extends LegalTextKind = PublicLegalKind> extends LegalVersionSummary {
+  kind: K
   locale: Locale
   requestedLocale: Locale
   isFallbackLocale: boolean
@@ -119,11 +119,14 @@ export class LegalVersionNotFound extends Error {
  * Если в локали текст ещё не опубликован, показывается другая локаль с пометкой (строка «Пусто»
  * §8). `null` — ни одной опубликованной версии нет ни в одной локали: страница показывает
  * состояние «документ готовится». Неизвестная версия — `LegalVersionNotFound` (404 по §8).
+ *
+ * Тем же механизмом читается текст «О проекте» (`about.md` §4 `[ДОПУЩЕНИЕ]`): он ведётся в
+ * `/admin/legal` вместе с юридическими и так же версионируется.
  */
-export async function readPublicLegalText(
+export async function readPublicLegalText<K extends LegalTextKind>(
   prisma: LegalTextReader,
-  input: { kind: PublicLegalKind; locale: Locale; version?: number | null }
-): Promise<LegalDocumentView | null> {
+  input: { kind: K; locale: Locale; version?: number | null }
+): Promise<LegalDocumentView<K> | null> {
   const versions = await prisma.legalText.findMany({
     where: { kind: input.kind, status: { in: [...VISIBLE_STATUSES] } },
     orderBy: { version: "desc" },

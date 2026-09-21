@@ -39,7 +39,23 @@ export default {
         }
         throw error
       }
-    }
+    },
+
+    staticText: async (
+      _parent: unknown,
+      args: { kind: "about"; locale: Locale },
+      ctx: GraphQLContext
+    ): Promise<LegalDocumentView<"about"> | null> =>
+      // Текст «О проекте» публичный, как юридические; публикация в `/admin/legal` сбрасывает тег вида.
+      readThroughPublicCache(
+        {
+          cache: ctx.cache,
+          key: buildCacheKey("query.staticText", { kind: args.kind, locale: args.locale }),
+          tags: [legalCacheTag(args.kind)],
+          ttlSeconds: CACHE_TTL_SECONDS.publicList
+        },
+        () => readPublicLegalText(ctx.prisma, { kind: args.kind, locale: args.locale })
+      )
   },
   AccountUser: {
     consents: async (parent: { id: string }, _args: unknown, ctx: GraphQLContext) => {

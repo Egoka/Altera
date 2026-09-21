@@ -70,14 +70,15 @@ const rules = {
     source: "rate-limits.md §2 п. 3",
     middlewareFields: ["verifyMagicLink", "acceptConsent"]
   },
-  // §2 п. 4: письмо в редакцию (`pages.md` #14) — страница ещё не реализована.
+  // §2 п. 4: письмо в редакцию (`pages.md` #14). Та же мутация отправляет «битую ссылку» со
+  // страницы 404: отдельного порога для неё реестр не задаёт, поэтому корзина общая.
   "contact.ip": {
     bucket: "contact.ip",
     keyKind: "ip",
     limit: 3,
     windowSeconds: HOUR,
     source: "rate-limits.md §2 п. 4",
-    middlewareFields: []
+    middlewareFields: ["createSupportRequest"]
   },
   "contact.user": {
     bucket: "contact.user",

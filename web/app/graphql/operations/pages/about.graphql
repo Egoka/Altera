@@ -1,0 +1,27 @@
+# «О проекте» (`docs/spec/20-public/about.md` §4): текст владельца тем же механизмом, что
+# юридические, и непустые рубрики для блока «О чём пишем».
+query GetAboutPage($locale: Locale!) {
+  staticText(kind: about, locale: $locale) {
+    kind
+    locale
+    requestedLocale
+    isFallbackLocale
+    version
+    publishedAt
+    html
+    availableLocales
+  }
+  sectionCatalog(locale: $locale) {
+    slug
+    name
+    description
+    articleCount
+  }
+}
+
+query GetAboutViewer {
+  me {
+    id
+    role
+  }
+}

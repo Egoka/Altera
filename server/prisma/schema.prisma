@@ -52,6 +52,7 @@ model User {
   avatarAsset                 MediaAsset?           @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
   previousAvatar              MediaAsset?           @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
   reviewNotes                 ReviewNote[]          @relation("ReviewNoteCreator")
+  supportRequests             SupportRequest[]
 
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
@@ -694,6 +695,43 @@ model RateLimitCounter {
   @@id([bucket, key])
   @@index([expiresAt])
   @@map("rate_limit_counters")
+}
+
+/// Обращение в поддержку и редакцию (`20-public/contact.md` §4, матрица #117): письмо с `/contact`
+/// и «битая ссылка» со страницы 404 (журнал §20.15). Очередь в админке и статус в кабинете —
+/// отдельные решения (Q-08), поэтому здесь только сама запись. Адрес отправителя — персональные
+/// данные: в лог уходят только тема, шаблон маршрута и `requestId` (событие #80).
+model SupportRequest {
+  id                 String       @id @default(uuid())
+  /// Номер обращения, который видит отправитель: «Обращение №{ticketNo} принято» (§5 зона 4).
+  ticketNo           Int          @unique @default(autoincrement())
+  topic              SupportTopic
+  /// Адрес ответа; у анонимного сообщения о битой ссылке без комментария адреса нет.
+  email              String?
+  message            String?      @db.Text
+  /// Страница, о которой обращение, без query-параметров (`contact.md` §3).
+  path               String?
+  /// `requestId` сбоя со страницы 500: ведёт сотрудника к записи ошибки (`request-tracing.md` п. 5).
+  requestId          String?
+  userId             String?
+  user               User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  locale             Locale
+  /// Запрос, которым обращение создано, — для сверки с логом `support.request.created`.
+  createdByRequestId String
+  createdAt          DateTime     @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("support_requests")
+}
+
+enum SupportTopic {
+  general
+  broken_link
+  refund
+  copyright
+  restore
+  other
 }
 
 enum Role {
