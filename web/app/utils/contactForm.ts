@@ -53,11 +53,25 @@ export interface ContactDraft {
   topic: SupportTopic
   email: string
   message: string
+  path: string
   acceptPrivacy: boolean
 }
 
-export type ContactField = "email" | "message" | "acceptPrivacy"
-export type ContactFieldError = "required" | "email" | "tooShort" | "tooLong"
+export type ContactField = "email" | "message" | "path" | "acceptPrivacy"
+export type ContactFieldError = "required" | "email" | "tooShort" | "tooLong" | "path"
+
+/**
+ * Значение поля «Страница» для отправки: полный адрес этого же сайта сводится к пути, query и
+ * фрагмент отбрасываются. `null` — поле пустое; чужой адрес остаётся как есть и не пройдёт проверку.
+ */
+export const normalizeContactPath = (value: string, origin: string): string | null => {
+  let path = value.trim()
+  if (!path) return null
+  if (origin && path.startsWith(origin)) path = path.slice(origin.length) || "/"
+  return path.split(/[?#]/)[0] || "/"
+}
+
+const isSitePath = (path: string): boolean => path.startsWith("/") && !path.startsWith("//") && path.length <= 1000
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/
 
@@ -75,6 +89,9 @@ export const validateContactDraft = (
   else if (message.length < CONTACT_MESSAGE_MIN) errors.message = "tooShort"
   else if (message.length > CONTACT_MESSAGE_MAX) errors.message = "tooLong"
 
+  const path = draft.path.trim()
+  if (path && !isSitePath(path)) errors.path = "path"
+
   if (viewer === "guest") {
     const email = draft.email.trim()
     if (!email) errors.email = "required"
@@ -90,7 +107,7 @@ export const validateContactDraft = (
  */
 export type ContactFailure =
   | { kind: "rateLimited"; retryAfter: number | null }
-  | { kind: "field"; field: ContactField }
+  | { kind: "field"; field: ContactField; error: ContactFieldError }
   | { kind: "failed"; requestId: string | null }
 
 interface ErrorLike {
@@ -106,7 +123,11 @@ export const contactFailure = (errors: readonly ErrorLike[] | undefined): Contac
   }
   if (code === "VALIDATION_ERROR") {
     const field = extensions.field
-    if (field === "email" || field === "message" || field === "acceptPrivacy") return { kind: "field", field }
+    const rule = String(extensions.rule ?? "")
+    if (field === "email") return { kind: "field", field, error: rule === "required" ? "required" : "email" }
+    if (field === "message") return { kind: "field", field, error: rule.startsWith("at most") ? "tooLong" : "tooShort" }
+    if (field === "path") return { kind: "field", field, error: "path" }
+    if (field === "acceptPrivacy") return { kind: "field", field, error: "required" }
   }
   const requestId = extensions.requestId
   return { kind: "failed", requestId: typeof requestId === "string" ? requestId : null }

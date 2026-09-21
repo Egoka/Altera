@@ -5,6 +5,7 @@ import {
   contactFailure,
   formatRetryAfter,
   hasContactQuery,
+  normalizeContactPath,
   parseContactPath,
   parseContactRequestId,
   parseContactTopic,
@@ -17,6 +18,7 @@ const draft = (overrides: Partial<Parameters<typeof validateContactDraft>[0]> = 
   topic: "general" as const,
   email: "guest@example.test",
   message: "Здравствуйте, у меня вопрос о журнале.",
+  path: "",
   acceptPrivacy: true,
   ...overrides
 })
@@ -64,6 +66,14 @@ describe("проверка полей", () => {
     expect(validateContactDraft(draft({ email: "", acceptPrivacy: false }), "account")).toEqual({})
   })
 
+  it("поле «Страница»: полный адрес сайта сводится к пути, чужой адрес — ошибка поля", () => {
+    expect(normalizeContactPath(" https://altera.test/culture/x?utm=1 ", "https://altera.test")).toBe("/culture/x")
+    expect(normalizeContactPath("", "https://altera.test")).toBeNull()
+    expect(validateContactDraft(draft({ path: "/culture/x" }), "guest")).toEqual({})
+    expect(validateContactDraft(draft({ path: "https://evil.test/x" }), "guest")).toEqual({ path: "path" })
+    expect(validateContactDraft(draft({ path: "//evil.test/x" }), "account")).toEqual({ path: "path" })
+  })
+
   it("границы длины текста", () => {
     expect(validateContactDraft(draft({ message: "  " }), "guest")).toEqual({ message: "required" })
     expect(validateContactDraft(draft({ message: "я".repeat(CONTACT_MESSAGE_MIN - 1) }), "guest")).toEqual({
@@ -87,7 +97,17 @@ describe("ответ API", () => {
   it("ошибка поля — у поля, без кода запроса", () => {
     expect(contactFailure([{ extensions: { code: "VALIDATION_ERROR", field: "email", requestId: "r" } }])).toEqual({
       kind: "field",
-      field: "email"
+      field: "email",
+      error: "email"
+    })
+    expect(
+      contactFailure([{ extensions: { code: "VALIDATION_ERROR", field: "message", rule: "at most 4000 characters" } }])
+    ).toEqual({ kind: "field", field: "message", error: "tooLong" })
+    // Поле «Страница» — ошибка поля, а не технический сбой (журнал §28.4).
+    expect(contactFailure([{ extensions: { code: "VALIDATION_ERROR", field: "path", rule: "site path" } }])).toEqual({
+      kind: "field",
+      field: "path",
+      error: "path"
     })
   })
 

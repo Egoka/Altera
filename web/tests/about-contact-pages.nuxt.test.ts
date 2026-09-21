@@ -215,6 +215,45 @@ describe("страница «Письмо в редакцию»", () => {
     )
   })
 
+  it("чужой адрес в поле «Страница» — ошибка поля, запрос не уходит", async () => {
+    graphQLRequest.mockResolvedValue(guest)
+
+    const wrapper = await render(ContactPage)
+    await fillGuest(wrapper)
+    await wrapper.get('[data-testid="contact-path"]').setValue("https://evil.test/x")
+    await submit(wrapper)
+
+    expect(wrapper.find('[data-testid="contact-path-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="contact-error"]').exists()).toBe(false)
+    expect(fetchRequest).not.toHaveBeenCalled()
+  })
+
+  it("полный адрес этого сайта уходит путём", async () => {
+    graphQLRequest.mockResolvedValue(guest)
+    fetchRequest.mockResolvedValue({ data: { createSupportRequest: { ok: true, ticketNo: 7 } } })
+
+    const wrapper = await render(ContactPage)
+    await fillGuest(wrapper)
+    await wrapper.get('[data-testid="contact-path"]').setValue("http://altera.test/culture/x?utm=1")
+    await submit(wrapper)
+
+    expect(fetchRequest.mock.calls[0]![1].body.variables.path).toBe("/culture/x")
+  })
+
+  it("сессия аккаунта истекла: ошибка адреса открывает форму гостя", async () => {
+    graphQLRequest.mockResolvedValue(account)
+    fetchRequest.mockResolvedValue({
+      errors: [{ extensions: { code: "VALIDATION_ERROR", field: "email", rule: "required" } }]
+    })
+
+    const wrapper = await render(ContactPage)
+    await wrapper.get('[data-testid="contact-message"]').setValue("Здравствуйте, у меня вопрос о журнале.")
+    await submit(wrapper)
+
+    expect(wrapper.find('[data-testid="contact-email"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="contact-email-error"]').exists()).toBe(true)
+  })
+
   it("тема «возврат» подсказывает кабинет", async () => {
     graphQLRequest.mockResolvedValue(account)
     routeQuery.value = { topic: "refund" }

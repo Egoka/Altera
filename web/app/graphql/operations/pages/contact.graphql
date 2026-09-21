@@ -24,8 +24,8 @@ mutation CreateSupportRequest(
   }
 }
 
-mutation CreateBrokenLinkReport($topic: SupportTopic!, $path: String!, $message: String) {
-  createSupportRequest(topic: $topic, path: $path, message: $message, route: "/404") {
+mutation CreateBrokenLinkReport($topic: SupportTopic!, $path: String!, $message: String, $locale: Locale) {
+  createSupportRequest(topic: $topic, path: $path, message: $message, route: "/404", locale: $locale) {
     ok
   }
 }

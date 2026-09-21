@@ -10,6 +10,7 @@
     contactFailure,
     formatRetryAfter,
     hasContactQuery,
+    normalizeContactPath,
     parseContactPath,
     parseContactRequestId,
     parseContactTopic,
@@ -50,6 +51,7 @@
     { server: false, lazy: true }
   )
   const viewer = computed<"guest" | "account">(() => (viewerData.value ? "account" : "guest"))
+  const origin = useRequestURL().origin
   const accountEmail = computed(() => viewerData.value?.email ?? null)
 
   type PageState = "form" | "sending" | "sent" | "error"
@@ -78,8 +80,15 @@
 
   const submit = async () => {
     if (state.value === "sending" || limited.value) return
+    path.value = normalizeContactPath(path.value, origin) ?? ""
     fieldErrors.value = validateContactDraft(
-      { topic: topic.value, email: email.value, message: message.value, acceptPrivacy: acceptPrivacy.value },
+      {
+        topic: topic.value,
+        email: email.value,
+        message: message.value,
+        path: path.value,
+        acceptPrivacy: acceptPrivacy.value
+      },
       viewer.value
     )
     if (Object.keys(fieldErrors.value).length) return
@@ -97,7 +106,7 @@
               topic: topic.value,
               email: viewer.value === "guest" ? email.value.trim() : null,
               message: message.value.trim(),
-              path: path.value.trim() || null,
+              path: path.value || null,
               requestId: requestId || null,
               locale: requestLocale(locale.value),
               acceptPrivacy: viewer.value === "guest" ? acceptPrivacy.value : null
@@ -118,12 +127,10 @@
         startTimer(failure.retryAfter)
         state.value = "form"
       } else if (failure.kind === "field") {
-        const fieldError: Record<ContactField, ContactFieldError> = {
-          email: "email",
-          message: "tooShort",
-          acceptPrivacy: "required"
-        }
-        fieldErrors.value = { [failure.field]: fieldError[failure.field] }
+        // Сервер не признал сессию аккаунта (истекла между чтением и отправкой): форма
+        // переходит к виду гостя, чтобы поле адреса с ошибкой стало видно.
+        if (failure.field === "email" || failure.field === "acceptPrivacy") viewerData.value = null
+        fieldErrors.value = { [failure.field]: failure.error }
         state.value = "form"
       } else {
         failureRequestId.value = failure.requestId
@@ -145,7 +152,6 @@
     ["refund", "copyright", "restore", "broken_link"].includes(topic.value) ? topic.value : null
   )
 
-  const origin = useRequestURL().origin
   const canonicalUrl = computed(() => `${origin}${locale.value === "en" ? "/en" : ""}/contact`)
 
   useSeoMeta({

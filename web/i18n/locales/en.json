@@ -1398,7 +1398,8 @@
       "email": "Check the address: it needs an “{'@'}” and a domain",
       "tooShort": "Write at least {min} characters",
       "tooLong": "No more than {max} characters",
-      "consent": "Without consent we cannot reply to your message"
+      "consent": "Without consent we cannot reply to your message",
+      "path": "Give the address of a page on this site, starting with “/”"
     },
     "submit": "Send",
     "sending": "Sending…",

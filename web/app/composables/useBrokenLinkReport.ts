@@ -27,7 +27,7 @@ export const reportablePath = (fullPath: string): string => fullPath.split("?")[
 export const useBrokenLinkReport = () => {
   const state = ref<BrokenLinkReportState>("idle")
 
-  const send = async (path: string, message: string) => {
+  const send = async (path: string, message: string, locale: "ru" | "en" = "ru") => {
     if (state.value === "sending" || state.value === "sent") return
 
     state.value = "sending"
@@ -39,7 +39,8 @@ export const useBrokenLinkReport = () => {
           variables: {
             topic: "broken_link",
             path: reportablePath(path),
-            message: message.trim() ? message.trim() : null
+            message: message.trim() ? message.trim() : null,
+            locale
           }
         }
       })

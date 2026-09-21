@@ -207,7 +207,7 @@ test.describe("«О проекте»", () => {
 
     expect(response?.status()).toBe(200)
     await expect(page).toHaveTitle(/О проекте/)
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /index/)
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /^index/)
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/about$/)
     await expect(page.locator('script[type="application/ld+json"]')).toContainText("AboutPage")
     await expect(page.getByTestId("about-lead")).toContainText("чтение бесплатно")

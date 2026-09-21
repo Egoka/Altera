@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, ref } from "vue"
+  import { computed, ref, watch } from "vue"
   import type { SupportTopic } from "~/graphql/generated/graphql"
   import {
     CONTACT_MESSAGE_MAX,
@@ -35,11 +35,18 @@
 
   // Предзаполненная со страницы 404 ссылка свёрнута в строку и раскрывается по кнопке (§9 `[ДОПУЩЕНИЕ]`).
   const pathExpanded = ref(!path.value)
+  watch(
+    () => props.errors.path,
+    (error) => {
+      if (error) pathExpanded.value = true
+    }
+  )
 
   const errorText = (field: ContactField): string | null => {
     const error = props.errors[field]
     if (!error) return null
     if (field === "acceptPrivacy") return t("contact.errors.consent")
+    if (field === "path") return t("contact.errors.path")
     return t(`contact.errors.${error}`, { min: CONTACT_MESSAGE_MIN, max: CONTACT_MESSAGE_MAX })
   }
 
@@ -134,7 +141,16 @@
           type="text"
           data-testid="contact-path"
           :placeholder="t('contact.fields.pathPlaceholder')"
-          :class="[fieldClass, 'border-zinc-300 dark:border-zinc-700']" />
+          :aria-invalid="Boolean(errors.path) || undefined"
+          :aria-describedby="describedBy('path')"
+          :class="[fieldClass, borderOf('path')]" />
+        <p
+          v-if="errors.path"
+          id="contact-path-error"
+          class="mt-1 font-sans text-sm text-red-700 dark:text-red-400"
+          data-testid="contact-path-error">
+          {{ errorText("path") }}
+        </p>
       </template>
       <p v-else class="font-sans text-sm text-zinc-700 dark:text-zinc-300" data-testid="contact-path-line">
         {{ t("contact.fields.pathLine", { path }) }}
