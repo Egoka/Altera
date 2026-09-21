@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-058",
+  "issue_id": "01a0c113-1e40-7dd0-929f-2f5c41aebc18",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-058-service-pages-404-500-offline.md",
+    "sha": "8afb1ed27bcd244983d22a08ade06387e1118a51"
+  },
+  "baseline_sha": "05c330290866b9af6646612be651fee1cf37189e",
+  "tested_sha": "ce3142c792706ee9b8d928e2c75bb97acc11610c",
+  "branch": "feat/t058-service-pages",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c146-eb2b-7ac6-9fbc-9763c3a1d757",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/service-pages.spec.ts reproduces the §8 state rows of not-found.md, error.md and offline.md in Chromium: 404 answered with HTTP 404 and noindex, the where-to-go zone capped at three small cards, the broken-link form in its sent and rate-limited states, the 500 page with its request id, copy confirmation and contact link, and the offline page with an empty cache, a saved page read from Cache Storage, a missing Cache Storage, a requested address that is not cached and the return to the requested address. Green in CI run 35548580714 (browser job 157 passed / 9 skipped). One row — the offline retry indicator — is covered by web/tests/service-pages.nuxt.test.ts instead: it lives only until the navigation starts, so Playwright cannot observe it."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "The same browser suite asserts that the 404 page carries neither a copy field nor the request-code label, and that the 500 page shows the request id in the copy field and in the contact link. The unit test on serviceRequestId adds the source-level guarantee: on a 404 the value is not computed at all, so it never reaches the page payload (journal §28.4)."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 616 passed / 25 skipped; web 445 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "web_smoke": "passed",
+    "playwright": "12 service-page scenarios passed locally against the production build; CI browser job 157 passed / 9 skipped",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35548580714",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 187,
+    "url": "https://github.com/Egoka/Altera/pull/187",
+    "base_ref": "app",
+    "base_sha": "05c330290866b9af6646612be651fee1cf37189e",
+    "head_sha": "ce3142c792706ee9b8d928e2c75bb97acc11610c",
+    "merge_sha": "d9696565bfe731ec0731eaa1600d036b755cda43"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "New public pages and a Nitro response plugin need controller-managed development deployment and health verification after independent review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-058.md",
+    "sha256": "7cfadaa0f88a13099041476d46eb88f8205425a3700d205b0c80b48322f5fd53"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA and controller-managed development deployment are pending",
+    "createSupportRequest resolver and the /contact page belong to T-059 §3: the 404 form posts to that route and shows an honest failure with a link to the editors until the resolver lands",
+    "Service worker, precaching and the stale-while-revalidate strategy stay stage 3 per offline.md §1; the task scope is the three pages",
+    "The search zone of not-found.md §5 arrives with search itself at stage 3",
+    "The staff hint about /admin/articles (not-found.md §2) and the admin/owner link to /admin/errors?requestId= (error.md §2) wait for the web session and role identity of T-023",
+    "page.error (#64) on a client-side 404 and on the offline page belongs to the observability epic",
+    "The local branch feat/t058-service-pages could not be deleted: the command was declined in this run; the remote branch was removed by the merge"
+  ],
+  "usage": null
+}
