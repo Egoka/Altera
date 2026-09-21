@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-089",
+  "issue_id": "01a0c301-c94e-719a-929f-577b0b0d02b1",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-089-error-collector-adapter.md",
+    "sha": "cad9f41508993684a151762259dd539fd2ab9a5c"
+  },
+  "baseline_sha": "16690a1615cc20c6d8c3b2a247036f82e8b4b01f",
+  "tested_sha": "1dbec39faabafb7220b56fadd3785125a78df9b1",
+  "branch": "feat/t089-error-collector",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t089-error-collector",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c302-9d88-7b5a-aab9-e2390ac3031e",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/error-collector.test.ts ('writes a frontend page error into the history through the public mutation'): reportPageError stores a page.error occurrence with the route template and requestId and yields one group; server/tests/error-history-database.test.ts on PostgreSQL 17: two page.error occurrences form one group with two occurrences, first and last time; web/tests/page-error-report.test.ts: the frontend sends the ReportPageError mutation with registry fields only. CI run 35579904510 green on 1dbec39f."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/error-collector.test.ts ('is the default driver and the system works without an external service'): noop is chosen for an unset, empty and 'noop' ERROR_COLLECTOR_DRIVER, including production; an unhandled resolver error is written to the history and the INTERNAL_ERROR response carries the same requestId, with no failure log; separate tests show an adapter failure keeps the history and a history failure does not throw. CI run 35579904510 green on 1dbec39f."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 788 passed / 30 skipped; web 564 passed",
+    "database_test": "server/tests/error-history-database.test.ts: 1 passed locally on a throwaway postgres:17-alpine container; added to CI with T089_TEST_DATABASE_URL",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "locally service-pages.spec.ts and 30-account-dashboard.spec.ts: 21 passed after the plugin fix; CI browser job on the tested SHA passed on attempt 2. Attempt 1 failed one unrelated scenario (public-feeds.spec.ts:167: locator getByRole('link', { name: 'ИИ' }) without exact matched the footer link /legal/content-rules); the same scenario passed on the previous head 2176766",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35579904510",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 208,
+    "url": "https://github.com/Egoka/Altera/pull/208",
+    "base_ref": "app",
+    "base_sha": "1100704cf6162d8abe053ad0e2f13cac1f3fcb31",
+    "head_sha": "1dbec39faabafb7220b56fadd3785125a78df9b1",
+    "merge_sha": "db6f168b6ae7460fe6744c8e35adb3533b335293"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "A new Prisma migration (20260921180000_backend_error_events) and a new mutation need controller-managed development deployment and health verification"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-089.md",
+    "sha256": "e302a1d30000498f0636b31dfd0914cc95394c8ec517c8f890a892529fbe5e3e"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "The external error collector provider and its PD contract are owner question Q-01; only the noop adapter exists",
+    "reportPageError has no rate-limit bucket: rate-limits.md defines none for page.error and no number was invented (Q-04)",
+    "90-day retention ([ДОПУЩЕНИЕ]) and spike alerts are operations scope (health-and-alerts.md)",
+    "/admin/errors, group work statuses (ErrorWorkItem) and admin.change audit belong to T-081",
+    "Nuxt server-render failures reach the history only as page.error reported by the browser; there is no separate Nitro server channel"
+  ],
+  "usage": null
+}
