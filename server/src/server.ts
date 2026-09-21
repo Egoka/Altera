@@ -10,6 +10,9 @@ import { createCache } from "./cache"
 import { createErrorMasker } from "./errors/graphql-error"
 import { createMailConfigFromEnv } from "./mail/config"
 import { createMailService } from "./mail/service"
+import { createPrismaPublicAccessResolver, type MediaUsageClient } from "./storage/access"
+import { createStorageConfigFromEnv } from "./storage/config"
+import { withMedia } from "./storage/gateway"
 import { createAppLogger } from "./observability/logger"
 import { createPiiHasher } from "./observability/privacy"
 import { createRequestTracingPlugin, getRequestId } from "./observability/request-tracing"
@@ -35,6 +38,7 @@ const forwardedRequestSecret = process.env.REQUEST_ID_FORWARD_SECRET
 if (!forwardedRequestSecret) throw new Error("REQUEST_ID_FORWARD_SECRET must be defined")
 const mailConfig = createMailConfigFromEnv(process.env)
 const mail = createMailService({ store: prisma, transport: mailConfig.transport, logger, from: mailConfig.from })
+const storageConfig = createStorageConfigFromEnv(process.env)
 const maskError = createErrorMasker({ logger, requestIdFactory: getRequestId })
 // Счётчики лимитов: Redis при заданном `REDIS_URL`, иначе таблица (`rate-limits.md` §2 п. 13).
 const rateLimitClient = prisma as unknown as RateLimitDatabaseClient
@@ -78,7 +82,14 @@ const health = createHealthCheck(
   },
   process.env.RENDER_GIT_COMMIT
 )
-const server = createServer(withHealth(yoga, health))
+// Локальная реализация раздаёт `/media/*` сама; у S3 публичные файлы идут через CDN провайдера.
+const media = storageConfig.local
+  ? withMedia(yoga, {
+      storage: storageConfig.local,
+      resolvePublicAccess: createPrismaPublicAccessResolver(prisma as unknown as MediaUsageClient)
+    })
+  : yoga
+const server = createServer(withHealth(media, health))
 const jobStore = createPrismaJobStore(prisma)
 registerHousekeepingJob(prisma)
 const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger })

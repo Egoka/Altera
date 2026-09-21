@@ -56,7 +56,16 @@ const definitions: Record<SystemSettingsGroup, readonly SettingDefinition[]> = {
     fromEnv("SMTP_USER", true),
     fromEnv("SMTP_PASSWORD", true)
   ],
-  storage: [],
+  storage: [
+    fromEnv("STORAGE_DRIVER"),
+    fromEnv("STORAGE_MEDIA_BASE_URL"),
+    fromEnv("STORAGE_SIGNING_SECRET", true),
+    fromEnv("S3_ENDPOINT"),
+    fromEnv("S3_REGION"),
+    fromEnv("S3_BUCKET"),
+    fromEnv("S3_ACCESS_KEY_ID", true),
+    fromEnv("S3_SECRET_ACCESS_KEY", true)
+  ],
   domains: [
     fromEnv("FRONTEND_URL"),
     fromEnv("MAGIC_LINK_BASE_URL"),
@@ -68,7 +77,8 @@ const definitions: Record<SystemSettingsGroup, readonly SettingDefinition[]> = {
 
 // Активный адаптер провайдера группы; null — провайдер ещё не подключён в коде.
 const adapters: Partial<Record<SystemSettingsGroup, (env: SettingsEnv) => string>> = {
-  mail: (env) => env.MAIL_TRANSPORT || (env.NODE_ENV === "production" ? "unconfigured" : "console")
+  mail: (env) => env.MAIL_TRANSPORT || (env.NODE_ENV === "production" ? "unconfigured" : "console"),
+  storage: (env) => env.STORAGE_DRIVER || (env.NODE_ENV === "production" ? "unconfigured" : "local")
 }
 
 export const isSystemSettingsGroup = (value: unknown): value is SystemSettingsGroup =>
