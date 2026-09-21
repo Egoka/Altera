@@ -1,4 +1,4 @@
-import { SESSION_ACCESS_COOKIE } from "#shared/session"
+import { SESSION_ACCESS_COOKIE, SESSION_COOKIE_PATH } from "#shared/session"
 import { GraphQLProxyError, getGraphQLRouteError, proxyGraphQLRequest } from "../utils/graphqlProxy"
 import {
   REFRESH_COOKIE_MAX_AGE_SECONDS,
@@ -10,6 +10,7 @@ import {
 } from "../utils/sessionCookie"
 
 const refreshCookieOptions = { httpOnly: true, secure: true, sameSite: "lax", path: "/" } as const
+const accessCookieOptions = { httpOnly: true, sameSite: "lax", path: SESSION_COOKIE_PATH } as const
 
 export default defineEventHandler(async (event) => {
   const requestId = event.context.requestId
@@ -54,6 +55,10 @@ export default defineEventHandler(async (event) => {
       })
     } else if (session.clear) {
       deleteCookie(event, REFRESH_COOKIE_NAME, refreshCookieOptions)
+      // Выход обязан очистить cookie (`30-account/reader/sessions.md` §7): без этого шага
+      // access-cookie живёт ещё 15 минут и интерфейс продолжает считать читателя вошедшим,
+      // хотя API уже отвечает `UNAUTHENTICATED` по отозванной сессии.
+      deleteCookie(event, SESSION_ACCESS_COOKIE, accessCookieOptions)
     }
 
     setResponseStatus(event, result.status)

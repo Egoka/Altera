@@ -1,0 +1,65 @@
+"""
+Класс устройства сессии. Сырой `user-agent` наружу не отдаётся (ADR-0027,
+`50-access/rate-limits.md` п. 2), поэтому экран получает только класс.
+"""
+enum SessionDeviceClass {
+  desktop
+  mobile
+  tablet
+  unknown
+}
+
+"""
+Класс браузера сессии — та же причина, что и у `SessionDeviceClass`.
+"""
+enum SessionBrowserClass {
+  chrome
+  safari
+  firefox
+  edge
+  opera
+  other
+  unknown
+}
+
+"""
+Активная сессия аккаунта (`docs/spec/30-account/reader/sessions.md` §4).
+Местоположение по IP не показывается и не вычисляется (журнал §25.9), поэтому полей
+`ip`, `country`, `city` и подобных в контракте нет и быть не должно.
+"""
+type AccountSession {
+  id: ID!
+  deviceClass: SessionDeviceClass!
+  browserClass: SessionBrowserClass!
+  createdAt: String!
+  lastActiveAt: String!
+  """
+  Сессия, из которой пришёл запрос: её закрывает «выйти», а не «отозвать».
+  """
+  isCurrent: Boolean!
+}
+
+type SessionRevokeResult {
+  revoked: Boolean!
+}
+
+"""
+Итог «выйти везде»: текущая сессия сохраняется, остальные отзываются (§7).
+"""
+type SessionRevokeAllResult {
+  revokedCount: Int!
+}
+
+extend type AccountUser {
+  """
+  Свои сессии (матрица доступа #47). Чужие сессии здесь недоступны никакой роли:
+  аналитик к активным сессиям пользователей доступа не получает (журнал §26.6), а карточка
+  пользователя в админке в эту задачу не входит.
+  """
+  sessions: [AccountSession!]!
+}
+
+extend type Mutation {
+  revokeSession(id: ID!): SessionRevokeResult!
+  revokeAllSessions: SessionRevokeAllResult!
+}

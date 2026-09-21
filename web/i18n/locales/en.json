@@ -166,6 +166,49 @@
         "generic": "Something went wrong. Try again (code: {requestId})",
         "dataUnavailable": "The e-mail change data could not be loaded. Try again later."
       }
+    },
+    "sessions": {
+      "pageTitle": "Sessions and devices",
+      "intro": "A session is a sign-in from one device: access is renewed every 15 minutes while you use the site and ends after 30 days without activity.",
+      "currentTitle": "Current session",
+      "othersTitle": "Other devices",
+      "empty": "No other devices.",
+      "now": "active now",
+      "createdAt": "signed in {date}",
+      "lastActiveAt": "active {date}",
+      "revoke": "Revoke",
+      "revoking": "Revoking…",
+      "logout": "Sign out",
+      "logoutAll": "Sign out everywhere",
+      "logoutAllConfirmTitle": "Sign out on other devices?",
+      "logoutAllConfirmBody": "Other devices will be signed out immediately. This one stays active.",
+      "cancel": "Cancel",
+      "revoked": "The session is closed.",
+      "alreadyRevoked": "That session was already closed.",
+      "revokedAll": "Sessions closed: {count}. Only the current one remains.",
+      "securityTitle": "Security",
+      "changeEmail": "Change e-mail",
+      "contact": "Tell the editors if this sign-in was not yours",
+      "retry": "Retry",
+      "error": {
+        "dataUnavailable": "The session list could not be loaded. Please try again later.",
+        "generic": "Something went wrong. Please try again (code: {requestId})"
+      },
+      "device": {
+        "desktop": "Computer",
+        "mobile": "Phone",
+        "tablet": "Tablet",
+        "unknown": "Unknown device"
+      },
+      "browser": {
+        "chrome": "Chrome",
+        "safari": "Safari",
+        "firefox": "Firefox",
+        "edge": "Edge",
+        "opera": "Opera",
+        "other": "Other browser",
+        "unknown": "Unknown browser"
+      }
     }
   },
   "mail": {
