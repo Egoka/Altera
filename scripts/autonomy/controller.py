@@ -108,6 +108,11 @@ class Ledger:
             self.db.execute("INSERT OR REPLACE INTO events VALUES (?, 'running', ?, ?)", (key, attempts, dt.datetime.now(dt.timezone.utc).isoformat()))
         return True
 
+    def release_unapplied(self, key):
+        """`running` → `failed`, когда сверка под общим lock доказала, что действие не состоялось."""
+        with self.db:
+            self.db.execute("UPDATE events SET state='failed', updated=? WHERE key=? AND state='running'", (dt.datetime.now(dt.timezone.utc).isoformat(), key))
+
     def finish(self, key, success):
         with self.db:
             self.db.execute("UPDATE events SET state=?, updated=? WHERE key=? AND state='running'", ("done" if success else "failed", dt.datetime.now(dt.timezone.utc).isoformat(), key))
@@ -400,6 +405,10 @@ class Live:
                     self.write_verified(receipt, state_dir, accepted_at)
                     ledger.observe_done(key)
                     return {"ok": True, "phase": phase, "reconciled": True, "task_id": receipt["task_id"]}
+                # Карточка прочитана под `dispatch.lock` и не в Done: прежний `running` не записал
+                # статус. Запись статуса идемпотентна, поэтому повтор идёт в общий бюджет попыток,
+                # а не блокирует задачу навсегда. Для merge сверка не доказывает отсутствие действия.
+                ledger.release_unapplied(key)
             if not ledger.claim(key):
                 return {"ok": False, "blocked": ["duplicate_or_reconciliation_required"]}
             # До внешнего вызова запись running. Неопределённый сбой оставляет её для сверки.

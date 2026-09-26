@@ -370,6 +370,57 @@ class ReconciliationTests(unittest.TestCase):
             live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
             self.assertEqual(live.transition(self.receipt, "done", root)["blocked"], ["issue_scope"])
 
+    def test_stale_done_running_is_retried_when_native_issue_is_not_done(self):
+        # Сбой после захвата ключа `done` оставлял `running` навсегда (T-007, 2026-09-19):
+        # карточка не в Done, значит запись статуса не состоялась, и повтор безопасен.
+        state = {"status": "in_review", "status_category": "started", "writes": 0}
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt): return self.facts
+            def multica(inner, *args):
+                if args[:2] == ("issue", "status"):
+                    state.update(status="done", status_category="completed", writes=state["writes"] + 1)
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, **state}
+
+        with tempfile.TemporaryDirectory() as root:
+            key = c.fingerprint({"phase": "done", "task": "T-123", "sha": "b" * 40})
+            self.assertTrue(c.Ledger(Path(root) / "ledger.sqlite3").claim(key))
+            live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
+            result = live.transition(self.receipt, "done", root)
+            self.assertTrue(result["ok"], result)
+            self.assertEqual(state["writes"], 1)
+            self.assertIsNotNone(c.Ledger(Path(root) / "ledger.sqlite3").completed_at(key))
+
+    def test_stale_done_running_respects_retry_budget(self):
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt): return self.facts
+            def multica(inner, *args):
+                if args[:2] == ("issue", "status"):
+                    raise AssertionError("retry budget exhausted, status must not be written")
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, "status": "in_review", "status_category": "started"}
+
+        with tempfile.TemporaryDirectory() as root:
+            key = c.fingerprint({"phase": "done", "task": "T-123", "sha": "b" * 40})
+            ledger = c.Ledger(Path(root) / "ledger.sqlite3")
+            for _ in range(2):
+                ledger.claim(key); ledger.finish(key, False)
+            self.assertTrue(ledger.claim(key))
+            live = VerifiedLive({"repo": root, "workspace_id": "workspace", "project_id": "project"})
+            self.assertEqual(live.transition(self.receipt, "done", root)["blocked"], ["duplicate_or_reconciliation_required"])
+
+    def test_stale_merge_running_is_still_not_replayed(self):
+        open_facts = {**self.facts, "state": "OPEN"}
+        class OpenLive(c.Live):
+            def facts(inner, receipt): return open_facts
+        with tempfile.TemporaryDirectory() as root:
+            key = c.fingerprint({"phase": "merge", "task": "T-123", "sha": "b" * 40})
+            self.assertTrue(c.Ledger(Path(root) / "ledger.sqlite3").claim(key))
+            live = OpenLive({"repo": root, "github_repo": "example/project"})
+            with patch.object(c, "command", side_effect=AssertionError("must not merge again")):
+                result = live.transition(self.receipt, "merge", root)
+            self.assertEqual(result["blocked"], ["duplicate_or_reconciliation_required"])
+
 
 class FreshBaseTests(unittest.TestCase):
     def setUp(self):
