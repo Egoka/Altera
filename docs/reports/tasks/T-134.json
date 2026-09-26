@@ -40,7 +40,12 @@
     "base_ref": "app",
     "merge_sha": "9553d2f4c1b32dcd4831ff6f02ae51583b5a6562"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0df34-d90c-7822-9f8e-8445a27ea488",
+    "sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "probe_actor_id": null,
