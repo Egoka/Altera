@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-014",
+  "issue_id": "01a0a5d1-d512-7db4-bd2e-452640728155",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-014-migration-taxonomy.md",
+    "sha": "4992a49dc8d6dc9ee984310eb7fb2eb980edd6f1"
+  },
+  "baseline_sha": "96ef15c06f3596b8eea2f9421d0915f9b6f31c4a",
+  "tested_sha": "ea1d61696d7900ff4aed493a2e39660e7d8e5f93",
+  "branch": "server/t-014-taxonomy",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0a61b-c61b-709c-817a-1a56b3630ea9",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "миграция taxonomy CHECK :174-180; server/src/taxonomy/service.ts:118-160 преемник; server/tests/taxonomy-service.test.ts:21-106"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "миграция только переименовывает, пред- и постпроверки :19-56,:190-204; server/tests/taxonomy-migration-database.test.ts:89-160"
+    }
+  ],
+  "pr": {
+    "number": 55,
+    "url": "https://github.com/Egoka/Altera/pull/55",
+    "base_ref": "app",
+    "base_sha": "96ef15c06f3596b8eea2f9421d0915f9b6f31c4a",
+    "head_sha": "ea1d61696d7900ff4aed493a2e39660e7d8e5f93",
+    "merge_sha": "e9cba143a98508db5a432788c4edcf66429b223c"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0dd9d-9319-7549-9eba-02d6402a578a",
+    "sha": "ea1d61696d7900ff4aed493a2e39660e7d8e5f93",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "reason": "PR меняет server/ — миграции и сервис таксономии"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-014.md",
+    "sha256": "83bed34b2ed28217b28a238b244cfe0748164c175d6590c4229fe017f2b635a3"
+  },
+  "usage": null
+}
