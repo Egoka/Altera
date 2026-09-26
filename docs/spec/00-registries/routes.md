@@ -38,7 +38,7 @@
 | 22 | страница 404 | public | все | — | noindex | `20-public/not-found.md` | 1 | утверждён |
 | 23 | страница 410 (снятый или архивированный материал) | public | все | — | noindex | `20-public/gone.md` | 1 | утверждён |
 | 24 | страница 500 | public | все | — | noindex | `20-public/error.md` | 1 | утверждён |
-| 25 | офлайн-страница | public | все | — | noindex | `20-public/offline.md` | 3 | утверждён |
+| 25 | офлайн-страница | public | все | — | noindex | `20-public/offline.md` | 1 | утверждён; этап 3 → 1 (журнал §35 п. 3) |
 
 ## Кабинет
 
@@ -58,7 +58,7 @@
 | 37 | `/me/articles/{id}/review` | account | автор-владелец | З, П (ещё не подавалась), О, Д, Н | noindex | `30-account/author/review-history.md` | 1 | утверждён |
 | 38 | `/me/articles/{id}/stats` | account | автор-владелец (standard — сумма, pro — по дням) | З, П, О, Д, Н, Пл | noindex | `30-account/author/article-stats.md` | 2 | утверждён |
 | 39 | `/me/export` | account | акк. (и при истёкшем плане) | З, О, Д | noindex | `30-account/reader/export.md` | 3 | утверждён |
-| 40 | `/me/delete`, `/me/delete/confirm?token=` | account | акк. (= архивирование аккаунта) | З, О, Д, Н (ссылка), конфликт для последнего `owner` | noindex | `30-account/reader/delete-account.md` | 3 | утверждён |
+| 40 | `/me/delete`, `/me/delete/confirm?token=` | account | акк. (= архивирование аккаунта) | З, О, Д, Н (ссылка), конфликт для последнего `owner` | noindex | `30-account/reader/delete-account.md` | 1 | утверждён; этап 3 → 1 (журнал §35 п. 1) |
 
 ## Админка
 
@@ -81,22 +81,22 @@
 | 55 | `/admin/ranking` | admin | owner; analyst, admin — чтение | З, О, Д | noindex | `40-admin/ranking-config.md` | 2 | утверждён; параметры — Г4 |
 | 56 | `/admin/audit` | admin | все служебные роли — своя зона; admin, owner — полный | З, П, О, Д | noindex | `40-admin/audit-log.md` | 1 | утверждён (перенесён с этапа 4, журнал #37) |
 | 57 | `/admin/media`, `/admin/media/{id}` | admin | — | — | — | — | 4 | отменено: медиа привязано к статье (журнал #28) |
-| 58 | `/admin/legal` | admin | owner; admin — чтение | З, П, О, Д | noindex | `40-admin/legal-texts.md` | 4 | утверждён |
+| 58 | `/admin/legal` | admin | owner; admin — чтение | З, П, О, Д | noindex | `40-admin/legal-texts.md` | 1 | утверждён; этап 4 → 1 (журнал §35 п. 3) |
 | 59 | `/admin/newsletter`, `/admin/newsletter/{id}` | admin | — | — | — | `40-admin/newsletter.md` | 4 | отложено: правила рассылок — отдельный разбор |
 | 60 | `/admin/settings` | admin | owner; admin — чтение без секретов (журнал §28.11) | З, О, Д | noindex | `40-admin/system-settings.md` | 4 | утверждён (настройки провайдеров — этап 4, журнал #36); Г8b |
 | 70 | `/admin/mail`, `/admin/mail/{id}` | admin | analyst, admin, owner (адрес, тема, содержание, статус — журнал §27.6); editor, moderator — письма по своим статьям | З, П, О, Д, Н | noindex | `40-admin/mail.md` | 1 | утверждён (новый — журнал #34); Г8a |
 | 71 | `/auth/appeal?token=`, `/en/auth/appeal?token=` | public | пользователь архивированного аккаунта по токену входа | З, О, Н (токен), лимит, конфликт (оспаривание уже подано) | noindex | `20-public/blocked-appeal.md` | 1 | утверждён (новый — Г2, журнал #48) |
 | 72 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (новый — Г3, журнал §20.19) |
 | 73 | `/me/archived` | account | пользователь самостоятельно архивированного аккаунта (ограниченная сессия); остальным — редирект в `/me` | З, О, Д | noindex | `30-account/reader/archived-state.md` | 1 | утверждён (новый — Г3, журнал §5.2) |
-| 74 | `/me/stats` | account | автор; бывший автор — чтение | З, П, О, Д, Пл | noindex | `30-account/author/stats-overview.md` | 2 | черновик (новый — Г6, журнал §25.5) |
+| 74 | `/me/stats` | account | автор; бывший автор — чтение | З, П, О, Д, Пл | noindex | `30-account/author/stats-overview.md` | 2 | утверждён (журнал §37 п. 12; новый — Г6, журнал §25.5) |
 | 75 | `/admin/errors`, `/admin/errors/{id}` | admin | admin (чтение и рабочие статусы), owner | З, П, О, Д, Н | noindex | `40-admin/errors-and-health.md` | 1 `[ДОПУЩЕНИЕ]` | утверждён (Г8b; раздел — Г3, журнал §20.19; статусы — §27.7) |
 
 ## Инфраструктура и API
 
 | # | Маршрут | Тип | Роли с доступом | Состояния | SEO | Файл спецификации | Этап | Статус |
 |---|---|---|---|---|---|---|---|---|
-| 61 | `/rss.xml`, `/en/rss.xml` | infra | все | О | — | `20-public/feeds-and-sitemap.md` | 3 | утверждён |
-| 62 | `/sitemap.xml`, `/sitemap-{locale}.xml` | infra | все | О | — | `20-public/feeds-and-sitemap.md` | 3 | утверждён |
+| 61 | `/rss.xml`, `/en/rss.xml` | infra | все | О | — | `20-public/feeds-and-sitemap.md` | 1 | утверждён; этап 3 → 1 (журнал §35 п. 3) |
+| 62 | `/sitemap.xml`, `/sitemap-{locale}.xml` | infra | все | О | — | `20-public/feeds-and-sitemap.md` | 1 | утверждён; этап 3 → 1 (журнал §35 п. 3) |
 | 63 | `/robots.txt` | infra | все | — | — | `20-public/feeds-and-sitemap.md` | 1 | утверждён |
 | 64 | `/health` (Nuxt) и `GET /health` (API) | infra | все (без данных) | О | — | `80-observability/health-and-alerts.md` | 0 | утверждён |
 | 65 | `POST /api/graphql` (BFF-прокси Nuxt → API) | infra | по роли запроса | — | — | `50-access/permission-checks.md` | 0 | утверждён |
@@ -119,3 +119,6 @@
 - Все `account` и `admin` маршруты — `noindex` и вне `sitemap.xml`.
 - Изменения Г1: #54 `/admin/ai` — этап 1; #56 `/admin/audit` — этап 1; #57 отменён;
   #52, #59 — отложены; #70 `/admin/mail` — новый; #37 — файл `review-history.md`.
+- Изменения гейта блокеров 2026-09-26: #40 `/me/delete` — этап 1 (журнал §35 п. 1); #25
+  офлайн-страница, #61 RSS, #62 sitemap, #58 `/admin/legal` — этап 1 (журнал §35 п. 3); #74
+  `/me/stats` утверждён (журнал §37 п. 12).
