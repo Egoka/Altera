@@ -5,31 +5,29 @@
   "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-007-deterministic-seed.md",
-    "sha": "772a87fd573b82a364d9029169c5b563375a6115"
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
   },
-  "baseline_sha": "2979101be6c630d53d6796594253f1765913d0d5",
+  "baseline_sha": "67066a297cd047e1c6040dfcccac87e6de31496f",
   "tested_sha": "bb227d2ca5eeb1bc492cf84901c1ef64676077ef",
-  "branch": "server/t007-deterministic-seed",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0b7a2-1d06-7d5c-92d9-852f288a4ce2",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "Two consecutive prisma db seed commands exited 0; the CI-wired PostgreSQL integration test invokes the public CLI twice and verifies unchanged entity counts"
+      "evidence": "server/seed/seed.ts upsert по фиксированным id; server/tests/seed-database.test.ts:53-83 (CI шаг T-007); CI https://github.com/Egoka/Altera/actions/runs/35418315510/job/105831460954"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "SQL after the second run returned one service account for each of editor/moderator/analyst/admin/owner and one article for each of 7 ArticleStatus values"
+      "evidence": "server/tests/seed-database.test.ts:85-105 роли и 7 статусов; CI https://github.com/Egoka/Altera/actions/runs/35418315510/job/105831460954"
     }
   ],
   "pr": {
     "number": 111,
-    "url": "https://github.com/Egoka/Altera/pull/111",
-    "base_ref": "app",
-    "base_sha": "67066a297cd047e1c6040dfcccac87e6de31496f",
     "head_sha": "bb227d2ca5eeb1bc492cf84901c1ef64676077ef",
+    "base_sha": "67066a297cd047e1c6040dfcccac87e6de31496f",
+    "base_ref": "app",
     "merge_sha": "3722abfd77c39d03b93fcbe5f11d5143a3954502"
   },
   "review": {
@@ -39,8 +37,10 @@
     "verdict": "approved"
   },
   "deployment": {
-    "required": false,
-    "reason": "Seed is an explicit development/test command; no migration or automatic production execution is introduced"
+    "required": true,
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0ddd7-9968-7240-a31e-909433d4cdb2",
+    "reason": "PR меняет server/ или общие входы сборки; Render dev live включает merge SHA"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-007.md",

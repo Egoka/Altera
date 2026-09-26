@@ -2,54 +2,52 @@
   "schema_version": 1,
   "task_id": "T-005",
   "issue_id": "01a0b009-46f7-71dd-acbb-cb8b14553f41",
-  "work_class": "chore",
+  "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-005-lint-rules-hygiene.md",
-    "sha": "20bac88b8a2a8e04f16e4e8f3ad6e012094889b5eeafe28ab3b3d41e2537d87a"
+    "sha": "423f6db40e205e93db1b5b621d26d0d2a7b6478e"
   },
-  "baseline_sha": "608a54d8cb472efce90802d6b535346ce171ce96",
-  "tested_sha": "ca7d025cc321810c780f0d64491b50910a146013",
-  "branch": "task/t005-lint-hygiene",
+  "baseline_sha": "eb7e502542eb77b6cb0909ed55e7cf94d1b99b44",
+  "tested_sha": "08489e2d1e444334813525f831af9b2c7c5c7327",
   "implementer_id": "d08ef989-e4d4-4772-bc33-335127a85f0f",
   "implementer_run_id": "01a0b0e1-d0c4-7866-ae3b-89e119bd6c2d",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "eslint.config.mjs правило no-console:error для server/src/**/{ts,js} присутствовало на baseline 2979101; временная вставка console.log в server/src/health.ts вызвала ошибку линта; после revert pnpm lint exit 0"
+      "evidence": "eslint.config.mjs:52-57 no-console, :20 игнор .output; CI https://github.com/Egoka/Altera/actions/runs/35454093434/job/105926557148"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "Удалены web/app/pages/fonts-showcase.vue, components-showcase.vue, test-error.vue; маршруты /fonts-showcase /components-showcase /test-error вернут 404 в прод-сборке"
+      "evidence": "PR #116 удалил демо-страницы; /test-error только dev: web/nuxt.config.ts:6, web/tests/dev-only-routes.test.ts, web/scripts/smoke.sh:108-110; CI https://github.com/Egoka/Altera/actions/runs/35454093434/job/105926557148"
     },
     {
       "id": "AC-3",
       "status": "passed",
-      "evidence": "server/package.json build: prisma generate && tsc && ... — prisma migrate deploy отсутствует; подтверждено на baseline 2979101"
+      "evidence": "server/package.json:8 lint; CI https://github.com/Egoka/Altera/actions/runs/35454093434/job/105926557148"
     }
   ],
   "pr": {
     "number": 116,
-    "url": "https://github.com/Egoka/Altera/pull/116",
+    "head_sha": "08489e2d1e444334813525f831af9b2c7c5c7327",
+    "base_sha": "eb7e502542eb77b6cb0909ed55e7cf94d1b99b44",
     "base_ref": "app",
-    "base_sha": "67066a297cd047e1c6040dfcccac87e6de31496f",
-    "head_sha": "ca7d025cc321810c780f0d64491b50910a146013",
-    "merge_sha": null
+    "merge_sha": "c56993952344a414a1ed4c47bd93416349e40842"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
-    "sha": "ca7d025cc321810c780f0d64491b50910a146013",
-    "verdict": null
+    "run_id": "01a0dd9c-b707-7a71-ab61-69aeebd14233",
+    "sha": "08489e2d1e444334813525f831af9b2c7c5c7327",
+    "verdict": "approved"
   },
   "deployment": {
     "required": false,
-    "reason": "Только удаление демо-страниц и конфигурация линта; нет изменений в продуктовом runtime"
+    "reason": "PR не меняет server/, packages/ и общие входы сборки"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-005.md",
-    "sha256": "15a9dd8123366e3897436bdd030182edc856c5befe32a4057612dcc4c2908bb1"
+    "sha256": "7e622b6cb7e535f5bc6d6e7c553a3f59e58ec57645c56b0292dadc9244bc430d"
   },
   "usage": null
 }

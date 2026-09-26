@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "T-087",
+  "issue_id": "01a0a450-56be-7380-9e3e-dacf2e84958b",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-087-request-id-http-request.md",
+    "sha": "fd518e080f5c0e42d638f0791fd5af234cb82974"
+  },
+  "baseline_sha": "83e5336754ce799d14fc0d48c47c7de72f45e5c2",
+  "tested_sha": "de49b43d313737eb8fe10a16fe71c60740f97ff3",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0a78b-f4b5-76fc-b052-87963d04ca64",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/src/errors/graphql-error.ts:14,59-63; server/tests/graphql-error-boundary.test.ts:132,155; request-tracing.test.ts:106; CI https://github.com/Egoka/Altera/actions/runs/35076602494/job/104730967138"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/src/observability/request-tracing.ts:76-91; server/src/prisma.ts:111; server/tests/request-tracing.test.ts:84-104,120; CI https://github.com/Egoka/Altera/actions/runs/35076602494/job/104730967138"
+    }
+  ],
+  "pr": {
+    "number": 60,
+    "head_sha": "de49b43d313737eb8fe10a16fe71c60740f97ff3",
+    "base_sha": "83e5336754ce799d14fc0d48c47c7de72f45e5c2",
+    "base_ref": "app",
+    "merge_sha": "64c47488bd847467ed2f44cdb4877b4b10591d78"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0dd9e-144d-7906-8bc4-06288412ce5f",
+    "sha": "de49b43d313737eb8fe10a16fe71c60740f97ff3",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0ddd7-9968-7240-a31e-909433d4cdb2",
+    "reason": "PR меняет server/ или общие входы сборки; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-087.md",
+    "sha256": "8247d82b7fae76f54785c97fdad288fcfa899410298d427fdaea598a45bc1b0a"
+  },
+  "usage": null
+}

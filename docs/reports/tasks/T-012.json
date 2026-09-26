@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "task_id": "T-012",
+  "issue_id": "01a0a565-2e45-7c16-9b42-54f7bc1fdd3e",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-012-migration-sessions-magic-link.md",
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
+  },
+  "baseline_sha": "4064de2c0eb1342096c5340fd314e31893109de4",
+  "tested_sha": "928d09682619947b31cee8ac674e668a880241fc",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0a56f-33d0-79df-888e-16da67172439",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/prisma/schema.prisma Session без геополей; server/tests/auth-schema-contract.test.ts:49-65; CI https://github.com/Egoka/Altera/actions/runs/34983637570/job/104430690511"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/src/auth/token-hash.ts:5-11 SHA-256/HMAC, CHECK 64 hex; server/tests/auth-token-hash.test.ts:49-94; CI https://github.com/Egoka/Altera/actions/runs/34983637570/job/104430690511"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "docs/reports/2026-09-15-t012-sessions-magic-link-report.md:82-112 репетиция на заполненной копии; server/tests/auth-schema-contract.test.ts:78-91; CI https://github.com/Egoka/Altera/actions/runs/34983637570/job/104430690511"
+    }
+  ],
+  "pr": {
+    "number": 51,
+    "head_sha": "928d09682619947b31cee8ac674e668a880241fc",
+    "base_sha": "4064de2c0eb1342096c5340fd314e31893109de4",
+    "base_ref": "app",
+    "merge_sha": "bf5931670fc7145ac7a4a8994afb735dff83b3c4"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0dd9d-8f6c-7b45-863f-a3ed5d10db64",
+    "sha": "928d09682619947b31cee8ac674e668a880241fc",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0ddd7-9968-7240-a31e-909433d4cdb2",
+    "reason": "PR меняет server/ или общие входы сборки; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-012.md",
+    "sha256": "9327f4fae86ebc9800511eec1379ceae84855edbe9ef46b549c9100f40221f76"
+  },
+  "usage": null
+}

@@ -5,70 +5,46 @@
   "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-101-legal-versions-consent.md",
-    "sha": "dbfe76f5d3b5c9a908095464d758f998ace580b0"
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
   },
   "baseline_sha": "5fbd8f6af4cf4ccc7ae9b37610e0c9d3dae9d61e",
   "tested_sha": "d6d437127a5060e5fce7360749a37fa3fbe54ab7",
-  "branch": "feat/t101-legal-versions",
-  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t101-legal",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0c1ef-bd05-7bbe-b972-aa15add0b6aa",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "server/tests/legal-versions-database.test.ts on PostgreSQL 17 in CI run https://github.com/Egoka/Altera/actions/runs/35557831301 (step 'Проверить версии юридических текстов и согласия T-101', 2 passed): the first login creates the account and user_legal_consents rows referencing terms v1 and privacy v1; a non-material version lets the reader in without consent, a material one returns consent_required and acceptConsent records version 4. Fake-world coverage in server/tests/auth-magic-link.test.ts."
+      "evidence": "server/src/graphql/auth/resolver.ts:256-261; server/src/auth/legal.ts:136-157; server/tests/legal-versions-database.test.ts:113 (CI шаг T-101); CI https://github.com/Egoka/Altera/actions/runs/35557831301/job/106205593231"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "web/tests/e2e/101-legal-pages.spec.ts, 16 Chromium scenarios against the live API and database: loading skeleton, empty (other-locale fallback), data error with requestId, not found (unknown and malformed version 404, unknown anchor 200), blocked (archived account reads as guest), not-applicable rows as a public 200 page, previous version with noindex, account zones, AI-training ban, print. CI run https://github.com/Egoka/Altera/actions/runs/35557831301: browser job 195 passed / 9 skipped versus 179 / 9 on baseline 2b25863, so all 16 new scenarios passed."
+      "evidence": "web/tests/e2e/101-legal-pages.spec.ts:151,168 и состояния; CI https://github.com/Egoka/Altera/actions/runs/35557831301/job/106205593231"
     }
   ],
-  "checks": {
-    "format": "passed",
-    "lint": "passed",
-    "codegen_drift": "passed",
-    "tests": "server 699 passed / 27 skipped; web 499 passed",
-    "web_typecheck": "passed",
-    "web_build": "passed",
-    "server_build_ci": "passed",
-    "playwright": "not run locally: the local Docker daemon answers HTTP 500 and no local PostgreSQL exists; the CI browser job ran the new scenarios — 195 passed / 9 skipped",
-    "ci": "https://github.com/Egoka/Altera/actions/runs/35557831301",
-    "environment": "Node 24.12.0, pnpm 10.18.3"
-  },
   "pr": {
     "number": 195,
-    "url": "https://github.com/Egoka/Altera/pull/195",
-    "base_ref": "app",
-    "base_sha": "5fbd8f6af4cf4ccc7ae9b37610e0c9d3dae9d61e",
     "head_sha": "d6d437127a5060e5fce7360749a37fa3fbe54ab7",
+    "base_sha": "5fbd8f6af4cf4ccc7ae9b37610e0c9d3dae9d61e",
+    "base_ref": "app",
     "merge_sha": "fd679cc317cfb89cb0b6b096cd813c95b048d657"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ddfb-bb36-74c8-b723-eef0ca2bd8b4",
+    "sha": "d6d437127a5060e5fce7360749a37fa3fbe54ab7",
+    "verdict": "approved"
   },
   "deployment": {
-    "required": false,
-    "environment": "development",
-    "status": "not_run",
-    "reason": "The task adds no Prisma migration and does not change the database schema; the new resolvers and pages ship with the ordinary server and web builds"
+    "required": true,
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0ddfb-be83-7305-bc75-78216aa9b1c6",
+    "reason": "PR меняет server/ или общие входы сборки; Render dev live включает merge SHA"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-101.md",
-    "sha256": "9e79cf2731fa170e9a9a956f20db49bfcf4b7df43ab76df5192bb44829186b0e"
+    "sha256": "3a27355f83040a9c1026bc50f128cc9f7f8be6bca579ed7858c06ea387b18431"
   },
-  "remaining": [
-    "Independent native review of the tested SHA is pending; Done stays with the controller",
-    "Re-consent is now required only after a material version (ADR-0028 p. 2, legal-texts.md §5); before this task any new version triggered it",
-    "The on-page 'accept the new version' button ([ДОПУЩЕНИЕ] legal-terms.md §5, §9) is replaced by a note that consent is requested at the next sign-in, because acceptConsent works only inside the login flow",
-    "The image-licence zone of legal-license.md §5 p. 6 is hidden as empty: there is no mediaLicenses query in the API",
-    "The #ai-training section is rendered from journal §24.2 wording until the owner's final text (T-102) carries its own section",
-    "Text content is T-102 (Q-07); /admin/legal is T-083; /legal/paid-services and /legal/refunds are F-01; /contact, /me/export and /me/delete do not exist yet",
-    "The owner question on whether the English text is an informational translation (legal-terms.md §12) stays open"
-  ],
   "usage": null
 }

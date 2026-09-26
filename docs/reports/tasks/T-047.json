@@ -5,49 +5,46 @@
   "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-047-job-queue-runner.md",
-    "sha": "e50bf40ccf891f743e64812963bd6399a63076b4"
+    "sha": "fd518e080f5c0e42d638f0791fd5af234cb82974"
   },
-  "baseline_sha": "3722abfd77c39d03b93fcbe5f11d5143a3954502",
+  "baseline_sha": "86a1022c0635b04633339e5cd29a8197248dace1",
   "tested_sha": "d6ccb24a76157c167025e71ffa6895d8c5959cdb",
-  "branch": "server/t047-job-queue",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
-  "implementer_run_id": "01a0b133-3287-7c8e-8600-b25a7be68e7a",
+  "implementer_run_id": "01a0b95d-373f-7e95-a988-33c1274b202a",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "job-worker.ts: attemptCount >= maxAttempts → store.fail() → job.failed log; unit test confirms failed transition; CI run 35442605620 SUCCESS on head bf109969"
+      "evidence": "server/src/jobs/job-worker.ts:107-131; prisma-job-store.ts:128-141; server/tests/job-worker.test.ts:92, job-queue-database.test.ts:50 (CI); CI https://github.com/Egoka/Altera/actions/runs/35455138600/job/105929337606"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "stuck job timeout detection with clock substitution; CI run 35442605620 SUCCESS"
+      "evidence": "server/src/jobs/job-worker.ts:145-163; prisma-job-store.ts:143-172; server/tests/job-worker.test.ts:126; CI https://github.com/Egoka/Altera/actions/runs/35455138600/job/105929337606"
     }
   ],
   "pr": {
     "number": 123,
-    "url": "https://github.com/Egoka/Altera/pull/123",
-    "base_ref": "app",
-    "base_sha": "86a1022c0635b04633339e5cd29a8197248dace1",
     "head_sha": "d6ccb24a76157c167025e71ffa6895d8c5959cdb",
+    "base_sha": "86a1022c0635b04633339e5cd29a8197248dace1",
+    "base_ref": "app",
     "merge_sha": "0a6509103589d39e908f29dca3b4a0f97c3e3d72"
   },
   "review": {
     "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": null,
-    "sha": "bf109969a762d1d15b66f1acd25b1e81a69bc75c",
-    "verdict": null
+    "run_id": "01a0dde0-c7da-7030-a123-c4e01bb63ec9",
+    "sha": "d6ccb24a76157c167025e71ffa6895d8c5959cdb",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
-    "environment": "development",
-    "reason": "Server code and Prisma migration; controller must apply in authorized environment and verify health",
     "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "probe_run_id": null
+    "probe_run_id": "01a0ddfb-be83-7305-bc75-78216aa9b1c6",
+    "reason": "PR меняет server/ или общие входы сборки; Render dev live включает merge SHA"
   },
   "finalization": {
     "path": "docs/reports/tasks/T-047.md",
-    "sha256": "1ec9182fd173c4cadbe3b049ff13fe3e0f6f8e191998fd5113592d6059fd77aa"
+    "sha256": "f0528eea09aa4288f74a98aa2860bdd73dc02e5bd526f8111e82ae8501628597"
   },
   "usage": null
 }
