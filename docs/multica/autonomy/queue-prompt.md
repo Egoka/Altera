@@ -20,6 +20,7 @@ Todo из docs/backlog/tasks, без дублей и нарушения зави
 Все merge и Done выполняются только через установленный controller.py и канонический receipt.
 Реализация и независимое review запускаются в одной канонической native задаче;
 их реальные run IDs записываются в receipt. Отдельная child-review не заменяет этот run.
+Слитые в `app` задачи в `in_review` ведёт автопилот «Altera — приёмка в Done»; ты их не ревьюишь и не финализируешь.
 Review запрашивай на финальном head — том, который пойдёт в merge. Итог review перенеси в receipt
 сам: `review.actor_id`, `review.run_id`, `review.sha`, `review.verdict`. Завершённый run ревьюера
 без этих полей контроллер не видит и отказывает `review`.
