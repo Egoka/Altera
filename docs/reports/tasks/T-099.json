@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task_id": "T-099",
+  "issue_id": "01a0c030-0ee0-75f1-b50b-e8623a1713d6",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-099-sitemap-rss.md",
+    "sha": "b80eee0323951dbfd6f0d94698609015543be816"
+  },
+  "baseline_sha": "a84e731724fb0793814cd3307468360332dff538",
+  "tested_sha": "1e0bd57aac17366c1318e492cfa68586c08d769d",
+  "branch": "web/t099-feeds",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0c0a4-760c-7568-8a82-068b248e7763",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/feeds-xml.test.ts: valid XML, paths with locales, priorities, hreflang alternates"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/feeds-xml.test.ts and server/tests/public-feeds.test.ts: RSS feeds with latest published articles"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "server/tests/sitemap-entries.test.ts: sitemapEntries query returns paths, lastmod, priorities, and locale alternates"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "server_build_ci": "passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35539642230",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 180,
+    "url": "https://github.com/Egoka/Altera/pull/180",
+    "base_ref": "app",
+    "base_sha": "a84e731724fb0793814cd3307468360332dff538",
+    "head_sha": "1e0bd57aac17366c1318e492cfa68586c08d769d",
+    "merge_sha": "f974d6306f2668a6dd576f271d54c4cca770d7b4"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Changes server/ GraphQL modules and web/ server routes; deployment and health verification required"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-099.md",
+    "sha256": "5fc6855978c96bad05955c59b31c2b5bcd906a0c9340f1bfdcf327221f98f033"
+  },
+  "remaining": [
+    "Independent review of the tested SHA is pending; Done stays with the controller"
+  ],
+  "usage": null
+}
