@@ -17,6 +17,7 @@ export interface HousekeepingClient {
   magicLinkToken: DeleteManyDelegate
   emailChangeRequest: DeleteManyDelegate
   backendError: DeleteManyDelegate
+  backendErrorEvent: DeleteManyDelegate
   $executeRaw(query: Prisma.Sql): Promise<number>
 }
 
@@ -26,7 +27,10 @@ export interface HousekeepingResult {
   emailChangeRequests: number
   autosaveRevisions: number
   backendErrors: number
+  errorEvents: number
 }
+
+const PAGE_ERROR_EVENT = "page.error"
 
 export async function runHousekeeping(
   client: HousekeepingClient,
@@ -50,13 +54,22 @@ export async function runHousekeeping(
   const backendErrors = await client.backendError.deleteMany({
     where: { lastSeenAt: { lt: subDays(now, policy.backendErrorDays) }, statusHistory: { none: {} } }
   })
+  // Неизменяемая история `backend_error_events` (T-089): триггер запрещает только UPDATE,
+  // удаление по сроку разрешено. `page.error` хранится короче остальных событий (реестр #64).
+  const pageErrorEvents = await client.backendErrorEvent.deleteMany({
+    where: { event: PAGE_ERROR_EVENT, occurredAt: { lt: subDays(now, policy.pageErrorEventDays) } }
+  })
+  const otherErrorEvents = await client.backendErrorEvent.deleteMany({
+    where: { event: { not: PAGE_ERROR_EVENT }, occurredAt: { lt: subDays(now, policy.backendErrorDays) } }
+  })
 
   return {
     sessions: sessions.count,
     magicLinkTokens: magicLinkTokens.count,
     emailChangeRequests: emailChangeRequests.count,
     autosaveRevisions,
-    backendErrors: backendErrors.count
+    backendErrors: backendErrors.count,
+    errorEvents: pageErrorEvents.count + otherErrorEvents.count
   }
 }
 
