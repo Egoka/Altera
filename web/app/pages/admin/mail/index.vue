@@ -5,10 +5,11 @@
   const { t } = useI18n()
   const route = useRoute()
   const router = useRouter()
-  const { summary } = useAdminDashboard()
   const {
     items,
+    access,
     providerWaiting,
+    viewerCanResend,
     pagination,
     pending,
     failed,
@@ -27,7 +28,8 @@
   const BULK_RESEND_LIMIT = 100
   const statuses = ["queued", "sent", "bounced", "failed"] as const
 
-  const canResend = computed(() => summary.value?.role === "owner")
+  // Повтор — право `job.retry` (§5); решение приходит с сервера, роль его не заменяет.
+  const canResend = viewerCanResend
   const selected = ref(new Set<string>())
   const confirmOpen = ref(false)
   const limitExceeded = ref(false)
@@ -100,6 +102,10 @@
         {{ t("admin.mail.description") }}
       </p>
     </header>
+
+    <p v-if="access === 'full'" data-mail-masked-note class="mb-5 font-sans text-sm text-zinc-600 dark:text-zinc-300">
+      {{ t("admin.mail.recipientMaskedNote") }}
+    </p>
 
     <p
       v-if="providerWaiting"

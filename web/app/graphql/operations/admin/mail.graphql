@@ -2,6 +2,7 @@ fragment AdminMailRow on AdminMail {
   id
   template
   recipientEmail
+  recipientEmailMasked
   recipientHandle
   subject
   status
@@ -19,6 +20,7 @@ query GetAdminMails($filters: AdminMailFiltersInput, $pagination: PaginationInpu
   adminMails(filters: $filters, pagination: $pagination) {
     access
     providerWaiting
+    viewerCanResend
     items {
       ...AdminMailRow
     }

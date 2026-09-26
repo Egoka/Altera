@@ -21,11 +21,19 @@ type AdminMailDeliveryEvent {
 type AdminMail {
   id: ID!
   template: String!
-  "Адрес получателя: только analyst, admin и owner (журнал §27.6)."
+  """
+  Адрес получателя: только analyst, admin и owner (журнал §27.6). В списке — маска, полный адрес
+  отдаёт только карточка, и её открытие пишется в аудит admin.read.personal (журнал §28.7).
+  """
   recipientEmail: String
+  "Адрес отдан маской: полный адрес в этом ответе не раскрыт."
+  recipientEmailMasked: Boolean!
   recipientHandle: String
   subject: String!
-  "Сохранённая копия письма без секретов; для editor и moderator — null."
+  """
+  Сохранённая копия письма без секретов — только в карточке. В списке всегда null: иначе список
+  был бы обходом записи чтения ПДн (журнал §28.7).
+  """
   body: String
   status: AdminMailStatus!
   provider: String
@@ -38,6 +46,7 @@ type AdminMail {
   sentAt: String
   createdAt: String!
   deliveryEvents: [AdminMailDeliveryEvent!]!
+  "Зритель может повторить это письмо: право job.retry, техническая ошибка, полная копия, повтора ещё не было."
   canResend: Boolean!
 }
 
@@ -47,6 +56,8 @@ type AdminMailList {
   access: AdminMailAccess!
   "Письма ждут в очереди: почтовый провайдер их не забрал."
   providerWaiting: Boolean!
+  "Право job.retry у зрителя: по нему раздел показывает или скрывает повтор."
+  viewerCanResend: Boolean!
 }
 
 type AdminMailSummaryRow {

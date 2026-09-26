@@ -264,6 +264,12 @@ jobs:
         env:
           T021_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/mail-history-database.test.ts
+      # T-134: одна отправка на два параллельных повтора держится на условном UPDATE и блокировке
+      # строки PostgreSQL; та же миграция переносит прошлые повторы из аудита в отметку письма.
+      - name: Проверить повтор письма T-134
+        env:
+          T134_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/mail-resend-database.test.ts
       - name: Проверить инварианты миграции T-017
         env:
           T017_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}

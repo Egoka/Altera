@@ -376,6 +376,9 @@ model MailMessage {
   deliveryErrorClass String?
   queuedAt           DateTime            @default(now())
   sentAt             DateTime?
+  // Отметка повтора из админки: заявка на повтор и проверка «уже повторено» — один
+  // условный UPDATE, поэтому два параллельных повтора дают одну отправку (T-134 §5 AC-4).
+  resentAt           DateTime?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   deliveryEvents     MailDeliveryEvent[]

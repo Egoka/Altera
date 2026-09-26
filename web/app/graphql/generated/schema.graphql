@@ -306,8 +306,15 @@ type AdminLegalVersionDetail {
 }
 
 type AdminMail {
-  """Сохранённая копия письма без секретов; для editor и moderator — null."""
+  """
+  Сохранённая копия письма без секретов — только в карточке. В списке всегда null: иначе список
+  был бы обходом записи чтения ПДн (журнал §28.7).
+  """
   body: String
+
+  """
+  Зритель может повторить это письмо: право job.retry, техническая ошибка, полная копия, повтора ещё не было.
+  """
   canResend: Boolean!
   createdAt: String!
   deliveryErrorClass: String
@@ -320,8 +327,14 @@ type AdminMail {
   provider: String
   queuedAt: String!
 
-  """Адрес получателя: только analyst, admin и owner (журнал §27.6)."""
+  """
+  Адрес получателя: только analyst, admin и owner (журнал §27.6). В списке — маска, полный адрес
+  отдаёт только карточка, и её открытие пишется в аудит admin.read.personal (журнал §28.7).
+  """
   recipientEmail: String
+
+  """Адрес отдан маской: полный адрес в этом ответе не раскрыт."""
+  recipientEmailMasked: Boolean!
   recipientHandle: String
   sentAt: String
   status: AdminMailStatus!
@@ -358,6 +371,11 @@ type AdminMailList {
 
   """Письма ждут в очереди: почтовый провайдер их не забрал."""
   providerWaiting: Boolean!
+
+  """
+  Право job.retry у зрителя: по нему раздел показывает или скрывает повтор.
+  """
+  viewerCanResend: Boolean!
 }
 
 type AdminMailResendResult {

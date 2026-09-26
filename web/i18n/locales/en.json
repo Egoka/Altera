@@ -867,6 +867,7 @@
       "columnStatus": "Status",
       "columnProvider": "Provider",
       "recipientHidden": "Address is not shown",
+      "recipientMaskedNote": "Recipient addresses are hidden in the list. The full address is shown on the message card — that is a personal data read and it is recorded in the audit log.",
       "loading": "Loading mail",
       "empty": "No mail matches this filter",
       "loadError": "The mail history could not be loaded.",
