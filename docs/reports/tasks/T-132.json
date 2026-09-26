@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "T-132",
+  "issue_id": "01a0b5ee-c45e-7edd-b058-768964c3b5da",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-132-sections-restore-hierarchy.md",
+    "sha": "babde820ad49343cfcb00e96ce2ba3b5817e8734"
+  },
+  "baseline_sha": "d8ee443d17801bcdd27cb9d1dcc30fbb56e74439",
+  "tested_sha": "15dfe0a86a4c3315372df1092c9fb86a9388438e",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0deb5-0ad3-7936-b558-1cc20926a96d",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/src/taxonomy/service.ts (restoreSection: NOT_FOUND / CONFLICT / FORBIDDEN без аудита); server/tests/taxonomy-service.test.ts — «does not let an admin restore a section archived by the owner», «lets the owner restore an archive made by the owner», «does not restore an active section and writes no audit entry», «reports a missing section as NOT_FOUND instead of a Prisma failure»; pnpm test exit 0 (server 798 passed / 30 skipped)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/src/taxonomy/service.ts (updateSection, updateSectionRow — expectedUpdatedAt и updatedAt в WHERE); server/tests/taxonomy-service.test.ts — «refuses a section edit that was prepared against an older version», «keeps the version in the UPDATE so a parallel edit cannot slip through»; server/tests/admin-categories.test.ts — «passes the card version from the client into the section update»; web/tests/e2e/admin-sections-restore-hierarchy.spec.ts — «explains a conflict when another administrator already changed the section» (playwright --project=chromium --no-deps: 225 passed)"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "web/tests/e2e/admin-sections-restore-hierarchy.spec.ts — «hides restore from an admin for a section the owner archived» и сценарий конфликта; web/tests/admin-categories-page.nuxt.test.ts — пять новых сценариев состояний §9; pnpm test exit 0 (web 569 passed)"
+    }
+  ],
+  "pr": {
+    "number": 227,
+    "head_sha": "15dfe0a86a4c3315372df1092c9fb86a9388438e",
+    "base_sha": "d8ee443d17801bcdd27cb9d1dcc30fbb56e74439",
+    "base_ref": "app",
+    "merge_sha": null
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ и общие входы сборки; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-132.md",
+    "sha256": "115e62ea6a74873c6a2b989711ec01084e1c4b8ba041d0eeda0232f7e7cc5653"
+  },
+  "usage": null
+}
