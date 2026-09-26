@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "task_id": "T-123",
+  "issue_id": "01a0df5b-a265-7389-8f82-d71c4f2b2e1b",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-123-login-link-fixes.md",
+    "sha": "cc89c28fd055299bcf3c7c1d97a8863d47844407"
+  },
+  "baseline_sha": "cc89c28fd055299bcf3c7c1d97a8863d47844407",
+  "tested_sha": "52932aee071bb11ed8e31e3d33512033995fa138",
+  "branch": "server/t123-login-link-fixes",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t123-login-link",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0df61-1e18-7719-8194-073899e53efa",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/auth-magic-link.test.ts, describe 'acceptConsent and an archived account': for an administratively archived account acceptConsent returns outcome archived_admin with session null and a result identical to verifyMagicLink, creates no session, records no consent and leaves usedAt null (the appeal form opens with the same token, journal #48); a self-archived account gets only a limited session. CI run https://github.com/Egoka/Altera/actions/runs/36271393732, step 'Формат, линт и тесты'."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/session-cookie.test.ts, describe 'isLoginTokenExchange' (10 cases: both exchange fields, headerless server call, a non-exchange mutation, a batch with a foreign mutation, an empty selection, two form content types, two background fetch modes). web/tests/e2e/23-login-cross-site.spec.ts on the real server: a navigation from http://webmail.test reaches /me, and with an explicit Sec-Fetch-Site: cross-site the token exchange answers 200 while logoutAll and a background-mode exchange answer 403. CI run https://github.com/Egoka/Altera/actions/runs/36271393732, step 'Браузерная проверка веба'."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "web/tests/e2e/23-login-cross-site.spec.ts against the real server (built Nitro .output plus the API, not a BFF mock): after /auth/verify the browser context holds altera_refresh with httpOnly true and SameSite=Lax, document.cookie does not contain it, refreshSession accepts and rotates it, and the database holds exactly one session. RED confirmed: with the Set-Cookie propagation removed the cookie assertion fails."
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "server/tests/auth-magic-link-database.test.ts on PostgreSQL (T123_TEST_DATABASE_URL), 3 scenarios — new account, existing account, self-archived account: exactly one of two parallel exchanges succeeds, the other rejects with NOT_FOUND/magicLink, and one session exists. RED confirmed: with an unconditional update all three fail with two fulfilled exchanges. CI run https://github.com/Egoka/Altera/actions/runs/36271393732, step 'Проверить одноразовость ссылки входа T-123'."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 808 passed / 35 skipped; web 582 passed",
+    "database_tests": "T123_TEST_DATABASE_URL against PostgreSQL in container altera-postgres-1 on port 25432: 3 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "web_smoke": "passed",
+    "server_build_ci": "passed",
+    "server_smoke": "passed: HTTP readiness confirmed PostgreSQL, Redis, migrations and revision",
+    "playwright": "full suite 234 passed / 9 skipped; the new spec three times in a row 6 passed. The first full run had three unrelated failures (admin-audit, admin-categories, admin-tags read DATABASE_URL directly and without it point at a non-existent 127.0.0.1:5432); with DATABASE_URL set those 21 scenarios passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36271393732",
+    "environment": "Node 24.12.0, pnpm 10.18.3; isolated database altera_e2e_t123 created and dropped inside the check, owner data untouched"
+  },
+  "pr": {
+    "number": 233,
+    "url": "https://github.com/Egoka/Altera/pull/233",
+    "base_ref": "app",
+    "base_sha": "cc89c28fd055299bcf3c7c1d97a8863d47844407",
+    "head_sha": "52932aee071bb11ed8e31e3d33512033995fa138",
+    "merge_sha": "540d3fab8acf787269101433a5d350bb1d993cb7"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The task adds no Prisma migration and does not change the database schema; the resolver, BFF route and SSR composable ship with the ordinary server and web builds"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-123.md",
+    "sha256": "6765b9b83227b27dba2c939ad54f350dfc9c8396b1a8d11c173774c9eb2f372b"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "The §7 [ДОПУЩЕНИЕ] was resolved as a narrow CSRF exception for the token exchange, not an interim screen: AC-2 requires that opening the link completes the login. The interim screen would additionally close login CSRF and protect against mail scanners and needs an owner decision",
+    "docs/spec/20-public/verify.md and the ADR-0023 status line do not yet mention the exception: the documentation stage belongs to the documentation keeper",
+    "Client-side access token refresh is T-124; rate limits are T-125; the new account name is T-126; password login is T-115",
+    "Acceptance of the returned T-022 (ALTE-57) happens in its own card after this task is accepted"
+  ],
+  "usage": null
+}
