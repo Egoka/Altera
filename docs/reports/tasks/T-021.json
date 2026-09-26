@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "task_id": "T-021",
+  "issue_id": "01a0ab1b-bb56-72f6-93b8-c5f9ee63824a",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-021-mail-module-transports.md",
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
+  },
+  "baseline_sha": "adbdbcb37a0e0b631d55c77ae96cd8354cbbb051",
+  "tested_sha": "5418feb8cc906bca6dc2ca7da51cb6b825512d3c",
+  "branch": "server/t021-mail-module",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0ba45-7151-7d63-88fa-199f2a8bb940",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/21-magic-link-mail.spec.ts: mutation via BFF → email in Mailpit API (subject, link with 64-hex token) → MailMessage sent, provider: smtp, messageId matches Mailpit, events queued+sent, sanitizedBody without token"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "tests/mail-service.test.ts, tests/magic-link-mail.test.ts (fake with error); tests/mail-history-database.test.ts — same on PostgreSQL 17"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "server 170 passed / 22 skipped; web 155 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "server_build_ci": "passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35452754674",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 149,
+    "url": "https://github.com/Egoka/Altera/pull/149",
+    "base_ref": "app",
+    "base_sha": "adbdbcb37a0e0b631d55c77ae96cd8354cbbb051",
+    "head_sha": "5418feb8cc906bca6dc2ca7da51cb6b825512d3c",
+    "merge_sha": "b1c13fd2166d589ae43b7b2f8fdde8278d5ea579"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Changes server/, pnpm-lock.yaml, and adds new mail module; deployment and health verification required"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-021.md",
+    "sha256": "59f40cbf2211d1f14937bce6c2e840ff4e6bfc85626d94d8641b09457001bb5d"
+  },
+  "remaining": [
+    "Independent review of the tested SHA is pending; Done stays with the controller",
+    "Real SMTP provider and sender domain — Q-01; without MAIL_TRANSPORT production login is impossible",
+    "Admin mail history section — T-080; email templates — F-05"
+  ],
+  "usage": null
+}
