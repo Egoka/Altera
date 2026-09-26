@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test, type Page } from "./helpers/test"
 
 // Строки состояний страницы автора в браузере (`docs/spec/20-public/author.md` §8).
 //
@@ -99,7 +99,7 @@ const openAuthorPage = async (page: Page) => {
     .click()
 }
 
-test("пустая база: неизвестный автор отвечает 404", async ({ page }) => {
+test("пустая база: неизвестный автор отвечает 404", { tag: "@empty-db" }, async ({ page }) => {
   expect((await page.goto("/authors/vera"))?.status()).toBe(404)
 })
 

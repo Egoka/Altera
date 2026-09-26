@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Route } from "@playwright/test"
+import { expect, test, type Page, type Route } from "./helpers/test"
 import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 import { SESSION_ACCESS_COOKIE } from "../../shared/session"

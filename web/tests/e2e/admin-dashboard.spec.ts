@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 import { PrismaClient, type Role } from "../../../server/src/generated/prisma/index.js"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 

@@ -1,7 +1,8 @@
-import { expect, test, type Page, type Route } from "@playwright/test"
+import { expect, test, type Page, type Route } from "./helpers/test"
 import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 import { SESSION_ACCESS_COOKIE } from "../../shared/session"
+import { navigateOnClient } from "./helpers/hydration"
 
 /**
  * T-059: «О проекте» и «Письмо в редакцию» (`docs/spec/20-public/about.md`, `contact.md`).
@@ -14,15 +15,7 @@ import { SESSION_ACCESS_COOKIE } from "../../shared/session"
 const MESSAGE = "Здравствуйте! После оплаты страница показала ошибку, подскажите, что делать."
 
 /** Переход без перезагрузки: моки `page.route` ловят только браузерные запросы, SSR ходит мимо. */
-const navigateInPage = async (page: Page, path: string) => {
-  await expect(async () => {
-    await page.evaluate((target) => {
-      window.history.pushState({}, "", target)
-      window.dispatchEvent(new PopStateEvent("popstate"))
-    }, path)
-    await expect(page).toHaveURL(path, { timeout: 1000 })
-  }).toPass()
-}
+const navigateInPage = navigateOnClient
 
 // `fallback`, а не `continue`: чужой запрос уходит к ранее зарегистрированной подстановке, а не мимо неё.
 const fulfillOperation = (page: Page, operation: string, body: unknown) =>

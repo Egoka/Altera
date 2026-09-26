@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("flow #11 archives an account transactionally and resolves one appeal", async ({ page }) => {
   test.skip(true, "Requires T-045, T-061, and T-073 with account, session, article, and mail fixtures")

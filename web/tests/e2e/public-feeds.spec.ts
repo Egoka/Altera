@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test, type Page } from "./helpers/test"
 
 // Строки состояний §8 пяти публичных страниц в браузере: `section-feed.md`,
 // `tag-feed.md`, `sections-index.md`, `tags-index.md`, `authors-index.md`.
@@ -48,7 +48,7 @@ const openSectionFeed = async (page: Page) => {
   await expect(page).toHaveURL(/\/culture$/)
 }
 
-test("пустая база: каталоги показывают свои пустые строки", async ({ page }) => {
+test("пустая база: каталоги показывают свои пустые строки", { tag: "@empty-db" }, async ({ page }) => {
   await page.goto("/sections")
   await expect(page.getByRole("heading", { name: "Рубрики" })).toBeVisible()
   await expect(page.getByRole("heading", { name: "Материалов пока нет" })).toBeVisible()
@@ -61,7 +61,7 @@ test("пустая база: каталоги показывают свои пу
   await expect(page.getByRole("heading", { name: "Авторов пока нет — станьте первым" })).toBeVisible()
 })
 
-test("пустая база: неизвестные рубрика и тег отвечают 404", async ({ page }) => {
+test("пустая база: неизвестные рубрика и тег отвечают 404", { tag: "@empty-db" }, async ({ page }) => {
   expect((await page.goto("/culture"))?.status()).toBe(404)
   expect((await page.goto("/tags/ai"))?.status()).toBe(404)
 })

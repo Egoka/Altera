@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 
@@ -15,6 +15,10 @@ const SHELF = "0de0f52a-7071-4a71-9c21-000000000003"
 const OWNER_ARCHIVED = "0de0f52a-7071-4a71-9c21-000000000004"
 
 const token = () => signAccessToken("t071-admin", sessionId)
+
+// Журнал аудита неизменяем (триггер `audit_log records are immutable`), поэтому записи прошлых
+// прогонов на той же базе остаются: проверки сравнивают счётчик с состоянием до действия.
+const auditCount = (action: string, entityId: string) => prisma.auditLog.count({ where: { action, entityId } })
 
 const seedTag = async (
   id: string,
@@ -82,7 +86,6 @@ test.describe("admin tags", () => {
     await prisma.handleHistory.update({ where: { handle: "t071-author" }, data: { userId: "t071-author" } })
     sessionId = await createSessionId(prisma, "t071-admin")
 
-    await prisma.auditLog.deleteMany({ where: { entityType: "Tag", entityId: { in: [SOURCE, SHELF] } } })
     await seedTag(TARGET, "t071-cinema", "T071 Кино")
     await seedTag(SOURCE, "t071-kino", "T071 Кинематограф")
     await seedTag(SHELF, "t071-shelf", "T071 Полка")
@@ -109,6 +112,7 @@ test.describe("admin tags", () => {
 
   test("merges a tag, moves its articles and answers 301 on the source slug", async ({ page }) => {
     await page.setExtraHTTPHeaders({ authorization: `Bearer ${token()}` })
+    const mergesBefore = await auditCount("tag.merge", SOURCE)
     const response = await page.goto("/admin/tags?status=all")
 
     expect(response?.status()).toBe(200)
@@ -130,9 +134,7 @@ test.describe("admin tags", () => {
           .then((article) => article?.tags.map(({ id }) => id))
       )
       .toEqual([TARGET])
-    await expect
-      .poll(() => prisma.auditLog.count({ where: { action: "tag.merge", entityId: SOURCE } }))
-      .toBeGreaterThan(0)
+    await expect.poll(() => auditCount("tag.merge", SOURCE)).toBeGreaterThan(mergesBefore)
 
     const redirect = await page.request.get("/tags/t071-kino", { maxRedirects: 0 })
     expect(redirect.status()).toBe(301)
@@ -141,6 +143,8 @@ test.describe("admin tags", () => {
 
   test("archives and restores a tag, leaving the owner archive without a restore action", async ({ page }) => {
     await page.setExtraHTTPHeaders({ authorization: `Bearer ${token()}` })
+    const archivesBefore = await auditCount("tag.archive", SHELF)
+    const restoresBefore = await auditCount("tag.restore", SHELF)
     await page.goto("/admin/tags?status=all")
 
     await expect(page.locator('[data-no-restore="t071-owner-archive"]')).toBeVisible()
@@ -150,26 +154,20 @@ test.describe("admin tags", () => {
     await page.locator("[data-confirm-archive]").click()
 
     await expect(page.locator('[data-restore-tag="t071-shelf"]')).toBeVisible()
-    await expect
-      .poll(() => prisma.auditLog.count({ where: { action: "tag.archive", entityId: SHELF } }))
-      .toBeGreaterThan(0)
+    await expect.poll(() => auditCount("tag.archive", SHELF)).toBeGreaterThan(archivesBefore)
 
     await page.locator('[data-restore-tag="t071-shelf"]').click()
     await expect(page.locator('[data-archive-tag="t071-shelf"]')).toBeVisible()
-    await expect
-      .poll(() => prisma.auditLog.count({ where: { action: "tag.restore", entityId: SHELF } }))
-      .toBeGreaterThan(0)
+    await expect.poll(() => auditCount("tag.restore", SHELF)).toBeGreaterThan(restoresBefore)
   })
 
   test("shows the empty state when the filter matches nothing", async ({ page }) => {
     await page.setExtraHTTPHeaders({ authorization: `Bearer ${token()}` })
     await page.goto("/admin/tags?status=all")
 
-    // Ввод до гидратации теряется: Vue перерисовывает поле из пустого `search`.
-    // Поэтому ввод повторяется, пока фильтр не применится.
-    await expect(async () => {
-      await page.locator("[data-tag-search]").fill("t071-no-such-tag")
-      await expect(page.locator("[data-tag-empty]")).toBeVisible({ timeout: 1000 })
-    }).toPass()
+    // Ввод до гидратации терялся бы: Vue перерисовал бы поле из пустого `search`. `page.goto`
+    // из `helpers/test` возвращается уже после гидратации, поэтому ввод один.
+    await page.locator("[data-tag-search]").fill("t071-no-such-tag")
+    await expect(page.locator("[data-tag-empty]")).toBeVisible()
   })
 })

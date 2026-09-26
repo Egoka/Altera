@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 /**
  * Шаги 1–3 закрыты T-032 и проверяются в `32-email-change.spec.ts` на живой базе и почте.

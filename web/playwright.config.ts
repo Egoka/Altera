@@ -16,8 +16,18 @@ export default defineConfig({
     screenshot: "only-on-failure"
   },
   projects: [
+    // Сценарии «пустой базы» (тег `@empty-db`) проверяют глобальное состояние — пустые каталоги,
+    // главную без материалов. Параллельно с ними другие файлы публикуют свои фикстуры, поэтому
+    // они идут отдельным проектом до всех остальных, пока база ещё только после миграций.
+    {
+      name: "empty-db",
+      grep: /@empty-db/,
+      use: { ...devices["Desktop Chrome"] }
+    },
     {
       name: "chromium",
+      grepInvert: /@empty-db/,
+      dependencies: ["empty-db"],
       use: { ...devices["Desktop Chrome"] }
     }
   ],

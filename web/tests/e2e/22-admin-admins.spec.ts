@@ -1,4 +1,5 @@
-import { expect, test, type Page, type Route } from "@playwright/test"
+import { expect, test, type Page, type Route } from "./helpers/test"
+import { navigateOnClient } from "./helpers/hydration"
 
 // Строки состояний раздела «Администраторы» (`docs/spec/40-admin/admins.md` §9).
 
@@ -131,16 +132,7 @@ async function openAdmins(page: Page, options: { waitForList?: boolean } = {}) {
           response.url().includes("/api/graphql") && response.request().postData()?.includes("GetAdminStaff") === true
       )
     : null
-  // Переход клиентский: моки `page.route` ловят только браузерные запросы, поэтому
-  // полная загрузка не подходит. До гидратации роутер ещё не слушает popstate и
-  // возвращает адрес на «/», поэтому переход повторяется, пока не закрепится.
-  await expect(async () => {
-    await page.evaluate(() => {
-      window.history.pushState({}, "", "/admin/admins")
-      window.dispatchEvent(new PopStateEvent("popstate"))
-    })
-    await expect(page).toHaveURL(/\/admin\/admins/, { timeout: 1000 })
-  }).toPass()
+  await navigateOnClient(page, "/admin/admins")
   if (listResponse) await listResponse
 }
 

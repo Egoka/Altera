@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("flow #5 claims the oldest review and preserves every manual outcome", async ({ page }) => {
   test.skip(true, "Requires T-043, T-050, and T-051 with review and mail fixtures")

@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "@playwright/test"
+import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "./helpers/test"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
 
 // T-023: ротация refresh, выход и httpOnly-cookie через BFF. Refresh никогда не попадает

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("flow #12 exports data, self-archives, and restores articles separately", async ({ page }) => {
   test.skip(true, "Requires T-021, T-034, T-035, and T-045 with export and mail fixtures")

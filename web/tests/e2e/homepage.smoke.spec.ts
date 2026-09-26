@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("homepage exposes the required Altera document title", async ({ page }) => {
   await page.goto("/")

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("serves Russian at root, English under /en, and redirects /ru permanently", async ({ page, request }) => {
   const rootResponse = await request.get("/", { maxRedirects: 0 })

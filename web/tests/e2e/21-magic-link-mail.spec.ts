@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
 
 // T-021: письмо входа уходит через mail-модуль в локальный SMTP-приёмник (Mailpit)

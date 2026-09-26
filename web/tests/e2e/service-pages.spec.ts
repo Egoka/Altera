@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test } from "./helpers/test"
+import { navigateOnClient } from "./helpers/hydration"
 
 // Строки состояний §8 трёх служебных спецификаций (`not-found.md`, `error.md`, `offline.md`)
 // и решение журнала §28.4: код запроса показывается только при техническом сбое.
@@ -10,20 +11,8 @@ const internalError = {
   errors: [{ message: "internal", extensions: { code: "INTERNAL_ERROR", requestId: REQUEST_ID } }]
 }
 
-/**
- * Переход без перезагрузки: моки `page.route` ловят только браузерные запросы, а SSR ходит
- * в API мимо браузера. До гидратации роутер ещё не слушает popstate, поэтому переход
- * повторяется, пока адрес не закрепится.
- */
-const navigateInPage = async (page: Page, path: string) => {
-  await expect(async () => {
-    await page.evaluate((target) => {
-      window.history.pushState({}, "", target)
-      window.dispatchEvent(new PopStateEvent("popstate"))
-    }, path)
-    await expect(page).toHaveURL(path, { timeout: 1000 })
-  }).toPass()
-}
+/** Переход без перезагрузки: моки `page.route` ловят только браузерные запросы, а SSR ходит мимо. */
+const navigateInPage = navigateOnClient
 
 test.describe("страница 404", () => {
   test("отвечает 404, объясняет адрес и не показывает код запроса", async ({ page }) => {
