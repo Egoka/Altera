@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 import { setSessionCookie } from "./helpers/auth-fixtures"
 
 const articles = {
@@ -31,7 +31,7 @@ const items = [
   { bookmarkedAt: "2026-09-17T10:00:00.000Z", article: articles.published }
 ]
 
-const stubBookmarks = async (page: import("@playwright/test").Page) => {
+const stubBookmarks = async (page: import("./helpers/test").Page) => {
   const removed: string[] = []
 
   await page.route("**/api/graphql", async (route) => {

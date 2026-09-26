@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test, type Page } from "./helpers/test"
 
 // Строки состояний `docs/spec/20-public/home.md` §8 в браузере.
 //
@@ -41,7 +41,7 @@ const openHomeFromEnglish = async (page: Page) => {
   await expect(page).toHaveURL(/\/$/)
 }
 
-test("пустая база: главная оставляет шапку, приглашение авторам и футер", async ({ page }) => {
+test("пустая база: главная оставляет шапку, приглашение авторам и футер", { tag: "@empty-db" }, async ({ page }) => {
   await page.goto("/")
 
   await expect(page).toHaveTitle("Altera")
@@ -52,12 +52,16 @@ test("пустая база: главная оставляет шапку, пр�
   await expect(page.locator('img[src*="picsum.photos"], img[src*="images.unsplash.com"]')).toHaveCount(0)
 })
 
-test("английская главная на пустой базе показывает приглашение своей локали", async ({ page }) => {
-  await page.goto("/en")
+test(
+  "английская главная на пустой базе показывает приглашение своей локали",
+  { tag: "@empty-db" },
+  async ({ page }) => {
+    await page.goto("/en")
 
-  await expect(page.getByRole("heading", { name: "Nothing here yet" })).toBeVisible()
-  await expect(page.getByRole("link", { name: "Become an author" })).toHaveAttribute("href", "/pricing")
-})
+    await expect(page.getByRole("heading", { name: "Nothing here yet" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Become an author" })).toHaveAttribute("href", "/pricing")
+  }
+)
 
 test("подборки рисуются в порядке ответа и ведут на материал", async ({ page }) => {
   await stubFeed(page, { data: { feed: { locale: "ru", sections: [section("top", 5), section("new", 3)] } } })

@@ -1,8 +1,9 @@
-import { expect, test, type Page, type Route } from "@playwright/test"
+import { expect, test, type Page, type Route } from "./helpers/test"
 import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 import { SESSION_ACCESS_COOKIE } from "../../shared/session"
 import type { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { navigateOnClient } from "./helpers/hydration"
 
 /**
  * T-030: сводка кабинета `/me` (`docs/spec/30-account/reader/dashboard.md`).
@@ -87,6 +88,9 @@ interface ArticleInput {
  * Триггер `t015_sync_legacy_article` сам создаёт исходную (ru) языковую версию и переносит в неё
  * статус и дату публикации, поэтому фикстура дописывает в неё только поля сводки.
  */
+/** Статьи этого экземпляра файла: при `--repeat-each` и нескольких воркерах префикс общий. */
+const createdArticleIds: string[] = []
+
 const createArticles = (account: Account, articles: ArticleInput[]) =>
   withPrisma(async (prisma) => {
     for (const input of articles) {
@@ -101,6 +105,7 @@ const createArticles = (account: Account, articles: ArticleInput[]) =>
           authorId: account.id
         }
       })
+      createdArticleIds.push(article.id)
       const translation = await prisma.articleTranslation.update({
         where: { articleId_locale: { articleId: article.id, locale: "ru" } },
         data: { rejected: input.rejected ?? false, reeditUntil: input.reeditUntil ?? null }
@@ -142,10 +147,11 @@ const graphQLError = (code: string) =>
 
 const stateOf = (page: Page) => page.locator("[data-dashboard-state]")
 
-// Опубликованные материалы фикстур убираются: следующие файлы проверяют пустые каталоги на
-// той же базе (`public-feeds.spec.ts`, «пустая база»).
+// Опубликованные материалы фикстур убираются, но только свои: удаление по общему префиксу
+// `t030-` стирало статьи параллельного экземпляра файла посреди его теста. Сценарии пустой
+// базы от этой уборки не зависят — они идут отдельным проектом до остальных (`playwright.config.ts`).
 test.afterAll(async () => {
-  await withPrisma((prisma) => prisma.article.deleteMany({ where: { slug: { startsWith: "t030-" } } }))
+  await withPrisma((prisma) => prisma.article.deleteMany({ where: { id: { in: createdArticleIds } } }))
 })
 
 test.describe("сводка кабинета: строки состояний §8", () => {
@@ -287,18 +293,11 @@ test.describe("сводка кабинета: строки состояний §
     const account = await createAccount("t030-me-error")
     await useSession(page, account)
     await page.goto("/me/sessions")
-    await page.waitForLoadState("networkidle")
 
     await stubOperation(page, "GetAccountDashboard", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: graphQLError("INTERNAL_ERROR") })
     )
-    await expect(async () => {
-      await page.evaluate(() => {
-        window.history.pushState({}, "", "/me")
-        window.dispatchEvent(new PopStateEvent("popstate"))
-      })
-      await expect(page).toHaveURL(/\/me$/, { timeout: 1000 })
-    }).toPass()
+    await navigateOnClient(page, "/me")
 
     await expect(page.getByTestId("server-error")).toContainText("500")
     await expect(page.getByTestId("copy-field-value")).toHaveText("e2e-t030")

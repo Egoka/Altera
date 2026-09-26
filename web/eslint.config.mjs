@@ -41,6 +41,24 @@ export default [
     }
   },
   {
+    // `page.goto` из `helpers/test` ждёт гидратации Nuxt; без этого клик сразу после перехода
+    // попадает в серверную разметку, и сценарий падает от скорости машины CI.
+    files: ["tests/e2e/**/*.spec.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@playwright/test",
+              message: "Импортируйте test и expect из ./helpers/test: его page.goto дожидается гидратации."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
     files: ["**/*.vue"],
     languageOptions: {
       parser: vueParser,

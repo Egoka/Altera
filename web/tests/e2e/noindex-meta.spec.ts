@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 import { authenticateAdminPage } from "./helpers/admin-auth"
 import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
 import { createSessionId, signAccessToken } from "./helpers/session-token"

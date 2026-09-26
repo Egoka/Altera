@@ -10,6 +10,9 @@ on:
   push:
     branches:
       - app
+  # Ручной запуск на любой ветке — повторные прогоны для проверки стабильности (например,
+  # браузерной проверки после исправления нестабильного теста) без пустых коммитов.
+  workflow_dispatch:
 
 jobs:
   checks:
@@ -109,6 +112,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Первый родитель merge-коммита PR — вершина app: по нему находятся изменённые спеки.
+          fetch-depth: 2
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node.js
@@ -126,6 +132,21 @@ jobs:
         run: pnpm --filter nuxt-app exec playwright install --with-deps chromium
       - name: Smoke check homepage
         run: pnpm --filter nuxt-app run test:e2e
+      # Новые и изменённые в PR спеки прогоняются ещё трижды подряд: нестабильный тест ловится
+      # до слияния, а не валит потом чужие PR. Один воркер — копии файла с фиксированными
+      # фикстурами не мешают друг другу; `--no-deps` пропускает сценарии пустой базы, которая
+      # после основного прогона уже не пустая. Разбор причин — отчёт 2026-09-26-e2e-stabilization.
+      - name: Повторный прогон изменённых спеков
+        if: github.event_name == 'pull_request'
+        run: |
+          specs=$(git diff --name-only --diff-filter=AM HEAD^1 HEAD -- 'web/tests/e2e/*.spec.ts' | sed 's#^web/##')
+          if [ -z "$specs" ]; then
+            echo "Новых и изменённых спеков нет."
+            exit 0
+          fi
+          echo "$specs"
+          cd web
+          pnpm exec playwright test --project chromium --no-deps --repeat-each 3 --workers 1 $specs
       # Состояние страницы на момент отказа: без этого шага разбор падения идёт по одному стеку.
       - name: Сохранить артефакты Playwright
         if: failure()

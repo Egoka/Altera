@@ -1,5 +1,5 @@
 import { connect } from "node:net"
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("built test server keeps serving after clients close their response pipes", async ({ page, request, baseURL }) => {
   await page.goto("/", { waitUntil: "networkidle" })

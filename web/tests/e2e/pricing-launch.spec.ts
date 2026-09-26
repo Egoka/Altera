@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 // Критерий T-060: на собранной странице «Цены и планы» первого запуска нет числовых цен
 // и кнопок оплаты, и она ведёт в создание материала (`docs/spec/20-public/pricing.md`, журнал §24.1).

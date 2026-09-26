@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 // Машиночитаемые маршруты собранного сервера: `docs/spec/20-public/feeds-and-sitemap.md`
 // §3, §5, §8, §10. База браузерной проверки поднимается миграциями без seed, поэтому здесь

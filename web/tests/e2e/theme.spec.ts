@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("theme switches through Nuxt color mode and semantic tokens", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" })

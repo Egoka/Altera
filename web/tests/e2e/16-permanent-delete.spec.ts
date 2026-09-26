@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("flow #16 permanently deletes only an archived entity after exact confirmation", async ({ page }) => {
   test.skip(

@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test, type Page } from "./helpers/test"
+import { navigateOnClient } from "./helpers/hydration"
 
 const grants = [
   {
@@ -87,24 +88,11 @@ async function mockAdminGrants(page: Page, onGrant?: (input: Record<string, unkn
 
 async function navigateToAdminPage(page: Page, path: "/admin/grants" | "/admin/subscriptions") {
   await page.goto("/")
-  // Переход подменой истории выполняется только после гидратации: на гидратации Nuxt
-  // заменяет адрес на тот, что отрисовал сервер, и `pushState`, случившийся раньше,
-  // молча откатывался к «/». Гидратация закончилась, когда запросы страницы утихли.
-  await page.waitForLoadState("networkidle")
   const grantsResponse = page.waitForResponse(
     (response) =>
       response.url().includes("/api/graphql") && response.request().postData()?.includes("GetAdminGrants") === true
   )
-  // Переход клиентский: моки `page.route` ловят только браузерные запросы, поэтому
-  // полная загрузка не подходит. До гидратации роутер ещё не слушает popstate и
-  // возвращает адрес на «/», поэтому переход повторяется, пока не закрепится.
-  await expect(async () => {
-    await page.evaluate((target) => {
-      window.history.pushState({}, "", target)
-      window.dispatchEvent(new PopStateEvent("popstate"))
-    }, path)
-    await expect(page).toHaveURL(path, { timeout: 1000 })
-  }).toPass()
+  await navigateOnClient(page, path)
   await grantsResponse
 }
 

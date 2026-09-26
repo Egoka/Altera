@@ -1,8 +1,9 @@
-import { expect, test, type Page, type Route } from "@playwright/test"
+import { expect, test, type Page, type Route } from "./helpers/test"
 import { uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 import { SESSION_ACCESS_COOKIE } from "../../shared/session"
 import type { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { navigateOnClient } from "./helpers/hydration"
 
 /**
  * T-036: подписка `/me/subscription` в режиме первого запуска
@@ -95,15 +96,7 @@ const stubOperation = (page: Page, operation: string, handle: (route: Route) => 
   })
 
 /** Клиентский переход на страницу подписки со страницы сессий — ленивая загрузка §8. */
-const navigateOnClient = async (page: Page) => {
-  await expect(async () => {
-    await page.evaluate(() => {
-      window.history.pushState({}, "", "/me/subscription")
-      window.dispatchEvent(new PopStateEvent("popstate"))
-    })
-    await expect(page).toHaveURL(/\/me\/subscription$/, { timeout: 1000 })
-  }).toPass()
-}
+const openSubscriptionOnClient = (page: Page) => navigateOnClient(page, "/me/subscription")
 
 const stateOf = (page: Page) => page.locator("[data-subscription-state]")
 
@@ -266,7 +259,7 @@ test.describe("подписка: строки состояний §8 на пер
       await route.fallback()
     })
 
-    await navigateOnClient(page)
+    await openSubscriptionOnClient(page)
 
     await expect(page.getByTestId("subscription-skeleton")).toBeVisible()
     await expect(stateOf(page)).toHaveAttribute("data-subscription-state", "loading")
@@ -290,7 +283,7 @@ test.describe("подписка: строки состояний §8 на пер
       })
     })
 
-    await navigateOnClient(page)
+    await openSubscriptionOnClient(page)
 
     await expect(stateOf(page)).toHaveAttribute("data-subscription-state", "data_error")
     await expect(page.getByTestId("subscription-error")).toContainText("e2e-t036")

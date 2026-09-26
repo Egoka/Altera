@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 const apiUrl = "http://127.0.0.1:4000/"
 const nuxtOrigin = "http://127.0.0.1:4173"

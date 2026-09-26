@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 
 test("меню шапки строится из ответа публичного navigation API", async ({ page }) => {
   await page.route("**/api/graphql", async (route) => {

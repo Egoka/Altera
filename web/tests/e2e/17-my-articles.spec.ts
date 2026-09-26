@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, test } from "./helpers/test"
 import { setSessionCookie } from "./helpers/auth-fixtures"
 
 const allItems = [
