@@ -9,8 +9,8 @@
 ## Задачи
 | ID | Название | Статус | Зависит от |
 |---|---|---|---|
-| [T-098](../tasks/T-098-robots-noindex.md) | `robots.txt` с запретом обучения ИИ; `noindex` служебных страниц | кандидат | — |
-| [T-099](../tasks/T-099-sitemap-rss.md) | Sitemap по локалям и RSS | зависит: T-054 | T-054 |
+| [T-098](../tasks/T-098-robots-noindex.md) | `robots.txt` с запретом обучения ИИ; `noindex` служебных страниц | завершена (PR #59, merge fd8d703f; приёмка ALTE-24) | — |
+| [T-099](../tasks/T-099-sitemap-rss.md) | Sitemap по локалям и RSS | в работе (влита PR #180, merge f974d630; ждёт приёмки ALTE-99; реализована при открытом Q-09) | T-054 |
 | [T-100](../tasks/T-100-seo-meta-hreflang.md) | Meta, canonical, hreflang, Open Graph и JSON-LD на публичных страницах | зависит: T-054, T-056, T-057 | T-054, T-056, T-057 |
 
 ## Границы

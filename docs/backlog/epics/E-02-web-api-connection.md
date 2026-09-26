@@ -9,9 +9,9 @@
 ## Задачи
 | ID | Название | Статус | Зависит от |
 |---|---|---|---|
-| [T-008](../tasks/T-008-graphql-codegen.md) | GraphQL-кодоген из SDL сервера и `codegen --check` в CI | кандидат | — |
-| [T-009](../tasks/T-009-bff-proxy-runtime-config.md) | BFF-прокси `POST /api/graphql` и адрес API в `runtimeConfig` | кандидат | — |
-| [T-010](../tasks/T-010-frontend-operations-graphql-files.md) | Операции фронта в `.graphql` и их валидация против схемы в CI | зависит: T-008, T-009 | T-008, T-009 |
+| [T-008](../tasks/T-008-graphql-codegen.md) | GraphQL-кодоген из SDL сервера и `codegen --check` в CI | завершена (PR #39, merge 74147084; приёмка ALTE-16) | — |
+| [T-009](../tasks/T-009-bff-proxy-runtime-config.md) | BFF-прокси `POST /api/graphql` и адрес API в `runtimeConfig` | завершена (PR #40, merge 5271880f; приёмка ALTE-18) | — |
+| [T-010](../tasks/T-010-frontend-operations-graphql-files.md) | Операции фронта в `.graphql` и их валидация против схемы в CI | завершена (PR #42, merge a1f7711c; приёмка ALTE-21) | T-008, T-009 |
 
 ## Границы
 Новые поля API под спецификации (в задачах доменов).

@@ -1,4 +1,4 @@
-> **Исторический документ.** Содержимое не соответствует коду с сентября 2025 года и сохранено как свидетельство намерений. Актуальное состояние проекта — [docs/vision/00-reality-check.md](../vision/00-reality-check.md), целевая архитектура — [docs/vision/02-target-architecture.md](../vision/02-target-architecture.md).
+> **Исторический документ.** Содержимое не соответствует коду с сентября 2025 года и сохранено как свидетельство намерений. Актуальное состояние задач — [docs/backlog/matrix.md](../backlog/matrix.md) (сверка 2026-09-26), общий срез проекта — [docs/vision/00-reality-check.md](../vision/00-reality-check.md), целевая архитектура — [docs/vision/02-target-architecture.md](../vision/02-target-architecture.md).
 
 # Статус реализации GraphQL API
 

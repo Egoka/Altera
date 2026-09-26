@@ -9,11 +9,11 @@
 ## Задачи
 | ID | Название | Статус | Зависит от |
 |---|---|---|---|
-| [T-021](../tasks/T-021-mail-module-transports.md) | Модуль почты с транспортами `smtp`/`console`/`fake` и письмо со ссылкой для входа | зависит: T-019 | T-019 |
-| [T-022](../tasks/T-022-register-login-magic-link.md) | Регистрация и вход по ссылке: `/login`, `/auth/verify`, экраны состояния | зависит: T-012, T-021, T-009 | T-012, T-021, T-009 |
-| [T-023](../tasks/T-023-session-rotation-logout-cookie.md) | Сессии: ротация refresh, выход, выход везде, обнаружение повторного предъявления, httpOnly-cookie через BFF | зависит: T-012, T-022 | T-012, T-022 |
-| [T-024](../tasks/T-024-server-rate-limits.md) | Серверные лимиты частоты: единые пороги, `RATE_LIMITED`, `rate_limit.hit` | решение владельца: Q-04 | T-022 |
-| [T-025](../tasks/T-025-account-sessions-page.md) | Страница «Сессии и устройства» `/me/sessions` без геолокации по IP | зависит: T-023 | T-023 |
+| [T-021](../tasks/T-021-mail-module-transports.md) | Модуль почты с транспортами `smtp`/`console`/`fake` и письмо со ссылкой для входа | в работе (влита PR #147, merge adbdbcb3; ждёт приёмки ALTE-55; реализована при открытом Q-01) | T-019 |
+| [T-022](../tasks/T-022-register-login-magic-link.md) | Регистрация и вход по ссылке: `/login`, `/auth/verify`, экраны состояния | в работе (влита PR #164, merge a84e7317; ждёт приёмки ALTE-57) | T-012, T-021, T-009 |
+| [T-023](../tasks/T-023-session-rotation-logout-cookie.md) | Сессии: ротация refresh, выход, выход везде, обнаружение повторного предъявления, httpOnly-cookie через BFF | в работе (влита PR #168, merge d282c8a9; ждёт приёмки ALTE-97) | T-012, T-022 |
+| [T-024](../tasks/T-024-server-rate-limits.md) | Серверные лимиты частоты: единые пороги, `RATE_LIMITED`, `rate_limit.hit` | в работе (влита PR #181, merge 924c682b; ждёт приёмки ALTE-100; реализована при открытом Q-04) | T-022 |
+| [T-025](../tasks/T-025-account-sessions-page.md) | Страница «Сессии и устройства» `/me/sessions` без геолокации по IP | в работе (влита PR #191, merge fd756435; ждёт приёмки ALTE-106) | T-023 |
 
 ## Границы
 OAuth и иные способы входа (ADR-0022 — только по измеренной потере).
