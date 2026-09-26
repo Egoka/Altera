@@ -76,6 +76,53 @@ describe("admin categories GraphQL", () => {
     })
   })
 
+  // T-132: раздел получает `NOT_FOUND` вместо внутренней ошибки, если рубрика исчезла
+  // между открытием карточки и восстановлением (`40-admin/categories.md` §2).
+  it("answers NOT_FOUND when the section to restore no longer exists", async () => {
+    const transaction = vi.fn().mockRejectedValue(Object.assign(new Error("record not found"), { code: "P2025" }))
+    const context = {
+      currentUser: admin,
+      requestId: "request-restore-missing",
+      prisma: { $transaction: transaction },
+      cache: { delByTags: vi.fn() }
+    }
+
+    await expect(
+      sectionResolver.Mutation.restoreSection({}, { id: "missing" }, context as never)
+    ).rejects.toMatchObject({ extensions: { code: "NOT_FOUND", entity: "section" } })
+  })
+
+  it("passes the card version from the client into the section update", async () => {
+    const version = new Date("2026-09-26T12:00:00.000Z")
+    const findUnique = vi.fn().mockResolvedValue({ slug: "culture", name: "Культура", updatedAt: version })
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 })
+    const findUniqueOrThrow = vi.fn().mockResolvedValue({ id: "culture", slug: "culture" })
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        section: { findUnique, updateMany, findUniqueOrThrow },
+        sectionSlugHistory: {},
+        auditLog: { create: vi.fn() }
+      })
+    )
+    const context = {
+      currentUser: admin,
+      requestId: "request-version",
+      prisma: { $transaction: transaction, section: { findUnique: vi.fn().mockResolvedValue({ slug: "culture" }) } },
+      cache: { delByTags: vi.fn() }
+    }
+
+    await sectionResolver.Mutation.updateSection(
+      {},
+      { id: "culture", input: { name: "Новое" }, expectedUpdatedAt: version.toISOString() },
+      context as never
+    )
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "culture", updatedAt: version },
+      data: { name: "Новое" }
+    })
+  })
+
   it("audits each changed section order in the reorder transaction", async () => {
     const update = vi
       .fn()

@@ -194,7 +194,8 @@ input UpdateFormatInput {
 extend type Mutation {
   # Админ мутации для управления типами контента
   createSection(input: CreateSectionInput!): Section!
-  updateSection(id: ID!, input: UpdateSectionInput!): Section!
+  # `expectedUpdatedAt` — метка версии карточки: несовпадение даёт `CONFLICT` (categories.md §9).
+  updateSection(id: ID!, input: UpdateSectionInput!, expectedUpdatedAt: String): Section!
   deleteSection(id: ID!): Section!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
   archiveSection(id: ID!, successorId: ID!, reason: String!): Section!

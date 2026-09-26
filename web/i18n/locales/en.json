@@ -645,7 +645,11 @@
       "reason": "Archive reason",
       "openMaterials": "Open articles",
       "events": "Event log",
-      "emptyEvents": "No changes yet"
+      "emptyEvents": "No changes yet",
+      "conflict": "Another administrator changed the section. Refresh the card and repeat the edit.",
+      "conflictSuccessor": "The chosen successor section is no longer active. Choose another successor.",
+      "forbidden": "Not enough rights for this action.",
+      "ownerArchiveNote": "Archived by the owner — only the owner restores it"
     },
     "usersTitle": "User management",
     "usersDescription": "View and manage system users",
