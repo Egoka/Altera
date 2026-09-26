@@ -19,6 +19,7 @@ function fakeClient() {
     magicLinkToken: { deleteMany: deleteMany() },
     emailChangeRequest: { deleteMany: deleteMany() },
     backendError: { deleteMany: deleteMany() },
+    backendErrorEvent: { deleteMany: deleteMany() },
     $executeRaw: vi.fn<(query: Prisma.Sql) => Promise<number>>(async () => 2)
   }
   return client satisfies HousekeepingClient
@@ -40,6 +41,12 @@ describe("T-090 housekeeping", () => {
     expect(client.backendError.deleteMany).toHaveBeenCalledWith({
       where: { lastSeenAt: { lt: daysBefore(RETENTION_POLICY.backendErrorDays) }, statusHistory: { none: {} } }
     })
+    expect(client.backendErrorEvent.deleteMany).toHaveBeenCalledWith({
+      where: { event: "page.error", occurredAt: { lt: daysBefore(RETENTION_POLICY.pageErrorEventDays) } }
+    })
+    expect(client.backendErrorEvent.deleteMany).toHaveBeenCalledWith({
+      where: { event: { not: "page.error" }, occurredAt: { lt: daysBefore(RETENTION_POLICY.backendErrorDays) } }
+    })
     const revisionQuery = client.$executeRaw.mock.calls[0][0]
     expect(revisionQuery.sql).toContain(`r."kind" = 'autosave'`)
     expect(revisionQuery.values).toEqual([daysBefore(RETENTION_POLICY.autosaveRevisionDays)])
@@ -48,18 +55,30 @@ describe("T-090 housekeeping", () => {
       magicLinkTokens: 1,
       emailChangeRequests: 1,
       autosaveRevisions: 2,
-      backendErrors: 1
+      backendErrors: 1,
+      errorEvents: 2
     })
   })
 
   it("берёт сроки из переданной политики, а не из собственных чисел", async () => {
     const client = fakeClient()
 
-    await runHousekeeping(client, NOW, { ...RETENTION_POLICY, sessionAfterExpiryDays: 7, backendErrorDays: 1 })
+    await runHousekeeping(client, NOW, {
+      ...RETENTION_POLICY,
+      sessionAfterExpiryDays: 7,
+      backendErrorDays: 1,
+      pageErrorEventDays: 2
+    })
 
     expect(client.session.deleteMany).toHaveBeenCalledWith({ where: { expiresAt: { lt: daysBefore(7) } } })
     expect(client.backendError.deleteMany).toHaveBeenCalledWith({
       where: { lastSeenAt: { lt: daysBefore(1) }, statusHistory: { none: {} } }
+    })
+    expect(client.backendErrorEvent.deleteMany).toHaveBeenCalledWith({
+      where: { event: "page.error", occurredAt: { lt: daysBefore(2) } }
+    })
+    expect(client.backendErrorEvent.deleteMany).toHaveBeenCalledWith({
+      where: { event: { not: "page.error" }, occurredAt: { lt: daysBefore(1) } }
     })
   })
 

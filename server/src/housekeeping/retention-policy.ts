@@ -11,6 +11,7 @@ export interface RetentionPolicy {
   readonly oneTimeTokenAfterExpiryDays: number
   readonly autosaveRevisionDays: number
   readonly backendErrorDays: number
+  readonly pageErrorEventDays: number
   readonly runIntervalMs: number
 }
 
@@ -30,6 +31,11 @@ export const RETENTION_POLICY: RetentionPolicy = {
   autosaveRevisionDays: 30,
   /** Техническая история ошибок — 90 дней `[ДОПУЩЕНИЕ]` (`error-collector.md` п. 2). */
   backendErrorDays: 90,
+  /**
+   * Фронтовые `page.error` в неизменяемой истории ошибок — 30 дней (реестр событий #64); остальные
+   * события этой истории (`backend.error` #81 и др.) живут `backendErrorDays`.
+   */
+  pageErrorEventDays: 30,
   /** Период постановки задания `[ДОПУЩЕНИЕ: спецификация говорит «по расписанию» без частоты]`. */
   runIntervalMs: 60 * 60_000
 }

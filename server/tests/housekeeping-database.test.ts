@@ -175,6 +175,25 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
         }
       })
 
+      // Неизменяемая история ошибок (T-089): `page.error` живёт 30 дней, остальные события — 90.
+      const errorEvent = (id: string, event: string, stream: "backend" | "page", days: number) => ({
+        id,
+        event,
+        stream,
+        service: stream === "page" ? "web" : "api",
+        code: "INTERNAL_ERROR",
+        signature: id,
+        occurredAt: daysBefore(days)
+      })
+      await db.backendErrorEvent.createMany({
+        data: [
+          errorEvent("page-old", "page.error", "page", 31),
+          errorEvent("page-recent", "page.error", "page", 29),
+          errorEvent("backend-old", "backend.error", "backend", 91),
+          errorEvent("backend-month", "backend.error", "backend", 31)
+        ]
+      })
+
       // Аудит старше любого срока.
       await db.auditLog.createMany({
         data: [
@@ -202,7 +221,8 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
         magicLinkTokens: 2,
         emailChangeRequests: 1,
         autosaveRevisions: 2,
-        backendErrors: 1
+        backendErrors: 1,
+        errorEvents: 2
       })
       expect(await ids(db.session.findMany({ select: { id: true } }))).toEqual(["session-active", "session-recent"])
       expect(await ids(db.magicLinkToken.findMany({ select: { id: true } }))).toEqual(["link-live"])
@@ -221,6 +241,10 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
       )
       expect(await ids(db.backendError.findMany({ select: { id: true } }))).toEqual(["error-decided", "error-recent"])
       expect(await db.backendErrorStatusHistory.count()).toBe(1)
+      expect(await ids(db.backendErrorEvent.findMany({ select: { id: true } }))).toEqual([
+        "backend-month",
+        "page-recent"
+      ])
       expect(await ids(db.auditLog.findMany({ select: { id: true } }))).toEqual(["audit-ancient", "audit-session"])
 
       // Повторный проход ничего не находит.
@@ -229,7 +253,8 @@ describe.skipIf(!testDatabaseUrl)("T-090 housekeeping на PostgreSQL", () => {
         magicLinkTokens: 0,
         emailChangeRequests: 0,
         autosaveRevisions: 0,
-        backendErrors: 0
+        backendErrors: 0,
+        errorEvents: 0
       })
     })
   }, 60_000)
