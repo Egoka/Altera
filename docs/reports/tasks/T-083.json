@@ -46,10 +46,10 @@
     "merge_sha": "a959d15160b61bed6579aab87602225c090c0b65"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0de89-4945-78cb-bd30-8db95eb81929",
+    "sha": "e5dd97b513de8399d2f70d0926b4a26686908310",
+    "verdict": "approved"
   },
   "deployment": {
     "required": false,
