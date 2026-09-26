@@ -371,6 +371,19 @@ describe("verifyMagicLink", () => {
     expect(world.logs.filter(({ event }) => event === "auth.login")).toHaveLength(1)
   })
 
+  it("does not derive the account name from the address", async () => {
+    // ADR-0018 п. 3: e-mail не попадает ни в хэндл, ни в имя. Имя нового аккаунта пустое,
+    // пока владелец не задаст его в профиле (журнал §25.4, T-126).
+    const world = createWorld()
+    const token = await tokenFor(world, "ivan.petrov@example.test")
+
+    await resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
+
+    expect(world.users).toHaveLength(1)
+    expect(world.users[0]!.name).toBe("")
+    expect(world.users[0]!.name).not.toBe("ivan.petrov")
+  })
+
   it("refuses the same link twice", async () => {
     const world = createWorld()
     const token = await tokenFor(world, "fresh@example.test")

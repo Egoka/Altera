@@ -38,6 +38,7 @@ import {
   SearchInput
 } from "../../utils/admin"
 import { publicUserSelect } from "../../visibility/article"
+import { publicDisplayName } from "../../visibility/display-name"
 
 export default {
   Query: {
@@ -202,5 +203,10 @@ export default {
 
       return user
     }
+  },
+
+  // Публичный тип: пока имя не задано, наружу уходит хэндл, а не пустая строка (T-126).
+  User: {
+    name: (parent: { name: string | null; handle: string }): string => publicDisplayName(parent.name, parent.handle)
   }
 }

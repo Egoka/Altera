@@ -3,6 +3,7 @@ import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
+import { publicDisplayName } from "../../visibility/display-name"
 import { findPageAuthor, normalizeHandle } from "../author/resolver"
 
 type FeedLocale = "ru" | "en"
@@ -117,7 +118,7 @@ const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale): FeedItem =>
   dek: article.dek,
   cover: article.featuredImage,
   author: {
-    name: article.author.name,
+    name: publicDisplayName(article.author.name, article.author.handle),
     handle: article.author.handle,
     grade: gradeOf(article.author.planTier)
   },
