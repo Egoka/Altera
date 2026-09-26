@@ -9,7 +9,7 @@
 ## Задачи
 | ID | Название | Статус | Зависит от |
 |---|---|---|---|
-| [T-101](../tasks/T-101-legal-versions-consent.md) | Механизм версий юридических текстов и согласий; страницы `/legal/terms`, `/legal/privacy`, `/legal/content-rules`, `/legal/license` | в работе (влита PR #195, merge fd679cc3; ждёт приёмки ALTE-109) | T-019, T-022 |
+| [T-101](../tasks/T-101-legal-versions-consent.md) | Механизм версий юридических текстов и согласий; страницы `/legal/terms`, `/legal/privacy`, `/legal/content-rules`, `/legal/license` | завершена (PR #195, merge fd679cc3; приёмка ALTE-109) | T-019, T-022 |
 | [T-102](../tasks/T-102-legal-texts-content.md) | Содержание юридических текстов: оферта, политика ПД, правила публикации, лицензия | кандидат | — |
 
 ## Границы
