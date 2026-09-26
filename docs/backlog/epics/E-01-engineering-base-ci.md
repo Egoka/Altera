@@ -13,9 +13,9 @@
 | [T-002](../tasks/T-002-test-infrastructure.md) | Тестовая инфраструктура: Vitest в server и web, Playwright smoke | завершена (PR #29, merge 467bde72; приёмка ALTE-12) | T-001 |
 | [T-003](../tasks/T-003-docker-compose-local.md) | Локальное окружение: docker-compose с PostgreSQL, Redis и почтовой заглушкой | завершена (PR #84, merge 478b63a0; приёмка ALTE-9) | — |
 | [T-004](../tasks/T-004-fix-web-prod-build.md) | Прод-сборка веба под пиновой версией Node | завершена (PR #34, merge 83f0d0ac; приёмка ALTE-13) | T-001 |
-| [T-005](../tasks/T-005-lint-rules-hygiene.md) | Линт-правила и гигиена: запрет `console.log`, `.output` вне линта, удаление мёртвого кода | в работе (влита PR #116, merge c5699395; ждёт приёмки ALTE-67) | T-004 |
+| [T-005](../tasks/T-005-lint-rules-hygiene.md) | Линт-правила и гигиена: запрет `console.log`, `.output` вне линта, удаление мёртвого кода | завершена (PR #116, merge c5699395; приёмка ALTE-67) | T-004 |
 | [T-006](../tasks/T-006-cache-wrapper-noop.md) | Кеш-обёртка Redis/`noop`, инвалидация без `KEYS`, ключи со всеми аргументами | завершена (PR #83, merge aa3b3aa9; приёмка ALTE-58) | — |
-| [T-007](../tasks/T-007-deterministic-seed.md) | Детерминированный сид: роли, первый `owner`, рубрики, форматы, теги, материалы во всех статусах | в работе (влита PR #111, merge 3722abfd; ждёт приёмки ALTE-63) | T-015, T-017 |
+| [T-007](../tasks/T-007-deterministic-seed.md) | Детерминированный сид: роли, первый `owner`, рубрики, форматы, теги, материалы во всех статусах | завершена (PR #111, merge 3722abfd; приёмка ALTE-63) | T-015, T-017 |
 | [T-112](../tasks/T-112-launch-e2e-scenarios.md) | Подготовка e2e-сценариев запуска по flow-спецификациям | завершена (PR #44, merge a39387e0; приёмка ALTE-25) | T-002 |
 
 ## Границы
