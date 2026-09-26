@@ -3,11 +3,14 @@
 
   const { t } = useI18n()
   const route = useRoute()
+  const { summary } = useAdminDashboard()
   const {
     sections,
     formats,
     loading,
     failed,
+    conflict,
+    forbidden,
     requestId,
     refresh,
     saveSection,
@@ -52,6 +55,16 @@
     order: 0
   })
 
+  const isOwner = computed(() => summary.value?.role === "owner")
+
+  /**
+   * Низшая роль не отменяет архив высшей: `admin` восстанавливает только свой архив,
+   * `owner` — любой. Иначе кнопки нет, а рядом стоит пояснение «архивировано владельцем»
+   * (`40-admin/categories.md` §5, §9; журнал #2).
+   */
+  const canRestoreSection = (section: { status: string; archivedByRole?: string | null }) =>
+    section.status === "archived" && (isOwner.value || section.archivedByRole !== "owner")
+
   const normalizedSearch = computed(() => search.value.trim().toLocaleLowerCase())
   const visibleSections = computed(() =>
     sections.value.filter((item) =>
@@ -71,7 +84,9 @@
     sections.value.filter((item) => item.status === "active" && item.id !== archiveId.value)
   )
 
-  const syncUrl = () => navigateTo({ path: "/admin/categories", query: { tab: tab.value, status: status.value } })
+  // Раздел живёт по `/admin/sections` (реестр `routes.md` #42); `/admin/categories` — его алиас,
+  // поэтому фильтры сохраняются в текущем пути, а не в жёстко заданном.
+  const syncUrl = () => navigateTo({ path: route.path, query: { tab: tab.value, status: status.value } })
   const setTab = (value: Tab) => {
     tab.value = value
     editorOpen.value = false
@@ -95,7 +110,8 @@
       seoTitleEn: "",
       seoDescription: "",
       seoDescriptionEn: "",
-      order: 0
+      order: 0,
+      updatedAt: ""
     })
   }
   const openCreate = () => {
@@ -107,10 +123,18 @@
     for (const key of Object.keys(form)) if (key in item) Reflect.set(form, key, Reflect.get(item, key) ?? "")
     editorOpen.value = true
   }
+  /**
+   * Конфликт и запрет оставляют форму открытой с введённым текстом: сотрудник обновляет
+   * карточку и повторяет правку, а не набирает всё заново (`40-admin/categories.md` §9).
+   */
   const submit = async () => {
-    if (tab.value === "sections") await saveSection({ ...form })
-    else await saveFormat({ ...form })
-    editorOpen.value = false
+    try {
+      if (tab.value === "sections") await saveSection({ ...form })
+      else await saveFormat({ ...form })
+      editorOpen.value = false
+    } catch {
+      // Состояние раздела уже выставлено композаблом; форма остаётся на экране.
+    }
   }
 
   const openArchive = (id: string) => {
@@ -118,11 +142,28 @@
     successorId.value = ""
     archiveReason.value = ""
   }
+  /**
+   * Преемник может быть заархивирован к моменту подтверждения: сервер отвечает `CONFLICT`,
+   * окно остаётся открытым, чтобы выбрать другого преемника (`40-admin/categories.md` §9).
+   */
   const confirmSectionArchive = async () => {
     if (!archiveId.value || !successorId.value || !archiveReason.value.trim()) return
-    await archiveSection(archiveId.value, successorId.value, archiveReason.value.trim())
-    archiveId.value = null
+    try {
+      await archiveSection(archiveId.value, successorId.value, archiveReason.value.trim())
+      archiveId.value = null
+    } catch {
+      successorId.value = ""
+    }
   }
+
+  /**
+   * Отказ уже объяснён состоянием раздела: каталог, фильтр и выбранная вкладка остаются
+   * на месте, поэтому обработчики кнопок гасят исключение вместо своего сообщения.
+   */
+  const runSectionRestore = (id: string) => restoreSection(id).catch(() => undefined)
+  const runFormatArchive = (id: string) => archiveFormat(id).catch(() => undefined)
+  const runFormatRestore = (id: string) => restoreFormat(id).catch(() => undefined)
+  const runSectionMove = (id: string, direction: -1 | 1) => moveSection(id, direction).catch(() => undefined)
   const showDetail = async (
     entity: { id: string; name: string; _count?: { articles: number } | null },
     type: "Section" | "Format"
@@ -205,6 +246,21 @@
       class="mb-5 border border-red-300 bg-red-50 p-4 font-sans text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
       {{ t("admin.categories.error") }} <span v-if="requestId" class="font-mono">requestId: {{ requestId }}</span>
     </div>
+    <div
+      v-if="conflict"
+      role="alert"
+      data-taxonomy-conflict
+      class="mb-5 border border-amber-400 bg-amber-50 p-4 font-sans text-sm text-amber-900 dark:border-amber-600 dark:bg-amber-950 dark:text-amber-100">
+      {{ archiveId ? t("admin.categories.conflictSuccessor") : t("admin.categories.conflict") }}
+      <span v-if="requestId" class="font-mono">requestId: {{ requestId }}</span>
+    </div>
+    <div
+      v-if="forbidden"
+      role="alert"
+      data-taxonomy-forbidden
+      class="mb-5 border border-zinc-400 bg-zinc-100 p-4 font-sans text-sm text-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
+      {{ t("admin.categories.forbidden") }} <span v-if="requestId" class="font-mono">requestId: {{ requestId }}</span>
+    </div>
     <div v-if="loading" aria-busy="true" class="grid gap-2">
       <div v-for="index in 4" :key="index" class="h-20 animate-pulse bg-zinc-200 dark:bg-zinc-800" />
     </div>
@@ -231,9 +287,9 @@
         </button>
         <div
           class="col-span-2 flex flex-wrap items-center gap-2 border-t border-zinc-200 p-3 dark:border-zinc-800 sm:col-span-1 sm:border-l sm:border-t-0">
-          <button type="button" class="taxonomy-action" @click="moveSection(item.id, -1)">↑</button
-          ><button type="button" class="taxonomy-action" @click="moveSection(item.id, 1)">↓</button>
-          <button type="button" class="taxonomy-action" @click="openEdit(item)">
+          <button type="button" class="taxonomy-action" @click="runSectionMove(item.id, -1)">↑</button
+          ><button type="button" class="taxonomy-action" @click="runSectionMove(item.id, 1)">↓</button>
+          <button type="button" class="taxonomy-action" :data-edit-section="item.id" @click="openEdit(item)">
             {{ t("admin.categories.edit") }}
           </button>
           <button
@@ -244,9 +300,17 @@
             @click="openArchive(item.id)">
             {{ t("admin.categories.archive") }}
           </button>
-          <button v-else type="button" class="taxonomy-action" @click="restoreSection(item.id)">
+          <button
+            v-else-if="canRestoreSection(item)"
+            type="button"
+            class="taxonomy-action"
+            :data-restore-section="item.id"
+            @click="runSectionRestore(item.id)">
             {{ t("admin.categories.restore") }}
           </button>
+          <span v-else :data-no-restore-section="item.id" class="font-sans text-xs text-zinc-500">
+            {{ t("admin.categories.ownerArchiveNote") }}
+          </span>
         </div>
       </article>
       <p
@@ -269,14 +333,15 @@
           ><span class="font-sans text-xs text-zinc-500">{{ t("admin.categories.materials") }}</span>
         </button>
         <div class="mt-5 flex gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <button class="taxonomy-action" type="button" @click="openEdit(item)">{{ t("admin.categories.edit") }}</button
+          <button class="taxonomy-action" type="button" :data-edit-format="item.id" @click="openEdit(item)">
+            {{ t("admin.categories.edit") }}</button
           ><button
             v-if="item.status === 'active'"
             class="taxonomy-action text-red-700"
             type="button"
-            @click="archiveFormat(item.id)">
+            @click="runFormatArchive(item.id)">
             {{ t("admin.categories.archive") }}</button
-          ><button v-else class="taxonomy-action" type="button" @click="restoreFormat(item.id)">
+          ><button v-else class="taxonomy-action" type="button" @click="runFormatRestore(item.id)">
             {{ t("admin.categories.restore") }}
           </button>
         </div>
@@ -290,6 +355,7 @@
 
     <dialog
       :open="editorOpen"
+      data-taxonomy-editor
       class="fixed inset-0 z-40 m-auto max-h-[90vh] w-[min(48rem,calc(100%-2rem))] overflow-y-auto border border-zinc-300 bg-white p-0 text-zinc-950 shadow-2xl backdrop:bg-black/40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50">
       <form class="grid gap-4 p-6" @submit.prevent="submit">
         <div class="flex items-start justify-between">

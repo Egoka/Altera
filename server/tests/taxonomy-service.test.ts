@@ -293,7 +293,10 @@ describe("taxonomy service", () => {
     const update = vi.fn().mockResolvedValue(archived)
     const createAudit = vi.fn().mockResolvedValue({})
     const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
-      operation({ format: { update }, auditLog: { create: createAudit } })
+      operation({
+        format: { findUnique: vi.fn().mockResolvedValue({ status: "active" }), update },
+        auditLog: { create: createAudit }
+      })
     )
 
     await expect(
@@ -354,7 +357,10 @@ describe("taxonomy service", () => {
     const update = vi.fn().mockResolvedValue(restored)
     const createAudit = vi.fn().mockResolvedValue({})
     const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
-      operation({ format: { update }, auditLog: { create: createAudit } })
+      operation({
+        format: { findUnique: vi.fn().mockResolvedValue({ status: "archived" }), update },
+        auditLog: { create: createAudit }
+      })
     )
 
     await expect(
@@ -385,12 +391,19 @@ describe("taxonomy service", () => {
     expect(transaction).not.toHaveBeenCalled()
   })
 
-  it("records section fields before and after an update", async () => {
-    const findUnique = vi.fn().mockResolvedValue({ id: "section-1", name: "Старое", slug: "old" })
-    const update = vi.fn().mockResolvedValue({ id: "section-1", name: "Новое", slug: "old" })
+  it("records section fields before and after an update without leaking the version", async () => {
+    const findUnique = vi
+      .fn()
+      .mockResolvedValue({ name: "Старое", slug: "old", order: 1, updatedAt: new Date("2026-09-26T10:00:00.000Z") })
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 })
+    const findUniqueOrThrow = vi.fn().mockResolvedValue({ id: "section-1", name: "Новое", slug: "old" })
     const createAudit = vi.fn().mockResolvedValue({})
     const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
-      operation({ section: { findUnique, update }, sectionSlugHistory: {}, auditLog: { create: createAudit } })
+      operation({
+        section: { findUnique, updateMany, findUniqueOrThrow },
+        sectionSlugHistory: {},
+        auditLog: { create: createAudit }
+      })
     )
 
     await updateSection({ $transaction: transaction } as never, {
@@ -400,8 +413,15 @@ describe("taxonomy service", () => {
       requestId: "request-5"
     })
 
+    // Без заявленной версии запись не привязана к `updatedAt`, а метка не попадает в `diff`.
+    expect(updateMany).toHaveBeenCalledWith({ where: { id: "section-1" }, data: { name: "Новое" } })
     expect(createAudit).toHaveBeenCalledWith({
-      data: expect.objectContaining({ action: "section.update", entityId: "section-1", requestId: "request-5" })
+      data: expect.objectContaining({
+        action: "section.update",
+        entityId: "section-1",
+        requestId: "request-5",
+        diff: { before: { name: "Старое", slug: "old", order: 1 }, after: { name: "Новое" } }
+      })
     })
   })
 
@@ -412,7 +432,10 @@ describe("taxonomy service", () => {
       operation({
         $queryRaw: vi.fn(),
         sectionSlugHistory: { updateMany: vi.fn() },
-        section: { update },
+        section: {
+          findUnique: vi.fn().mockResolvedValue({ status: "archived", archivedByRole: "admin" }),
+          update
+        },
         auditLog: { create: createAudit }
       })
     )
@@ -427,6 +450,201 @@ describe("taxonomy service", () => {
       data: expect.objectContaining({ action: "section.restore", entityId: "section-1", requestId: "request-6" })
     })
   })
+  // T-132 AC-1: иерархия восстановления рубрик повторяет правило тегов (журнал #2, §5).
+  it("does not let an admin restore a section archived by the owner", async () => {
+    const update = vi.fn()
+    const updateHistory = vi.fn()
+    const createAudit = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn(),
+        sectionSlugHistory: { updateMany: updateHistory },
+        section: {
+          findUnique: vi.fn().mockResolvedValue({ status: "archived", archivedByRole: "owner" }),
+          update
+        },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      restoreSection({ $transaction: transaction } as never, {
+        sectionId: "section-1",
+        actor: actor("admin"),
+        requestId: "request-forbidden"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "FORBIDDEN", action: "section.restore" } })
+
+    expect(updateHistory).not.toHaveBeenCalled()
+    expect(update).not.toHaveBeenCalled()
+    expect(createAudit).not.toHaveBeenCalled()
+  })
+
+  it("lets the owner restore a section archived by the owner", async () => {
+    const restored = { id: "section-1", slug: "culture", status: "active" }
+    const update = vi.fn().mockResolvedValue(restored)
+    const createAudit = vi.fn().mockResolvedValue({})
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn(),
+        sectionSlugHistory: { updateMany: vi.fn() },
+        section: {
+          findUnique: vi.fn().mockResolvedValue({ status: "archived", archivedByRole: "owner" }),
+          update
+        },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      restoreSection({ $transaction: transaction } as never, {
+        sectionId: "section-1",
+        actor: actor("owner"),
+        requestId: "request-owner-restore"
+      })
+    ).resolves.toEqual(restored)
+    expect(createAudit).toHaveBeenCalledWith({
+      data: expect.objectContaining({ action: "section.restore", entityId: "section-1" })
+    })
+  })
+
+  it("does not restore an active section and writes no audit entry", async () => {
+    const update = vi.fn()
+    const updateHistory = vi.fn()
+    const createAudit = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn(),
+        sectionSlugHistory: { updateMany: updateHistory },
+        section: {
+          findUnique: vi.fn().mockResolvedValue({ status: "active", archivedByRole: null }),
+          update
+        },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      restoreSection({ $transaction: transaction } as never, {
+        sectionId: "section-1",
+        actor: actor("admin"),
+        requestId: "request-active-restore"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "CONFLICT", expected: "archived section", actual: "active" } })
+
+    expect(updateHistory).not.toHaveBeenCalled()
+    expect(update).not.toHaveBeenCalled()
+    expect(createAudit).not.toHaveBeenCalled()
+  })
+
+  it("reports a missing section as NOT_FOUND instead of a Prisma failure", async () => {
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        $queryRaw: vi.fn(),
+        sectionSlugHistory: { updateMany: vi.fn() },
+        section: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() },
+        auditLog: { create: vi.fn() }
+      })
+    )
+
+    await expect(
+      restoreSection({ $transaction: transaction } as never, {
+        sectionId: "missing",
+        actor: actor("owner"),
+        requestId: "request-missing"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "NOT_FOUND", entity: "section" } })
+  })
+
+  // T-132 AC-2: правка сверяет версию карточки и не переписывает чужую (§9 «Конфликт»).
+  it("refuses a section edit that was prepared against an older version", async () => {
+    const updateMany = vi.fn()
+    const createAudit = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        section: {
+          findUnique: vi.fn().mockResolvedValue({ name: "Старое", updatedAt: new Date("2026-09-26T12:00:00.000Z") }),
+          updateMany,
+          findUniqueOrThrow: vi.fn()
+        },
+        sectionSlugHistory: {},
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      updateSection({ $transaction: transaction } as never, {
+        sectionId: "section-1",
+        input: { name: "Новое" },
+        expectedUpdatedAt: "2026-09-26T11:00:00.000Z",
+        actor: actor("admin"),
+        requestId: "request-stale"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "CONFLICT", entity: "section", actual: "changed" } })
+
+    expect(updateMany).not.toHaveBeenCalled()
+    expect(createAudit).not.toHaveBeenCalled()
+  })
+
+  it("keeps the version in the UPDATE so a parallel edit cannot slip through", async () => {
+    const version = new Date("2026-09-26T12:00:00.000Z")
+    // Оба сотрудника прочитали одну версию; первый успел записать между чтением и записью второго.
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 })
+    const createAudit = vi.fn()
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        section: {
+          findUnique: vi.fn().mockResolvedValue({ name: "Старое", updatedAt: version }),
+          updateMany,
+          findUniqueOrThrow: vi.fn()
+        },
+        sectionSlugHistory: {},
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      updateSection({ $transaction: transaction } as never, {
+        sectionId: "section-1",
+        input: { name: "Новое" },
+        expectedUpdatedAt: version.toISOString(),
+        actor: actor("admin"),
+        requestId: "request-parallel"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "CONFLICT", expected: version.toISOString() } })
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "section-1", updatedAt: version },
+      data: { name: "Новое" }
+    })
+    expect(createAudit).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["archiveFormat", archiveFormat, "archived", "active"],
+    ["restoreFormat", restoreFormat, "active", "archived"]
+  ])("%s refuses a format that is already in the target state", async (_name, operation, current, expected) => {
+    const update = vi.fn()
+    const createAudit = vi.fn()
+    const transaction = vi.fn(async (op: (tx: unknown) => Promise<unknown>) =>
+      op({
+        format: { findUnique: vi.fn().mockResolvedValue({ status: current }), update },
+        auditLog: { create: createAudit }
+      })
+    )
+
+    await expect(
+      operation({ $transaction: transaction } as never, {
+        formatId: "format-1",
+        actor: actor("admin"),
+        requestId: "request-format-status"
+      })
+    ).rejects.toMatchObject({ extensions: { code: "CONFLICT", entity: "format", expected, actual: current } })
+
+    expect(update).not.toHaveBeenCalled()
+    expect(createAudit).not.toHaveBeenCalled()
+  })
+
   it("moves tag links, redirects source slugs and records tag.merge for each source", async () => {
     const executeRaw = vi
       .fn()

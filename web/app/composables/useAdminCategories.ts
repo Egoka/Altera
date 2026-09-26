@@ -14,8 +14,10 @@ import {
   UpdateSectionDocument
 } from "~/graphql/generated/graphql"
 
-type Section = GetAdminCategoriesQuery["sections"]["sections"][number]
-type Format = GetAdminCategoriesQuery["formats"]["formats"][number]
+export type AdminSection = GetAdminCategoriesQuery["sections"]["sections"][number]
+export type AdminFormat = GetAdminCategoriesQuery["formats"]["formats"][number]
+type Section = AdminSection
+type Format = AdminFormat
 type AuditEntry = GetTaxonomyAuditQuery["taxonomyAudit"][number]
 type EntityStatus = TaxonomyStatus | "all"
 
@@ -23,6 +25,7 @@ const graphQLError = (result: ExecutionResult<unknown>) => {
   const error = result.errors?.[0]
   return {
     message: error?.message ?? "GraphQL request failed",
+    code: typeof error?.extensions?.code === "string" ? error.extensions.code : null,
     requestId: typeof error?.extensions?.requestId === "string" ? error.extensions.requestId : null
   }
 }
@@ -32,6 +35,8 @@ export const useAdminCategories = () => {
   const formats = useState<Format[]>("admin.categories.formats", () => [])
   const loading = ref(false)
   const failed = ref(false)
+  const conflict = ref(false)
+  const forbidden = ref(false)
   const requestId = ref<string | null>(null)
 
   const run = async <T>(promise: Promise<ExecutionResult<T>>) => {
@@ -39,10 +44,16 @@ export const useAdminCategories = () => {
     if (result.errors?.length || !result.data) {
       const failure = graphQLError(result)
       requestId.value = failure.requestId
-      failed.value = true
+      // Конфликт версии и нехватка прав — отдельные состояния раздела
+      // (`40-admin/categories.md` §9): каталог остаётся на экране, меняется только пояснение.
+      conflict.value = failure.code === "CONFLICT"
+      forbidden.value = failure.code === "FORBIDDEN"
+      failed.value = !conflict.value && !forbidden.value
       throw new Error(failure.message)
     }
     failed.value = false
+    conflict.value = false
+    forbidden.value = false
     requestId.value = null
     return result.data
   }
@@ -65,7 +76,7 @@ export const useAdminCategories = () => {
       sections.value = data.sections.sections
       formats.value = data.formats.formats
     } catch {
-      failed.value = true
+      // Причину уже записал `run`: каталог сохраняется, чтобы состояние раздела не сбросилось.
     } finally {
       loading.value = false
     }
@@ -80,6 +91,10 @@ export const useAdminCategories = () => {
     }
   }
 
+  /**
+   * Правка уходит вместе с версией карточки (`updatedAt` из списка): сервер отвечает
+   * `CONFLICT`, если рубрику успел изменить другой сотрудник (`40-admin/categories.md` §9).
+   */
   const saveSection = async (section: Partial<Section> & { name: string; nameEn: string; slug: string }) => {
     const input = {
       name: section.name,
@@ -93,8 +108,15 @@ export const useAdminCategories = () => {
       seoDescriptionEn: section.seoDescriptionEn,
       order: section.order ?? sections.value.length + 1
     }
-    if (section.id) await mutate(useGraphQL(UpdateSectionDocument, { id: section.id, input }))
-    else await mutate(useGraphQL(CreateSectionDocument, { input }))
+    if (section.id) {
+      await mutate(
+        useGraphQL(UpdateSectionDocument, {
+          id: section.id,
+          input,
+          expectedUpdatedAt: section.updatedAt || null
+        })
+      )
+    } else await mutate(useGraphQL(CreateSectionDocument, { input }))
     await refresh("all")
   }
 
@@ -160,6 +182,8 @@ export const useAdminCategories = () => {
     formats,
     loading,
     failed,
+    conflict,
+    forbidden,
     requestId,
     refresh,
     saveSection,

@@ -1234,7 +1234,7 @@ type Mutation {
   startCheckout(interval: BillingInterval!, promo: String, tier: PlanTier!): Boolean!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
-  updateSection(id: ID!, input: UpdateSectionInput!): Section!
+  updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
   verifyMagicLink(token: String!): VerifyMagicLinkResult!
 }

@@ -105,6 +105,28 @@ function isRegistryConflict(error: unknown): boolean {
   return typeof error === "object" && error !== null && Reflect.get(error, "code") === "P2002"
 }
 
+const sectionVersionConflict = (requestId: string, expected: string) =>
+  createApiError("CONFLICT", { requestId, entity: "section", expected, actual: "changed" })
+
+/**
+ * Правка рубрики поверх известной версии: `updatedAt` уходит в `WHERE` самого `UPDATE`.
+ * Одной сверки до записи недостаточно — второй сотрудник успевает записать между чтением
+ * карточки и обновлением (`40-admin/categories.md` §9, тот же приём — `admin/legal.ts`).
+ */
+async function updateSectionRow(
+  tx: Prisma.TransactionClient,
+  where: { id: string; updatedAt: Date | null },
+  data: Prisma.SectionUpdateManyMutationInput,
+  requestId: string
+) {
+  const { count } = await tx.section.updateMany({
+    where: { id: where.id, ...(where.updatedAt ? { updatedAt: where.updatedAt } : {}) },
+    data
+  })
+  if (count === 0) throw sectionVersionConflict(requestId, where.updatedAt?.toISOString() ?? "existing section")
+  return tx.section.findUniqueOrThrow({ where: { id: where.id } })
+}
+
 export async function archiveSection(
   prisma: TaxonomyClient,
   input: {
@@ -433,6 +455,12 @@ export async function updateSection(
       seoDescription?: string | null
       seoDescriptionEn?: string | null
     }
+    /**
+     * Версия карточки, с которой работал сотрудник: метка `updatedAt`, полученная тем же
+     * запросом списка. Несовпадение — `CONFLICT` «объект изменён другим администратором»
+     * (`40-admin/categories.md` §9). Аргумент необязателен: контракт мутации сохраняется.
+     */
+    expectedUpdatedAt?: string | null
     actor: TaxonomyActor
     requestId: string
   }
@@ -442,7 +470,7 @@ export async function updateSection(
 
   try {
     return await prisma.$transaction(async (tx) => {
-      const current = await tx.section.findUnique({
+      const row = await tx.section.findUnique({
         where: { id: input.sectionId },
         select: {
           slug: true,
@@ -454,16 +482,24 @@ export async function updateSection(
           seoTitleEn: true,
           seoDescription: true,
           seoDescriptionEn: true,
-          order: true
+          order: true,
+          updatedAt: true
         }
       })
-      if (!current) throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "section" })
+      if (!row) throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "section" })
+      // `updatedAt` — версия, а не изменённое поле: в `diff` уходят только JSON-безопасные поля.
+      const { updatedAt, ...current } = row
+      if (input.expectedUpdatedAt && input.expectedUpdatedAt !== updatedAt?.toISOString()) {
+        throw sectionVersionConflict(input.requestId, input.expectedUpdatedAt)
+      }
       if (slug && slug !== current.slug) await tx.sectionSlugHistory.create({ data: { slug } })
 
-      const section = await tx.section.update({
-        where: { id: input.sectionId },
-        data: { ...input.input, ...(slug ? { slug } : {}) }
-      })
+      const section = await updateSectionRow(
+        tx,
+        { id: input.sectionId, updatedAt: input.expectedUpdatedAt ? updatedAt : null },
+        { ...input.input, ...(slug ? { slug } : {}) },
+        input.requestId
+      )
       if (slug && slug !== current.slug) {
         await tx.sectionSlugHistory.update({
           where: { slug },
@@ -503,6 +539,29 @@ export async function restoreSection(
   requireRole(input.actor, editorialRoles, "section.restore", input.requestId)
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "sections" WHERE "id" = ${input.sectionId} FOR UPDATE`)
+    const current = await tx.section.findUnique({
+      where: { id: input.sectionId },
+      select: { status: true, archivedByRole: true }
+    })
+    if (!current) {
+      throw createApiError("NOT_FOUND", { requestId: input.requestId, entity: "section" })
+    }
+    // Восстанавливается только архивная рубрика: повтор на активной не переписывает преемника
+    // и не оставляет записи в журнале (`40-admin/categories.md` §5, §9).
+    if (current.status !== "archived") {
+      throw createApiError("CONFLICT", {
+        requestId: input.requestId,
+        entity: "section",
+        expected: "archived section",
+        actual: current.status
+      })
+    }
+    // Низшая роль не отменяет архив высшей: `admin` восстанавливает только свой архив,
+    // `owner` — любой (журнал #2, `40-admin/categories.md` §5).
+    if (input.actor.role !== "owner" && current.archivedByRole === "owner") {
+      throw createApiError("FORBIDDEN", { requestId: input.requestId, action: "section.restore" })
+    }
+
     await tx.sectionSlugHistory.updateMany({
       where: { ownerSectionId: input.sectionId },
       data: { redirectToSectionId: input.sectionId }
@@ -634,6 +693,25 @@ interface FormatInput {
   descriptionEn?: string | null
 }
 
+/**
+ * Архив и восстановление формата зависят от текущего статуса: повторное действие ничего не
+ * меняет, но без проверки оставляет ложную запись аудита (`40-admin/categories.md` §5, §8).
+ */
+async function requireFormatStatus(
+  tx: Prisma.TransactionClient,
+  formatId: string,
+  expected: "active" | "archived",
+  requestId: string
+): Promise<void> {
+  const current = await tx.format.findUnique({ where: { id: formatId }, select: { status: true } })
+  if (!current) {
+    throw createApiError("NOT_FOUND", { requestId, entity: "format" })
+  }
+  if (current.status !== expected) {
+    throw createApiError("CONFLICT", { requestId, entity: "format", expected, actual: current.status })
+  }
+}
+
 export async function createFormat(
   prisma: TaxonomyClient,
   input: { input: FormatInput; actor: TaxonomyActor; requestId: string }
@@ -732,6 +810,7 @@ export async function archiveFormat(
 ) {
   requireRole(input.actor, editorialRoles, "format.archive", input.requestId)
   return prisma.$transaction(async (tx) => {
+    await requireFormatStatus(tx, input.formatId, "active", input.requestId)
     const format = await tx.format.update({
       where: { id: input.formatId },
       data: { status: "archived", archivedAt: new Date() }
@@ -757,6 +836,7 @@ export async function restoreFormat(
 ) {
   requireRole(input.actor, editorialRoles, "format.restore", input.requestId)
   return prisma.$transaction(async (tx) => {
+    await requireFormatStatus(tx, input.formatId, "archived", input.requestId)
     const format = await tx.format.update({
       where: { id: input.formatId },
       data: { status: "active", archivedAt: null }

@@ -65,9 +65,10 @@ mutation CreateSection($input: CreateSectionInput!) {
     id
   }
 }
-mutation UpdateSection($id: ID!, $input: UpdateSectionInput!) {
-  updateSection(id: $id, input: $input) {
+mutation UpdateSection($id: ID!, $input: UpdateSectionInput!, $expectedUpdatedAt: String) {
+  updateSection(id: $id, input: $input, expectedUpdatedAt: $expectedUpdatedAt) {
     id
+    updatedAt
   }
 }
 mutation ReorderSections($input: ReorderSectionsInput!) {

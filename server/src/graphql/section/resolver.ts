@@ -362,7 +362,11 @@ export default {
       }
     },
 
-    updateSection: async (_parent: any, { id, input }: { id: string; input: any }, ctx: GraphQLContext) => {
+    updateSection: async (
+      _parent: any,
+      { id, input, expectedUpdatedAt }: { id: string; input: any; expectedUpdatedAt?: string | null },
+      ctx: GraphQLContext
+    ) => {
       // Проверка прав доступа
       ensurePermission(ctx.currentUser, "taxonomy", "section.update", ctx.requestId)
 
@@ -371,6 +375,7 @@ export default {
         const updatedSection = await updateSection(ctx.prisma, {
           sectionId: id,
           input,
+          expectedUpdatedAt,
           actor: ctx.currentUser!,
           requestId: ctx.requestId
         })
@@ -520,13 +525,18 @@ export default {
 
     restoreSection: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       ensurePermission(ctx.currentUser, "taxonomy", "section.restore", ctx.requestId)
-      const section = await restoreSection(ctx.prisma, {
-        sectionId: id,
-        actor: ctx.currentUser!,
-        requestId: ctx.requestId
-      })
-      await ctx.cache.delByTags(["home", `section:${section.slug}`])
-      return section
+      try {
+        const section = await restoreSection(ctx.prisma, {
+          sectionId: id,
+          actor: ctx.currentUser!,
+          requestId: ctx.requestId
+        })
+        await ctx.cache.delByTags(["home", `section:${section.slug}`])
+        return section
+      } catch (error) {
+        // Исчезнувшая рубрика — `NOT_FOUND` раздела, а не внутренняя ошибка Prisma.
+        handleAdminError(error, ctx.requestId, "section")
+      }
     },
 
     createFormat: async (_parent: unknown, { input }: { input: any }, ctx: GraphQLContext) => {
