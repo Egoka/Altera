@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   REFRESH_COOKIE_MAX_AGE_SECONDS,
   extractSessionCookie,
+  isLoginTokenExchange,
   isSameOriginMutation,
   readOperation,
   withRefreshTokenVariable
@@ -116,6 +117,36 @@ describe("isSameOriginMutation", () => {
     ["a malformed origin", { origin: "not-a-url", host: "altera.test" }]
   ])("rejects %s", (_name, headers) => {
     expect(isSameOriginMutation(headers)).toBe(false)
+  })
+})
+
+// T-123 AC-2: ссылка из веб-почты открывается как межсайтовый переход, поэтому обмен токена —
+// единственное исключение из проверки происхождения, и оно не должно прикрывать чужую мутацию.
+describe("isLoginTokenExchange", () => {
+  const navigation = { secFetchMode: "navigate", contentType: "application/json; charset=utf-8" }
+
+  it.each([["verifyMagicLink"], ["acceptConsent"]])("допускает межсайтовый обмен %s", (field) => {
+    expect(isLoginTokenExchange([field], navigation)).toBe(true)
+  })
+
+  it("допускает серверный вызов без заголовков перехода", () => {
+    expect(isLoginTokenExchange(["verifyMagicLink"], {})).toBe(true)
+  })
+
+  it.each([
+    ["мутацию без обмена токена", ["logoutAll"], navigation],
+    ["батч обмена с чужой мутацией", ["verifyMagicLink", "logoutAll"], navigation],
+    ["операцию без корневых полей", [], navigation],
+    ["простую форму со чужого сайта", ["verifyMagicLink"], { ...navigation, contentType: "text/plain" }],
+    [
+      "форму с кодированным телом",
+      ["verifyMagicLink"],
+      { ...navigation, contentType: "application/x-www-form-urlencoded" }
+    ],
+    ["фоновый запрос со чужой страницы", ["verifyMagicLink"], { ...navigation, secFetchMode: "cors" }],
+    ["подзапрос со чужой страницы", ["verifyMagicLink"], { ...navigation, secFetchMode: "no-cors" }]
+  ])("не допускает %s", (_name, fields, headers) => {
+    expect(isLoginTokenExchange(fields, headers)).toBe(false)
   })
 })
 

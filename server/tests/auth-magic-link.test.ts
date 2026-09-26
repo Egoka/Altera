@@ -135,10 +135,12 @@ function createWorld(options: WorldOptions = {}) {
         else tokens.push(record)
         return record
       }),
-      update: vi.fn(async ({ where, data }: { where: { id: string }; data: { usedAt: Date } }) => {
-        const record = tokens.find((token) => token.id === where.id)
-        if (record) record.usedAt = data.usedAt
-        return record
+      // Та же семантика, что у условного UPDATE резолвера: гасится только непогашенный токен.
+      updateMany: vi.fn(async ({ where, data }: { where: { id: string; usedAt: null }; data: { usedAt: Date } }) => {
+        const record = tokens.find((token) => token.id === where.id && token.usedAt === null)
+        if (!record) return { count: 0 }
+        record.usedAt = data.usedAt
+        return { count: 1 }
       })
     },
     session: {
@@ -605,6 +607,116 @@ describe("verifyMagicLink", () => {
     await expect(
       resolver.Mutation.acceptConsent({}, { token, termsVersion: 3, privacyVersion: 2 }, world.ctx as never)
     ).rejects.toMatchObject({ extensions: { code: "VALIDATION_ERROR" } })
+  })
+})
+
+// T-123 AC-1: до исправления `acceptConsent` заводил сессию в обход проверки архива, поэтому
+// заблокированный администратором аккаунт входил вторым шагом экрана согласия.
+describe("acceptConsent and an archived account", () => {
+  const archivedWorld = (mode: "self" | "admin") =>
+    createWorld({
+      publishedTerms: 4,
+      publishedPrivacy: 2,
+      acceptedTerms: 3,
+      acceptedPrivacy: 2,
+      users: [
+        {
+          id: "user-1",
+          email: "archived@example.test",
+          name: "archived",
+          handle: "u-1",
+          locale: "ru",
+          archivedAt: new Date("2026-09-01T00:00:00.000Z"),
+          archiveMode: mode
+        }
+      ]
+    })
+
+  const tokenFor = async (world: ReturnType<typeof createWorld>) => {
+    await resolver.Mutation.requestMagicLink(
+      {},
+      { email: "archived@example.test", consentVersion: consent(4, 2), locale: "ru" },
+      world.ctx as never
+    )
+    return world.sentMail.at(-1)!.text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)![1]!
+  }
+
+  it("answers an administratively archived account exactly as verifyMagicLink does", async () => {
+    const accepting = archivedWorld("admin")
+    const verifying = archivedWorld("admin")
+    const acceptToken = await tokenFor(accepting)
+    const verifyToken = await tokenFor(verifying)
+
+    const accepted = await resolver.Mutation.acceptConsent(
+      {},
+      { token: acceptToken, termsVersion: 4, privacyVersion: 2 },
+      accepting.ctx as never
+    )
+    const verified = await resolver.Mutation.verifyMagicLink({}, { token: verifyToken }, verifying.ctx as never)
+
+    expect(accepted).toEqual({ ...verified, appealToken: acceptToken })
+    expect(accepted).toMatchObject({ outcome: "archived_admin", session: null })
+    expect(accepting.sessions, "сессии заблокированному аккаунту нет").toHaveLength(0)
+    expect(accepting.consents, "согласие заблокированного аккаунта не записывается").toHaveLength(0)
+    // Форма оспаривания открывается тем же токеном (журнал #48), поэтому он не гасится.
+    expect(accepting.tokens[0]!.usedAt).toBeNull()
+    expect(accepting.logs.at(-1)).toMatchObject({ event: "auth.login.failed", data: { reason: "archived_admin" } })
+  })
+
+  it("opens only a limited session for a self-archived account", async () => {
+    const world = archivedWorld("self")
+    const token = await tokenFor(world)
+
+    const accepted = await resolver.Mutation.acceptConsent(
+      {},
+      { token, termsVersion: 4, privacyVersion: 2 },
+      world.ctx as never
+    )
+
+    expect(accepted.outcome).toBe("archived_self")
+    expect(world.sessions).toEqual([expect.objectContaining({ limited: true })])
+    expect(world.consents).toHaveLength(0)
+    expect(world.tokens[0]!.usedAt).not.toBeNull()
+  })
+})
+
+// T-123 AC-4: отметка `usedAt` ставится условным обновлением, поэтому вторая попытка обмена
+// того же токена не доходит до создания сессии. Гонку на настоящем PostgreSQL проверяет
+// `auth-magic-link-database.test.ts`.
+describe("one-time exchange of a login token", () => {
+  it("creates a single session for two exchanges of one token", async () => {
+    const world = createWorld({
+      users: [
+        {
+          id: "user-1",
+          email: "reader@example.test",
+          name: "reader",
+          handle: "u-1",
+          locale: "ru",
+          archivedAt: null,
+          archiveMode: null
+        }
+      ]
+    })
+    await resolver.Mutation.requestMagicLink(
+      {},
+      { email: "reader@example.test", consentVersion: consent(null, null), locale: "ru" },
+      world.ctx as never
+    )
+    const token = world.sentMail.at(-1)!.text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)![1]!
+
+    const outcomes = await Promise.allSettled([
+      resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never),
+      resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
+    ])
+
+    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1)
+    const rejected = outcomes.find((outcome) => outcome.status === "rejected")
+    expect(rejected).toBeDefined()
+    expect((rejected as PromiseRejectedResult).reason).toMatchObject({
+      extensions: { code: "NOT_FOUND", entity: "magicLink" }
+    })
+    expect(world.sessions).toHaveLength(1)
   })
 })
 

@@ -14,6 +14,8 @@ const REFRESH_OUTPUT_FIELDS = new Set(["verifyMagicLink", "acceptConsent", "refr
 const NESTED_SESSION_FIELD = "session"
 // Мутации, после успеха которых cookie стирается.
 const SESSION_END_FIELDS = new Set(["logout", "logoutAll"])
+// Обмен одноразового токена входа: полномочие даёт секрет в теле запроса, а не cookie браузера.
+const LOGIN_EXCHANGE_FIELDS = new Set(["verifyMagicLink", "acceptConsent"])
 
 export interface ParsedOperation {
   isMutation: boolean
@@ -30,6 +32,11 @@ export interface RequestOriginHeaders {
   origin?: string
   secFetchSite?: string
   host?: string
+}
+
+export interface LoginExchangeHeaders {
+  secFetchMode?: string
+  contentType?: string
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -117,6 +124,24 @@ export function extractSessionCookie(payload: unknown, fields: readonly string[]
     token,
     clear: token === null && (endedSession || refreshRejected)
   }
+}
+
+/**
+ * Единственное исключение из проверки происхождения: обмен одноразового токена входа. Ссылка
+ * открывается из веб-почты, и браузер помечает такой переход как `sec-fetch-site: cross-site`,
+ * поэтому иначе вход из письма отвечает 403 (`docs/spec/20-public/verify.md` §3). CSRF на этих
+ * мутациях не действует — полномочие даёт секрет из письма, а не cookie браузера, и чужая
+ * страница его не знает. Исключение сужено так, чтобы им нельзя было прикрыть другую мутацию:
+ * в операции нет иных корневых полей, тело — `application/json` (простая форма со чужого сайта
+ * его без CORS не отправит), а запрос является переходом документа, а не фоновым вызовом.
+ */
+export function isLoginTokenExchange(
+  fields: readonly string[],
+  { secFetchMode, contentType }: LoginExchangeHeaders
+): boolean {
+  if (fields.length === 0 || !fields.every((field) => LOGIN_EXCHANGE_FIELDS.has(field))) return false
+  if (contentType !== undefined && !contentType.startsWith("application/json")) return false
+  return secFetchMode === undefined || secFetchMode === "navigate"
 }
 
 /**

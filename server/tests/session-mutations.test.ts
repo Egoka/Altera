@@ -115,7 +115,7 @@ const context = (overrides: Record<string, unknown> = {}) =>
       },
       magicLinkToken: {
         findUnique: async () => magicLinkToken,
-        update: async () => magicLinkToken
+        updateMany: async () => ({ count: 1 })
       },
       // Опубликованных текстов нет: согласие не требуется и ветка `consent_required` не включается.
       legalText: { findFirst: async () => null },

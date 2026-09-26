@@ -4,6 +4,7 @@ import {
   REFRESH_COOKIE_MAX_AGE_SECONDS,
   REFRESH_COOKIE_NAME,
   extractSessionCookie,
+  isLoginTokenExchange,
   isSameOriginMutation,
   readOperation,
   withRefreshTokenVariable
@@ -21,8 +22,16 @@ export default defineEventHandler(async (event) => {
     const body = await readBody<unknown>(event)
     const operation = readOperation(body)
 
+    // Обмен токена входа приходит из письма как межсайтовый переход и проверку происхождения
+    // не проходит; для остальных мутаций она остаётся (ADR-0023 п. 4).
+    const loginExchange = isLoginTokenExchange(operation.fields, {
+      secFetchMode: getHeader(event, "sec-fetch-mode"),
+      contentType: getHeader(event, "content-type")
+    })
+
     if (
       operation.isMutation &&
+      !loginExchange &&
       !isSameOriginMutation({
         origin: getHeader(event, "origin"),
         secFetchSite: getHeader(event, "sec-fetch-site"),
