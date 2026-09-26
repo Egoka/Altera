@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "task_id": "T-134",
+  "issue_id": "01a0bc94-460c-730a-9599-6837e45589fe",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-134-admin-mail-pd-in-list.md",
+    "sha": "784ca04d841de918f1339dc16d72e5a2d90dfb61"
+  },
+  "baseline_sha": "f1ed1885f5be4a364b14ccb442412cfbd13e18b7",
+  "tested_sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0deb5-236c-7dc6-b321-6cd6a0ad5b08",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/src/admin/mail.ts (presentMail, вид list — body всегда null); server/tests/admin-mail.test.ts — «masks the address and hides the body from the list for analyst, admin and owner», «never returns the stored copy in the list, even for a secret-free template»; web/tests/e2e/22-admin-mail.spec.ts — таблица списка не содержит текста копии; pnpm test exit 0 (server 805 passed / 32 skipped)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "адрес в списке маскирован (server/src/admin/personal-data.ts, журнал §28.7); server/tests/admin-mail.test.ts — маска без записи аудита в списке и полный адрес с admin.read.personal на карточке; web/tests/admin-mail-page.nuxt.test.ts — маска и пояснение; playwright --project=chromium --grep \"admin mail\": 21 passed"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "SECRET_MAIL_TEMPLATES дополнен email_change_code; server/tests/admin-mail-secrets.test.ts — «не содержит код и повтор отклоняется даже владельцу» (canResend = false, FORBIDDEN); server/tests/admin-mail.test.ts — it.each по magic_link и email_change_code; e2e — карточка t080-mail-code без кнопки повтора"
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "условный UPDATE ... WHERE \"resentAt\" IS NULL AND status = 'failed' (server/src/admin/mail.ts, claimResend) и миграция 20260926120000_mail_resend_claim; server/tests/mail-resend-database.test.ts — 2 passed на PostgreSQL локально и в CI (run 36263253435, job 108462960107, «Проверить повтор письма T-134»: Tests 2 passed); со снятым условием тот же тест даёт две отправки"
+    }
+  ],
+  "pr": {
+    "number": 230,
+    "head_sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
+    "base_sha": "f1ed1885f5be4a364b14ccb442412cfbd13e18b7",
+    "base_ref": "app",
+    "merge_sha": "9553d2f4c1b32dcd4831ff6f02ae51583b5a6562"
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ и добавляет миграцию; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-134.md",
+    "sha256": "d444433dc76ad15742c62b9e05b37fb73d4ab0f5677fa3d89991cb3e56f81bba"
+  },
+  "usage": null
+}
