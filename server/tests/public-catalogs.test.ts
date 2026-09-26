@@ -53,7 +53,7 @@ const userRow = (handle: string, name: string, overrides: Record<string, unknown
     {
       title: `Материал ${handle}`,
       slug: `slug-${handle}`,
-      author: { name },
+      author: { name, handle },
       section: { slug: "culture" },
       firstPublishedAt: new Date("2026-09-18T10:00:00.000Z")
     }
@@ -268,6 +268,15 @@ describe("каталог авторов", () => {
       isEditorial: false,
       recent: [{ title: "Материал anna", path: "/culture/slug-anna", author: "Анна" }]
     })
+  })
+
+  it("автор без имени показан хэндлом и в карточке, и в подписи материала", async () => {
+    // Пустое имя наружу не уходит: вместо него — хэндл (T-126, ADR-0018 п. 3).
+    const catalog = await call(prisma([userRow("anna", "")]))
+
+    expect(catalog.items[0]!.name).toBe("anna")
+    expect(catalog.items[0]!.recent).toEqual([{ title: "Материал anna", path: "/culture/slug-anna", author: "anna" }])
+    expect(catalog.letters).toEqual(["A"])
   })
 
   it("берёт только не архивированные аккаунты с публикациями рубрики и локали", async () => {

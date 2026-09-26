@@ -130,7 +130,7 @@ describe("profile handle allocation", () => {
     const createUser = vi.fn().mockResolvedValue({
       id: "user-1",
       email: "reader@example.test",
-      name: "reader",
+      name: "",
       handle: "u-22222222",
       locale: "en"
     })
@@ -162,7 +162,8 @@ describe("profile handle allocation", () => {
     expect(createUser).toHaveBeenCalledWith({
       data: {
         email: "reader@example.test",
-        name: "reader",
+        // Регистрация имени не придумывает: локальная часть адреса в имя не попадает (T-126).
+        name: "",
         handle: "u-22222222",
         locale: "en"
       }

@@ -6,6 +6,7 @@ import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
 import { isEmailAddress, normalizeEmail } from "../../auth/email-address"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
+import { EMPTY_ACCOUNT_NAME } from "../../visibility/display-name"
 import {
   findSessionByRefreshToken,
   revokeAllSessions,
@@ -324,7 +325,9 @@ export default {
         try {
           created = await createUserWithReservedHandle(prisma, {
             email: record.email,
-            name: record.email.split("@")[0],
+            // Имя не выводится из адреса: e-mail не попадает ни в хэндл, ни в имя
+            // (ADR-0018 п. 3, журнал §25.4, T-126). Своё имя пользователь задаёт в профиле.
+            name: EMPTY_ACCOUNT_NAME,
             locale: record.locale
           })
         } catch (error: unknown) {

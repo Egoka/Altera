@@ -276,6 +276,12 @@ jobs:
         env:
           T134_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/mail-resend-database.test.ts
+      # T-126: чистка имён, производных от e-mail, написана на SQL (`split_part`, сравнение без
+      # учёта регистра) — она проверяется на настоящем PostgreSQL, а не на двойнике.
+      - name: Проверить миграцию имён аккаунтов T-126
+        env:
+          T126_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/account-name-migration-database.test.ts
       - name: Проверить инварианты миграции T-017
         env:
           T017_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
