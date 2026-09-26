@@ -635,14 +635,39 @@ sitemap и RSS реализованы (T-099)
   `<div>/me/articles/:slug/edit</div>` [ФАКТ: `web/app/pages/me/articles/[slug]/edit.vue:10`];
   `/admin/articles/new.vue` — `<div>/admin/articles/new</div>`
   [ФАКТ: `web/app/pages/admin/articles/new.vue:9`]; пакет `content` не начат.
-- **Дефекты входа по ссылке** (T-123): блокировка кнопки при несогласии с офертой,
-  обработка ссылки из веб-почты и установка refresh-cookie через BFF не реализованы.
-- **Ротация refresh-cookie** (T-124): BFF-маршрут не реализован.
-- **Лимиты: реальный IP и GraphQL-алиасы** (T-125): учёт IP через BFF-прокси и защита
-  от GraphQL-алиасов не реализованы.
-- **i18n неполный**: переводы охватывают не все тексты публичного интерфейса.
-- **SEO**: canonical, hreflang, JSON-LD глобально не заданы — T-100 не начата.
-- **Кандидаты backlog** (T-126–T-134): имя аккаунта из e-mail (T-126), тексты первого
-  запуска кабинета (T-127), кэш плана (T-128), `/en` локаль публичных страниц (T-129),
-  безопасность офлайн-страницы (T-130), уведомления поддержки (T-131), иерархия рубрик
-  (T-132), инвариант владельцев (T-133), ПД в /admin/mail (T-134).
+- **Дефекты входа по ссылке** (T-123): `web/server/utils/sessionCookie.ts:1-135` не
+  содержит `isLoginTokenExchange` [ФАКТ: `web/server/utils/sessionCookie.ts:1-135`];
+  переход из веб-почты отклонялся CSRF-проверкой без исключения
+  [ФАКТ: `web/server/api/graphql.post.ts:26-32`].
+- **Ротация refresh-cookie** (T-124): `web/server/api/graphql.post.ts:1-70` не содержит
+  логики вызова `refreshSession` при ответе `UNAUTHENTICATED` и атомарной ротации
+  [ФАКТ: `web/server/api/graphql.post.ts:1-70`].
+- **Лимиты: реальный IP и GraphQL-алиасы** (T-125): `getRequestIP({ xForwardedFor: true })`
+  берёт первый `X-Forwarded-For`, а не IP доверенного прокси платформы
+  [ФАКТ: `web/server/api/graphql.post.ts:49`]; `new Set<string>()` дедуплицирует имена
+  полей — алиасы одного поля не считаются отдельно
+  [ФАКТ: `server/src/rate-limits/plugin.ts:63,68`].
+- **i18n неполный**: ссылки рубрик в шапке без `localePath`, названия без `nameEn` на `/en`
+  [ФАКТ: `web/app/components/app/header.vue:77,79`].
+- **SEO**: canonical, hreflang, JSON-LD глобально не заданы — T-100 не начата
+  [ФАКТ: `web/app/pages/index.vue:1-78`]; страница авторов содержит только
+  `useHead({ title })` [ФАКТ: `web/app/pages/authors/index.vue:98`].
+- **Кандидаты backlog** (T-126–T-134):
+  имя аккаунта из e-mail — `record.email.split("@")[0]`
+  [ФАКТ: `server/src/graphql/auth/resolver.ts:245`] (T-126);
+  тексты первого запуска кабинета — текст invite не различает первый запуск
+  [ФАКТ: `web/app/pages/me/index.vue:141-143`] (T-127);
+  кэш плана — `grantPlan` не обновляет `role`/`planTier`/`planUntil` в `User`
+  [ФАКТ: `server/src/admin/grants.ts:126-152`] (T-128);
+  `/en` локаль — `articlePath` без `localePath`
+  [ФАКТ: `web/app/components/article/Card.vue:38-40`] (T-129);
+  открытый редирект офлайн — `value.startsWith("/")` пропускает `//external.com`
+  [ФАКТ: `web/app/composables/useOfflinePage.ts:87`] (T-130);
+  уведомления поддержки синхронны — `await notifyStaff(...)` до ответа
+  [ФАКТ: `server/src/support/requests.ts:159`] (T-131);
+  иерархия рубрик — `restoreSection` без проверки статуса и роли архивировавшего
+  [ФАКТ: `server/src/taxonomy/service.ts:499-528`] (T-132);
+  инвариант владельцев — `ensureOwnerRemains` без `SELECT … FOR UPDATE`
+  [ФАКТ: `server/src/admin/staff.ts:613-624`] (T-133);
+  ПД в /admin/mail — `recipientEmail: String` раскрывает e-mail получателя
+  [ФАКТ: `server/src/graphql/mail/schema.graphql:25`] (T-134).
