@@ -10,9 +10,10 @@ import AdminMailCardPage from "../app/pages/admin/mail/[id].vue"
 const t = (key: string, params?: Record<string, unknown>) =>
   params ? `${key}:${Object.values(params).join(",")}` : key
 
-const summary = ref<{ role: string } | null>(null)
 const items = ref<Record<string, unknown>[]>([])
 const providerWaiting = ref(false)
+const viewerCanResend = ref(true)
+const access = ref("full")
 const pagination = ref<Record<string, unknown> | null>(null)
 const pending = ref(false)
 const failed = ref(false)
@@ -30,7 +31,8 @@ const nuxtLink = { props: ["to"], template: '<a :href="to"><slot /></a>' }
 const mailRow = (overrides: Record<string, unknown> = {}) => ({
   id: "mail-1",
   template: "article_decision",
-  recipientEmail: "reader@example.test",
+  recipientEmail: "r***r@example.test",
+  recipientEmailMasked: true,
   recipientHandle: null,
   subject: "Решение по статье",
   status: "failed",
@@ -46,9 +48,10 @@ const mailRow = (overrides: Record<string, unknown> = {}) => ({
 })
 
 beforeEach(() => {
-  summary.value = { role: "owner" }
   items.value = [mailRow()]
   providerWaiting.value = false
+  viewerCanResend.value = true
+  access.value = "full"
   pagination.value = null
   pending.value = false
   failed.value = false
@@ -66,7 +69,6 @@ beforeEach(() => {
   vi.stubGlobal("useI18n", () => ({ t }))
   vi.stubGlobal("useRoute", () => ({ query: {}, params: { id: "mail-1" } }))
   vi.stubGlobal("useRouter", () => ({ replace: vi.fn() }))
-  vi.stubGlobal("useAdminDashboard", () => ({ summary }))
   vi.stubGlobal("useAdminMail", () => ({
     requestId,
     errorCode,
@@ -77,8 +79,9 @@ beforeEach(() => {
   }))
   vi.stubGlobal("useAdminMailList", () => ({
     items: computed(() => items.value),
-    access: computed(() => "full"),
+    access: computed(() => access.value),
     providerWaiting: computed(() => providerWaiting.value),
+    viewerCanResend: computed(() => viewerCanResend.value),
     pagination: computed(() => pagination.value),
     pending: computed(() => pending.value),
     failed: computed(() => failed.value),
@@ -142,13 +145,31 @@ describe("список писем", () => {
     expect(wrapper.find("[data-mail-provider-waiting]").exists()).toBe(true)
   })
 
-  it("не показывает повтор и выбор строк никому, кроме владельца", () => {
-    summary.value = { role: "admin" }
+  it("не показывает повтор и выбор строк без права job.retry", () => {
+    viewerCanResend.value = false
 
     const wrapper = mountList()
 
     expect(wrapper.find("[data-mail-bulk-resend]").exists()).toBe(false)
     expect(wrapper.find('[data-mail-select="mail-1"]').exists()).toBe(false)
+  })
+
+  it("показывает адрес маской и объясняет, что полный адрес открывает карточка", () => {
+    const wrapper = mountList()
+
+    expect(wrapper.get("[data-mail-recipient]").text()).toBe("r***r@example.test")
+    expect(wrapper.get("[data-mail-recipient]").text()).not.toContain("reader@")
+    expect(wrapper.find("[data-mail-masked-note]").exists()).toBe(true)
+  })
+
+  it("не обещает полного адреса редактору и модератору", () => {
+    access.value = "scoped"
+    items.value = [mailRow({ recipientEmail: null, recipientEmailMasked: false })]
+
+    const wrapper = mountList()
+
+    expect(wrapper.get("[data-mail-recipient]").text()).toBe("admin.mail.recipientHidden")
+    expect(wrapper.find("[data-mail-masked-note]").exists()).toBe(false)
   })
 
   it("сообщает о превышении лимита массового повтора", async () => {
@@ -175,9 +196,9 @@ describe("список писем", () => {
 })
 
 describe("карточка письма", () => {
-  it("показывает копию письма и повтор владельцу", () => {
+  it("показывает полный адрес, копию письма и повтор по праву job.retry", () => {
     card.value = {
-      ...mailRow(),
+      ...mailRow({ recipientEmail: "reader@example.test", recipientEmailMasked: false }),
       body: "Статья опубликована.",
       queuedAt: "2026-09-20T10:00:00.000Z",
       jobId: null,
@@ -186,14 +207,28 @@ describe("карточка письма", () => {
 
     const wrapper = mountCard()
 
+    expect(wrapper.get("[data-mail-recipient]").text()).toBe("reader@example.test")
     expect(wrapper.get("[data-mail-body]").text()).toContain("Статья опубликована.")
     expect(wrapper.find("[data-mail-resend]").exists()).toBe(true)
   })
 
-  it("скрывает адрес и содержание от редактора и модератора", () => {
-    summary.value = { role: "editor" }
+  it("не показывает повтор, когда сервер его не разрешил", () => {
     card.value = {
-      ...mailRow({ recipientEmail: null, canResend: false }),
+      ...mailRow({ canResend: false }),
+      body: "Статья опубликована.",
+      queuedAt: "2026-09-20T10:00:00.000Z",
+      jobId: null,
+      deliveryEvents: []
+    }
+
+    const wrapper = mountCard()
+
+    expect(wrapper.find("[data-mail-resend]").exists()).toBe(false)
+  })
+
+  it("скрывает адрес и содержание от редактора и модератора", () => {
+    card.value = {
+      ...mailRow({ recipientEmail: null, recipientEmailMasked: false, canResend: false }),
       body: null,
       queuedAt: "2026-09-20T10:00:00.000Z",
       jobId: null,

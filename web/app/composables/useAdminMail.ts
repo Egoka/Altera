@@ -135,6 +135,8 @@ export const useAdminMailList = () => {
     items: computed(() => data.value?.items ?? []),
     access: computed(() => data.value?.access ?? null),
     providerWaiting: computed(() => data.value?.providerWaiting === true),
+    // Повтор показывается по праву `job.retry` с сервера, а не по роли `owner` в клиенте (§5).
+    viewerCanResend: computed(() => data.value?.viewerCanResend === true),
     pagination: computed(() => data.value?.pagination ?? null),
     pending: computed(() => pending.value || actionPending.value),
     // `useAsyncData` держит в `error` значение `undefined`, а не `null`: сравнение с `null` дало бы

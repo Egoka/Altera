@@ -4,7 +4,6 @@
 
   const { t } = useI18n()
   const route = useRoute()
-  const { summary } = useAdminDashboard()
   const { loadCard, resend, requestId, errorCode, actionPending } = useAdminMail()
 
   definePageMeta({ i18n: false, layout: "admin", middleware: ["admin"] })
@@ -26,7 +25,8 @@
   })
 
   const showConflict = computed(() => errorCode.value === "CONFLICT")
-  const canResend = computed(() => summary.value?.role === "owner" && mail.value?.canResend === true && !resent.value)
+  // `canResend` с сервера уже учитывает право `job.retry`, статус письма и прошлый повтор (§5).
+  const canResend = computed(() => mail.value?.canResend === true && !resent.value)
 
   const submitResend = async () => {
     const result = await resend(id.value)

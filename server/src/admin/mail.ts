@@ -1,9 +1,10 @@
 import type { MailDeliveryStatus, Prisma, Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
-import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
-import { MAGIC_LINK_TEMPLATE } from "../mail/messages"
+import { ensureAuthenticated, ensurePermission, hasPermission } from "../exceptions/permissions"
+import { EMAIL_CHANGE_CODE_TEMPLATE, MAGIC_LINK_TEMPLATE, SUPPORT_REQUEST_STAFF_TEMPLATE } from "../mail/messages"
 import type { GraphQLContext } from "../prisma"
 import { calculatePagination, validatePagination, type PaginationInfo, type PaginationInput } from "../utils/admin"
+import { maskEmail } from "./personal-data"
 
 /** Роли, которым §27.6 открывает адрес, тему и содержание письма. */
 const FULL_ACCESS_ROLES = ["analyst", "admin", "owner"] as const
@@ -12,8 +13,21 @@ const SCOPED_ACCESS_ROLES = ["editor", "moderator"] as const
 /** Статусы статьи, которые модератор ведёт в очереди проверки (как в сводке админки). */
 const REVIEW_ARTICLE_STATUSES = ["review", "in_review", "rework"] as const
 
-/** Шаблоны, копию которых нельзя отправить повторно: секрет выдаётся заново самим пользователем. */
-export const SECRET_MAIL_TEMPLATES: ReadonlySet<string> = new Set([MAGIC_LINK_TEMPLATE])
+/**
+ * Шаблоны с секретом: ссылка входа и код смены почты. Копия письма их не содержит (§27.6), поэтому
+ * повтор ушёл бы получателю с пометкой вместо секрета — секрет пользователь запрашивает заново.
+ */
+export const SECRET_MAIL_TEMPLATES: ReadonlySet<string> = new Set([MAGIC_LINK_TEMPLATE, EMAIL_CHANGE_CODE_TEMPLATE])
+/**
+ * Шаблоны, у которых копия письма сокращена: ПДн отправителя обращения остаются в одной записи
+ * обращения, а не в истории писем. Повтор такой копии не донёс бы ни адрес ответа, ни текст.
+ */
+export const REDACTED_COPY_MAIL_TEMPLATES: ReadonlySet<string> = new Set([SUPPORT_REQUEST_STAFF_TEMPLATE])
+
+/** Копию письма можно отправить повторно, только если в ней есть всё письмо. */
+export function isResendableTemplate(template: string): boolean {
+  return !SECRET_MAIL_TEMPLATES.has(template) && !REDACTED_COPY_MAIL_TEMPLATES.has(template)
+}
 /** Максимум писем в массовом повторе (`docs/spec/40-admin/mail.md` §6, `[ДОПУЩЕНИЕ]`). */
 export const MAIL_BULK_RESEND_LIMIT = 100
 /** Период списка по умолчанию — 7 дней (`docs/spec/40-admin/mail.md` §4, `[ДОПУЩЕНИЕ]`). */
@@ -33,6 +47,8 @@ export interface AdminMailItem {
   id: string
   template: string
   recipientEmail: string | null
+  /** Адрес отдан маской: полный адрес открывает только карточка, с записью аудита (§28.7). */
+  recipientEmailMasked: boolean
   recipientHandle: string | null
   subject: string
   body: string | null
@@ -56,6 +72,8 @@ export interface AdminMailList {
   access: AdminMailAccess
   /** Письма стоят в очереди: провайдер не забрал их (плашка §9). */
   providerWaiting: boolean
+  /** Право `job.retry` у зрителя: по нему раздел показывает или скрывает повтор (§5). */
+  viewerCanResend: boolean
 }
 
 export interface AdminMailSummaryRow {
@@ -95,6 +113,7 @@ const mailSelect = {
   jobId: true,
   queuedAt: true,
   sentAt: true,
+  resentAt: true,
   createdAt: true,
   deliveryEvents: {
     orderBy: { occurredAt: "asc" },
@@ -108,14 +127,17 @@ interface MailViewer {
   id: string
   role: Role
   access: AdminMailAccess
+  /** Право `job.retry`, а не роль `owner`: исключение прав меняет доступ к повтору (§5). */
+  canResend: boolean
 }
 
 function ensureViewer(ctx: GraphQLContext, action: string): MailViewer {
   ensurePermission(ctx.currentUser, "admin.enter", action, ctx.requestId)
   const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
   const role = user.role
-  if ((FULL_ACCESS_ROLES as readonly Role[]).includes(role)) return { id: user.id, role, access: "full" }
-  if ((SCOPED_ACCESS_ROLES as readonly Role[]).includes(role)) return { id: user.id, role, access: "scoped" }
+  const canResend = hasPermission(ctx.currentUser, "job.retry")
+  if ((FULL_ACCESS_ROLES as readonly Role[]).includes(role)) return { id: user.id, role, access: "full", canResend }
+  if ((SCOPED_ACCESS_ROLES as readonly Role[]).includes(role)) return { id: user.id, role, access: "scoped", canResend }
   throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action })
 }
 
@@ -224,15 +246,32 @@ async function resolveHandles(ctx: GraphQLContext, mails: MailRecord[]): Promise
   return new Map(users.flatMap(({ email, handle }) => (handle ? [[email, handle] as const] : [])))
 }
 
-function presentMail(mail: MailRecord, access: AdminMailAccess, handle: string | null): AdminMailItem {
-  const visible = access === "full"
+/** Письмо готово к повтору: техническая ошибка, полная копия и ещё не повторённое (§5). */
+function isResendable(mail: Pick<MailRecord, "status" | "template" | "resentAt">): boolean {
+  return mail.status === "failed" && isResendableTemplate(mail.template) && mail.resentAt === null
+}
+
+/**
+ * Список и карточка отдают разное. Полный адрес и сохранённая копия — только карточка: её открытие
+ * записывается в аудит `admin.read.personal` (§28.7, T-134 §3). В списке адрес идёт маской, а
+ * содержания нет вовсе — иначе список был бы обходом этой записи.
+ */
+function presentMail(
+  mail: MailRecord,
+  viewer: MailViewer,
+  handle: string | null,
+  view: "list" | "card"
+): AdminMailItem {
+  const visible = viewer.access === "full"
+  const masked = visible && view === "list"
   return {
     id: mail.id,
     template: mail.template,
-    recipientEmail: visible ? mail.recipientEmail : null,
+    recipientEmail: visible ? (masked ? maskEmail(mail.recipientEmail) : mail.recipientEmail) : null,
+    recipientEmailMasked: masked,
     recipientHandle: handle,
     subject: mail.subject,
-    body: visible ? mail.sanitizedBody : null,
+    body: visible && view === "card" ? mail.sanitizedBody : null,
     status: mail.status,
     provider: mail.provider,
     messageId: mail.messageId,
@@ -244,7 +283,7 @@ function presentMail(mail: MailRecord, access: AdminMailAccess, handle: string |
     sentAt: mail.sentAt,
     createdAt: mail.createdAt,
     deliveryEvents: mail.deliveryEvents,
-    canResend: mail.status === "failed" && !SECRET_MAIL_TEMPLATES.has(mail.template)
+    canResend: viewer.canResend && isResendable(mail)
   }
 }
 
@@ -279,10 +318,11 @@ export async function listAdminMails(
   const queued = await ctx.prisma.mailMessage.count({ where: { AND: [where, { status: "queued" }] } })
 
   return {
-    items: mails.map((mail) => presentMail(mail, viewer.access, handles.get(mail.recipientEmail) ?? null)),
+    items: mails.map((mail) => presentMail(mail, viewer, handles.get(mail.recipientEmail) ?? null, "list")),
     pagination: paginationInfo,
     access: viewer.access,
-    providerWaiting: queued > 0
+    providerWaiting: queued > 0,
+    viewerCanResend: viewer.canResend
   }
 }
 
@@ -303,7 +343,7 @@ export async function getAdminMail(ctx: GraphQLContext, id: string): Promise<Adm
   }
 
   const handles = await resolveHandles(ctx, [mail])
-  return presentMail(mail, viewer.access, handles.get(mail.recipientEmail) ?? null)
+  return presentMail(mail, viewer, handles.get(mail.recipientEmail) ?? null, "card")
 }
 
 export async function getMailSummary(ctx: GraphQLContext, periodDays: 7 | 30, now = new Date()) {
@@ -336,12 +376,17 @@ function htmlFromText(text: string): string {
     .join("")
 }
 
-async function alreadyResent(ctx: GraphQLContext, mailId: string): Promise<boolean> {
-  const previous = await ctx.prisma.auditLog.findFirst({
-    where: { action: "job.retry", entityType: "mailMessage", entityId: mailId },
-    select: { id: true }
+/**
+ * Заявка на повтор: проверка «уже повторено» и отметка — один условный UPDATE по первичному ключу,
+ * поэтому из двух параллельных повторов одного письма отправку делает ровно один (T-134 §5 AC-4).
+ * Раньше проверка читала аудит отдельным запросом и оба повтора проходили её.
+ */
+async function claimResend(ctx: GraphQLContext, mailId: string, now: Date): Promise<boolean> {
+  const claimed = await ctx.prisma.mailMessage.updateMany({
+    where: { id: mailId, resentAt: null, status: "failed" },
+    data: { resentAt: now }
   })
-  return previous !== null
+  return claimed.count === 1
 }
 
 async function resendOne(ctx: GraphQLContext, viewer: MailViewer, mail: MailRecord): Promise<void> {
@@ -369,7 +414,7 @@ async function resendOne(ctx: GraphQLContext, viewer: MailViewer, mail: MailReco
 }
 
 function ensureResendable(ctx: GraphQLContext, mail: MailRecord): void {
-  if (SECRET_MAIL_TEMPLATES.has(mail.template)) {
+  if (!isResendableTemplate(mail.template)) {
     throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "mail.resend" })
   }
   if (mail.status !== "failed") {
@@ -382,35 +427,44 @@ function ensureResendable(ctx: GraphQLContext, mail: MailRecord): void {
   }
 }
 
-function ensureOwnerResend(ctx: GraphQLContext): MailViewer {
+function alreadyResentError(ctx: GraphQLContext) {
+  return createApiError("CONFLICT", {
+    requestId: ctx.requestId,
+    entity: "mailMessage",
+    expected: "not-resent",
+    actual: "resent"
+  })
+}
+
+function ensureRetryPermission(ctx: GraphQLContext): MailViewer {
   // Повтор — право `job.retry`, по умолчанию только у `owner` (§5, `[ДОПУЩЕНИЕ]`).
   ensurePermission(ctx.currentUser, "job.retry", "mail.resend", ctx.requestId)
   const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
-  return { id: user.id, role: user.role, access: "full" }
+  return { id: user.id, role: user.role, access: "full", canResend: true }
 }
 
-export async function resendMail(ctx: GraphQLContext, id: string): Promise<AdminMailItem> {
-  const viewer = ensureOwnerResend(ctx)
+export async function resendMail(ctx: GraphQLContext, id: string, now = new Date()): Promise<AdminMailItem> {
+  const viewer = ensureRetryPermission(ctx)
   const mail = await ctx.prisma.mailMessage.findUnique({ where: { id }, select: mailSelect })
   if (!mail) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "mailMessage" })
 
   ensureResendable(ctx, mail)
-  if (await alreadyResent(ctx, mail.id)) {
-    throw createApiError("CONFLICT", {
-      requestId: ctx.requestId,
-      entity: "mailMessage",
-      expected: "not-resent",
-      actual: "resent"
-    })
-  }
+  // Отметка ставится до отправки и при отказе провайдера не снимается: письмо уходит не больше
+  // одного раза, а риск раздела — дубль у получателя, а не пропущенный повтор (§7).
+  if (!(await claimResend(ctx, mail.id, now))) throw alreadyResentError(ctx)
 
   await resendOne(ctx, viewer, mail)
   const handles = await resolveHandles(ctx, [mail])
-  return presentMail(mail, viewer.access, handles.get(mail.recipientEmail) ?? null)
+  // Карточка после повтора: отметка уже стоит, поэтому `canResend` отдаётся выключенным.
+  return presentMail({ ...mail, resentAt: now }, viewer, handles.get(mail.recipientEmail) ?? null, "card")
 }
 
-export async function resendMails(ctx: GraphQLContext, ids: string[]): Promise<AdminMailResendResult> {
-  const viewer = ensureOwnerResend(ctx)
+export async function resendMails(
+  ctx: GraphQLContext,
+  ids: string[],
+  now = new Date()
+): Promise<AdminMailResendResult> {
+  const viewer = ensureRetryPermission(ctx)
   if (ids.length > MAIL_BULK_RESEND_LIMIT) {
     throw createApiError("VALIDATION_ERROR", {
       requestId: ctx.requestId,
@@ -424,8 +478,8 @@ export async function resendMails(ctx: GraphQLContext, ids: string[]): Promise<A
   let skipped = 0
 
   for (const mail of mails) {
-    // Письма с секретами и уже повторённые исключаются из массового повтора автоматически (§6).
-    if (SECRET_MAIL_TEMPLATES.has(mail.template) || mail.status !== "failed" || (await alreadyResent(ctx, mail.id))) {
+    // Письма с секретами, сокращённые копии и уже повторённые исключаются автоматически (§6).
+    if (!isResendable(mail) || !(await claimResend(ctx, mail.id, now))) {
       skipped += 1
       continue
     }

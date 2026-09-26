@@ -4,11 +4,14 @@ import { createSessionId, signAccessToken } from "./helpers/session-token"
 
 // T-080: раздел `/admin/mail` — все строки состояний docs/spec/40-admin/mail.md §9,
 // разделение ролей §1 и отсутствие секретов в копии письма §3.
+// T-134: в списке адрес идёт маской и содержания нет — полный адрес открывает только карточка
+// с записью аудита (журнал §28.7).
 const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
 
 const template = "t080_notice"
 const recipient = "t080-recipient@example.test"
+const maskedRecipient = "t***t@example.test"
 const roles = ["editor", "moderator", "analyst", "admin", "owner", "author"] as const
 type TestRole = (typeof roles)[number]
 
@@ -107,6 +110,20 @@ async function seedMail() {
     queuedAt: new Date()
   }
   await prisma.mailMessage.upsert({ where: { id: secret.id }, update: secret, create: secret })
+
+  // Код смены почты — тоже секрет: копия несёт пометку, повтор запрещён (T-134 §3).
+  const code = {
+    id: "t080-mail-code",
+    template: "email_change_code",
+    recipientEmail: recipient,
+    subject: "Код смены почты в Altera",
+    sanitizedBody: "Код: [секрет не показывается]",
+    status: "failed" as const,
+    provider: "smtp",
+    createdAt: new Date(),
+    queuedAt: new Date()
+  }
+  await prisma.mailMessage.upsert({ where: { id: code.id }, update: code, create: code })
 }
 
 const authorize = (page: Page, role: TestRole) =>
@@ -126,19 +143,34 @@ test.describe("admin mail", () => {
     await prisma.$disconnect()
   })
 
-  test("owner sees address, stored copy and the repeat action", async ({ page }) => {
+  test("owner sees the masked address in the list and the full one with the stored copy on the card", async ({
+    page
+  }) => {
     await authorize(page, "owner")
 
     await page.goto(`/admin/mail?template=${template}`)
 
     await expect(page.locator('[data-mail-row="t080-mail-failed"]')).toBeVisible()
-    await expect(page.locator('[data-mail-row="t080-mail-failed"] [data-mail-recipient]')).toHaveText(recipient)
+    await expect(page.locator('[data-mail-row="t080-mail-failed"] [data-mail-recipient]')).toHaveText(maskedRecipient)
+    await expect(page.locator("[data-mail-masked-note]")).toBeVisible()
+    await expect(page.locator("[data-mail-table]")).not.toContainText("T080 содержание без секретов.")
     await expect(page.locator("[data-mail-bulk-resend]")).toBeVisible()
 
     await page.goto("/admin/mail/t080-mail-failed")
 
+    await expect(page.locator("[data-mail-recipient]")).toHaveText(recipient)
     await expect(page.locator("[data-mail-body]")).toContainText("T080 содержание без секретов.")
     await expect(page.locator("[data-mail-resend]")).toBeVisible()
+  })
+
+  test("the stored copy of an e-mail change code keeps no code and cannot be repeated", async ({ page }) => {
+    await authorize(page, "owner")
+
+    await page.goto("/admin/mail/t080-mail-code")
+
+    await expect(page.locator("[data-mail-body]")).toContainText("[секрет не показывается]")
+    await expect(page.locator("[data-mail-body]")).not.toContainText("482913")
+    await expect(page.locator("[data-mail-resend]")).toHaveCount(0)
   })
 
   test("the stored copy of a login mail keeps no token and cannot be repeated", async ({ page }) => {
@@ -152,12 +184,12 @@ test.describe("admin mail", () => {
   })
 
   for (const role of ["analyst", "admin"] as const) {
-    test(`${role} reads the address but has no repeat action`, async ({ page }) => {
+    test(`${role} reads the masked address but has no repeat action`, async ({ page }) => {
       await authorize(page, role)
 
       await page.goto(`/admin/mail?template=${template}`)
 
-      await expect(page.locator('[data-mail-row="t080-mail-failed"] [data-mail-recipient]')).toHaveText(recipient)
+      await expect(page.locator('[data-mail-row="t080-mail-failed"] [data-mail-recipient]')).toHaveText(maskedRecipient)
       await expect(page.locator("[data-mail-bulk-resend]")).toHaveCount(0)
 
       await page.goto("/admin/mail/t080-mail-failed")

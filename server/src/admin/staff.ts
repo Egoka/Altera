@@ -4,6 +4,9 @@ import { ensureAuthenticated, ensurePermission, ensureRole } from "../exceptions
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../auth/handle"
 import { issueMagicLink } from "../auth/magic-link"
 import type { GraphQLContext } from "../prisma"
+import { maskEmail } from "./personal-data"
+
+export { maskEmail }
 
 /**
  * Служебные записи: создание, роли, владельцы и архив (`docs/spec/40-admin/admins.md`,
@@ -109,16 +112,6 @@ const staffInclude = {
 } as const
 
 const ROLE_HISTORY_ACTIONS = ["user.role.change", "role.assign.owner", "role.revoke.owner"]
-
-/** `a***e@example.com`: домен виден, локальная часть скрыта (§28.7). */
-export function maskEmail(email: string): string {
-  const separator = email.lastIndexOf("@")
-  if (separator <= 0) return "***"
-  const local = email.slice(0, separator)
-  const domain = email.slice(separator)
-  if (local.length <= 2) return `${local.slice(0, 1)}***${domain}`
-  return `${local.slice(0, 1)}***${local.slice(-1)}${domain}`
-}
 
 export function isActiveStaffException(exception: StaffExceptionRecord, role: Role, now: Date): boolean {
   return (
