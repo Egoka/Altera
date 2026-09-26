@@ -1,0 +1,31 @@
+{
+  "captured": "2026-09-26, до создания",
+  "autopilots": [
+    {
+      "id": "9beb69d3-b639-41a5-866f-465508975651",
+      "title": "Altera — ежедневный аудит автономии",
+      "status": "paused",
+      "assignee_id": "b1c275c8-c97d-4b3c-a671-0a908d5fbdc7"
+    },
+    {
+      "id": "8c1f12a9-382b-4516-bbd2-f37bda927e53",
+      "title": "Altera — актуальность контекста",
+      "status": "paused",
+      "assignee_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4"
+    },
+    {
+      "id": "e564a6fb-d7cd-4ab6-b719-b0570b730ccf",
+      "title": "Altera — восстановление работы",
+      "status": "paused",
+      "assignee_id": "d08ef989-e4d4-4772-bc33-335127a85f0f"
+    },
+    {
+      "id": "c40fbc10-3bb3-4181-b244-14b87e8ae3f1",
+      "title": "Altera — очередь разработки",
+      "status": "paused",
+      "assignee_id": "d08ef989-e4d4-4772-bc33-335127a85f0f"
+    }
+  ],
+  "finalizer_agent": null,
+  "note": "Агента-финализатора и автопилота «приёмка в Done» не было; все четыре автопилота на паузе владельца."
+}
