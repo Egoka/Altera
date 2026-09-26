@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "T-033",
+  "issue_id": "01a0baa0-2e88-7b61-9390-e33a3f4694eb",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-033-bookmarks.md",
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
+  },
+  "baseline_sha": "0cbe082de26894d13636199e0ae022ac3878f42c",
+  "tested_sha": "88b51ca9a1ce732e0db616dd6b3f68e3bd356974",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bbb4-7fc9-72ba-a279-3a3df344d5cb",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/src/bookmarks/service.ts:76 available; server/tests/bookmarks.test.ts:90; web/tests/e2e/22-bookmarks.spec.ts:74; CI https://github.com/Egoka/Altera/actions/runs/35536618203/job/106147154799"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/src/bookmarks/service.ts:47; server/tests/bookmarks.test.ts:146,161,173,184; CI https://github.com/Egoka/Altera/actions/runs/35536618203/job/106147154799"
+    }
+  ],
+  "pr": {
+    "number": 158,
+    "head_sha": "88b51ca9a1ce732e0db616dd6b3f68e3bd356974",
+    "base_sha": "0cbe082de26894d13636199e0ae022ac3878f42c",
+    "base_ref": "app",
+    "merge_sha": "b8677bae0216a62fd3e0b24a100a36302699fb79"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0dde1-161d-7037-86bd-b3bb517a1a90",
+    "sha": "88b51ca9a1ce732e0db616dd6b3f68e3bd356974",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "probe_run_id": "01a0ddfb-be83-7305-bc75-78216aa9b1c6",
+    "reason": "PR меняет server/ или общие входы сборки; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-033.md",
+    "sha256": "9d00e3c06c51e05e2d73c955c960c53c32d41148734ee915172ca9b99674f206"
+  },
+  "usage": null
+}
