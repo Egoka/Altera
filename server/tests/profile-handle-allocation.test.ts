@@ -44,7 +44,7 @@ const context = (
     session: { create: vi.fn().mockResolvedValue({ id: "session-1" }) },
     magicLinkToken: {
       findUnique: vi.fn().mockResolvedValue(linkRecord(email, locale)),
-      update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       upsert: vi.fn().mockResolvedValue({})
     },
     ...overrides

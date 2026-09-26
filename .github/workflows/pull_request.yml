@@ -240,6 +240,12 @@ jobs:
         env:
           T101_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm --filter server exec vitest run tests/legal-versions-database.test.ts
+      # T-123: одноразовость ссылки входа держится на условном UPDATE отметки `usedAt`; две
+      # конкурирующие записи одной строки сериализует PostgreSQL, а не двойник.
+      - name: Проверить одноразовость ссылки входа T-123
+        env:
+          T123_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/auth-magic-link-database.test.ts
       # T-090: прореживание autosave написано на SQL, а сохранность аудита и истории решений
       # держится на внешних ключах — это проверяется на PostgreSQL, а не на двойнике.
       - name: Проверить сроки хранения и housekeeping T-090

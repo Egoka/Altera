@@ -103,15 +103,97 @@ async function loadUsableToken(ctx: GraphQLContext, token: string): Promise<Magi
   return record
 }
 
+/**
+ * Гашение токена — условный UPDATE с проверкой числа строк, а не запись после отдельного чтения:
+ * два параллельных обмена одной ссылки иначе оба доходят до создания сессии. Проигравшая гонку
+ * попытка отвечает как использованный токен (`docs/spec/20-public/verify.md` §4,
+ * `session-lifecycle.md` п. 1).
+ */
+async function consumeToken(ctx: GraphQLContext, record: MagicLinkToken): Promise<void> {
+  const { prisma, logger, requestId } = ctx
+  const { count } = await prisma.magicLinkToken.updateMany({
+    where: { id: record.id, usedAt: null },
+    data: { usedAt: new Date() }
+  })
+
+  if (count === 1) return
+
+  logger.log({
+    level: "warn",
+    event: "auth.login.failed",
+    requestId,
+    message: "Magic link rejected",
+    data: { reason: "used" }
+  })
+  throw createApiError("NOT_FOUND", { requestId, entity: "magicLink" })
+}
+
+/**
+ * Архив аккаунта закрывает вход одинаково для обеих мутаций подтверждения ссылки: иначе
+ * `acceptConsent` выдаёт полноценную сессию заблокированному аккаунту. Административный архив
+ * сессии не получает и токен не гасит — той же ссылкой открывается форма оспаривания
+ * (журнал #48); самостоятельный получает ограниченную сессию (`session-lifecycle.md` п. 7).
+ */
+async function archivedOutcome(
+  ctx: GraphQLContext,
+  record: MagicLinkToken,
+  user: User,
+  token: string
+): Promise<VerifyMagicLinkResult | null> {
+  if (!user.archivedAt) return null
+  const { logger, piiHasher, requestId } = ctx
+
+  if (user.archiveMode === "self") {
+    await consumeToken(ctx, record)
+    const { sessionId, ...session } = await issueSession(ctx, user, { limited: true })
+
+    logger.log({
+      level: "info",
+      event: "auth.login",
+      requestId,
+      message: "Limited login into self-archived account",
+      data: { emailHash: piiHasher.email(user.email), reason: "archived_self", sessionId }
+    })
+
+    return {
+      outcome: "archived_self",
+      session,
+      next: null,
+      isNewAccount: false,
+      termsVersion: null,
+      privacyVersion: null,
+      appealToken: null
+    }
+  }
+
+  logger.log({
+    level: "warn",
+    event: "auth.login.failed",
+    requestId,
+    message: "Login into administratively archived account",
+    data: { reason: "archived_admin" }
+  })
+
+  return {
+    outcome: "archived_admin",
+    session: null,
+    next: null,
+    isNewAccount: false,
+    termsVersion: null,
+    privacyVersion: null,
+    appealToken: token
+  }
+}
+
 async function completeLogin(
   ctx: GraphQLContext,
   record: MagicLinkToken,
   user: User,
   options: { isNewAccount: boolean }
 ): Promise<VerifyMagicLinkResult> {
-  const { prisma, logger, piiHasher, requestId } = ctx
+  const { logger, piiHasher, requestId } = ctx
 
-  await prisma.magicLinkToken.update({ where: { id: record.id }, data: { usedAt: new Date() } })
+  await consumeToken(ctx, record)
   const { sessionId, ...session } = await issueSession(ctx, user)
 
   logger.log({
@@ -231,7 +313,7 @@ export default {
       { token }: { token: string },
       ctx: GraphQLContext
     ): Promise<VerifyMagicLinkResult> => {
-      const { prisma, logger, piiHasher, requestId } = ctx
+      const { prisma } = ctx
       const record = await loadUsableToken(ctx, token)
       const user = await prisma.user.findUnique({ where: { email: record.email } })
 
@@ -263,51 +345,8 @@ export default {
         return completeLogin(ctx, record, created, { isNewAccount: true })
       }
 
-      if (user.archivedAt) {
-        if (user.archiveMode === "self") {
-          // Ограниченная сессия: доступен только экран состояния (`session-lifecycle.md` п. 7).
-          await prisma.magicLinkToken.update({ where: { id: record.id }, data: { usedAt: new Date() } })
-          const { sessionId, ...session } = await issueSession(ctx, user, { limited: true })
-
-          logger.log({
-            level: "info",
-            event: "auth.login",
-            requestId,
-            message: "Limited login into self-archived account",
-            data: { emailHash: piiHasher.email(user.email), reason: "archived_self", sessionId }
-          })
-
-          return {
-            outcome: "archived_self",
-            session,
-            next: null,
-            isNewAccount: false,
-            termsVersion: null,
-            privacyVersion: null,
-            appealToken: null
-          }
-        }
-
-        // Административный архив: сессии нет; форма оспаривания открывается тем же токеном
-        // входа (журнал #48), поэтому токен не гасится.
-        logger.log({
-          level: "warn",
-          event: "auth.login.failed",
-          requestId,
-          message: "Login into administratively archived account",
-          data: { reason: "archived_admin" }
-        })
-
-        return {
-          outcome: "archived_admin",
-          session: null,
-          next: null,
-          isNewAccount: false,
-          termsVersion: null,
-          privacyVersion: null,
-          appealToken: token
-        }
-      }
+      const archived = await archivedOutcome(ctx, record, user, token)
+      if (archived) return archived
 
       const outdated = await findOutdatedConsent(prisma, user.id, user.locale)
       if (outdated) {
@@ -339,6 +378,11 @@ export default {
       const record = await loadUsableToken(ctx, token)
       const user = await prisma.user.findUnique({ where: { email: record.email } })
       if (!user) throw createApiError("NOT_FOUND", { requestId, entity: "user" })
+
+      // Архив проверяется до записи согласия: заблокированный аккаунт не должен получить ни
+      // сессию, ни отметку о принятии новых условий.
+      const archived = await archivedOutcome(ctx, record, user, token)
+      if (archived) return archived
 
       const current = await readLegalVersions(prisma, user.locale)
       if (!sameVersion(termsVersion, current.termsVersion) || !sameVersion(privacyVersion, current.privacyVersion)) {
