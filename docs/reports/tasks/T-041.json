@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task_id": "T-041",
+  "issue_id": "01a0c301-a1d0-7e25-b2dc-dcf3d1d19cce",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-041-content-package.md",
+    "sha": "5da96412d3f9f46d5a40e6e8f72d12a89a031145"
+  },
+  "baseline_sha": "4711c2ede5d95318bed5cf05f765f8d1dea67e0d",
+  "tested_sha": "cd2ae61568d7a3a1d9da6f48d1d85dee79378fe5",
+  "branch": "feat/t041-content-package",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t041-content",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0dfc9-5d89-7250-a925-a895ebd2076b",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "packages/content/tests/render.test.ts, describe 'снимки рендера каждого узла каталога': for every catalog block (paragraph, heading, blockquote, bulletList, orderedList, figure, horizontalRule) three snapshots are asserted — the render tree, the HTML and the Markdown — stored in packages/content/tests/__snapshots__/render.test.ts.snap. A separate case compares the fixture keys against the block-group entries of NODE_SPECS, so a new block added without a snapshot fails the suite. CI run https://github.com/Egoka/Altera/actions/runs/36277293235, step 'Формат, линт и тесты'."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "packages/content/tests/validate.test.ts, describe 'узел изображения не имеет собственного alt': a document carrying attrs.alt on a figure node returns valid false with code CONTENT_INVALID and exactly one error at path doc.content[0].attrs.alt, code forbidden_attribute, whose message cites journal §29.13. Neighbouring cases cover caption, attribution and a direct src. CI run https://github.com/Egoka/Altera/actions/runs/36277293235, step 'Формат, линт и тесты'."
+    }
+  ],
+  "checks": {
+    "install_frozen_lockfile": "passed",
+    "format": "passed",
+    "lint": "passed",
+    "codegen_drift": "passed",
+    "tests": "@altera/content 99 passed; server 808 passed / 35 skipped; web 582 passed",
+    "package_build": "passed: tsc -p tsconfig.build.json exit 0; the emitted dist/index.js was required from Node and validateDocument plus toHTML returned the expected values",
+    "web_typecheck": "passed in CI, job 'Сборка и типизация веба'",
+    "web_build": "passed in CI, job 'Сборка и типизация веба'",
+    "web_smoke": "passed in CI, job 'Сборка и типизация веба'",
+    "server_build_ci": "passed in CI, job 'Сборка сервера и дымовая проверка старта'",
+    "server_smoke": "passed in CI, job 'Сборка сервера и дымовая проверка старта'",
+    "playwright": "passed in CI, job 'Браузерная проверка веба' (5m16s)",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36277293235 — aggregate check 'test' pass on the tested SHA",
+    "environment": "Node 24.12.0, pnpm 10.18.3; no database or migration was touched"
+  },
+  "pr": {
+    "number": 236,
+    "url": "https://github.com/Egoka/Altera/pull/236",
+    "base_ref": "app",
+    "base_sha": "4711c2ede5d95318bed5cf05f765f8d1dea67e0d",
+    "head_sha": "cd2ae61568d7a3a1d9da6f48d1d85dee79378fe5",
+    "merge_sha": "919a15193f0ecc606218fabdde6c6a681998d6ea"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The change adds only the new workspace package packages/content; server/, web/ and the Prisma schema are untouched and nothing imports the package yet"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-041.md",
+    "sha256": "fae40589f5cda1674e4238a0e5a10fd5fbb3cc975ca4299c6ad46f5250d69c89"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "The docs/spec/95-blocks/ pass has not started: journal §31 п. 3 runs it in parallel and §31 п. 4 has the owner accept the catalogue as a whole on the working site, that is after T-040 and T-056",
+    "The document size limits (5000 nodes, 200000 characters) stay [ДОПУЩЕНИЕ] until the owner approves values; they are the second argument of validateDocument",
+    "Nothing imports @altera/content yet: the first integrations are T-040 (editor) and T-049 (save and status transitions)"
+  ],
+  "usage": null
+}
