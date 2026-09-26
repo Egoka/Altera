@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task_id": "T-126",
+  "issue_id": "01a0df5d-fbbc-7a58-a77c-6852fd8ff27e",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-126-account-name-not-from-email.md",
+    "sha": "cc89c28fd055299bcf3c7c1d97a8863d47844407"
+  },
+  "baseline_sha": "e0cf4f27282bb296329198ea5fd94bc634706782",
+  "tested_sha": "ee2b5bb2b24327f499fc05ffd03ea001d93fb442",
+  "branch": "server/t126-account-name",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t126-account-name",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0dfce-33a6-7d89-a2e2-98ef0a458382",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/auth-magic-link.test.ts, case 'does not derive the account name from the address': exchanging the login link sent to ivan.petrov@example.test creates exactly one account whose name is the empty string and is not 'ivan.petrov'. The registration resolver now passes EMPTY_ACCOUNT_NAME instead of record.email.split(\"@\")[0]. CI run https://github.com/Egoka/Altera/actions/runs/36279975204, job 'Формат, линт и тесты'."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/account-name-migration-database.test.ts on a real PostgreSQL: baseline migrations are applied, five accounts are seeded, then 20260927120000_account_name_not_from_email runs with exit 0. Afterwards the name derived from the own address is empty (also when written in another case), a namesake of somebody else's local part and a chosen name are untouched, and the control query 'name = local part of own email' returns no rows. CI run https://github.com/Egoka/Altera/actions/runs/36279975204, step 'Проверить миграцию имён аккаунтов T-126' on the PostgreSQL 17 service (1 passed). RED was confirmed locally: with an empty migration body the same test fails on the two derived rows."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "server/tests/author-page.test.ts ('без имени подписывается хэндлом, а не пустой строкой' for AuthorProfile and 'автор без имени подписывает карточки хэндлом' for the author feed), server/tests/account-display-name.test.ts (the name field of the public User type returns the handle, contains no '@' and is not the email local part), server/tests/public-catalogs.test.ts ('автор без имени показан хэндлом и в карточке, и в подписи материала'). CI run https://github.com/Egoka/Altera/actions/runs/36279975204, job 'Формат, линт и тесты'."
+    }
+  ],
+  "checks": {
+    "install_frozen_lockfile": "passed",
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 818 passed / 36 skipped; web 582 passed; @altera/content 99 passed",
+    "migration_test_postgres": "passed locally (docker-compose PostgreSQL 16 on port 25432) and in CI on PostgreSQL 17; RED verified with an empty migration body",
+    "server_build_ci": "passed locally and in CI, job 'Сборка сервера и дымовая проверка старта'",
+    "server_smoke": "passed in CI, job 'Сборка сервера и дымовая проверка старта'",
+    "web_typecheck": "passed in CI, job 'Сборка и типизация веба'",
+    "web_build": "passed in CI, job 'Сборка и типизация веба'",
+    "web_smoke": "passed in CI, job 'Сборка и типизация веба'",
+    "playwright": "passed in CI, job 'Браузерная проверка веба'",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36279975204 — aggregate check 'test' pass on the tested SHA",
+    "environment": "Node 24.12.0, pnpm 10.18.3; migrations were applied only to throwaway CI and local test databases"
+  },
+  "pr": {
+    "number": 238,
+    "url": "https://github.com/Egoka/Altera/pull/238",
+    "base_ref": "app",
+    "base_sha": "e0cf4f27282bb296329198ea5fd94bc634706782",
+    "head_sha": "ee2b5bb2b24327f499fc05ffd03ea001d93fb442",
+    "merge_sha": "53ac1c16bd8df7f27a6ff1ffbdd38ae46d694294"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The change carries a data migration, but no production environment exists (T-103) and the task did not authorise applying migrations anywhere beyond the throwaway CI and local test databases"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-126.md",
+    "sha256": "20c31d53fe6048fe1289294d42d1c83829479a147fd227e1ac61a7ae6abdb958"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "The profile edit screen and the name check before the first publication belong to T-031 and were out of scope",
+    "Closing the public user(handle) query is a separate task and was out of scope",
+    "The rule 'an empty name is shown as the handle' lives in code and tests only; the line in docs/spec/20-public/author.md §4 belongs to the documentation stage",
+    "The returned T-013 (ALTE-36) is re-accepted in its own card after this task is accepted"
+  ],
+  "usage": null
+}

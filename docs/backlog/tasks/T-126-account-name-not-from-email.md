@@ -8,7 +8,7 @@
 - **Навыки**: Prisma-миграции, GraphQL Yoga, Vitest
 - **Authorization**: прямое поручение владельца 2026-09-26 «заведи задачи на доработку возвращённых 16»; допуск в Todo — по [правилам пополнения](../../multica/backlog-autofill.md)
 - **Baseline**: `5af26a3fd661917cb00e8021409ffe4e6352c8c1`
-- **Проверяемая revision**: заполняется исполнителем
+- **Проверяемая revision**: `ee2b5bb2b24327f499fc05ffd03ea001d93fb442` (PR #238, merge `53ac1c16bd8df7f27a6ff1ffbdd38ae46d694294`)
 
 ## 1. Результат
 
