@@ -250,7 +250,10 @@ model TagSlugHistory {
 
 model Article {
   id                String               @id @default(uuid())
-  // Старые локализованные поля остаются до T-020 и перевода API на языковые версии.
+  // T-020 сконвертировала тела в документ `content`: `ArticleTranslation.body` и
+  // `ArticleRevision.body` хранят документ, а не JSON-строку. Старые локализованные поля
+  // и trigger `t015_sync_legacy_article` остаются до перевода API на языковые версии:
+  // действующие резолверы всё ещё читают и пишут `articles.body` как строку.
   title             String
   slug              String               @unique
   dek               String?

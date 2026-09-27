@@ -19,7 +19,8 @@
     "postinstall": "prisma generate",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke": "bash scripts/smoke.sh"
+    "smoke": "bash scripts/smoke.sh",
+    "verify:legacy-bodies": "ts-node scripts/verify-legacy-bodies.ts"
   },
   "prisma": {
     "seed": "ts-node seed/seed.ts"
@@ -44,6 +45,7 @@
     "pino": "^10.3.1"
   },
   "devDependencies": {
+    "@altera/content": "workspace:*",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.15",

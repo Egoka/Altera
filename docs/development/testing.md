@@ -24,6 +24,36 @@ Server smoke в CI проверяет этот маршрут и точный SH
 `playwright-artifacts` (хранится 7 дней). Трассировка открывается `npx playwright show-trace`.
 Повторов у браузерных тестов нет, поэтому в CI трассировка включена по отказу, а не по повтору.
 
+## Конвертируемость тел материалов и репетиция миграций
+
+```bash
+pnpm verify:legacy-bodies
+```
+
+Скрипт (T-020, `server/scripts/verify-legacy-bodies.ts`) читает все тела материалов из
+`articles.body`, `article_translations.body` и `article_revisions.body`, прогоняет каждое через
+SQL-функцию конверсии `t020_legacy_body_to_document` и проверяет результат валидатором каталога
+`readDocument` из `@altera/content`. Он ничего не изменяет: только `SELECT`. Коды выхода — 0, если
+неконвертируемых тел нет; 1, если есть (идентификаторы печатаются); 2, если нет `DATABASE_URL` или
+в базе нет функции конверсии, то есть миграции не применены. `articles.body` остаётся строковым
+legacy-полем до перевода API на языковые версии, поэтому строки в этом источнике — ожидаемое
+состояние, а не дефект.
+
+Репетиция миграций с данными идёт на копии локальной базы, а не на development Neon:
+
+```bash
+docker exec altera-postgres-1 psql -U altera -d postgres \
+  -c "CREATE DATABASE altera_rehearsal TEMPLATE altera_dev"
+DATABASE_URL=postgresql://altera:altera@localhost:25432/altera_rehearsal \
+DATABASE_URL_UNPOOLED=postgresql://altera:altera@localhost:25432/altera_rehearsal \
+  pnpm --filter server exec prisma migrate deploy
+```
+
+`CREATE DATABASE … TEMPLATE` требует, чтобы к базе-шаблону не было подключений.
+Миграционные тесты баз данных берут адрес из переменных вида `T020_TEST_DATABASE_URL`
+(указывает на базу `postgres` того же сервера: тест создаёт и удаляет одноразовые базы сам).
+Без такой переменной набор соответствующей задачи пропускается, а не падает.
+
 ## Актуальное состояние инфраструктуры после Task 3
 
 Инфраструктура добавлена в `b8e00f13b53cd73db8571d248e6823165d5f3764`; исправление
