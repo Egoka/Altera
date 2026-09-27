@@ -1,5 +1,5 @@
 import crypto from "node:crypto"
-import type { Locale, Prisma, PrismaClient, User } from "../generated/prisma"
+import type { Locale, Prisma, PrismaClient, Role, User } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { authorCacheTag } from "../cache"
 import type { Cache } from "../cache"
@@ -80,9 +80,26 @@ export async function changeUserHandle(
   }
 }
 
+export interface ReservedHandleUserInput {
+  email: string
+  name: string
+  locale: Locale
+  /** Служебная запись создаётся сразу с целевой ролью: вторым шагом её пришлось бы досоздавать. */
+  role?: Role
+  isServiceAccount?: boolean
+}
+
+/**
+ * Создаёт аккаунт вместе с вечной записью его хэндла. `withinTransaction` выполняется в той же
+ * транзакции: всё, без чего аккаунт не имеет смысла (роль служебной записи, её аудит), обязано
+ * откатиться вместе с ним — иначе сбой второго шага оставил бы занятый адрес у аккаунта читателя.
+ * Повтор при занятом хэндле остаётся снаружи: неуникальность отменяет транзакцию PostgreSQL
+ * целиком, и новую попытку можно делать только новой транзакцией.
+ */
 export async function createUserWithReservedHandle(
   prisma: PrismaClient,
-  input: { email: string; name: string; locale: Locale }
+  input: ReservedHandleUserInput,
+  withinTransaction?: (transaction: Prisma.TransactionClient, user: User) => Promise<void>
 ): Promise<User> {
   for (;;) {
     const handle = generateRandomHandle()
@@ -92,6 +109,7 @@ export async function createUserWithReservedHandle(
         await transaction.handleHistory.create({ data: { handle } })
         const user = await transaction.user.create({ data: { ...input, handle } })
         await transaction.handleHistory.update({ where: { handle }, data: { userId: user.id } })
+        await withinTransaction?.(transaction, user)
         return user
       })
     } catch (error: unknown) {

@@ -1,4 +1,4 @@
-import type { Prisma, Role } from "../generated/prisma"
+import { Prisma, type Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission, ensureRole } from "../exceptions/permissions"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../auth/handle"
@@ -88,7 +88,9 @@ export interface AdminStaffMember {
 export interface AdminOwner {
   id: string
   name: string
+  /** Список показывает маску: полный адрес отдаёт только карточка записи, с записью аудита (§28.7). */
   email: string
+  emailMasked: boolean
   status: StaffStatus
   assignedAt: Date | null
 }
@@ -347,10 +349,14 @@ export async function listOwners(ctx: GraphQLContext): Promise<AdminOwner[]> {
   for (const assignment of assignments) {
     if (!assignedAt.has(assignment.entityId)) assignedAt.set(assignment.entityId, assignment.createdAt)
   }
+  // Список владельцев — тоже список: он идёт маской, как список служебных записей (`:289`) и
+  // список писем (`mail.ts`). Иначе открытие раздела раскрывало бы ПДн в обход записи
+  // `admin.read.personal`, которую делает только карточка (§28.7).
   return owners.map((owner) => ({
     id: owner.id,
     name: owner.name,
-    email: owner.email,
+    email: maskEmail(owner.email),
+    emailMasked: true,
     status: toStatus(owner),
     assignedAt: assignedAt.get(owner.id) ?? null
   }))
@@ -359,6 +365,24 @@ export async function listOwners(ctx: GraphQLContext): Promise<AdminOwner[]> {
 /** Действующие владельцы: роль `owner` и открытый доступ (журнал #10). */
 function countActiveOwners(tx: Prisma.TransactionClient): Promise<number> {
   return tx.user.count({ where: { role: "owner", archivedAt: null } })
+}
+
+/**
+ * Блокирует строки действующих владельцев до изменения и подсчёта. На READ COMMITTED два
+ * одновременных отзыва читают каждый своего соседа, оба видят двух владельцев и оба коммитятся —
+ * система остаётся без владельца (write skew, журнал #10). Блокировка строк — тот же приём, что у
+ * слияния разделов (`taxonomy/service.ts`): второй запрос ждёт коммита первого и считает уже без
+ * снятого. `ORDER BY "id"` задаёт обеим транзакциям один порядок захвата, иначе встречные отзывы
+ * могли бы взаимно заблокироваться.
+ */
+function lockActiveOwners(tx: Prisma.TransactionClient): Promise<unknown> {
+  return tx.$queryRaw(Prisma.sql`
+    SELECT "id"
+    FROM "users"
+    WHERE "role" = 'owner'::"Role" AND "archivedAt" IS NULL
+    ORDER BY "id"
+    FOR UPDATE
+  `)
 }
 
 async function reloadMember(
@@ -403,9 +427,28 @@ export async function createStaff(
     })
   }
 
+  // Аккаунт, служебная роль и аудит — одна транзакция. Раньше роль выдавалась вторым вызовом, и
+  // сбой между ними оставлял аккаунт читателя с этим адресом: повторное создание после такого
+  // сбоя навсегда падало `VALIDATION_ERROR/not-an-account` (журнал #46–47).
   let created
   try {
-    created = await createUserWithReservedHandle(ctx.prisma, { email, name, locale: "ru" })
+    created = await createUserWithReservedHandle(
+      ctx.prisma,
+      { email, name, locale: "ru", role, isServiceAccount: true },
+      async (tx, user) => {
+        await tx.auditLog.create({
+          data: {
+            action: "user.create.staff",
+            actorId: actor.id,
+            actorRole: actor.role,
+            entityType: "user",
+            entityId: user.id,
+            diff: { role, emailHash: ctx.piiHasher.email(email) },
+            requestId: ctx.requestId
+          }
+        })
+      }
+    )
   } catch (error: unknown) {
     if (!isPrismaUniqueConstraint(error, "email")) throw error
     throw createApiError("CONFLICT", {
@@ -416,25 +459,8 @@ export async function createStaff(
     })
   }
 
-  const staff = (await ctx.prisma.$transaction(async (tx) => {
-    const updated = await tx.user.update({
-      where: { id: created.id },
-      data: { role, isServiceAccount: true },
-      include: staffInclude
-    })
-    await tx.auditLog.create({
-      data: {
-        action: "user.create.staff",
-        actorId: actor.id,
-        actorRole: actor.role,
-        entityType: "user",
-        entityId: created.id,
-        diff: { role, emailHash: ctx.piiHasher.email(email) },
-        requestId: ctx.requestId
-      }
-    })
-    return updated
-  })) as unknown as StaffRecord
+  // У только что созданной записи нет ни исключений, ни сессий — перечитывать их незачем.
+  const staff = { ...created, permissionExceptions: [], sessions: [] } as unknown as StaffRecord
 
   // Письмо ставится после создания: недоступная почта не отменяет запись — ссылку
   // сотрудник запрашивает заново с `/login` (`appoint-admin.md` §5).
@@ -629,6 +655,7 @@ export async function revokeOwner(
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
   return ctx.prisma.$transaction(async (tx) => {
+    await lockActiveOwners(tx)
     const target = await loadTarget(ctx, tx, input.id, "owner.revoke")
     if (target.role !== "owner") {
       throw createApiError("CONFLICT", {
@@ -704,6 +731,7 @@ export async function deactivateOwner(
 
   let closedHandle = ""
   const member = await ctx.prisma.$transaction(async (tx) => {
+    await lockActiveOwners(tx)
     const target = await loadTarget(ctx, tx, input.id, "owner.deactivate")
     if (target.role !== "owner") {
       throw createApiError("CONFLICT", {

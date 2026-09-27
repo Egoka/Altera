@@ -64,29 +64,65 @@ const staffCard = {
   ]
 }
 
+/** Карточка владельца: у неё другие кнопки действий, чем у обычной служебной записи (§26.7). */
+const ownerCard = {
+  ...staffRows[1],
+  email: "owner@altera.test",
+  emailMasked: false,
+  sessionCount: 1,
+  roleHistory: [],
+  exceptions: []
+}
+
+const staffCards: Record<string, unknown> = { "staff-editor": staffCard, "staff-owner": ownerCard }
+
+/** Поле ответа мутации: composable считает действие выполненным только по своему полю. */
+const MUTATION_FIELDS: Record<string, string> = {
+  CreateStaff: "createStaff",
+  ChangeStaffRole: "changeStaffRole",
+  RevokeStaffRole: "revokeStaffRole",
+  RevokeOwner: "revokeOwner",
+  DeactivateOwner: "deactivateOwner",
+  ArchiveStaffAccount: "archiveStaffAccount",
+  RestoreStaffAccount: "restoreStaffAccount"
+}
+
+/** Extensions отказа: словарь ошибок отдаёт `requestId` только у части кодов. */
+interface MutationError {
+  code: string
+  entity?: string
+  field?: string
+  rule?: string
+  requestId?: string
+}
+
 interface MockOptions {
   role?: "admin" | "owner"
   rows?: unknown[]
   listError?: { code: string; requestId: string }
-  mutationError?: { code: string }
+  mutationError?: MutationError
+  assignError?: MutationError
   delayListMs?: number
   onAssignOwner?: () => void
+  onList?: () => void
 }
 
 async function mockAdminStaff(page: Page, options: MockOptions = {}) {
   const role = options.role ?? "owner"
 
   await page.route("**/api/graphql", async (route: Route) => {
-    const body = route.request().postDataJSON() as { query?: string }
+    const body = route.request().postDataJSON() as { query?: string; variables?: { id?: string } }
     const query = body.query ?? ""
     let payload: Record<string, unknown>
 
     if (query.includes("GetAdminSummary")) {
       payload = { data: { adminSummary: { role, cards: [] } } }
     } else if (query.includes("GetAdminStaffMember")) {
-      payload = { data: { adminStaffMember: staffCard } }
+      // Карточка зависит от строки: у владельца в ней другие кнопки действий (§26.7).
+      payload = { data: { adminStaffMember: staffCards[body.variables?.id ?? ""] ?? staffCard } }
     } else if (query.includes("GetAdminStaff")) {
       if (options.delayListMs) await new Promise((resolve) => setTimeout(resolve, options.delayListMs))
+      options.onList?.()
       payload = options.listError
         ? { data: { adminStaff: null }, errors: [{ message: "failed", extensions: options.listError }] }
         : { data: { adminStaff: options.rows ?? staffRows } }
@@ -97,7 +133,8 @@ async function mockAdminStaff(page: Page, options: MockOptions = {}) {
             {
               id: "staff-owner",
               name: "Второй владелец",
-              email: "owner@altera.test",
+              email: "o***r@altera.test",
+              emailMasked: true,
               status: "active",
               assignedAt: "2026-09-12T00:00:00.000Z"
             }
@@ -106,17 +143,15 @@ async function mockAdminStaff(page: Page, options: MockOptions = {}) {
       }
     } else if (query.includes("AssignOwner")) {
       options.onAssignOwner?.()
-      payload = { data: { assignOwner: { id: "staff-editor" } } }
-    } else if (
-      /ChangeStaffRole|RevokeStaffRole|RevokeOwner|DeactivateOwner|ArchiveStaffAccount|RestoreStaffAccount|CreateStaff/.test(
-        query
-      )
-    ) {
-      payload = options.mutationError
-        ? { data: null, errors: [{ message: "conflict", extensions: options.mutationError }] }
-        : { data: { result: { id: "staff-editor" } } }
+      payload = options.assignError
+        ? { data: null, errors: [{ message: "failed", extensions: options.assignError }] }
+        : { data: { assignOwner: { id: "staff-editor" } } }
     } else {
-      return route.continue()
+      const operation = Object.keys(MUTATION_FIELDS).find((name) => query.includes(name))
+      if (!operation) return route.continue()
+      payload = options.mutationError
+        ? { data: null, errors: [{ message: "failed", extensions: options.mutationError }] }
+        : { data: { [MUTATION_FIELDS[operation]!]: { id: "staff-editor" } } }
     }
 
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) })
@@ -167,6 +202,10 @@ test.describe("раздел «Администраторы»: состояния
     await expect(page.locator("tbody").getByText("Редактор журнала")).toBeVisible()
     await expect(page.locator("tbody").getByText("r***р@altera.test")).toBeVisible()
     await expect(page.getByRole("heading", { name: /владельцы/i })).toBeVisible()
+    // Список владельцев — тоже список: полного адреса в нём нет (журнал §28.7).
+    const owners = page.locator("[data-staff-owners]")
+    await expect(owners).toContainText("o***r@altera.test")
+    await expect(owners).not.toContainText("owner@altera.test")
   })
 
   test("ограничивает администратора чтением и созданием", async ({ page }) => {
@@ -194,11 +233,114 @@ test.describe("раздел «Администраторы»: состояния
     await expect(page.getByText(/запись изменена другим администратором/i).first()).toBeVisible()
   })
 
+  test("перечитывает список после отказа мутации", async ({ page }) => {
+    let lists = 0
+    await mockAdminStaff(page, { mutationError: { code: "CONFLICT", entity: "user" }, onList: () => (lists += 1) })
+    await openAdmins(page)
+    const before = lists
+
+    await page.locator("tbody").getByText("Редактор журнала").click()
+    await page.getByRole("button", { name: /^сменить роль$/i }).click()
+    await page.getByLabel(/^причина$/i).fill("Перевод")
+    await page.getByRole("button", { name: /подтвердить/i }).click()
+
+    await expect.poll(() => lists).toBeGreaterThan(before)
+  })
+
   test("не показывает ограничений по лимиту: административные действия не лимитируются", async ({ page }) => {
     await mockAdminStaff(page)
     await openAdmins(page)
 
     await expect(page.getByText(/лимит|rate limit/i)).toHaveCount(0)
+  })
+})
+
+// Строка состояния «Ошибка — мутация» (`admins.md` §9): свой текст на каждый код мутаций раздела.
+test.describe("раздел «Администраторы»: ошибки действий", () => {
+  const changeRole = async (page: Page) => {
+    await page.locator("tbody").getByText("Редактор журнала").click()
+    await page.getByRole("button", { name: /^сменить роль$/i }).click()
+    await page.getByLabel(/^причина$/i).fill("Перевод")
+    await page.getByRole("button", { name: /подтвердить/i }).click()
+  }
+
+  const revokeOwner = async (page: Page) => {
+    await page.locator("tbody").getByText("Второй владелец").click()
+    await page.getByRole("button", { name: /отозвать роль владельца/i }).click()
+    await page.getByLabel(/^причина$/i).fill("Передал дела")
+    await page.getByRole("button", { name: /подтвердить/i }).click()
+  }
+
+  const createStaff = async (page: Page) => {
+    await page.getByRole("button", { name: /создать служебную запись/i }).click()
+    await page.getByLabel(/^e-mail$/i).fill("reader@altera.test")
+    await page.getByLabel(/служебное имя/i).fill("Редактор")
+    await page
+      .getByRole("button", { name: /создать служебную запись/i })
+      .last()
+      .click()
+  }
+
+  const failure = (page: Page, code: string) => page.locator(`[data-staff-failure="${code}"]`).first()
+
+  test("показывает отказ прав на смене роли", async ({ page }) => {
+    await mockAdminStaff(page, { mutationError: { code: "FORBIDDEN" } })
+    await openAdmins(page)
+    await changeRole(page)
+
+    await expect(failure(page, "FORBIDDEN")).toContainText(/только владелец/i)
+  })
+
+  test("показывает исчезнувшую запись на смене роли", async ({ page }) => {
+    await mockAdminStaff(page, { mutationError: { code: "NOT_FOUND", entity: "user" } })
+    await openAdmins(page)
+    await changeRole(page)
+
+    await expect(failure(page, "NOT_FOUND")).toContainText(/не найдена/i)
+  })
+
+  test("показывает запрет на отзыв последнего владельца", async ({ page }) => {
+    await mockAdminStaff(page, { mutationError: { code: "CONFLICT", entity: "owner" } })
+    await openAdmins(page)
+    await revokeOwner(page)
+
+    await expect(failure(page, "CONFLICT")).toContainText(/последнего владельца/i)
+  })
+
+  test("показывает отказ проверки адреса при создании записи", async ({ page }) => {
+    await mockAdminStaff(page, { mutationError: { code: "VALIDATION_ERROR", field: "email", rule: "not-an-account" } })
+    await openAdmins(page)
+    await createStaff(page)
+
+    await expect(failure(page, "VALIDATION_ERROR")).toContainText(/читателя или автора/i)
+  })
+
+  test("показывает недоступность почты с кодом запроса", async ({ page }) => {
+    await mockAdminStaff(page, {
+      mutationError: { code: "PROVIDER_UNAVAILABLE", requestId: "req-staff-77" }
+    })
+    await openAdmins(page)
+    await createStaff(page)
+
+    const alert = failure(page, "PROVIDER_UNAVAILABLE")
+    await expect(alert).toContainText(/почта недоступна/i)
+    await expect(alert).toContainText("req-staff-77")
+  })
+
+  test("показывает архив записи на назначении владельцем", async ({ page }) => {
+    await mockAdminStaff(page, { assignError: { code: "ARCHIVED", entity: "user" } })
+    await openAdmins(page)
+
+    await page.locator("tbody").getByText("Редактор журнала").click()
+    await page.getByRole("button", { name: /назначить владельцем/i }).click()
+    await page.getByRole("button", { name: /продолжить/i }).click()
+    await page.getByLabel(/e-mail служебной записи/i).fill("redaktor@altera.test")
+    await page
+      .getByRole("button", { name: /назначить владельцем/i })
+      .last()
+      .click()
+
+    await expect(failure(page, "ARCHIVED")).toContainText(/в архиве/i)
   })
 })
 
