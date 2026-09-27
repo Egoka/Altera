@@ -468,7 +468,7 @@
       </aside>
     </div>
 
-    <AppDialog v-model="isCreateOpen" close-button :classes="{ content: 'max-w-md' }">
+    <AppDialog v-model="isCreateOpen" close-button size="md" :classes="{ content: 'max-w-md' }">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.staff.create") }}</h2>
       <div class="flex flex-col gap-4 p-4">
         <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ t("admin.staff.createHint") }}</p>
@@ -530,6 +530,7 @@
     <AppDialog
       :model-value="reasonAction !== null"
       close-button
+      size="md"
       :classes="{ content: 'max-w-md' }"
       @update:model-value="closeReason">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -581,6 +582,7 @@
     <AppDialog
       :model-value="assignStep !== 0"
       close-button
+      size="md"
       :classes="{ content: 'max-w-md' }"
       @update:model-value="closeAssign">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">

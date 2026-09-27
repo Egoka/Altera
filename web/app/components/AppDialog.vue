@@ -9,6 +9,9 @@
 
   // С fishtvue 1.0 `class` адресует корень диалога, а карточку — `classes.content`.
   // Токены `.app-dialog` (main.css) описывают именно карточку.
+  // Ширину карточки задаёт `size` (по умолчанию "2xl" → `sm:max-w-2xl` от 640px);
+  // `max-w-*` в `classes.content` перекрывает только мобильную базу `max-w-xs`,
+  // поэтому узкому диалогу нужны оба: `size="md"` и `classes.content: 'max-w-md'`.
   const classes = computed(() => {
     const content = props.classes?.content
     return {
