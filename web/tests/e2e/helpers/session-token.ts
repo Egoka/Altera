@@ -10,12 +10,18 @@ interface SessionStore {
   }
 }
 
+export interface IssuedTestSession {
+  sessionId: string
+  /** Значение, которое BFF держит в httpOnly-cookie: в базе лежит только его хэш. */
+  refreshToken: string
+}
+
 /**
  * После T-023 access-токен авторизует запрос только вместе с живой записью сессии,
  * поэтому фикстура создаёт её и кладёт идентификатор в клейм `sid`.
  * Роль в токен не входит: сервер читает её из базы на каждый запрос.
  */
-export async function createSessionId(prisma: SessionStore, userId: string): Promise<string> {
+export async function createSession(prisma: SessionStore, userId: string): Promise<IssuedTestSession> {
   const refreshToken = randomBytes(32).toString("hex")
   const session = await prisma.session.create({
     data: {
@@ -25,13 +31,18 @@ export async function createSessionId(prisma: SessionStore, userId: string): Pro
     }
   })
 
-  return session.id
+  return { sessionId: session.id, refreshToken }
 }
 
-export function signAccessToken(userId: string, sessionId: string): string {
+export async function createSessionId(prisma: SessionStore, userId: string): Promise<string> {
+  return (await createSession(prisma, userId)).sessionId
+}
+
+/** `expiresInSeconds` меньше нуля даёт токен, у которого 15 минут уже истекли (T-124). */
+export function signAccessToken(userId: string, sessionId: string, expiresInSeconds = 900): string {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")
   const payload = Buffer.from(
-    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 900, sid: sessionId, userId })
+    JSON.stringify({ exp: Math.floor(Date.now() / 1000) + expiresInSeconds, sid: sessionId, userId })
   ).toString("base64url")
   const unsigned = `${header}.${payload}`
 

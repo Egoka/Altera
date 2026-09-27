@@ -37,25 +37,26 @@ function createSessionStore() {
           ip: data.ip ?? null
         }
         rows.set(row.id, row)
-        return row
+        return { ...row }
       },
+      // Копия строки, как у настоящего клиента: иначе прочитанный объект менялся бы вместе с
+      // хранилищем и условная замена по прежнему `tokenHash` всегда сходилась бы.
       async findUnique({ where }) {
-        return [...rows.values()].find((row) => row.tokenHash === where.tokenHash) ?? null
+        const row = [...rows.values()].find((stored) => stored.tokenHash === where.tokenHash)
+        return row ? { ...row } : null
       },
       async findFirst({ where }) {
-        return [...rows.values()].find((row) => row.previousTokenHash === where.previousTokenHash) ?? null
+        const row = [...rows.values()].find((stored) => stored.previousTokenHash === where.previousTokenHash)
+        return row ? { ...row } : null
       },
-      async update({ where, data }) {
-        const row = rows.get(where.id)
-        if (!row) throw new Error(`Unknown session ${where.id}`)
-        Object.assign(row, data)
-        return row
-      },
+      // Условие на `tokenHash` — та же семантика, что у `updateMany` в PostgreSQL: строка
+      // меняется, только если в ней всё ещё лежит предъявленный хэш (T-124).
       async updateMany({ where, data }) {
         let count = 0
         for (const row of rows.values()) {
           if (where.userId && row.userId !== where.userId) continue
           if (where.id && row.id !== where.id) continue
+          if (where.tokenHash && row.tokenHash !== where.tokenHash) continue
           if (row.revokedAt !== null) continue
           Object.assign(row, data)
           count += 1
@@ -143,6 +144,46 @@ describe("rotateSession", () => {
 
     expect(outcome).toEqual({ status: "unknown" })
     expect(store.rows.get(started.session.id)?.revokedAt).toBeNull()
+  })
+
+  // T-124 AC-2: замена условная, поэтому второй обмен тем же токеном новой пары не получает.
+  it("оставляет одну ротацию на два параллельных обмена одним токеном", async () => {
+    const started = await startSession(store.client, "user-1", meta)
+
+    const outcomes = await Promise.all([
+      rotateSession(store.client, started.refreshToken, meta),
+      rotateSession(store.client, started.refreshToken, meta)
+    ])
+
+    expect(outcomes.filter((outcome) => outcome.status === "rotated")).toHaveLength(1)
+    const loser = outcomes.find((outcome) => outcome.status !== "rotated")
+    expect(loser, "проигравший получает исход повторного предъявления, а не unknown").toMatchObject({
+      status: "reuse_detected",
+      sessionId: started.session.id
+    })
+    const winner = outcomes.find((outcome) => outcome.status === "rotated")
+    expect(winner?.status === "rotated" && store.rows.get(started.session.id)?.tokenHash).toBe(
+      winner?.status === "rotated" ? hashOpaqueToken(winner.refreshToken) : null
+    )
+  })
+
+  it("сообщает об отозванной сессии, когда её отозвали между чтением и заменой", async () => {
+    const started = await startSession(store.client, "user-1", meta)
+    // Отзыв приходит ровно между чтением строки и условной заменой её токена.
+    const racing: SessionClient = {
+      session: {
+        ...store.client.session,
+        async updateMany(args) {
+          if (args.where.tokenHash) await revokeSession(store.client, started.session.id)
+          return store.client.session.updateMany(args)
+        }
+      }
+    }
+
+    const outcome = await rotateSession(racing, started.refreshToken, meta)
+
+    expect(outcome).toMatchObject({ status: "revoked", sessionId: started.session.id })
+    expect(store.rows.get(started.session.id)?.tokenHash).toBe(started.session.tokenHash)
   })
 
   it("moves the expiry window forward on every rotation", async () => {
