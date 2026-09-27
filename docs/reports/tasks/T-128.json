@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task_id": "T-128",
+  "issue_id": "01a0df5b-a73d-714c-8301-c3bc9ff34bba",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-128-plan-cache-sync-grants.md",
+    "sha": "cc89c28fd055299bcf3c7c1d97a8863d47844407"
+  },
+  "baseline_sha": "266299a19be34d4d342c57fbe4d582506d9dd6a3",
+  "tested_sha": "31eda5356cda195a6441a9e825ff2feae4b49546",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e0a9-e082-7a44-94ad-deeee96d4691",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/src/plans/plan-cache.ts (derivePlanCacheUpdate, syncPlanCache) вызывается в транзакции grantPlan (server/src/admin/grants.ts); server/tests/plan-cache-database.test.ts — «AC-1: выдача поднимает читателя до автора и открывает создание статьи» (PostgreSQL 16 локально, 17 в CI, job 108537530366); server/tests/admin-grants.test.ts — кэш author/standard со сроком выдачи; pnpm test exit 0 (server 855 passed / 44 skipped)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "syncPlanCache в транзакции revokePlan; server/tests/plan-cache-database.test.ts — «AC-2: отзыв срочной выдачи приводит кэш к оставшимся выдачам» (pro → standard → free/reader) и «AC-2: истёкшая выдача в кэш не возвращается» (отзыв истёкшей остаётся CONFLICT actual=ended); server/tests/admin-grants.test.ts — «оставляет действующей вторую выдачу»; server/tests/plan-cache.test.ts — приоритет периодов журнала §8.22"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "server/src/authorship/base-authorship.ts — первое нажатие определяется отсутствием базовой выдачи (isBaseGrant), а не отсутствием любой; базовая выдача создаётся с явным startsAt = now, иначе пересчёт кэша в той же транзакции счёл бы свежую выдачу будущей; server/tests/plan-cache-database.test.ts — «AC-3: истёкшая админская выдача базовому авторству не мешает» (одна базовая выдача, одно событие author.enabled); server/tests/base-authorship.test.ts — истёкшая и отозванная админская выдача открывают базовое авторство, отозванная базовая остаётся закрытой (журнал §27.1), «начало базовой выдачи совпадает с «сейчас» вызова»"
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "adminGrantWhere() (NOT: endsAt=null AND grantedById=null) в listAdminGrants, isBaseGrant в getAdminGrant (null) и в revokePlan (FORBIDDEN action=plan.revoke); server/tests/plan-cache-database.test.ts — «AC-4: базовая выдача не попадает в раздел грантов и не отзывается»: список содержит только ручную выдачу, базовая остаётся revokedAt=null, отзыв ручной выдачи базовое авторство не закрывает; server/tests/admin-grants.test.ts — фильтр запроса, null в карточке, отказ без записи аудита и кэша"
+    },
+    {
+      "id": "AC-5",
+      "status": "passed",
+      "evidence": "authorGradeOf (server/src/plans/plan-state.ts) выводит бейдж из planTier вместе с planUntil; применён в резолверах author, catalog, feed (в feed now доведён до сборки карточки); server/tests/plan-cache-database.test.ts — «AC-5: действующая выдача pro показывает бейдж на странице автора» и «AC-5: истёкшая выдача pro бейдж на странице автора снимает»: состояние готовит только grantPlan, planTier в тесте не подставляется, страница читается настоящим резолвером на настоящей базе; server/tests/author-page.test.ts, public-catalogs.test.ts, home-feed.test.ts — снятие бейджа по истечении срока"
+    }
+  ],
+  "pr": {
+    "number": 247,
+    "head_sha": "31eda5356cda195a6441a9e825ff2feae4b49546",
+    "base_sha": "266299a19be34d4d342c57fbe4d582506d9dd6a3",
+    "base_ref": "app",
+    "merge_sha": "e1ae8f731da1bc694272f0b205df908ce60936ad"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "not_run"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ (кэш плана, раздел грантов, публичные резолверы); миграций задача не добавляет. Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-128.md",
+    "sha256": "a94dedefd783eef69e1df09c600df60befcdb68867dca079d3a2cfa12af5d0c9"
+  },
+  "usage": null
+}
