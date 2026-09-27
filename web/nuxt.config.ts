@@ -1,4 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { fileURLToPath } from "node:url"
 import { defineNuxtConfig } from "nuxt/config"
 import type { NuxtPage } from "@nuxt/schema"
 import tailwindcss from "@tailwindcss/vite"
@@ -79,6 +80,11 @@ export default defineNuxtConfig({
       if (process.env.NODE_ENV === "production") {
         removeDevOnlyPages(pages)
       }
+    },
+    // Nuxt к этому моменту уже поставил свой обработчик; `server/error.ts` встаёт перед ним.
+    "nitro:config": (nitroConfig) => {
+      const handlers = [nitroConfig.errorHandler ?? []].flat()
+      nitroConfig.errorHandler = [fileURLToPath(new URL("./server/error", import.meta.url)), ...handlers]
     }
   },
 
