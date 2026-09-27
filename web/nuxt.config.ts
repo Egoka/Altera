@@ -124,6 +124,13 @@ export default defineNuxtConfig({
     }
   },
 
+  // Картинки не обрабатываются на лету (ADR-0030). IPX требовал `sharp` в процессе Nuxt, а
+  // платформенного бинарника `sharp` 0.32 в сборке нет: `/_ipx/...` отвечал 500, сборка
+  // предупреждала о `sharp`. `none` отдаёт `src` как есть; варианты и `srcset` — задача T-064.
+  image: {
+    provider: "none"
+  },
+
   // Конфигурация иконок
   icon: {
     customCollections: [
