@@ -52,14 +52,14 @@
     "verdict": "approved"
   },
   "deployment": {
-    "required": true,
+    "required": false,
     "environment": "development",
     "status": "not_run",
-    "reason": "New public pages and a Nitro response plugin need controller-managed development deployment and health verification after independent review"
+    "reason": "PR #187 меняет только web/ и docs/ — controller.py вычисляет requires_deploy=false; сервис Render (rootDir server) эти файлы не выкладывает. Решение владельца 2026-09-27."
   },
   "finalization": {
     "path": "docs/reports/tasks/T-058.md",
-    "sha256": "5ae8487430ded839d4cfae10a022536bea9d7934f9944ab13d3db1bfd217bd55"
+    "sha256": "370d689879fcf3a6c8179b72e34d8fe5becc5ab720edf3a92eb3b86fae7a82bc"
   },
   "remaining": [
     "Independent native review of the tested SHA and controller-managed development deployment are pending",
