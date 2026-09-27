@@ -2,6 +2,7 @@ import type { Prisma } from "../generated/prisma"
 import type { GraphQLContext } from "../prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated } from "../exceptions/permissions"
+import { publicDisplayName } from "../visibility/display-name"
 
 // Закладками пользуются только личные аккаунты: служебные роли получают FORBIDDEN (журнал #58).
 const PERSONAL_ROLES = new Set(["reader", "author"])
@@ -74,7 +75,10 @@ function presentBookmark(bookmark: BookmarkRecord) {
       publishedAt: article.publishedAt?.toISOString() ?? null,
       // Снятый или архивированный материал остаётся в списке недоступным (журнал §25.10).
       available: article.status === "published",
-      author: article.author,
+      author: {
+        name: publicDisplayName(article.author.name, article.author.handle),
+        handle: article.author.handle
+      },
       section: article.section
     }
   }

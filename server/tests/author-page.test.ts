@@ -153,6 +153,18 @@ describe("профиль автора", () => {
     })
   })
 
+  it("без имени подписывается хэндлом, а не пустой строкой", async () => {
+    // Имя аккаунта задаёт сам пользователь; до этого страница показывает хэндл (T-126,
+    // ADR-0018 п. 3: адрес почты публичным именем не становится).
+    const profile = await callAuthor({
+      user: userRow({ name: "" }),
+      publishedCount: 1,
+      firstPublished: { firstPublishedAt: new Date("2026-03-04T08:00:00.000Z") }
+    })
+
+    expect(profile.name).toBe("vera")
+  })
+
   it("истёкший план оставляет страницу, но снимает бейдж pro", async () => {
     const profile = await callAuthor({ user: userRow({ planTier: "standard" }), publishedCount: 2 })
 
@@ -206,6 +218,17 @@ describe("лента автора", () => {
     expect(feed.items.map((item) => item.id)).toEqual(["1", "2"])
     expect(feed.pageInfo).toEqual({ page: 1, totalPages: 1, hasNext: false })
     expect(feed.redirect).toBeNull()
+  })
+
+  it("автор без имени подписывает карточки хэндлом", async () => {
+    const feed = await callAuthorFeed({
+      user: userRow({ name: "" }),
+      publishedCount: 1,
+      localeCount: 1,
+      articles: [articleRow("1", { author: { name: "", handle: "vera", planTier: "pro" } })]
+    })
+
+    expect(feed.items[0]!.author).toEqual({ name: "vera", handle: "vera", grade: "pro" })
   })
 
   it("пустая локаль — состояние «пусто», а не отказ", async () => {

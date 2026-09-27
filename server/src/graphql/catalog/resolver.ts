@@ -3,6 +3,7 @@ import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
+import { publicDisplayName } from "../../visibility/display-name"
 import { localizedName } from "../feed/resolver"
 
 type CatalogLocale = "ru" | "en"
@@ -96,20 +97,21 @@ const articlePath = (sectionSlug: string, slug: string): string => `/${sectionSl
 interface ArticleLinkRecord {
   title: string
   slug: string
-  author: { name: string }
+  author: { name: string; handle: string }
   section: { slug: string } | null
 }
 
 const toArticleLink = (article: ArticleLinkRecord) => ({
   title: article.title,
   path: articlePath(article.section!.slug, article.slug),
-  author: article.author.name
+  author: publicDisplayName(article.author.name, article.author.handle)
 })
 
 const articleLinkSelect = {
   title: true,
   slug: true,
-  author: { select: { name: true } },
+  // Хэндл нужен рядом с именем: без имени карточка подписывается им (T-126).
+  author: { select: { name: true, handle: true } },
   section: { select: { slug: true } }
 } as const
 
@@ -277,7 +279,7 @@ export default {
           const items = users.map((user) => ({
             id: user.id,
             handle: user.handle,
-            name: user.name,
+            name: publicDisplayName(user.name, user.handle),
             avatar: user.photoUrl,
             grade: user.planTier === "pro" ? ("pro" as const) : ("standard" as const),
             bioShort: firstSentence(user.bio),

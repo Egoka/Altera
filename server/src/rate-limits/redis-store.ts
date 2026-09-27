@@ -21,12 +21,16 @@ export interface RateLimitRedisClient {
  * Инкремент и срок жизни выставляются одним скриптом: TTL ставится только на первом попадании,
  * поэтому окно считается от него, а не продлевается каждым следующим запросом. `PTTL < 0`
  * означает ключ без срока — такой ключ пережил бы окно, поэтому срок восстанавливается.
+ *
+ * Стоимость обращения — второй аргумент: документ с алиасами расходует её целиком за один
+ * `INCRBY`. Счёт, равный стоимости, означает новый ключ, то есть начало окна.
  */
 const CONSUME_LUA = `
 -- rate-limit-consume
-local hits = redis.call("INCR", KEYS[1])
+local cost = tonumber(ARGV[2])
+local hits = redis.call("INCRBY", KEYS[1], cost)
 local ttl = redis.call("PTTL", KEYS[1])
-if hits == 1 or ttl < 0 then
+if hits <= cost or ttl < 0 then
   redis.call("PEXPIRE", KEYS[1], ARGV[1])
   ttl = tonumber(ARGV[1])
 end
@@ -69,23 +73,25 @@ export class RedisRateLimitStore implements RateLimitCounterStore {
     this.client.on("error", () => this.warn("Redis rate limit connection error"))
   }
 
-  async consume(bucket: string, key: string, windowSeconds: number, now: Date): Promise<RateLimitWindow> {
+  async consume(bucket: string, key: string, windowSeconds: number, now: Date, cost = 1): Promise<RateLimitWindow> {
+    const hits = Math.max(1, Math.floor(cost))
     try {
       const result = await this.client.eval(
         CONSUME_LUA,
         1,
         rateLimitRedisKey(bucket, key),
-        String(windowSeconds * 1000)
+        String(windowSeconds * 1000),
+        String(hits)
       )
-      const [hits, ttlMs] = result as [number, number]
-      if (typeof hits !== "number" || typeof ttlMs !== "number") {
+      const [total, ttlMs] = result as [number, number]
+      if (typeof total !== "number" || typeof ttlMs !== "number") {
         throw new Error("Unexpected rate limit script result")
       }
 
-      return { hits, resetAt: new Date(now.getTime() + Math.max(0, ttlMs)) }
+      return { hits: total, resetAt: new Date(now.getTime() + Math.max(0, ttlMs)) }
     } catch {
       this.warn("Redis rate limit counter failed")
-      return this.fallback.consume(bucket, key, windowSeconds, now)
+      return this.fallback.consume(bucket, key, windowSeconds, now, hits)
     }
   }
 

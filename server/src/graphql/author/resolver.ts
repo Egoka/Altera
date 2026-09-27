@@ -3,6 +3,7 @@ import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
+import { publicDisplayName } from "../../visibility/display-name"
 
 type AuthorGrade = "standard" | "pro"
 
@@ -141,7 +142,7 @@ export default {
           return {
             id: user.id,
             handle: user.handle,
-            name: user.name,
+            name: publicDisplayName(user.name, user.handle),
             bio: user.bio,
             avatar: user.photoUrl,
             links: toAuthorLinks(user.socialLinks),

@@ -29,13 +29,14 @@ export class DatabaseRateLimitStore implements RateLimitCounterStore {
    * записью. Истёкшее окно тем же выражением начинается заново — отдельная очистка для
    * правильности счёта не нужна, она только освобождает место (`pruneExpired`).
    */
-  async consume(bucket: string, key: string, windowSeconds: number, now: Date): Promise<RateLimitWindow> {
+  async consume(bucket: string, key: string, windowSeconds: number, now: Date, cost = 1): Promise<RateLimitWindow> {
     const expiresAt = new Date(now.getTime() + windowSeconds * 1000)
+    const hits = Math.max(1, Math.floor(cost))
     const rows = await this.client.$queryRaw<CounterRow[]>(Prisma.sql`
       INSERT INTO "rate_limit_counters" ("bucket", "key", "hits", "expiresAt")
-      VALUES (${bucket}, ${key}, 1, ${expiresAt})
+      VALUES (${bucket}, ${key}, ${hits}, ${expiresAt})
       ON CONFLICT ("bucket", "key") DO UPDATE SET
-        "hits" = CASE WHEN "rate_limit_counters"."expiresAt" <= ${now} THEN 1 ELSE "rate_limit_counters"."hits" + 1 END,
+        "hits" = CASE WHEN "rate_limit_counters"."expiresAt" <= ${now} THEN ${hits} ELSE "rate_limit_counters"."hits" + ${hits} END,
         "expiresAt" = CASE WHEN "rate_limit_counters"."expiresAt" <= ${now} THEN ${expiresAt} ELSE "rate_limit_counters"."expiresAt" END
       RETURNING "hits", "expiresAt"
     `)

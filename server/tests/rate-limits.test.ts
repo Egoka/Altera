@@ -1,8 +1,13 @@
 import { createHmac } from "node:crypto"
+import { readdirSync, readFileSync } from "node:fs"
+import { createServer, type Server } from "node:http"
+import type { AddressInfo } from "node:net"
+import { resolve } from "node:path"
 import { parse } from "graphql"
 import { createSchema, createYoga } from "graphql-yoga"
-import { beforeAll, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 import { createErrorMasker } from "../src/errors/graphql-error"
+import { withHealth } from "../src/health"
 import { createAppLogger, type AppLogger, type LogEntry } from "../src/observability/logger"
 import { createPiiHasher } from "../src/observability/privacy"
 import { createRequestTracingPlugin } from "../src/observability/request-tracing"
@@ -16,7 +21,7 @@ import {
   RATE_LIMIT_RULES,
   rateLimitRedisKey,
   resolveRateLimitAddress,
-  rootFieldNames,
+  rootFieldCounts,
   type QueryDocument,
   type RateLimitBucket,
   type RateLimitCounterStore,
@@ -344,16 +349,60 @@ describe("middleware корзин по адресу", () => {
     expect(bucket).toBe("auth.verify.ip")
   })
 
-  it("не применяет корзину по адресу к петлевому вызову доверенного BFF", async () => {
+  /**
+   * Петлевой адрес больше не исключение: раньше он объявлялся «системным вызовом» §3, и вместе
+   * с подстановкой `X-Forwarded-For: 127.0.0.1` это снимало все лимиты по адресу. Системные
+   * вызовы §3 через это middleware не проходят вовсе — см. отдельный describe ниже.
+   */
+  it("лимитирует петлевой адрес доверенного BFF как обычную клиентскую корзину", async () => {
     const store = createMemoryRateLimitStore()
     const consume = vi.spyOn(store, "consume")
     const yoga = yogaFor({ ip: "127.0.0.1", forwarded: true, limiter: limiterWith({ store }) })
+    const rule = RATE_LIMIT_RULES["auth.verify.ip"]
 
-    for (let attempt = 0; attempt < RATE_LIMIT_RULES["auth.verify.ip"].limit + 5; attempt += 1) {
-      const result = await post(yoga, 'mutation { verifyMagicLink(token: "t") }')
-      expect(result.errors).toBeUndefined()
+    for (let attempt = 0; attempt < rule.limit; attempt += 1) {
+      expect((await post(yoga, 'mutation { verifyMagicLink(token: "t") }')).errors).toBeUndefined()
     }
-    expect(consume).not.toHaveBeenCalled()
+    const limited = await post(yoga, 'mutation { verifyMagicLink(token: "t") }')
+
+    expect(limited.errors?.[0]?.extensions).toEqual({ code: "RATE_LIMITED", retryAfter: HOUR })
+    expect(consume).toHaveBeenCalledTimes(rule.limit + 1)
+  })
+
+  const aliases = (count: number, field: string, args: string) =>
+    Array.from({ length: count }, (_, index) => `a${index}: ${field}${args}`).join(" ")
+
+  it("расходует обращение на каждый алиас лимитируемого поля, а не на имя поля", async () => {
+    resolverCalls = 0
+    const store = createMemoryRateLimitStore()
+    const consume = vi.spyOn(store, "consume")
+    const yoga = yogaFor({ ip: "203.0.113.20", forwarded: true, limiter: limiterWith({ store }) })
+    const rule = RATE_LIMIT_RULES["auth.link.ip"]
+    const document = `mutation { ${aliases(rule.limit, "requestMagicLink", '(email: "reader@example.test") { ok }')} }`
+
+    const passed = await post(yoga, document)
+    expect(passed.errors).toBeUndefined()
+    expect(resolverCalls).toBe(rule.limit)
+
+    // Окно израсходовано одним документом: следующее обращение той же корзины отклоняется.
+    const limited = await post(yoga, 'mutation { requestMagicLink(email: "reader@example.test") { ok } }')
+    expect(limited.errors?.[0]?.extensions).toEqual({ code: "RATE_LIMITED", retryAfter: HOUR })
+
+    // Стоимость складывается до применения: одно обращение к хранилищу на корзину, а не N.
+    expect(consume).toHaveBeenCalledTimes(2)
+    expect(consume.mock.calls[0]?.[4]).toBe(rule.limit)
+  })
+
+  it("отклоняет весь документ с алиасами сверх порога и не доходит до резолвера", async () => {
+    resolverCalls = 0
+    const yoga = yogaFor({ ip: "203.0.113.21", forwarded: true, limiter: limiterWith() })
+    const rule = RATE_LIMIT_RULES["auth.link.ip"]
+    const document = `mutation { ${aliases(rule.limit + 1, "requestMagicLink", '(email: "reader@example.test") { ok }')} }`
+
+    const limited = await post(yoga, document)
+
+    expect(limited.errors?.[0]?.extensions).toEqual({ code: "RATE_LIMITED", retryAfter: HOUR })
+    expect(resolverCalls).toBe(0)
   })
 })
 
@@ -426,15 +475,17 @@ describe("middleware вместе с трассировкой запроса", (
     expect(new Set(keys).size).toBe(1)
   })
 
-  it("не считает петлевой адрес подписанного запроса клиентской корзиной", async () => {
+  it("считает петлевой адрес подписанного запроса своей клиентской корзиной", async () => {
     const store = createMemoryRateLimitStore()
     const consume = vi.spyOn(store, "consume")
     const yoga = yogaFor(limiterWith({ store }), "127.0.0.1")
+    const rule = RATE_LIMIT_RULES["auth.verify.ip"]
 
-    for (let attempt = 0; attempt < RATE_LIMIT_RULES["auth.verify.ip"].limit + 3; attempt += 1) {
+    for (let attempt = 0; attempt < rule.limit; attempt += 1) {
       expect((await post(yoga, true)).errors).toBeUndefined()
     }
-    expect(consume).not.toHaveBeenCalled()
+    expect((await post(yoga, true)).errors?.[0]?.extensions).toEqual({ code: "RATE_LIMITED", retryAfter: HOUR })
+    expect(consume).toHaveBeenCalledTimes(rule.limit + 1)
   })
 
   it("не верит петлевому адресу без подписи и считает такой вызов в общей корзине", async () => {
@@ -451,12 +502,108 @@ describe("middleware вместе с трассировкой запроса", (
   })
 })
 
+describe("исключения §3: системные вызовы не доходят до корзин по адресу", () => {
+  /**
+   * `rate-limits.md` §3 освобождает от лимита по адресу системные вызовы (воркер, вебхук
+   * провайдера по подписи) и внешнюю проверку `/health`. Признаком такого вызова петлевой адрес
+   * быть не может: его подставляет любой клиент. Настоящая граница — маршрут и процесс: проверка
+   * платформы отвечает до Yoga, а воркер живёт внутри процесса и в GraphQL по HTTP не ходит.
+   */
+  const servers: Server[] = []
+
+  afterEach(async () => {
+    await Promise.all(
+      servers.splice(0).map(
+        (server) =>
+          new Promise<void>((resolve) => {
+            server.closeAllConnections()
+            server.close(() => resolve())
+          })
+      )
+    )
+  })
+
+  const serve = async (limiter: RateLimiter) => {
+    const yoga = createYoga({
+      schema: createSchema({
+        typeDefs: /* GraphQL */ `
+          type Mutation {
+            verifyMagicLink(token: String!): String
+          }
+          type Query {
+            me: String
+          }
+        `,
+        resolvers: { Query: { me: () => "reader" }, Mutation: { verifyMagicLink: () => "authenticated" } }
+      }),
+      graphqlEndpoint: "/",
+      logging: false,
+      context: () => ({ requestId: "req-system", requestMeta: { ip: "127.0.0.1" }, rateLimiter: limiter }),
+      plugins: [createRateLimitPlugin({ forwardedByBff: () => true })]
+    })
+    const server = createServer(
+      withHealth(yoga, async () => ({
+        status: "ok" as const,
+        revision: null,
+        checks: { postgres: true, redis: "disabled" as const, migrations: true }
+      }))
+    )
+    servers.push(server)
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject)
+      server.listen(0, "127.0.0.1", resolve)
+    })
+
+    return `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+  }
+
+  it("не расходует корзину на /health и на пробу порта платформы", async () => {
+    const store = createMemoryRateLimitStore()
+    const consume = vi.spyOn(store, "consume")
+    const origin = await serve(limiterWith({ store }))
+
+    for (let attempt = 0; attempt < RATE_LIMIT_RULES["auth.verify.ip"].limit + 5; attempt += 1) {
+      expect((await fetch(`${origin}/health`)).status).toBe(200)
+      expect((await fetch(`${origin}/`)).status).toBe(200)
+    }
+
+    expect(consume).not.toHaveBeenCalled()
+  })
+
+  it("расходует корзину на прочий петлевой запрос по тому же адресу", async () => {
+    const store = createMemoryRateLimitStore()
+    const consume = vi.spyOn(store, "consume")
+    const origin = await serve(limiterWith({ store }))
+
+    const response = await fetch(origin, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-graphql-yoga-csrf": "bff" },
+      body: JSON.stringify({ query: 'mutation { verifyMagicLink(token: "t") }' })
+    })
+
+    expect(response.status).toBe(200)
+    expect(consume).toHaveBeenCalledTimes(1)
+  })
+
+  it("воркер не обращается к GraphQL по HTTP, поэтому под это middleware не попадает", () => {
+    const jobsDirectory = resolve(import.meta.dirname, "../src/jobs")
+    const sources = readdirSync(jobsDirectory)
+      .filter((name) => name.endsWith(".ts"))
+      .map((name) => ({ name, source: readFileSync(resolve(jobsDirectory, name), "utf8") }))
+
+    const httpCall = new RegExp("\\bfetch\\s*\\(|https?://")
+    expect(sources.length).toBeGreaterThan(0)
+    expect(sources.filter((file) => httpCall.test(file.source)).map((file) => file.name)).toEqual([])
+  })
+})
+
 describe("разбор адреса", () => {
   it.each([
     ["203.0.113.5", true, { kind: "client", key: "203.0.113.5" }],
-    ["127.0.0.1", true, { kind: "internal" }],
-    ["::1", true, { kind: "internal" }],
-    ["::ffff:127.0.0.1", true, { kind: "internal" }],
+    // Петлевой адрес — такая же клиентская корзина: исключения по самому адресу нет.
+    ["127.0.0.1", true, { kind: "client", key: "127.0.0.1" }],
+    ["::1", true, { kind: "client", key: "::1" }],
+    ["::ffff:127.0.0.1", true, { kind: "client", key: "::ffff:127.0.0.1" }],
     ["203.0.113.5", false, { kind: "unverified", key: "unverified" }],
     [null, true, { kind: "unverified", key: "unverified" }],
     ["not-an-address", true, { kind: "unverified", key: "unverified" }]
@@ -466,6 +613,9 @@ describe("разбор адреса", () => {
 })
 
 describe("корневые поля операции", () => {
+  const counts = (document: QueryDocument, operationName?: string | null) =>
+    Object.fromEntries(rootFieldCounts(document, operationName))
+
   it("читает названную операцию и раскрывает фрагмент верхнего уровня", () => {
     const document = parse(`
       fragment LoginFields on Mutation { requestMagicLink(email: "a@b.test") { ok } }
@@ -474,10 +624,38 @@ describe("корневые поля операции", () => {
     `)
 
     const query = document as unknown as QueryDocument
-    expect(rootFieldNames(query, "Login")).toEqual(["requestMagicLink"])
-    expect(rootFieldNames(query, "Verify")).toEqual(["verifyMagicLink"])
-    expect(rootFieldNames(query)).toEqual(["requestMagicLink"])
-    expect(rootFieldNames(query, "Missing")).toEqual([])
+    expect(counts(query, "Login")).toEqual({ requestMagicLink: 1 })
+    expect(counts(query, "Verify")).toEqual({ verifyMagicLink: 1 })
+    expect(counts(query)).toEqual({ requestMagicLink: 1 })
+    expect(counts(query, "Missing")).toEqual({})
+  })
+
+  it("считает каждый алиас поля, а не уникальное имя", () => {
+    const document = parse(`
+      mutation Batch {
+        first: requestMagicLink(email: "a@b.test") { ok }
+        second: requestMagicLink(email: "c@d.test") { ok }
+        third: requestMagicLink(email: "e@f.test") { ok }
+        verifyMagicLink(token: "t")
+      }
+    `) as unknown as QueryDocument
+
+    expect(counts(document, "Batch")).toEqual({ requestMagicLink: 3, verifyMagicLink: 1 })
+  })
+
+  it("считает повторный разворот фрагмента и вложенный inline-фрагмент", () => {
+    const document = parse(`
+      fragment Link on Mutation { one: requestMagicLink(email: "a@b.test") { ok } }
+      mutation Repeat {
+        ...Link
+        ...Link
+        ... on Mutation {
+          two: requestMagicLink(email: "c@d.test") { ok }
+        }
+      }
+    `) as unknown as QueryDocument
+
+    expect(counts(document, "Repeat")).toEqual({ requestMagicLink: 3 })
   })
 })
 
@@ -502,6 +680,18 @@ describe("хранилище счётчиков", () => {
 
     expect(client.$queryRaw).toHaveBeenCalledTimes(1)
     expect(window).toEqual({ hits: 7, resetAt: new Date("2026-09-21T11:00:00.000Z") })
+  })
+
+  it("добавляет стоимость обращения одним выражением", async () => {
+    const client = databaseClient([{ hits: 5, expiresAt: new Date("2026-09-21T11:00:00.000Z") }])
+    const store = new DatabaseRateLimitStore(client as unknown as RateLimitDatabaseClient)
+
+    const window = await store.consume("auth.link.ip", "key-3", HOUR, new Date("2026-09-21T10:00:00.000Z"), 5)
+
+    expect(client.$queryRaw).toHaveBeenCalledTimes(1)
+    const statement = client.$queryRaw.mock.calls[0]?.[0] as unknown as { values: unknown[] }
+    expect(statement.values).toContain(5)
+    expect(window.hits).toBe(5)
   })
 
   it("удаляет только закрытые окна", async () => {
@@ -530,11 +720,12 @@ describe("счётчики Redis", () => {
       on: () => undefined,
       quit: async () => undefined,
       async eval(_script, _keyCount, ...args) {
-        const [key, ttlArg] = args
+        const [key, ttlArg, costArg] = args
         const ttlMs = Number(ttlArg)
+        const cost = Number(costArg ?? 1)
         const current = keys.get(key) ?? { hits: 0, ttl: -1 }
-        current.hits += 1
-        if (current.hits === 1 || current.ttl < 0) current.ttl = ttlMs
+        current.hits += cost
+        if (current.hits <= cost || current.ttl < 0) current.ttl = ttlMs
         keys.set(key, current)
         return [current.hits, current.ttl]
       }
@@ -556,6 +747,33 @@ describe("счётчики Redis", () => {
     // TTL остался тем же, поэтому конец окна отсчитывается от текущего момента тем же остатком.
     expect(second.hits).toBe(2)
     expect(client.keys.get(rateLimitRedisKey("auth.link.ip", "key-1"))).toEqual({ hits: 2, ttl: HOUR * 1000 })
+  })
+
+  it("добавляет стоимость обращения одним INCRBY и открывает окно от него", async () => {
+    const client = fakeRedis()
+    const store = new RedisRateLimitStore(client, createMemoryRateLimitStore())
+    const now = new Date("2026-09-21T10:00:00.000Z")
+
+    const window = await store.consume("auth.link.ip", "key-3", HOUR, now, 4)
+
+    expect(window).toEqual({ hits: 4, resetAt: new Date("2026-09-21T11:00:00.000Z") })
+    expect(client.keys.get(rateLimitRedisKey("auth.link.ip", "key-3"))).toEqual({ hits: 4, ttl: HOUR * 1000 })
+  })
+
+  it("переносит стоимость в таблицу при сбое Redis", async () => {
+    const failing: RateLimitRedisClient = {
+      on: () => undefined,
+      quit: async () => undefined,
+      eval: async () => {
+        throw new Error("redis down")
+      }
+    }
+    const fallback = createMemoryRateLimitStore()
+    const store = new RedisRateLimitStore(failing, fallback, () => undefined)
+
+    expect(await store.consume("auth.link.ip", "key-4", HOUR, new Date("2026-09-21T10:00:00.000Z"), 3)).toMatchObject({
+      hits: 3
+    })
   })
 
   it("объявляет ключ с версией и корзиной", () => {

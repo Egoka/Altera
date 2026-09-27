@@ -13,7 +13,7 @@ export {
 } from "./counter-store"
 export { DatabaseRateLimitStore, type RateLimitDatabaseClient } from "./database-store"
 export { createRateLimiter, type RateLimitContext, type RateLimitDecision, type RateLimiter } from "./limiter"
-export { createRateLimitPlugin, rootFieldNames, type QueryDocument } from "./plugin"
+export { createRateLimitPlugin, rootFieldCounts, type QueryDocument } from "./plugin"
 export {
   middlewareRulesForField,
   RATE_LIMIT_BUCKETS,

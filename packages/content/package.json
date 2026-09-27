@@ -1,0 +1,24 @@
+{
+  "name": "@altera/content",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Схема документа материала, валидация, экстракторы и рендер: один источник для веба и сервера (ADR-0029)",
+  "license": "ISC",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.build.json --noEmit",
+    "test": "pnpm run typecheck && vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.0"
+  }
+}
