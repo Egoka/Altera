@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "task_id": "T-131",
+  "issue_id": "01a0e0ab-a0d1-7452-9570-a49e3fac2a17",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-131-support-request-staff-notice.md",
+    "sha": "ce326f2243138b56bc6b83258b6679e5463b0c17"
+  },
+  "baseline_sha": "40fb3788a441f28cffe8aa6066d3fa950f046a95",
+  "tested_sha": "1912ec1f2256ba871fa919f93b069fa2579e370b",
+  "branch": "server/t131-support-staff-notice",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e115-8a37-7f12-8b54-7fc665a6f347",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/support-requests.test.ts: «уведомляет служебные записи admin и owner…» (ровно два письма) и «архивированная служебная запись письма не получает». Фикстура помечает служебные записи isServiceAccount: true, findMany применяет фильтры where — прежний запрос с isServiceAccount: false на ней краснеет."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/support-requests.test.ts: «отказ почты не отменяет сохранённое обращение», «сбой выборки получателей даёт номер обращения и пишет backend.error», «сбой уведомления не провоцирует повтор…». RED до правки: те же тесты против файла baseline — 3 failed из 26."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 858 passed / 44 skipped, web 588 passed, @altera/content 99 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "web_smoke": "passed",
+    "playwright": "235 passed / 1 failed (чужой 125-rate-limit-bypass.spec.ts, проходит на baseline и при повторе джоба)",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36294944659",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 252,
+    "url": "https://github.com/Egoka/Altera/pull/252",
+    "base_ref": "app",
+    "base_sha": "40fb3788a441f28cffe8aa6066d3fa950f046a95",
+    "head_sha": "1912ec1f2256ba871fa919f93b069fa2579e370b",
+    "merge_sha": "be6675afb677bd97526bb7e00a26afe7d501a15b"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e157-c005-70f4-a22f-eac405b41876",
+    "sha": "1912ec1f2256ba871fa919f93b069fa2579e370b",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Миграций нет; изменён серверный код уведомлений. Прод-окружения в РФ нет (T-103)."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-131.md",
+    "sha256": "f3ebc1e85ce8621e9e40f777c4ae56b6b5630f3bd2daa0af276d8f370308f066"
+  },
+  "remaining": [
+    "Раздел «Обращения» и статус в кабинете (T-119).",
+    "Обход лимита алиасами (T-125).",
+    "Согласие гостя с политикой ПД (T-102).",
+    "[ДОПУЩЕНИЕ] про PROVIDER_UNAVAILABLE в docs/spec/20-public/contact.md §4 больше не соответствует коду — ждёт стадии документации.",
+    "Браузерный сценарий T-125 неустойчив при параллельных воркерах Playwright — разбор за T-125."
+  ],
+  "usage": null
+}
