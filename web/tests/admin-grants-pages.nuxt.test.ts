@@ -73,7 +73,7 @@ const stubs = {
     emits: ["click"],
     template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>'
   },
-  Modal: { props: ["modelValue"], template: '<div v-if="modelValue"><slot /></div>' },
+  AppDialog: { props: ["modelValue"], template: '<div v-if="modelValue" role="dialog"><slot /></div>' },
   Input: {
     props: ["modelValue", "placeholder"],
     emits: ["update:modelValue"],
@@ -116,6 +116,25 @@ describe("admin grants pages", () => {
     expect(wrapper.text()).toContain("Тестовый пользователь active")
     expect(wrapper.text()).toContain("Отозванный пользователь revoked")
     expect(wrapper.text()).not.toContain("Базовое авторство первого запуска")
+  })
+
+  it("keeps the grant form in a dialog that opens from the header button", async () => {
+    const wrapper = mount(GrantsPage, { global: { stubs } })
+
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    expect(wrapper.find('input[placeholder="user-handle"]').exists()).toBe(false)
+
+    await wrapper.get("button").trigger("click")
+
+    const dialog = wrapper.get('[role="dialog"]')
+    expect(dialog.get("h2").text()).toBe("Выдать план")
+    expect(dialog.find('input[placeholder="user-handle"]').exists()).toBe(true)
+
+    await dialog
+      .findAll("button")
+      .find((button) => button.text() === "Отмена")
+      ?.trigger("click")
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
   })
 
   it("keeps manual submission disabled until an end date is provided", async () => {
