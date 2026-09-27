@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "task_id": "T-074",
+  "issue_id": "01a0bc94-3dc6-7d8f-bd1b-a52d811fe0e4",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-074-admin-admins-owner-two-step.md",
+    "sha": "60ee5f02fd4b3a7ede6e3f14767ee8e3cb9dab2e"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "40dcbbe87bcfcf9689bf8183a3c3d59ed9e420cc",
+  "branch": "feat/t074-admin-admins",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bcc8-986a-7e72-aca9-a247bdb54075",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "попытка оставить ноль владельцев → `CONFLICT` — `server/tests/admin-staff.test.ts`, блок «инвариант «не ноль владельцев»»: отзыв и деактивация дают `CONFLICT` (`expected: at-least-one`) и откат без аудита; при двух владельцах оба действия проходят"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "назначение владельца завершается только вторым шагом — `server/tests/admin-staff.test.ts` («назначение владельца в два шага»), `web/tests/admin-admins-page.nuxt.test.ts`, `web/tests/e2e/22-admin-admins.spec.ts`: `createStaff` с ролью `owner` даёт `FORBIDDEN` и не создаёт запись; владельцев прибавляется только после `assignOwner`; в интерфейсе мутация не уходит ни на первом шаге, ни при неточном e-mail"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "строки состояний `admins.md` §9 воспроизводимы — `npx playwright test tests/e2e/22-admin-admins.spec.ts` — 8 passed: загрузка, пусто, ошибка с `requestId`, ограничение прав `admin`, конфликт, отсутствие лимитов, два шага владельца"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 294 passed / 24 skipped, web 195 passed (по данным исполнителя на 4aa8afd5)",
+    "environment": "по данным исполнителя"
+  },
+  "pr": {
+    "number": 163,
+    "url": "https://github.com/Egoka/Altera/pull/163",
+    "base_ref": "app",
+    "base_sha": "b8677bae0216a62fd3e0b24a100a36302699fb79",
+    "head_sha": "40dcbbe87bcfcf9689bf8183a3c3d59ed9e420cc",
+    "merge_sha": "fa9acb55746803c9781d5b6b104f7cfbb5f0baa9"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e354-0299-79e8-86b2-3fc6b0b675d6",
+    "sha": "40dcbbe87bcfcf9689bf8183a3c3d59ed9e420cc",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/: GraphQL-модуль admin staff и мутации"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-074.md",
+    "sha256": "1cea86beb03feaa0d2053d739e66c9fac690967cc5318214dcf057029fcf5248"
+  },
+  "remaining": [
+    "Архивные мутации названы `archiveStaffAccount` / `restoreStaffAccount`, а не общими `archiveAccount` / `restoreAccount` из `admins.md` §5: общий архив аккаунтов читателей и авторов принадлежит T-045/T-073. Если владелец хочет ровно имена спецификации — переименую.",
+    "Карточка открывается панелью на той же странице; вложенные маршруты `/admin/admins/new` и `/admin/admins/{id}` помечены в спецификации как `[ДОПУЩЕНИЕ]` и не заводились.",
+    "«Удалить навсегда» — T-076, в эту задачу не входит. Отдельной формы выдачи исключений нет: карточка показывает действующие, выдача идёт мутациями T-028.",
+    "Судьба служебной записи после снятия роли остаётся открытым вопросом Q-08: запись остаётся служебной без прав — временное допущение спецификации, новых правил не вводил.",
+    "Локально не запускались сценарии Playwright, которым нужны Postgres и Mailpit из `docker-compose.yml` (`21-magic-link-mail`, `admin-categories`, `admin-dashboard`, `app-components-theme`, `noindex-meta`): Docker на машине не запущен, они падают на подключении `PrismaClient` независимо от этих изменений. Их даёт CI.",
+    "Preflight (`scripts/autonomy/preflight.py --server`) прошёл все проверки, кроме `env:LOG_HASH_SECRET`: переменная нужна для запуска сервера, а сервер с секретом не поднимался.",
+    "Замечено рядом, не правил: страницы `/admin/grants` и `/admin/subscriptions` используют несуществующий компонент `<Modal>` — их диалоги рендерятся всегда; `useAdminGrants` считает `failed` как `error.value !== null`, хотя Nuxt 4 держит `error` в `undefined`."
+  ],
+  "usage": null
+}
