@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task_id": "T-124",
+  "issue_id": "01a0e314-4642-7763-a99d-6e14e9e381df",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-124-session-refresh-client.md",
+    "sha": "00c4669c073877a2ac4b7f0d036e4658d4eaad2f"
+  },
+  "baseline_sha": "db57fc6f4a327ed9c6b811f56e71a67f3ff7517c",
+  "tested_sha": "e9552ee9c1ba4e31743bf138d7c6e0004160c14b",
+  "branch": "server/t124-session-refresh",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e3e1-a34d-76a7-bd1f-d0b616c0cae1",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "BFF обменивает refresh на новый access при SSR (web/server/middleware/session-refresh.ts) и по ответу UNAUTHENTICATED с одной попыткой повтора запроса (web/server/api/graphql.post.ts, sendWithSessionRefresh). web/tests/e2e/124-session-refresh.spec.ts на реальном сервере: состояние «прошло 16 минут» подменено наблюдаемым состоянием браузера (access-cookie жива 15 минут, поэтому её либо нет в запросе, либо она несёт истёкший токен), /me отдаёт сводку без редиректа на /login, выдан новый access, refresh ротирован, previousTokenHash равен хэшу прежнего токена, сессия не отозвана. Локально 3 passed, при --repeat-each 3 — 9 passed. RED: с отключённым обменом все три сценария падают — /me не отдаёт сводку. CI run 36343191186: браузерный прогон 263 passed, изменённый спек трижды — 9 passed."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "rotateSession меняет tokenHash условным updateMany по прежнему хэшу и revokedAt: null (server/src/auth/session.ts); проигравший обмен получает исход повторного предъявления либо revoked/expired, но не unknown. server/tests/session-rotation-database.test.ts на настоящем PostgreSQL: из двух параллельных refreshSession одним токеном fulfilled ровно один, второй — UNAUTHENTICATED, в строке лежит хэш пары победителя, previousTokenHash — хэш предъявленного токена. Локально 3 passed (PostgreSQL 16 из docker-compose, отдельные базы под прогон, после прогона удалены); в CI новый шаг «Проверить ротацию refresh T-124» на PostgreSQL 17 — 3 passed. RED: со снятым условием на tokenHash параллельный сценарий даёт две успешные ротации. То же поведение закреплено на двойнике в server/tests/session-rotation.test.ts. CI run 36343191186."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Реестр обменов sessionRefreshExchanges (web/server/utils/sessionRefresh.ts) делает один обмен на предъявленный токен и держит результат ещё 30 секунд: запросы вкладок не предъявляют серверу уже ротированный токен и не выглядят кражей (session-lifecycle.md §2.4). web/tests/session-refresh.test.ts: один обмен на три одновременных запроса, общий результат в пределах TTL, разные сессии — разные обмены, недоступный апстрим не кэшируется, повтор запроса ровно один. Браузерный сценарий «AC-3: одновременные запросы двух вкладок не завершают сессию»: два контекста с одной парой cookie одновременно спрашивают me, оба получают идентификатор, сессия не отозвана, обмен был один. RED: с отключённым обменом сценарий падает. CI run 36343191186."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 886 passed / 50 skipped, web 723 passed, packages/content 99 passed",
+    "web_typecheck": "passed: все четыре проекта exit 0, ошибок 0",
+    "web_build": "passed",
+    "server_build_ci": "passed",
+    "codegen": "passed: pnpm codegen --check exit 0, операции GraphQL не менялись",
+    "database": "passed: server/tests/session-rotation-database.test.ts — 3 passed локально на PostgreSQL 16 (docker-compose, порт 25432, отдельные базы под прогон, удалены после) и 3 passed в CI на PostgreSQL 17",
+    "playwright": "passed: web/tests/e2e/124-session-refresh.spec.ts — 3 passed локально и 9 passed при --repeat-each 3; в CI полный прогон 263 passed / 9 skipped и изменённый спек трижды одним воркером — 9 passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36343191186",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "notes": "Полный локальный прогон Playwright — 259 passed, 2 failed: tests/e2e/23-login-cross-site.spec.ts и tests/e2e/graphql-bff.spec.ts держат http://127.0.0.1:4173 прямо в коде, а локальный прогон шёл на портах 24173/24000 — порт 4000 занял посторонний процесс. Временное изменение портов в playwright.config.ts в коммит не попало; в CI оба спека зелёные. Три падения первого локального прогона (admin-audit, admin-categories, admin-tags) вызваны отсутствием DATABASE_URL в локальной среде: с ним те же 21 сценария прошли. Логи CI на проверенном head не содержат строк unhandled, fatal и reuse_detected."
+  },
+  "pr": {
+    "number": 313,
+    "url": "https://github.com/Egoka/Altera/pull/313",
+    "base_ref": "app",
+    "base_sha": "759b624505924c0b8db2892fc77ee898f99dd0f9",
+    "head_sha": "e9552ee9c1ba4e31743bf138d7c6e0004160c14b",
+    "merge_sha": "ebfe29965a168004a9c6c9704ef0f7baa2342c5d"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "not_received"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ (ротация сессии) и web/ (BFF, middleware Nitro); миграций задача не добавляет. Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-124.md",
+    "sha256": "e34e5c2cc1921d6e6bcc25f6e9e894d34c3c90138c0a6f6977b34880e666c9ab"
+  },
+  "remaining": [
+    "Независимое ревью с маркером ALTERA_REVIEW_V1 на финальном head не получено: его назначает контроллер.",
+    "Реестр обменов refresh живёт в памяти процесса Nitro: при нескольких экземплярах веб-сервера защита от ложного reuse работает в пределах одного. Экземпляр сейчас один (прод-окружения в РФ нет, T-103); общий счёт обменов — отдельная задача.",
+    "Лимит «до 10 устройств» ([ДОПУЩЕНИЕ] session-lifecycle.md §6) в задачу не входил.",
+    "Перенос access-токена из тела ответа в cookie целиком не делался: по границам задачи это либо часть ADR-0023 по признанию архитектора, либо отдельная задача.",
+    "Правило §2.4 не смягчено: API по-прежнему отзывает все сессии, если один refresh-токен предъявлен дважды; от ложного срабатывания защищает общий обмен в BFF.",
+    "Приёмка возвращённой T-023 (ALTE-97) идёт в её карточке: эта задача её разблокирует.",
+    "Спецификации не менялись: §2.4 и §2.5 session-lifecycle.md уже описывают ротацию, реакцию на повторное предъявление и сроки, а обмен через BFF задан ADR-0023 п. 3."
+  ],
+  "usage": null
+}
