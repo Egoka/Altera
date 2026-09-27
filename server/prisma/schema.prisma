@@ -42,6 +42,7 @@ model User {
   revokedPermissionExceptions PermissionException[] @relation("PermissionExceptionRevokeActor")
   sessions                    Session[]
   emailChangeRequest          EmailChangeRequest?
+  accountArchiveRequest       AccountArchiveRequest?
   currentHandle               HandleHistory         @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
   handleHistory               HandleHistory[]       @relation("HandleOwner")
   createdTags                 Tag[]                 @relation("TagCreator")
@@ -124,6 +125,20 @@ model EmailChangeRequest {
   createdAt DateTime @default(now())
 
   @@map("email_change_requests")
+}
+
+/// Открытый запрос самостоятельного архивирования аккаунта: письмо с одноразовой ссылкой уже
+/// ушло, а архив выполняет переход по ней (`30-account/reader/delete-account.md` §4). Запрос
+/// один на аккаунт: второй адрес подтверждения отвечал бы `CONFLICT`.
+model AccountArchiveRequest {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @db.VarChar(64)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("account_archive_requests")
 }
 
 model Section {

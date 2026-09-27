@@ -117,6 +117,49 @@ export const createEmailChangeNoticeMessage = (locale: Locale): MailMessage => {
   }
 }
 
+export const ACCOUNT_ARCHIVE_CONFIRM_TEMPLATE = "account_archive_confirm"
+
+/**
+ * Письмо подтверждения «удаления аккаунта» — шаг 2 flow #12 (`10-flows/delete-account.md` §6).
+ * Владелец включил его в первый запуск (журнал §35 п. 1); остальные письма сценария (после
+ * архива и после восстановления) остаются `[ДОПУЩЕНИЕ]` и ждут прохода почты (§25.13).
+ * Текст называет последствия словами: доступ закроется сразу, данные сохранятся, вернуться
+ * можно самому после входа (журнал §5.1–2).
+ */
+export const createAccountArchiveConfirmMessage = (locale: Locale, url: string, expiryMinutes: number): MailMessage => {
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Confirm deleting your Altera account",
+      preheader: "One-time link for archiving your account",
+      text: `Hello,\n\nyou asked to delete your Altera account. Access closes immediately, your articles move to the archive and your data is kept: you can bring the account back yourself after signing in again.\n\nConfirm: ${url}\n\nThe link expires in ${expiryMinutes} minutes and works only once.\n\nIf you did not request this, you can safely ignore this email.\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>you asked to delete your Altera account. Access closes immediately, your articles move to the archive and your data is kept: you can bring the account back yourself after signing in again.</p><p><a href="${escapedUrl}">Confirm deleting the account</a></p><p>The link expires in ${expiryMinutes} minutes and works only once.</p><p>If you did not request this, you can safely ignore this email.</p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Подтвердите удаление аккаунта Altera",
+    preheader: "Одноразовая ссылка для архивирования аккаунта",
+    text: `Здравствуйте,\n\nвы попросили удалить аккаунт Altera. Доступ закроется сразу, материалы уйдут в архив, а данные сохранятся: вернуться можно самому — просто войдите снова.\n\nПодтвердить: ${url}\n\nСсылка действует ${expiryMinutes} минут и подходит только для одного подтверждения.\n\nЕсли вы не запрашивали удаление — просто проигнорируйте это письмо.\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>вы попросили удалить аккаунт Altera. Доступ закроется сразу, материалы уйдут в архив, а данные сохранятся: вернуться можно самому — просто войдите снова.</p><p><a href="${escapedUrl}">Подтвердить удаление аккаунта</a></p><p>Ссылка действует ${expiryMinutes} минут и подходит только для одного подтверждения.</p><p>Если вы не запрашивали удаление — просто проигнорируйте это письмо.</p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export interface AccountArchiveConfirmMail {
+  message: MailMessage
+  sanitizedBody: string
+}
+
+export const createAccountArchiveConfirmMail = (
+  locale: Locale,
+  url: string,
+  expiryMinutes: number
+): AccountArchiveConfirmMail => ({
+  message: createAccountArchiveConfirmMessage(locale, url, expiryMinutes),
+  sanitizedBody: createAccountArchiveConfirmMessage(locale, secretPlaceholder[locale], expiryMinutes).text
+})
+
 export const SUPPORT_REQUEST_STAFF_TEMPLATE = "support_request_staff"
 
 export interface SupportRequestNotice {

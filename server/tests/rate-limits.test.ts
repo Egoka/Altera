@@ -57,6 +57,7 @@ describe("единые пороги корзин", () => {
     "search.user": { limit: 300, windowSeconds: MINUTE },
     "account.mutation.user": { limit: 60, windowSeconds: MINUTE },
     "account.email_change.user": { limit: 1, windowSeconds: DAY },
+    "account.archive.user": { limit: 1, windowSeconds: DAY },
     "media.upload.user": { limit: 30, windowSeconds: HOUR },
     "admin.export.user": { limit: 10, windowSeconds: HOUR },
     "appeal.form.ip": { limit: 10, windowSeconds: HOUR }

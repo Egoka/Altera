@@ -4,16 +4,28 @@ import { Kind, parse, type OperationDefinitionNode } from "graphql"
 export const REFRESH_COOKIE_NAME = "altera_refresh"
 // Срок cookie совпадает со сроком сессии на сервере (ADR-0009 п. 1).
 export const REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30
+// Access живёт 15 минут (`50-access/session-lifecycle.md` п. 5).
+export const ACCESS_COOKIE_MAX_AGE_SECONDS = 15 * 60
 
 // Мутации, которым BFF подставляет refresh из cookie вместо клиента.
 const REFRESH_INPUT_FIELDS = new Set(["refreshSession", "logout"])
-// Мутации, ответ которых содержит новый refresh.
-const REFRESH_OUTPUT_FIELDS = new Set(["verifyMagicLink", "acceptConsent", "refreshSession"])
+// Мутации, ответ которых содержит новый refresh. Самостоятельное восстановление аккаунта здесь
+// потому, что меняет ограниченную сессию на полную (`30-account/reader/archived-state.md` §4).
+const REFRESH_OUTPUT_FIELDS = new Set(["verifyMagicLink", "acceptConsent", "refreshSession", "restoreAccountSelf"])
 // По контракту входа (T-022) ветки подтверждения ссылки возвращают сессию вложенным полем,
 // а `refreshSession` — плоской полезной нагрузкой. Ищется и то, и другое.
 const NESTED_SESSION_FIELD = "session"
-// Мутации, после успеха которых cookie стирается.
-const SESSION_END_FIELDS = new Set(["logout", "logoutAll"])
+/**
+ * Мутации, после успеха которых cookie стирается. Успех читается либо по самому результату
+ * (`logout` отвечает `true`), либо по флагу в нём: подтверждение архива аккаунта отзывает все
+ * сессии в той же транзакции (`50-access/session-lifecycle.md` п. 7), и держать их cookie
+ * незачем — иначе интерфейс ещё 15 минут считает пользователя вошедшим.
+ */
+const SESSION_END_FIELDS = new Map<string, string | null>([
+  ["logout", null],
+  ["logoutAll", null],
+  ["confirmAccountArchive", "archived"]
+])
 // Обмен одноразового токена входа: полномочие даёт секрет в теле запроса, а не cookie браузера.
 const LOGIN_EXCHANGE_FIELDS = new Set(["verifyMagicLink", "acceptConsent"])
 
@@ -25,6 +37,11 @@ export interface ParsedOperation {
 export interface SessionCookieOutcome {
   body: unknown
   token: string | null
+  /**
+   * Новый access-токен той же сессии. Мутация, заменившая сессию без перезагрузки страницы
+   * (восстановление аккаунта), иначе оставила бы в браузере токен уже отозванной сессии.
+   */
+  accessToken: string | null
   clear: boolean
 }
 
@@ -87,11 +104,14 @@ export function withRefreshTokenVariable(body: unknown, fields: readonly string[
 
 /** Снимает refresh из ответа API и сообщает, что делать с cookie. */
 export function extractSessionCookie(payload: unknown, fields: readonly string[]): SessionCookieOutcome {
-  if (!isRecord(payload) || fields.length === 0) return { body: payload, token: null, clear: false }
+  if (!isRecord(payload) || fields.length === 0) {
+    return { body: payload, token: null, accessToken: null, clear: false }
+  }
 
   const data = isRecord(payload.data) ? payload.data : null
   const failed = Array.isArray(payload.errors) && payload.errors.length > 0
   let token: string | null = null
+  let accessToken: string | null = null
   let sanitizedData = data
 
   for (const field of fields) {
@@ -106,6 +126,7 @@ export function extractSessionCookie(payload: unknown, fields: readonly string[]
     if (!carrier || typeof carrier.refreshToken !== "string" || carrier.refreshToken.length === 0) continue
 
     token = carrier.refreshToken
+    accessToken = typeof carrier.accessToken === "string" ? carrier.accessToken : null
     sanitizedData = {
       ...sanitizedData,
       [field]:
@@ -115,13 +136,19 @@ export function extractSessionCookie(payload: unknown, fields: readonly string[]
     }
   }
 
-  const endedSession = fields.some((field) => SESSION_END_FIELDS.has(field) && data?.[field] === true)
+  const endedSession = fields.some((field) => {
+    if (!SESSION_END_FIELDS.has(field)) return false
+    const flag = SESSION_END_FIELDS.get(field) ?? null
+    const result = data?.[field]
+    return flag === null ? result === true : isRecord(result) && result[flag] === true
+  })
   // Неудачное обновление означает мёртвую сессию — держать её cookie незачем.
   const refreshRejected = fields.includes("refreshSession") && failed && !data?.refreshSession
 
   return {
     body: sanitizedData === data ? payload : { ...payload, data: sanitizedData },
     token,
+    accessToken,
     clear: token === null && (endedSession || refreshRejected)
   }
 }
