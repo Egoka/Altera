@@ -28,10 +28,17 @@ export interface RateLimitDecision {
 export interface RateLimiter {
   readonly mode: RateLimitStoreMode
   /**
-   * Учитывает обращение и отвечает `RATE_LIMITED`, если порог корзины превышен. Возвращённое
-   * решение позволяет вызывающему показать таймер, не повторяя арифметику окна.
+   * Учитывает `cost` обращений (по умолчанию одно) и отвечает `RATE_LIMITED`, если порог корзины
+   * превышен. Возвращённое решение позволяет вызывающему показать таймер, не повторяя арифметику
+   * окна. Стоимость больше одного расходует документ, назвавший лимитируемое поле несколько раз:
+   * превышение отклоняет его целиком.
    */
-  enforce(bucket: RateLimitBucket, keyValue: string, context: RateLimitContext): Promise<RateLimitDecision>
+  enforce(
+    bucket: RateLimitBucket,
+    keyValue: string,
+    context: RateLimitContext,
+    cost?: number
+  ): Promise<RateLimitDecision>
 }
 
 interface RateLimiterOptions {
@@ -49,12 +56,12 @@ export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
   return {
     mode: options.store.mode,
 
-    async enforce(bucket, keyValue, context) {
+    async enforce(bucket, keyValue, context, cost = 1) {
       const rule = RATE_LIMIT_RULES[bucket]
       // Ключ корзины обезличен: счётчик не хранит ни адрес, ни e-mail (§2 п. 2).
       const key = options.piiHasher.limitKey(`${rule.keyKind}:${keyValue}`)
       const at = now()
-      const window = await options.store.consume(bucket, key, rule.windowSeconds, at)
+      const window = await options.store.consume(bucket, key, rule.windowSeconds, at, Math.max(1, Math.floor(cost)))
       const retryAfter = retryAfterSeconds(window, at)
 
       if (window.hits > rule.limit) {

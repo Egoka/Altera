@@ -1,4 +1,5 @@
 import { SESSION_ACCESS_COOKIE, SESSION_COOKIE_PATH } from "#shared/session"
+import { resolveTrustedClientAddress } from "../utils/clientAddress"
 import { GraphQLProxyError, getGraphQLRouteError, proxyGraphQLRequest } from "../utils/graphqlProxy"
 import {
   REFRESH_COOKIE_MAX_AGE_SECONDS,
@@ -50,7 +51,14 @@ export default defineEventHandler(async (event) => {
       body: withRefreshTokenVariable(body, operation.fields, getCookie(event, REFRESH_COOKIE_NAME) ?? null),
       authorization: getHeader(event, "authorization") ?? (accessToken ? `Bearer ${accessToken}` : undefined),
       userAgent: getHeader(event, "user-agent"),
-      clientIp: getRequestIP(event, { xForwardedFor: true }),
+      // Адрес берётся из элемента `X-Forwarded-For`, который добавил доверенный прокси площадки:
+      // самый левый элемент присылает клиент и им снимался бы лимит по адресу (`rate-limits.md`
+      // §2 п. 2).
+      clientIp: resolveTrustedClientAddress({
+        forwardedFor: getHeader(event, "x-forwarded-for"),
+        socketAddress: getRequestIP(event),
+        trustedProxyHops: runtimeConfig.trustedProxyHops
+      }),
       requestId,
       requestIdForwardSecret: runtimeConfig.requestIdForwardSecret,
       fetchRaw: (url, options) => $fetch.raw(url, options)

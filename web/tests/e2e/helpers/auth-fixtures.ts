@@ -152,3 +152,17 @@ export const authenticateSessionCookie = async (page: Page, email: string): Prom
 
   return userId
 }
+
+/**
+ * Обнуляет счётчики лимитов частоты перед сценарием (T-125).
+ *
+ * Все сквозные сценарии приходят с одного адреса `127.0.0.1`, то есть в одну корзину: подряд они
+ * упирались бы в `auth.verify.ip` (10 в час) и `auth.link.ip` (20 в час). Раньше их прикрывало
+ * исключение по петлевому адресу, которым любой клиент снимал лимит подстановкой
+ * `X-Forwarded-For: 127.0.0.1`; исключения больше нет, поэтому набор чистит счётчики сам, а не
+ * получает поблажку в продуктовом коде.
+ */
+export const resetRateLimitCounters = (): Promise<void> =>
+  withPrisma(async (prisma) => {
+    await prisma.rateLimitCounter.deleteMany({})
+  })

@@ -17,8 +17,12 @@ export interface RateLimitWindow {
 
 export interface RateLimitCounterStore {
   readonly mode: RateLimitStoreMode
-  /** Учитывает одно обращение и возвращает состояние окна. Ключ уже обезличен вызывающим. */
-  consume(bucket: string, key: string, windowSeconds: number, now: Date): Promise<RateLimitWindow>
+  /**
+   * Учитывает `cost` обращений и возвращает состояние окна. Ключ уже обезличен вызывающим.
+   * Стоимость больше одного нужна документу, который называет лимитируемое поле несколько раз
+   * (алиасы): столько обращений он и расходует, но одним обращением к хранилищу.
+   */
+  consume(bucket: string, key: string, windowSeconds: number, now: Date, cost?: number): Promise<RateLimitWindow>
 }
 
 /** Секунды до конца окна, не меньше одной: `retryAfter` словаря ошибок — целое и положительное. */

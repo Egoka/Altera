@@ -85,4 +85,24 @@ describe.skipIf(!testDatabaseUrl)("T-024 счётчики лимитов в та
       expect(remaining).toEqual([{ bucket: "auth.link.email", key: "key-a" }])
     })
   })
+
+  /**
+   * Документ с алиасами расходует N обращений одним выражением (T-125): стоимость складывается
+   * тем же `ON CONFLICT DO UPDATE`, а истёкшее окно начинается сразу со стоимости, а не с единицы.
+   */
+  it("добавляет стоимость обращения и начинает окно с неё", async () => {
+    await withDatabase(async (database) => {
+      const store = new DatabaseRateLimitStore(database as unknown as RateLimitDatabaseClient)
+      const now = new Date("2026-09-21T10:00:00.000Z")
+
+      expect((await store.consume("auth.link.ip", "key-cost", HOUR, now, 5)).hits).toBe(5)
+      expect((await store.consume("auth.link.ip", "key-cost", HOUR, now, 3)).hits).toBe(8)
+      expect((await store.consume("auth.link.ip", "key-cost", HOUR, now)).hits).toBe(9)
+
+      const afterWindow = new Date("2026-09-21T11:00:01.000Z")
+      const restarted = await store.consume("auth.link.ip", "key-cost", HOUR, afterWindow, 4)
+      expect(restarted.hits).toBe(4)
+      expect(restarted.resetAt).toEqual(new Date("2026-09-21T12:00:01.000Z"))
+    })
+  })
 })
