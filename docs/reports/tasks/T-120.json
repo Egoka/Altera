@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task_id": "T-120",
+  "issue_id": "01a0e274-2a03-710d-8325-8f3db7375551",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-120-owner-dashboard-metrics-proposal.md",
+    "sha": "96bc278e4fe2fd36111e9b1b2b0145fddf8760a4"
+  },
+  "baseline_sha": "6fded07821c5fa7b933c9a94b7bf95cddcdc880b",
+  "tested_sha": "637f3dfb1402270235f92c3b6ee287f88a5aa935",
+  "branch": "agent/altera/4a8458313bf4",
+  "implementer_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+  "implementer_run_id": "01a0e322-494f-7854-8177-4a8458313bf4",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "предложение сверено с собираемыми данными — спецификации, Prisma-схема и текущий dashboard, контрольные примеры в отчёте docs/reports/2026-09-27-t120-owner-dashboard-metrics-proposal.md; подтверждено независимым ревью"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "владелец утвердил предложение целиком 2026-09-27 — запись в журнале решений §44 п. 2 (docs/decisions/role-review-working-log-2026-09-08.md, PR #318)"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed (по данным архитектора)"
+  },
+  "pr": {
+    "number": 303,
+    "url": "https://github.com/Egoka/Altera/pull/303",
+    "base_ref": "app",
+    "base_sha": "6fded07821c5fa7b933c9a94b7bf95cddcdc880b",
+    "head_sha": "637f3dfb1402270235f92c3b6ee287f88a5aa935",
+    "merge_sha": "d6a5297bc71eef44d6d69bbb1010b3acd27e1c69"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e463-84aa-7811-94f5-cf547570618a",
+    "sha": "637f3dfb1402270235f92c3b6ee287f88a5aa935",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR #303 меняет только документацию (отчёт-предложение) — controller.py вычисляет requires_deploy=false"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-120.md",
+    "sha256": "e9061e5c7875891143a0fd77e59c8c376c44f428b94deb4d8455ae71bb7b02e7"
+  },
+  "remaining": [
+    "Перенос утверждённого в спецификации и реализация — отдельными задачами (журнал §44)."
+  ],
+  "usage": null
+}

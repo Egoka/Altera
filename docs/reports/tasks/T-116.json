@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task_id": "T-116",
+  "issue_id": "01a0e1fe-556d-78d0-aa70-2661022f6d2f",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-116-rate-limit-thresholds-review.md",
+    "sha": "fdc079435d4bf2001997e416f657b35acad651a7"
+  },
+  "baseline_sha": "ab916b64463566deaff4d9a4de3f87ec28ac1d7a",
+  "tested_sha": "0e1884b742d20edc7612217e3d1081f2db2772ce",
+  "branch": "docs/t116-rate-limit-thresholds",
+  "implementer_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+  "implementer_run_id": "01a0e322-28e9-77d7-a0d6-da33ddca018e",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "предложение покрывает все пороги rate-limits.md §2 и лимит попыток пароля — таблица RL-01…RL-15 и явное покрытие отложенных пунктов §2 в отчёте docs/reports/2026-09-27-t116-rate-limit-thresholds-proposal.md; сверка подтверждена независимым ревью"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "владелец утвердил предложение целиком 2026-09-27 — запись в журнале решений §44 п. 1 (docs/decisions/role-review-working-log-2026-09-08.md, PR #318)"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed (по данным архитектора)"
+  },
+  "pr": {
+    "number": 298,
+    "url": "https://github.com/Egoka/Altera/pull/298",
+    "base_ref": "app",
+    "base_sha": "ada5c6ffcc8f738b15746214f6e11c466d06a92c",
+    "head_sha": "0e1884b742d20edc7612217e3d1081f2db2772ce",
+    "merge_sha": "7713a355641709273d83630a60813a5364f14169"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e38b-c169-7b00-bf7f-c5f2d033e9c8",
+    "sha": "0e1884b742d20edc7612217e3d1081f2db2772ce",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR #298 меняет только документацию (отчёт-предложение) — controller.py вычисляет requires_deploy=false"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-116.md",
+    "sha256": "17a19013bee8b0daa1808bde397c621de4adb4b44b9b409327e391262236b896"
+  },
+  "remaining": [
+    "Перенос утверждённого в спецификации и реализация — отдельными задачами (журнал §44)."
+  ],
+  "usage": null
+}
