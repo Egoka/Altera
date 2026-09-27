@@ -1435,7 +1435,7 @@ type Query {
   owners: [AdminOwner!]!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
-  publicSections: [PublicSection!]!
+  publicSections(locale: Locale!): [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
   section(slug: String!): Section

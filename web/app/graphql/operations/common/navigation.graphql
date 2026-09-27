@@ -1,5 +1,7 @@
 query GetNavigation($locale: Locale!) {
-  publicSections {
+  # Рубрики меню — только непустые в локали страницы (журнал §20.9): английская шапка не
+  # показывает рубрику без английских материалов.
+  publicSections(locale: $locale) {
     id
     name
     nameEn

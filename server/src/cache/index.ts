@@ -2,7 +2,7 @@ import { NoopCache } from "./noop"
 import { createRedisCache } from "./redis"
 import type { Cache } from "./types"
 
-export { buildCacheKey } from "./key"
+export { authorCacheTag, buildCacheKey } from "./key"
 export type { Cache, CacheMode, CacheSetOptions } from "./types"
 
 export const CACHE_TTL_SECONDS = {

@@ -226,16 +226,25 @@ class MemoryPrisma {
   }
 }
 
+/**
+ * Архив и восстановление аккаунта сбрасывают кеш страницы автора (`author.md` §4), поэтому
+ * контекст всегда несёт кеш: вызов `delByTags` виден тесту и не падает на заглушке.
+ */
 function context(prisma: MemoryPrisma, actor: MemoryUser | null, mailSend = vi.fn().mockResolvedValue({})) {
   return {
     currentUser: actor ? { ...actor, planTier: "free", planUntil: null, permissionExceptions: [] } : null,
     requestId: "req-staff",
     prisma,
+    cache: { delByTags: vi.fn().mockResolvedValue(undefined) },
     mail: { send: mailSend },
     piiHasher: { email: () => "email-digest", ip: () => "ip-digest" },
     logger: { log: vi.fn() }
   } as unknown as GraphQLContext
 }
+
+/** Теги, по которым контекст сбрасывал кеш: тест читает их без приведения на месте. */
+const resetCacheTags = (ctx: GraphQLContext): string[][] =>
+  (ctx.cache.delByTags as unknown as { mock: { calls: [string[]][] } }).mock.calls.map(([tags]) => tags)
 
 const ownerActor = user({ id: "owner-1", role: "owner", name: "Первый владелец" })
 const secondOwner = user({ id: "owner-2", role: "owner", name: "Второй владелец" })
@@ -433,6 +442,7 @@ describe("инвариант «не ноль владельцев»", () => {
 
     expect(deactivated.status).toBe("archived")
     expect(prisma.sessions[0]?.revokedAt).toEqual(now)
+    expect(resetCacheTags(ctx)).toContainEqual([`author:${secondOwner.handle}`])
     expect(prisma.audits.find(({ action }) => action === "owner.deactivate")?.diff).toMatchObject({
       remainingOwners: 1
     })
@@ -564,6 +574,9 @@ describe("архив служебной записи", () => {
     expect(archived.archiveReason).toBe("Уволен")
     expect(prisma.sessions[0]?.revokedAt).toEqual(now)
     expect(prisma.audits.some(({ action }) => action === "user.archive")).toBe(true)
+    // Страница автора отвечает 410 сразу после архива: кеш профиля сбрасывается тем же
+    // тегом, под которым он положен (`author.md` §4, AC-4 T-129).
+    expect(resetCacheTags(ctx)).toContainEqual([`author:${editor.handle}`])
   })
 
   it("не даёт администратору архивировать чужую служебную запись", async () => {
@@ -575,6 +588,8 @@ describe("архив служебной записи", () => {
 
     expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "staff.archive" })
     expect(prisma.users.find(({ id }) => id === editor.id)?.archivedAt).toBeNull()
+    // Отказ архива ничего не меняет, поэтому и кеш страницы автора остаётся нетронутым.
+    expect(resetCacheTags(ctx)).toEqual([])
   })
 
   it("не даёт администратору восстановить служебную запись", async () => {
@@ -597,6 +612,8 @@ describe("архив служебной записи", () => {
     expect(restored.status).toBe("active")
     expect(restored.role).toBe("moderator")
     expect(prisma.audits.some(({ action }) => action === "user.restore")).toBe(true)
+    // Возвращённый аккаунт снова отвечает 200: ответ 410 не должен дожить до конца TTL.
+    expect(resetCacheTags(ctx)).toContainEqual([`author:${editor.handle}`])
   })
 
   it("направляет владельца к отдельной деактивации вместо архива", async () => {

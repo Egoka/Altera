@@ -45,8 +45,10 @@ const t = (key: string, params: Record<string, string | number> = {}) =>
     messages[key] ?? key
   )
 
+/** Русская локаль адрес не префиксует, поэтому заглушка `localePath` возвращает его как есть. */
 beforeEach(() => {
   vi.stubGlobal("useI18n", () => ({ t }))
+  vi.stubGlobal("useLocalePath", () => (path: string) => path)
 })
 
 describe("ArticleCard snapshots", () => {

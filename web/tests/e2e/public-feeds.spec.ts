@@ -41,9 +41,21 @@ const stubGraphQL = async (page: Page, responses: Record<string, unknown>) => {
   })
 }
 
+/**
+ * Рубрики шапки приходят уже в ответе SSR (T-129), поэтому подставленный ответ доходит до
+ * неё только браузерным запросом: переключатель языка делает клиентский переход, меню
+ * перезапрашивается из страницы и попадает под перехват.
+ */
+const loadStubbedHeader = async (page: Page) => {
+  await page.goto("/en")
+  await page.getByRole("link", { name: "Switch language to Русский" }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole("link", { name: "Культура" }).first()).toBeVisible()
+}
+
 /** Клиентский переход в ленту рубрики по ссылке шапки. */
 const openSectionFeed = async (page: Page) => {
-  await page.goto("/sections")
+  await loadStubbedHeader(page)
   await page.getByRole("link", { name: "Культура" }).first().click()
   await expect(page).toHaveURL(/\/culture$/)
 }
@@ -143,7 +155,7 @@ test("лента рубрики: архивированная рубрика у�
     }
   })
 
-  await page.goto("/sections")
+  await loadStubbedHeader(page)
   await page.getByRole("link", { name: "Культура" }).first().click()
 
   await expect(page).toHaveURL(/\/society$/)
@@ -157,7 +169,7 @@ test("лента рубрики: отказ данных показывает к
     }
   })
 
-  await page.goto("/sections")
+  await loadStubbedHeader(page)
   await page.getByRole("link", { name: "Культура" }).first().click()
 
   // Локатор по тексту, а не по роли: у объявления маршрута Nuxt та же роль `alert`.

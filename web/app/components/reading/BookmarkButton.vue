@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { computed } from "vue"
   const props = withDefaults(
     defineProps<{
       bookmarked?: boolean
@@ -11,12 +12,16 @@
 
   const emit = defineEmits<{ toggle: [bookmarked: boolean] }>()
   const { t } = useI18n()
+
+  // Приглашение войти остаётся в локали страницы (журнал §20.5).
+  const localePath = useLocalePath()
+  const loginTo = computed(() => localePath(props.loginPath))
 </script>
 
 <template>
   <NuxtLink
     v-if="guest"
-    :to="loginPath"
+    :to="loginTo"
     :aria-label="t('reading.loginToBookmark')"
     :title="t('reading.loginToBookmark')"
     class="inline-flex size-10 items-center justify-center rounded-full border border-zinc-300 bg-white text-zinc-800 transition-colors hover:border-orange-600 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">

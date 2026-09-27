@@ -1,9 +1,15 @@
 <script setup lang="ts">
   /** Ряд тегов-ссылок; в облаке каталога размер знака растёт со счётчиком в три ступени. */
+  import { computed } from "vue"
+
   const props = withDefaults(
     defineProps<{ tags: readonly { slug: string; name: string; articleCount?: number }[]; sized?: boolean }>(),
     { sized: false }
   )
+
+  // Ленты тегов в локали страницы (журнал §20.5).
+  const localePath = useLocalePath()
+  const tagTo = (slug: string) => localePath(`/tags/${slug}`)
 
   const max = computed(() => Math.max(1, ...props.tags.map((tag) => tag.articleCount ?? 0)))
   const step = (count?: number) => {
@@ -19,7 +25,7 @@
     <NuxtLink
       v-for="tag in tags"
       :key="tag.slug"
-      :to="`/tags/${tag.slug}`"
+      :to="tagTo(tag.slug)"
       :class="[
         'font-garamond-libre text-zinc-700 transition-colors duration-300 hover:text-red-700 dark:text-zinc-300 dark:hover:text-red-400',
         step(tag.articleCount)

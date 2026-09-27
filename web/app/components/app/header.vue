@@ -17,8 +17,18 @@
 
   const { isScrolled, isHeaderVisible } = useScroll()
   const { locale, t } = useI18n()
-  const { sections, popularTags, status } = usePublicNavigation({ enabled: !props.static })
+  const localePath = useLocalePath()
+  // Меню запрашивается при отрисовке, а не после монтирования: рубрики обязаны быть в
+  // ответе SSR (`section-feed.md` §2, AC-3 T-129).
+  const { sections, popularTags, status } = await usePublicNavigation({ enabled: !props.static })
   const isMegaMenuOpen = ref(false)
+
+  /**
+   * Название рубрики в локали страницы: в английской шапке выводится `nameEn`, а пустой
+   * перевод оставляет русское имя — пустая строка в меню хуже непереведённой (журнал §20.5).
+   */
+  const sectionName = (section: { name: string; nameEn?: string | null }) =>
+    locale.value === "en" ? section.nameEn?.trim() || section.name : section.name
 
   const toggleMegaMenu = () => {
     isMegaMenuOpen.value = !isMegaMenuOpen.value
@@ -74,14 +84,14 @@
         <NuxtLink
           v-for="section in sections.slice(0, 2)"
           :key="section.id"
-          :to="`/${section.slug}`"
+          :to="localePath(`/${section.slug}`)"
           class="hidden font-sans text-sm font-semibold text-zinc-700 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 xl:block dark:text-zinc-300 dark:hover:text-orange-400">
-          {{ section.name }}
+          {{ sectionName(section) }}
         </NuxtLink>
       </div>
 
       <NuxtLink
-        to="/"
+        :to="localePath('/')"
         class="p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600">
         <span class="sr-only">{{ t("common.logoHome") }}</span>
         <VisualLogo />
@@ -91,7 +101,7 @@
         <LanguageToggle compact />
         <NuxtLink
           v-if="!minimal"
-          to="/login"
+          :to="localePath('/login')"
           class="hidden px-2 py-3 font-sans text-sm font-semibold text-zinc-800 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 sm:inline-flex dark:text-zinc-200">
           {{ t("common.login") }}
         </NuxtLink>
@@ -99,7 +109,7 @@
              страница создания перекладывает на вход с возвратом (журнал §25.1, `home.md` §7). -->
         <NuxtLink
           v-if="!minimal"
-          to="/me/articles/new"
+          :to="localePath('/me/articles/new')"
           class="inline-flex min-h-10 items-center border border-zinc-900 px-3 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:border-orange-700 hover:bg-orange-700 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 motion-reduce:transition-none dark:border-zinc-100 dark:text-zinc-100">
           {{ t("common.write") }}
         </NuxtLink>

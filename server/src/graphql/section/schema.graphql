@@ -124,7 +124,9 @@ type ArticlesBySectionResponse {
 extend type Query {
   # Запросы для страницы типа контента
   section(slug: String!): Section
-  publicSections: [PublicSection!]!
+  # Меню шапки строится по локали страницы: рубрика без публикаций в этом языке
+  # в меню не выводится (журнал §20.9, `section-feed.md` §2).
+  publicSections(locale: Locale!): [PublicSection!]!
   articlesBySection(sectionSlug: String!, page: Int = 1, limit: Int = 10): ArticlesBySectionResponse!
   sectionStats(sectionSlug: String!): SectionStats
 

@@ -22,6 +22,8 @@
 
   const route = useRoute()
   const { locale, t } = useI18n()
+  // Пагинация и 301 слитого тега остаются в локали страницы (журнал §20.5).
+  const localePath = useLocalePath()
 
   const slug = computed(() => String(route.params.slug ?? ""))
   const page = computed(() => pageParam(route.query.page))
@@ -48,7 +50,9 @@
   rethrowNotFound(error.value)
 
   const followRedirect = (value: typeof feed.value) =>
-    value?.redirect ? navigateTo(`/tags/${value.redirect.slug}`, { redirectCode: 301, replace: true }) : undefined
+    value?.redirect
+      ? navigateTo(localePath(`/tags/${value.redirect.slug}`), { redirectCode: 301, replace: true })
+      : undefined
 
   // На сервере переход выполняется до рендера — ответом становится сам 301.
   await followRedirect(feed.value)
@@ -58,6 +62,7 @@
   const articles = computed(() => (feed.value?.items ?? []).map(toReadingArticle))
   const pageInfo = computed(() => feed.value?.pageInfo ?? null)
   const requestId = computed(() => errorRequestId(error.value))
+  const feedPath = computed(() => localePath(`/tags/${slug.value}`))
 
   useHead(() => ({ title: tag.value?.name }))
 </script>
@@ -81,14 +86,14 @@
       :title="t('tagFeed.emptyTitle')"
       :description="t('tagFeed.emptyDescription')"
       :action-label="t('tagFeed.emptyAction')"
-      action-to="/tags" />
+      :action-to="localePath('/tags')" />
 
     <ReadingPagination
       v-if="pageInfo"
       :page="pageInfo.page"
       :total-pages="pageInfo.totalPages"
       :label="t('tagFeed.pagination')"
-      :to="(value) => withQuery(`/tags/${slug}`, { page: value })" />
+      :to="(value) => withQuery(feedPath, { page: value })" />
   </div>
 
   <ReadingLoadingSkeleton v-else :cards="6" class="py-12" />

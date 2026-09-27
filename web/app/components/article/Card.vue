@@ -35,8 +35,11 @@
 
   const emit = defineEmits<{ bookmark: [bookmarked: boolean] }>()
   const { t } = useI18n()
+  // Адрес материала строится в локали страницы: без префикса карточка на `/en` уводила
+  // читателя в русскую версию (стратегия `prefix_except_default`, журнал §20.5).
+  const localePath = useLocalePath()
   const articlePath = computed(() =>
-    props.article.section ? `/${props.article.section.slug}/${props.article.slug}` : ""
+    props.article.section ? localePath(`/${props.article.section.slug}/${props.article.slug}`) : ""
   )
   const showsBookmark = computed(() => props.canBookmark || props.guest)
   const showImage = computed(() => props.variant !== "rank" && Boolean(props.article.featuredImage))
