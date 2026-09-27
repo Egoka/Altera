@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "task_id": "T-131",
+  "issue_id": "01a0e0ab-a0d1-7452-9570-a49e3fac2a17",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-131-support-request-staff-notice.md",
+    "sha": "ce326f2243138b56bc6b83258b6679e5463b0c17"
+  },
+  "baseline_sha": "40fb3788a441f28cffe8aa6066d3fa950f046a95",
+  "tested_sha": "1912ec1f2256ba871fa919f93b069fa2579e370b",
+  "branch": "server/t131-support-staff-notice",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t131-support-notice",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e115-8a37-7f12-8b54-7fc665a6f347",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/support-requests.test.ts, cases 'уведомляет служебные записи admin и owner, копия для истории писем не повторяет адрес и текст' and 'архивированная служебная запись письма не получает': with two active service accounts admin/owner a new support request queues exactly two support_request_staff letters (admin@example.test, owner@example.test) and the archived service admin gets none. The recipient query no longer filters isServiceAccount, because admin/owner are exactly the service accounts (журнал §40 п. 2). The fixture now marks isServiceAccount and the fake user.findMany applies the where filters the way the database does, so the previous query finds nobody on it. CI run https://github.com/Egoka/Altera/actions/runs/36294944659, job 'Формат, линт и тесты'."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/support-requests.test.ts, cases 'отказ почты не отменяет сохранённое обращение', 'сбой выборки получателей даёт номер обращения и пишет backend.error' and 'сбой уведомления не провоцирует повтор: ответ успешен, а вторая отправка была бы дублем': the whole notification step no longer raises out of the mutation — a mail failure and a recipient-lookup failure both leave the user with { ok: true, ticketNo: 101 } and exactly one stored request, and the lookup failure is logged as backend.error with the request number. The successful answer is what keeps the form from being resent, since the mutation has no deduplication. CI run https://github.com/Egoka/Altera/actions/runs/36294944659, job 'Формат, линт и тесты'. RED confirmed locally: the same tests against the baseline file give 3 failed of 26."
+    }
+  ],
+  "checks": {
+    "install_frozen_lockfile": "passed",
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 858 passed / 44 skipped; web 588 passed; @altera/content 99 passed",
+    "server_build_ci": "passed locally and in CI, job 'Сборка сервера и дымовая проверка старта'",
+    "server_smoke": "passed in CI, job 'Сборка сервера и дымовая проверка старта'",
+    "web_typecheck": "passed in CI, job 'Сборка и типизация веба'",
+    "web_build": "passed in CI, job 'Сборка и типизация веба'",
+    "web_smoke": "passed in CI, job 'Сборка и типизация веба'",
+    "playwright": "passed in CI, job 'Браузерная проверка веба', on the second attempt of the same run on the unchanged head (235 passed, 0 failed, 9 skipped). The first attempt failed on the unrelated T-125 scenario web/tests/e2e/125-rate-limit-bypass.spec.ts ('подставленный X-Forwarded-For не снимает лимит по адресу': NOT_FOUND instead of RATE_LIMITED); that scenario passes on the baseline (run 36293877216 on 40fb3788) and the change touches only server/src/support/requests.ts and its test. No test was weakened or skipped.",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36294944659 — aggregate check 'test' pass on the tested SHA",
+    "environment": "Node 24.12.0, pnpm 10.18.3; no migrations added and none applied anywhere"
+  },
+  "pr": {
+    "number": 252,
+    "url": "https://github.com/Egoka/Altera/pull/252",
+    "base_ref": "app",
+    "base_sha": "40fb3788a441f28cffe8aa6066d3fa950f046a95",
+    "head_sha": "1912ec1f2256ba871fa919f93b069fa2579e370b",
+    "merge_sha": "be6675afb677bd97526bb7e00a26afe7d501a15b"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": "1912ec1f2256ba871fa919f93b069fa2579e370b",
+    "verdict": "pending"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Server-side change without migrations; no production environment exists (T-103) and Render Server stays on the development Neon branch"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-131.md",
+    "sha256": "8874854893a160f153a55c4b12d43a749fe931dbf1796512b94c827481ca2020"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "The admin 'Обращения' queue screen and the request status in the cabinet belong to T-119 and were out of scope",
+    "The rate-limit bypass via GraphQL aliases belongs to T-125 and was out of scope",
+    "Recording the guest's consent to the personal-data policy belongs to T-102 and was out of scope",
+    "The [ДОПУЩЕНИЕ] about PROVIDER_UNAVAILABLE in docs/spec/20-public/contact.md §4 no longer matches the code and belongs to the documentation stage",
+    "The T-125 browser scenario 125-rate-limit-bypass.spec.ts is flaky under parallel Playwright workers; handed to the owner as an observation, analysis stays with T-125",
+    "The returned T-059 (ALTE-111) is re-accepted in its own card after this task and T-125 are accepted"
+  ],
+  "usage": null
+}
