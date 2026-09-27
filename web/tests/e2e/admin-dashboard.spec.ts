@@ -189,6 +189,12 @@ test.describe("admin dashboard", () => {
 
     expect(response?.status()).toBe(403)
     await expect(page.locator("[data-admin-card]")).toHaveCount(0)
+
+    // T-130: отказ в доступе — не сбой сервера, и код запроса на нём не показывается (§28.4).
+    await expect(page.getByTestId("forbidden")).toContainText("403")
+    await expect(page.getByTestId("server-error")).toHaveCount(0)
+    await expect(page.getByTestId("copy-field-value")).toHaveCount(0)
+    await expect(page).toHaveTitle(/Нет доступа/)
   })
 
   test("guest is redirected to login with the original admin target", async ({ page }) => {

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import ErrorPage from "../app/error.vue"
 import NotFound from "../app/components/service/NotFound.vue"
 import ServerError from "../app/components/service/ServerError.vue"
+import Forbidden from "../app/components/service/Forbidden.vue"
 import ReportLinkForm from "../app/components/service/ReportLinkForm.vue"
 import CachedList from "../app/components/service/CachedList.vue"
 import CopyField from "../app/components/reading/CopyField.vue"
@@ -60,6 +61,7 @@ const stubs = {
 const components = {
   ServiceNotFound: NotFound,
   ServiceServerError: ServerError,
+  ServiceForbidden: Forbidden,
   ServiceReportLinkForm: ReportLinkForm,
   ServiceCachedList: CachedList,
   ReadingCopyField: CopyField
@@ -217,6 +219,60 @@ describe("обработчик ошибок Nuxt", () => {
     expect(serviceRequestId({ statusCode: 500, data: { requestId: "from-error" } }, "event")).toBe("from-error")
     expect(serviceRequestId({ statusCode: 404, data: { requestId: "leaked" } }, "event")).toBeNull()
     expect(serviceRequestId(null, undefined)).toBeNull()
+  })
+
+  it("403 отдаёт отказ в доступе, а не сбой сервера", async () => {
+    const wrapper = await render(ErrorPage, {
+      error: { statusCode: 403, statusMessage: "Admin access is limited to service accounts" }
+    })
+
+    expect(wrapper.find('[data-testid="forbidden"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="server-error"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="not-found"]').exists()).toBe(false)
+  })
+
+  it("клиентский статус остаётся без кода запроса даже с ним в отказе", async () => {
+    // Журнал §28.4: `requestId` — только технический сбой. 403 и прочие 4xx им не являются.
+    for (const statusCode of [400, 403, 429]) {
+      expect(serviceRequestId({ statusCode, data: { requestId: "leaked-id" } }, "event")).toBeNull()
+    }
+
+    const wrapper = await render(ErrorPage, { error: { statusCode: 403, data: { requestId: "leaked-id" } } })
+
+    expect(wrapper.html()).not.toContain("leaked-id")
+  })
+
+  it("вторая ошибка той же SPA-сессии показывает свой код запроса", async () => {
+    const first = await render(ErrorPage, { error: { statusCode: 500, data: { requestId: "first-id" } } })
+    expect(first.get('[data-testid="copy-field-value"]').text()).toBe("first-id")
+
+    const second = await render(ErrorPage, { error: { statusCode: 500, data: { requestId: "second-id" } } })
+
+    expect(second.get('[data-testid="copy-field-value"]').text()).toBe("second-id")
+  })
+
+  it("серверный код запроса не переезжает на следующую ошибку без своего кода", async () => {
+    // Первая ошибка отрисована сервером: код взят из контекста запроса и перенесён через `useState`.
+    states.set("service.requestId", ref("server-id"))
+    const first = await render(ErrorPage, { error: { statusCode: 500 } })
+    expect(first.get('[data-testid="copy-field-value"]').text()).toBe("server-id")
+
+    const second = await render(ErrorPage, { error: { statusCode: 500 } })
+
+    expect(second.find('[data-testid="copy-field-value"]').exists()).toBe(false)
+  })
+})
+
+describe("страница 403", () => {
+  it("объясняет отказ и уводит на главную и в редакцию без кода запроса", async () => {
+    const wrapper = await render(Forbidden)
+
+    expect(wrapper.get('[data-testid="forbidden"]').text()).toContain("service.forbiddenTitle")
+    expect(wrapper.get('[data-testid="forbidden-contact"]').attributes("href")).toBe("/contact")
+    expect(wrapper.find('[data-testid="copy-field-value"]').exists()).toBe(false)
+    // 403 приходит из middleware: страница отказа не должна ходить в API следом.
+    expect(wrapper.get('[data-zone="header"]').attributes("data-static")).toBe("true")
+    expect(graphQLRequest).not.toHaveBeenCalled()
   })
 })
 
