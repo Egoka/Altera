@@ -62,7 +62,9 @@ pnpm --filter nuxt-app run test:e2e
 зависимостях и получал копию, поднятую в `node_modules/.pnpm/node_modules`, а `@tailwindcss/vite`
 — свою; при расхождении node-проект падал с TS2322 (`Plugin$1<any>[]` → `PluginOption`). jiti
 перерешён на 2.5.1 без постоянных `overrides`: override добавили, выполнили
-`pnpm install --lockfile-only`, убрали и повторили. Точный `jiti: 2.4.2` у `@prisma/config`
+`pnpm install --lockfile-only`, убрали и повторили. Тем же приёмом jiti выровнен на 2.7.0 при
+переходе на `tailwindcss` 4.3: `@tailwindcss/node` требует `^2.7.0`, и без выравнивания снова
+появлялась вторая копия vite. Точный `jiti: 2.4.2` у `@prisma/config`
 остался, vite он не касается. Если TS2322 вернётся, проверь `grep '^  vite@7' pnpm-lock.yaml`:
 больше одной строки со скобками — дубль снова появился, и лечить его нужно выравниванием
 расходящегося peer, а не кастом. `pnpm dedupe` здесь слишком широк: он заодно перерешает десятки

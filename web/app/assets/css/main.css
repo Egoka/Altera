@@ -273,6 +273,10 @@
   --font-waterway: "Waterway", serif;
   --font-garamond-libre: "Garamond Libre", serif;
   --font-cormorant: "Cormorant SC", serif;
+  /* Основной текст (`html` ниже): стек Tailwind 4.1. С 4.2 умолчание Tailwind — -apple-system,
+     Segoe UI, Roboto, Arial; гарнитура сайта не меняется вместе с версией пакета. */
+  --font-sans:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
   /* Контейнеры и горизонтальные отступы. `--container-max` объявлен в `:root`
      (слой base): ключ `max` в `@theme` переопределил бы `w-max`, `min-w-max`,
