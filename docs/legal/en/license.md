@@ -1,134 +1,145 @@
 # Content License
 
+> **Internal note, not for publication.** Revision 1 for the first free launch. The agent draft
+> (T-102) was reviewed and corrected by a lawyer on 2026-09-27; see the
+> [report](../../reports/2026-09-27-t102-legal-review-report.md). Before publishing via
+> `/admin/legal`, the owner fills in the `[TO BE FILLED BY OWNER: …]` fields and removes this note.
+
 **Revision:** 1  
-**Date:** [set by owner upon publication]  
-**Status:** agent draft — requires legal review and owner approval
+**Publication date:** [TO BE FILLED BY OWNER: publication date]
 
 ---
 
 ## 1. General Provisions
 
-1.1. This Content License (hereinafter — the License) defines the terms under which authors
-grant the online journal **Altera** (hereinafter — the Platform) rights to use published materials.
+1.1. This Content License (the "License") contains the terms of a license agreement (Article 1235 of
+the Civil Code of the Russian Federation) under which the Author grants [TO BE FILLED BY OWNER: full
+name of the legal entity or of the sole proprietor] (the "Administration") the right to use their
+materials on the online journal **Altera** (the "Platform"). The License forms an integral part of
+the Terms of Service (`/en/legal/terms`); terms have the meanings given in the Terms.
 
-1.2. This License does not apply to the Platform's source code, which is released under the
-MIT License.
+1.2. The license agreement is concluded in electronic form: by submitting a material for
+publication, the Author accepts the terms of the License with respect to that material.
+
+1.3. The License applies to Authors' materials. It does not apply to the journal's editorial
+materials or to the Platform's source code.
 
 ---
 
 ## 2. Author's Rights {#author-rights}
 
-2.1. All exclusive rights to published texts and images created by the author remain with
-the author. The Platform does not acquire exclusive rights to the materials.
+2.1. The exclusive right to a material remains with the Author. The Administration does not acquire
+the exclusive right to materials.
 
-2.2. Authors may publish the same materials on other platforms and for any other purposes —
-independently of their presence on the Platform.
+2.2. The Author may use their materials in any way, including publishing them on other platforms,
+regardless of their presence on the Platform.
+
+2.3. The Platform shows the Author's public name or pseudonym with the material and does not change
+its text. Technical transformations — changing the size, format and compression of images, showing
+excerpts in previews — are not adaptation or alteration of the work.
+
+2.4. The Author warrants that they are entitled to grant the License for the material. If a material
+or part of it was created with generative artificial intelligence, the License is granted to the
+extent of the rights the Author holds in such material.
 
 ---
 
-## 3. License Granted to the Platform {#platform-license}
+## 3. License Granted to the Administration {#platform-license}
 
-3.1. By publishing a material on the Platform, the author grants **[Legal Entity / Sole
-Proprietor Name]** a non-exclusive, royalty-free, worldwide license to:
+3.1. The Author grants the Administration a simple (non-exclusive) license free of charge for the
+territory of the whole world.
 
-- publish and display the material on Platform pages;
-- cache and create technical copies required for the Platform's operation;
-- include the material in feeds, RSS, sitemaps, and previews;
-- allow indexing of the material by search engines.
+3.2. The Administration may use the material in the following ways:
 
-3.2. The Platform may **not**:
+- reproduction, including recording in computer memory, storage, caching, making technical and
+  backup copies, and making image variants of different sizes and formats;
+- making available to the public: display on Platform pages, inclusion in feeds and selections, RSS,
+  the sitemap, previews and cards when links to the material are shared, including using the title,
+  subtitle, cover and text excerpts;
+- reproduction for automated review of the material and for preparing alternative text for images
+  by contractors acting on the Administration's behalf.
 
-- sell materials or transfer rights to them to third parties beyond displaying them as part
-  of the Platform's operation;
-- use materials for training, fine-tuning, or creating artificial intelligence models
-  (see section [#ai-training](#ai-training)).
+3.3. The Administration may not:
 
-3.3. Term of license: while the material is in a published state, and during the period of
-archival copy retention under the data retention policy. Upon permanent deletion of the material,
-the license terminates.
+- grant other persons the right to use the material (sublicenses);
+- sell materials or otherwise transfer rights to them to third parties;
+- use materials for training artificial intelligence models (section 4).
+
+3.4. The License is valid for the entire term of the exclusive right to the material and terminates
+upon permanent deletion of the material or of the Author's account. While the material or the
+account is archived, and after a final rejection of publication, the Administration does not display
+the material publicly; storing copies of it is permitted.
 
 ---
 
 ## 4. Prohibition on Use of Materials for AI Training {#ai-training}
 
-4.1. Use of materials published on the Platform for training, fine-tuning, or creating
-artificial intelligence models is **prohibited** — for both the Platform and any third parties.
+4.1. The Administration does not use Platform materials for training, fine-tuning or creating
+artificial intelligence models and does not provide materials to third parties for such purposes.
 
-4.2. This prohibition is a condition of this License. Violation of this prohibition constitutes
-a breach of the license terms and results in termination of the license as it applies to the
-violating party.
+4.2. Neither the Administration nor this License grants third parties any right to use Platform
+materials for training, fine-tuning or creating artificial intelligence models. Users are expressly
+prohibited from doing so by the Terms of Service. Reproducing materials for such purposes without
+the Author's permission infringes the Author's exclusive right (Articles 1229 and 1270 of the Civil
+Code of the Russian Federation).
 
-4.3. This prohibition does not restrict:
+4.3. The prohibition does not restrict:
 
-- human reading and quotation of materials;
+- reading materials;
+- quotation in accordance with Article 1274 of the Civil Code of the Russian Federation;
 - indexing of materials by search engines;
-- standard caching by browsers and CDN.
+- ordinary caching by browsers and content delivery networks;
+- sharing links to materials.
 
-4.4. The Platform records this prohibition in `robots.txt` with respect to known automated
-dataset crawlers used for AI training. This is a license condition, not a technical safeguard:
-the Platform does not guarantee that this prohibition technically prevents unauthorized data
-collection.
+4.4. The Platform states the prohibition in its `robots.txt` file for known AI training data
+crawlers. The prohibition is a condition of use of the materials, not a technical protection against
+copying: the Platform does not guarantee that it technically prevents unauthorized collection.
 
-4.5. Transmitting article text to an **AI provider** solely for content review and AI
-translation (Publication Rules, section 4; Terms of Service) is permitted and does not
-constitute training of AI on Platform materials. In such transmissions, the text is not
-retained for model training.
+4.5. Transferring a material to the AI provider for automated review and preparing alternative text
+for images (Publication Rules, section 9) is not training of artificial intelligence on Platform
+materials. The Administration transfers materials on terms that exclude their use for training the
+provider's models.
 
 ---
 
 ## 5. Images {#images}
 
-5.1. Images published alongside text must include a license declaration and attribution.
-Permitted image licenses include: author-owned content, open licenses such as CC BY, CC BY-SA,
-CC BY-NC and similar, and images from open stock libraries with proper attribution.
+5.1. When uploading an image, the Author provides attribution (author and source) and a license.
+Permitted options: the Author's own image; CC BY; CC BY-SA; CC BY-NC; CC0; public domain; the rights
+holder's permission. The attribution is shown with the image.
 
-5.2. The author who uploads an image is responsible for ensuring compliance with the declared
-license.
+5.2. The Author who uploaded an image is responsible for holding the rights to it and for using it
+in accordance with the stated license, including its attribution requirements.
 
 ---
 
 ## 6. Quotation and Link Sharing {#sharing}
 
-6.1. Quoting Platform materials with proper attribution and a link to the original is permitted.
+6.1. Quoting Platform materials is permitted to the extent justified by the purpose of quotation,
+with the author's name and the source — a link to the material — stated (Article 1274 of the Civil
+Code of the Russian Federation).
 
-6.2. Sharing links to public Platform pages is permitted without restriction.
-
----
-
-## 7. Export of Materials {#export}
-
-7.1. Authors may export their materials via `/me/export` at any time, including after a paid
-plan expires.
+6.2. Sharing links to public Platform pages is not restricted.
 
 ---
 
-## 8. Archiving and Deletion
+## 7. Author's Access to Their Materials {#export}
 
-8.1. When an account is archived, materials are hidden from the public feed; the license
-with respect to publication is suspended.
-
-8.2. Upon permanent deletion of an account ("delete forever"), materials are removed from
-the Platform and the license terminates.
+7.1. The Author sees their materials in the personal account, including archived ones and those that
+received a final rejection, and can copy them. The Author may also request a copy of their materials
+via the `/en/contact` form.
 
 ---
 
-## 9. Source Code
+## 8. Source Code {#code}
 
-9.1. The Platform's source code is distributed under the MIT License, published in the
-project repository. The MIT License does not apply to user-generated materials (texts, images)
-published on the Platform.
+8.1. The Platform's source code is distributed under the MIT License, the text of which is published
+in the project repository. The MIT License does not apply to Authors' materials.
 
 ---
 
-## Related Documents
+Related documents:
 
 - Terms of Service — `/en/legal/terms`
 - Privacy Policy — `/en/legal/privacy`
 - Publication Rules — `/en/legal/content-rules`
-
----
-
-_Draft prepared by agent in accordance with the owner's decision log (§24.2, §39) and project
-specifications (ADR-0008, ADR-0028, ADR-0043). The AI training prohibition is established by
-the owner (decision log §24.2). Requires legal review and owner approval prior to publication
-via `/admin/legal`._

@@ -1,161 +1,226 @@
 # Publication Rules
 
+> **Internal note, not for publication.** Revision 1 for the first free launch. The agent draft
+> (T-102) was reviewed and corrected by a lawyer on 2026-09-27; see the
+> [report](../../reports/2026-09-27-t102-legal-review-report.md). Before publishing via
+> `/admin/legal`, the owner fills in the `[TO BE FILLED BY OWNER: …]` fields and removes this note.
+
 **Revision:** 1  
-**Date:** [set by owner upon publication]  
-**Status:** agent draft — requires legal review and owner approval
+**Publication date:** [TO BE FILLED BY OWNER: publication date]
 
 ---
 
 ## 1. General Provisions
 
-1.1. These Publication Rules (hereinafter — the Rules) establish requirements for content
-published on the online journal **Altera** (hereinafter — the Platform) and describe the
-editorial review process.
+1.1. These Publication Rules (the "Rules") set out the requirements for materials on the online
+journal **Altera** (the "Platform") and how they are reviewed. The Rules form an integral part of
+the Terms of Service (`/en/legal/terms`); terms have the meanings given in the Terms.
 
-1.2. By publishing on the Platform, authors confirm they have read and will comply with these
-Rules. Violations may result in content removal or account suspension.
+1.2. By publishing a material, the Author confirms that they have read and comply with the Rules. A
+breach of the Rules may lead to refusal of publication, taking the material down or blocking the
+account.
 
-1.3. These Rules supplement the Terms of Service (`/en/legal/terms`) and the Content License
-(`/en/legal/license`).
+1.3. The Rules also apply to the Author's public profile: public name, avatar, description and
+links.
 
 ---
 
-## 2. Prohibited Content {#forbidden}
+## 2. What May Not Be Published {#forbidden}
 
-The following content is prohibited:
+A material is not published if it falls under at least one of the six categories below. The same
+categories are stated in the rejection notice (section 5).
 
-### 2.1. Infringement of Text or Image Rights {#rights}
+### 2.1. Infringement of Rights to Text or Images {#rights}
 
-Publishing texts, text excerpts, or images owned by third parties is prohibited unless the
-author has the rights holder's permission or the work is clearly covered by an appropriate
-open license. The author who uploads an image is responsible for ensuring compliance with
-the applicable license.
+Other people's texts, excerpts of them and images may not be published without the rights holder's
+permission or another lawful basis. Quotation is permitted to the extent justified by the purpose of
+quotation, with the author and source stated (Article 1274 of the Civil Code of the Russian
+Federation). Retelling in one's own words with a link to the source is not an infringement.
 
 ### 2.2. Illegal Content {#illegal}
 
-Content that violates Russian Federation law is prohibited, including materials promoting
-violence, discrimination, extremism, and any content that is unlawful to distribute publicly.
+Information whose distribution is prohibited by the laws of the Russian Federation may not be
+published, including:
 
-### 2.3. Spam and Undisclosed Advertising {#spam}
+- calls for violence, terrorist or extremist activity, and its justification;
+- sexual material involving minors;
+- information on how to make or obtain narcotic drugs, and their distribution;
+- descriptions of suicide methods and incitement to suicide;
+- instructions for making weapons and explosives;
+- offers to sell prohibited goods and services;
+- threats against specific people, insults and harassment on the grounds of ethnicity, religion,
+  sex or other characteristics.
 
-Materials that constitute undisclosed advertising, spam, or do not conform to the Platform's
-editorial format are prohibited. Commercial references without mandatory disclosure of their
-advertising nature fall within this category.
+Journalistic, historical, scientific and artistic treatment of these subjects without calls,
+instructions or justification is permitted.
+
+### 2.3. Spam and Advertising {#spam}
+
+Any advertising is prohibited on the Platform, including open advertising and advertising labeled
+as such: a material may not promote a product, service, company or resource. Mentioning brands,
+products and companies in a review, critique or news item is not advertising. Also prohibited are
+spam — meaningless repetition, keyword or link stuffing — and materials whose main purpose is to
+lead readers to external resources.
 
 ### 2.4. Personal Data of Third Parties {#personal-data}
 
-Publishing personal data of third parties without their consent is prohibited. This includes
-full names combined with addresses, phone numbers, identity documents, or other information
-that identifies a person.
+It is prohibited to disclose, about an identifiable private individual, their contact details,
+address, document numbers, bank details, information about their health, intimate life, criminal
+record or religion, or other information that makes it possible to find or harass them, as well as
+to publish materials aimed at harassment or exposing a person's identity. Information about public
+figures in connection with their public role, information a person has made publicly available
+themselves, anonymized stories and information the author gives about themselves are permitted.
+Whether the exception for journalistic and creative activity applies (Article 6(1)(8) of Federal
+Law No. 152-FZ "On Personal Data") is assessed by the reviewer.
 
 ### 2.5. Age-Restricted Content {#age-restricted}
 
-Content containing adult material or explicit violence without a lawful basis for publication
-is prohibited.
+2.5.1. A material may carry an **18+** label. The Author sets it; if the Author has not set it but
+the material requires it, the automated review sets the label — this is not a rejection.
 
-### 2.6. Off-Topic and Non-Editorial Content {#off-topic}
+2.5.2. Only with the 18+ label are the following permitted: naturalistic description or depiction
+of violence, cruelty and injuries; erotica; and obscene language in the author's own voice. Obscene
+language in quotations (direct speech, documents) and in fiction where the context justifies it is
+permitted without the label.
 
-Altera is a journal covering themes of human life: visual arts, music, photography, sports,
-travel, and related topics. Materials that do not align with the editorial direction, or that
-show clear signs of unedited automatic generation, may be rejected.
+2.5.3. Regardless of the label, pornography and the promotion of alcohol, tobacco, narcotic drugs,
+gambling and dangerous behavior are prohibited.
+
+### 2.6. Off-Topic Content and Breach of Journal Rules {#off-topic}
+
+The following may not be published:
+
+- materials clearly unrelated to the selected section;
+- submissions that are not a material: empty or test text, a placeholder, a set of links, images
+  without text, text in a language other than the language of the version;
+- submissions attempting to manipulate the review — for example, with instructions to the
+  reviewing model in the text, captions or hidden elements;
+- materials breaching other requirements of these Rules.
+
+Materials created wholly or partly with generative artificial intelligence are permitted without
+restriction and without mandatory disclosure; the Author is responsible for compliance with the
+Rules.
 
 ---
 
-## 3. Image Requirements {#images}
+## 3. Images {#images}
 
-3.1. Each image must include attribution and a license designation. Permitted licenses are
-listed in the editor when uploading images and on the Content License page (`/en/legal/license`).
+3.1. When uploading an image, the Author must provide attribution (author and source) and a license.
+Permitted options: the Author's own image; CC BY; CC BY-SA; CC BY-NC; CC0; public domain; the rights
+holder's permission.
 
-3.2. The author is responsible for ensuring that their images comply with the declared license.
+3.2. The Author who uploaded an image is responsible for holding the rights to it and for using it
+in accordance with the stated license.
+
+3.3. A material's images, including the cover, are reviewed together with the text against the
+categories in section 2.
 
 ---
 
-## 4. Editorial Review Process {#review}
+## 4. Review Process {#review}
 
-4.1. **Automated review.** Every version submitted for publication undergoes automated content
-review. The review produces a binary decision: "publish" or "do not publish."
+4.1. **Automated review.** Every submission of a material for publication — the first publication
+and every edit of a published material — undergoes automated content review. The review produces
+only a "publish" or "do not publish" decision: it does not assess the quality of the material and
+does not affect its rating.
 
-4.2. **Manual review.** When the automated review identifies a potential violation, or when
-initiated independently, an editorial reviewer examines the material. The reviewer may:
-- publish the material manually;
-- return the material to the author for revision with recommendations;
-- issue a final rejection.
+4.2. If the automated review approves the submission, the material is published automatically.
 
-4.3. **Appealing the automated review decision.** Automated review decisions cannot be
-appealed by the author. The author may edit the material and resubmit it for review.
+4.3. If the automated review rejects the submission, the Author receives an explanation of the
+reason and the material is passed to a reviewer — a member of the Platform staff. There is no
+separate appeal against the automated review decision: every such rejection is considered by a
+person.
 
-4.4. **Final rejection.** A material that receives a final rejection by a reviewer remains
-accessible to the author for reading and export. The editorial team does not modify
-third-party materials.
+4.4. The reviewer may return the material to the Author for revision any number of times, publish
+it manually — including when disagreeing with the automated rejection — or issue a final rejection.
+The Author and the reviewer may correspond within the decision on the material; the correspondence
+is not published.
 
-4.5. **Review timeline.** The estimated response time for manual review is
-`[ASSUMPTION: 48 hours]`. The specific timeline will be confirmed by the owner.
+4.5. A final rejection is neither deletion nor archiving: the Author can see the material and copy
+it but can no longer edit it.
+
+4.6. The reviewer may at any time take a published material down for revision, stating the reason
+or recommendations. After revision, decisions on such a material are made by the reviewer.
+
+4.7. The editorial team does not change the Author's text. Only the Author makes changes to the
+material.
+
+4.8. Manual review is carried out in order of the queue; no guaranteed review time is set.
+
+4.9. The review does not confirm that a material is accurate or lawful and does not release the
+Author from responsibility for its content.
 
 ---
 
 ## 5. Rejection Notices {#rejection-notice}
 
-5.1. For each rejection, the author receives a notification indicating the category from
-section 2 of these Rules. The notification is shown in the author's dashboard and sent by email.
+5.1. For every rejection, the Author receives a notice in the personal account stating the category
+from section 2 and the explanation produced by the automated review. The reviewer may add a comment
+to their decision.
 
-5.2. Specific criteria for automated review, decision thresholds, and internal signals that
-could be used to circumvent the review are not published in order to maintain the integrity
-of the editorial process.
-
----
-
-## 6. Editing Window After Publication {#edit-window}
-
-6.1. After publication, the author may make corrections within one hour without triggering
-a full review for non-material changes. The exact behavior depends on the technical
-implementation of the editor.
+5.2. The exact criteria, thresholds and internal signals of the review are not published so that
+the review cannot be circumvented.
 
 ---
 
-## 7. Fate of Materials {#expiry}
+## 6. Editing a Published Material {#edit-window}
 
-7.1. When a paid plan expires, access to the full editor is restricted; however, published
-materials remain in the Platform's feed in accordance with the Content License.
+6.1. The Author may correct any part of a published material, including the cover. The edit is
+prepared in a copy: the previous version remains public, and the new one is published only after
+automated review.
 
-7.2. Authors may export their materials at any time, including after a paid plan expires.
+6.2. If the automated review rejects the edit, the previous version remains published, the Author
+sees the reasons and revises the edit; the resubmission is considered by the reviewer.
 
-7.3. When an account is archived, published materials are hidden from the public feed.
-Materials remain accessible to the author for viewing and export.
+6.3. Only one edit of a material may be under review at a time. The Author may withdraw the edit and
+continue working on it.
 
----
-
-## 8. Editorial Takedown {#takedown}
-
-8.1. The editorial team may remove a published material from the public feed if it violates
-these Rules. The author will be notified with a reason.
-
-8.2. For copyright infringement reports, contact us via `/contact`.
+6.4. After automatic publication, the Author may once, and only within one hour, take the material
+down for revision. The resubmission after such revision again undergoes automated review.
 
 ---
 
-## 9. Transmission of Content to External Services
+## 7. Archiving, Blocking and What Happens to Materials {#expiry}
 
-9.1. For automated content review, article text may be transmitted to an AI provider without
-the author's personal data (name and email address).
+7.1. The Author may archive their material; an archived material is hidden from public access. The
+Author may restore a material only if they archived it themselves.
 
-9.2. The prohibition on using Platform materials for AI training is established in the Content
-License, section "Prohibition on AI Training" (`/en/legal/license#ai-training`).
+7.2. When an account is deleted (archived), all of the Author's materials are archived as well. When
+the account is restored, the materials remain archived and the Author returns them themselves; a
+previously published material returns to publication without a new review.
+
+7.3. When an account is blocked, its materials are hidden from public access. A blocking may be
+appealed via the form that opens when trying to log in (Terms of Service, section 6).
 
 ---
 
-## 10. Contact and Disputes
+## 8. Takedown and Claims {#takedown}
 
-For questions related to these Rules: `/contact`
+8.1. The editorial team may take a published material down for revision or archive it if it
+breaches these Rules or the law. The Author receives a notice stating the reason.
+
+8.2. An infringement may be reported via the `/en/contact` form with a link to the material.
+
+8.3. A rights holder or another person whose rights have been infringed sends a notice via the
+`/en/contact` form (topic "Rights to a piece") or to the email address given in the Terms of Service
+(section 12). The notice should include a link to the material, the grounds of the rights and the
+nature of the infringement.
+
+---
+
+## 9. Transfer of Materials to External Services
+
+9.1. For automated review and preparing alternative text for images, the title, text, images,
+captions, section and tags of the material are transferred to the AI provider without the Author's
+name or email address (Privacy Policy, section 6).
+
+9.2. Such transfer is not use of materials for training artificial intelligence. The prohibition on
+training is set out in the Content License (`/en/legal/license#ai-training`).
+
+---
 
 Related documents:
+
 - Terms of Service — `/en/legal/terms`
 - Privacy Policy — `/en/legal/privacy`
 - Content License — `/en/legal/license`
-
----
-
-_Draft prepared by agent in accordance with the owner's decision log (§24.3, §32, §39) and
-project specifications. The six rejection categories are approved by the owner (decision log
-§32 item 1). AI review criteria per category are being prepared under a separate task (T-113)
-and are not included in this document. Requires legal review and owner approval prior to
-publication via `/admin/legal`._
