@@ -8,7 +8,7 @@
     "sha": "88e47776573975866c867b06775f02ff3880cb71"
   },
   "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
-  "tested_sha": "c45afbedbd85f5698464e4028511de615553330d",
+  "tested_sha": "b470aa0d71e7079c5ce224b9fc3ee0a750cea450",
   "branch": "feat/t022-register-login",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t022-auth",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -48,14 +48,14 @@
     "url": "https://github.com/Egoka/Altera/pull/164",
     "base_ref": "app",
     "base_sha": "cd7323467ba50d60accd287eaaad2dff4bd70855",
-    "head_sha": "c45afbedbd85f5698464e4028511de615553330d",
-    "merge_sha": null
+    "head_sha": "b470aa0d71e7079c5ce224b9fc3ee0a750cea450",
+    "merge_sha": "a84e731724fb0793814cd3307468360332dff538"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e2d7-cbc3-755d-bdea-5870b922a893",
+    "sha": "b470aa0d71e7079c5ce224b9fc3ee0a750cea450",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -65,7 +65,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-022.md",
-    "sha256": "9b9297cf65fc81e4a707967860914f27e40fe4bd7d6c5026ea2894ad96ccfdb8"
+    "sha256": "df763d50aab57168f0cd4cce479f76576446ad511b263ef56efe4b72c6d4c97b"
   },
   "remaining": [
     "Независимое review проверенного SHA и развёртывание с проверкой здоровья через контроллер не выполнены",
