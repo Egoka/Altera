@@ -151,11 +151,15 @@ Receipt для контроллера держи во временном фай�
    worktree от свежего `origin/app`, включи автослияние (`gh pr merge <номер> --auto --merge`)
    и не жди. Поля, которых нет в истории карточки и GitHub, не выдумывай — `blocked` с причиной.
 5. Проба выкладки. Если для задачи с готовым итогом `controller.py verify` отказывает только
-   `deployment` и завершённой пробы моложе 40 минут нет, оставь в карточке первой такой задачи
-   один комментарий с упоминанием ревьюера: прогреть `https://altera-m4po.onrender.com/health`
-   до ответа 200, затем только чтение Render MCP — `list_deploys` и `get_deploy` для сервиса
-   `srv-d1uk6b6mcj7s73ek25h0` (workspace `tea-d0q29c7diees738n0250`); маркер ревью не печатать;
-   вернуть deploy ID, commit SHA и статус. Не больше одной пробы за проход.
+   `deployment`, а завершённой пробы моложе 40 минут, которую `verify` принимает, нет, оставь в
+   карточке первой такой задачи один комментарий с упоминанием ревьюера: прогреть
+   `https://altera-m4po.onrender.com/health` до ответа 200; Render MCP `list_deploys` с
+   `serviceId: "srv-d1uk6b6mcj7s73ek25h0"` и `workspaceId: "tea-d0q29c7diees738n0250"` — найти
+   деплой `live`; затем обязательно ровно один вызов Render MCP `get_deploy` с тремя аргументами:
+   те же `serviceId` и `workspaceId` и `deployId` этого деплоя. Контроллер принимает только результат
+   `get_deploy`, `list_deploys` не засчитывается; параллельные и повторные `get_deploy` не нужны.
+   Ничего не менять, маркер ревью не печатать; вернуть deploy ID, commit SHA, статус и `revision`
+   из `/health`. Не больше одной пробы за проход.
 6. Done. Для задачи с готовым итогом в `app` и завершённой пробой моложе 55 минут (если выкладка
    обязательна): receipt из `origin/app` плюс локально `deployment.probe_actor_id` =
    `db94a617-807c-4eec-981f-51fd4b3217d4` и `deployment.probe_run_id` = run пробы; прогрей
@@ -246,6 +250,13 @@ Receipt для контроллера держи во временном фай�
    `gh pr view --json headRefOid,mergeCommit` или `git rev-parse` этого прохода, копировать дословно
    и перед отправкой проверять `git cat-file -e`. Снимок —
    `snapshots/2026-09-27-finalizer-rework/verified-sha-verbatim.json`.
+9. **Проба выкладки — обязательный `get_deploy`** (применено по решению владельца 2026-09-27 в
+   14:29 UTC). Проба 14:12 (run `01a0e31b`, ALTE-36) не засчитана контроллером: ревьюер вызвал только
+   `list_deploys` без `workspaceId`, а `render_deploy` принимает исключительно результат `get_deploy` с
+   `serviceId`, `workspaceId` и `deployId`. По старому шагу 5 такая проба ещё 40 минут считалась
+   «свежей», и новая не запрашивалась. Теперь шаг 5 называет обязательный вызов с тремя аргументами
+   и учитывает только пробу, которую принимает `verify`. Снимок —
+   `snapshots/2026-09-27-finalizer-rework/verified-probe-get-deploy.json`.
 
 ## Вариант (а): правило в автопилоте «Altera — очередь разработки»
 
