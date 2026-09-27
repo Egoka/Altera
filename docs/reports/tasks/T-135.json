@@ -7,7 +7,7 @@
   "implementer_run_id": "unknown",
   "source_path": "docs/backlog/tasks/T-135-reality-check-and-claude-md.md",
   "baseline_sha": "5af26a3fd661917cb00e8021409ffe4e6352c8c1",
-  "tested_sha": "0e13d4582419a07fa2f7a49f76bb54b2e3acad3e",
+  "tested_sha": "f16d90c57d53bfb51d7603d3d1f3b1ab0af0d628",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
   "branch": "docs/t135-reality-check",
   "pr": "https://github.com/Egoka/Altera/pull/235",
@@ -39,7 +39,7 @@
   ],
   "criteria": {
     "AC-1": "каждое утверждение §С2.2 и §С2.7 (включая «Действительно не реализовано») снабжено [ФАКТ: файл:строка] или ссылкой на отсутствие — выполнено (1a33513)",
-    "AC-2": "T-123/T-132/T-134 удалены из «Что сломано» в CLAUDE.md — выполнено (0e13d45)"
+    "AC-2": "T-123/T-132/T-134 удалены из «Что сломано» в CLAUDE.md — выполнено (0e13d45); T-125/T-126 убраны, T-041 переформулирован — выполнено (f16d90c)"
   },
   "review_verdict": "ожидает независимого ревью",
   "verified": false,

@@ -634,7 +634,8 @@ sitemap и RSS реализованы (T-099)
 - **Редактор статьи — заглушки**: `/me/articles/[slug]/edit.vue` выводит
   `<div>/me/articles/:slug/edit</div>` [ФАКТ: `web/app/pages/me/articles/[slug]/edit.vue:10`];
   `/admin/articles/new.vue` — `<div>/admin/articles/new</div>`
-  [ФАКТ: `web/app/pages/admin/articles/new.vue:9`]; пакет `content` не начат.
+  [ФАКТ: `web/app/pages/admin/articles/new.vue:9`]; пакет `content` реализован (T-041),
+  редактор не начат.
 - **Дефекты входа по ссылке** (T-123): `web/server/utils/sessionCookie.ts:1-135` не
   содержит `isLoginTokenExchange` [ФАКТ: `web/server/utils/sessionCookie.ts:1-135`];
   переход из веб-почты отклонялся CSRF-проверкой без исключения
@@ -642,19 +643,12 @@ sitemap и RSS реализованы (T-099)
 - **Ротация refresh-cookie** (T-124): `web/server/api/graphql.post.ts:1-70` не содержит
   логики вызова `refreshSession` при ответе `UNAUTHENTICATED` и атомарной ротации
   [ФАКТ: `web/server/api/graphql.post.ts:1-70`].
-- **Лимиты: реальный IP и GraphQL-алиасы** (T-125): `getRequestIP({ xForwardedFor: true })`
-  берёт первый `X-Forwarded-For`, а не IP доверенного прокси платформы
-  [ФАКТ: `web/server/api/graphql.post.ts:49`]; `new Set<string>()` дедуплицирует имена
-  полей — алиасы одного поля не считаются отдельно
-  [ФАКТ: `server/src/rate-limits/plugin.ts:63,68`].
 - **i18n неполный**: ссылки рубрик в шапке без `localePath`, названия без `nameEn` на `/en`
   [ФАКТ: `web/app/components/app/header.vue:77,79`].
 - **SEO**: canonical, hreflang, JSON-LD глобально не заданы — T-100 не начата
   [ФАКТ: `web/app/pages/index.vue:1-78`]; страница авторов содержит только
   `useHead({ title })` [ФАКТ: `web/app/pages/authors/index.vue:98`].
-- **Кандидаты backlog** (T-126–T-134):
-  имя аккаунта из e-mail — `record.email.split("@")[0]`
-  [ФАКТ: `server/src/graphql/auth/resolver.ts:245`] (T-126);
+- **Кандидаты backlog** (T-127–T-134):
   тексты первого запуска кабинета — текст invite не различает первый запуск
   [ФАКТ: `web/app/pages/me/index.vue:141-143`] (T-127);
   кэш плана — `grantPlan` не обновляет `role`/`planTier`/`planUntil` в `User`
