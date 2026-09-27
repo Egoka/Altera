@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task_id": "T-048",
+  "issue_id": "01a0e4af-a3ee-72f7-af5a-2e0c4a6b98bf",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-048-ai-check-adapter.md",
+    "sha": "76e46e6ab48a98568f87d5c44c55c4b0d9a45eec"
+  },
+  "baseline_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
+  "tested_sha": "cfa67c4dda571c9d8df1094d807a288087c3f0f9",
+  "branch": "server/t048-ai-check-adapter",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e4e1-608c-7238-a398-fe461a8ec172",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "фикстура «отказ» даёт ReviewMessage вида ai_decision с причинами по категориям: server/tests/ai-check-adapter.test.ts 16 passed, server/tests/ai-check-queue-database.test.ts 4 passed (cfa67c4)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "выборка загрузчика не запрашивает author/name/email/handle, состав подачи — закрытый перечень полей: server/tests/ai-check-submission.test.ts 6 passed (cfa67c4)"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "в AiProcess и Prisma.AiProcessScalarFieldEnum нет полей стоимости, агрегат не ссылается на запись, схема API стоимости AI-записи не отдаёт: server/tests/ai-cost-contract.test.ts 3 passed (cfa67c4)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (cfa67c4)",
+    "lint": "passed: pnpm lint exit 0 (cfa67c4)",
+    "tests": "passed: server 911 passed / 57 skipped, web 723 passed, content 99 passed (cfa67c4)",
+    "build": "passed: pnpm --filter server run build:ci exit 0, dist/server.js собран из чистого packages/content (cfa67c4)",
+    "codegen": "passed: pnpm codegen --check exit 0 (cfa67c4)",
+    "migrations": "passed: prisma migrate deploy на копии altera_dev (420 ai_processes, 795 review_messages) без потери строк; prisma migrate diff --exit-code — No difference detected (cfa67c4)",
+    "smoke": "passed: pnpm run smoke на копии локальной базы со всеми миграциями — GraphQL и /health ответили (cfa67c4)",
+    "database_tests": "passed: T048_TEST_DATABASE_URL vitest run tests/ai-check-queue-database.test.ts 4 passed; тот же прогон добавлен в джоб server-smoke (cfa67c4)"
+  },
+  "pr": {
+    "number": 325,
+    "url": "https://github.com/Egoka/Altera/pull/325",
+    "base_ref": "app",
+    "base_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
+    "head_sha": "cfa67c4dda571c9d8df1094d807a288087c3f0f9",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ и добавляет миграцию 20260928150000_ai_check_result; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-048.md",
+    "sha256": "cdbfd2e10f7ceeadf0fb6c3959d116a8fa22bdee7fe87eacd9ea33e5ea26faf9"
+  },
+  "usage": null
+}
