@@ -12,7 +12,7 @@
   "branch": "feat/t035-self-archive",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t035-self-archive",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
-  "implementer_run_id": "01a0e33c-33cf-744d-b4ed-4df63e2932ea",
+  "implementer_run_id": "01a0e477-1c3d-799f-92bf-2be4ff815857",
   "criteria": [
     {
       "id": "AC-1",
@@ -44,7 +44,12 @@
     "head_sha": "fcc94933361553a7ddb15b569688eaa7a23cd6c7",
     "merge_sha": "f90d2ea6ec9d9bfc0f3d03370d54208d9cf4fc7f"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e38b-aacd-70e4-be58-30c58a9478df",
+    "sha": "fcc94933361553a7ddb15b569688eaa7a23cd6c7",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": true,
     "environment": "development",
@@ -53,7 +58,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-035.md",
-    "sha256": "009181ed5c54b96006a796eac7c0ebffd5fa6f580546fca0838ec88f00702080"
+    "sha256": "0ce5704808f62a004495d2838c3a0b84aa004d158492835e08ad3dd105d11b77"
   },
   "remaining": [
     "Независимое review проверенного SHA и развёртывание с проверкой здоровья через контроллер не выполнены",
