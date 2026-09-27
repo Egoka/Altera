@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "task_id": "T-111",
+  "issue_id": "01a0bbf1-40f3-7c2d-85e4-b5d84b2671ed",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-111-reality-check-refresh.md",
+    "sha": "d00bbb13377e642c84fef8f33f3b95f3f852bc37"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "668f1c63e1c6b59c0931804410e9b574ed90ee54",
+  "branch": "docs/t111-reality-check-refresh",
+  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+  "implementer_run_id": "01a0bc94-90cc-7495-821b-d6a0090c923b",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "каждое утверждение среза помечено [ФАКТ:] — по отчёту исполнителя (комментарий 01a0bca2 в ALTE-92) `grep -c \"\\[ФАКТ:\" docs/vision/00-reality-check.md` = 151; дефекты прошлых ревью закрыты доработками T-135 (PR #243) и T-138 (PR #307), обе Done/verified"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "независимое ревью одобрило: run 01a0e41b-bf43-730d-bf2c-51592642026f ревьюера db94a617, verdict approved на head PR #161 668f1c63e1c6b59c0931804410e9b574ed90ee54"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 259 passed / 24 skipped, web 180 passed (по данным исполнителя)"
+  },
+  "pr": {
+    "number": 161,
+    "url": "https://github.com/Egoka/Altera/pull/161",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "668f1c63e1c6b59c0931804410e9b574ed90ee54",
+    "merge_sha": "4f517bc2d278fd76103db8ba0bad6576a3441e39"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e41b-bf43-730d-bf2c-51592642026f",
+    "sha": "668f1c63e1c6b59c0931804410e9b574ed90ee54",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR #161 меняет только документацию (docs/, CLAUDE.md) — controller.py вычисляет requires_deploy=false"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-111.md",
+    "sha256": "91220abd0aeeffe44983e714ef218da46e56560df09808a72fe3bbbc04e9be1a"
+  },
+  "remaining": [],
+  "usage": null
+}
