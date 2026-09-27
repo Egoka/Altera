@@ -46,10 +46,10 @@
     "merge_sha": "1043e76eae1d9dd04d67b88290c76b35d423f5ca"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e353-e611-7e9a-9f1e-ec0f6f037644",
     "sha": "9514c01c75f7cc87859d91a0dfcb3ea201db2a27",
-    "verdict": "approve"
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -59,7 +59,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-059.md",
-    "sha256": "b054a2b6582e90f5439d404bb489df7dc162d15b1e4fff647071e976ed523261"
+    "sha256": "17314edad7357582d0e8d4ebdf763762d60ee163f61d9d18937efc5513fbe18f"
   },
   "remaining": [
     "Independent review was done inside this native task by separate clean-context review agents, not by a native Multica reviewer. 79133cd: approve with one should-fix and several nits, fixed in 6c3a4f3. 6c3a4f3: approve, two nits left. Delta 6c3a4f3..9514c01 (e2e only): approve. review.actor_id and review.run_id are unknown",
