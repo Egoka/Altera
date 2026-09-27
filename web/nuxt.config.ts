@@ -68,6 +68,8 @@ export default defineNuxtConfig({
     "/subscribe": { redirect: { to: "/pricing", statusCode: 301 } },
     "/en/plans": { redirect: { to: "/en/pricing", statusCode: 301 } },
     "/en/subscribe": { redirect: { to: "/en/pricing", statusCode: 301 } },
+    // Сводка кабинета (`docs/spec/30-account/reader/dashboard.md` §4): все ответы персональные.
+    "/me": { headers: { "cache-control": "private, no-store" } },
     // Страница «Подписка» (`docs/spec/30-account/reader/subscription.md` §3, §10): старые адреса
     // `/me/billing`, `/me/plan` — `[ДОПУЩЕНИЕ]`; ответ личный и не кешируется.
     "/me/billing": { redirect: { to: "/me/subscription", statusCode: 301 } },

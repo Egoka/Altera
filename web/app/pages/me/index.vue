@@ -137,8 +137,10 @@
           </template>
 
           <!-- Без статей авторские разделы скрыты (журнал §8.21); первое «Создать статью»
-               открывает базовое авторство без оплаты (журнал §24.1, §25.1). -->
-          <div v-else-if="!expired" data-testid="dashboard-write-invite" class="flex flex-col items-start gap-3">
+               бессрочно открывает базовое авторство без оплаты и одобрения (журнал §24.1, §25.1,
+               `plan-free.md` п. 6а), поэтому путь к созданию виден и когда выдача истекла.
+               «Выбрать план» → `/pricing` появится здесь вместе с платностью (§5 зона 5, журнал #5). -->
+          <div v-else data-testid="dashboard-write-invite" class="flex flex-col items-start gap-3">
             <p class="font-sans text-base text-zinc-700 dark:text-zinc-300">
               {{ t("account.dashboard.articles.invite") }}
             </p>
@@ -147,17 +149,6 @@
               data-testid="dashboard-create-article"
               class="inline-flex min-h-11 items-center justify-center rounded-full bg-zinc-950 px-5 font-sans text-sm font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-orange-400">
               {{ t("account.dashboard.articles.create") }}
-            </NuxtLink>
-          </div>
-
-          <div v-else data-testid="dashboard-choose-plan" class="flex flex-col items-start gap-3">
-            <p class="font-sans text-base text-zinc-700 dark:text-zinc-300">
-              {{ t("account.dashboard.articles.planNeeded") }}
-            </p>
-            <NuxtLink
-              to="/pricing"
-              class="border-b border-orange-600 font-sans text-sm font-semibold text-zinc-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600 dark:text-zinc-100">
-              {{ t("account.dashboard.articles.choosePlan") }}
             </NuxtLink>
           </div>
         </section>
