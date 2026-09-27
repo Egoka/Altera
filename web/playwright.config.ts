@@ -26,8 +26,17 @@ export default defineConfig({
     },
     {
       name: "chromium",
-      grepInvert: /@empty-db/,
+      grepInvert: /@empty-db|@real-rate-limit/,
       dependencies: ["empty-db"],
+      use: { ...devices["Desktop Chrome"] }
+    },
+    // Сценарии, исчерпывающие настоящую корзину лимита по адресу (тег `@real-rate-limit`), идут
+    // последними и одни: каждый тест других проектов перед стартом очищает все счётчики
+    // (`helpers/test.ts`), и такая очистка посреди исчерпания пропускала лимит.
+    {
+      name: "real-rate-limit",
+      grep: /@real-rate-limit/,
+      dependencies: ["chromium"],
       use: { ...devices["Desktop Chrome"] }
     }
   ],
