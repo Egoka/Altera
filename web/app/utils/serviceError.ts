@@ -5,13 +5,14 @@
  * (`web/server/utils/graphqlProxy.ts`, T-087). Падение рендера своего отказа не приносит,
  * поэтому запасной источник — `requestId` текущего запроса из контекста Nitro.
  *
- * На 404 код не вычисляется вовсе: это обычное пользовательское состояние.
+ * На клиентских статусах код не вычисляется вовсе: журнал §28.4 оставил его техническим сбоям,
+ * а 404 «нет такой страницы» и 403 «нет доступа» — обычные пользовательские состояния.
  */
 export const serviceRequestId = (
   error: { statusCode?: number; data?: unknown } | null | undefined,
   eventRequestId?: unknown
 ): string | null => {
-  if ((error?.statusCode ?? 500) === 404) return null
+  if ((error?.statusCode ?? 500) < 500) return null
 
   const data = error?.data
   if (data && typeof data === "object" && typeof (data as { requestId?: unknown }).requestId === "string") {
