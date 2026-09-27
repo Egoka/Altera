@@ -37,7 +37,7 @@ export const useAdminGrants = () => {
     return envelope.data.adminGrants
   }
 
-  const { data, pending, error, refresh } = useAsyncData("admin-grants", load, {
+  const { data, status, error, refresh } = useAsyncData("admin-grants", load, {
     default: () => [],
     lazy: true,
     server: false
@@ -72,7 +72,11 @@ export const useAdminGrants = () => {
 
   return {
     grants: data,
-    pending: computed(() => pending.value || mutationPending.value),
+    // Список читается только в браузере (`server: false`): на сервере запрос не начат и `status`
+    // остаётся `idle`, а при гидратации Nuxt ставит `pending` ещё до первой отрисовки (nuxt@4
+    // `asyncData.js`, запуск в `onBeforeMount`). Штатный `pending` различает эти состояния, и
+    // сервер рисовал пустую таблицу, а клиент — «Загрузка…». `idle` — тоже «данных ещё нет».
+    pending: computed(() => status.value === "idle" || status.value === "pending" || mutationPending.value),
     // `useAsyncData` держит в `error` значение `undefined`, а не `null`: сравнение с `null` включало
     // признак отказа навсегда (nuxt@4 `asyncData.js`: `_errors[key] ??= void 0`).
     failed: computed(() => Boolean(error.value)),
