@@ -119,13 +119,16 @@ test.describe("admin grants page", () => {
       .getByRole("button", { name: /выдать план/i })
       .first()
       .click()
+    // С fishtvue 1.0 подпись «Начало»/«Конец» есть и у кнопки сортировки колонки, и у её
+    // фильтра-календаря: поле формы выбирается как нативный date-input с этой подписью.
+    const dateField = (label: RegExp) => page.locator('input[type="date"]').and(page.getByLabel(label))
     await page.getByPlaceholder(/user-handle/i).fill("new-user")
-    await page.getByLabel(/начало/i).fill("2026-09-20")
+    await dateField(/начало/i).fill("2026-09-20")
     await page.getByPlaceholder(/причину выдачи/i).fill("Редакционная выдача")
 
     const submit = page.getByRole("button", { name: /выдать план/i }).last()
     await expect(submit).toBeDisabled()
-    await page.getByLabel(/конец/i).fill("2026-10-20")
+    await dateField(/конец/i).fill("2026-10-20")
     await expect(submit).toBeEnabled()
     await submit.click()
 
