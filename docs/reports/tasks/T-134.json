@@ -48,15 +48,15 @@
     "number": 230,
     "url": "https://github.com/Egoka/Altera/pull/230",
     "base_ref": "app",
-    "base_sha": "f1ed1885f5be4a364b14ccb442412cfbd13e18b7",
+    "base_sha": "b1aafe3d52652f6aa45d358f4e1b298bbad1cbbe",
     "head_sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
     "merge_sha": "9553d2f4c1b32dcd4831ff6f02ae51583b5a6562"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": "unknown"
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e25b-0c4f-7bc5-9579-28ad06655a78",
+    "sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
+    "verdict": "approved"
   },
   "history": {
     "note": "Реализация и первое независимое ревью прошли в карточке T-080 (ALTE-95), потому что канонической карточки T-134 тогда не было. Контроллер требует native execution той же issue_id, поэтому прежние run сохранены ссылкой как история, а review канонической карточки ждёт актуального вердикта в ALTE-126.",

@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Create Neon Branch
         id: create_neon_branch
-        uses: neondatabase/create-branch-action@v5
+        uses: neondatabase/create-branch-action@v6
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: ${{ env.NEON_BRANCH }}
@@ -43,14 +43,14 @@ jobs:
 
       # Ветка создана и живёт до конца этого прогона. Проверки на ней добавляются сюда, до
       # удаления. URL доступны как steps.create_neon_branch.outputs.db_url (прямое
-      # подключение) и steps.create_neon_branch.outputs.db_url_with_pooler (через пулер).
+      # подключение) и steps.create_neon_branch.outputs.db_url_pooled (через пулер).
       # Печатать их в лог нельзя: в них логин и пароль базы.
       #
       # Пример миграций — пока не включён, решение отдельное:
       #      - name: Миграции Prisma
       #        run: cd server && npx prisma migrate deploy
       #        env:
-      #          DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
+      #          DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url_pooled }}"
       #          DATABASE_URL_UNPOOLED: "${{ steps.create_neon_branch.outputs.db_url }}"
       #
       # Schema diff комментарием к pull request (джобу нужны permissions: contents: read и
