@@ -173,99 +173,110 @@
       </div>
     </div>
 
-    <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
-      <template #table>
-        <Table
-          v-if="!isListLoading"
-          :data-source="data"
-          :columns="columns"
-          :height="tableHeight"
-          :is-loading="isListLoading"
-          :load-error="loadError"
-          class="h-full"
-          @click-row="openDetail($event.data)">
-          <template #tier="{ value }">
-            <span
-              class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-              :class="tierColors[value as PlanTier]">
-              {{ value === "pro" ? "Pro" : "Standard" }}
-            </span>
-          </template>
-          <template #status="{ value }">
-            <span
-              class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-              :class="statusColors[value as GrantStatus]">
-              {{ t(`admin.grantStatus.${value}`) }}
-            </span>
-          </template>
-          <!-- Для колонки `type: "date"` fishtvue отдаёт в слот уже готовую строку «ДД.ММ.ГГГГ»
-               (или null), повторный разбор через new Date() переставил бы день и месяц. -->
-          <template #endsAt="{ value }">
-            <span :class="value ? '' : 'text-zinc-400 italic'">
-              {{ value ?? t("admin.indefinite") }}
-            </span>
-          </template>
-        </Table>
-        <div v-else role="status" class="flex h-full items-center justify-center text-sm text-zinc-500">
+    <!-- Split из fishtvue считает размеры панелей при setup только на сервере, а в браузере — после
+         монтирования, и первая клиентская отрисовка расходится с серверной (`flex: 100 1 0px`
+         против `flex: 0 1 0px`). Список всё равно читается только в браузере, поэтому сервер и
+         гидратация рисуют одно и то же состояние загрузки, а Split появляется после монтирования. -->
+    <ClientOnly>
+      <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
+        <template #table>
+          <Table
+            v-if="!isListLoading"
+            :data-source="data"
+            :columns="columns"
+            :height="tableHeight"
+            :is-loading="isListLoading"
+            :load-error="loadError"
+            class="h-full"
+            @click-row="openDetail($event.data)">
+            <template #tier="{ value }">
+              <span
+                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                :class="tierColors[value as PlanTier]">
+                {{ value === "pro" ? "Pro" : "Standard" }}
+              </span>
+            </template>
+            <template #status="{ value }">
+              <span
+                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                :class="statusColors[value as GrantStatus]">
+                {{ t(`admin.grantStatus.${value}`) }}
+              </span>
+            </template>
+            <!-- Для колонки `type: "date"` fishtvue отдаёт в слот уже готовую строку «ДД.ММ.ГГГГ»
+                 (или null), повторный разбор через new Date() переставил бы день и месяц. -->
+            <template #endsAt="{ value }">
+              <span :class="value ? '' : 'text-zinc-400 italic'">
+                {{ value ?? t("admin.indefinite") }}
+              </span>
+            </template>
+          </Table>
+          <div v-else role="status" class="flex h-full items-center justify-center text-sm text-zinc-500">
+            {{ t("common.loading") }}
+          </div>
+        </template>
+
+        <template #item>
+          <div v-if="selectedGrant" class="h-full overflow-y-auto p-4 flex flex-col gap-4">
+            <div class="flex items-start justify-between">
+              <div>
+                <h2 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  {{ selectedGrant.userName }}
+                </h2>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">@{{ selectedGrant.userHandle }}</p>
+              </div>
+              <Button mode="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldPlan") }}</p>
+                <span
+                  class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="tierColors[selectedGrant.tier]">
+                  {{ selectedGrant.tier === "pro" ? "Pro" : "Standard" }}
+                </span>
+              </div>
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStatus") }}</p>
+                <span
+                  class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="statusColors[selectedGrant.status]">
+                  {{ t(`admin.grantStatus.${selectedGrant.status}`) }}
+                </span>
+              </div>
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStartsAt") }}</p>
+                <p class="text-zinc-900 dark:text-zinc-100">{{ formatDate(selectedGrant.startsAt) }}</p>
+              </div>
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldEndsAt") }}</p>
+                <p :class="selectedGrant.endsAt ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 italic'">
+                  {{ selectedGrant.endsAt ? formatDate(selectedGrant.endsAt) : t("admin.indefinite") }}
+                </p>
+              </div>
+              <div class="col-span-2">
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldReason") }}</p>
+                <p class="text-zinc-900 dark:text-zinc-100">{{ selectedGrant.reason }}</p>
+              </div>
+            </div>
+
+            <div class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-700">
+              <NuxtLink to="/admin/grants" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                {{ t("admin.manageGrantsLink") }}
+              </NuxtLink>
+            </div>
+          </div>
+          <div v-else class="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-600 text-sm">
+            {{ t("admin.selectFromList") }}
+          </div>
+        </template>
+      </Split>
+      <template #fallback>
+        <div role="status" class="flex flex-1 min-h-0 items-center justify-center text-sm text-zinc-500">
           {{ t("common.loading") }}
         </div>
       </template>
-
-      <template #item>
-        <div v-if="selectedGrant" class="h-full overflow-y-auto p-4 flex flex-col gap-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {{ selectedGrant.userName }}
-              </h2>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400">@{{ selectedGrant.userHandle }}</p>
-            </div>
-            <Button mode="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldPlan") }}</p>
-              <span
-                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                :class="tierColors[selectedGrant.tier]">
-                {{ selectedGrant.tier === "pro" ? "Pro" : "Standard" }}
-              </span>
-            </div>
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStatus") }}</p>
-              <span
-                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                :class="statusColors[selectedGrant.status]">
-                {{ t(`admin.grantStatus.${selectedGrant.status}`) }}
-              </span>
-            </div>
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStartsAt") }}</p>
-              <p class="text-zinc-900 dark:text-zinc-100">{{ formatDate(selectedGrant.startsAt) }}</p>
-            </div>
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldEndsAt") }}</p>
-              <p :class="selectedGrant.endsAt ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 italic'">
-                {{ selectedGrant.endsAt ? formatDate(selectedGrant.endsAt) : t("admin.indefinite") }}
-              </p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldReason") }}</p>
-              <p class="text-zinc-900 dark:text-zinc-100">{{ selectedGrant.reason }}</p>
-            </div>
-          </div>
-
-          <div class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-700">
-            <NuxtLink to="/admin/grants" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              {{ t("admin.manageGrantsLink") }}
-            </NuxtLink>
-          </div>
-        </div>
-        <div v-else class="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-600 text-sm">
-          {{ t("admin.selectFromList") }}
-        </div>
-      </template>
-    </Split>
+    </ClientOnly>
   </div>
 </template>
