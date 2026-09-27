@@ -374,8 +374,15 @@
       </template>
     </ClientOnly>
 
-    <AppDialog v-model="isGrantFormOpen" close-button size="md" :classes="{ content: 'max-w-md' }">
-      <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.grantPlan") }}</h2>
+    <AppDialog
+      v-model="isGrantFormOpen"
+      close-button
+      size="md"
+      aria-labelledby="grant-form-title"
+      :classes="{ content: 'max-w-md' }">
+      <h2 id="grant-form-title" class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        {{ t("admin.grantPlan") }}
+      </h2>
       <div class="flex flex-col gap-4 p-4">
         <div>
           <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{{
