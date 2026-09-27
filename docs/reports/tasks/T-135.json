@@ -1,16 +1,29 @@
 {
+  "schema_version": 1,
   "task_id": "T-135",
   "issue_id": "01a0df5b-ab20-7a33-b5c3-4e7885bc6631",
-  "issue_identifier": "ALTE-118",
-  "title": "Срез реальности и «Что сломано» в CLAUDE.md по фактическому коду",
-  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
-  "implementer_run_id": "unknown",
-  "source_path": "docs/backlog/tasks/T-135-reality-check-and-claude-md.md",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-135-reality-check-and-claude-md.md",
+    "sha": "cc89c28fd055299bcf3c7c1d97a8863d47844407"
+  },
   "baseline_sha": "5af26a3fd661917cb00e8021409ffe4e6352c8c1",
-  "tested_sha": "f16d90c57d53bfb51d7603d3d1f3b1ab0af0d628",
-  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+  "tested_sha": "5754c8b383a55fbfa54ad0d9bfaa7e89def70682",
   "branch": "docs/t135-reality-check",
-  "pr": "https://github.com/Egoka/Altera/pull/235",
+  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+  "implementer_run_id": "01a0e031-d351-705f-99e7-940fae844750",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "каждое утверждение §С2.2 и §С2.7 (включая «Действительно не реализовано») снабжено [ФАКТ: файл:строка] или ссылкой на отсутствие — выполнено (ревизия 1a33513)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "T-123 (540d3fa), T-132 (574e484), T-134 (9553d2f) удалены из «Что сломано» в CLAUDE.md — выполнено (ревизия 0e13d45); T-125/T-126 убраны, T-041 переформулирован — выполнено (ревизия f16d90c)"
+    }
+  ],
   "checks": [
     {
       "check_id": "format",
@@ -37,13 +50,32 @@
       "result": "582 passed"
     }
   ],
-  "criteria": {
-    "AC-1": "каждое утверждение §С2.2 и §С2.7 (включая «Действительно не реализовано») снабжено [ФАКТ: файл:строка] или ссылкой на отсутствие — выполнено (1a33513)",
-    "AC-2": "T-123/T-132/T-134 удалены из «Что сломано» в CLAUDE.md — выполнено (0e13d45); T-125/T-126 убраны, T-041 переформулирован — выполнено (f16d90c)"
+  "pr": {
+    "number": 243,
+    "url": "https://github.com/Egoka/Altera/pull/243",
+    "base_ref": "app",
+    "base_sha": "677c53a028ccf63e8ebfa3be34e6d55c393b8d62",
+    "head_sha": "5754c8b383a55fbfa54ad0d9bfaa7e89def70682",
+    "merge_sha": "266299a19be34d4d342c57fbe4d582506d9dd6a3"
   },
-  "review_verdict": "ожидает независимого ревью",
-  "verified": false,
-  "accepted_at": null,
-  "remainder": "PR #235 ожидает CI и независимого ревью",
-  "next_step": "координатор переводит в Done после ревью"
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e062-0316-773f-8836-6801432a26ec",
+    "sha": "5754c8b383a55fbfa54ad0d9bfaa7e89def70682",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Задача меняет только документацию (docs/vision/00-reality-check.md и CLAUDE.md)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-135.md",
+    "sha256": "9e74a672f2965f10b1298cdc15528b8d0a71bec0983c35e131d0aae224825962"
+  },
+  "remaining": [
+    "Done stays with the controller"
+  ],
+  "usage": null
 }
