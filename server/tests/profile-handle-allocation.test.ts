@@ -59,19 +59,46 @@ describe("profile handle allocation", () => {
   it("normalizes, reserves, and assigns a changed handle in one transaction", async () => {
     const reserve = vi.fn().mockResolvedValue({})
     const updateUser = vi.fn().mockResolvedValue({ id: "user-1", handle: "new-handle" })
+    const findUser = vi.fn().mockResolvedValue({ handle: "old-handle" })
     const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
-      operation({ handleHistory: { create: reserve }, user: { update: updateUser } })
+      operation({
+        handleHistory: { create: reserve },
+        user: { findUnique: findUser, update: updateUser }
+      })
     )
+    const delByTags = vi.fn().mockResolvedValue(undefined)
 
     await expect(
       changeUserHandle({ $transaction: transaction } as never, {
         userId: "user-1",
         handle: "  NEW-HANDLE  ",
-        requestId: "request-1"
+        requestId: "request-1",
+        cache: { delByTags } as never
       })
     ).resolves.toEqual({ id: "user-1", handle: "new-handle" })
     expect(reserve).toHaveBeenCalledWith({ data: { handle: "new-handle", userId: "user-1" } })
     expect(updateUser).toHaveBeenCalledWith({ where: { id: "user-1" }, data: { handle: "new-handle" } })
+    // Смена хэндла — изменение профиля: страница автора под обоими адресами перечитывается
+    // сразу, без ожидания TTL общего кеша (`author.md` §4).
+    expect(delByTags).toHaveBeenCalledWith(["author:new-handle", "author:old-handle"])
+  })
+
+  it("does not require a cache: without it the handle still changes", async () => {
+    const updateUser = vi.fn().mockResolvedValue({ id: "user-1", handle: "new-handle" })
+    const transaction = vi.fn(async (operation: (tx: unknown) => Promise<unknown>) =>
+      operation({
+        handleHistory: { create: vi.fn().mockResolvedValue({}) },
+        user: { findUnique: vi.fn().mockResolvedValue({ handle: "new-handle" }), update: updateUser }
+      })
+    )
+
+    await expect(
+      changeUserHandle({ $transaction: transaction } as never, {
+        userId: "user-1",
+        handle: "new-handle",
+        requestId: "request-1"
+      })
+    ).resolves.toEqual({ id: "user-1", handle: "new-handle" })
   })
 
   it.each(["same owner's historical handle", "another owner's reserved handle"])(

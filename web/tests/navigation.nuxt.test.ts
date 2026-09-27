@@ -1,14 +1,17 @@
 // @vitest-environment happy-dom
 
 import { flushPromises, mount } from "@vue/test-utils"
-import { ref } from "vue"
+import { defineComponent, h, ref, Suspense } from "vue"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import AppHeader from "../app/components/app/header.vue"
 import LanguageToggle from "../app/components/functional/LanguageToggle.vue"
+import { useGraphQL } from "../app/composables/useGraphQL"
 
 vi.mock("~/composables/useScroll", () => ({
   useScroll: () => ({ isScrolled: ref(false), isHeaderVisible: ref(true) })
 }))
+
+vi.mock("~/composables/useGraphQL", () => ({ useGraphQL: vi.fn() }))
 
 const messages: Record<string, string> = {
   "common.logoHome": "Altera — на главную",
@@ -38,8 +41,44 @@ const headLinks = (): Record<string, string>[] => {
   return typeof link === "function" ? link() : (link ?? [])
 }
 
-const mountHeader = () =>
-  mount(AppHeader, {
+const graphql = vi.mocked(useGraphQL)
+
+const navigationResponse = {
+  data: {
+    publicSections: [
+      { id: "culture", name: "Культура", nameEn: "Culture", slug: "culture", order: 1, articleCount: 8 },
+      { id: "travel", name: "Путешествия", nameEn: "Travel", slug: "travel", order: 2, articleCount: 3 }
+    ],
+    popularTags: [{ slug: "photo", name: "Фотография", articleCount: 4 }]
+  }
+}
+
+/**
+ * Локаль страницы задаётся один раз на монтирование: `localePath` под неё префиксует адрес
+ * ровно так же, как стратегия `prefix_except_default` в приложении.
+ */
+const useLocale = (locale: "ru" | "en") => {
+  vi.stubGlobal("useI18n", () => ({
+    t,
+    locale: ref(locale),
+    locales: ref([
+      { code: "ru", name: "Русский" },
+      { code: "en", name: "English" }
+    ])
+  }))
+  vi.stubGlobal("useLocalePath", () => (path: string) => (locale === "en" ? `/en${path === "/" ? "" : path}` : path))
+}
+
+/**
+ * Шапка грузит меню в `setup`, поэтому монтируется внутри `Suspense` — так же, как её
+ * оборачивает `NuxtLayout` в приложении.
+ */
+const SuspendedHeader = defineComponent({
+  setup: () => () => h(Suspense, null, { default: () => h(AppHeader) })
+})
+
+const mountHeader = async () => {
+  const wrapper = mount(SuspendedHeader, {
     global: {
       stubs: {
         NuxtLink: { props: ["to"], template: '<a :href="to"><slot /></a>' },
@@ -49,21 +88,23 @@ const mountHeader = () =>
       }
     }
   })
+  await flushPromises()
+  return wrapper
+}
 
 beforeEach(() => {
   head.mockClear()
+  graphql.mockReset()
+  graphql.mockResolvedValue(navigationResponse as never)
   vi.stubGlobal("useHead", head)
-  vi.stubGlobal("useRequestFetch", () =>
-    vi.fn().mockResolvedValue({ data: { publicSections: [], popularTags: { tags: [] } } })
-  )
-  vi.stubGlobal("useI18n", () => ({
-    t,
-    locale: ref("ru"),
-    locales: ref([
-      { code: "ru", name: "Русский" },
-      { code: "en", name: "English" }
-    ])
+  // Меню грузится при отрисовке страницы, а не после монтирования: `useAsyncData` в тестах
+  // разрешается сразу, как это делает SSR перед отдачей разметки.
+  vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => ({
+    data: ref(await handler()),
+    status: ref("success"),
+    refresh: vi.fn()
   }))
+  useLocale("ru")
 })
 
 afterEach(() => {
@@ -72,40 +113,57 @@ afterEach(() => {
 
 describe("AppHeader navigation", () => {
   it("строит меню из публичных рубрик ответа GraphQL", async () => {
-    const requestFetch = vi.fn().mockResolvedValue({
-      data: {
-        publicSections: [
-          { id: "culture", name: "Культура", nameEn: "Culture", slug: "culture", order: 1, articleCount: 8 },
-          { id: "travel", name: "Путешествия", nameEn: "Travel", slug: "travel", order: 2, articleCount: 3 }
-        ],
-        popularTags: { tags: [{ name: "Фотография", slug: "photo" }] }
-      }
-    })
-    vi.stubGlobal("useRequestFetch", () => requestFetch)
-
-    const wrapper = mount(AppHeader, {
-      global: {
-        stubs: {
-          NuxtLink: { props: ["to"], template: '<a :href="to"><slot /></a>' },
-          LanguageToggle: true,
-          VisualLogo: { template: "<span>Altera</span>" },
-          IconBurger: true
-        }
-      }
-    })
-    await flushPromises()
-    await wrapper.get('button[aria-controls="public-navigation-menu"]').trigger("click")
+    const wrapper = await mountHeader()
 
     expect(wrapper.get('nav[aria-label="Рубрики"]').text()).toContain("Культура")
     expect(wrapper.get('a[href="/travel"]').text()).toContain("Путешествия")
-    expect(requestFetch).toHaveBeenCalledOnce()
+    expect(graphql).toHaveBeenCalledOnce()
+    expect(graphql.mock.calls[0]![1]).toEqual({ locale: "ru" })
+  })
+
+  // AC-3 T-129: меню английской страницы спрашивает свою локаль и называет рубрики `nameEn`.
+  it("на английской странице запрашивает свою локаль, ведёт в неё и берёт nameEn", async () => {
+    useLocale("en")
+
+    const wrapper = await mountHeader()
+
+    expect(graphql.mock.calls[0]![1]).toEqual({ locale: "en" })
+    const menu = wrapper.get('nav[aria-label="Рубрики"]')
+    expect(menu.text()).toContain("Culture")
+    expect(menu.text()).not.toContain("Культура")
+    expect(wrapper.get('a[href="/en/travel"]').text()).toContain("Travel")
+    expect(wrapper.find('a[href="/travel"]').exists()).toBe(false)
+  })
+
+  // Меню обязано быть в ответе SSR, поэтому оно рисуется закрытым, а не появляется по клику.
+  it("держит рубрики в разметке до открытия меню", async () => {
+    const wrapper = await mountHeader()
+
+    expect(wrapper.get("#public-navigation-menu").attributes("style")).toContain("display: none")
+    expect(wrapper.get('a[href="/culture"]').exists()).toBe(true)
+  })
+
+  it("пустой перевод рубрики оставляет её имя по умолчанию", async () => {
+    useLocale("en")
+    graphql.mockResolvedValue({
+      data: {
+        publicSections: [
+          { id: "culture", name: "Культура", nameEn: "   ", slug: "culture", order: 1, articleCount: 8 }
+        ],
+        popularTags: []
+      }
+    } as never)
+
+    const wrapper = await mountHeader()
+
+    expect(wrapper.get('a[href="/en/culture"]').text()).toContain("Культура")
   })
 })
 
 // Ссылка на ленту в шапке: `docs/spec/20-public/feeds-and-sitemap.md` §3, §6.
 describe("AppHeader RSS", () => {
-  it("объявляет ленту русской локали", () => {
-    mountHeader()
+  it("объявляет ленту русской локали", async () => {
+    await mountHeader()
 
     expect(headLinks()).toContainEqual({
       rel: "alternate",
@@ -115,10 +173,10 @@ describe("AppHeader RSS", () => {
     })
   })
 
-  it("в английской локали ведёт на её ленту", () => {
-    vi.stubGlobal("useI18n", () => ({ t, locale: ref("en"), locales: ref([{ code: "en", name: "English" }]) }))
+  it("в английской локали ведёт на её ленту", async () => {
+    useLocale("en")
 
-    mountHeader()
+    await mountHeader()
 
     expect(headLinks()[0]!.href).toBe("/en/rss.xml")
   })

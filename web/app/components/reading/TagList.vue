@@ -3,10 +3,16 @@
    * Колонки «тег — счётчик». При порядке по имени список группируется по первой букве:
    * облако чипов счётчик и группы не выражает, поэтому у каталога свой компонент.
    */
+  import { computed } from "vue"
+
   const props = defineProps<{
     tags: readonly { slug: string; name: string; articleCount: number }[]
     grouped: boolean
   }>()
+
+  // Ленты тегов в локали страницы (журнал §20.5).
+  const localePath = useLocalePath()
+  const tagTo = (slug: string) => localePath(`/tags/${slug}`)
 
   const groups = computed(() => {
     if (!props.grouped) return [{ letter: "", tags: props.tags }]
@@ -32,7 +38,7 @@
       <ul class="grid grid-cols-1 gap-x-12 gap-y-3 md:grid-cols-2 lg:grid-cols-3">
         <li v-for="tag in group.tags" :key="tag.slug">
           <NuxtLink
-            :to="`/tags/${tag.slug}`"
+            :to="tagTo(tag.slug)"
             class="flex items-baseline justify-between gap-4 font-garamond-libre text-lg text-zinc-800 transition-colors duration-300 hover:text-red-700 dark:text-zinc-200 dark:hover:text-red-400">
             <span>{{ tag.name }}</span>
             <span class="font-sans text-xs text-zinc-500 dark:text-zinc-500">{{ tag.articleCount }}</span>

@@ -3,7 +3,9 @@
    * Карточка рубрики каталога: обложка или цветная плашка по токену, название, описание,
    * счётчик и до трёх превью материалов ссылками (`sections-index.md` §5).
    */
-  defineProps<{
+  import { computed } from "vue"
+
+  const props = defineProps<{
     section: {
       slug: string
       name: string
@@ -14,18 +16,24 @@
     }
     countLabel: string
   }>()
+
+  // Каталог рубрик ведёт в ленты своей локали; превью материалов приходят с сервера
+  // адресом без префикса, поэтому локаль добавляется здесь (журнал §20.5).
+  const localePath = useLocalePath()
+  const sectionTo = computed(() => localePath(`/${props.section.slug}`))
+  const articleTo = (path: string) => localePath(path)
 </script>
 
 <template>
   <article class="flex flex-col gap-4">
-    <NuxtLink :to="`/${section.slug}`" class="block">
+    <NuxtLink :to="sectionTo" class="block">
       <NuxtImg v-if="section.cover" :src="section.cover" :alt="section.name" class="aspect-video w-full object-cover" />
       <div v-else class="aspect-video w-full bg-zinc-100 dark:bg-zinc-900" aria-hidden="true"></div>
     </NuxtLink>
 
     <div>
       <h2 class="font-waterway text-2xl tracking-wide text-zinc-950 dark:text-zinc-100">
-        <NuxtLink :to="`/${section.slug}`" class="transition-colors duration-300 hover:text-red-700">
+        <NuxtLink :to="sectionTo" class="transition-colors duration-300 hover:text-red-700">
           {{ section.name }}
         </NuxtLink>
       </h2>
@@ -43,7 +51,7 @@
     <ul v-if="section.preview.length" class="space-y-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
       <li v-for="(article, index) in section.preview" :key="article.path" :class="index > 0 ? 'hidden sm:block' : ''">
         <NuxtLink
-          :to="article.path"
+          :to="articleTo(article.path)"
           class="font-garamond-libre text-base text-zinc-700 transition-colors duration-300 hover:text-red-700 dark:text-zinc-300 dark:hover:text-red-400">
           {{ article.title }}
         </NuxtLink>

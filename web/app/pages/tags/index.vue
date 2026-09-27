@@ -21,6 +21,8 @@
   const route = useRoute()
   const router = useRouter()
   const { locale, t } = useI18n()
+  // Сортировка, указатель, поиск и пагинация каталога не выводят читателя из локали (§20.5).
+  const localePath = useLocalePath()
 
   const page = computed(() => pageParam(route.query.page))
   const letter = computed(() => stringParam(route.query.letter))
@@ -54,8 +56,10 @@
   const pageInfo = computed(() => catalog.value?.tagCatalog.pageInfo ?? null)
   const letters = computed(() => catalog.value?.tagCatalog.letters ?? [])
 
+  const catalogPath = computed(() => localePath("/tags"))
+
   const pathTo = (params: { q?: string | null; letter?: string | null; sort?: string; page?: number }) =>
-    withQuery("/tags", {
+    withQuery(catalogPath.value, {
       q: params.q === undefined ? query.value : params.q,
       letter: params.letter === undefined ? letter.value : params.letter,
       sort: (params.sort ?? sort.value) === "popular" ? null : (params.sort ?? sort.value),
@@ -151,7 +155,7 @@
         class="my-12"
         :title="query || letter ? t('tagsIndex.emptyQueryTitle') : t('tagsIndex.emptyTitle')"
         :action-label="query || letter ? t('tagsIndex.reset') : undefined"
-        :action-to="query || letter ? '/tags' : undefined" />
+        :action-to="query || letter ? catalogPath : undefined" />
 
       <ReadingPagination
         v-if="pageInfo"

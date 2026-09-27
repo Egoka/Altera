@@ -108,7 +108,7 @@
   })
 
   /** Адрес страницы для листания — всегда канонический хэндл профиля. */
-  const pagePath = computed(() => `/authors/${author.value?.handle ?? handle.value}`)
+  const pagePath = computed(() => localePath(`/authors/${author.value?.handle ?? handle.value}`))
 
   // Пусто в локали: материалы другого языка не подмешиваются (журнал §20.5), поэтому
   // действие пустого состояния — переключатель языка, а не чужая лента.

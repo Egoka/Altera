@@ -59,7 +59,8 @@ test(
     await page.goto("/en")
 
     await expect(page.getByRole("heading", { name: "Nothing here yet" })).toBeVisible()
-    await expect(page.getByRole("link", { name: "Become an author" })).toHaveAttribute("href", "/pricing")
+    // AC-1 T-129: действие английской страницы остаётся в английской локали.
+    await expect(page.getByRole("link", { name: "Become an author" })).toHaveAttribute("href", "/en/pricing")
   }
 )
 

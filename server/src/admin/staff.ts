@@ -2,6 +2,7 @@ import type { Prisma, Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission, ensureRole } from "../exceptions/permissions"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../auth/handle"
+import { authorCacheTag } from "../cache"
 import { issueMagicLink } from "../auth/magic-link"
 import type { GraphQLContext } from "../prisma"
 import { maskEmail } from "./personal-data"
@@ -444,6 +445,8 @@ export async function createStaff(
 
 interface StaffTarget {
   id: string
+  /** Нужен для сброса кеша страницы автора: она читается по хэндлу (`author.md` §4). */
+  handle: string
   role: Role
   isServiceAccount: boolean
   archivedAt: Date | null
@@ -457,7 +460,7 @@ async function loadTarget(
 ): Promise<StaffTarget> {
   const target = await tx.user.findUnique({
     where: { id },
-    select: { id: true, role: true, isServiceAccount: true, archivedAt: true }
+    select: { id: true, handle: true, role: true, isServiceAccount: true, archivedAt: true }
   })
   if (!target) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "user" })
   // Служебный путь и пользовательский не смешиваются (журнал #46–47).
@@ -682,6 +685,15 @@ async function closeAccess(
   await tx.session.updateMany({ where: { userId: target.id, revokedAt: null }, data: { revokedAt: now } })
 }
 
+/**
+ * Страница автора кешируется по тегу `author:{handle}` (`author.md` §4). Закрытие и
+ * восстановление доступа меняют её ответ (410 и снова 200), поэтому тег сбрасывается сразу
+ * после коммита: ждать окончания TTL общего кеша значит показывать архивированного автора.
+ */
+async function resetAuthorPageCache(ctx: GraphQLContext, handle: string): Promise<void> {
+  await ctx.cache.delByTags([authorCacheTag(handle)])
+}
+
 export async function deactivateOwner(
   ctx: GraphQLContext,
   input: { id: string; reason: string },
@@ -690,7 +702,8 @@ export async function deactivateOwner(
   const actor = ensureOwnerActor(ctx, "owner.deactivate")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let closedHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
     const target = await loadTarget(ctx, tx, input.id, "owner.deactivate")
     if (target.role !== "owner") {
       throw createApiError("CONFLICT", {
@@ -700,6 +713,7 @@ export async function deactivateOwner(
         actual: target.role
       })
     }
+    closedHandle = target.handle
     await closeAccess(ctx, tx, target, actor.role, actor.id, reason, now)
     const remainingOwners = await ensureOwnerRemains(ctx, tx)
     await tx.auditLog.create({
@@ -715,6 +729,8 @@ export async function deactivateOwner(
     })
     return reloadMember(ctx, tx, target.id, now)
   })
+  await resetAuthorPageCache(ctx, closedHandle)
+  return member
 }
 
 export async function archiveStaffAccount(
@@ -726,12 +742,14 @@ export async function archiveStaffAccount(
   const actor = ensureOwnerActor(ctx, "staff.archive")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let archivedHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
     const target = await loadTarget(ctx, tx, input.id, "staff.archive")
     if (target.role === "owner") {
       // Владелец закрывается отдельным действием с проверкой инварианта (`admins.md` §5).
       throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "staff.archive.owner" })
     }
+    archivedHandle = target.handle
     await closeAccess(ctx, tx, target, actor.role, actor.id, reason, now)
     await tx.auditLog.create({
       data: {
@@ -746,6 +764,9 @@ export async function archiveStaffAccount(
     })
     return reloadMember(ctx, tx, target.id, now)
   })
+  // Архивированный аккаунт отвечает 410 сразу: страница автора не ждёт TTL (`author.md` §4).
+  await resetAuthorPageCache(ctx, archivedHandle)
+  return member
 }
 
 export async function restoreStaffAccount(
@@ -756,8 +777,10 @@ export async function restoreStaffAccount(
   const actor = ensureOwnerActor(ctx, "staff.restore")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let restoredHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
     const target = await loadTarget(ctx, tx, input.id, "staff.restore")
+    restoredHandle = target.handle
     const restored = await tx.user.updateMany({
       where: { id: target.id, archivedAt: { not: null } },
       data: {
@@ -789,4 +812,6 @@ export async function restoreStaffAccount(
     })
     return reloadMember(ctx, tx, target.id, now)
   })
+  await resetAuthorPageCache(ctx, restoredHandle)
+  return member
 }

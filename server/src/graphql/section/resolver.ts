@@ -36,11 +36,17 @@ import {
 
 export default {
   Query: {
-    publicSections: async (_parent: unknown, _args: Record<string, never>, ctx: GraphQLContext) => {
+    /**
+     * Рубрики меню шапки. Локаль обязательна: рубрика публична только там, где у неё есть
+     * опубликованный материал этого языка (журнал §20.9), поэтому английское меню не
+     * показывает рубрику, пустую в английской ленте, и считает её материалы по своей локали.
+     */
+    publicSections: async (_parent: unknown, args: { locale: "ru" | "en" }, ctx: GraphQLContext) => {
+      const where = publicArticleWhere({ sourceLocale: args.locale })
       const sections = await ctx.prisma.section.findMany({
         where: {
           status: "active",
-          articles: { some: publicArticleWhere() }
+          articles: { some: where }
         },
         orderBy: { order: "asc" },
         select: {
@@ -49,7 +55,7 @@ export default {
           nameEn: true,
           slug: true,
           order: true,
-          _count: { select: { articles: { where: publicArticleWhere() } } }
+          _count: { select: { articles: { where } } }
         }
       })
 

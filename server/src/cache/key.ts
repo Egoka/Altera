@@ -25,6 +25,13 @@ export const buildCacheKey = (namespace: string, args: Readonly<Record<string, u
   return `cache:${CACHE_KEY_VERSION}:data:${namespace}:${digest}`
 }
 
+/**
+ * Тег кеша страницы автора. Адрес страницы регистр не учитывает, и профиль кладётся в кеш
+ * по хэндлу в нижнем регистре (`author.md` §3–4), поэтому тег приводится к нему же: иначе
+ * сброс по `Vera` не тронул бы запись, положенную по `vera`.
+ */
+export const authorCacheTag = (handle: string): string => `author:${handle.trim().toLowerCase()}`
+
 interface ArticleCacheIdentity {
   slug: string
   author?: { handle: string } | null
@@ -37,7 +44,7 @@ export const buildArticleCacheTags = (...articles: readonly ArticleCacheIdentity
 
   for (const article of articles) {
     tags.add(`article:${article.slug}`)
-    if (article.author) tags.add(`author:${article.author.handle}`)
+    if (article.author) tags.add(authorCacheTag(article.author.handle))
     if (article.section) tags.add(`section:${article.section.slug}`)
     article.tags?.forEach((tag) => tags.add(`tag:${tag.slug}`))
   }
