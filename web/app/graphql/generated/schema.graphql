@@ -1,3 +1,66 @@
+"""
+Как аккаунт попал в архив (`50-access/session-lifecycle.md` п. 7): `self` — самостоятельно,
+вход выдаёт ограниченную сессию и экран состояния; `admin` и `emergency` — административно,
+сессии нет и остаётся только оспаривание (журнал #48).
+"""
+enum AccountArchiveMode {
+  admin
+  emergency
+  self
+}
+
+"""
+Открытый запрос архивирования (`30-account/reader/delete-account.md` §4): письмо уже ушло,
+ссылка действует до `expiresAt`. Самой ссылки здесь нет — она только в письме.
+"""
+type AccountArchivePending {
+  expiresAt: String!
+  requestedAt: String!
+}
+
+"""Предпросмотр последствий для страницы «Удалить аккаунт» (§4–5)."""
+type AccountArchivePreview {
+  """
+  Сколько материалов уйдёт в архив вместе с аккаунтом — единственный режим (журнал #4).
+  """
+  articlesCount: Int!
+
+  """
+  Последний владелец себя не архивирует — инвариант владельцев (`roles/owner.md`).
+  """
+  isLastOwner: Boolean!
+  pending: AccountArchivePending
+
+  """
+  План продолжает идти без возврата и без паузы (журнал #50). `null` у служебной записи:
+  она плана не покупает (журнал §8.17).
+  """
+  plan: AccountSubscription
+}
+
+"""
+Итог подтверждения: архив выполнен, все сессии отозваны, страница уходит на `/`.
+"""
+type AccountArchiveResult {
+  archived: Boolean!
+  articlesArchived: Int!
+}
+
+"""
+Состояние экрана `/me/archived` (`30-account/reader/archived-state.md` §4).
+"""
+type AccountArchiveState {
+  archivedAt: String!
+
+  """
+  Сколько материалов лежит в архиве: после восстановления они остаются там (журнал §5.4).
+  """
+  articlesArchived: Int!
+  canRestore: Boolean!
+  mode: AccountArchiveMode!
+  plan: AccountSubscription
+}
+
 type AccountPlanPeriod {
   endsAt: String
   startsAt: String!
@@ -15,6 +78,15 @@ enum AccountPlanState {
   base
   expired
   free
+}
+
+"""
+Итог восстановления: ограниченная сессия заменена полной, поэтому ответ несёт новую сессию —
+refresh из неё BFF переносит в httpOnly-cookie (ADR-0023 п. 2).
+"""
+type AccountRestoreResult {
+  restored: Boolean!
+  session: AuthPayload!
 }
 
 """
@@ -47,6 +119,14 @@ type AccountSubscription {
 
 type AccountUser {
   _count: UserCount
+
+  """Последствия архивирования своей записи (матрица #51)."""
+  archivePreview: AccountArchivePreview!
+
+  """
+  Состояние своей архивированной записи; полному аккаунту — `FORBIDDEN` (матрица #116).
+  """
+  archiveState: AccountArchiveState!
   articles: [Article!]
   avatarAssetId: ID
   avatarCheckStatus: ProfileCheckStatus!
@@ -1188,10 +1268,12 @@ type Mutation {
   assignOwner(id: ID!): AdminStaffMember!
   bulkDeleteArticles(ids: [ID!]!): [Article!]!
   bulkUpdateArticleStatus(ids: [ID!]!, status: ArticleStatus!): [Article!]!
+  cancelAccountArchive: AccountArchivePreview!
   cancelEmailChange: EmailChangeState!
   cancelJob(id: ID!, reason: String!): AdminJob!
   cancelSubscription: Boolean!
   changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
+  confirmAccountArchive(token: String!): AccountArchiveResult!
   confirmEmailChange(code: String!): EmailChangeResult!
   confirmPriceChange(decision: PriceChangeDecision!): Boolean!
   createArticle(input: CreateArticleInput!): Article!
@@ -1232,12 +1314,14 @@ type Mutation {
   адрес и пользователь не передаются (§2 п. 5, п. 8).
   """
   reportPageError(code: String!, requestId: String, route: String!): Boolean!
+  requestAccountArchive(mode: AccountArchiveMode! = self): AccountArchivePreview!
   requestEmailChange(newEmail: String!): EmailChangeState!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
   requestRefund(paymentId: ID!, reason: String): Boolean!
   requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
+  restoreAccountSelf: AccountRestoreResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
   restoreSection(id: ID!): Section!

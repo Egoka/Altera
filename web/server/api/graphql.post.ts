@@ -2,6 +2,7 @@ import { SESSION_ACCESS_COOKIE, SESSION_COOKIE_PATH } from "#shared/session"
 import { resolveTrustedClientAddress } from "../utils/clientAddress"
 import { GraphQLProxyError, getGraphQLRouteError, proxyGraphQLRequest } from "../utils/graphqlProxy"
 import {
+  ACCESS_COOKIE_MAX_AGE_SECONDS,
   REFRESH_COOKIE_MAX_AGE_SECONDS,
   REFRESH_COOKIE_NAME,
   extractSessionCookie,
@@ -70,6 +71,16 @@ export default defineEventHandler(async (event) => {
         ...refreshCookieOptions,
         maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS
       })
+      // Мутация, заменившая сессию, обновляет и access-cookie: страница, сделавшая её из
+      // браузера (восстановление аккаунта, `archived-state.md` §4), иначе продолжила бы
+      // предъявлять токен отозванной сессии до конца его 15 минут.
+      if (session.accessToken) {
+        setCookie(event, SESSION_ACCESS_COOKIE, session.accessToken, {
+          ...accessCookieOptions,
+          secure: true,
+          maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS
+        })
+      }
     } else if (session.clear) {
       deleteCookie(event, REFRESH_COOKIE_NAME, refreshCookieOptions)
       // Выход обязан очистить cookie (`30-account/reader/sessions.md` §7): без этого шага

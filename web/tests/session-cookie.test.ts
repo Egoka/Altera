@@ -94,7 +94,46 @@ describe("extractSessionCookie", () => {
   it("leaves a response without session fields untouched", () => {
     const payload = { data: { __typename: "Query" } }
 
-    expect(extractSessionCookie(payload, [])).toEqual({ body: payload, token: null, clear: false })
+    expect(extractSessionCookie(payload, [])).toEqual({
+      body: payload,
+      token: null,
+      accessToken: null,
+      clear: false
+    })
+  })
+
+  // T-035: восстановление аккаунта меняет ограниченную сессию на полную из браузера, без
+  // перезагрузки страницы (`30-account/reader/archived-state.md` §4), поэтому маршрут обновляет
+  // обе cookie — иначе в браузере остался бы токен уже отозванной сессии.
+  it("carries both tokens of the session issued by a self-restore", () => {
+    const payload = {
+      data: {
+        restoreAccountSelf: {
+          restored: true,
+          session: { accessToken: "fresh-access", refreshToken: "fresh-refresh", user: { id: "user-1" } }
+        }
+      }
+    }
+
+    const outcome = extractSessionCookie(payload, ["restoreAccountSelf"])
+
+    expect(outcome.token).toBe("fresh-refresh")
+    expect(outcome.accessToken).toBe("fresh-access")
+    expect(outcome.clear).toBe(false)
+    expect(JSON.stringify(outcome.body)).not.toContain("fresh-refresh")
+  })
+
+  // Подтверждение архива отзывает все сессии в той же транзакции (`session-lifecycle.md` п. 7).
+  it("asks to clear the cookie after the account archive is confirmed", () => {
+    const payload = { data: { confirmAccountArchive: { archived: true, articlesArchived: 2 } } }
+
+    expect(extractSessionCookie(payload, ["confirmAccountArchive"])).toMatchObject({ token: null, clear: true })
+  })
+
+  it("keeps the cookie when the archive confirmation failed", () => {
+    const payload = { data: null, errors: [{ message: "Entity not found" }] }
+
+    expect(extractSessionCookie(payload, ["confirmAccountArchive"])).toMatchObject({ token: null, clear: false })
   })
 })
 

@@ -1,7 +1,7 @@
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { ensureAuthenticated } from "../../exceptions/permissions"
-import { deriveAccountSubscription, type AccountPlanPeriod } from "../../account/dashboard"
+import { deriveAccountSubscription, toAccountSubscriptionPayload } from "../../account/dashboard"
 
 /**
  * Сводка кабинета `/me` (`docs/spec/30-account/reader/dashboard.md` §4).
@@ -30,12 +30,6 @@ const paymentsDisabled = (action: string) => (_parent: unknown, _args: unknown, 
   throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action })
 }
 
-const toPeriod = (period: AccountPlanPeriod) => ({
-  tier: period.tier,
-  startsAt: period.startsAt.toISOString(),
-  endsAt: period.endsAt?.toISOString() ?? null
-})
-
 export default {
   Mutation: {
     startCheckout: paymentsDisabled("checkout.start"),
@@ -60,15 +54,7 @@ export default {
         where: { userId: user.id },
         select: { tier: true, startsAt: true, endsAt: true, revokedAt: true }
       })
-      const view = deriveAccountSubscription(grants, new Date())
-
-      return {
-        state: view.state,
-        tier: view.tier,
-        until: view.until?.toISOString() ?? null,
-        endedAt: view.endedAt?.toISOString() ?? null,
-        queue: view.queue.map(toPeriod)
-      }
+      return toAccountSubscriptionPayload(deriveAccountSubscription(grants, new Date()))
     }
   }
 }

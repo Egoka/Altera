@@ -1,0 +1,85 @@
+# «Удалить аккаунт» и экран состояния (`30-account/reader/delete-account.md` §4,
+# `archived-state.md` §4). Первый запуск идёт без платности, поэтому карточка плана здесь та же,
+# что в сводке `/me`: срок идёт независимо от архива (журнал #50).
+fragment AccountArchivePlanFields on AccountSubscription {
+  state
+  tier
+  until
+  endedAt
+  queue {
+    tier
+    startsAt
+    endsAt
+  }
+}
+
+fragment AccountArchivePreviewFields on AccountArchivePreview {
+  articlesCount
+  isLastOwner
+  plan {
+    ...AccountArchivePlanFields
+  }
+  pending {
+    requestedAt
+    expiresAt
+  }
+}
+
+query GetAccountArchivePreview {
+  me {
+    id
+    archivePreview {
+      ...AccountArchivePreviewFields
+    }
+  }
+}
+
+query GetAccountArchiveState {
+  me {
+    id
+    name
+    archiveState {
+      archivedAt
+      mode
+      articlesArchived
+      canRestore
+      plan {
+        ...AccountArchivePlanFields
+      }
+    }
+  }
+}
+
+mutation RequestAccountArchive {
+  requestAccountArchive(mode: self) {
+    ...AccountArchivePreviewFields
+  }
+}
+
+mutation CancelAccountArchive {
+  cancelAccountArchive {
+    ...AccountArchivePreviewFields
+  }
+}
+
+mutation ConfirmAccountArchive($token: String!) {
+  confirmAccountArchive(token: $token) {
+    archived
+    articlesArchived
+  }
+}
+
+# Ограниченная сессия заменяется полной, поэтому ответ несёт новую: обе cookie ставит маршрут
+# BFF, refresh из ответа он вырезает и наружу тот не доходит (ADR-0023 п. 2).
+mutation RestoreAccountSelf {
+  restoreAccountSelf {
+    restored
+    session {
+      accessToken
+      refreshToken
+      user {
+        id
+      }
+    }
+  }
+}

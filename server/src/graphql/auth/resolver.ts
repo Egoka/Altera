@@ -1,9 +1,9 @@
 import { addMinutes } from "date-fns"
 import crypto from "crypto"
-import jwt from "jsonwebtoken"
 import type { GraphQLContext } from "../../prisma"
 import { createApiError } from "../../errors/graphql-error"
 import { hashOpaqueToken } from "../../auth/token-hash"
+import { issueAccessToken } from "../../auth/access-token"
 import { isEmailAddress, normalizeEmail } from "../../auth/email-address"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../../auth/handle"
 import { EMPTY_ACCOUNT_NAME } from "../../visibility/display-name"
@@ -24,8 +24,6 @@ if (!process.env.JWT_ACCESS_SECRET) {
   throw new Error("JWT secrets must be defined in environment variables.")
 }
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET
-const JWT_ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_TOKEN_EXPIRY || "15m"
 const MAGIC_LINK_EXPIRY_MINUTES = parseInt(process.env.MAGIC_LINK_EXPIRY_MINUTES || "15")
 const MAGIC_LINK_BASE_URL = process.env.MAGIC_LINK_BASE_URL || "http://localhost:3000/auth/verify"
 
@@ -48,10 +46,6 @@ const buildMagicLinkUrl = (token: string): string => {
 
 const sameVersion = (accepted: number | null | undefined, current: number | null): boolean =>
   current === null ? accepted === null || accepted === undefined : accepted === current
-
-// Роль в клейм не попадает: она читается из базы на каждый запрос (ADR-0003 п. 4, ADR-0009 п. 6).
-const issueAccessToken = (userId: string, sessionId: string): string =>
-  (jwt as any).sign({ userId, sid: sessionId }, JWT_ACCESS_SECRET, { expiresIn: JWT_ACCESS_TOKEN_EXPIRY })
 
 const sessionClient = (ctx: GraphQLContext): SessionClient => ctx.prisma as unknown as SessionClient
 

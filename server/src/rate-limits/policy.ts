@@ -105,7 +105,8 @@ const rules = {
     source: "rate-limits.md §2 п. 7",
     middlewareFields: []
   },
-  // §2 п. 8: мутации кабинета (закладки, профиль) и отдельная корзина смены адреса.
+  // §2 п. 8: мутации кабинета (закладки, профиль), отдельные корзины смены адреса и запроса
+  // самостоятельного архивирования аккаунта.
   "account.mutation.user": {
     bucket: "account.mutation.user",
     keyKind: "user",
@@ -116,6 +117,14 @@ const rules = {
   },
   "account.email_change.user": {
     bucket: "account.email_change.user",
+    keyKind: "user",
+    limit: 1,
+    windowSeconds: DAY,
+    source: "rate-limits.md §2 п. 8",
+    middlewareFields: []
+  },
+  "account.archive.user": {
+    bucket: "account.archive.user",
     keyKind: "user",
     limit: 1,
     windowSeconds: DAY,

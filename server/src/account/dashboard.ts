@@ -32,6 +32,31 @@ export interface AccountSubscriptionView {
   queue: AccountPlanPeriod[]
 }
 
+/**
+ * Та же карточка в виде ответа API: даты — строки ISO. Живёт здесь, а не в резолвере сводки,
+ * потому что план показывают две страницы — сводка `/me` и экран состояния `/me/archived`
+ * (`archived-state.md` §4): срок идёт независимо от архива (журнал #50).
+ */
+export interface AccountSubscriptionPayload {
+  state: AccountPlanState
+  tier: PlanTier
+  until: string | null
+  endedAt: string | null
+  queue: { tier: PlanTier; startsAt: string; endsAt: string | null }[]
+}
+
+export const toAccountSubscriptionPayload = (view: AccountSubscriptionView): AccountSubscriptionPayload => ({
+  state: view.state,
+  tier: view.tier,
+  until: view.until?.toISOString() ?? null,
+  endedAt: view.endedAt?.toISOString() ?? null,
+  queue: view.queue.map((period) => ({
+    tier: period.tier,
+    startsAt: period.startsAt.toISOString(),
+    endsAt: period.endsAt?.toISOString() ?? null
+  }))
+})
+
 // Порядок приоритета периодов — журнал §8.22: `pro` действует раньше `standard`.
 const TIER_PRIORITY: Record<PlanTier, number> = { pro: 2, standard: 1, free: 0 }
 

@@ -1,7 +1,12 @@
 import type { MailDeliveryStatus, Prisma, Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission, hasPermission } from "../exceptions/permissions"
-import { EMAIL_CHANGE_CODE_TEMPLATE, MAGIC_LINK_TEMPLATE, SUPPORT_REQUEST_STAFF_TEMPLATE } from "../mail/messages"
+import {
+  ACCOUNT_ARCHIVE_CONFIRM_TEMPLATE,
+  EMAIL_CHANGE_CODE_TEMPLATE,
+  MAGIC_LINK_TEMPLATE,
+  SUPPORT_REQUEST_STAFF_TEMPLATE
+} from "../mail/messages"
 import type { GraphQLContext } from "../prisma"
 import { calculatePagination, validatePagination, type PaginationInfo, type PaginationInput } from "../utils/admin"
 import { maskEmail } from "./personal-data"
@@ -14,10 +19,15 @@ const SCOPED_ACCESS_ROLES = ["editor", "moderator"] as const
 const REVIEW_ARTICLE_STATUSES = ["review", "in_review", "rework"] as const
 
 /**
- * Шаблоны с секретом: ссылка входа и код смены почты. Копия письма их не содержит (§27.6), поэтому
- * повтор ушёл бы получателю с пометкой вместо секрета — секрет пользователь запрашивает заново.
+ * Шаблоны с секретом: ссылка входа, код смены почты и ссылка подтверждения архива аккаунта.
+ * Копия письма их не содержит (§27.6), поэтому повтор ушёл бы получателю с пометкой вместо
+ * секрета — секрет пользователь запрашивает заново.
  */
-export const SECRET_MAIL_TEMPLATES: ReadonlySet<string> = new Set([MAGIC_LINK_TEMPLATE, EMAIL_CHANGE_CODE_TEMPLATE])
+export const SECRET_MAIL_TEMPLATES: ReadonlySet<string> = new Set([
+  MAGIC_LINK_TEMPLATE,
+  EMAIL_CHANGE_CODE_TEMPLATE,
+  ACCOUNT_ARCHIVE_CONFIRM_TEMPLATE
+])
 /**
  * Шаблоны, у которых копия письма сокращена: ПДн отправителя обращения остаются в одной записи
  * обращения, а не в истории писем. Повтор такой копии не донёс бы ни адрес ответа, ни текст.

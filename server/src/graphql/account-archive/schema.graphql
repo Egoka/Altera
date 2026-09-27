@@ -1,0 +1,79 @@
+"""
+Как аккаунт попал в архив (`50-access/session-lifecycle.md` п. 7): `self` — самостоятельно,
+вход выдаёт ограниченную сессию и экран состояния; `admin` и `emergency` — административно,
+сессии нет и остаётся только оспаривание (журнал #48).
+"""
+enum AccountArchiveMode {
+  self
+  admin
+  emergency
+}
+
+"""
+Открытый запрос архивирования (`30-account/reader/delete-account.md` §4): письмо уже ушло,
+ссылка действует до `expiresAt`. Самой ссылки здесь нет — она только в письме.
+"""
+type AccountArchivePending {
+  requestedAt: String!
+  expiresAt: String!
+}
+
+"""
+Предпросмотр последствий для страницы «Удалить аккаунт» (§4–5).
+"""
+type AccountArchivePreview {
+  "Сколько материалов уйдёт в архив вместе с аккаунтом — единственный режим (журнал #4)."
+  articlesCount: Int!
+  """
+  План продолжает идти без возврата и без паузы (журнал #50). `null` у служебной записи:
+  она плана не покупает (журнал §8.17).
+  """
+  plan: AccountSubscription
+  "Последний владелец себя не архивирует — инвариант владельцев (`roles/owner.md`)."
+  isLastOwner: Boolean!
+  pending: AccountArchivePending
+}
+
+"""
+Состояние экрана `/me/archived` (`30-account/reader/archived-state.md` §4).
+"""
+type AccountArchiveState {
+  archivedAt: String!
+  mode: AccountArchiveMode!
+  "Сколько материалов лежит в архиве: после восстановления они остаются там (журнал §5.4)."
+  articlesArchived: Int!
+  plan: AccountSubscription
+  canRestore: Boolean!
+}
+
+"""
+Итог подтверждения: архив выполнен, все сессии отозваны, страница уходит на `/`.
+"""
+type AccountArchiveResult {
+  archived: Boolean!
+  articlesArchived: Int!
+}
+
+"""
+Итог восстановления: ограниченная сессия заменена полной, поэтому ответ несёт новую сессию —
+refresh из неё BFF переносит в httpOnly-cookie (ADR-0023 п. 2).
+"""
+type AccountRestoreResult {
+  restored: Boolean!
+  session: AuthPayload!
+}
+
+extend type AccountUser {
+  "Последствия архивирования своей записи (матрица #51)."
+  archivePreview: AccountArchivePreview!
+  "Состояние своей архивированной записи; полному аккаунту — `FORBIDDEN` (матрица #116)."
+  archiveState: AccountArchiveState!
+}
+
+extend type Mutation {
+  # `mode` зарезервирован: единственный режим судьбы материалов — архив всех (журнал #4).
+  requestAccountArchive(mode: AccountArchiveMode! = self): AccountArchivePreview!
+  cancelAccountArchive: AccountArchivePreview!
+  confirmAccountArchive(token: String!): AccountArchiveResult!
+  restoreAccountSelf: AccountRestoreResult!
+}
