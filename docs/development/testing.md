@@ -45,7 +45,17 @@ pnpm --filter nuxt-app run typecheck
 pnpm --filter nuxt-app run test:e2e
 ```
 
-`web/typecheck` использует установленный `vue-tsc` через `nuxt prepare && vue-tsc -b --noEmit`.
+`web/typecheck` — `nuxt prepare && node scripts/typecheck.mjs`. Скрипт берёт проекты из `references`
+в `web/tsconfig.json` (app, server, shared, node), проверяет каждый отдельным
+`vue-tsc --noEmit -p` без tsbuildinfo и последним печатает сводку «проект → exit, число ошибок».
+Ошибка одного проекта не останавливает остальные; exit ненулевой, если упал хотя бы один.
+Прежний `vue-tsc -b --noEmit` проверял те же проекты, но печатал ошибки одним потоком без
+разбивки по проектам, и последней шла ошибка node-проекта (`nuxt.config.ts`). 2026-09-27 в его
+выводе заметили только ошибку `nuxt.config.ts` при девяти ошибках app. В изолированном
+воспроизведении `-b` эти девять ошибок показал, поэтому точная причина пропуска не установлена.
+Ошибка TS2322 (`Plugin$1<any>[]` → `PluginOption`) у плагина Tailwind зависела от того, какую из
+двух копий `vite@7.0.5` pnpm поднимет в `node_modules/.pnpm/node_modules`. Тип плагина теперь
+берётся из схемы Nuxt (пояснение — в `web/nuxt.config.ts`), базовой линии для этой ошибки нет.
 Команды запускаются по необходимости текущей задачи. Исторические результаты ниже
 не ограничивают проверки в новом прямом запросе пользователя.
 
@@ -54,7 +64,7 @@ pnpm --filter nuxt-app run test:e2e
 | Unit             | 24 passed и 1 todo; todo отражает открытый T-027, не выполненную SDL-проверку безопасности  |
 | Format/lint      | Прошли; fix1 имеет сохранённые raw outputs и входные хэши                                   |
 | Server/web build | Прошли в Task 3; `build:ci` не применяет миграции                                           |
-| Web typecheck    | Exit 2, девять диагностик; T-001 остаётся открыт                                            |
+| Web typecheck    | 2026-09-27: exit 0 во всех четырёх проектах; Exit 2 и девять диагностик — срез Task 3       |
 | Browser smoke    | После исправления проверки title: один failed, девять skipped; HTML title пуст              |
 | T-112            | Девять подготовленных сценариев skipped; flow 16 имеет непринятый дефект последовательности |
 
