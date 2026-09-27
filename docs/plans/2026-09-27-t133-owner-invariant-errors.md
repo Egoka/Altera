@@ -81,13 +81,13 @@ write skew инварианта «хотя бы один владелец», н�
 
 ## 4. Проверки
 
-| check_id | Что проверяет | Команда |
-|---|---|---|
-| T133-C1 | AC-1: два параллельных отзыва на PostgreSQL оставляют одного владельца | `T133_TEST_DATABASE_URL=… pnpm --filter server exec vitest run tests/admin-owner-invariant-database.test.ts` |
-| T133-C2 | AC-3, AC-4 и блокировка на двойнике | `pnpm --filter server exec vitest run tests/admin-staff.test.ts` |
-| T133-C3 | AC-2: строка «Ошибка — мутация» на каждый код | `pnpm --filter web exec playwright test tests/e2e/22-admin-admins.spec.ts` |
-| T133-C4 | Регрессия сервера и web | `pnpm -r test` |
-| T133-C5 | Типы, формат, линт | `pnpm --filter web typecheck`, `pnpm format`, `pnpm lint` |
+| check_id | Что проверяет                                                          | Команда                                                                                                      |
+| -------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| T133-C1  | AC-1: два параллельных отзыва на PostgreSQL оставляют одного владельца | `T133_TEST_DATABASE_URL=… pnpm --filter server exec vitest run tests/admin-staff-database.test.ts` |
+| T133-C2  | AC-3, AC-4 и блокировка на двойнике                                    | `pnpm --filter server exec vitest run tests/admin-staff.test.ts`                                             |
+| T133-C3  | AC-2: строка «Ошибка — мутация» на каждый код                          | `pnpm --filter web exec playwright test tests/e2e/22-admin-admins.spec.ts`                                   |
+| T133-C4  | Регрессия сервера и web                                                | `pnpm -r test`                                                                                               |
+| T133-C5  | Типы, формат, линт                                                     | `pnpm --filter web typecheck`, `pnpm format`, `pnpm lint`                                                    |
 
 Шаг CI для T133-C1 добавляется в `.github/workflows/pull_request.yml` рядом с прочими проверками
 на настоящем PostgreSQL.
