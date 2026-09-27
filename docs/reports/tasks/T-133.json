@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-133",
+  "issue_id": "01a0e14b-e385-7d35-88f0-3fc88c3467ae",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-133-admins-owner-invariant-errors.md",
+    "sha": "992398ba65ab932eb706acd949bdbf5e560f116d"
+  },
+  "baseline_sha": "178b8ad5dfd0139a7c0616a6e8996a6996f76e56",
+  "tested_sha": "4bf1192b7afa5986e6593a3b732dc8dcfe1195bc",
+  "branch": "server/t133-owner-invariant",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e1fa-b067-7b3b-bdaa-4d55ae8e93a8",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "lockActiveOwners в server/src/admin/staff.ts берёт SELECT \"id\" FROM \"users\" WHERE \"role\" = 'owner'::\"Role\" AND \"archivedAt\" IS NULL ORDER BY \"id\" FOR UPDATE первым действием транзакций revokeOwner и deactivateOwner — до replaceRole/closeAccess и ensureOwnerRemains. server/tests/admin-staff-database.test.ts на настоящем PostgreSQL: «на два встречных отзыва оставляет ровно одного владельца» и «на два встречных закрытия доступа оставляет ровно одного владельца» — один исход fulfilled, второй rejected с CONFLICT/owner/at-least-one/0, в базе один активный владелец, в аудите одна запись role.revoke.owner. server/tests/admin-staff.test.ts фиксирует порядок вызова; со снятой блокировкой оба сценария дают два успеха и ноль владельцев. CI run 36308718670, джоб «Сборка сервера и дымовая проверка старта», шаг «Проверить инвариант владельцев и создание записи T-133» на PostgreSQL 17"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/app/composables/useAdminStaff.ts: отдельное состояние actionFailure (code, entity, field, rule, requestId), перечитывание списка, владельцев и карточки после любого исхода мутации, затем установка отказа. web/app/pages/admin/admins/index.vue: строка role=\"alert\" с data-staff-failure на странице и в диалогах причины, создания и назначения; текст по коду, внутри VALIDATION_ERROR — по rule/field. web/tests/e2e/22-admin-admins.spec.ts — 15 passed (FORBIDDEN, NOT_FOUND, CONFLICT по owner и по user, VALIDATION_ERROR/not-an-account, PROVIDER_UNAVAILABLE с кодом запроса, ARCHIVED, перечитывание списка после отказа), при --repeat-each 3 — 45 passed. web/tests/admin-admins-page.nuxt.test.ts — 20 passed, it.each по девяти вариантам кода. Ограничение: requestId публичен только у INTERNAL_ERROR и PROVIDER_UNAVAILABLE (server/src/errors/graphql-error.ts, словарь T-086), интерфейс печатает его, когда сервер отдал. CI run 36308718670"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "listOwners (server/src/admin/staff.ts) отдаёт maskEmail(email) и emailMasked: true; поле emailMasked добавлено в AdminOwner (server/src/graphql/staff/schema.graphql) и в запрос GetOwners. server/tests/admin-staff.test.ts — «отдаёт в списке владельцев маску адреса и не пишет чтение персональных данных»: полного адреса в ответе нет, записи admin.read.personal нет, а карточка того же владельца отдаёт полный адрес и запись делает. web/tests/e2e/22-admin-admins.spec.ts — блок [data-staff-owners] содержит маску и не содержит полного адреса. Это приводит список владельцев к правилу §8 спецификации: просмотр списка с маскированным e-mail не аудируется (журнал §28.7). CI run 36308718670"
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "createUserWithReservedHandle (server/src/auth/handle.ts) принимает role и isServiceAccount и необязательный шаг withinTransaction в той же транзакции; createStaff создаёт аккаунт, роль и аудит user.create.staff одной транзакцией, письмо входа — после коммита (appoint-admin.md §5). server/tests/admin-staff-database.test.ts — «после сбоя на аудите не оставляет адрес занятым и даёт создать запись снова»: после падения внутри транзакции user.findUnique по адресу возвращает null, аудита нет, повторное создание проходит и даёт isServiceAccount = true с ролью editor. С возвратом к двум транзакциям тот же тест падает — аккаунт читателя остаётся в базе. CI run 36308718670"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0",
+    "lint": "passed: pnpm lint exit 0",
+    "typecheck": "passed: pnpm --filter nuxt-app run typecheck exit 0; tsc --noEmit в server exit 0",
+    "tests": "passed: pnpm -r test exit 0 — server 866 passed / 44 skipped, web 624 passed, packages/content 99 passed",
+    "staff_unit": "passed: vitest run tests/admin-staff.test.ts — 38 passed",
+    "owner_invariant_postgres": "passed: T133_TEST_DATABASE_URL=… vitest run tests/admin-staff-database.test.ts — 3 passed на PostgreSQL 16 (docker-compose, порт 25432, своя база на прогон); в CI тот же файл на PostgreSQL 17",
+    "e2e": "passed: playwright test --project chromium --no-deps tests/e2e/22-admin-admins.spec.ts — 15 passed; --repeat-each 3 --workers 1 — 45 passed",
+    "negative_control": "passed: без вызовов lockActiveOwners оба встречных сценария дают два успеха и ноль активных владельцев; при создании двумя транзакциями аккаунт читателя остаётся в базе после сбоя второго шага",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36308718670",
+    "environment": "Node 24.12.0, pnpm 10.18.3, локальный PostgreSQL 16 из docker-compose (порт 25432); в CI PostgreSQL 17"
+  },
+  "pr": {
+    "number": 261,
+    "url": "https://github.com/Egoka/Altera/pull/261",
+    "base_ref": "app",
+    "base_sha": "178b8ad5dfd0139a7c0616a6e8996a6996f76e56",
+    "head_sha": "4bf1192b7afa5986e6593a3b732dc8dcfe1195bc",
+    "merge_sha": "7beea01aa75346386305faff8637e085495b874b"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "unknown"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/; Render dev live включает merge SHA. Миграций задача не добавляет"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-133.md",
+    "sha256": "c3a3cdb94c17fc98f25f28b4ce56f686f58814b96a8de482f50e8c053d23f73b"
+  },
+  "usage": null
+}
