@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task_id": "T-121",
+  "issue_id": "01a0e1d9-f41d-7c12-8175-7564a16c58d6",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-121-critical-audit-criterion-proposal.md",
+    "sha": "f4632039442cb3b56ebdf7006f16a600e6baabe6"
+  },
+  "baseline_sha": "2c4076561e3069282b9c835596ac5b59e6004134",
+  "tested_sha": "67bb1778d17f38c277e5599096cf65126b78ea27",
+  "branch": "docs/t121-critical-audit-criterion",
+  "implementer_id": "4d98c007-0a6b-4254-85b1-1f57c99cb9ea",
+  "implementer_run_id": "01a0e320-34eb-7f05-b96b-daa53c4a29f5",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "каждый код предложения есть в реестре событий — 33/33 кода механически найдены в реестре с типом audit, отменённых и отложенных строк нет (отчёт docs/reports/2026-09-27-t121-critical-audit-criterion-proposal.md); подтверждено независимым ревью"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "владелец утвердил предложение целиком 2026-09-27 — запись в журнале решений §44 п. 3 (docs/decisions/role-review-working-log-2026-09-08.md, PR #318)"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed (по данным архитектора)"
+  },
+  "pr": {
+    "number": 292,
+    "url": "https://github.com/Egoka/Altera/pull/292",
+    "base_ref": "app",
+    "base_sha": "0985b2521ad287b728e7ecd9e66f0c36a26d6f33",
+    "head_sha": "67bb1778d17f38c277e5599096cf65126b78ea27",
+    "merge_sha": "b7b4c6599c931710335d7c6e4ecc199029ae3718"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e463-9aaa-7b6d-a941-d26c21d22371",
+    "sha": "67bb1778d17f38c277e5599096cf65126b78ea27",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR #292 меняет только документацию (отчёт-предложение) — controller.py вычисляет requires_deploy=false"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-121.md",
+    "sha256": "bc0c3e81e33a99b46d121ee36faa2687bd779c80e0bac8494cd915d8a72efc59"
+  },
+  "remaining": [
+    "Перенос утверждённого в спецификации и реализация — отдельными задачами (журнал §44)."
+  ],
+  "usage": null
+}
