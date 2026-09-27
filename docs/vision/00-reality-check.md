@@ -563,8 +563,8 @@ magic link в логе, отсутствие rate limit, отсутствие т
   [ФАКТ: `server/src/visibility/article.ts:4,83-86`]; возвращает `ARCHIVED` при ранее
   опубликованном адресе (HTTP 410) [ФАКТ: `server/src/visibility/article.ts:106`].
 - **Матрица прав**: `DEFAULT_ROLE_PERMISSIONS` в `server/src/exceptions/permissions.ts`
-  с 18 кодами прав и их носителями; `editor`/`moderator`/`analyst` имеют конкретные
-  права [ФАКТ: `server/src/exceptions/permissions.ts:5-75`].
+  с 13 кодами прав и их носителями; `editor`/`moderator`/`analyst` имеют конкретные
+  права [ФАКТ: `server/src/exceptions/permissions.ts:5-19,53-67`].
 - **Исключения прав**: `grantPermissionException`/`revokePermissionException` —
   временные гранты и блокировки для конкретного пользователя
   [ФАКТ: `server/src/graphql/permission-exception/resolver.ts:1-30`].
