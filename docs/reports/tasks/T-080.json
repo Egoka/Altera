@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "task_id": "T-080",
+  "issue_id": "01a0bc94-460c-730a-9599-6837e45589fe",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-080-admin-mail-history.md",
+    "sha": "c1330114f54da5b4936f01a3969221ec09eb588a"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "a9f6c43e33a886b105e121f13ff3d57ecd7c54cf",
+  "branch": "feat/t080-admin-mail",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bda3-7d83-703b-b223-e622ee2fa995",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Все строки состояний `mail.md` §9 воспроизводимы — `web/tests/admin-mail-page.nuxt.test.ts` — 11 passed; `web/tests/e2e/22-admin-mail.spec.ts` — выполняет джоб «Браузерная проверка веба»; CI на итоговом head a9f6c43e: джоб «Браузерная проверка веба» success (https://github.com/Egoka/Altera/actions/runs/35524793700); повторное ревью run 01a0e354-214b отметило AC-1 passed"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "В сохранённой копии письма входа нет токена — `server/tests/admin-mail-secrets.test.ts` — 2 passed: копия содержит «[секрет не показывается]», без токена, ссылки и `token=`; повтор отклоняется даже владельцу"
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 281 passed / 24 skipped, web 193 passed (по данным исполнителя на 96317c14)",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/35524793700"
+  },
+  "pr": {
+    "number": 167,
+    "url": "https://github.com/Egoka/Altera/pull/167",
+    "base_ref": "app",
+    "base_sha": "1daf02c0e08a58562fe5884ac59971dbe49e339e",
+    "head_sha": "a9f6c43e33a886b105e121f13ff3d57ecd7c54cf",
+    "merge_sha": "0ac9a686f462068fd13deecfd7ca1041139fef7c"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e354-214b-7867-8302-221d105cf0ad",
+    "sha": "a9f6c43e33a886b105e121f13ff3d57ecd7c54cf",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/: модуль admin mail и GraphQL mail"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-080.md",
+    "sha256": "cbe792434694a8e54477f4464ab741304edcf58836b0434419e26f2753e67c8b"
+  },
+  "remaining": [
+    "Доработка T-134 (ПД в списке, обход аудита карточки) принята отдельной задачей."
+  ],
+  "usage": null
+}

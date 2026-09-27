@@ -8,7 +8,7 @@
     "sha": "8001eaeaec27b10f443e7fb64cde5d52878d2134"
   },
   "baseline_sha": "f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54",
-  "tested_sha": "14d34bede921c77fcd99639a0f5a847ea71cd580",
+  "tested_sha": "4927eabfd7ac73ddc8b6581c364bfc8b4ec3e507",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0bf5e-4bc4-73d9-9ab5-e2e6323ae01c",
   "criteria": [
@@ -19,23 +19,23 @@
     },
     {
       "id": "AC-2",
-      "status": "blocked",
-      "evidence": "Поведение реализовано и покрыто: server/tests/public-feeds.test.ts («архивированная рубрика ведёт на преемника», «прежний слаг рубрики ведёт на нынешний») и сценарий переезда в run 35520495868. Запрос curl к живой архивированной рубрике требует доступного в app архивирования, то есть слияния T-070 — так критерий и сформулирован в задаче; T-070 сейчас in_review"
+      "status": "passed",
+      "evidence": "Подтверждено повторным независимым ревью 2026-09-27 (run 01a0e353-af6d, комментарий 01a0e3ac-4f7b-73cd-93ae-90dcce40f6f0 в ALTE-93): 301 архивированной рубрики и слитого тега на /en и русских переездов — e2e web/tests/e2e/129-public-locale-links.spec.ts:146-158 (T-129, PR #258, принята); server/tests/public-feeds.test.ts. Прежняя блокировка — архивирование рубрик T-070 — снята: T-070 принята (ALTE-83)."
     }
   ],
   "pr": {
     "number": 169,
     "url": "https://github.com/Egoka/Altera/pull/169",
     "base_ref": "app",
-    "base_sha": "f9483dcf05000698ec7ddd1eb2fcdf8d3d2a4d54",
-    "head_sha": "14d34bede921c77fcd99639a0f5a847ea71cd580",
-    "merge_sha": null
+    "base_sha": "b8677bae0216a62fd3e0b24a100a36302699fb79",
+    "head_sha": "4927eabfd7ac73ddc8b6581c364bfc8b4ec3e507",
+    "merge_sha": "b021bf945a5dabb18d47e45c9d55f48f0d4ad532"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e353-af6d-71f3-85fe-2dcee88ea1a5",
+    "sha": "4927eabfd7ac73ddc8b6581c364bfc8b4ec3e507",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -46,7 +46,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-055.md",
-    "sha256": "a93ea479bbafeb08ee4ec896f096a53c04a631dee629327ee9003d42efd66a0e"
+    "sha256": "9352be3862ef626363b3ac1ba3b28f2f69695572148f438706f177e68de5834e"
   },
   "usage": null
 }

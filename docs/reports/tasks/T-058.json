@@ -46,10 +46,10 @@
     "merge_sha": "d9696565bfe731ec0731eaa1600d036b755cda43"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e347-3f5a-7356-837e-102f1a4cd154",
+    "sha": "ce3142c792706ee9b8d928e2c75bb97acc11610c",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -59,7 +59,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-058.md",
-    "sha256": "7cfadaa0f88a13099041476d46eb88f8205425a3700d205b0c80b48322f5fd53"
+    "sha256": "5ae8487430ded839d4cfae10a022536bea9d7934f9944ab13d3db1bfd217bd55"
   },
   "remaining": [
     "Independent native review of the tested SHA and controller-managed development deployment are pending",
