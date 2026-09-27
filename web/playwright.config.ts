@@ -66,6 +66,10 @@ export default defineConfig({
       // Собранный сервер не использует dev/HMR-прокси, который завершался при EPIPE.
       command: "pnpm run build && node .output/server/index.mjs",
       env: {
+        // Джоб CI ставит `NODE_ENV=test` ради API, а собранный веб должен работать как на проде:
+        // внешний `vue-router` читает `NODE_ENV` при каждом запросе и в test печатал
+        // `[Vue Router warn]` на каждый намеренный 404, а сборка — `[nuxi] Changing NODE_ENV`.
+        NODE_ENV: "production",
         NUXT_GRAPHQL_API_URL: "http://127.0.0.1:4000/",
         NUXT_REQUEST_ID_FORWARD_SECRET: "t087-e2e-forward-secret",
         NITRO_HOST: "127.0.0.1",
