@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { DashboardArticleFieldsFragment } from "~/graphql/generated/graphql"
 import { selectAttention } from "~/utils/accountDashboard"
+import config from "../nuxt.config"
 
 // Зона «Требует внимания» сводки кабинета (`docs/spec/30-account/reader/dashboard.md` §5 п. 4).
 
@@ -84,5 +85,12 @@ describe("selectAttention", () => {
     } as DashboardArticleFieldsFragment
 
     expect(selectAttention([withRussian], NOW).map((item) => item.translation.id)).toEqual(["bilingual-ru"])
+  })
+})
+
+// Все ответы сводки персональные (`dashboard.md` §4), поэтому ни прокси, ни браузер их не хранят.
+describe("dashboard caching", () => {
+  it("serves /me with private, no-store", () => {
+    expect(config.routeRules?.["/me"]).toEqual({ headers: { "cache-control": "private, no-store" } })
   })
 })

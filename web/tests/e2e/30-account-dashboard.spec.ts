@@ -9,6 +9,9 @@ import { navigateOnClient } from "./helpers/hydration"
  * T-030: сводка кабинета `/me` (`docs/spec/30-account/reader/dashboard.md`).
  * AC-1 — строки состояний §8 воспроизводимы; AC-2 — служебная запись уходит в `/admin`.
  *
+ * T-127: при истёкшей выдаче без статей сводка ведёт к созданию статьи, а не к выбору плана
+ * (AC-2), и ответ `/me` не кешируется (AC-3).
+ *
  * Вход не проходит по ссылке намеренно: сессия кладётся в базу напрямую, чтобы сценарий не
  * расходовал общую корзину `auth.verify.ip` (`rate-limits.md` §2 п. 3) вместе с T-022.
  */
@@ -177,6 +180,11 @@ test.describe("сводка кабинета: строки состояний §
     const account = await createAccount("t030-empty")
     await useSession(page, account)
 
+    // Все ответы сводки персональные (§4): ни прокси, ни браузер их не хранят.
+    const response = await page.request.get("/me", { maxRedirects: 0 })
+    expect(response.status()).toBe(200)
+    expect(response.headers()["cache-control"]).toBe("private, no-store")
+
     // Чтение закладок задерживается, чтобы «Загрузка» стала наблюдаемой строкой, а не мельканием.
     await stubOperation(page, "GetMyBookmarks", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1_500))
@@ -226,7 +234,7 @@ test.describe("сводка кабинета: строки состояний §
     await expect(page.getByTestId("dashboard-plan-renew")).toHaveCount(0)
   })
 
-  test("«Ограничение плана»: истёкший план предлагает продлить, писать новое нельзя", async ({ page }) => {
+  test("«Ограничение плана»: истёкший план предлагает продлить, путь к созданию остаётся", async ({ page }) => {
     const now = Date.now()
     const account = await createAccount("t030-expired", {
       grants: [{ tier: "standard", startsAt: new Date(now - 40 * DAY), endsAt: new Date(now - 2 * DAY) }]
@@ -240,8 +248,11 @@ test.describe("сводка кабинета: строки состояний §
     await expect(page.getByTestId("dashboard-plan-headline")).toContainText(/^План закончился /)
     await expect(page.getByTestId("dashboard-plan-readonly")).toBeVisible()
     await expect(page.getByTestId("dashboard-plan-renew")).toHaveAttribute("href", "/pricing")
-    await expect(page.getByTestId("dashboard-create-article")).toHaveCount(0)
-    await expect(page.getByTestId("dashboard-choose-plan")).toBeVisible()
+    // Первый запуск бесплатен (журнал §24.1, §25.1): без статей сводка ведёт к созданию статьи,
+    // а «Выбрать план» появится здесь только вместе с платностью (§5 зона 5).
+    await expect(page.getByTestId("dashboard-create-article")).toHaveAttribute("href", "/me/articles/new")
+    await expect(page.getByTestId("dashboard-choose-plan")).toHaveCount(0)
+    await expect(page.getByTestId("dashboard-articles")).not.toContainText("Выбрать план")
   })
 
   test("автор видит «Требует внимания» и последние материалы", async ({ page }) => {

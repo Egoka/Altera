@@ -80,6 +80,27 @@ describe("словари локалей", () => {
     expect(empty).toEqual([])
   })
 
+  // Первый запуск бесплатен целиком (журнал §24.1, §25.1): базовые авторские возможности
+  // открываются бессрочно, поэтому обещать бесплатность именно первого материала нельзя —
+  // такая строка обещает читателю платность со второго (T-127).
+  it("не обещают бесплатность только первого материала", () => {
+    const promises = [
+      ...[...ru].filter(
+        ([, value]) =>
+          typeof value === "string" && /перв[а-яё]*\s+(материал|стать)/i.test(value) && /бесплат/i.test(value)
+      ),
+      ...[...en].filter(
+        ([, value]) =>
+          typeof value === "string" && /first\s+(piece|article|material)/i.test(value) && /free/i.test(value)
+      )
+    ].map(([key]) => key)
+
+    expect(promises).toEqual([])
+    // Приглашение писать при этом остаётся приглашением написать первый материал (`dashboard.md` §5).
+    expect(ru.get("account.dashboard.articles.invite")).toMatch(/перв[а-яё]*\s+материал/i)
+    expect(en.get("account.dashboard.articles.invite")).toMatch(/first piece/i)
+  })
+
   it("все значения — строки", () => {
     const wrong = [...ru, ...en].filter(([, value]) => typeof value !== "string").map(([key]) => key)
     expect(wrong).toEqual([])

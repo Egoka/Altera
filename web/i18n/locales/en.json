@@ -308,10 +308,8 @@
       "articles": {
         "title": "Recent pieces",
         "all": "All pieces",
-        "invite": "You have no pieces yet. Your first piece is free to write.",
-        "create": "Create an article",
-        "planNeeded": "Renew your plan to write new pieces.",
-        "choosePlan": "Choose a plan"
+        "invite": "You have no pieces yet. You can write your first piece right now.",
+        "create": "Create an article"
       },
       "bookmarks": {
         "title": "Bookmarks",
