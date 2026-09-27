@@ -28,7 +28,7 @@
 
   const { isSm, isMd } = useBreakpoint()
   const tableHeight = ref(47)
-  const { grants: data, pending: isLoading, failed: loadError, grant, revoke } = useAdminGrants()
+  const { grants: data, pending: isLoading, grant, revoke } = useAdminGrants()
   const isListLoading = isLoading
 
   watch(
@@ -247,8 +247,6 @@
           :data-source="data"
           :columns="columns"
           :height="tableHeight"
-          :is-loading="isListLoading"
-          :load-error="loadError"
           class="h-full"
           @click-row="openDetail($event.data)">
           <template #tier="{ value }">
@@ -363,7 +361,8 @@
       </template>
     </Split>
 
-    <Modal v-model="isGrantFormOpen" :title="t('admin.grantPlan')" class="max-w-md">
+    <AppDialog v-model="isGrantFormOpen" close-button size="md" class="max-w-md">
+      <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.grantPlan") }}</h2>
       <div class="flex flex-col gap-4 p-4">
         <div>
           <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{{
@@ -421,6 +420,6 @@
           </Button>
         </div>
       </div>
-    </Modal>
+    </AppDialog>
   </div>
 </template>

@@ -28,7 +28,7 @@
 
   const { isSm, isMd } = useBreakpoint()
   const tableHeight = ref(47)
-  const { grants: data, pending: isListLoading, failed: loadError } = useAdminGrants()
+  const { grants: data, pending: isListLoading } = useAdminGrants()
 
   watch(
     isSm,
@@ -180,8 +180,6 @@
           :data-source="data"
           :columns="columns"
           :height="tableHeight"
-          :is-loading="isListLoading"
-          :load-error="loadError"
           class="h-full"
           @click-row="openDetail($event.data)">
           <template #tier="{ value }">
