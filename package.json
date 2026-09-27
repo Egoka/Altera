@@ -8,6 +8,7 @@
     "codegen": "graphql-codegen --config codegen.ts",
     "prepare": "husky",
     "test": "pnpm -r test",
+    "verify:legacy-bodies": "pnpm --filter @altera/content run build && pnpm --filter server run verify:legacy-bodies",
     "lint": "pnpm -r exec eslint .",
     "format": "pnpm -r exec prettier --check .",
     "format:fix": "pnpm -r exec prettier --write ."
