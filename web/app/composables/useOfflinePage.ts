@@ -15,6 +15,41 @@ const PRIVATE_PREFIXES = ["/me", "/admin", "/auth", "/api", "/_nuxt", "/offline"
 /** Не больше 50 страниц — граница кеша по `offline.md` §4. */
 const MAX_PAGES = 50
 
+/**
+ * Управляющие символы браузер из адреса выбрасывает молча, поэтому `/\t/evil.example` прошло бы
+ * любую посимвольную проверку. Такое значение отклоняется целиком, а не чистится.
+ */
+const CONTROL_CHARACTERS = /[\u0000-\u001F\u007F]/
+
+/** Опорный источник разбора: сравнивается только он, наружу уходит один путь. */
+const PROBE_ORIGIN = "http://offline.invalid"
+
+/**
+ * Адрес возврата из `?from=` (`offline.md` §3): принимается только путь своего сайта.
+ *
+ * `startsWith("/")` мало: браузер читает `//evil.example` как протокол-относительный адрес, а
+ * `\` в начале пути приравнивает к `/`, поэтому `/\evil.example` — тоже чужой источник. Разбор
+ * идёт теми же правилами WHATWG, что и у самого браузера, и возвращается уже нормализованный
+ * путь — так на переход уходит значение, которое нельзя увести за пределы сайта.
+ */
+export const sameSitePath = (raw: unknown): string | null => {
+  const value = Array.isArray(raw) ? raw[0] : raw
+  if (typeof value !== "string" || !value.startsWith("/") || CONTROL_CHARACTERS.test(value)) return null
+
+  try {
+    const url = new URL(value, PROBE_ORIGIN)
+    if (url.origin !== PROBE_ORIGIN) return null
+
+    // `/..//evil.example` нормализуется в `//evil.example`: источник разбора остался своим, а вот
+    // результат снова протокол-относительный. Наружу уходит только путь с одним ведущим слэшем.
+    if (url.pathname.startsWith("//")) return null
+
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return null
+  }
+}
+
 export const isCacheablePath = (path: string): boolean => {
   if (path === "/" || path === "/en") return false
   return !PRIVATE_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
@@ -79,12 +114,12 @@ export const useOfflinePage = () => {
   const retrying = ref(false)
   const requestedCached = ref<boolean | null>(null)
 
-  /** Адрес, который читатель запрашивал: его подставляет service worker при показе страницы. */
-  const requestedPath = computed(() => {
-    const raw = route.query.from
-    const value = Array.isArray(raw) ? raw[0] : raw
-    return typeof value === "string" && value.startsWith("/") ? value : null
-  })
+  /**
+   * Адрес, который читатель запрашивал: его подставляет service worker при показе страницы.
+   * Значение приходит из query, то есть от кого угодно, — на переход оно попадает только как
+   * путь своего сайта (`sameSitePath`).
+   */
+  const requestedPath = computed(() => sameSitePath(route.query.from))
 
   const storage = (): CacheStorage | null =>
     typeof window !== "undefined" && "caches" in window ? window.caches : null

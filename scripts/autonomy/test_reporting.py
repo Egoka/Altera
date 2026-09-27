@@ -32,6 +32,14 @@ def run(identifier="r1", **extra):
 
 
 class ReportingTests(unittest.TestCase):
+    def test_multica_timestamp_with_short_fraction_is_parsed(self):
+        # Multica отбрасывает хвостовые нули микросекунд; раньше такие события выпадали из отчёта.
+        self.assertEqual(reporting.timestamp("2026-09-27T03:22:56.69189Z").microsecond, 691890)
+        self.assertEqual(reporting.timestamp("2026-09-27T03:22:56.6+00:00").microsecond, 600000)
+        self.assertEqual(reporting.iso(reporting.timestamp("2026-09-27T06:22:56+03:00")), "2026-09-27T03:22:56Z")
+        self.assertIsNone(reporting.timestamp("2026-09-27T03:22:56"))
+        self.assertIsNone(reporting.timestamp("not a time"))
+
     def test_nested_github_repository_and_user_observations_do_not_change_closed_day(self):
         data = snapshot()
         repository = {"id": 42, "open_issues": 3, "open_issues_count": 3, "pushed_at": "2026-09-15T19:15:21Z"}

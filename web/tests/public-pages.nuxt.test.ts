@@ -566,3 +566,119 @@ describe("страница автора", () => {
     expect((await render(AuthorPage)).find('[data-zone="skeleton"]').exists()).toBe(true)
   })
 })
+
+/**
+ * AC-1 и AC-2 T-129: на `/en` пагинация, фильтры, сброс, пустые состояния и редиректы 301
+ * остаются в английской локали. Стратегия `prefix_except_default` префиксует только
+ * не-умолчательную локаль, поэтому заглушка `localePath` повторяет ровно её поведение.
+ */
+describe("английская локаль публичных страниц", () => {
+  beforeEach(() => {
+    vi.stubGlobal("useI18n", () => ({ t, locale: ref("en") }))
+    vi.stubGlobal("useLocalePath", () => (path: string) => (path === "/" ? "/en" : `/en${path}`))
+  })
+
+  it("лента рубрики листается, фильтруется и сбрасывается внутри /en", async () => {
+    routeParams.value = { slugTypeContent: "culture" }
+    routeQuery.value = { tag: "ai" }
+    respondWith(sectionFeed())
+
+    const wrapper = await render(SectionFeedPage)
+
+    expect(wrapper.get('[data-zone="pagination"]').attributes("data-next")).toBe("/en/culture?tag=ai&page=2")
+    expect(wrapper.get('[data-zone="controls"]').attributes("data-reset")).toBe("/en/culture")
+  })
+
+  it("301 архивированной рубрики ведёт на английский адрес преемника", async () => {
+    routeParams.value = { slugTypeContent: "culture" }
+    respondWith(sectionFeed({ redirect: { slug: "society" }, section: null, items: [] }))
+
+    await render(SectionFeedPage)
+
+    expect(navigate).toHaveBeenCalledWith("/en/society", { redirectCode: 301, replace: true })
+  })
+
+  it("301 слитого тега ведёт на английский адрес целевого", async () => {
+    routeParams.value = { slug: "ai" }
+    respondWith({
+      data: {
+        feed: {
+          redirect: { slug: "ai-2" },
+          caption: "by_publication_date",
+          tag: null,
+          items: [],
+          pageInfo: { page: 1, totalPages: 0, hasNext: false }
+        }
+      }
+    })
+
+    await render(TagFeedPage)
+
+    expect(navigate).toHaveBeenCalledWith("/en/tags/ai-2", { redirectCode: 301, replace: true })
+  })
+
+  it("каталог авторов фильтруется и сбрасывается внутри /en", async () => {
+    routeQuery.value = { section: "culture" }
+    respondWith({
+      data: {
+        sectionCatalog: [{ slug: "culture", name: "Culture" }],
+        authorCatalog: {
+          letters: [],
+          items: [],
+          pageInfo: { page: 1, totalPages: 0, totalCount: 0, hasNext: false }
+        }
+      }
+    })
+
+    const wrapper = await render(AuthorsIndexPage)
+
+    expect(wrapper.get('[data-zone="controls"]').attributes("data-reset")).toBe("/en/authors")
+    expect(wrapper.get('[data-zone="empty"]').attributes("data-action")).toBe("/en/authors")
+  })
+
+  it("каталог тегов сбрасывает поиск внутри /en", async () => {
+    routeQuery.value = { q: "zeta" }
+    respondWith({
+      data: {
+        popularTags: [],
+        tagCatalog: {
+          letters: [],
+          items: [],
+          pageInfo: { page: 1, totalPages: 0, totalCount: 0, hasNext: false }
+        }
+      }
+    })
+
+    expect((await render(TagsIndexPage)).get('[data-zone="empty"]').attributes("data-action")).toBe("/en/tags")
+  })
+
+  it("пагинация страницы автора остаётся в /en", async () => {
+    routeParams.value = { slug: "vera" }
+    respondWith({
+      data: {
+        author: {
+          id: "1",
+          handle: "vera",
+          name: "Vera Orlova",
+          bio: null,
+          avatar: null,
+          grade: "pro",
+          publishedCount: 3,
+          firstPublishedAt: "2026-03-04T08:00:00.000Z",
+          redirect: null,
+          links: []
+        },
+        feed: {
+          caption: "by_publication_date",
+          redirect: null,
+          items: [feedItem("1")],
+          pageInfo: { page: 1, totalPages: 2, hasNext: true }
+        }
+      }
+    })
+
+    const wrapper = await render(AuthorPage)
+
+    expect(wrapper.get('[data-zone="pagination"]').attributes("data-next")).toBe("/en/authors/vera?page=2")
+  })
+})

@@ -21,7 +21,9 @@ const VERIFY_LIMIT = 10
 
 test.beforeEach(resetRateLimitCounters)
 
-test("подставленный X-Forwarded-For не снимает лимит по адресу", async ({ request }) => {
+// Тег `@real-rate-limit`: тест исчерпывает настоящую корзину, поэтому идёт отдельным проектом
+// после всех остальных — их очистка счётчиков посреди исчерпания пропускала лимит.
+test("подставленный X-Forwarded-For не снимает лимит по адресу", { tag: "@real-rate-limit" }, async ({ request }) => {
   const call = async () =>
     (
       await request.post("/api/graphql", {
@@ -44,7 +46,8 @@ test("подставленный X-Forwarded-For не снимает лимит 
   expect(limited.errors?.[0]?.extensions?.retryAfter).toBeGreaterThan(0)
 })
 
-test("алиасы одного поля расходуют корзину по числу вхождений", async ({ request }) => {
+// Тоже `@real-rate-limit`: корзина набирается записями по одной на вхождение внутри запроса.
+test("алиасы одного поля расходуют корзину по числу вхождений", { tag: "@real-rate-limit" }, async ({ request }) => {
   const response = await request.post("/api/graphql", {
     headers: { "content-type": "application/json" },
     data: { query: aliasDocument(VERIFY_LIMIT + 1) }

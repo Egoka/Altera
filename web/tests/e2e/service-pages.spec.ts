@@ -190,4 +190,36 @@ test.describe("офлайн-страница", () => {
     // проверяется юнит-тестом; здесь наблюдаем результат — возврат на запрошенный адрес.
     await expect(page).toHaveURL(/\/culture\/t058-retry$/)
   })
+
+  // T-130: `?from=` приходит из адресной строки, и чужой источник в нём уводил читателя с сайта.
+  // Отклонённое значение возвращает читателя на главную своего сайта, а не на чужой хост.
+  const hostile = [
+    ["протокол-относительный адрес", "//evil.example/"],
+    ["обратный слэш вместо второго", "/\\evil.example/"],
+    ["выход за корень после нормализации", "/..//evil.example/"]
+  ] as const
+
+  for (const [name, from] of hostile) {
+    test(`повтор не уходит на чужой сайт: ${name}`, async ({ page, baseURL }) => {
+      await page.goto(`/offline?from=${encodeURIComponent(from)}`)
+
+      await page.getByTestId("offline-retry").click()
+      await page.waitForURL((url) => url.pathname !== "/offline")
+
+      expect(page.url()).toBe(new URL("/", baseURL).toString())
+    })
+  }
+
+  for (const [name, from] of hostile.slice(0, 2)) {
+    test(`возврат сети не уходит на чужой сайт: ${name}`, async ({ page, context, baseURL }) => {
+      await page.goto(`/offline?from=${encodeURIComponent(from)}`)
+
+      // Событие `online` страница слушает сама (§3, §7): тот же переход проверяется без кнопки.
+      await context.setOffline(true)
+      await context.setOffline(false)
+      await page.waitForURL((url) => url.pathname !== "/offline")
+
+      expect(page.url()).toBe(new URL("/", baseURL).toString())
+    })
+  }
 })

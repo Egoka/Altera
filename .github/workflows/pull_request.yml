@@ -135,7 +135,10 @@ jobs:
       # Новые и изменённые в PR спеки прогоняются ещё трижды подряд: нестабильный тест ловится
       # до слияния, а не валит потом чужие PR. Один воркер — копии файла с фиксированными
       # фикстурами не мешают друг другу; `--no-deps` пропускает сценарии пустой базы, которая
-      # после основного прогона уже не пустая. Разбор причин — отчёт 2026-09-26-e2e-stabilization.
+      # после основного прогона уже не пустая. Сценарии настоящей корзины лимита
+      # (`real-rate-limit`) при одном воркере очистке счётчиков из соседнего теста не подвержены.
+      # Спек, где остались только сценарии пустой базы, не даёт тестов — это не ошибка.
+      # Разбор причин — отчёт 2026-09-26-e2e-stabilization.
       - name: Повторный прогон изменённых спеков
         if: github.event_name == 'pull_request'
         run: |
@@ -146,7 +149,7 @@ jobs:
           fi
           echo "$specs"
           cd web
-          pnpm exec playwright test --project chromium --no-deps --repeat-each 3 --workers 1 $specs
+          pnpm exec playwright test --project chromium --project real-rate-limit --no-deps --repeat-each 3 --workers 1 --pass-with-no-tests $specs
       # Состояние страницы на момент отказа: без этого шага разбор падения идёт по одному стеку.
       - name: Сохранить артефакты Playwright
         if: failure()
@@ -276,6 +279,12 @@ jobs:
         env:
           T134_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/mail-resend-database.test.ts
+      # T-133: инвариант «хотя бы один владелец» держится на блокировке строк, а атомарность
+      # создания служебной записи — на откате транзакции; двойник ни то ни другое не докажет.
+      - name: Проверить инвариант владельцев и создание записи T-133
+        env:
+          T133_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/admin-staff-database.test.ts
       # T-126: чистка имён, производных от e-mail, написана на SQL (`split_part`, сравнение без
       # учёта регистра) — она проверяется на настоящем PostgreSQL, а не на двойнике.
       - name: Проверить миграцию имён аккаунтов T-126

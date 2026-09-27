@@ -1,5 +1,5 @@
 import type { GraphQLContext } from "../../prisma"
-import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
+import { authorCacheTag, buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
@@ -111,12 +111,13 @@ export default {
       const handle = normalizeHandle(args.handle, ctx.requestId)
 
       // Ответ одинаков для всех и от сессии не зависит (ADR-0019); тег `author:{handle}`
-      // публикация и архивирование материала уже сбрасывают (`cache/key.ts`).
+      // сбрасывают публикация и архивирование материала (`cache/key.ts`), смена хэндла
+      // и архивирование самого аккаунта (`author.md` §4).
       return readThroughPublicCache(
         {
           cache: ctx.cache,
           key: buildCacheKey("query.author", { handle }),
-          tags: [`author:${handle}`],
+          tags: [authorCacheTag(handle)],
           ttlSeconds: CACHE_TTL_SECONDS.publicList
         },
         async () => {

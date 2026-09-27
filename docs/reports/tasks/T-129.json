@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task_id": "T-129",
+  "issue_id": "01a0e02b-5d88-7e1a-b06f-a3aeb5cbc409",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-129-public-pages-locale-links.md",
+    "sha": "e9605132c54dce03a039a557e37af83e14408d10"
+  },
+  "baseline_sha": "4c3ec3af65ecc37971a753cee67461ebf9e1e844",
+  "tested_sha": "50f4b6a101f9bf9b91a6ad0294a3d8de372a6805",
+  "branch": "feat/t129-locale-links",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e185-8e23-715a-b7dd-b26eabe718cb",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "web/tests/e2e/129-public-locale-links.spec.ts обходит /en, /en/{рубрика}, /en/tags/{тег}, /en/authors, /en/authors/{handle} и страницу с ?page=1 на настоящих фикстурах и требует, чтобы каждая внутренняя ссылка начиналась с /en; исключён только переключатель языка, который и обязан вести в другую локаль. Компоненты — web/tests/locale-links.nuxt.test.ts (карточка материала, подпись автора, кикер рубрики, карточки рубрики и автора, списки и облако тегов, футер, приглашение войти); пагинация, фильтры и сброс страниц — web/tests/public-pages.nuxt.test.ts, describe «английская локаль публичных страниц». CI run 36302658022."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/e2e/129-public-locale-links.spec.ts: /en/t129-gone отвечает 301 с Location /en/t129-culture, /en/tags/t129-merged — 301 с Location /en/tags/t129-ai; русский адрес того же переезда остаётся русским. Юнит на оба navigateTo — web/tests/public-pages.nuxt.test.ts («301 архивированной рубрики ведёт на английский адрес преемника», «301 слитого тега ведёт на английский адрес целевого»). CI run 36302658022."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "web/tests/e2e/129-public-locale-links.spec.ts разбирает разметку ответа SSR /en без полезной нагрузки гидратации: есть href=\"/en/t129-culture\" и >T129 Culture<, нет рубрики без английских материалов и нет архивированной; на / — наоборот. Резолвер: server/tests/public-sections.test.ts — отбор и счётчик по sourceLocale для ru и en. Шапка: web/tests/navigation.nuxt.test.ts (локаль в запросе, nameEn, пустой перевод, меню в разметке до открытия) и web/tests/e2e/navigation.spec.ts. CI run 36302658022."
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "server/tests/admin-staff.test.ts: archiveStaffAccount, restoreStaffAccount и deactivateOwner сбрасывают кеш тегом author:{handle} после коммита транзакции, а отказ архива кеш не трогает. Смена профиля: server/tests/profile-handle-allocation.test.ts — changeUserHandle сбрасывает author:{новый} и author:{прежний}, а без кеша по-прежнему меняет хэндл. Тег собирается общей authorCacheTag в нижнем регистре — тем же, которым кладётся ответ query.author. CI run 36302658022."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 860 passed / 44 skipped, web 614 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "web_smoke": "passed",
+    "playwright": "локально 228 passed / 9 skipped / 4 failed; те же четыре отказа (125-rate-limit-bypass, admin-audit, admin-categories, admin-tags) воспроизведены на чистом origin/app 4c3ec3a в отдельном дереве с отдельной базой (219 passed / 4 failed) — принадлежат локальной среде, а не изменению. В CI браузерная проверка на проверенном head зелёная",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36302658022",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 258,
+    "url": "https://github.com/Egoka/Altera/pull/258",
+    "base_ref": "app",
+    "base_sha": "4c3ec3af65ecc37971a753cee67461ebf9e1e844",
+    "head_sha": "50f4b6a101f9bf9b91a6ad0294a3d8de372a6805",
+    "merge_sha": "52c97c32a6bb93b2766c3532f9507f4e7603a1d0"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e1d3-3990-70eb-9e60-760a52b475a5",
+    "sha": "50f4b6a101f9bf9b91a6ad0294a3d8de372a6805",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Миграций нет; изменены резолвер и SDL публичного publicSections, кеш страницы автора и web. Прод-окружения в РФ нет (T-103)."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-129.md",
+    "sha256": "e86ebce10f5b8e3873e58a818ecc982783b0d0e02161d547c037169082f40137"
+  },
+  "remaining": [
+    "Независимое ревью с маркером ALTERA_REVIEW_V1 на финальном head не получено: его назначает контроллер.",
+    "Публичный user(handle) и фильтр архивных авторов в лентах остаются открытыми — по границам T-129 это отдельная задача.",
+    "Сортировка главной без второго ключа и ?page=1.5 — неблокирующие замечания ревью, в заход не взяты.",
+    "Мёртвые компоненты article/{meta,author,type}.vue и show/{Author,Type,Tag}.vue собирают адреса без локали, но ни одной страницей не отрисовываются; кандидат на отдельную уборку.",
+    "Повторная приёмка T-054 (ALTE-91), T-055 (ALTE-93), T-057 (ALTE-104) идёт в их карточках."
+  ],
+  "usage": null
+}

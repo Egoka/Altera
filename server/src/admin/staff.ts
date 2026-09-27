@@ -1,7 +1,8 @@
-import type { Prisma, Role } from "../generated/prisma"
+import { Prisma, type Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission, ensureRole } from "../exceptions/permissions"
 import { createUserWithReservedHandle, isPrismaUniqueConstraint } from "../auth/handle"
+import { authorCacheTag } from "../cache"
 import { issueMagicLink } from "../auth/magic-link"
 import type { GraphQLContext } from "../prisma"
 import { maskEmail } from "./personal-data"
@@ -87,7 +88,9 @@ export interface AdminStaffMember {
 export interface AdminOwner {
   id: string
   name: string
+  /** Список показывает маску: полный адрес отдаёт только карточка записи, с записью аудита (§28.7). */
   email: string
+  emailMasked: boolean
   status: StaffStatus
   assignedAt: Date | null
 }
@@ -346,10 +349,14 @@ export async function listOwners(ctx: GraphQLContext): Promise<AdminOwner[]> {
   for (const assignment of assignments) {
     if (!assignedAt.has(assignment.entityId)) assignedAt.set(assignment.entityId, assignment.createdAt)
   }
+  // Список владельцев — тоже список: он идёт маской, как список служебных записей (`:289`) и
+  // список писем (`mail.ts`). Иначе открытие раздела раскрывало бы ПДн в обход записи
+  // `admin.read.personal`, которую делает только карточка (§28.7).
   return owners.map((owner) => ({
     id: owner.id,
     name: owner.name,
-    email: owner.email,
+    email: maskEmail(owner.email),
+    emailMasked: true,
     status: toStatus(owner),
     assignedAt: assignedAt.get(owner.id) ?? null
   }))
@@ -358,6 +365,24 @@ export async function listOwners(ctx: GraphQLContext): Promise<AdminOwner[]> {
 /** Действующие владельцы: роль `owner` и открытый доступ (журнал #10). */
 function countActiveOwners(tx: Prisma.TransactionClient): Promise<number> {
   return tx.user.count({ where: { role: "owner", archivedAt: null } })
+}
+
+/**
+ * Блокирует строки действующих владельцев до изменения и подсчёта. На READ COMMITTED два
+ * одновременных отзыва читают каждый своего соседа, оба видят двух владельцев и оба коммитятся —
+ * система остаётся без владельца (write skew, журнал #10). Блокировка строк — тот же приём, что у
+ * слияния разделов (`taxonomy/service.ts`): второй запрос ждёт коммита первого и считает уже без
+ * снятого. `ORDER BY "id"` задаёт обеим транзакциям один порядок захвата, иначе встречные отзывы
+ * могли бы взаимно заблокироваться.
+ */
+function lockActiveOwners(tx: Prisma.TransactionClient): Promise<unknown> {
+  return tx.$queryRaw(Prisma.sql`
+    SELECT "id"
+    FROM "users"
+    WHERE "role" = 'owner'::"Role" AND "archivedAt" IS NULL
+    ORDER BY "id"
+    FOR UPDATE
+  `)
 }
 
 async function reloadMember(
@@ -402,9 +427,28 @@ export async function createStaff(
     })
   }
 
+  // Аккаунт, служебная роль и аудит — одна транзакция. Раньше роль выдавалась вторым вызовом, и
+  // сбой между ними оставлял аккаунт читателя с этим адресом: повторное создание после такого
+  // сбоя навсегда падало `VALIDATION_ERROR/not-an-account` (журнал #46–47).
   let created
   try {
-    created = await createUserWithReservedHandle(ctx.prisma, { email, name, locale: "ru" })
+    created = await createUserWithReservedHandle(
+      ctx.prisma,
+      { email, name, locale: "ru", role, isServiceAccount: true },
+      async (tx, user) => {
+        await tx.auditLog.create({
+          data: {
+            action: "user.create.staff",
+            actorId: actor.id,
+            actorRole: actor.role,
+            entityType: "user",
+            entityId: user.id,
+            diff: { role, emailHash: ctx.piiHasher.email(email) },
+            requestId: ctx.requestId
+          }
+        })
+      }
+    )
   } catch (error: unknown) {
     if (!isPrismaUniqueConstraint(error, "email")) throw error
     throw createApiError("CONFLICT", {
@@ -415,25 +459,8 @@ export async function createStaff(
     })
   }
 
-  const staff = (await ctx.prisma.$transaction(async (tx) => {
-    const updated = await tx.user.update({
-      where: { id: created.id },
-      data: { role, isServiceAccount: true },
-      include: staffInclude
-    })
-    await tx.auditLog.create({
-      data: {
-        action: "user.create.staff",
-        actorId: actor.id,
-        actorRole: actor.role,
-        entityType: "user",
-        entityId: created.id,
-        diff: { role, emailHash: ctx.piiHasher.email(email) },
-        requestId: ctx.requestId
-      }
-    })
-    return updated
-  })) as unknown as StaffRecord
+  // У только что созданной записи нет ни исключений, ни сессий — перечитывать их незачем.
+  const staff = { ...created, permissionExceptions: [], sessions: [] } as unknown as StaffRecord
 
   // Письмо ставится после создания: недоступная почта не отменяет запись — ссылку
   // сотрудник запрашивает заново с `/login` (`appoint-admin.md` §5).
@@ -444,6 +471,8 @@ export async function createStaff(
 
 interface StaffTarget {
   id: string
+  /** Нужен для сброса кеша страницы автора: она читается по хэндлу (`author.md` §4). */
+  handle: string
   role: Role
   isServiceAccount: boolean
   archivedAt: Date | null
@@ -457,7 +486,7 @@ async function loadTarget(
 ): Promise<StaffTarget> {
   const target = await tx.user.findUnique({
     where: { id },
-    select: { id: true, role: true, isServiceAccount: true, archivedAt: true }
+    select: { id: true, handle: true, role: true, isServiceAccount: true, archivedAt: true }
   })
   if (!target) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "user" })
   // Служебный путь и пользовательский не смешиваются (журнал #46–47).
@@ -626,6 +655,7 @@ export async function revokeOwner(
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
   return ctx.prisma.$transaction(async (tx) => {
+    await lockActiveOwners(tx)
     const target = await loadTarget(ctx, tx, input.id, "owner.revoke")
     if (target.role !== "owner") {
       throw createApiError("CONFLICT", {
@@ -682,6 +712,15 @@ async function closeAccess(
   await tx.session.updateMany({ where: { userId: target.id, revokedAt: null }, data: { revokedAt: now } })
 }
 
+/**
+ * Страница автора кешируется по тегу `author:{handle}` (`author.md` §4). Закрытие и
+ * восстановление доступа меняют её ответ (410 и снова 200), поэтому тег сбрасывается сразу
+ * после коммита: ждать окончания TTL общего кеша значит показывать архивированного автора.
+ */
+async function resetAuthorPageCache(ctx: GraphQLContext, handle: string): Promise<void> {
+  await ctx.cache.delByTags([authorCacheTag(handle)])
+}
+
 export async function deactivateOwner(
   ctx: GraphQLContext,
   input: { id: string; reason: string },
@@ -690,7 +729,9 @@ export async function deactivateOwner(
   const actor = ensureOwnerActor(ctx, "owner.deactivate")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let closedHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
+    await lockActiveOwners(tx)
     const target = await loadTarget(ctx, tx, input.id, "owner.deactivate")
     if (target.role !== "owner") {
       throw createApiError("CONFLICT", {
@@ -700,6 +741,7 @@ export async function deactivateOwner(
         actual: target.role
       })
     }
+    closedHandle = target.handle
     await closeAccess(ctx, tx, target, actor.role, actor.id, reason, now)
     const remainingOwners = await ensureOwnerRemains(ctx, tx)
     await tx.auditLog.create({
@@ -715,6 +757,8 @@ export async function deactivateOwner(
     })
     return reloadMember(ctx, tx, target.id, now)
   })
+  await resetAuthorPageCache(ctx, closedHandle)
+  return member
 }
 
 export async function archiveStaffAccount(
@@ -726,12 +770,14 @@ export async function archiveStaffAccount(
   const actor = ensureOwnerActor(ctx, "staff.archive")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let archivedHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
     const target = await loadTarget(ctx, tx, input.id, "staff.archive")
     if (target.role === "owner") {
       // Владелец закрывается отдельным действием с проверкой инварианта (`admins.md` §5).
       throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "staff.archive.owner" })
     }
+    archivedHandle = target.handle
     await closeAccess(ctx, tx, target, actor.role, actor.id, reason, now)
     await tx.auditLog.create({
       data: {
@@ -746,6 +792,9 @@ export async function archiveStaffAccount(
     })
     return reloadMember(ctx, tx, target.id, now)
   })
+  // Архивированный аккаунт отвечает 410 сразу: страница автора не ждёт TTL (`author.md` §4).
+  await resetAuthorPageCache(ctx, archivedHandle)
+  return member
 }
 
 export async function restoreStaffAccount(
@@ -756,8 +805,10 @@ export async function restoreStaffAccount(
   const actor = ensureOwnerActor(ctx, "staff.restore")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let restoredHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
     const target = await loadTarget(ctx, tx, input.id, "staff.restore")
+    restoredHandle = target.handle
     const restored = await tx.user.updateMany({
       where: { id: target.id, archivedAt: { not: null } },
       data: {
@@ -789,4 +840,6 @@ export async function restoreStaffAccount(
     })
     return reloadMember(ctx, tx, target.id, now)
   })
+  await resetAuthorPageCache(ctx, restoredHandle)
+  return member
 }

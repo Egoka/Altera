@@ -34,6 +34,10 @@ export type AdminOwnerRow = GetOwnersQuery["owners"][number]
 
 export interface StaffActionFailure {
   code: string | null
+  /** `CONFLICT` по `owner` — это «остался последний владелец», по `user` — «запись уже изменена». */
+  entity: string | null
+  field: string | null
+  rule: string | null
   requestId: string | null
 }
 
@@ -42,12 +46,30 @@ function readExtension(errors: readonly GraphQLErrorLike[] | undefined, key: str
   return typeof value === "string" ? value : null
 }
 
+/**
+ * Словарь ошибок отдаёт `requestId` только у `INTERNAL_ERROR` и `PROVIDER_UNAVAILABLE`
+ * (`server/src/errors/graphql-error.ts`), поэтому у остальных кодов поле остаётся пустым, а строка
+ * состояния печатает код запроса только когда он пришёл (`admins.md` §9).
+ */
+function readFailure(errors: readonly GraphQLErrorLike[] | undefined): StaffActionFailure {
+  return {
+    code: readExtension(errors, "code"),
+    entity: readExtension(errors, "entity"),
+    field: readExtension(errors, "field"),
+    rule: readExtension(errors, "rule"),
+    requestId: readExtension(errors, "requestId")
+  }
+}
+
 export const useAdminStaff = () => {
   const route = useRoute()
   const filters = useState<AdminStaffFiltersInput>("admin.staff.filters", () =>
     readStaffFilters(route.query as Record<string, unknown>)
   )
   const failure = useState<StaffActionFailure | null>("admin.staff.failure", () => null)
+  // Отказ действия держится отдельно от отказа списка: список показывает свой `ErrorState`, а
+  // действие — строку рядом с кнопкой, и одно состояние затирало бы другое (`admins.md` §9).
+  const actionFailure = useState<StaffActionFailure | null>("admin.staff.actionFailure", () => null)
   const mutationPending = ref(false)
   const card = ref<AdminStaffCard | null>(null)
 
@@ -56,10 +78,7 @@ export const useAdminStaff = () => {
       filters: filters.value
     })) as GraphQLEnvelope<GetAdminStaffQuery>
     if (!envelope.data?.adminStaff || envelope.errors?.length) {
-      failure.value = {
-        code: readExtension(envelope.errors, "code"),
-        requestId: readExtension(envelope.errors, "requestId")
-      }
+      failure.value = readFailure(envelope.errors)
       throw createError({ statusCode: 500, statusMessage: "Admin staff list is unavailable" })
     }
     failure.value = null
@@ -88,12 +107,7 @@ export const useAdminStaff = () => {
       id
     })) as GraphQLEnvelope<GetAdminStaffMemberQuery>
     card.value = envelope.data?.adminStaffMember ?? null
-    if (!card.value) {
-      failure.value = {
-        code: readExtension(envelope.errors, "code"),
-        requestId: readExtension(envelope.errors, "requestId")
-      }
-    }
+    if (!card.value) failure.value = readFailure(envelope.errors)
     return card.value
   }
 
@@ -101,22 +115,25 @@ export const useAdminStaff = () => {
     card.value = null
   }
 
+  /** Список, владельцы и открытая карточка после действия читаются заново — одним местом. */
+  const reload = async (): Promise<void> => {
+    await refresh()
+    await owners.refresh()
+    if (card.value) await openCard(card.value.id)
+  }
+
   const runMutation = async <T>(request: () => Promise<GraphQLEnvelope<T>>, select: (data: T) => unknown) => {
     mutationPending.value = true
     try {
       const envelope = await request()
-      if (!envelope.data || envelope.errors?.length || !select(envelope.data)) {
-        failure.value = {
-          code: readExtension(envelope.errors, "code"),
-          requestId: readExtension(envelope.errors, "requestId")
-        }
-        return false
-      }
-      failure.value = null
-      await refresh()
-      await owners.refresh()
-      if (card.value) await openCard(card.value.id)
-      return true
+      const done = Boolean(envelope.data && !envelope.errors?.length && select(envelope.data))
+      const next = done ? null : readFailure(envelope.errors)
+      // Список перечитывается и после отказа: конфликт означает, что запись уже изменил другой
+      // владелец, и прежние строки показывать нельзя (`admins.md` §9). Состояние отказа ставится
+      // после перечитывания — успешный список сбрасывает `failure` и затёр бы его.
+      await reload()
+      actionFailure.value = next
+      return done
     } finally {
       mutationPending.value = false
     }
@@ -176,6 +193,7 @@ export const useAdminStaff = () => {
     card,
     filters,
     failure,
+    actionFailure,
     pending: computed(() => pending.value || mutationPending.value),
     // Nuxt 4 оставляет `error` равным `undefined`, пока ошибки нет: сравнение с null даёт ложный отказ.
     failed: computed(() => Boolean(error.value)),

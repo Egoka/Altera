@@ -25,6 +25,9 @@
 
   const route = useRoute()
   const { locale, t } = useI18n()
+  // Адреса ленты строятся в локали страницы: фильтры, пагинация и 301 на `/en` обязаны
+  // оставаться в английской версии (`prefix_except_default`, журнал §20.5).
+  const localePath = useLocalePath()
 
   const slug = computed(() => String(route.params.slugTypeContent ?? ""))
   const page = computed(() => pageParam(route.query.page))
@@ -60,7 +63,9 @@
   rethrowNotFound(error.value)
 
   const followRedirect = (value: typeof feed.value) =>
-    value?.redirect ? navigateTo(`/${value.redirect.slug}`, { redirectCode: 301, replace: true }) : undefined
+    value?.redirect
+      ? navigateTo(localePath(`/${value.redirect.slug}`), { redirectCode: 301, replace: true })
+      : undefined
 
   // На сервере переход выполняется до рендера — ответом становится сам 301; watch
   // повторяет его при клиентской навигации на другой слаг.
@@ -74,8 +79,10 @@
   const filtered = computed(() => Boolean(format.value || tag.value))
   const requestId = computed(() => errorRequestId(error.value))
 
+  const feedPath = computed(() => localePath(`/${slug.value}`))
+
   const pathTo = (params: { format?: string | null; tag?: string | null; page?: number }) =>
-    withQuery(`/${slug.value}`, {
+    withQuery(feedPath.value, {
       format: params.format === undefined ? format.value : params.format,
       tag: params.tag === undefined ? tag.value : params.tag,
       page: params.page ?? 1
@@ -119,7 +126,7 @@
       :caption="t('home.captionByDate')"
       :groups="controlGroups"
       :reset-label="filtered ? t('sectionFeed.reset') : undefined"
-      :reset-to="filtered ? `/${slug}` : undefined" />
+      :reset-to="filtered ? feedPath : undefined" />
 
     <ReadingLoadingSkeleton v-if="status === 'pending'" :cards="6" class="py-12" />
 
@@ -140,7 +147,7 @@
       :title="t('sectionFeed.emptyTitle')"
       :description="t('sectionFeed.emptyDescription')"
       :action-label="t('sectionFeed.reset')"
-      :action-to="`/${slug}`" />
+      :action-to="feedPath" />
 
     <ReadingPagination
       v-if="pageInfo"
@@ -158,7 +165,7 @@
         <NuxtLink
           v-for="other in feed.otherSections"
           :key="other.slug"
-          :to="`/${other.slug}`"
+          :to="localePath(`/${other.slug}`)"
           class="shrink-0 font-garamond-libre text-lg text-zinc-700 transition-colors duration-300 hover:text-red-700 dark:text-zinc-300 dark:hover:text-red-400">
           {{ other.name }}
           <span class="font-sans text-xs text-zinc-500">{{ other.count }}</span>

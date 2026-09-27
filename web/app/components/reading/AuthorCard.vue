@@ -5,6 +5,8 @@
    * (`authors-index.md` §5). Плана, срока и e-mail в публичном типе нет (ADR-0018);
    * подписка — F-10, в этой странице её нет.
    */
+  import { computed } from "vue"
+
   const props = defineProps<{
     author: {
       handle: string
@@ -19,6 +21,12 @@
     countLabel: string
   }>()
 
+  // Страница автора и его материалы — в локали каталога (журнал §20.5); адреса публикаций
+  // приходят с сервера без префикса.
+  const localePath = useLocalePath()
+  const authorTo = computed(() => localePath(`/authors/${props.author.handle}`))
+  const articleTo = (path: string) => localePath(path)
+
   const initials = computed(() =>
     props.author.name
       .split(/\s+/)
@@ -30,7 +38,7 @@
 
 <template>
   <article class="flex flex-col gap-3">
-    <NuxtLink :to="`/authors/${author.handle}`" class="flex items-center gap-4">
+    <NuxtLink :to="authorTo" class="flex items-center gap-4">
       <NuxtImg v-if="author.avatar" :src="author.avatar" :alt="author.name" class="size-16 rounded-full object-cover" />
       <span
         v-else
@@ -55,7 +63,7 @@
     <ul v-if="author.recent.length" class="space-y-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
       <li v-for="article in author.recent" :key="article.path">
         <NuxtLink
-          :to="article.path"
+          :to="articleTo(article.path)"
           class="font-garamond-libre text-base text-zinc-700 transition-colors duration-300 hover:text-red-700 dark:text-zinc-300 dark:hover:text-red-400">
           {{ article.title }}
         </NuxtLink>

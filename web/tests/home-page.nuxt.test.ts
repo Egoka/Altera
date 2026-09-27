@@ -77,6 +77,8 @@ beforeEach(() => {
   vi.stubGlobal("computed", computed)
   vi.stubGlobal("ref", ref)
   vi.stubGlobal("useI18n", () => ({ t, locale: ref("ru") }))
+  // Русская локаль адрес не префиксует (`prefix_except_default`).
+  vi.stubGlobal("useLocalePath", () => (path: string) => path)
   vi.stubGlobal("useHead", vi.fn())
   vi.stubGlobal("createError", (input: object) => Object.assign(new Error("feed failed"), input))
   vi.stubGlobal("useGraphQL", graphQLRequest)

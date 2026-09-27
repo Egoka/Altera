@@ -400,7 +400,12 @@ type AdminMailSummaryRow {
 
 type AdminOwner {
   assignedAt: String
+
+  """
+  Маскированный адрес: полный отдаёт только карточка записи, и её открытие пишется в аудит admin.read.personal (журнал §28.7).
+  """
   email: String!
+  emailMasked: Boolean!
   id: ID!
   name: String!
   status: AdminStaffStatus!
@@ -1435,7 +1440,7 @@ type Query {
   owners: [AdminOwner!]!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
-  publicSections: [PublicSection!]!
+  publicSections(locale: Locale!): [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
   section(slug: String!): Section

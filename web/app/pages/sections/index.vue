@@ -11,6 +11,8 @@
   definePageMeta({ layout: "default" })
 
   const { locale, t } = useI18n()
+  // Приглашение авторам ведёт в локаль каталога (журнал §20.5).
+  const localePath = useLocalePath()
 
   const {
     data: sections,
@@ -53,6 +55,6 @@
       :title="t('sectionsIndex.emptyTitle')"
       :description="t('sectionsIndex.emptyDescription')"
       :action-label="t('sectionsIndex.emptyAction')"
-      action-to="/pricing" />
+      :action-to="localePath('/pricing')" />
   </div>
 </template>

@@ -21,6 +21,8 @@
 
   const route = useRoute()
   const { locale, t } = useI18n()
+  // Фильтры, указатель и пагинация каталога остаются в локали страницы (журнал §20.5).
+  const localePath = useLocalePath()
 
   const page = computed(() => pageParam(route.query.page))
   const letter = computed(() => stringParam(route.query.letter))
@@ -55,8 +57,10 @@
   const letters = computed(() => catalog.value?.authorCatalog.letters ?? [])
   const filtered = computed(() => Boolean(section.value || letter.value))
 
+  const catalogPath = computed(() => localePath("/authors"))
+
   const pathTo = (params: { sort?: string; section?: string | null; letter?: string | null; page?: number }) =>
-    withQuery("/authors", {
+    withQuery(catalogPath.value, {
       sort: (params.sort ?? sort.value) === "recent" ? null : (params.sort ?? sort.value),
       section: params.section === undefined ? section.value : params.section,
       letter: params.letter === undefined ? letter.value : params.letter,
@@ -105,7 +109,7 @@
       :count="pageInfo ? t('authorsIndex.count', { count: pageInfo.totalCount }) : undefined"
       :caption="sort === 'name' ? t('authorsIndex.captionName') : t('authorsIndex.captionRecent')"
       :action-label="t('authorsIndex.becomeAuthor')"
-      action-to="/pricing" />
+      :action-to="localePath('/pricing')" />
 
     <ReadingErrorState v-if="error" :request-id="requestId" />
 
@@ -113,7 +117,7 @@
       <ReadingFeedControls
         :groups="controlGroups"
         :reset-label="filtered ? t('authorsIndex.reset') : undefined"
-        :reset-to="filtered ? '/authors' : undefined" />
+        :reset-to="filtered ? catalogPath : undefined" />
 
       <ReadingLoadingSkeleton v-if="status === 'pending'" :cards="6" class="py-12" />
 
@@ -131,7 +135,7 @@
         :title="filtered ? t('authorsIndex.emptyFilterTitle') : t('authorsIndex.emptyTitle')"
         :description="filtered ? undefined : t('authorsIndex.emptyDescription')"
         :action-label="filtered ? t('authorsIndex.reset') : t('authorsIndex.becomeAuthor')"
-        :action-to="filtered ? '/authors' : '/pricing'" />
+        :action-to="filtered ? catalogPath : localePath('/pricing')" />
 
       <ReadingPagination
         v-if="pageInfo"

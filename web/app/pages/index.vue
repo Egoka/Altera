@@ -8,6 +8,8 @@
    * Порядок и состав зон решает сервер — страница их только рисует.
    */
   const { locale, t } = useI18n()
+  // Приглашение авторам ведёт в ту же локаль, что и главная (журнал §20.5).
+  const localePath = useLocalePath()
 
   const {
     data: feed,
@@ -74,5 +76,5 @@
     :title="t('home.emptyTitle')"
     :description="t('home.emptyDescription')"
     :action-label="t('home.emptyAction')"
-    action-to="/pricing" />
+    :action-to="localePath('/pricing')" />
 </template>

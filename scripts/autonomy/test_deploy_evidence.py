@@ -22,6 +22,24 @@ class DeployEvidenceTests(unittest.TestCase):
         self.assertEqual(result["sha"], "a"*40)
         self.assertEqual(result["status"], "live")
 
+    def test_multica_timestamp_with_short_fraction_is_accepted(self):
+        # Multica отбрасывает хвостовые нули микросекунд; Python 3.9 `fromisoformat` такую
+        # строку не разбирал, и настоящая проба тихо пропускалась (ALTE-116, 2026-09-27).
+        stamp = self.now.replace(microsecond=691890)
+        for created_at in (stamp.strftime("%Y-%m-%dT%H:%M:%S.69189Z"), stamp.strftime("%Y-%m-%dT%H:%M:%S.6918+00:00"),
+                           stamp.strftime("%Y-%m-%dT%H:%M:%S.6Z"), stamp.strftime("%Y-%m-%dT%H:%M:%SZ")):
+            messages = copy.deepcopy(self.messages)
+            messages[1]["created_at"] = created_at
+            with self.subTest(created_at=created_at):
+                self.assertIsNotNone(d.render_deploy(messages, self.config, self.now + dt.timedelta(seconds=1)))
+
+    def test_multica_timestamp_parse_rejects_garbage(self):
+        for created_at in ("", "yesterday", "2026-09-27T03:22:56.1234567Z", "2026-09-27T03:22:56.12a45Z"):
+            messages = copy.deepcopy(self.messages)
+            messages[1]["created_at"] = created_at
+            with self.subTest(created_at=created_at):
+                self.assertIsNone(d.render_deploy(messages, self.config, self.now))
+
     def test_text_claim_and_bash_echo_are_not_render_evidence(self):
         for tool in ["Bash", "text"]:
             messages = copy.deepcopy(self.messages)

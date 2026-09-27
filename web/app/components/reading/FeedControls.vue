@@ -8,6 +8,7 @@
    */
   import type { FeedControlGroup } from "~/types/reading"
 
+  /** Адреса фильтров и сброса приходят готовыми: локаль ставит страница (журнал §20.5). */
   defineProps<{ caption?: string; groups: readonly FeedControlGroup[]; resetLabel?: string; resetTo?: string }>()
 </script>
 

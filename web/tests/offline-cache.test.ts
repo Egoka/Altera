@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isCacheablePath, readCachedPages } from "../app/composables/useOfflinePage"
+import { isCacheablePath, readCachedPages, sameSitePath } from "../app/composables/useOfflinePage"
 import { reportablePath } from "../app/composables/useBrokenLinkReport"
 
 // Чтение Cache Storage и отбор адресов (`docs/spec/20-public/offline.md` §4): личное и
@@ -78,5 +78,38 @@ describe("путь обращения о битой ссылке", () => {
   it("отбрасывает query: чужая ссылка может нести персональные данные", () => {
     expect(reportablePath("/culture/essay?utm_source=letter&email=a@b.c")).toBe("/culture/essay")
     expect(reportablePath("/culture/essay")).toBe("/culture/essay")
+  })
+})
+
+describe("адрес возврата из ?from=", () => {
+  it("принимает путь своего сайта вместе с query и якорем", () => {
+    expect(sameSitePath("/culture/essay")).toBe("/culture/essay")
+    expect(sameSitePath("/en/culture/essay?ref=letter#start")).toBe("/en/culture/essay?ref=letter#start")
+    // Nuxt отдаёт повторённый параметр массивом — берётся первое значение.
+    expect(sameSitePath(["/culture/essay", "/other"])).toBe("/culture/essay")
+  })
+
+  it("отклоняет чужой источник: протокол-относительный адрес, обратный слэш и схему", () => {
+    for (const raw of [
+      "//evil.example",
+      "///evil.example",
+      "/\\evil.example",
+      "/\\/evil.example",
+      "/..//evil.example",
+      "https://evil.example/x",
+      "javascript:alert(1)",
+      "culture/essay"
+    ]) {
+      expect(sameSitePath(raw)).toBeNull()
+    }
+  })
+
+  it("отклоняет управляющие символы и не-строки", () => {
+    expect(sameSitePath("/\tculture")).toBeNull()
+    expect(sameSitePath("/\n//evil.example")).toBeNull()
+    expect(sameSitePath("/culture\u0000")).toBeNull()
+    expect(sameSitePath(undefined)).toBeNull()
+    expect(sameSitePath([])).toBeNull()
+    expect(sameSitePath(42)).toBeNull()
   })
 })
