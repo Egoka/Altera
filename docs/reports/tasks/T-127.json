@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "task_id": "T-127",
+  "issue_id": "01a0e314-494a-7a2f-96a3-55f2c4891fdc",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-127-account-dashboard-launch-texts.md",
+    "sha": "0ddd167b8b086cb8e703cc3a32f682417d30fa6d"
+  },
+  "baseline_sha": "d5533cbb7b0789cfa11a33381a23b40bf050895f",
+  "tested_sha": "8e797cb490509cf03bd46391ecf49b41b4512e73",
+  "branch": "web/t127-dashboard-launch-texts",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e3e1-9581-7e4c-9f7f-56d0c006c909",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Приглашение писать больше не обещает бесплатность именно первого материала: account.dashboard.articles.invite в ru.json и en.json переписано по dashboard.md §1, §5. web/tests/i18n-locales.test.ts, «не обещают бесплатность только первого материала»: проверяются оба словаря целиком — строка, где рядом «первый материал/стать*» и «бесплат*» (для en — first piece/article/material и free), делает тест красным; тот же тест требует, чтобы приглашение по-прежнему звало написать первый материал. RED: прежние строки обеих локалей этим выражениям соответствуют. CI run 36338457567."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Зона 5 без статей всегда показывает приглашение и «Создать статью» → /me/articles/new; ветка «Выбрать план» → /pricing убрана (dashboard.md §5, журнал #5 — она появляется только после включения платности). web/tests/e2e/30-account-dashboard.spec.ts, «Ограничение плана»: dashboard-create-article с href /me/articles/new, dashboard-choose-plan отсутствует, в зоне материалов нет текста «Выбрать план»; карточка плана сохраняет «Продлить» → /pricing и состояние страницы plan_limit. Заменяет прежний сценарий строки 238, который закреплял обратное. Локально 15 passed; в CI изменённый спек трижды одним воркером — 27 passed. CI run 36338457567."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "routeRules[\"/me\"] отдаёт cache-control: private, no-store (dashboard.md §4). web/tests/e2e/30-account-dashboard.spec.ts, «Загрузка» и «Пусто»: page.request.get(\"/me\") — 200 и cache-control private, no-store. web/tests/account-dashboard.test.ts, «serves /me with private, no-store» — правило в nuxt.config.ts. RED подтверждён: со снятым правилом сценарий падает с Received: undefined — заголовка у /me не было вовсе. /en/me не существует: страницы me/* не локализуются (locale-routing.test.ts). CI run 36338457567."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 884 passed / 47 skipped, web 679 passed, packages/content 99 passed",
+    "web_typecheck": "passed: все четыре проекта exit 0, ошибок 0",
+    "web_build": "passed",
+    "playwright": "локально web/tests/e2e/30-account-dashboard.spec.ts — 15 passed (включая зависимый проект empty-db) на PostgreSQL 16 из docker-compose (порт 25432), отдельная база t127_e2e с применёнными миграциями, после прогона удалена; в CI полный прогон 260 passed и изменённый спек трижды подряд одним воркером — 27 passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36338457567",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "notes": "Первый локальный запуск web unit дал exit 1 при 679 passed из-за двух EnvironmentTeardownError в несвязанном tests/admin-grants-pages.nuxt.test.ts; повтор — 679 passed без ошибок, джоб CI «Формат, линт и тесты» зелёный."
+  },
+  "pr": {
+    "number": 308,
+    "url": "https://github.com/Egoka/Altera/pull/308",
+    "base_ref": "app",
+    "base_sha": "d5533cbb7b0789cfa11a33381a23b40bf050895f",
+    "head_sha": "8e797cb490509cf03bd46391ecf49b41b4512e73",
+    "merge_sha": "9c6ca914e0ce034db4c0ac6858217cb41603a39a"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "not_received"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Изменён только web/ (страница /me, словари локалей, routeRules, тесты); миграций и изменений server/ нет. Прод-окружения в РФ нет (T-103)."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-127.md",
+    "sha256": "d4648be49243429611308a2e91a32a6f15d07d1d82266dff4cee21ede89a62a3"
+  },
+  "remaining": [
+    "Независимое ревью с маркером ALTERA_REVIEW_V1 на финальном head не получено: его назначает контроллер.",
+    "Текст приглашения писать — [ДОПУЩЕНИЕ] исполнителя: журнал и dashboard.md задают смысл («Написать первый материал»), но не байты строки.",
+    "Ключи account.dashboard.articles.planNeeded и choosePlan удалены вместе с ветвью зоны 5; при включении платности их нужно вернуть — отмечено комментарием в web/app/pages/me/index.vue.",
+    "Повторная приёмка T-030 (ALTE-107) идёт в её карточке: эта задача её разблокирует.",
+    "docs/spec/30-account/reader/dashboard.md не менялся: §4 и §5 уже описывали и заголовок кеширования, и появление «выбрать план» только вместе с платностью."
+  ],
+  "usage": null
+}
