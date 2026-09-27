@@ -16,10 +16,11 @@ export type PublicMediaAccess = "public" | "closed"
 
 /**
  * Публичен только вариант готового неудалённого медиа, которое служит обложкой опубликованной
- * статьи или аватаром неархивированного аккаунта. Оригиналы и выгрузки публичными не бывают.
+ * статьи или аватаром неархивированного аккаунта. Карантин, оригиналы и выгрузки публичными не
+ * бывают: файл не становится публичным сразу после передачи (`upload-pipeline.md` п. 5).
  */
 export function decidePublicAccess(
-  objectKind: "master" | "variant" | "export",
+  objectKind: "quarantine" | "master" | "variant" | "export",
   usage: MediaUsage | null
 ): PublicMediaAccess {
   if (objectKind !== "variant" || !usage) return "closed"

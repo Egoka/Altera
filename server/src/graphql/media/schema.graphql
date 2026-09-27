@@ -1,0 +1,57 @@
+"""
+Файл multipart-запроса GraphQL. Имя файла и объявленный тип конвейер не использует: фактический
+тип определяется по содержимому (`upload-pipeline.md` п. 3).
+"""
+scalar File
+
+"Справочник лицензий медиа (ADR-0008 п. 3)."
+enum MediaLicense {
+  own
+  cc_by
+  cc_by_sa
+  cc_by_nc
+  cc0
+  public_domain
+  permission
+}
+
+"""
+Состояние обработки (журнал §29.12). Публичный доступ к файлу появляется только после `ready`
+(`access-and-signed-urls.md` п. 1).
+"""
+enum MediaProcessingStatus {
+  uploading
+  queued
+  processing
+  ready
+  failed
+}
+
+type MediaAsset {
+  id: ID!
+  processingStatus: MediaProcessingStatus!
+  mimeType: String!
+  byteSize: Int!
+  width: Int
+  height: Int
+  """
+  Единое описание медиафайла. Его создаёт конвейер; автор его не задаёт и не редактирует, а
+  размещение в статье не переопределяет (журнал §29.13).
+  """
+  alt: String
+  caption: String
+  attribution: String!
+  license: MediaLicense!
+  licenseNote: String
+  "Варианты изображения; их генерирует отдельный шаг конвейера (T-064)."
+  variants: JSON!
+  createdAt: String!
+}
+
+extend type Mutation {
+  """
+  Загрузка медиа версии статьи: файл принимается в карантин и обрабатывается заданием очереди.
+  Лицензия и атрибуция обязательны; `alt` автор не задаёт (журнал §29.13).
+  """
+  uploadMedia(translationId: ID!, file: File!, license: MediaLicense!, attribution: String!): MediaAsset!
+}

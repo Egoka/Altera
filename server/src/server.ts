@@ -16,6 +16,7 @@ import {
 } from "./error-collector"
 import { createMailConfigFromEnv } from "./mail/config"
 import { createMailService } from "./mail/service"
+import { createMediaService, isMediaUploadEnabled } from "./media"
 import { createPrismaPublicAccessResolver, type MediaUsageClient } from "./storage/access"
 import { createStorageConfigFromEnv } from "./storage/config"
 import { withMedia } from "./storage/gateway"
@@ -64,10 +65,20 @@ const rateLimiter = createRateLimiter({
   piiHasher
 })
 
+const jobStore = createPrismaJobStore(prisma)
+// Конвейер загрузки: сервис в контексте API и обработчик задания `media.process` в этом же
+// процессе (`upload-pipeline.md` п. 5). Загрузка закрыта до утверждения порогов (журнал §33 п. 3).
+const media = createMediaService({
+  client: prisma,
+  jobStore,
+  storage: storageConfig.storage,
+  uploadEnabled: isMediaUploadEnabled(process.env)
+})
+
 const yoga = createYoga<GraphQLContext>({
   schema,
   context: (initialContext) =>
-    createContext(initialContext, cache, logger, piiHasher, mail, rateLimiter, errorCollector),
+    createContext(initialContext, cache, logger, piiHasher, mail, media, rateLimiter, errorCollector),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {
@@ -96,14 +107,13 @@ const health = createHealthCheck(
   process.env.RENDER_GIT_COMMIT
 )
 // Локальная реализация раздаёт `/media/*` сама; у S3 публичные файлы идут через CDN провайдера.
-const media = storageConfig.local
+const mediaGateway = storageConfig.local
   ? withMedia(yoga, {
       storage: storageConfig.local,
       resolvePublicAccess: createPrismaPublicAccessResolver(prisma as unknown as MediaUsageClient)
     })
   : yoga
-const server = createServer(withHealth(media, health))
-const jobStore = createPrismaJobStore(prisma)
+const server = createServer(withHealth(mediaGateway, health))
 registerHousekeepingJob(prisma)
 const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger, errorCollector })
 jobWorker.start()

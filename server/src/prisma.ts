@@ -4,6 +4,7 @@ import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
 import type { ErrorCollector } from "./error-collector"
 import type { MailService } from "./mail/service"
+import type { MediaService } from "./media"
 import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
 import type { RateLimiter } from "./rate-limits"
@@ -30,6 +31,8 @@ export interface GraphQLContext {
   logger: AppLogger
   piiHasher: PiiHasher
   mail: MailService
+  // Конвейер загрузки медиа: приём файла в карантин и права на версию (`upload-pipeline.md` п. 1).
+  media: MediaService
   // Единые пороги лимитов частоты: корзины по e-mail и аккаунту применяются в резолверах,
   // корзины по адресу — middleware до резолвера (`50-access/rate-limits.md` §2 п. 13).
   rateLimiter: RateLimiter
@@ -55,6 +58,7 @@ export async function createContext(
   logger: AppLogger,
   piiHasher: PiiHasher,
   mail: MailService,
+  media: MediaService,
   rateLimiter: RateLimiter,
   errorCollector: ErrorCollector
 ): Promise<GraphQLContext> {
@@ -119,6 +123,7 @@ export async function createContext(
     logger,
     piiHasher,
     mail,
+    media,
     rateLimiter,
     errorCollector
   }
