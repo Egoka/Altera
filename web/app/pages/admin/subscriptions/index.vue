@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { IColumn } from "#fishtvue/table"
+  import type { TableColumn } from "#fishtvue/table"
   import type { Panel } from "#fishtvue/split"
   import type { AdminGrantRow } from "@/composables/useAdminGrants"
 
@@ -50,7 +50,7 @@
     { name: "item", minSize: 10, size: 40, hidden: true }
   ])
 
-  const columns = shallowRef<Array<IColumn>>([
+  const columns = shallowRef<Array<TableColumn>>([
     {
       dataField: "userName",
       name: "userName",
@@ -59,9 +59,9 @@
       visible: true,
       width: 200,
       minWidth: 160,
-      isFilter: true,
-      isSort: true,
-      class: { td: "cursor-pointer" }
+      filterable: true,
+      sortable: true,
+      classes: { td: "cursor-pointer" }
     },
     {
       dataField: "userHandle",
@@ -71,8 +71,8 @@
       visible: true,
       width: 160,
       minWidth: 120,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "tier",
@@ -82,10 +82,10 @@
       visible: true,
       width: 120,
       minWidth: 100,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "tier",
-      paramsFilter: { dataSelect: tierOptions }
+      filterProps: { options: tierOptions }
     },
     {
       dataField: "status",
@@ -95,10 +95,10 @@
       visible: true,
       width: 140,
       minWidth: 120,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "status",
-      paramsFilter: { dataSelect: statusOptions }
+      filterProps: { options: statusOptions }
     },
     {
       dataField: "startsAt",
@@ -108,8 +108,8 @@
       visible: true,
       width: 130,
       minWidth: 110,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "endsAt",
@@ -119,8 +119,8 @@
       visible: true,
       width: 130,
       minWidth: 110,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "endsAt"
     }
   ])
@@ -173,7 +173,7 @@
       </div>
     </div>
 
-    <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
+    <Split :panels="panels" orientation="horizontal" class="flex-1 min-h-0">
       <template #table>
         <Table
           v-if="!isListLoading"
@@ -218,7 +218,7 @@
               </h2>
               <p class="text-sm text-zinc-500 dark:text-zinc-400">@{{ selectedGrant.userHandle }}</p>
             </div>
-            <Button mode="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
+            <Button variant="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
           </div>
 
           <div class="grid grid-cols-2 gap-3 text-sm">

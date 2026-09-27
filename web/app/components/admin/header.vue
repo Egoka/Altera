@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { GroupMenu, ItemMenu, MenuExpose } from "#fishtvue"
+  import type { MenuExpose, MenuGroupData, MenuItemDataPrivate } from "#fishtvue"
   import { computed, onMounted, ref, watch } from "vue"
   import { getAdminNavigation } from "~/utils/admin"
 
@@ -11,7 +11,7 @@
     adminStore.toggleMenuCollapsed()
   }
 
-  const menu = computed<GroupMenu[]>(() => [
+  const menu = computed<MenuGroupData[]>(() => [
     {
       class: "h-[calc(100vh-48px-112px-12px-13px-15px-40px)]",
       items: summary.value
@@ -66,7 +66,7 @@
       }
     }
   )
-  function switchPage(_: unknown, data: ItemMenu) {
+  function switchPage(_: unknown, data: MenuItemDataPrivate) {
     isOpen.value = false
     activePage.value = data.to
     navigateTo(data.to)
@@ -85,22 +85,19 @@
         :groups="menu"
         :only-icons="adminStore.isMenuCollapsed"
         :class="[
-          'w-full shadow-none border-0 bg-transparent dark:bg-transparent transition-all duration-300',
+          'p-3 z-30 w-full shadow-none border-0 bg-transparent dark:bg-transparent transition-all duration-300',
           adminStore.isMenuCollapsed ? 'min-w-[64px]' : 'min-w-[200px]'
         ]"
-        :separator="{ classBodyLine: 'text-zinc-200 dark:text-zinc-500' }"
-        :styles="{
-          height: '100%',
-          class: {
-            body: 'p-3 z-30',
-            title: 'p-0 mb-3 bg-transparent dark:bg-transparent',
-            item: 'h-10 justify-start pl-3.5 mb-3 overflow-auto',
-            separator: 'text-zinc-200 dark:text-zinc-500 t4444'
-          },
-          selectedRows: 'bg-zinc-100 dark:bg-zinc-950'
+        :separator="{ classes: { segment: 'text-zinc-200 dark:text-zinc-500' } }"
+        height="100%"
+        :classes="{
+          title: 'p-0 mb-3 bg-transparent dark:bg-transparent',
+          item: 'h-10 justify-start pl-3.5 mb-3 overflow-auto',
+          separator: 'text-zinc-200 dark:text-zinc-500 t4444',
+          itemSelected: 'bg-zinc-100 dark:bg-zinc-950'
         }"
         selected
-        @onClick="switchPage">
+        @item-click="switchPage">
         <template #title>
           <NuxtLink to="/" class="h-10 flex items-center justify-start">
             <IconLogo class="ml-2 mb-0.5 size-6 fill-neutral-700 dark:fill-neutral-200" />
@@ -119,7 +116,7 @@
             </Transition>
           </NuxtLink>
           <Button
-            mode="ghost"
+            variant="ghost"
             icon="uim:web-section-alt"
             class="my-4 mx-0 h-10 w-10 p-2"
             @click="toggleMenuCollapsed"></Button>
@@ -139,7 +136,12 @@
               {{ data.title }}
             </span>
           </Transition>
-          <FixWindow v-if="adminStore.isMenuCollapsed" position="right" :delay="500" :margin-px="10" mode="outlined">
+          <FixWindow
+            v-if="adminStore.isMenuCollapsed"
+            position="right"
+            :open-delay="500"
+            :margin-px="10"
+            mode="outlined">
             <span :data-title="!!data?.title" class="w-max">{{ data.title }}</span>
           </FixWindow>
         </template>
@@ -208,17 +210,14 @@
               ref="menuApp"
               :groups="menu"
               :only-icons="false"
-              class="shadow-none border-0 w-full h-full"
-              :styles="{
-                height: '100%',
-                class: {
-                  body: 'p-3 z-30',
-                  item: 'h-10 justify-center ml-6 mb-3'
-                },
-                selectedRows: 'bg-zinc-100 dark:bg-zinc-900'
+              class="p-3 z-30 shadow-none border-0 w-full h-full"
+              height="100%"
+              :classes="{
+                item: 'h-10 justify-center ml-6 mb-3',
+                itemSelected: 'bg-zinc-100 dark:bg-zinc-900'
               }"
               selected
-              @onClick="switchPage">
+              @item-click="switchPage">
             </Menu>
           </div>
         </Transition>

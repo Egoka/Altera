@@ -149,7 +149,7 @@
   // Структура формы редактирования пользователя
   const formStructure = ref<FormStructure[]>([
     {
-      classGrid: "grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6",
+      classes: { grid: "grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6" },
       fields: [
         {
           typeComponent: "Input",
@@ -157,7 +157,7 @@
           rules: { required: true },
           label: "Имя",
           placeholder: "Введите имя пользователя",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
           typeComponent: "Input",
@@ -165,15 +165,15 @@
           rules: { required: true, email: true },
           label: "Email",
           placeholder: "Введите email",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
           typeComponent: "Select",
           name: "role",
           rules: { required: true },
           label: "Роль",
-          classCol: "sm:col-span-6",
-          dataSelect: roleOptions
+          classes: { field: "sm:col-span-6" },
+          options: roleOptions
         },
         {
           typeComponent: "Input",
@@ -181,31 +181,31 @@
           rules: { required: true },
           label: "Slug",
           placeholder: "Введите slug",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
-          typeComponent: "Aria",
+          typeComponent: "Textarea",
           name: "bio",
           rules: {},
           label: "Описание",
           placeholder: "Введите описание пользователя",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
-          typeComponent: "Aria",
+          typeComponent: "Textarea",
           name: "bio",
           rules: {},
           label: "Описание",
           placeholder: "Введите описание пользователя",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
-          typeComponent: "Aria",
+          typeComponent: "Textarea",
           name: "bio",
           rules: {},
           label: "Описание",
           placeholder: "Введите описание пользователя",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         }
       ]
     }
@@ -312,9 +312,9 @@
       <div class="flex absolute top-1 right-1 z-10">
         <Button
           class="bg-white dark:bg-zinc-950"
-          class-icon="text-zinc-700 dark:text-zinc-400"
+          :classes="{ icon: 'text-zinc-700 dark:text-zinc-400' }"
           type="icon"
-          :mode="'primary'"
+          variant="primary"
           icon="x-mark"
           @click="close" />
       </div>
@@ -331,7 +331,10 @@
           :formFields="formValues"
           :structure="formStructure"
           modeValidate="onChange"
-          structureClass="h-[calc(100vh-250px)] sm:h-[calc(100vh-216px)] overflow-auto border-b border-neutral-200 dark:border-neutral-800 pb-12"
+          :classes="{
+            section:
+              'h-[calc(100vh-250px)] sm:h-[calc(100vh-216px)] overflow-auto border-b border-neutral-200 dark:border-neutral-800 pb-12'
+          }"
           :submitButton="t('common.save')"
           @submit="handleSubmit" />
       </div>

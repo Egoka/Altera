@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { IColumn } from "#fishtvue/table"
+  import type { TableColumn } from "#fishtvue/table"
 
   const { t } = useI18n()
   const isListLoading = ref(false)
@@ -172,7 +172,7 @@
   )
 
   // Конфигурация колонок таблицы
-  const columns = shallowRef<Array<IColumn>>([
+  const columns = shallowRef<Array<TableColumn>>([
     {
       dataField: "title",
       name: "title",
@@ -181,8 +181,8 @@
       visible: true,
       width: 300,
       minWidth: 250,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       defaultSort: "asc"
     },
     {
@@ -193,8 +193,8 @@
       visible: true,
       width: 120,
       minWidth: 100,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "status"
     },
     {
@@ -205,8 +205,8 @@
       visible: true,
       width: 200,
       minWidth: 150,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "sectionName",
@@ -216,8 +216,8 @@
       visible: true,
       width: 120,
       minWidth: 100,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "tagsString",
@@ -227,8 +227,8 @@
       visible: true,
       width: 200,
       minWidth: 150,
-      isFilter: false,
-      isSort: false,
+      filterable: false,
+      sortable: false,
       cellTemplate: "tags"
     },
     {
@@ -239,8 +239,8 @@
       visible: true,
       width: 150,
       minWidth: 120,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "publishedAt",
@@ -250,8 +250,8 @@
       visible: true,
       width: 150,
       minWidth: 120,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     }
   ])
 
@@ -301,17 +301,12 @@
     <AppTable
       :dataSource="data"
       :columns="columns"
-      search
+      searchable
       toolbar
       class="p-0 overflow-auto"
-      :styles="{
-        hoverRows: true,
-        class: {
-          toolbar: 'flex-col md:flex-row'
-        },
-        width: '100%',
-        height: '100%'
-      }">
+      :classes="{ toolbar: 'flex-col md:flex-row' }"
+      width="100%"
+      height="100%">
       <template #toolbar>
         <div class="flex items-start gap-2 justify-between my-2.5 ml-5 text-xs sm:text-base">
           <div class="">

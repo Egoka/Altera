@@ -104,9 +104,11 @@ export default defineNuxtConfig({
       Form: {
         class: "app-form__component"
       },
+      // fishtvue 1.0: `class` — корень диалога (бывший `classBody`), карточка — `classes.content`
+      // (бывший `class`).
       Dialog: {
-        class: "app-dialog",
-        classBody: "app-dialog__body"
+        class: "app-dialog__body",
+        classes: { content: "app-dialog" }
       }
     },
     optionsTheme: {

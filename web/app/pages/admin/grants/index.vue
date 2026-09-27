@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { IColumn } from "#fishtvue/table"
+  import type { TableColumn } from "#fishtvue/table"
   import type { Panel } from "#fishtvue/split"
   import type { AdminGrantRow } from "@/composables/useAdminGrants"
 
@@ -51,7 +51,7 @@
     { name: "item", minSize: 10, size: 40, hidden: true }
   ])
 
-  const columns = shallowRef<Array<IColumn>>([
+  const columns = shallowRef<Array<TableColumn>>([
     {
       dataField: "userName",
       name: "userName",
@@ -60,9 +60,9 @@
       visible: true,
       width: 200,
       minWidth: 160,
-      isFilter: true,
-      isSort: true,
-      class: { td: "cursor-pointer" }
+      filterable: true,
+      sortable: true,
+      classes: { td: "cursor-pointer" }
     },
     {
       dataField: "userHandle",
@@ -72,8 +72,8 @@
       visible: true,
       width: 160,
       minWidth: 120,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "tier",
@@ -83,10 +83,10 @@
       visible: true,
       width: 120,
       minWidth: 100,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "tier",
-      paramsFilter: { dataSelect: tierOptions }
+      filterProps: { options: tierOptions }
     },
     {
       dataField: "status",
@@ -96,10 +96,10 @@
       visible: true,
       width: 140,
       minWidth: 120,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "status",
-      paramsFilter: { dataSelect: statusOptions }
+      filterProps: { options: statusOptions }
     },
     {
       dataField: "startsAt",
@@ -109,8 +109,8 @@
       visible: true,
       width: 130,
       minWidth: 110,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "endsAt",
@@ -120,8 +120,8 @@
       visible: true,
       width: 130,
       minWidth: 110,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "endsAt"
     },
     {
@@ -132,8 +132,8 @@
       visible: true,
       width: 180,
       minWidth: 140,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     }
   ])
 
@@ -235,12 +235,12 @@
         <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.grantsTitle") }}</h1>
         <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ t("admin.grantsDescription") }}</p>
       </div>
-      <Button mode="outline" icon="lucide:plus" class="shrink-0" @click="openGrantForm">
+      <Button variant="outline" icon="lucide:plus" class="shrink-0" @click="openGrantForm">
         {{ t("admin.grantPlan") }}
       </Button>
     </div>
 
-    <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
+    <Split :panels="panels" orientation="horizontal" class="flex-1 min-h-0">
       <template #table>
         <Table
           v-if="!isListLoading"
@@ -285,7 +285,7 @@
               </h2>
               <p class="text-sm text-zinc-500 dark:text-zinc-400">@{{ selectedGrant.userHandle }}</p>
             </div>
-            <Button mode="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
+            <Button variant="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
           </div>
 
           <div class="grid grid-cols-2 gap-3 text-sm">
@@ -334,7 +334,7 @@
             class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-700">
             <Button
               v-if="!isRevokeConfirmOpen"
-              mode="outline"
+              variant="outline"
               icon="lucide:x-circle"
               class="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
               @click="isRevokeConfirmOpen = true">
@@ -343,11 +343,11 @@
             <div v-else class="flex flex-col gap-2">
               <Input v-model="revokeReason" :placeholder="t('admin.revokeReasonPlaceholder')" class="w-full" />
               <div class="flex gap-2">
-                <Button mode="ghost" class="flex-1" @click="cancelRevoke">
+                <Button variant="ghost" class="flex-1" @click="cancelRevoke">
                   {{ t("common.cancel") }}
                 </Button>
                 <Button
-                  mode="outline"
+                  variant="outline"
                   class="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
                   :disabled="!revokeReason.trim()"
                   @click="confirmRevoke">
@@ -375,7 +375,7 @@
           <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{{
             t("admin.fieldPlan")
           }}</label>
-          <Select v-model="grantForm.tier" :data="tierOptions" :styles="{ width: '100%' }" />
+          <Select v-model="grantForm.tier" :options="tierOptions" class="w-full" />
         </div>
         <div>
           <label for="grant-starts-at" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">{{
@@ -405,9 +405,9 @@
           <Input v-model="grantForm.reason" :placeholder="t('admin.reasonPlaceholder')" class="w-full" />
         </div>
         <div class="flex gap-2 pt-2">
-          <Button mode="ghost" class="flex-1" @click="isGrantFormOpen = false">{{ t("common.cancel") }}</Button>
+          <Button variant="ghost" class="flex-1" @click="isGrantFormOpen = false">{{ t("common.cancel") }}</Button>
           <Button
-            mode="outline"
+            variant="outline"
             class="flex-1"
             :disabled="
               !grantForm.userHandle.trim() ||

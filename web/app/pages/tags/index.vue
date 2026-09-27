@@ -137,8 +137,10 @@
         <Input
           v-model="search"
           mode="underlined"
-          class="ring-0 border-0 bg-transparent dark:bg-transparent"
-          class-input="!font-garamond-libre text-zinc-600 text-2xl h-max"
+          :classes="{
+            base: 'ring-0 border-0 bg-transparent dark:bg-transparent',
+            control: '!font-garamond-libre text-zinc-600 text-2xl h-max'
+          }"
           :placeholder="t('tagsIndex.searchPlaceholder')" />
       </div>
 
