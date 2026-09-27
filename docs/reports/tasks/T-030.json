@@ -46,10 +46,10 @@
     "merge_sha": "2b258633dc02105431d1bd2329e34e69c268a40d"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e462-8e12-7736-a742-03d19b165a03",
+    "sha": "01eab7b5f44e1debc66a53470b34a310662d8af7",
+    "verdict": "approved"
   },
   "deployment": {
     "required": false,
@@ -59,7 +59,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-030.md",
-    "sha256": "afe74c03c997303a793cc7448ddf17f8f48da976fa342add257fe047505fdfb0"
+    "sha256": "7dc35a5f479fc34be25deb7c2d18703108909d07a46f6647d00d305eba1bb5f7"
   },
   "remaining": [
     "Independent native review of the tested SHA is pending; Done stays with the controller. A pre-merge review by a separate agent (not a native review) found three defects on 73ed819 that were fixed in 3c5f0d0",
