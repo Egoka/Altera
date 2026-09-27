@@ -28,7 +28,7 @@
 
   const { isSm, isMd } = useBreakpoint()
   const tableHeight = ref(47)
-  const { grants: data, pending: isListLoading, failed: loadError } = useAdminGrants()
+  const { grants: data, pending: isListLoading } = useAdminGrants()
 
   watch(
     isSm,
@@ -185,8 +185,6 @@
             :data-source="data"
             :columns="columns"
             :height="tableHeight"
-            :is-loading="isListLoading"
-            :load-error="loadError"
             class="h-full"
             @click-row="openDetail($event.data)">
             <template #tier="{ value }">
@@ -203,9 +201,11 @@
                 {{ t(`admin.grantStatus.${value}`) }}
               </span>
             </template>
+            <!-- Для колонки `type: "date"` fishtvue отдаёт в слот уже готовую строку «ДД.ММ.ГГГГ»
+                 (или null), повторный разбор через new Date() переставил бы день и месяц. -->
             <template #endsAt="{ value }">
               <span :class="value ? '' : 'text-zinc-400 italic'">
-                {{ value ? formatDate(value) : t("admin.indefinite") }}
+                {{ value ?? t("admin.indefinite") }}
               </span>
             </template>
           </Table>
