@@ -1,0 +1,49 @@
+{
+  "task_id": "T-135",
+  "issue_id": "01a0df5b-ab20-7a33-b5c3-4e7885bc6631",
+  "issue_identifier": "ALTE-118",
+  "title": "Срез реальности и «Что сломано» в CLAUDE.md по фактическому коду",
+  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+  "implementer_run_id": "unknown",
+  "source_path": "docs/backlog/tasks/T-135-reality-check-and-claude-md.md",
+  "baseline_sha": "5af26a3fd661917cb00e8021409ffe4e6352c8c1",
+  "tested_sha": "0e13d4582419a07fa2f7a49f76bb54b2e3acad3e",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+  "branch": "docs/t135-reality-check",
+  "pr": "https://github.com/Egoka/Altera/pull/235",
+  "checks": [
+    {
+      "check_id": "format",
+      "run": "pnpm format",
+      "revision": "4fea3234a062cb67066468a500bc849a97c7a142",
+      "result": "exit 0"
+    },
+    {
+      "check_id": "lint",
+      "run": "pnpm lint",
+      "revision": "4fea3234a062cb67066468a500bc849a97c7a142",
+      "result": "exit 0"
+    },
+    {
+      "check_id": "test-server",
+      "run": "pnpm test",
+      "revision": "4fea3234a062cb67066468a500bc849a97c7a142",
+      "result": "808 passed, 35 skipped"
+    },
+    {
+      "check_id": "test-web",
+      "run": "pnpm test",
+      "revision": "4fea3234a062cb67066468a500bc849a97c7a142",
+      "result": "582 passed"
+    }
+  ],
+  "criteria": {
+    "AC-1": "каждое утверждение §С2.2 и §С2.7 (включая «Действительно не реализовано») снабжено [ФАКТ: файл:строка] или ссылкой на отсутствие — выполнено (1a33513)",
+    "AC-2": "T-123/T-132/T-134 удалены из «Что сломано» в CLAUDE.md — выполнено (0e13d45)"
+  },
+  "review_verdict": "ожидает независимого ревью",
+  "verified": false,
+  "accepted_at": null,
+  "remainder": "PR #235 ожидает CI и независимого ревью",
+  "next_step": "координатор переводит в Done после ревью"
+}

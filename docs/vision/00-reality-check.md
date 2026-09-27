@@ -518,30 +518,30 @@ magic link в логе, отсутствие rate limit, отсутствие т
 
 ### С2.2. Схема данных (E-03)
 
-- Схема: **30 моделей, 13 enum** против исходных 5 моделей и 3 enum
-  [ФАКТ: `server/prisma/schema.prisma:1-826`].
+- Схема: **33 модели, 23 enum** против исходных 5 моделей и 3 enum
+  [ФАКТ: `server/prisma/schema.prisma:1-925`].
 - **Роль**: теперь 7 значений — `reader`, `author`, `editor`, `moderator`, `analyst`, `admin`,
-  `owner` [ФАКТ: `server/prisma/schema.prisma:674-682`]. Добавлена в миграции
+  `owner` [ФАКТ: `server/prisma/schema.prisma:737-745`]. Добавлена в миграции
   `20260915090000_role_add_moderator_analyst_owner`.
 - **Пользователь**: поле `handle` (уникальное) вместо `slug` из e-mail; `HandleHistory` —
   append-only реестр [ФАКТ: `server/prisma/schema.prisma:19,64-75`]. Коллизии домена
   e-mail больше не вызывают необработанную ошибку Prisma.
 - **Сессии**: модель `Session` с хэшем токена `tokenHash`; magic-link токены хранятся как
-  `tokenHash`, не в открытом виде [ФАКТ: `server/prisma/schema.prisma:87-112`].
+  `tokenHash`, не в открытом виде [ФАКТ: `server/prisma/schema.prisma:93-112`].
 - **Таксономия**: модели `Section`, `SectionSlugHistory`, `Format`, `Tag`, `TagSlugHistory`
-  с историей слагов и признаком архива [ФАКТ: `server/prisma/schema.prisma:117-221`].
+  с историей слагов и признаком архива [ФАКТ: `server/prisma/schema.prisma:129-234`].
 - **Материал**: `ArticleTranslation`, `ArticleRevision` — языковые версии и ревизии вместо
-  единого строкового поля `body` [ФАКТ: `server/prisma/schema.prisma:472,505`].
+  единого строкового поля `body` [ФАКТ: `server/prisma/schema.prisma:484,517`].
 - **Медиа**: модель `MediaAsset` с вариантами, лицензией, статусом обработки
-  [ФАКТ: `server/prisma/schema.prisma:530-563`].
+  [ФАКТ: `server/prisma/schema.prisma:542-577`].
 - **Аудит и переписка**: `AuditLog` (неизменяемый), `ReviewMessage`, `ReviewNote`
-  [ФАКТ: `server/prisma/schema.prisma:565,585,604`].
-- **Закладки и гранты**: `Bookmark`, `PlanGrant` [ФАКТ: `server/prisma/schema.prisma:620,634`].
-- **Исключения прав**: `PermissionException` [ФАКТ: `server/prisma/schema.prisma:651`].
+  [ФАКТ: `server/prisma/schema.prisma:577,597,616`].
+- **Закладки и гранты**: `Bookmark`, `PlanGrant` [ФАКТ: `server/prisma/schema.prisma:632,646`].
+- **Исключения прав**: `PermissionException` [ФАКТ: `server/prisma/schema.prisma:663`].
 - **Инфраструктура**: `Job`, `JobAttempt`, `AiProcess`, `AiCostAggregate`, `MailMessage`,
   `MailDeliveryEvent`, `BackendError`, `BackendErrorStatusHistory`, `LegalText`,
-  `UserLegalConsent` [ФАКТ: `server/prisma/schema.prisma:263-469`].
-- Миграций стало 16: 4 исходных + 12 добавленных в 2026-09
+  `UserLegalConsent` [ФАКТ: `server/prisma/schema.prisma:275-471`].
+- Миграций стало 21: 4 исходных + 17 добавленных в 2026-09
   [ФАКТ: `ls server/prisma/migrations/`].
 
 ### С2.3. API (E-02, E-05)
@@ -608,18 +608,66 @@ magic link в логе, отсутствие rate limit, отсутствие т
 
 ### С2.7. Что остаётся не реализованным
 
-- **`auth.global.ts` middleware** — тело закомментировано; сессионная защита маршрутов
-  не работает [ФАКТ: `web/app/middleware/auth.global.ts:1-13`].
-- **Страниц `/login` и `/auth/verify` нет**: ссылки на них есть в коде
-  [ФАКТ: `web/app/middleware/admin.ts:102`, `web/app/components/app/header.vue:72`],
-  но файлов страниц нет (T-022 не завершена).
-- **`/me` — заглушки**: `web/app/pages/me/index.vue` выводит `<div>/me</div>`
-  [ФАКТ: `web/app/pages/me/index.vue:10`]; T-023/T-025 не завершены.
-- **`error-t.vue`** не переименован в `error.vue` — Nuxt не использует
-  [ФАКТ: `web/app/error-t.vue`].
-- **i18n**: конфиг и словари на месте, но `$t(...)` используется только в
-  `layouts-showcase.vue` [ФАКТ: поиск по `web/app/`, 0 вне showcase].
-- **SEO meta**: `useSeoMeta` нигде не вызывается; sitemap, OG, canonical отсутствуют.
-- **Refresh/logout**: операций нет; после 15 мин. доступа клиент не может обновить
-  токен (T-023 не завершена) [ФАКТ: `server/src/graphql/auth/schema.graphql:7-10`].
-- **Rate limiting**: отсутствует (T-024 отложена до решения Q-04) [ФАКТ: `server/src/server.ts`].
+Пункты, ошибочно числившиеся нереализованными в предыдущей редакции:
+`auth.global.ts` функционален [ФАКТ: `web/app/middleware/auth.global.ts:11-17`];
+`/login` и `/auth/verify` существуют (T-022, T-023)
+[ФАКТ: `web/app/pages/login.vue`, `web/app/pages/auth/verify.vue`];
+`/me` — функциональный кабинет, не заглушка
+[ФАКТ: `web/app/pages/me/index.vue:1-10`];
+`error.vue` есть [ФАКТ: `web/app/error.vue`];
+`useI18n` и `t(...)` применяются в десятках компонентов
+[ФАКТ: `web/app/components/app/header.vue:19`, `web/app/components/app/footer.vue:2`,
+`web/app/pages/login.vue:21` и др.];
+`useSeoMeta` вызывается на 12 страницах — `login`, `about`, `authors/[slug]`,
+`[slugTypeContent]/[slugArticle]`, `auth/verify`, `contact`, `pricing`, `offline`,
+`error`, `legal/Page`, `layouts-showcase`, `admin/sections/index`
+[ФАКТ: `web/app/pages/about.vue`, `web/app/pages/login.vue`, `web/app/error.vue` и др.];
+`refreshSession`/`logout`/`logoutAll` в схеме (T-023)
+[ФАКТ: `server/src/graphql/auth/schema.graphql`];
+`createRateLimiter` подключён (T-024)
+[ФАКТ: `server/src/server.ts:57-60`];
+sitemap и RSS реализованы (T-099)
+[ФАКТ: `web/server/routes/sitemap.xml.get.ts`].
+
+Действительно не реализовано:
+
+- **Редактор статьи — заглушки**: `/me/articles/[slug]/edit.vue` выводит
+  `<div>/me/articles/:slug/edit</div>` [ФАКТ: `web/app/pages/me/articles/[slug]/edit.vue:10`];
+  `/admin/articles/new.vue` — `<div>/admin/articles/new</div>`
+  [ФАКТ: `web/app/pages/admin/articles/new.vue:9`]; пакет `content` не начат.
+- **Дефекты входа по ссылке** (T-123): `web/server/utils/sessionCookie.ts:1-135` не
+  содержит `isLoginTokenExchange` [ФАКТ: `web/server/utils/sessionCookie.ts:1-135`];
+  переход из веб-почты отклонялся CSRF-проверкой без исключения
+  [ФАКТ: `web/server/api/graphql.post.ts:26-32`].
+- **Ротация refresh-cookie** (T-124): `web/server/api/graphql.post.ts:1-70` не содержит
+  логики вызова `refreshSession` при ответе `UNAUTHENTICATED` и атомарной ротации
+  [ФАКТ: `web/server/api/graphql.post.ts:1-70`].
+- **Лимиты: реальный IP и GraphQL-алиасы** (T-125): `getRequestIP({ xForwardedFor: true })`
+  берёт первый `X-Forwarded-For`, а не IP доверенного прокси платформы
+  [ФАКТ: `web/server/api/graphql.post.ts:49`]; `new Set<string>()` дедуплицирует имена
+  полей — алиасы одного поля не считаются отдельно
+  [ФАКТ: `server/src/rate-limits/plugin.ts:63,68`].
+- **i18n неполный**: ссылки рубрик в шапке без `localePath`, названия без `nameEn` на `/en`
+  [ФАКТ: `web/app/components/app/header.vue:77,79`].
+- **SEO**: canonical, hreflang, JSON-LD глобально не заданы — T-100 не начата
+  [ФАКТ: `web/app/pages/index.vue:1-78`]; страница авторов содержит только
+  `useHead({ title })` [ФАКТ: `web/app/pages/authors/index.vue:98`].
+- **Кандидаты backlog** (T-126–T-134):
+  имя аккаунта из e-mail — `record.email.split("@")[0]`
+  [ФАКТ: `server/src/graphql/auth/resolver.ts:245`] (T-126);
+  тексты первого запуска кабинета — текст invite не различает первый запуск
+  [ФАКТ: `web/app/pages/me/index.vue:141-143`] (T-127);
+  кэш плана — `grantPlan` не обновляет `role`/`planTier`/`planUntil` в `User`
+  [ФАКТ: `server/src/admin/grants.ts:126-152`] (T-128);
+  `/en` локаль — `articlePath` без `localePath`
+  [ФАКТ: `web/app/components/article/Card.vue:38-40`] (T-129);
+  открытый редирект офлайн — `value.startsWith("/")` пропускает `//external.com`
+  [ФАКТ: `web/app/composables/useOfflinePage.ts:87`] (T-130);
+  уведомления поддержки синхронны — `await notifyStaff(...)` до ответа
+  [ФАКТ: `server/src/support/requests.ts:159`] (T-131);
+  иерархия рубрик — `restoreSection` без проверки статуса и роли архивировавшего
+  [ФАКТ: `server/src/taxonomy/service.ts:499-528`] (T-132);
+  инвариант владельцев — `ensureOwnerRemains` без `SELECT … FOR UPDATE`
+  [ФАКТ: `server/src/admin/staff.ts:613-624`] (T-133);
+  ПД в /admin/mail — `recipientEmail: String` раскрывает e-mail получателя
+  [ФАКТ: `server/src/graphql/mail/schema.graphql:25`] (T-134).
