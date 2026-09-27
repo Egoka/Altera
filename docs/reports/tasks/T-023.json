@@ -8,7 +8,7 @@
     "sha": "51a49b8b7172dc23e541a67c2933c415b2fe570d"
   },
   "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
-  "tested_sha": "948f41502a25a5c19d576769fffc8beb6a0d0362",
+  "tested_sha": "56de79608b472760e56b3baded71e771f791b12a",
   "branch": "feat/t023-sessions",
   "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t023-sessions",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
@@ -47,14 +47,14 @@
     "url": "https://github.com/Egoka/Altera/pull/168",
     "base_ref": "app",
     "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
-    "head_sha": "948f41502a25a5c19d576769fffc8beb6a0d0362",
-    "merge_sha": null
+    "head_sha": "56de79608b472760e56b3baded71e771f791b12a",
+    "merge_sha": "d282c8a9af73d44a27108e70994d001ebd3800e8"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e469-0d87-7bba-bd15-efbe875b6ceb",
+    "sha": "56de79608b472760e56b3baded71e771f791b12a",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -64,7 +64,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-023.md",
-    "sha256": "41be6f06737e80ca499c341480664f721a3113cf7ee3a71ec1a18feb658e6a0a"
+    "sha256": "50f0d939f2243a026a003e2a7d6c3568a6ed84d421957a880c5e501f7830763b"
   },
   "remaining": [
     "Independent native review of the tested SHA, controller-managed merge into app and the Done transition",
