@@ -52,10 +52,10 @@
     "merge_sha": "ebfe29965a168004a9c6c9704ef0f7baa2342c5d"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": "not_received"
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e459-655b-7482-874d-b180915e5e08",
+    "sha": "e9552ee9c1ba4e31743bf138d7c6e0004160c14b",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -65,7 +65,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-124.md",
-    "sha256": "e34e5c2cc1921d6e6bcc25f6e9e894d34c3c90138c0a6f6977b34880e666c9ab"
+    "sha256": "1677594bfd4d38887308c3364714e1fe0446c339c927e547c2ac4e455ee1f118"
   },
   "remaining": [
     "Независимое ревью с маркером ALTERA_REVIEW_V1 на финальном head не получено: его назначает контроллер.",
