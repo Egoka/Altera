@@ -1,3 +1,6 @@
 # Ignore build artifacts:
 dist/
-node_modules/ 
+node_modules/
+
+# Локальный файловый адаптер (журнал §34, T-021): данные разработки, не код.
+.storage-dev/

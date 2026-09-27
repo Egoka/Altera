@@ -32,3 +32,23 @@ Disallow: /
 
 User-agent: DataForSeoBot
 Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+# Не влияет на обычную индексацию YandexBot: только на показ контента
+# в генеративных ответах YandexGPT и ответах Алисы (документация Яндекса).
+User-agent: YandexAdditional
+Disallow: /
+
+User-agent: YandexAdditionalBot
+Disallow: /
