@@ -1,15 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from "nuxt/config"
-import type { NuxtConfig, NuxtPage } from "@nuxt/schema"
+import type { NuxtPage } from "@nuxt/schema"
 import tailwindcss from "@tailwindcss/vite"
-
-// pnpm держит две копии vite@7.0.5, различающиеся необязательным peer `jiti`: web собран с
-// jiti@2.4.2, vitest в `server` и `packages/content` — с jiti@2.5.1. `@tailwindcss/vite` видит
-// первую, а `@nuxt/schema` не объявляет vite в зависимостях и получает ту копию, которую pnpm
-// поднял в `node_modules/.pnpm/node_modules`. Если это вторая, одинаковые типы `Plugin` считаются
-// несовместимыми (TS2322). Тип плагина берётся из самой схемы Nuxt, поэтому проверка не зависит
-// от выбора hoist.
-type NuxtVitePlugin = NonNullable<NonNullable<NuxtConfig["vite"]>["plugins"]>[number]
 
 const DEV_ONLY_ROUTES = new Set(["/fonts-showcase", "/components-showcase", "/test-error"])
 
@@ -91,7 +83,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    plugins: [tailwindcss() as unknown as NuxtVitePlugin]
+    plugins: [tailwindcss()]
   },
   fishtvue: {
     prefix: "",
