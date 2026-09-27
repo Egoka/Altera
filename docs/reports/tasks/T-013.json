@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "task_id": "T-013",
+  "issue_id": "01a0a59c-0037-7654-a1e0-e2b3073a2e76",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-013-migration-profile-handle-locale.md",
+    "sha": "14c5836c1fbca8672929e25c0b4ae63b57761a64"
+  },
+  "baseline_sha": "52910e46fda736df668073f656973d919052e1cb",
+  "tested_sha": "70fd464477362f8655f6c55c62c3382828b0a67c",
+  "branch": "server/t-013-profile-handle-locale",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0a5dc-34ac-7335-a",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Миграция, Prisma-схема, handle_history append-only, unit-тесты подтверждают вечный резерв хэндлов."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Unit test: коллизия хэндла при регистрации разрешается автогенерацией альтернативы без ошибки."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "201 passed (pnpm test — по данным разработчика)",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 54,
+    "url": "https://github.com/Egoka/Altera/pull/54",
+    "base_ref": "app",
+    "base_sha": "52910e46fda736df668073f656973d919052e1cb",
+    "head_sha": "70fd464477362f8655f6c55c62c3382828b0a67c",
+    "merge_sha": "96ef15c06f3596b8eea2f9421d0915f9b6f31c4a"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e2d7-b1d3-75eb-97df-cb539e5a0438",
+    "sha": "70fd464477362f8655f6c55c62c3382828b0a67c",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет backend/shared inputs: Prisma-схема, GraphQL, миграция, Redis cache namespace v2"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-013.md",
+    "sha256": "0959e5eaed0cf76c7273e0964ef9d6acf9600576c879680bd394d5e36806bf50"
+  },
+  "remaining": [
+    "Deploy-проба обязательна: миграция и изменённый контракт GraphQL."
+  ],
+  "usage": null
+}
