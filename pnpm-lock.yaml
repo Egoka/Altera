@@ -71,6 +71,9 @@ importers:
 
   server:
     dependencies:
+      '@altera/content':
+        specifier: workspace:*
+        version: link:../packages/content
       '@escape.tech/graphql-armor-block-field-suggestions':
         specifier: ^3.0.1
         version: 3.0.1
@@ -114,9 +117,6 @@ importers:
         specifier: ^10.3.1
         version: 10.3.1
     devDependencies:
-      '@altera/content':
-        specifier: workspace:*
-        version: link:../packages/content
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3

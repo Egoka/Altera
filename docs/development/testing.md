@@ -75,6 +75,12 @@ pnpm --filter nuxt-app run typecheck
 pnpm --filter nuxt-app run test:e2e
 ```
 
+С T-048 `server`-скрипты `build` и `build:ci` начинаются с `build:content`
+(`pnpm --filter @altera/content run build`): `server/src/**` импортирует `@altera/content`, а его
+`dist` в git не хранится, поэтому без этого шага `tsc` сервера не разрешил бы типы пакета. Тесты
+сервера собранный пакет не требуют — `server/vitest.config.ts` направляет `@altera/content`
+на исходники.
+
 `web/typecheck` — `nuxt prepare && node scripts/typecheck.mjs`. Скрипт берёт проекты из `references`
 в `web/tsconfig.json` (app, server, shared, node), проверяет каждый отдельным
 `vue-tsc --noEmit -p` без tsbuildinfo и последним печатает сводку «проект → exit, число ошибок».
