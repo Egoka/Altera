@@ -6,6 +6,18 @@ import urllib.request
 
 
 TOOLS = {"mcp__plugin_render_render__get_deploy", "mcp__render__get_deploy"}
+TIMESTAMP_RE = re.compile(r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,6}))?(Z|[+-]\d{2}:\d{2})")
+
+
+def parse_timestamp(value):
+    """Время Multica: хвостовые нули микросекунд отбрасываются (`…56.69189Z`), а
+    `fromisoformat` Python 3.9 принимает дробную часть только из 3 или 6 знаков."""
+    match = TIMESTAMP_RE.fullmatch(value) if isinstance(value, str) else None
+    if not match:
+        raise ValueError("invalid timestamp")
+    base, fraction, zone = match.groups()
+    fraction = "." + fraction.ljust(6, "0") if fraction else ""
+    return dt.datetime.fromisoformat(base + fraction + ("+00:00" if zone == "Z" else zone))
 
 
 def render_deploy(messages, config, now, run_id=None):
@@ -33,7 +45,7 @@ def render_deploy(messages, config, now, run_id=None):
         if not isinstance(args, dict) or args.get("serviceId") != config.get("render_service_id") or args.get("workspaceId") != config.get("render_workspace_id"):
             continue
         try:
-            stamp = dt.datetime.fromisoformat(message["created_at"].replace("Z", "+00:00"))
+            stamp = parse_timestamp(message["created_at"])
             if not 0 <= (now-stamp).total_seconds() <= 3600:
                 continue
             blocks = json.loads(message["output"])
