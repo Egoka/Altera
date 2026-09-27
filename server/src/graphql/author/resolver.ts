@@ -4,8 +4,7 @@ import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
-
-type AuthorGrade = "standard" | "pro"
+import { authorGradeOf, type AuthorGrade } from "../../plans/plan-state"
 
 interface AuthorLink {
   kind: string
@@ -64,9 +63,6 @@ export const toAuthorLinks = (socialLinks: unknown): AuthorLink[] => {
   return links
 }
 
-/** Бейдж уровня автора; плана, срока и чисел рейтинга публичный ответ не содержит (ADR-0018). */
-const gradeOf = (planTier: string): AuthorGrade => (planTier === "pro" ? "pro" : "standard")
-
 const authorSelect = {
   id: true,
   handle: true,
@@ -75,6 +71,7 @@ const authorSelect = {
   photoUrl: true,
   socialLinks: true,
   planTier: true,
+  planUntil: true,
   archivedAt: true
 } as const
 
@@ -146,7 +143,7 @@ export default {
             bio: user.bio,
             avatar: user.photoUrl,
             links: toAuthorLinks(user.socialLinks),
-            grade: gradeOf(user.planTier),
+            grade: authorGradeOf(user, new Date()),
             publishedCount,
             firstPublishedAt: firstPublished?.firstPublishedAt?.toISOString() ?? null,
             redirect

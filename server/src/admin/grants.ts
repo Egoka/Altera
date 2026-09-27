@@ -1,9 +1,13 @@
 import type { PlanTier, Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
+import { adminGrantWhere, deriveGrantStatus, isBaseGrant, type GrantStatus } from "../plans/plan-state"
+import { syncPlanCache } from "../plans/plan-cache"
 import type { GraphQLContext } from "../prisma"
 
-export type AdminGrantStatus = "queued" | "active" | "ended" | "revoked"
+export { deriveGrantStatus }
+
+export type AdminGrantStatus = GrantStatus
 
 interface GrantPerson {
   id: string
@@ -47,13 +51,6 @@ const grantInclude = {
   grantedBy: { select: { id: true, name: true, handle: true } }
 } as const
 
-export function deriveGrantStatus(grant: Pick<GrantRecord, "startsAt" | "endsAt" | "revokedAt">, now: Date) {
-  if (grant.revokedAt) return "revoked" as const
-  if (grant.startsAt > now) return "queued" as const
-  if (grant.endsAt && grant.endsAt <= now) return "ended" as const
-  return "active" as const
-}
-
 function toAdminGrant(grant: GrantRecord, now: Date): AdminGrant {
   return { ...grant, status: deriveGrantStatus(grant, now) }
 }
@@ -79,16 +76,26 @@ function ensureFinance(ctx: GraphQLContext, action: string) {
   return ensureAuthenticated(ctx.currentUser, ctx.requestId)
 }
 
+/**
+ * Раздел грантов показывает только ручные выдачи: автоматическое базовое авторство первого
+ * запуска видно в карточке пользователя, отдельного списка и ручного отзыва у него нет
+ * (журнал §27.1).
+ */
 export async function listAdminGrants(ctx: GraphQLContext, now = new Date()): Promise<AdminGrant[]> {
   ensureFinance(ctx, "plan.read")
-  const grants = await ctx.prisma.planGrant.findMany({ include: grantInclude, orderBy: { createdAt: "desc" } })
+  const grants = await ctx.prisma.planGrant.findMany({
+    where: adminGrantWhere(),
+    include: grantInclude,
+    orderBy: { createdAt: "desc" }
+  })
   return grants.map((grant) => toAdminGrant(grant, now))
 }
 
 export async function getAdminGrant(ctx: GraphQLContext, id: string, now = new Date()): Promise<AdminGrant | null> {
   ensureFinance(ctx, "plan.read")
   const grant = await ctx.prisma.planGrant.findUnique({ where: { id }, include: grantInclude })
-  return grant ? toAdminGrant(grant, now) : null
+  if (!grant || isBaseGrant(grant)) return null
+  return toAdminGrant(grant, now)
 }
 
 export async function grantPlan(ctx: GraphQLContext, input: GrantPlanInput, now = new Date()): Promise<AdminGrant> {
@@ -144,6 +151,9 @@ export async function grantPlan(ctx: GraphQLContext, input: GrantPlanInput, now 
         requestId: ctx.requestId
       }
     })
+    // Выдача сразу меняет роль и кэш плана получателя (`role-derivation.md` §2 п. 2): без этого
+    // читатель с действующей выдачей продолжал бы получать `PLAN_LIMIT`.
+    await syncPlanCache(tx, recipient.id, now)
     return toAdminGrant(created, now)
   })
 }
@@ -156,6 +166,11 @@ export async function revokePlan(ctx: GraphQLContext, input: RevokePlanInput, no
   return ctx.prisma.$transaction(async (tx) => {
     const current = await tx.planGrant.findUnique({ where: { id: grantId }, include: grantInclude })
     if (!current) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "planGrant" })
+    // Базовое авторство первого запуска вручную не отзывается: закрытие доступа — только
+    // согласованное архивирование аккаунта (журнал §27.1).
+    if (isBaseGrant(current)) {
+      throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "plan.revoke" })
+    }
     const status = deriveGrantStatus(current, now)
     if (status !== "active" && status !== "queued") {
       throw createApiError("CONFLICT", {
@@ -182,6 +197,8 @@ export async function revokePlan(ctx: GraphQLContext, input: RevokePlanInput, no
         requestId: ctx.requestId
       }
     })
+    // Отзыв приводит кэш к оставшимся выдачам в том же коммите (`role-derivation.md` §2 п. 3).
+    await syncPlanCache(tx, current.userId, now)
     return toAdminGrant(revoked, now)
   })
 }

@@ -1,11 +1,11 @@
 import type { PlanTier } from "../generated/prisma"
-import { deriveGrantStatus } from "../admin/grants"
+import { deriveGrantStatus } from "../plans/plan-state"
 
 /**
  * Карточка плана сводки кабинета (`docs/spec/30-account/reader/dashboard.md` §4, §5 зона 3).
  *
- * Источник истины — выдачи `PlanGrant`, а не кэш `users.planTier`: административная выдача кэш
- * не обновляет, а роль и план выводятся из выдач (role-derivation.md п. 1, 9). Платежей на
+ * Источник истины — выдачи `PlanGrant`, а не кэш `users.planTier`: роль и план выводятся из
+ * выдач, а кэш их лишь повторяет (role-derivation.md п. 1, 9). Платежей на
  * первом запуске нет (журнал §24.1), поэтому варианты «серия списаний» и `cancelAtPeriodEnd`
  * здесь не появляются: их не из чего вывести.
  */

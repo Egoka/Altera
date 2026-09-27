@@ -1,6 +1,8 @@
 import type { Role } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, hasActiveAuthorPlan } from "../exceptions/permissions"
+import { syncPlanCache } from "../plans/plan-cache"
+import { isBaseGrant } from "../plans/plan-state"
 import type { GraphQLContext } from "../prisma"
 
 // Бессрочная базовая выдача первого запуска (plan-free.md п. 6а, журнал §25.1):
@@ -16,10 +18,13 @@ const personalAuthoringRoles = new Set<Role>(["reader", "author"])
  * Первое «Создать статью» бессрочно открывает базовые авторские возможности без оплаты и
  * ручного одобрения (become-author.md шаг 1, ADR-0052 п. 2).
  *
- * «Первое нажатие» — аккаунт, у которого ещё не было ни одного `PlanGrant`: повторное нажатие
- * не выдаёт вторую выдачу и не пишет второе событие `author.enabled` (#87), а истёкшая или
- * отозванная выдача не превращается в бессрочную — создание остаётся закрытым `PLAN_LIMIT`
- * до продления (plan-free.md п. 3–4).
+ * «Первое нажатие» — аккаунт, у которого ещё не было базовой выдачи: повторное нажатие не
+ * выдаёт вторую выдачу и не пишет второе событие `author.enabled` (#87).
+ *
+ * Прошлая админская выдача первому нажатию не мешает: на первом запуске платности нет, базовое
+ * авторство доступно любому зарегистрированному читателю (журнал §24.1, §25.1), а запрет
+ * `plan-free.md` п. 3 начинает действовать только после включения платности. Отозванная же
+ * базовая выдача остаётся закрытой — её снимает согласованное архивирование аккаунта (§27.1).
  */
 export async function enableBaseAuthorship(
   ctx: BaseAuthorshipContext,
@@ -42,28 +47,35 @@ export async function enableBaseAuthorship(
   // Действующий план — авторские возможности уже открыты, включать нечего.
   if (hasActiveAuthorPlan(user, now)) return user
 
-  const enabled = await ctx.prisma.$transaction(async (tx) => {
+  const cache = await ctx.prisma.$transaction(async (tx) => {
     const grants = await tx.planGrant.findMany({
       where: { userId: user.id },
-      select: { id: true, endsAt: true, revokedAt: true }
+      select: { id: true, endsAt: true, grantedById: true, revokedAt: true }
     })
 
-    const lifelong = grants.find((grant) => grant.endsAt === null && grant.revokedAt === null)
-    if (lifelong) {
-      // Источник истины — выдача, а не кэш плана (role-derivation.md п. 1, 9): расхождение
-      // чинится без второй выдачи и без второго события.
-      await syncPlanCache(tx, user.id)
-      return true
+    const base = grants.find(isBaseGrant)
+    if (base) {
+      // Базовая выдача уже есть: второй раз она не открывается и второго события не пишет.
+      // Действующая выдача только чинит расхождение кэша (role-derivation.md п. 1, 9);
+      // отозванная оставляет доступ закрытым (§27.1).
+      if (base.revokedAt) return null
+      return syncPlanCache(tx, user.id, now)
     }
 
-    // Выдача уже была: это не первое нажатие, базовое авторство второй раз не открывается.
-    if (grants.length > 0) return false
-
+    // `startsAt` задаётся явно: со значением по умолчанию его выставила бы база уже после `now`,
+    // и пересчёт кэша в этой же транзакции счёл бы свежую выдачу будущей, а план — отсутствующим.
     const grant = await tx.planGrant.create({
-      data: { userId: user.id, tier: "standard", endsAt: null, grantedById: null, reason: BASE_AUTHORSHIP_REASON },
+      data: {
+        userId: user.id,
+        tier: "standard",
+        startsAt: now,
+        endsAt: null,
+        grantedById: null,
+        reason: BASE_AUTHORSHIP_REASON
+      },
       select: { id: true }
     })
-    await syncPlanCache(tx, user.id)
+    const synced = await syncPlanCache(tx, user.id, now)
     await tx.auditLog.create({
       data: {
         action: "author.enabled",
@@ -75,18 +87,11 @@ export async function enableBaseAuthorship(
         requestId: ctx.requestId
       }
     })
-    return true
+    return synced
   })
 
-  if (!enabled) return user
-  return { ...user, role: "author", planTier: "standard", planUntil: null }
-}
-
-interface PlanCacheClient {
-  user: { update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<unknown> }
-}
-
-// Инвариант «роль author ⇔ действующий план или выдача» (role-derivation.md п. 1, 7).
-async function syncPlanCache(tx: PlanCacheClient, userId: string): Promise<void> {
-  await tx.user.update({ where: { id: userId }, data: { role: "author", planTier: "standard", planUntil: null } })
+  // Дальнейшие проверки этого же запроса идут по свежему кэшу, а не по прочитанному до записи:
+  // при действующей админской выдаче уровень выше базового (журнал §8.22).
+  if (!cache) return user
+  return { ...user, role: cache.role ?? user.role, planTier: cache.planTier, planUntil: cache.planUntil }
 }

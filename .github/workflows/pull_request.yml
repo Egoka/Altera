@@ -286,6 +286,13 @@ jobs:
         env:
           T017_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/bookmark-plan-migration-database.test.ts
+      # T-128: согласованность кэша плана с выдачами проверяется по строкам после коммита
+      # транзакции, а бейдж публичной страницы — настоящим резолвером; двойник ни то ни другое
+      # не докажет.
+      - name: Проверить кэш плана и выдачи T-128
+        env:
+          T128_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/plan-cache-database.test.ts
       - name: Require PostgreSQL 17 and Redis readiness
         run: node scripts/autonomy/infra_probe.mjs
       # Раньше здесь стояло `timeout 2s pnpm start || true`: падение старта не делало

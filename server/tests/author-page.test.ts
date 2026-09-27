@@ -32,6 +32,7 @@ const userRow = (overrides: Record<string, unknown> = {}) => ({
   photoUrl: "https://cdn.example.com/vera.jpg",
   socialLinks: { telegram: "https://t.me/vera" },
   planTier: "pro",
+  planUntil: new Date("2099-01-01T00:00:00.000Z"),
   archivedAt: null,
   ...overrides
 })
@@ -44,7 +45,7 @@ const articleRow = (id: string, overrides: Record<string, unknown> = {}) => ({
   featuredImage: null,
   firstPublishedAt: new Date("2026-09-18T10:00:00.000Z"),
   sourceLocale: "ru",
-  author: { name: "Вера Орлова", handle: "vera", planTier: "pro" },
+  author: { name: "Вера Орлова", handle: "vera", planTier: "pro", planUntil: new Date("2099-01-01T00:00:00.000Z") },
   section: { slug: "culture", name: "Культура", nameEn: "Culture" },
   ...overrides
 })
@@ -153,6 +154,28 @@ describe("профиль автора", () => {
     })
   })
 
+  // AC-5: бейдж выводится из уровня вместе со сроком, поэтому истёкшая выдача `pro` его снимает
+  // даже при устаревшем кэше `planTier` (`role-derivation.md` п. 9).
+  it("истёкшая выдача pro бейдж на странице автора снимает", async () => {
+    const profile = await callAuthor({
+      user: userRow({ planUntil: new Date("2020-01-01T00:00:00.000Z") }),
+      publishedCount: 1,
+      firstPublished: { firstPublishedAt: new Date("2026-03-04T08:00:00.000Z") }
+    })
+
+    expect(profile.grade).toBe("standard")
+  })
+
+  it("бессрочная базовая выдача остаётся уровнем standard", async () => {
+    const profile = await callAuthor({
+      user: userRow({ planTier: "standard", planUntil: null }),
+      publishedCount: 1,
+      firstPublished: { firstPublishedAt: new Date("2026-03-04T08:00:00.000Z") }
+    })
+
+    expect(profile.grade).toBe("standard")
+  })
+
   it("без имени подписывается хэндлом, а не пустой строкой", async () => {
     // Имя аккаунта задаёт сам пользователь; до этого страница показывает хэндл (T-126,
     // ADR-0018 п. 3: адрес почты публичным именем не становится).
@@ -225,7 +248,11 @@ describe("лента автора", () => {
       user: userRow({ name: "" }),
       publishedCount: 1,
       localeCount: 1,
-      articles: [articleRow("1", { author: { name: "", handle: "vera", planTier: "pro" } })]
+      articles: [
+        articleRow("1", {
+          author: { name: "", handle: "vera", planTier: "pro", planUntil: new Date("2099-01-01T00:00:00.000Z") }
+        })
+      ]
     })
 
     expect(feed.items[0]!.author).toEqual({ name: "vera", handle: "vera", grade: "pro" })
