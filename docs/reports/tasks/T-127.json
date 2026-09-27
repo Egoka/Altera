@@ -44,15 +44,15 @@
     "number": 308,
     "url": "https://github.com/Egoka/Altera/pull/308",
     "base_ref": "app",
-    "base_sha": "d5533cbb7b0789cfa11a33381a23b40bf050895f",
+    "base_sha": "05eca7d25f2a9060eaece074efec16135ce8b83b",
     "head_sha": "8e797cb490509cf03bd46391ecf49b41b4512e73",
     "merge_sha": "9c6ca914e0ce034db4c0ac6858217cb41603a39a"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": "not_received"
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e411-52e1-7256-b82e-cb725eb1cb12",
+    "sha": "8e797cb490509cf03bd46391ecf49b41b4512e73",
+    "verdict": "approved"
   },
   "deployment": {
     "required": false,
@@ -62,7 +62,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-127.md",
-    "sha256": "d4648be49243429611308a2e91a32a6f15d07d1d82266dff4cee21ede89a62a3"
+    "sha256": "4393f56d06e6dea29572892697b9321502f167ef0752211e5b1d14f313f207c4"
   },
   "remaining": [
     "Независимое ревью с маркером ALTERA_REVIEW_V1 на финальном head не получено: его назначает контроллер.",
