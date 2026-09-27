@@ -222,7 +222,7 @@
         <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.staff.title") }}</h1>
         <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{{ t("admin.staff.description") }}</p>
       </div>
-      <Button mode="outline" icon="lucide:plus" class="shrink-0" @click="openCreate">
+      <Button variant="outline" icon="lucide:plus" class="shrink-0" @click="openCreate">
         {{ t("admin.staff.create") }}
       </Button>
     </div>
@@ -317,7 +317,7 @@
           <p v-if="failure?.requestId" class="mt-1 font-mono text-xs">
             {{ t("admin.staff.requestCode", { requestId: failure.requestId }) }}
           </p>
-          <Button mode="ghost" class="mt-2" @click="refresh()">{{ t("admin.summary.refresh") }}</Button>
+          <Button variant="ghost" class="mt-2" @click="refresh()">{{ t("admin.summary.refresh") }}</Button>
         </div>
 
         <div v-else-if="isEmpty" class="rounded-md bg-zinc-50 p-8 text-center dark:bg-zinc-900/60">
@@ -384,7 +384,7 @@
             <p class="font-mono text-xs text-zinc-500 dark:text-zinc-400">{{ detail.email }}</p>
           </div>
           <Button
-            mode="ghost"
+            variant="ghost"
             icon="lucide:x"
             class="h-8 w-8 p-1"
             :aria-label="t('common.cancel')"
@@ -444,21 +444,21 @@
 
         <div v-if="isOwner" class="mt-5 flex flex-col gap-2">
           <template v-if="detail.role === 'owner'">
-            <Button mode="outline" @click="openReason('revokeOwner')">{{ t("admin.staff.revokeOwner") }}</Button>
-            <Button mode="outline" @click="openReason('deactivateOwner')">{{
+            <Button variant="outline" @click="openReason('revokeOwner')">{{ t("admin.staff.revokeOwner") }}</Button>
+            <Button variant="outline" @click="openReason('deactivateOwner')">{{
               t("admin.staff.deactivateOwner")
             }}</Button>
           </template>
           <template v-else>
-            <Button mode="outline" @click="openReason('changeRole')">{{ t("admin.staff.changeRole") }}</Button>
-            <Button mode="outline" @click="openReason('revokeRole')">{{ t("admin.staff.revokeRole") }}</Button>
-            <Button v-if="detail.status === 'active'" mode="outline" @click="openAssign">
+            <Button variant="outline" @click="openReason('changeRole')">{{ t("admin.staff.changeRole") }}</Button>
+            <Button variant="outline" @click="openReason('revokeRole')">{{ t("admin.staff.revokeRole") }}</Button>
+            <Button v-if="detail.status === 'active'" variant="outline" @click="openAssign">
               {{ t("admin.staff.assignOwner") }}
             </Button>
-            <Button v-if="detail.status === 'active'" mode="outline" @click="openReason('archive')">
+            <Button v-if="detail.status === 'active'" variant="outline" @click="openReason('archive')">
               {{ t("admin.staff.archive") }}
             </Button>
-            <Button v-else mode="outline" @click="openReason('restore')">{{ t("admin.staff.restore") }}</Button>
+            <Button v-else variant="outline" @click="openReason('restore')">{{ t("admin.staff.restore") }}</Button>
           </template>
         </div>
       </aside>
@@ -468,7 +468,7 @@
       </aside>
     </div>
 
-    <AppDialog v-model="isCreateOpen" close-button class="max-w-md">
+    <AppDialog v-model="isCreateOpen" close-button size="md" :classes="{ content: 'max-w-md' }">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.staff.create") }}</h2>
       <div class="flex flex-col gap-4 p-4">
         <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ t("admin.staff.createHint") }}</p>
@@ -515,9 +515,9 @@
           </select>
         </div>
         <div class="flex gap-2 pt-2">
-          <Button mode="ghost" class="flex-1" @click="isCreateOpen = false">{{ t("common.cancel") }}</Button>
+          <Button variant="ghost" class="flex-1" @click="isCreateOpen = false">{{ t("common.cancel") }}</Button>
           <Button
-            mode="outline"
+            variant="outline"
             class="flex-1"
             :disabled="!createForm.email.trim() || !createForm.name.trim() || pending"
             @click="submitCreate">
@@ -527,7 +527,12 @@
       </div>
     </AppDialog>
 
-    <AppDialog :model-value="reasonAction !== null" close-button class="max-w-md" @update:model-value="closeReason">
+    <AppDialog
+      :model-value="reasonAction !== null"
+      close-button
+      size="md"
+      :classes="{ content: 'max-w-md' }"
+      @update:model-value="closeReason">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
         {{ reasonAction ? t(`admin.staff.${reasonTitles[reasonAction]}`) : "" }}
       </h2>
@@ -566,15 +571,20 @@
           </span>
         </p>
         <div class="flex gap-2 pt-2">
-          <Button mode="ghost" class="flex-1" @click="closeReason">{{ t("common.cancel") }}</Button>
-          <Button mode="outline" class="flex-1" :disabled="!reason.trim() || pending" @click="submitReason">
+          <Button variant="ghost" class="flex-1" @click="closeReason">{{ t("common.cancel") }}</Button>
+          <Button variant="outline" class="flex-1" :disabled="!reason.trim() || pending" @click="submitReason">
             {{ t("common.confirm") }}
           </Button>
         </div>
       </div>
     </AppDialog>
 
-    <AppDialog :model-value="assignStep !== 0" close-button class="max-w-md" @update:model-value="closeAssign">
+    <AppDialog
+      :model-value="assignStep !== 0"
+      close-button
+      size="md"
+      :classes="{ content: 'max-w-md' }"
+      @update:model-value="closeAssign">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
         {{ assignStep === 1 ? t("admin.staff.assignStepOneTitle") : t("admin.staff.assignStepTwoTitle") }}
       </h2>
@@ -583,8 +593,10 @@
           <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ t("admin.staff.assignStepOneHint") }}</p>
           <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ detail?.name }}</p>
           <div class="flex gap-2 pt-2">
-            <Button mode="ghost" class="flex-1" @click="closeAssign">{{ t("common.cancel") }}</Button>
-            <Button mode="outline" class="flex-1" @click="assignStep = 2">{{ t("admin.staff.assignContinue") }}</Button>
+            <Button variant="ghost" class="flex-1" @click="closeAssign">{{ t("common.cancel") }}</Button>
+            <Button variant="outline" class="flex-1" @click="assignStep = 2">{{
+              t("admin.staff.assignContinue")
+            }}</Button>
           </div>
         </template>
         <template v-else>
@@ -611,8 +623,8 @@
               class="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900" />
           </div>
           <div class="flex gap-2 pt-2">
-            <Button mode="ghost" class="flex-1" @click="closeAssign">{{ t("common.cancel") }}</Button>
-            <Button mode="outline" class="flex-1" :disabled="!assignMatches || pending" @click="confirmAssign">
+            <Button variant="ghost" class="flex-1" @click="closeAssign">{{ t("common.cancel") }}</Button>
+            <Button variant="outline" class="flex-1" :disabled="!assignMatches || pending" @click="confirmAssign">
               {{ t("admin.staff.assignConfirm") }}
             </Button>
           </div>

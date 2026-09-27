@@ -21,7 +21,8 @@
   <AppDialog
     :model-value="props.open"
     close-button
-    class="max-w-md"
+    size="md"
+    :classes="{ content: 'max-w-md' }"
     @update:model-value="(value: boolean) => !value && emit('cancel')">
     <!-- Диалог телепортируется в `body`, поэтому отметка теста ставится на содержимое,
          а не на корневой компонент: сквозной атрибут туда не доходит. -->

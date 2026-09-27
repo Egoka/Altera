@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { IColumn } from "#fishtvue/table"
+  import type { TableColumn } from "#fishtvue/table"
   import type { Panel } from "#fishtvue/split"
   import type { FormStructure } from "#fishtvue/form"
   import type { Role } from "~/graphql/generated/graphql"
@@ -173,7 +173,7 @@
   ])
 
   // Конфигурация колонок таблицы
-  const columns = shallowRef<Array<IColumn>>([
+  const columns = shallowRef<Array<TableColumn>>([
     {
       dataField: "name",
       name: "name",
@@ -182,10 +182,10 @@
       visible: true,
       width: 250,
       minWidth: 200,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       defaultSort: "asc",
-      class: {
+      classes: {
         td: "cursor-pointer"
       }
     },
@@ -197,8 +197,8 @@
       visible: true,
       width: 250,
       minWidth: 200,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "role",
@@ -208,11 +208,11 @@
       visible: true,
       width: 150,
       minWidth: 150,
-      isFilter: true,
-      isSort: true,
+      filterable: true,
+      sortable: true,
       cellTemplate: "role",
-      paramsFilter: {
-        dataSelect: roleOptions
+      filterProps: {
+        options: roleOptions
       }
     },
     {
@@ -223,8 +223,8 @@
       visible: true,
       width: 300,
       minWidth: 250,
-      isFilter: true,
-      isSort: false
+      filterable: true,
+      sortable: false
     },
     {
       dataField: "articlesCount",
@@ -234,8 +234,8 @@
       visible: true,
       width: 100,
       minWidth: 80,
-      isFilter: false,
-      isSort: true,
+      filterable: false,
+      sortable: true,
       defaultSort: "desc"
     },
     {
@@ -246,8 +246,8 @@
       visible: true,
       width: 150,
       minWidth: 120,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     },
     {
       dataField: "updatedAt",
@@ -257,8 +257,8 @@
       visible: true,
       width: 150,
       minWidth: 120,
-      isFilter: true,
-      isSort: true
+      filterable: true,
+      sortable: true
     }
   ])
 
@@ -301,7 +301,7 @@
   // Структура формы редактирования пользователя
   const formStructure = ref<FormStructure[]>([
     {
-      classGrid: "grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6",
+      classes: { grid: "grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6" },
       fields: [
         {
           typeComponent: "Input",
@@ -309,7 +309,7 @@
           rules: { required: true },
           label: "Имя",
           placeholder: "Введите имя пользователя",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
           typeComponent: "Input",
@@ -317,15 +317,15 @@
           rules: { required: true, email: true },
           label: "Email",
           placeholder: "Введите email",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
           typeComponent: "Select",
           name: "role",
           rules: { required: true },
           label: "Роль",
-          classCol: "sm:col-span-6",
-          dataSelect: roleOptions
+          classes: { field: "sm:col-span-6" },
+          options: roleOptions
         },
         {
           typeComponent: "Input",
@@ -333,15 +333,15 @@
           rules: { required: true },
           label: "Slug",
           placeholder: "Введите slug",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         },
         {
-          typeComponent: "Aria",
+          typeComponent: "Textarea",
           name: "bio",
           rules: {},
           label: "Описание",
           placeholder: "Введите описание пользователя",
-          classCol: "sm:col-span-6"
+          classes: { field: "sm:col-span-6" }
         }
       ]
     }
@@ -443,7 +443,7 @@
   <Split
     :panels="panels"
     units="percentages"
-    :styles="{
+    :classes="{
       separator: 'bg-transparent dark:bg-transparent w-2',
       panel: 'h-full sm:rounded-xl bg-zinc-100 dark:bg-zinc-900'
     }">
@@ -452,22 +452,20 @@
         <AppTable
           :dataSource="data"
           :columns="columns"
-          search
+          searchable
           toolbar
           class="p-0 overflow-auto"
-          :styles="{
-            activeRow: 'bg-white dark:bg-zinc-950',
-            hoverRows: 'hover:bg-white dark:hover:bg-zinc-950',
-            class: {
-              toolbar: 'flex-col md:flex-row my-toolbar',
-              tfoot: 'bg-zinc-100 dark:bg-zinc-900',
-              pagination: 'bg-zinc-100 dark:bg-zinc-900'
-            },
-            width: '100%',
-            height: `calc(100vh - ${tableHeight ?? 47}px)`
+          :classes="{
+            rowActive: 'bg-white dark:bg-zinc-950',
+            rowHover: 'hover:bg-white dark:hover:bg-zinc-950',
+            toolbar: 'flex-col md:flex-row my-toolbar',
+            tfoot: 'bg-zinc-100 dark:bg-zinc-900',
+            pagination: 'bg-zinc-100 dark:bg-zinc-900'
           }"
+          width="100%"
+          :height="`calc(100vh - ${tableHeight ?? 47}px)`"
           :pagination="{
-            sizePage: 15
+            pageSize: 15
           }"
           @click-row="openUser">
           <template #toolbar>
@@ -496,16 +494,16 @@
         <div class="flex absolute top-1 right-1 z-10">
           <Button
             class="bg-white dark:bg-zinc-950"
-            class-icon="text-zinc-700 dark:text-zinc-400"
+            :classes="{ icon: 'text-zinc-700 dark:text-zinc-400' }"
             type="icon"
-            :mode="'primary'"
-            icon="arrow-top-right-on-square"
+            variant="primary"
+            icon="heroicons:arrow-top-right-on-square"
             @click="toUser" />
           <Button
             class="bg-white dark:bg-zinc-950"
-            class-icon="text-zinc-700 dark:text-zinc-400"
+            :classes="{ icon: 'text-zinc-700 dark:text-zinc-400' }"
             type="icon"
-            :mode="'primary'"
+            variant="primary"
             icon="x-mark"
             @click="close" />
         </div>
@@ -522,7 +520,10 @@
             :formFields="formValues"
             :structure="formStructure"
             modeValidate="onChange"
-            structureClass="h-[calc(100vh-250px)] sm:h-[calc(100vh-200px)] overflow-auto border-b border-neutral-200 dark:border-neutral-800 pb-12"
+            :classes="{
+              section:
+                'h-[calc(100vh-250px)] sm:h-[calc(100vh-200px)] overflow-auto border-b border-neutral-200 dark:border-neutral-800 pb-12'
+            }"
             :submitButton="t('common.save')"
             @submit="handleSubmit" />
         </div>

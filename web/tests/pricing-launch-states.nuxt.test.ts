@@ -43,9 +43,9 @@ const global = {
     NuxtLink: { props: ["to"], template: '<a :href="to"><slot /></a>' },
     // FishtVue `Accordion` в тесте подменяется разметкой без анимации: важен состав FAQ.
     Accordion: {
-      props: ["dataSource"],
+      props: ["items"],
       template:
-        '<div data-accordion><section v-for="item in dataSource" :key="item.title">' +
+        '<div data-accordion><section v-for="item in items" :key="item.title">' +
         "<h3>{{ item.title }}</h3><p>{{ item.subtitle }}</p></section></div>"
     }
   }
