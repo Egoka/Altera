@@ -265,9 +265,11 @@
               {{ t(`admin.grantStatus.${value}`) }}
             </span>
           </template>
+          <!-- Для колонки `type: "date"` fishtvue отдаёт в слот уже готовую строку «ДД.ММ.ГГГГ»
+               (или null), повторный разбор через new Date() переставил бы день и месяц. -->
           <template #endsAt="{ value }">
             <span :class="value ? '' : 'text-zinc-400 italic'">
-              {{ value ? formatDate(value) : t("admin.indefinite") }}
+              {{ value ?? t("admin.indefinite") }}
             </span>
           </template>
         </Table>

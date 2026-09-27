@@ -1,12 +1,14 @@
 // @vitest-environment happy-dom
 
-import { mount } from "@vue/test-utils"
+import { flushPromises, mount } from "@vue/test-utils"
+import Table from "fishtvue/table"
 import { ref, shallowRef, watch } from "vue"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import GrantsPage from "../app/pages/admin/grants/index.vue"
 import SubscriptionsPage from "../app/pages/admin/subscriptions/index.vue"
 
 const messages: Record<string, string> = {
+  "admin.indefinite": "Бессрочно",
   "admin.grantsTitle": "Ручные выдачи планов",
   "admin.grantsDescription": "Управление ручными выдачами",
   "admin.subscriptionsTitle": "Подписки и планы",
@@ -136,5 +138,36 @@ describe("admin grants pages", () => {
     expect(wrapper.text()).toContain("Платные подписки — отдельный этап")
     expect(wrapper.text()).toContain("Тестовый пользователь active")
     expect(wrapper.text()).not.toContain("Базовое авторство первого запуска")
+  })
+})
+
+// Настоящий fishtvue `Table`: `value` в `cellTemplate`-слоте колонки `type: "date"` приходит уже
+// отформатированным («ДД.ММ.ГГГГ»), поэтому повторный разбор через `new Date()` ломает даты.
+describe.each([
+  ["grants", GrantsPage],
+  ["subscriptions", SubscriptionsPage]
+])("admin %s page end-date column with the real table", (_name, Page) => {
+  const stubsWithoutTable = Object.fromEntries(Object.entries(stubs).filter(([name]) => name !== "Table"))
+
+  it("shows the end date as day.month.year and the indefinite label for grants without one", async () => {
+    // Полдень UTC — та же календарная дата в любом часовом поясе прогона.
+    const rows = shallowRef([
+      { ...grants.value[0], id: "grant-dated", userHandle: "dated-user", endsAt: "2026-12-14T12:00:00.000Z" },
+      { ...grants.value[0], id: "grant-indefinite", userHandle: "indefinite-user", endsAt: null }
+    ])
+    vi.stubGlobal("useAdminGrants", () => ({
+      grants: rows,
+      pending: ref(false),
+      failed: ref(false),
+      refresh,
+      grant: grantAction,
+      revoke: revokeAction
+    }))
+
+    const wrapper = mount(Page, { global: { components: { Table }, stubs: stubsWithoutTable } })
+    await flushPromises()
+
+    const endCells = wrapper.findAll("tbody tr").map((row) => row.findAll("td")[5]?.text())
+    expect(endCells).toEqual(["14.12.2026", "Бессрочно"])
   })
 })

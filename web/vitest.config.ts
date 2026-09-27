@@ -10,6 +10,9 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.ts"],
-    environment: "node"
+    environment: "node",
+    // fishtvue импортирует CSS (`v-calendar/dist/style.css`), который Node не загрузит напрямую:
+    // пакет прогоняется через Vite, чтобы тесты могли монтировать настоящие компоненты.
+    server: { deps: { inline: ["fishtvue"] } }
   }
 })
