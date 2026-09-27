@@ -18,6 +18,10 @@ def git(directory, *args):
                           capture_output=True, check=True).stdout.strip()
 
 
+# Клон получает настройку в свой конфиг: фоновое автообслуживание не переживает commit/push.
+NO_MAINTENANCE = ("--config", "maintenance.auto=false")
+
+
 class FakeGithub:
     """GitHub поверх временного remote: merge-коммит в app; strict up-to-date выключен, как в защите app."""
 
@@ -94,7 +98,10 @@ class DailyPublishTests(unittest.TestCase):
         self.remote = self.root / "remote.git"
         self.repo = self.root / "repo"
         subprocess.run(["git", "init", "--bare", str(self.remote)], capture_output=True, check=True)
-        subprocess.run(["git", "clone", str(self.remote), str(self.repo)], capture_output=True, check=True)
+        # Без фонового `git maintenance run --auto --detach`: он переживает commit/push и гоняется
+        # с удалением временного каталога. receive-pack читает конфиг самого remote.
+        git(self.remote, "config", "maintenance.auto", "false")
+        subprocess.run(["git", "clone", *NO_MAINTENANCE, str(self.remote), str(self.repo)], capture_output=True, check=True)
         git(self.repo, "config", "user.email", "test@example.test")
         git(self.repo, "config", "user.name", "Test")
         git(self.repo, "checkout", "-b", "app")
@@ -134,7 +141,7 @@ class DailyPublishTests(unittest.TestCase):
     def test_remote_head_advanced_by_other_writer_is_not_overwritten(self):
         result = daily_publish.run(self.config, "2026-09-15", self.snapshot, github=self.gh)
         other = self.root / "other"
-        subprocess.run(["git", "clone", "--branch", result["branch"], str(self.remote), str(other)],
+        subprocess.run(["git", "clone", *NO_MAINTENANCE, "--branch", result["branch"], str(self.remote), str(other)],
                        capture_output=True, check=True)
         git(other, "config", "user.email", "other@example.test")
         git(other, "config", "user.name", "Other")
@@ -247,7 +254,8 @@ class DailyPublishTests(unittest.TestCase):
 
     def other_clone(self):
         other = self.root / "other"
-        subprocess.run(["git", "clone", "--branch", "app", str(self.remote), str(other)], capture_output=True, check=True)
+        subprocess.run(["git", "clone", *NO_MAINTENANCE, "--branch", "app", str(self.remote), str(other)],
+                       capture_output=True, check=True)
         git(other, "config", "user.email", "other@example.test")
         git(other, "config", "user.name", "Other")
         return other
