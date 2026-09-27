@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "task_id": "T-125",
+  "issue_id": "01a0df5d-de5d-7006-86a1-1e687d0197a4",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-125-rate-limit-bypass-fixes.md",
+    "sha": "d1e3d58be2fa7abe2520acc664bcdc6a4795971b"
+  },
+  "baseline_sha": "f96abfeddc1560b1a35ecbfaff6bc655467bf17e",
+  "tested_sha": "5722408f52be6eda05fc97a67d57d870b05da1b7",
+  "branch": "feat/t125-rate-limit-bypass",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t125-rate-limits",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e02d-4e3b-7e4b-b1dc-2134dcc9db97",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "The BFF now takes the address the platform's trusted proxy appended (web/server/utils/clientAddress.ts), not the leftmost X-Forwarded-For element, and the server no longer exempts a loopback address. web/tests/client-address.test.ts covers six cases: a spoofed leading element is ignored, two trusted hops skip the proxies' own entries, a missing or too short header falls back to the socket address, a non-address value is not forwarded at all, a corrupted hop count falls back to one proxy instead of trusting the client header, and the setting stays in the private runtime config. server/tests/rate-limits.test.ts asserts that a loopback address forwarded by a trusted BFF hits the auth.verify.ip threshold like any other client bucket, both with the plugin's own forwarded flag and with the real request-tracing signature. web/tests/e2e/125-rate-limit-bypass.spec.ts drives the live stack: ten verifyMagicLink calls carrying X-Forwarded-For: 127.0.0.1 pass and the eleventh answers RATE_LIMITED with a positive retryAfter. RED confirmed: with the loopback exemption restored that scenario fails (no RATE_LIMITED). CI run 36283108045 on the tested SHA."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "rootFieldCounts counts every occurrence of a root field, including aliases and repeated fragment spreads, and the plugin sums the cost per bucket and enforces it once. server/tests/rate-limits.test.ts: a single document with 20 aliases of requestMagicLink consumes the whole auth.link.ip window, the store is consulted exactly once with cost 20, and the next single request is RATE_LIMITED; a document with limit+1 aliases is rejected whole and the resolver is never called; rootFieldCounts returns { requestMagicLink: 3, verifyMagicLink: 1 } for a batch and counts a fragment spread named twice plus an inline fragment as three calls. Cost is carried through both stores: database (INSERT ... ON CONFLICT DO UPDATE adding the cost, expired window restarting at the cost) and Redis (one INCRBY, window opened when the count equals the cost), each with unit tests and a real-PostgreSQL case. web/tests/e2e/125-rate-limit-bypass.spec.ts: a document with 11 aliases of verifyMagicLink answers RATE_LIMITED with null data. RED confirmed: with unique-name deduplication that scenario fails. CI run 36283108045 on the tested SHA."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "The address-based exemption is gone; the §3 system calls never reach this middleware, and that is now asserted instead of assumed. server/tests/rate-limits.test.ts, describe 'исключения §3': a real http server built as withHealth(yoga-with-the-rate-limit-plugin) answers 15 pairs of GET /health and GET / (the platform port probe) without consulting the counter store at all, while an ordinary GraphQL POST from the same loopback address consumes the bucket once; a third case reads every source file of server/src/jobs and requires no fetch( call and no http(s) URL, so the worker cannot pass through this middleware. No provider webhook exists in the schema yet; when it appears it needs a signature check, not a loopback address."
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "docs/reports/2026-09-21-t024-server-rate-limits-report.md, docs/reports/tasks/T-024.json and docs/reports/tasks/T-024.md are restored from the PR #181 record and the T-024 plan. No check was re-run for T-024 and no result was invented: the CI run id and the review verdict on head 68133a9e are absent from the record and are stated as unknown."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 828 passed / 37 skipped, web 588 passed, packages/content 99 passed",
+    "server_typecheck": "passed: pnpm --filter server exec tsc --noEmit",
+    "web_typecheck": "passed",
+    "server_build_ci": "passed, server/dist/server.js present",
+    "web_build": "passed",
+    "rate_limit_counters_postgres": "passed: 2 tests of server/tests/rate-limits-database.test.ts on the local PostgreSQL 16 from docker-compose.yml (a temporary database created and dropped by the test); CI runs the same on PostgreSQL 17",
+    "playwright": "passed locally on the login specs (01, 21, 22, 23-login-cross-site, 23-session-cookie): 27 passed, and tests/e2e/125-rate-limit-bypass.spec.ts: 7 passed (2 target scenarios plus 5 dependent @empty-db ones). Local stack: PostgreSQL 16 and Mailpit from docker-compose.yml, a separate t125_e2e database with migrations applied. The CI browser job on the tested SHA is green",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36283108045",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 241,
+    "url": "https://github.com/Egoka/Altera/pull/241",
+    "base_ref": "app",
+    "base_sha": "f96abfeddc1560b1a35ecbfaff6bc655467bf17e",
+    "head_sha": "5722408f52be6eda05fc97a67d57d870b05da1b7",
+    "merge_sha": "7bd2e199d5a41b12232e66e550ca97b179afec08"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "No migration and no new operation: the change alters how the client address is derived and how root fields are counted. A deployment decision stays with the controller"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-125.md",
+    "sha256": "ab7384e2dabc782171acc89e2e345b76f8d169595c0966cdf2844fc4f5432acc"
+  },
+  "remaining": [
+    "Threshold numbers stay a specification [ДОПУЩЕНИЕ]; the architect's proposal and the owner's approval are T-116 (журнал §36 п. 1). This task changed no threshold.",
+    "trustedProxyHops for the production platform is confirmed by the release engineer: the default is 1 (one proxy in front of the BFF), and Cloudflare plus the Gateway need 2 (docs/infrastructure/cloudflare-altera-com.md п. 4.2.6). A wrong value does not open the limit, it narrows it: every request lands in one bucket, which shows up as a rate_limit.hit spike on a single key.",
+    "The registry buckets with no application point (account.mutation.user, media.upload.user, search.*, appeal.form.ip) stay unapplied, per the task boundaries.",
+    "Re-acceptance of T-024 (ALTE-100) and T-059 (ALTE-111) happens in their own cards. The alias bypass that blocked T-059 is closed by the same middleware, but the other T-059 finding (staff notifications in server/src/support/requests.ts) was outside these boundaries.",
+    "No independent ALTERA_REVIEW_V1 verdict exists on head 5722408 yet; review is a separate stage participant and verified is assigned by the controller.",
+    "The restored T-024 artefacts carry only what the PR #181 record contains: the CI run id and the review verdict on head 68133a9e are unknown."
+  ],
+  "usage": null
+}

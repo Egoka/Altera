@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "task_id": "T-024",
+  "issue_id": "01a0c0a3-ee91-7e9d-9104-7c6077fcb7e2",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-024-server-rate-limits.md",
+    "sha": "14b7873d08d91e3404458d1650a8dab12d6e0cc3"
+  },
+  "baseline_sha": "a84e731724fb0793814cd3307468360332dff538",
+  "tested_sha": "68133a9ef7809b610cab97ebcd4ca2f1c97a2a3f",
+  "branch": "feat/t024-rate-limits",
+  "worktree": null,
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": null,
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/rate-limits.test.ts, describe 'запрос ссылки входа не раскрывает существование аккаунта': the N+1st link request over the threshold answers RATE_LIMITED with retryAfter, and the answer is identical for a known and an unknown address. The address bucket is consumed before any read about account existence."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/rate-limits.test.ts, describe 'лимит не зависит от роли': a guest, an owner and a service account hit the same threshold in the same bucket; neither the rule nor its lookup accepts a role, an account or a permission exception (журнал #57)."
+    }
+  ],
+  "checks": {
+    "format": "passed (from the PR #181 record, head 68133a9e)",
+    "lint": "passed (from the PR #181 record, head 68133a9e)",
+    "tests": "passed (from the PR #181 record): server 568 passed / 25 skipped, web 382 passed",
+    "server_typecheck": "passed (from the PR #181 record): pnpm --filter server exec tsc --noEmit",
+    "server_build_ci": "passed (from the PR #181 record): server/dist/server.js present",
+    "rate_limit_counters_postgres": "skipped locally (no PostgreSQL); a CI step 'Проверить счётчики лимитов частоты T-024' was added to the server build job for PostgreSQL 17",
+    "playwright": "not run locally (no PostgreSQL, no SMTP); covered by the CI browser job",
+    "ci": "unknown: the run id on head 68133a9e is not preserved in the PR record",
+    "environment": "unknown: not recorded in the PR body"
+  },
+  "pr": {
+    "number": 181,
+    "url": "https://github.com/Egoka/Altera/pull/181",
+    "base_ref": "app",
+    "base_sha": "a84e731724fb0793814cd3307468360332dff538",
+    "head_sha": "68133a9ef7809b610cab97ebcd4ca2f1c97a2a3f",
+    "merge_sha": "924c682b56a161aa6a724462fe8d6191d9b19a80"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "The migration 20260921090000_rate_limit_counters needs controller-managed development deployment; no record of it was found"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-024.md",
+    "sha256": "3635250160089bc8a83994a4ed6dbbbfd84a33cfa7bdc27f0fad53b08d2facf8"
+  },
+  "remaining": [
+    "This receipt was restored on 2026-09-27 inside T-125 (AC-4): neither a report nor a receipt existed when T-024 was handed over, which the independent acceptance of 2026-09-26 recorded. Every field comes from the PR #181 record and the T-024 plan; no check was re-run on 68133a9e, and fields absent from that record are left null.",
+    "The independent review verdict on head 68133a9e is unknown. The independent acceptance of 2026-09-26 (docs/reports/2026-09-26-in-review-acceptance-report.md) returned the task for rework: X-Forwarded-For: 127.0.0.1 removed every address limit, GraphQL aliases bypassed the bucket, and the report and receipt were missing.",
+    "Those defects are fixed by T-125, not by this task: docs/reports/2026-09-27-t125-rate-limit-bypass-report.md.",
+    "Q-04 stays open: every threshold number is a specification [ДОПУЩЕНИЕ]; approval is T-116 (журнал §36 п. 1). The mechanism itself was approved by the owner (журнал §36 п. 3).",
+    "Registry buckets with no application point yet (account.mutation.user, media.upload.user, search.*, appeal.form.ip) wait for their operations.",
+    "The resend pause value for the 'отправить ещё раз' timer (login.md §5) is not set by the specification."
+  ],
+  "usage": null
+}
