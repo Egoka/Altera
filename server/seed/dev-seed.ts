@@ -987,17 +987,31 @@ async function main(): Promise<void> {
   const articleTags: [string, string][] = []
   const usedSlugs = new Set<string>()
   const activeSectionSlugs = Object.keys(sectionIds)
+  // Резерв на главную (`home.md` §5, `feed/resolver.ts` HOME_TOP_SIZE=5 + HOME_NEW_SIZE=12):
+  // без него равномерный `daysAgo(2..560)` почти никогда не попадает в трёхсуточное окно
+  // «Новое» (HOME_NEW_WINDOW_DAYS=3), и зона на главной остаётся пустой при каждом запуске.
+  const HOME_RECENT_COUNT = 30
+  const HOME_RECENT_EN = 12
   for (let index = 0; index < 480; index += 1) {
-    const status = weighted([
-      [ArticleStatus.published, 66],
-      [ArticleStatus.draft, 11],
-      [ArticleStatus.ai_check, 3],
-      [ArticleStatus.review, 4],
-      [ArticleStatus.in_review, 4],
-      [ArticleStatus.rework, 6],
-      [ArticleStatus.archived, 6]
-    ])
-    const sourceLocale = chance(0.14) ? Locale.en : Locale.ru
+    const isHomeRecent = index < HOME_RECENT_COUNT
+    const status = isHomeRecent
+      ? ArticleStatus.published
+      : weighted([
+          [ArticleStatus.published, 66],
+          [ArticleStatus.draft, 11],
+          [ArticleStatus.ai_check, 3],
+          [ArticleStatus.review, 4],
+          [ArticleStatus.in_review, 4],
+          [ArticleStatus.rework, 6],
+          [ArticleStatus.archived, 6]
+        ])
+    const sourceLocale = isHomeRecent
+      ? index < HOME_RECENT_COUNT - HOME_RECENT_EN
+        ? Locale.ru
+        : Locale.en
+      : chance(0.14)
+        ? Locale.en
+        : Locale.ru
     const sectionSlug = pick(activeSectionSlugs)
     const topic = SECTION_TOPICS.find((entry) => entry.slug === sectionSlug) ?? SECTION_TOPICS[0]
     const title =
@@ -1007,12 +1021,12 @@ async function main(): Promise<void> {
     usedSlugs.add(slug)
     const isEditorial = chance(0.05)
     const author = isEditorial && editors.length > 0 ? pick(editors) : pick(chance(0.92) ? authors : allAuthors)
-    const createdAt = daysAgo(int(2, 560))
+    const createdAt = isHomeRecent ? daysAgo(int(0, 2)) : daysAgo(int(2, 560))
     const wasPublished =
       status === ArticleStatus.published ||
       status === ArticleStatus.archived ||
       (status === ArticleStatus.rework && chance(0.2))
-    const firstPublishedAt = wasPublished ? after(createdAt, 60, 60 * 24 * 10) : null
+    const firstPublishedAt = wasPublished ? after(createdAt, 60, isHomeRecent ? 60 * 24 : 60 * 24 * 10) : null
     const firstPublished = firstPublishedAt && firstPublishedAt > NOW ? daysAgo(1) : firstPublishedAt
     const publishedAt =
       status === ArticleStatus.published && firstPublished
