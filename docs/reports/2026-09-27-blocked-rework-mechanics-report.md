@@ -46,4 +46,26 @@
 - ALTE-95 → `blocked`; в ALTE-126 запрошено review PR #230 на `44b70286…`.
 - PR #263 — `parse_timestamp` в `deploy_evidence.py` и `reporting.py`, тесты; все тесты
   `scripts/autonomy` проходят на Python 3.9.6.
-- Предложение правок финализатора (этот PR) — не применено в Multica.
+- Правки финализатора (PR #264) применены в Multica 2026-09-27 в 10:31 UTC по подтверждению
+  владельца; readback и снимок после — PR #266.
+
+## Переустановка runtime
+
+Владелец 2026-09-27 выполнил `scripts/autonomy/install.py` из отдельного worktree `origin/app` на
+`68aebbd` с интерпретатором `/Applications/Xcode.app/Contents/Developer/usr/bin/python3`: выпуск
+`702d116d77af982e` вместо `25eeffd9e8173321`.
+
+- Отличия от прошлого выпуска — ровно три файла: `deploy_evidence.py` и `reporting.py`
+  (разбор времени, PR #263), `contracts/reviewer-prompt.md` (маркер ревьюера, PR #223).
+- Установленные скрипты и контракты побайтно совпадают с `app`; тесты `scripts/autonomy` на
+  Python 3.9.6 — OK; установленный `parse_timestamp` разбирает `…56.69189+00:00`.
+- В config изменились только `instructions_version` и `daily_instructions_version`; обёртки
+  controller и суточного аудита остались на прежнем интерпретаторе.
+- Откат: выпуск `.git/autonomy-runtime/releases/25eeffd9e8173321`, копия config —
+  `.git/autonomy-state/config-before-reinstall-2026-09-27.json`.
+- После установки ALTE-116 (T-123) возвращена из `blocked` в `in_review`: review и receipt готовы,
+  финализатор возьмёт свежую пробу выкладки. Активных run смена статуса не создала.
+
+## Ждёт владельца
+
+- Релиз-инженер: runtime Codex ищет `/Applications/ChatGPT.app/Contents/Resources/codex`.
