@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "T-035",
+  "issue_id": "01a0c0a4-4e9a-78fd-9167-da1f62fb574c",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-035-self-archive-and-archived-state.md",
+    "sha": "4a48771d227d8f6a9f1125e45746633212ce3df9"
+  },
+  "baseline_sha": "ada5c6ffcc8f738b15746214f6e11c466d06a92c",
+  "tested_sha": "fcc94933361553a7ddb15b569688eaa7a23cd6c7",
+  "branch": "feat/t035-self-archive",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t035-self-archive",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e33c-33cf-744d-b4ed-4df63e2932ea",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/account-archive.test.ts — «AC-1: восстановление возвращает аккаунт и оставляет статьи в архиве»: restoreAccountSelf не вызывает article.updateMany и статусы статей остаются archived. На живой базе то же проверяет web/tests/e2e/35-self-archive.spec.ts шаг 5: после восстановления user.archivedAt = null, а обе статьи по-прежнему archived."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "web/tests/e2e/35-self-archive.spec.ts воспроизводит строки §8 обеих страниц: загрузка и готовность /me/delete, ошибка данных, нет доступа (гость), ограничение (лимит 1 в сутки), заблокирован (последний владелец), не найдено (истёкшая ссылка подтверждения), ошибка данных и заблокирован на /me/archived, конфликт при повторном восстановлении. Строки, зависящие от отказа сервера, сняты подстановкой ответа. Те же строки на уровне компонентов — web/tests/account-archive-pages.nuxt.test.ts (20 тестов)."
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (fcc9493)",
+    "lint": "passed: pnpm lint exit 0 (fcc9493)",
+    "tests": "passed: server 884 passed / 47 skipped, web 670 passed, content 99 passed (fcc9493)",
+    "web_typecheck": "passed: exit 0 во всех четырёх проектах (fcc9493)",
+    "server_build": "passed: pnpm --filter server run build:ci exit 0, server/dist/server.js собран (fcc9493)",
+    "playwright": "passed: tests/e2e/35-self-archive.spec.ts — 3 passed (48,1 с) на изолированной базе altera_t035 и живом Mailpit (fcc9493)",
+    "migrations": "passed: prisma migrate deploy на изолированной базе altera_t035 — все миграции применены, включая 20260927150000_account_archive_request",
+    "ci": "passed: https://github.com/Egoka/Altera/actions/runs/36329417012 — четыре джоба зелёные на fcc9493",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 301,
+    "url": "https://github.com/Egoka/Altera/pull/301",
+    "base_ref": "app",
+    "base_sha": "806f27ce9010a4e56e15f2dc55ab07dd3a19189b",
+    "head_sha": "fcc94933361553a7ddb15b569688eaa7a23cd6c7",
+    "merge_sha": "f90d2ea6ec9d9bfc0f3d03370d54208d9cf4fc7f"
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Новая миграция базы (account_archive_requests) и изменённый контракт GraphQL требуют развёртывания и проверки здоровья через контроллер после CI и независимого review"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-035.md",
+    "sha256": "009181ed5c54b96006a796eac7c0ebffd5fa6f580546fca0838ec88f00702080"
+  },
+  "remaining": [
+    "Независимое review проверенного SHA и развёртывание с проверкой здоровья через контроллер не выполнены",
+    "Письма «аккаунт архивирован» и «аккаунт восстановлен» (шаги 3 и 5 flow #12 §6) остаются [ДОПУЩЕНИЕ] и отложены до прохода почты (журнал §25.13)",
+    "Ссылка на /me/export ведёт на страницу выгрузки данных T-034, которая ещё не сделана"
+  ],
+  "usage": null
+}
