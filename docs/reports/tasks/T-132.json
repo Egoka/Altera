@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "task_id": "T-132",
-  "issue_id": "01a0b5ee-c45e-7edd-b058-768964c3b5da",
+  "issue_id": "01a0e184-cbf4-762e-82c1-92b049a1d6a2",
   "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-132-sections-restore-hierarchy.md",
@@ -9,33 +9,60 @@
   },
   "baseline_sha": "d8ee443d17801bcdd27cb9d1dcc30fbb56e74439",
   "tested_sha": "15dfe0a86a4c3315372df1092c9fb86a9388438e",
+  "branch": "server/t132-sections-restore-hierarchy",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
-  "implementer_run_id": "01a0deb5-0ad3-7936-b558-1cc20926a96d",
+  "implementer_run_id": "01a0e242-58dd-7ede-8d6f-17693afab500",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "server/src/taxonomy/service.ts (restoreSection: NOT_FOUND / CONFLICT / FORBIDDEN без аудита); server/tests/taxonomy-service.test.ts — «does not let an admin restore a section archived by the owner», «lets the owner restore an archive made by the owner», «does not restore an active section and writes no audit entry», «reports a missing section as NOT_FOUND instead of a Prisma failure»; pnpm test exit 0 (server 798 passed / 30 skipped)"
+      "evidence": "server/src/taxonomy/service.ts (restoreSection: NOT_FOUND при отсутствии рубрики, CONFLICT на активной, FORBIDDEN для роли ниже владельца — без записи аудита); server/tests/taxonomy-service.test.ts — «does not let an admin restore a section archived by the owner», «lets the owner restore a section archived by the owner», «does not restore an active section and writes no audit entry», «reports a missing section as NOT_FOUND instead of a Prisma failure». CI run 36259645451 на tested SHA (7 проверок success); повторный прогон в канонической карточке на origin/app 77fb9b16: vitest tests/taxonomy-service.test.ts tests/admin-categories.test.ts exit 0 (41 passed)"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "server/src/taxonomy/service.ts (updateSection, updateSectionRow — expectedUpdatedAt и updatedAt в WHERE); server/tests/taxonomy-service.test.ts — «refuses a section edit that was prepared against an older version», «keeps the version in the UPDATE so a parallel edit cannot slip through»; server/tests/admin-categories.test.ts — «passes the card version from the client into the section update»; web/tests/e2e/admin-sections-restore-hierarchy.spec.ts — «explains a conflict when another administrator already changed the section» (playwright --project=chromium --no-deps: 225 passed)"
+      "evidence": "server/src/taxonomy/service.ts (updateSection принимает expectedUpdatedAt, updateSectionRow ставит updatedAt в WHERE условного UPDATE и отвечает CONFLICT при count === 0); server/tests/taxonomy-service.test.ts — «refuses a section edit that was prepared against an older version», «keeps the version in the UPDATE so a parallel edit cannot slip through»; server/tests/admin-categories.test.ts — «passes the card version from the client into the section update»; web/app/composables/useAdminCategories.ts (conflict по code === \"CONFLICT\") и web/app/pages/admin/categories/index.vue ([data-taxonomy-conflict]). Браузерный сценарий «explains a conflict when another administrator already changed the section» — playwright exit 0 в этом заходе"
     },
     {
       "id": "AC-3",
       "status": "passed",
-      "evidence": "web/tests/e2e/admin-sections-restore-hierarchy.spec.ts — «hides restore from an admin for a section the owner archived» и сценарий конфликта; web/tests/admin-categories-page.nuxt.test.ts — пять новых сценариев состояний §9; pnpm test exit 0 (web 569 passed)"
+      "evidence": "web/tests/e2e/admin-sections-restore-hierarchy.spec.ts покрывает обе строки состояний categories.md §9: «нет прав на часть действий» (кнопки восстановления нет, рядом пояснение ownerArchiveNote, отказ не пишет аудит) и «конфликт» (форма и введённый текст остаются, чужая правка не перезаписана). Повторный прогон в канонической карточке: playwright --config собственных портов, tests/e2e/admin-sections-restore-hierarchy.spec.ts exit 0 (2 passed) на изолированной PostgreSQL 16; web/tests/admin-categories-page.nuxt.test.ts exit 0 (8 passed). В CI тот же файл прогоняет джоб «Браузерная проверка веба» — pass на tested SHA (run 36259645451) и на последующем PR #261 (run 36308718670), где blob спеки совпадает с origin/app"
     }
   ],
+  "checks": {
+    "install": "passed: pnpm install --frozen-lockfile exit 0",
+    "format": "passed: pnpm format exit 0 — All matched files use Prettier code style",
+    "lint": "passed: pnpm lint exit 0",
+    "tests": "passed по пакетам: server 863 passed / 47 skipped (exit 0), web 624 passed (exit 0), packages/content 99 passed (exit 0). Корневой pnpm test одним прогоном exit 1 из-за нестабильного web/tests/smoke-script.test.ts — «fails before launch when the requested port is already serving HTTP», timeout 5000ms под одновременной нагрузкой трёх пакетов; в отдельном прогоне файл exit 0 (3 passed). К таксономии не относится: повторный корневой прогон в pre-commit hook этого коммита exit 0 (server 863 passed / 47 skipped, web 624 passed, packages/content 99 passed)",
+    "taxonomy_unit": "passed: vitest tests/taxonomy-service.test.ts tests/admin-categories.test.ts — 41 passed",
+    "admin_categories_page": "passed: vitest tests/admin-categories-page.nuxt.test.ts — 8 passed",
+    "e2e": "passed: playwright tests/e2e/admin-sections-restore-hierarchy.spec.ts — 2 passed на изолированной базе t132_e2e (PostgreSQL 16 из docker-compose, порт 25432, миграции применены к ней и база удалена после прогона), порты 24000/24173 — базовые 4000/4173 занимал dev-сервер владельца в основном checkout",
+    "server_build": "passed: pnpm --filter server run build:ci exit 0",
+    "web_typecheck": "passed: pnpm --filter nuxt-app run typecheck exit 0",
+    "code_identity": "passed: git diff 15dfe0a..77fb9b16 по server/src/taxonomy/service.ts, server/tests/taxonomy-service.test.ts, server/tests/admin-categories.test.ts, web/app/composables/useAdminCategories.ts, web/app/pages/admin/categories/index.vue, web/tests/admin-categories-page.nuxt.test.ts и web/tests/e2e/admin-sections-restore-hierarchy.spec.ts пуст. В server/src/graphql/section/{resolver.ts,schema.graphql} после слияния изменён только publicSections (локаль меню шапки, T-129) — мутации рубрик и форматов не затронуты",
+    "ci": "passed: https://github.com/Egoka/Altera/actions/runs/36259645451 на tested SHA — 7 проверок success, включая «Браузерная проверка веба»; агрегат на merge SHA — run 36259953994 success",
+    "environment": "Node 24.12.0, pnpm 10.18.3, PostgreSQL 16 из docker-compose (порт 25432); повторная сверка на origin/app 77fb9b169b6b5d858e4e8ee882e394f944f2fea2"
+  },
   "pr": {
     "number": 227,
-    "head_sha": "15dfe0a86a4c3315372df1092c9fb86a9388438e",
-    "base_sha": "d8ee443d17801bcdd27cb9d1dcc30fbb56e74439",
+    "url": "https://github.com/Egoka/Altera/pull/227",
     "base_ref": "app",
-    "merge_sha": null
+    "base_sha": "d8ee443d17801bcdd27cb9d1dcc30fbb56e74439",
+    "head_sha": "15dfe0a86a4c3315372df1092c9fb86a9388438e",
+    "merge_sha": "574e484364a1885ca839ee9a5d0970f28bd24ab0"
   },
-  "review": null,
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "unknown"
+  },
+  "history": {
+    "note": "Реализацию T-132 выполнили в карточке T-070 (ALTE-83), потому что канонической карточки T-132 тогда не было. Независимого ревью на head 15dfe0a не было ни в одной карточке: вердикт в receipt T-070 относится к его собственному head baa84225. Контроллер требует native execution той же issue_id, поэтому прежний run сохранён ссылкой как история, а review канонической карточки ждёт вердикта в ALTE-125.",
+    "previous_issue_id": "01a0b5ee-c45e-7edd-b058-768964c3b5da",
+    "previous_implementer_run_id": "01a0deb5-0ad3-7936-b558-1cc20926a96d",
+    "previous_review": null
+  },
   "deployment": {
     "required": true,
     "probe_actor_id": null,
@@ -44,7 +71,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-132.md",
-    "sha256": "115e62ea6a74873c6a2b989711ec01084e1c4b8ba041d0eeda0232f7e7cc5653"
+    "sha256": "9e3d6e19df30de4cff4f6116d36a0360a952a23eadd987892f5c295126d414ba"
   },
   "usage": null
 }
