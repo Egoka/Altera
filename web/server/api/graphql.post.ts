@@ -1,6 +1,7 @@
-import { SESSION_ACCESS_COOKIE, SESSION_COOKIE_PATH } from "#shared/session"
+import { SESSION_ACCESS_COOKIE } from "#shared/session"
 import { resolveTrustedClientAddress } from "../utils/clientAddress"
 import { GraphQLProxyError, getGraphQLRouteError, proxyGraphQLRequest } from "../utils/graphqlProxy"
+import { nitroFetchRaw } from "../utils/nitroFetch"
 import {
   ACCESS_COOKIE_MAX_AGE_SECONDS,
   REFRESH_COOKIE_MAX_AGE_SECONDS,
@@ -11,9 +12,13 @@ import {
   readOperation,
   withRefreshTokenVariable
 } from "../utils/sessionCookie"
-
-const refreshCookieOptions = { httpOnly: true, secure: true, sameSite: "lax", path: "/" } as const
-const accessCookieOptions = { httpOnly: true, sameSite: "lax", path: SESSION_COOKIE_PATH } as const
+import {
+  SESSION_COOKIE_OPTIONS,
+  exchangeRefreshToken,
+  sendWithSessionRefresh,
+  sessionRefreshExchanges,
+  type UpstreamResult
+} from "../utils/sessionRefresh"
 
 export default defineEventHandler(async (event) => {
   const requestId = event.context.requestId
@@ -46,47 +51,65 @@ export default defineEventHandler(async (event) => {
     // Браузер токенов не видит (ADR-0023): токен доступа лежит в cookie и подставляется здесь,
     // refresh живёт в отдельной httpOnly-cookie и попадает в переменные мутации ниже.
     // Явный заголовок остаётся для серверных и тестовых вызовов и имеет приоритет.
-    const accessToken = getCookie(event, SESSION_ACCESS_COOKIE)
-    const result = await proxyGraphQLRequest({
-      graphqlApiUrl: runtimeConfig.graphqlApiUrl,
-      body: withRefreshTokenVariable(body, operation.fields, getCookie(event, REFRESH_COOKIE_NAME) ?? null),
-      authorization: getHeader(event, "authorization") ?? (accessToken ? `Bearer ${accessToken}` : undefined),
-      userAgent: getHeader(event, "user-agent"),
-      // Адрес берётся из элемента `X-Forwarded-For`, который добавил доверенный прокси площадки:
-      // самый левый элемент присылает клиент и им снимался бы лимит по адресу (`rate-limits.md`
-      // §2 п. 2).
-      clientIp: resolveTrustedClientAddress({
-        forwardedFor: getHeader(event, "x-forwarded-for"),
-        socketAddress: getRequestIP(event),
-        trustedProxyHops: runtimeConfig.trustedProxyHops
-      }),
-      requestId,
-      requestIdForwardSecret: runtimeConfig.requestIdForwardSecret,
-      fetchRaw: (url, options) => $fetch.raw(url, options)
+    const authorization = getHeader(event, "authorization")
+    const upstream = (payload: unknown, accessToken: string | null): Promise<UpstreamResult> =>
+      proxyGraphQLRequest({
+        graphqlApiUrl: runtimeConfig.graphqlApiUrl,
+        body: payload,
+        authorization: authorization ?? (accessToken ? `Bearer ${accessToken}` : undefined),
+        userAgent: getHeader(event, "user-agent"),
+        // Адрес берётся из элемента `X-Forwarded-For`, который добавил доверенный прокси площадки:
+        // самый левый элемент присылает клиент и им снимался бы лимит по адресу (`rate-limits.md`
+        // §2 п. 2).
+        clientIp: resolveTrustedClientAddress({
+          forwardedFor: getHeader(event, "x-forwarded-for"),
+          socketAddress: getRequestIP(event),
+          trustedProxyHops: runtimeConfig.trustedProxyHops
+        }),
+        requestId,
+        requestIdForwardSecret: runtimeConfig.requestIdForwardSecret,
+        fetchRaw: nitroFetchRaw
+      })
+
+    // Истёкший access меняется на новый по ответу `UNAUTHENTICATED`, и запрос повторяется один
+    // раз: через 15 минут вошедший иначе видел бы страницу гостя (ADR-0023 п. 3).
+    const refreshed = await sendWithSessionRefresh({
+      fields: operation.fields,
+      refreshToken: getCookie(event, REFRESH_COOKIE_NAME) ?? null,
+      accessToken: getCookie(event, SESSION_ACCESS_COOKIE) ?? null,
+      send: ({ refreshToken, accessToken }) =>
+        upstream(withRefreshTokenVariable(body, operation.fields, refreshToken), accessToken),
+      refresh: (presentedToken) =>
+        sessionRefreshExchanges.run(presentedToken, () =>
+          exchangeRefreshToken(presentedToken, (refreshBody) => upstream(refreshBody, null))
+        )
     })
 
+    const result = refreshed.result
     const session = extractSessionCookie(result.body, operation.fields)
-    if (session.token) {
-      setCookie(event, REFRESH_COOKIE_NAME, session.token, {
-        ...refreshCookieOptions,
+    const issued = session.token ? { refreshToken: session.token, accessToken: session.accessToken } : refreshed.session
+
+    if (issued) {
+      setCookie(event, REFRESH_COOKIE_NAME, issued.refreshToken, {
+        ...SESSION_COOKIE_OPTIONS,
         maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS
       })
       // Мутация, заменившая сессию, обновляет и access-cookie: страница, сделавшая её из
       // браузера (восстановление аккаунта, `archived-state.md` §4), иначе продолжила бы
-      // предъявлять токен отозванной сессии до конца его 15 минут.
-      if (session.accessToken) {
-        setCookie(event, SESSION_ACCESS_COOKIE, session.accessToken, {
-          ...accessCookieOptions,
-          secure: true,
+      // предъявлять токен отозванной сессии до конца его 15 минут. Обмен refresh выдаёт новый
+      // access по той же причине.
+      if (issued.accessToken) {
+        setCookie(event, SESSION_ACCESS_COOKIE, issued.accessToken, {
+          ...SESSION_COOKIE_OPTIONS,
           maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS
         })
       }
-    } else if (session.clear) {
-      deleteCookie(event, REFRESH_COOKIE_NAME, refreshCookieOptions)
+    } else if (session.clear || refreshed.clear) {
+      deleteCookie(event, REFRESH_COOKIE_NAME, SESSION_COOKIE_OPTIONS)
       // Выход обязан очистить cookie (`30-account/reader/sessions.md` §7): без этого шага
       // access-cookie живёт ещё 15 минут и интерфейс продолжает считать читателя вошедшим,
       // хотя API уже отвечает `UNAUTHENTICATED` по отозванной сессии.
-      deleteCookie(event, SESSION_ACCESS_COOKIE, accessCookieOptions)
+      deleteCookie(event, SESSION_ACCESS_COOKIE, SESSION_COOKIE_OPTIONS)
     }
 
     setResponseStatus(event, result.status)

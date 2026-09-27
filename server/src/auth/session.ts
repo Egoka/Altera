@@ -33,10 +33,9 @@ export interface SessionClient {
     create(args: { data: SessionWriteData & { userId: string } }): Promise<SessionRow>
     findUnique(args: { where: { tokenHash: string } }): Promise<SessionRow | null>
     findFirst(args: { where: { previousTokenHash: string } }): Promise<SessionRow | null>
-    update(args: { where: { id: string }; data: SessionWriteData }): Promise<SessionRow>
     updateMany(args: {
-      where: { userId?: string; id?: string; revokedAt: null }
-      data: { revokedAt: Date }
+      where: { userId?: string; id?: string; tokenHash?: string; revokedAt: null }
+      data: SessionWriteData
     }): Promise<{ count: number }>
   }
 }
@@ -116,6 +115,10 @@ export async function revokeSession(client: SessionClient, sessionId: string, no
  * Ротация refresh-токена (ADR-0009 п. 3). Предъявленный токен уже ротированной сессии означает
  * утечку: отзываются все сессии пользователя, а не только цепочка предъявленного токена
  * (`docs/spec/50-access/session-lifecycle.md` §2.4, критерий AC-1 задачи T-023).
+ *
+ * Замена `tokenHash` условная: `updateMany` требует, чтобы в строке всё ещё лежал предъявленный
+ * хэш и сессия не была отозвана. Без условия два параллельных обмена одним токеном оба считали
+ * бы себя победителями, и пара победителя терялась бы поверх пары проигравшего (T-124 AC-2).
  */
 export async function rotateSession(
   client: SessionClient,
@@ -131,30 +134,65 @@ export async function rotateSession(
     if (current.expiresAt <= now) return { status: "expired", sessionId: current.id, userId: current.userId }
 
     const refreshToken = createRefreshToken()
-    const session = await client.session.update({
-      where: { id: current.id },
-      data: {
-        tokenHash: hashOpaqueToken(refreshToken),
-        previousTokenHash: current.tokenHash,
-        expiresAt: sessionExpiry(now),
-        lastUsedAt: now,
-        userAgent: meta.userAgent,
-        ip: meta.ip
-      }
+    const rotation = {
+      tokenHash: hashOpaqueToken(refreshToken),
+      previousTokenHash: current.tokenHash,
+      expiresAt: sessionExpiry(now),
+      lastUsedAt: now,
+      userAgent: meta.userAgent,
+      ip: meta.ip
+    }
+    const { count } = await client.session.updateMany({
+      where: { id: current.id, tokenHash: current.tokenHash, revokedAt: null },
+      data: rotation
     })
 
-    return { status: "rotated", session, refreshToken }
+    if (count > 0) {
+      return {
+        status: "rotated",
+        session: {
+          ...current,
+          tokenHash: rotation.tokenHash,
+          previousTokenHash: rotation.previousTokenHash,
+          expiresAt: rotation.expiresAt
+        },
+        refreshToken
+      }
+    }
   }
 
+  return resolvePresentedAgain(client, tokenHash, now, current !== null)
+}
+
+/**
+ * Предъявленный токен уже не является текущим: его либо сменил параллельный обмен, либо сессию
+ * отозвали между чтением и заменой. Исход тот же, что у повторного предъявления, — проигравшая
+ * гонку сторона не получает `unknown` и не остаётся без ответа (T-124).
+ */
+async function resolvePresentedAgain(
+  client: SessionClient,
+  tokenHash: string,
+  now: Date,
+  lostRotation: boolean
+): Promise<RotationOutcome> {
   const rotated = await client.session.findFirst({ where: { previousTokenHash: tokenHash } })
-  if (!rotated) return { status: "unknown" }
-
-  return {
-    status: "reuse_detected",
-    userId: rotated.userId,
-    sessionId: rotated.id,
-    revokedCount: await revokeAllSessions(client, rotated.userId, now)
+  if (rotated) {
+    return {
+      status: "reuse_detected",
+      userId: rotated.userId,
+      sessionId: rotated.id,
+      revokedCount: await revokeAllSessions(client, rotated.userId, now)
+    }
   }
+
+  if (!lostRotation) return { status: "unknown" }
+
+  // Строка с этим хэшем осталась на месте: замену отклонил отзыв сессии, а не гонка обмена.
+  const kept = await client.session.findUnique({ where: { tokenHash } })
+  if (kept?.revokedAt) return { status: "revoked", sessionId: kept.id, userId: kept.userId }
+  if (kept && kept.expiresAt <= now) return { status: "expired", sessionId: kept.id, userId: kept.userId }
+
+  return { status: "unknown" }
 }
 
 export async function findSessionByRefreshToken(

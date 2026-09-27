@@ -19,7 +19,7 @@ interface UpstreamRequestOptions {
   ignoreResponseError: true
 }
 
-type FetchRaw = (url: string, options: UpstreamRequestOptions) => Promise<UpstreamResponse>
+export type FetchRaw = (url: string, options: UpstreamRequestOptions) => Promise<UpstreamResponse>
 
 interface ProxyGraphQLRequestOptions {
   graphqlApiUrl: string

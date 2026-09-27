@@ -32,25 +32,26 @@ function createSessionStore() {
           ip: data.ip ?? null
         }
         rows.set(row.id, row)
-        return row
+        return { ...row }
       },
+      // Копия строки, как у настоящего клиента: иначе прочитанный объект менялся бы вместе с
+      // хранилищем и условная замена по прежнему `tokenHash` всегда сходилась бы.
       async findUnique({ where }) {
-        return [...rows.values()].find((row) => row.tokenHash === where.tokenHash) ?? null
+        const row = [...rows.values()].find((stored) => stored.tokenHash === where.tokenHash)
+        return row ? { ...row } : null
       },
       async findFirst({ where }) {
-        return [...rows.values()].find((row) => row.previousTokenHash === where.previousTokenHash) ?? null
+        const row = [...rows.values()].find((stored) => stored.previousTokenHash === where.previousTokenHash)
+        return row ? { ...row } : null
       },
-      async update({ where, data }) {
-        const row = rows.get(where.id)
-        if (!row) throw new Error(`Unknown session ${where.id}`)
-        Object.assign(row, data)
-        return row
-      },
+      // Условие на `tokenHash` — та же семантика, что у `updateMany` в PostgreSQL: строка
+      // меняется, только если в ней всё ещё лежит предъявленный хэш (T-124).
       async updateMany({ where, data }) {
         let count = 0
         for (const row of rows.values()) {
           if (where.userId && row.userId !== where.userId) continue
           if (where.id && row.id !== where.id) continue
+          if (where.tokenHash && row.tokenHash !== where.tokenHash) continue
           if (row.revokedAt !== null) continue
           Object.assign(row, data)
           count += 1

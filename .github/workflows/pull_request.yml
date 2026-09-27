@@ -249,6 +249,12 @@ jobs:
         env:
           T123_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm --filter server exec vitest run tests/auth-magic-link-database.test.ts
+      # T-124: одна успешная ротация на два параллельных обмена refresh держится на условном
+      # UPDATE по `tokenHash`; две конкурирующие записи одной строки сериализует PostgreSQL.
+      - name: Проверить ротацию refresh T-124
+        env:
+          T124_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/session-rotation-database.test.ts
       # T-090: прореживание autosave написано на SQL, а сохранность аудита и истории решений
       # держится на внешних ключах — это проверяется на PostgreSQL, а не на двойнике.
       - name: Проверить сроки хранения и housekeeping T-090
