@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "task_id": "T-134",
-  "issue_id": "01a0bc94-460c-730a-9599-6837e45589fe",
+  "issue_id": "01a0e1c9-7831-75f4-9e09-b106ffb81fa9",
   "work_class": "product",
   "source": {
     "path": "docs/backlog/tasks/T-134-admin-mail-pd-in-list.md",
@@ -9,42 +9,66 @@
   },
   "baseline_sha": "f1ed1885f5be4a364b14ccb442412cfbd13e18b7",
   "tested_sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
+  "branch": "server/t134-admin-mail-pd",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
-  "implementer_run_id": "01a0deb5-236c-7dc6-b321-6cd6a0ad5b08",
+  "implementer_run_id": "01a0e1d7-7b1a-7e27-855c-ddd7f1f0fa56",
   "criteria": [
     {
       "id": "AC-1",
       "status": "passed",
-      "evidence": "server/src/admin/mail.ts (presentMail, вид list — body всегда null); server/tests/admin-mail.test.ts — «masks the address and hides the body from the list for analyst, admin and owner», «never returns the stored copy in the list, even for a secret-free template»; web/tests/e2e/22-admin-mail.spec.ts — таблица списка не содержит текста копии; pnpm test exit 0 (server 805 passed / 32 skipped)"
+      "evidence": "server/src/admin/mail.ts (presentMail отдаёт body только при view === \"card\", в списке всегда null); server/tests/admin-mail.test.ts — «masks the address and hides the body from the list for analyst, admin and owner», «never returns the stored copy in the list, even for a secret-free template»; web/tests/e2e/22-admin-mail.spec.ts — таблица списка не содержит текста копии. CI run 36263253435 на tested SHA; повторный прогон в канонической карточке на origin/app 2093e49e: vitest tests/admin-mail.test.ts tests/admin-mail-secrets.test.ts exit 0 (29 passed)"
     },
     {
       "id": "AC-2",
       "status": "passed",
-      "evidence": "адрес в списке маскирован (server/src/admin/personal-data.ts, журнал §28.7); server/tests/admin-mail.test.ts — маска без записи аудита в списке и полный адрес с admin.read.personal на карточке; web/tests/admin-mail-page.nuxt.test.ts — маска и пояснение; playwright --project=chromium --grep \"admin mail\": 21 passed"
+      "evidence": "адрес в списке маскирован maskEmail (server/src/admin/personal-data.ts, журнал §28.7); server/tests/admin-mail.test.ts — маска без записи аудита в списке и полный адрес с admin.read.personal на карточке; фильтр по получателю пишет admin.read.personal (listAdminMails, purpose admin.mail.search); web/tests/admin-mail-page.nuxt.test.ts — маска и пояснение; playwright --project=chromium --grep \"admin mail\": 21 passed. CI run 36263253435; повторный прогон в канонической карточке — те же 29 passed"
     },
     {
       "id": "AC-3",
       "status": "passed",
-      "evidence": "SECRET_MAIL_TEMPLATES дополнен email_change_code; server/tests/admin-mail-secrets.test.ts — «не содержит код и повтор отклоняется даже владельцу» (canResend = false, FORBIDDEN); server/tests/admin-mail.test.ts — it.each по magic_link и email_change_code; e2e — карточка t080-mail-code без кнопки повтора"
+      "evidence": "SECRET_MAIL_TEMPLATES содержит magic_link и email_change_code (server/src/admin/mail.ts:20); server/tests/admin-mail-secrets.test.ts — копия не содержит код и повтор отклоняется даже владельцу (canResend = false, FORBIDDEN); server/tests/admin-mail.test.ts — it.each по magic_link и email_change_code; e2e — карточка t080-mail-code без кнопки повтора. CI run 36263253435; повторный прогон в канонической карточке — те же 29 passed"
     },
     {
       "id": "AC-4",
       "status": "passed",
-      "evidence": "условный UPDATE ... WHERE \"resentAt\" IS NULL AND status = 'failed' (server/src/admin/mail.ts, claimResend) и миграция 20260926120000_mail_resend_claim; server/tests/mail-resend-database.test.ts — 2 passed на PostgreSQL локально и в CI (run 36263253435, job 108462960107, «Проверить повтор письма T-134»: Tests 2 passed); со снятым условием тот же тест даёт две отправки"
+      "evidence": "условный UPDATE ... WHERE \"resentAt\" IS NULL AND status = 'failed' (claimResend, server/src/admin/mail.ts:384-390) и миграция 20260926120000_mail_resend_claim; server/tests/mail-resend-database.test.ts — 2 passed на PostgreSQL в CI (run 36263253435, job 108462960107, «Проверить повтор письма T-134»); со снятым условием тот же тест даёт две отправки. Повторный прогон в канонической карточке: T134_TEST_DATABASE_URL на PostgreSQL 16 из docker-compose (порт 25432), vitest tests/mail-resend-database.test.ts exit 0 (2 passed)"
     }
   ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 860 passed / 44 skipped, web 614 passed, packages/content 99 passed",
+    "mail_unit": "passed: vitest tests/admin-mail.test.ts tests/admin-mail-secrets.test.ts — 29 passed",
+    "mail_resend_postgres": "passed: vitest tests/mail-resend-database.test.ts — 2 passed на PostgreSQL 16 (docker-compose, порт 25432, своя база на прогон)",
+    "code_identity": "passed: git diff 44b70286..2093e49e по server/src/admin/mail.ts, server/src/admin/personal-data.ts, тестам раздела и миграции 20260926120000_mail_resend_claim пуст — проверенный код не менялся в app",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36263253435",
+    "environment": "Node 24.12.0, pnpm 10.18.3; повторная сверка на origin/app 2093e49e5407f7340e0b08afb4bdd769914ad00b"
+  },
   "pr": {
     "number": 230,
-    "head_sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
-    "base_sha": "f1ed1885f5be4a364b14ccb442412cfbd13e18b7",
+    "url": "https://github.com/Egoka/Altera/pull/230",
     "base_ref": "app",
+    "base_sha": "f1ed1885f5be4a364b14ccb442412cfbd13e18b7",
+    "head_sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
     "merge_sha": "9553d2f4c1b32dcd4831ff6f02ae51583b5a6562"
   },
   "review": {
-    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
-    "run_id": "01a0df34-d90c-7822-9f8e-8445a27ea488",
-    "sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
-    "verdict": "approved"
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "unknown"
+  },
+  "history": {
+    "note": "Реализация и первое независимое ревью прошли в карточке T-080 (ALTE-95), потому что канонической карточки T-134 тогда не было. Контроллер требует native execution той же issue_id, поэтому прежние run сохранены ссылкой как история, а review канонической карточки ждёт актуального вердикта в ALTE-126.",
+    "previous_issue_id": "01a0bc94-460c-730a-9599-6837e45589fe",
+    "previous_implementer_run_id": "01a0deb5-236c-7dc6-b321-6cd6a0ad5b08",
+    "previous_review": {
+      "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+      "run_id": "01a0df34-d90c-7822-9f8e-8445a27ea488",
+      "sha": "44b70286a1d28ca02a65f9c2171f98a6d93be6c6",
+      "verdict": "approved",
+      "issue_id": "01a0bc94-460c-730a-9599-6837e45589fe"
+    }
   },
   "deployment": {
     "required": true,
@@ -54,7 +78,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-134.md",
-    "sha256": "d444433dc76ad15742c62b9e05b37fb73d4ab0f5677fa3d89991cb3e56f81bba"
+    "sha256": "10320c939c1a160f08a35879be1e8114df1bd6c27680cce02669a816ad7208d7"
   },
   "usage": null
 }
