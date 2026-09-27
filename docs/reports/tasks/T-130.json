@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-130",
+  "issue_id": "01a0e065-28a7-7450-b35d-504ca6892045",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-130-offline-redirect-error-status.md",
+    "sha": "ae80c7a5ed73e9108d2f21c8b9dbb6c36c82a849"
+  },
+  "baseline_sha": "970031be039455caecb6252bb2d82e8e40a29d7f",
+  "tested_sha": "d49deb7bfb4d3858d8eabb38951be29630a3442e",
+  "branch": "web/t130-offline-error-status",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e14c-5cd7-75d2-a84e-f2d6ba55eb3c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "sameSitePath принимает ?from= только как путь своего источника: отклоняются не-строки, значения без ведущего /, управляющие символы, чужой источник по разбору WHATWG и результат, снова становящийся протокол-относительным после нормализации. web/tests/offline-cache.test.ts — 3 сценария разбора. web/tests/e2e/service-pages.spec.ts — 3 сценария «повтор не уходит на чужой сайт» и 2 сценария «возврат сети не уходит на чужой сайт». RED подтверждён: на неисправленном composable браузер уходит на http://evil.example/. CI run 36298466544."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "error.vue разводит 404, 403 и 5xx; 403 показывает components/service/Forbidden.vue без кода запроса и без обращений к API. web/tests/e2e/admin-dashboard.spec.ts «author receives HTTP 403 for /admin» — 403, виден forbidden с «403», server-error и copy-field-value отсутствуют, заголовок «Нет доступа». web/tests/service-pages.nuxt.test.ts — «403 отдаёт отказ в доступе, а не сбой сервера», «клиентский статус остаётся без кода запроса даже с ним в отказе» (400, 403, 429), «страница 403». CI run 36298466544."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Серверное значение requestId из useState принадлежит одному отказу: экземпляр страницы забирает его при создании и отпускает после гидратации, смена отказа сбрасывает унаследованное значение. web/tests/service-pages.nuxt.test.ts — «вторая ошибка той же SPA-сессии показывает свой код запроса» (first-id -> second-id) и «серверный код запроса не переезжает на следующую ошибку без своего кода». RED подтверждён. CI run 36298466544."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 858 passed / 44 skipped, web 596 passed, packages/content 99 passed",
+    "web_typecheck": "passed",
+    "web_build": "passed",
+    "playwright": "полный локальный прогон 239 passed / 2 failed; оба отказа (125-rate-limit-bypass.spec.ts, admin-legal.spec.ts) проходят при повторе одним воркером и не касаются изменённого кода — состязание за одну локальную базу. Изменённые спеки трижды подряд одним воркером, как в CI: 81 passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36298466544",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 255,
+    "url": "https://github.com/Egoka/Altera/pull/255",
+    "base_ref": "app",
+    "base_sha": "970031be039455caecb6252bb2d82e8e40a29d7f",
+    "head_sha": "d49deb7bfb4d3858d8eabb38951be29630a3442e",
+    "merge_sha": "0a5b8a96898e12df0ffc45450776faf2daae87e5"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": "unknown"
+  },
+  "deployment": {
+    "required": false,
+    "environment": "development",
+    "status": "not_run",
+    "reason": "Изменён только web/ (composable, error.vue, компонент, локали, тесты); миграций и изменений server/ нет. Прод-окружения в РФ нет (T-103)."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-130.md",
+    "sha256": "9cdb2a547c481146f55891227f78a978eaeec77fba4801df948a7a14050982e3"
+  },
+  "remaining": [
+    "Независимое ревью с маркером ALTERA_REVIEW_V1 на финальном head не получено: его назначает контроллер.",
+    "Страница 403 не заведена в реестре docs/spec/00-registries/pages.md и не имеет спецификации в docs/spec/20-public/ — работа хранителя документации.",
+    "Тексты страницы 403 (service.forbiddenTitle, service.forbiddenDescription) — [ДОПУЩЕНИЕ] исполнителя: формулировок журнал и спецификации не задают.",
+    "Повторная приёмка T-058 (ALTE-105) идёт в её карточке.",
+    "Q-09(в) — входит ли публичная /offline в срез первого запуска — остаётся вопросом владельца."
+  ],
+  "usage": null
+}
