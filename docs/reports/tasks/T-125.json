@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task_id": "T-125",
+  "issue_id": "01a0df5d-de5d-7006-86a1-1e687d0197a4",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-125-rate-limit-bypass-fixes.md",
+    "sha": "d1e3d58be2fa7abe2520acc664bcdc6a4795971b"
+  },
+  "baseline_sha": "f96abfeddc1560b1a35ecbfaff6bc655467bf17e",
+  "tested_sha": "5722408f52be6eda05fc97a67d57d870b05da1b7",
+  "branch": "feat/t125-rate-limit-bypass",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e02d-4e3b-7e4b-b1dc-2134dcc9db97",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "BFF берёт адрес из элемента X-Forwarded-For, добавленного доверенным прокси (web/server/utils/clientAddress.ts), а не из самого левого. web/tests/client-address.test.ts — 6 сценариев. server/tests/rate-limits.test.ts — петлевой адрес доверенного BFF упирается в порог. web/tests/e2e/125-rate-limit-bypass.spec.ts — 11-й запрос с X-Forwarded-For: 127.0.0.1 отвечает RATE_LIMITED. RED подтверждён. CI run 36283108045."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "rootFieldCounts считает каждое вхождение корневого поля, включая алиасы и повторные фрагменты. server/tests/rate-limits.test.ts — 20 алиасов исчерпывают окно, хранилище опрошено один раз со стоимостью 20. e2e — документ из 11 алиасов verifyMagicLink отвечает RATE_LIMITED. RED подтверждён. CI run 36283108045."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Исключение по адресу убрано. server/tests/rate-limits.test.ts «исключения §3»: withHealth(yoga) — /health и / не расходуют корзину, GraphQL с того же адреса расходует. Исходники воркера не содержат HTTP-вызовов."
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "docs/reports/2026-09-21-t024-server-rate-limits-report.md, docs/reports/tasks/T-024.json, docs/reports/tasks/T-024.md восстановлены из записи PR #181 и плана T-024."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "passed: server 828 passed / 37 skipped, web 588 passed, packages/content 99 passed",
+    "server_typecheck": "passed: pnpm --filter server exec tsc --noEmit",
+    "web_typecheck": "passed",
+    "server_build_ci": "passed, server/dist/server.js present",
+    "web_build": "passed",
+    "playwright": "passed: login specs 27 passed, 125-rate-limit-bypass.spec.ts 7 passed",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36283108045",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 241,
+    "url": "https://github.com/Egoka/Altera/pull/241",
+    "base_ref": "app",
+    "base_sha": "f96abfeddc1560b1a35ecbfaff6bc655467bf17e",
+    "head_sha": "5722408f52be6eda05fc97a67d57d870b05da1b7",
+    "merge_sha": "7bd2e199d5a41b12232e66e550ca97b179afec08"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e0b4-c6f6-7503-8ad3-b38f31f446d8",
+    "sha": "5722408f52be6eda05fc97a67d57d870b05da1b7",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ (rate-limits: client-address, plugin, counter store) и web/ (clientAddress utility). Миграций нет."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-125.md",
+    "sha256": "62f5cb74dc276fb10b149ef259448d429dd5db0361c239badb84d483c1904e34"
+  },
+  "remaining": [
+    "Пороги — [ДОПУЩЕНИЕ] спецификации; утверждение чисел — T-116 (журнал §36 п. 1).",
+    "trustedProxyHops боевой площадки подтверждает релиз-инженер: по умолчанию 1, за Cloudflare и Gateway нужно 2.",
+    "Неприменённые корзины (account.mutation.user, media.upload.user, search.*, appeal.form.ip) — вне границ.",
+    "Повторная приёмка T-024 (ALTE-100) и T-059 (ALTE-111) идёт в их карточках.",
+    "Восстановленные артефакты T-024 содержат только данные из записи PR #181."
+  ],
+  "usage": null
+}
