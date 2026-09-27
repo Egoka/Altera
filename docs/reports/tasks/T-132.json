@@ -52,10 +52,10 @@
     "merge_sha": "574e484364a1885ca839ee9a5d0970f28bd24ab0"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": "unknown"
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e2a2-b6da-72da-8064-f02151b8773e",
+    "sha": "15dfe0a86a4c3315372df1092c9fb86a9388438e",
+    "verdict": "approved"
   },
   "history": {
     "note": "Реализацию T-132 выполнили в карточке T-070 (ALTE-83), потому что канонической карточки T-132 тогда не было. Независимого ревью на head 15dfe0a не было ни в одной карточке: вердикт в receipt T-070 относится к его собственному head baa84225. Контроллер требует native execution той же issue_id, поэтому прежний run сохранён ссылкой как история, а review канонической карточки ждёт вердикта в ALTE-125.",
