@@ -276,6 +276,12 @@ jobs:
         env:
           T134_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/mail-resend-database.test.ts
+      # T-133: инвариант «хотя бы один владелец» держится на блокировке строк, а атомарность
+      # создания служебной записи — на откате транзакции; двойник ни то ни другое не докажет.
+      - name: Проверить инвариант владельцев и создание записи T-133
+        env:
+          T133_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/admin-staff-database.test.ts
       # T-126: чистка имён, производных от e-mail, написана на SQL (`split_part`, сравнение без
       # учёта регистра) — она проверяется на настоящем PostgreSQL, а не на двойнике.
       - name: Проверить миграцию имён аккаунтов T-126

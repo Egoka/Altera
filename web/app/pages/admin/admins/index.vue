@@ -18,6 +18,7 @@
     card,
     filters,
     failure,
+    actionFailure,
     pending,
     failed,
     refresh,
@@ -59,7 +60,44 @@
   }
 
   const isEmpty = computed(() => !pending.value && !failed.value && (staff.value?.length ?? 0) === 0)
-  const conflict = computed(() => failure.value?.code === "CONFLICT")
+  const conflict = computed(() => actionFailure.value?.code === "CONFLICT")
+
+  /**
+   * Строка состояния «Ошибка — мутация» (`admins.md` §9): свой текст на каждый код, который
+   * отдают мутации раздела. Без неё отказ был виден только по тому, что диалог не закрылся.
+   * `VALIDATION_ERROR` приходит на разные поля, поэтому строку внутри кода выбирает `rule`/`field`.
+   */
+  const actionFailureMessage = computed<string | null>(() => {
+    const value = actionFailure.value
+    if (!value) return null
+    switch (value.code) {
+      case "CONFLICT":
+        // Отзыв последнего владельца отличается от «запись уже изменена» только сущностью конфликта.
+        return value.entity === "owner" ? t("admin.staff.lastOwner") : t("admin.staff.conflict")
+      case "VALIDATION_ERROR":
+        if (value.rule === "not-an-account") return t("admin.staff.errorNotAnAccount")
+        if (value.field === "email") return t("admin.staff.errorEmail")
+        if (value.field === "reason") return t("admin.staff.errorReason")
+        return t("admin.staff.errorValidation")
+      case "FORBIDDEN":
+        return t("admin.staff.errorForbidden")
+      case "NOT_FOUND":
+        return t("admin.staff.errorNotFound")
+      case "ARCHIVED":
+        return t("admin.staff.errorArchived")
+      case "PROVIDER_UNAVAILABLE":
+        return t("admin.staff.errorProvider")
+      default:
+        return t("admin.staff.errorAction")
+    }
+  })
+
+  // Конфликт — ожидаемое состояние раздела, остальные коды — отказ: цвет строки различает их.
+  const actionFailureClass = computed(() =>
+    conflict.value
+      ? "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200"
+      : "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200"
+  )
 
   const isCreateOpen = ref(false)
   const createForm = ref<{ email: string; name: string; role: AssignableStaffRole }>({
@@ -196,10 +234,15 @@
     </p>
 
     <p
-      v-if="conflict"
-      role="status"
-      class="mx-4 mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-      {{ t("admin.staff.conflict") }}
+      v-if="actionFailureMessage"
+      role="alert"
+      :data-staff-failure="actionFailure?.code ?? 'unknown'"
+      class="mx-4 mb-3 rounded-md px-3 py-2 text-sm"
+      :class="actionFailureClass">
+      {{ actionFailureMessage }}
+      <span v-if="actionFailure?.requestId" class="font-mono text-xs">
+        {{ t("admin.staff.requestCode", { requestId: actionFailure.requestId }) }}
+      </span>
     </p>
 
     <div class="flex flex-wrap items-center gap-3 px-4 pb-3">
@@ -324,7 +367,7 @@
           <p v-if="(owners?.length ?? 0) === 0" class="mt-1 text-sm text-zinc-500">
             {{ t("admin.staff.ownersEmpty") }}
           </p>
-          <ul v-else class="mt-2 space-y-1 text-sm">
+          <ul v-else data-staff-owners class="mt-2 space-y-1 text-sm">
             <li v-for="owner in owners" :key="owner.id" class="flex flex-wrap gap-x-3 text-zinc-600 dark:text-zinc-300">
               <span class="text-zinc-900 dark:text-zinc-100">{{ owner.name }}</span>
               <span class="font-mono text-xs">{{ owner.email }}</span>
@@ -429,6 +472,17 @@
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.staff.create") }}</h2>
       <div class="flex flex-col gap-4 p-4">
         <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ t("admin.staff.createHint") }}</p>
+        <p
+          v-if="actionFailureMessage"
+          role="alert"
+          :data-staff-failure="actionFailure?.code ?? 'unknown'"
+          class="rounded-md px-3 py-2 text-sm"
+          :class="actionFailureClass">
+          {{ actionFailureMessage }}
+          <span v-if="actionFailure?.requestId" class="font-mono text-xs">
+            {{ t("admin.staff.requestCode", { requestId: actionFailure.requestId }) }}
+          </span>
+        </p>
         <div>
           <label for="staff-email" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             {{ t("admin.staff.fieldEmail") }}
@@ -500,8 +554,16 @@
             :placeholder="t('admin.staff.reasonPlaceholder')"
             class="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-900" />
         </div>
-        <p v-if="conflict" role="status" class="text-sm text-amber-700 dark:text-amber-300">
-          {{ t("admin.staff.conflict") }}
+        <p
+          v-if="actionFailureMessage"
+          role="alert"
+          :data-staff-failure="actionFailure?.code ?? 'unknown'"
+          class="rounded-md px-3 py-2 text-sm"
+          :class="actionFailureClass">
+          {{ actionFailureMessage }}
+          <span v-if="actionFailure?.requestId" class="font-mono text-xs">
+            {{ t("admin.staff.requestCode", { requestId: actionFailure.requestId }) }}
+          </span>
         </p>
         <div class="flex gap-2 pt-2">
           <Button mode="ghost" class="flex-1" @click="closeReason">{{ t("common.cancel") }}</Button>
@@ -527,6 +589,17 @@
         </template>
         <template v-else>
           <p class="text-sm text-zinc-600 dark:text-zinc-300">{{ t("admin.staff.assignStepTwoHint") }}</p>
+          <p
+            v-if="actionFailureMessage"
+            role="alert"
+            :data-staff-failure="actionFailure?.code ?? 'unknown'"
+            class="rounded-md px-3 py-2 text-sm"
+            :class="actionFailureClass">
+            {{ actionFailureMessage }}
+            <span v-if="actionFailure?.requestId" class="font-mono text-xs">
+              {{ t("admin.staff.requestCode", { requestId: actionFailure.requestId }) }}
+            </span>
+          </p>
           <div>
             <label for="assign-owner-email" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {{ t("admin.staff.assignEmailLabel") }}

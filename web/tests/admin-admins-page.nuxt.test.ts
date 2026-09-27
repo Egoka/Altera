@@ -14,6 +14,16 @@ const messages: Record<string, string> = {
   "admin.staff.create": "Создать служебную запись",
   "admin.staff.adminLimited": "Изменения ролей и архив служебных записей — только владелец.",
   "admin.staff.conflict": "Запись изменена другим администратором — список обновлён.",
+  "admin.staff.lastOwner": "Последнего владельца отозвать нельзя — сначала назначьте другого.",
+  "admin.staff.errorAction": "Действие не выполнено — повторите его.",
+  "admin.staff.errorValidation": "Действие не принято: проверьте заполненные поля.",
+  "admin.staff.errorEmail": "Проверьте e-mail: нужен полный почтовый адрес.",
+  "admin.staff.errorReason": "Укажите причину — без неё действие не выполняется.",
+  "admin.staff.errorNotAnAccount": "Это адрес читателя или автора: в служебную роль он не повышается.",
+  "admin.staff.errorForbidden": "Действие недоступно: роли и архив меняет только владелец.",
+  "admin.staff.errorNotFound": "Запись не найдена — список обновлён.",
+  "admin.staff.errorArchived": "Запись в архиве — сначала восстановите её.",
+  "admin.staff.errorProvider": "Почта недоступна: запись создана.",
   "admin.staff.loading": "Загрузка списка",
   "admin.staff.empty": "По фильтру ничего не найдено",
   "admin.staff.emptyHint": "Измените фильтр или создайте служебную запись.",
@@ -64,11 +74,20 @@ const stubs = {
   AppDialog: { props: ["modelValue"], template: '<div v-if="modelValue"><slot /></div>' }
 }
 
+interface Failure {
+  code: string | null
+  entity?: string | null
+  field?: string | null
+  rule?: string | null
+  requestId: string | null
+}
+
 interface StaffState {
   staff?: unknown[]
   pending?: boolean
   failed?: boolean
-  failure?: { code: string | null; requestId: string | null } | null
+  failure?: Failure | null
+  actionFailure?: Failure | null
   card?: typeof card | null
   role?: "admin" | "owner"
   query?: Record<string, string>
@@ -107,6 +126,7 @@ function setup(state: StaffState = {}) {
     card: cardRef,
     filters: filtersRef,
     failure: ref(state.failure ?? null),
+    actionFailure: ref(state.actionFailure ?? null),
     pending: ref(state.pending ?? false),
     failed: ref(state.failed ?? false),
     refresh: vi.fn(),
@@ -188,10 +208,39 @@ describe("страница «Администраторы»", () => {
   })
 
   it("сообщает о конфликте", () => {
-    setup({ failure: { code: "CONFLICT", requestId: null } })
+    setup({ actionFailure: { code: "CONFLICT", entity: "user", requestId: null } })
     const wrapper = mount(AdminsPage, { global: { stubs } })
 
     expect(wrapper.text()).toContain("Запись изменена другим администратором")
+  })
+
+  // AC-2: у строки «Ошибка — мутация» свой текст на каждый код, а не только на конфликт.
+  it.each([
+    [{ code: "CONFLICT", entity: "owner", requestId: null }, "Последнего владельца отозвать нельзя"],
+    [{ code: "FORBIDDEN", requestId: null }, "роли и архив меняет только владелец"],
+    [{ code: "NOT_FOUND", entity: "user", requestId: null }, "Запись не найдена"],
+    [{ code: "ARCHIVED", entity: "user", requestId: null }, "Запись в архиве"],
+    [{ code: "VALIDATION_ERROR", field: "email", rule: "not-an-account", requestId: null }, "читателя или автора"],
+    [{ code: "VALIDATION_ERROR", field: "email", rule: "email", requestId: null }, "Проверьте e-mail"],
+    [{ code: "VALIDATION_ERROR", field: "reason", rule: "required", requestId: null }, "Укажите причину"],
+    [{ code: "VALIDATION_ERROR", field: "id", rule: "service-account", requestId: null }, "проверьте заполненные поля"],
+    [{ code: "INTERNAL_ERROR", requestId: null }, "Действие не выполнено"]
+  ])("показывает строку отказа действия для %o", (actionFailure, expected) => {
+    setup({ actionFailure })
+    const wrapper = mount(AdminsPage, { global: { stubs } })
+
+    const alert = wrapper.find(`[data-staff-failure="${actionFailure.code}"]`)
+    expect(alert.exists()).toBe(true)
+    expect(alert.text()).toContain(expected)
+  })
+
+  it("печатает код запроса, когда сервер его отдал", () => {
+    setup({ actionFailure: { code: "PROVIDER_UNAVAILABLE", requestId: "req-staff-77" } })
+    const wrapper = mount(AdminsPage, { global: { stubs } })
+
+    const alert = wrapper.find('[data-staff-failure="PROVIDER_UNAVAILABLE"]')
+    expect(alert.text()).toContain("Почта недоступна")
+    expect(alert.text()).toContain("req-staff-77")
   })
 
   // AC-2: владелец назначается только вторым шагом.

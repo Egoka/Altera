@@ -50,6 +50,7 @@ query GetOwners {
     id
     name
     email
+    emailMasked
     status
     assignedAt
   }

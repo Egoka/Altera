@@ -124,6 +124,8 @@ class MemoryPrisma {
   audits: Array<Record<string, any>> = []
   handles: Array<{ handle: string; userId: string | null }> = []
   magicLinks: Array<{ email: string }> = []
+  /** Снимки действующих владельцев на каждую взятую блокировку строк: двойник её только считает. */
+  ownerLocks: string[][] = []
   private auditSequence = 0
 
   constructor(users: MemoryUser[], options: { exceptions?: MemoryException[]; sessions?: MemorySession[] } = {}) {
@@ -219,6 +221,18 @@ class MemoryPrisma {
       this.magicLinks.push({ email: where.email })
       return where
     }
+  }
+
+  /**
+   * Двойник знает только ту блокировку строк, которую берут отзыв и деактивация владельца:
+   * настоящее ожидание он показать не может, но проверяет, что она взята и до изменения роли.
+   */
+  $queryRaw = async (query: { strings: readonly string[] }) => {
+    const text = query.strings.join(" ")
+    if (!text.includes("FOR UPDATE")) throw new Error(`Unexpected raw query: ${text}`)
+    const owners = this.users.filter(({ role, archivedAt }) => role === "owner" && archivedAt === null)
+    this.ownerLocks.push(owners.map(({ id }) => id))
+    return owners.map(({ id }) => ({ id }))
   }
 
   async $transaction<T>(run: (tx: MemoryPrisma) => Promise<T>): Promise<T> {
@@ -455,6 +469,26 @@ describe("инвариант «не ноль владельцев»", () => {
     const extensions = await capture(() => revokeOwner(ctx, { id: ownerActor.id, reason: "Сам" }, now))
 
     expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "owner.revoke" })
+  })
+
+  // Порядок обязателен: подсчёт после изменения имеет смысл только у того, кто уже держит строки
+  // обоих владельцев. Сам исход конкуренции проверяет тест на PostgreSQL.
+  it("берёт блокировку действующих владельцев до изменения роли", async () => {
+    const prisma = new MemoryPrisma([ownerActor, secondOwner])
+    const ctx = context(prisma, ownerActor)
+
+    await revokeOwner(ctx, { id: secondOwner.id, reason: "Передал дела" }, now)
+
+    expect(prisma.ownerLocks).toEqual([[ownerActor.id, secondOwner.id]])
+  })
+
+  it("берёт блокировку действующих владельцев до деактивации", async () => {
+    const prisma = new MemoryPrisma([ownerActor, secondOwner])
+    const ctx = context(prisma, ownerActor)
+
+    await deactivateOwner(ctx, { id: secondOwner.id, reason: "Передал дела" }, now)
+
+    expect(prisma.ownerLocks).toEqual([[ownerActor.id, secondOwner.id]])
   })
 })
 
@@ -733,6 +767,26 @@ describe("список и карточка", () => {
 
     const adminCtx = context(prisma, adminActor)
     expect(await capture(() => listOwners(adminCtx))).toMatchObject({ code: "FORBIDDEN", action: "owner.read" })
+  })
+
+  // AC-3: список — не карточка, поэтому полного адреса в нём нет и запись чтения ПДн не нужна.
+  it("отдаёт в списке владельцев маску адреса и не пишет чтение персональных данных", async () => {
+    const prisma = new MemoryPrisma([ownerActor, secondOwner])
+    const ctx = context(prisma, ownerActor)
+
+    const owners = await listOwners(ctx)
+
+    expect(owners.map(({ email }) => email).sort()).toEqual(
+      [maskEmail(ownerActor.email), maskEmail(secondOwner.email)].sort()
+    )
+    expect(owners.every(({ emailMasked }) => emailMasked)).toBe(true)
+    expect(JSON.stringify(owners)).not.toContain(ownerActor.email)
+    expect(prisma.audits.some(({ action }) => action === "admin.read.personal")).toBe(false)
+
+    // Полный адрес остаётся в карточке — её открытие эту запись делает (§28.7).
+    const card = await getAdminStaffMember(ctx, secondOwner.id, now)
+    expect(card?.email).toBe(secondOwner.email)
+    expect(prisma.audits.some(({ action }) => action === "admin.read.personal")).toBe(true)
   })
 
   it("возвращает историю ролей в карточке", async () => {
