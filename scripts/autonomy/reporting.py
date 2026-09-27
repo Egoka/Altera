@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 import time as clock
 from zoneinfo import ZoneInfo
+from deploy_evidence import parse_timestamp
 
 
 TOKEN_FIELDS = ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens")
@@ -22,6 +23,11 @@ MOSCOW = ZoneInfo("Europe/Moscow")
 def timestamp(value):
     if not isinstance(value, str):
         return None
+    try:
+        # Время Multica бывает с 1–5 знаками дробной части: `fromisoformat` Python 3.9 его не разбирает.
+        return parse_timestamp(value).astimezone(timezone.utc)
+    except ValueError:
+        pass
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
         return parsed.astimezone(timezone.utc) if parsed.tzinfo else None
