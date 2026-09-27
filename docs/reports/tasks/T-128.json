@@ -46,10 +46,10 @@
     "merge_sha": "e1ae8f731da1bc694272f0b205df908ce60936ad"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": "not_run"
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e0e1-abd1-7b22-b70f-0085a26e2eec",
+    "sha": "31eda5356cda195a6441a9e825ff2feae4b49546",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -59,7 +59,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-128.md",
-    "sha256": "a94dedefd783eef69e1df09c600df60befcdb68867dca079d3a2cfa12af5d0c9"
+    "sha256": "ec5a7e5b54336aa1c6f966130591380ee670c1d5276c318822ab2fbadff6c6c0"
   },
   "usage": null
 }
