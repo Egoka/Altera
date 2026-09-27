@@ -274,8 +274,9 @@
   --font-garamond-libre: "Garamond Libre", serif;
   --font-cormorant: "Cormorant SC", serif;
 
-  /* Контейнеры и горизонтальные отступы */
-  --container-max: 80rem;
+  /* Контейнеры и горизонтальные отступы. `--container-max` объявлен в `:root`
+     (слой base): ключ `max` в `@theme` переопределил бы `w-max`, `min-w-max`,
+     `max-w-max` и `basis-max` с `max-content` на 80rem. */
   --container-prose: 48rem;
   --spacing-page-x: 1rem;
   --spacing-page-x-sm: 1.5rem;
@@ -336,6 +337,10 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root {
+    --container-max: 80rem; /* max-w-7xl = 1280px */
+  }
+
   html {
     background-color: var(--color-paper);
     color: var(--color-ink);
