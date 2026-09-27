@@ -240,126 +240,137 @@
       </Button>
     </div>
 
-    <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
-      <template #table>
-        <Table
-          v-if="!isListLoading"
-          :data-source="data"
-          :columns="columns"
-          :height="tableHeight"
-          class="h-full"
-          @click-row="openDetail($event.data)">
-          <template #tier="{ value }">
-            <span
-              class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-              :class="tierColors[value as PlanTier]">
-              {{ value === "pro" ? "Pro" : "Standard" }}
-            </span>
-          </template>
-          <template #status="{ value }">
-            <span
-              class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-              :class="statusColors[value as GrantStatus]">
-              {{ t(`admin.grantStatus.${value}`) }}
-            </span>
-          </template>
-          <template #endsAt="{ value }">
-            <span :class="value ? '' : 'text-zinc-400 italic'">
-              {{ value ? formatDate(value) : t("admin.indefinite") }}
-            </span>
-          </template>
-        </Table>
-        <div v-else role="status" class="flex h-full items-center justify-center text-sm text-zinc-500">
-          {{ t("common.loading") }}
-        </div>
-      </template>
-
-      <template #item>
-        <div v-if="selectedGrant" class="h-full overflow-y-auto p-4 flex flex-col gap-4">
-          <div class="flex items-start justify-between">
-            <div>
-              <h2 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {{ selectedGrant.userName }}
-              </h2>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400">@{{ selectedGrant.userHandle }}</p>
-            </div>
-            <Button mode="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldPlan") }}</p>
+    <!-- Split из fishtvue считает размеры панелей при setup только на сервере, а в браузере — после
+         монтирования, и первая клиентская отрисовка расходится с серверной (`flex: 100 1 0px`
+         против `flex: 0 1 0px`). Список всё равно читается только в браузере, поэтому сервер и
+         гидратация рисуют одно и то же состояние загрузки, а Split появляется после монтирования. -->
+    <ClientOnly>
+      <Split :panels="panels" direction="horizontal" class="flex-1 min-h-0">
+        <template #table>
+          <Table
+            v-if="!isListLoading"
+            :data-source="data"
+            :columns="columns"
+            :height="tableHeight"
+            class="h-full"
+            @click-row="openDetail($event.data)">
+            <template #tier="{ value }">
               <span
                 class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                :class="tierColors[selectedGrant.tier]">
-                {{ selectedGrant.tier === "pro" ? "Pro" : "Standard" }}
+                :class="tierColors[value as PlanTier]">
+                {{ value === "pro" ? "Pro" : "Standard" }}
               </span>
-            </div>
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStatus") }}</p>
+            </template>
+            <template #status="{ value }">
               <span
                 class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-                :class="statusColors[selectedGrant.status]">
-                {{ t(`admin.grantStatus.${selectedGrant.status}`) }}
+                :class="statusColors[value as GrantStatus]">
+                {{ t(`admin.grantStatus.${value}`) }}
               </span>
-            </div>
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStartsAt") }}</p>
-              <p class="text-zinc-900 dark:text-zinc-100">{{ formatDate(selectedGrant.startsAt) }}</p>
-            </div>
-            <div>
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldEndsAt") }}</p>
-              <p :class="selectedGrant.endsAt ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 italic'">
-                {{ selectedGrant.endsAt ? formatDate(selectedGrant.endsAt) : t("admin.indefinite") }}
-              </p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldReason") }}</p>
-              <p class="text-zinc-900 dark:text-zinc-100">{{ selectedGrant.reason }}</p>
-            </div>
-            <div v-if="selectedGrant.grantedByName" class="col-span-2">
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldGrantedBy") }}</p>
-              <p class="text-zinc-900 dark:text-zinc-100">{{ selectedGrant.grantedByName }}</p>
-            </div>
-            <div v-if="selectedGrant.revokedAt" class="col-span-2">
-              <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldRevokedAt") }}</p>
-              <p class="text-zinc-900 dark:text-zinc-100">{{ formatDate(selectedGrant.revokedAt) }}</p>
-            </div>
+            </template>
+            <template #endsAt="{ value }">
+              <span :class="value ? '' : 'text-zinc-400 italic'">
+                {{ value ? formatDate(value) : t("admin.indefinite") }}
+              </span>
+            </template>
+          </Table>
+          <div v-else role="status" class="flex h-full items-center justify-center text-sm text-zinc-500">
+            {{ t("common.loading") }}
           </div>
+        </template>
 
-          <div
-            v-if="selectedGrant.status === 'active' || selectedGrant.status === 'queued'"
-            class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-700">
-            <Button
-              v-if="!isRevokeConfirmOpen"
-              mode="outline"
-              icon="lucide:x-circle"
-              class="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
-              @click="isRevokeConfirmOpen = true">
-              {{ t("admin.revokePlan") }}
-            </Button>
-            <div v-else class="flex flex-col gap-2">
-              <Input v-model="revokeReason" :placeholder="t('admin.revokeReasonPlaceholder')" class="w-full" />
-              <div class="flex gap-2">
-                <Button mode="ghost" class="flex-1" @click="cancelRevoke">
-                  {{ t("common.cancel") }}
-                </Button>
-                <Button
-                  mode="outline"
-                  class="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
-                  :disabled="!revokeReason.trim()"
-                  @click="confirmRevoke">
-                  {{ t("common.confirm") }}
-                </Button>
+        <template #item>
+          <div v-if="selectedGrant" class="h-full overflow-y-auto p-4 flex flex-col gap-4">
+            <div class="flex items-start justify-between">
+              <div>
+                <h2 class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  {{ selectedGrant.userName }}
+                </h2>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">@{{ selectedGrant.userHandle }}</p>
+              </div>
+              <Button mode="ghost" icon="lucide:x" class="h-8 w-8 p-1" @click="closeDetail" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldPlan") }}</p>
+                <span
+                  class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="tierColors[selectedGrant.tier]">
+                  {{ selectedGrant.tier === "pro" ? "Pro" : "Standard" }}
+                </span>
+              </div>
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStatus") }}</p>
+                <span
+                  class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
+                  :class="statusColors[selectedGrant.status]">
+                  {{ t(`admin.grantStatus.${selectedGrant.status}`) }}
+                </span>
+              </div>
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldStartsAt") }}</p>
+                <p class="text-zinc-900 dark:text-zinc-100">{{ formatDate(selectedGrant.startsAt) }}</p>
+              </div>
+              <div>
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldEndsAt") }}</p>
+                <p :class="selectedGrant.endsAt ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 italic'">
+                  {{ selectedGrant.endsAt ? formatDate(selectedGrant.endsAt) : t("admin.indefinite") }}
+                </p>
+              </div>
+              <div class="col-span-2">
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldReason") }}</p>
+                <p class="text-zinc-900 dark:text-zinc-100">{{ selectedGrant.reason }}</p>
+              </div>
+              <div v-if="selectedGrant.grantedByName" class="col-span-2">
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldGrantedBy") }}</p>
+                <p class="text-zinc-900 dark:text-zinc-100">{{ selectedGrant.grantedByName }}</p>
+              </div>
+              <div v-if="selectedGrant.revokedAt" class="col-span-2">
+                <p class="text-zinc-400 dark:text-zinc-500 mb-0.5">{{ t("admin.fieldRevokedAt") }}</p>
+                <p class="text-zinc-900 dark:text-zinc-100">{{ formatDate(selectedGrant.revokedAt) }}</p>
+              </div>
+            </div>
+
+            <div
+              v-if="selectedGrant.status === 'active' || selectedGrant.status === 'queued'"
+              class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-700">
+              <Button
+                v-if="!isRevokeConfirmOpen"
+                mode="outline"
+                icon="lucide:x-circle"
+                class="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
+                @click="isRevokeConfirmOpen = true">
+                {{ t("admin.revokePlan") }}
+              </Button>
+              <div v-else class="flex flex-col gap-2">
+                <Input v-model="revokeReason" :placeholder="t('admin.revokeReasonPlaceholder')" class="w-full" />
+                <div class="flex gap-2">
+                  <Button mode="ghost" class="flex-1" @click="cancelRevoke">
+                    {{ t("common.cancel") }}
+                  </Button>
+                  <Button
+                    mode="outline"
+                    class="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
+                    :disabled="!revokeReason.trim()"
+                    @click="confirmRevoke">
+                    {{ t("common.confirm") }}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div v-else class="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-600 text-sm">
-          {{ t("admin.selectFromList") }}
+          <div v-else class="h-full flex items-center justify-center text-zinc-400 dark:text-zinc-600 text-sm">
+            {{ t("admin.selectFromList") }}
+          </div>
+        </template>
+      </Split>
+      <template #fallback>
+        <div role="status" class="flex flex-1 min-h-0 items-center justify-center text-sm text-zinc-500">
+          {{ t("common.loading") }}
         </div>
       </template>
-    </Split>
+    </ClientOnly>
 
     <AppDialog v-model="isGrantFormOpen" close-button size="md" class="max-w-md">
       <h2 class="px-4 pt-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">{{ t("admin.grantPlan") }}</h2>
