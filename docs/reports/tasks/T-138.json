@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "T-138",
+  "issue_id": "01a0e345-fdcf-705e-bd09-925974074751",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-138-reality-check-permission-codes.md",
+    "sha": "ada5c6ffcc8f738b15746214f6e11c466d06a92c"
+  },
+  "baseline_sha": "d5533cbb7b0789cfa11a33381a23b40bf050895f",
+  "tested_sha": "e67f3ad65535557d4c039551a41d62024f051a93",
+  "branch": "docs/t138-fix-permission-count",
+  "implementer_id": "e682f2d5-7541-475e-a0b4-ef0b8ae885f4",
+  "implementer_run_id": "01a0e345-fdcf-705e-bd09-925974074751",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "число кодов прав исправлено на 13 (ревизия среза 4ea27a6), [ФАКТ] сужен до строк 5-19 (PERMISSION_CODES) и 53-67 (DEFAULT_ROLE_PERMISSIONS) на той же ревизии — выполнено (e67f3ad)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (e67f3ad)",
+    "lint": "passed: pnpm lint exit 0 (e67f3ad)",
+    "tests": "passed: server 884 passed / 47 skipped, web 677 passed, content 99 passed (e67f3ad)"
+  },
+  "pr": {
+    "number": 307,
+    "url": "https://github.com/Egoka/Altera/pull/307",
+    "base_ref": "app",
+    "base_sha": "d5533cbb7b0789cfa11a33381a23b40bf050895f",
+    "head_sha": "e67f3ad65535557d4c039551a41d62024f051a93",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Задача меняет только документацию (docs/vision/00-reality-check.md)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-138.md",
+    "sha256": null
+  },
+  "usage": null
+}
