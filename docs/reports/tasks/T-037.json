@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "task_id": "T-037",
+  "issue_id": "01a0b671-471d-7637-97c9-df3484fbbd10",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-037-base-authorship-first-create.md",
+    "sha": "6728da71baf4fccbf37a5b165f43845c54a37140"
+  },
+  "baseline_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+  "tested_sha": "f053435534ef5383e889842e8ef270f2ce5d463d",
+  "branch": "server/t037-base-authorship",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0bbed-9fcb-7958-a822-279ea8bd065e",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Тест base-authorship.test.ts: читатель после первого создания проходит ensureActiveAuthor."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Тест base-authorship.test.ts: служебная запись при попытке получает FORBIDDEN."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 273 passed, 24 skipped; web 180 passed (pnpm test)",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 159,
+    "url": "https://github.com/Egoka/Altera/pull/159",
+    "base_ref": "app",
+    "base_sha": "4ea27a63d0fac9ccc9eb38cde522d9b17b58799b",
+    "head_sha": "f053435534ef5383e889842e8ef270f2ce5d463d",
+    "merge_sha": "d29d7349f4366ac8d06e064f2216de89efd234f8"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e2f6-6b3b-7e72-ad7d-3d59efbf0376",
+    "sha": "f053435534ef5383e889842e8ef270f2ce5d463d",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/src и server/tests"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-037.md",
+    "sha256": "2ef0b82d906462e05457c9a56040eaffd776d019cd8f7180f3e27f5145c50567"
+  },
+  "remaining": [
+    "Deploy-проба обязательна: изменён серверный код."
+  ],
+  "usage": null
+}
