@@ -5,12 +5,12 @@ import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
 import { findPageAuthor, normalizeHandle } from "../author/resolver"
+import { authorGradeOf, type AuthorGrade } from "../../plans/plan-state"
 
 type FeedLocale = "ru" | "en"
 type FeedScope = "home" | "section" | "tag" | "author" | "latest"
 type FeedSectionKey = "top" | "new" | "popular"
 type FeedCaption = "by_publication_date"
-type AuthorGrade = "standard" | "pro"
 
 /** Главный топ — ровно пять материалов (журнал §20.2). */
 export const HOME_TOP_SIZE = 5
@@ -35,7 +35,7 @@ export interface FeedArticleRecord {
   featuredImage: string | null
   firstPublishedAt: Date | null
   sourceLocale: string
-  author: { name: string; handle: string; planTier: string }
+  author: { name: string; handle: string; planTier: string; planUntil: Date | null }
   section: { slug: string; name: string; nameEn: string | null } | null
 }
 
@@ -98,18 +98,15 @@ const feedArticleSelect = {
   featuredImage: true,
   firstPublishedAt: true,
   sourceLocale: true,
-  author: { select: { name: true, handle: true, planTier: true } },
+  author: { select: { name: true, handle: true, planTier: true, planUntil: true } },
   section: { select: { slug: true, name: true, nameEn: true } }
 } as const
-
-/** Бейдж уровня автора; чисел рейтинга и плана публичный ответ не содержит (журнал §21.18). */
-const gradeOf = (planTier: string): AuthorGrade => (planTier === "pro" ? "pro" : "standard")
 
 /** Слово локали с откатом на русское: `nameEn` у рубрики необязателен. */
 export const localizedName = (name: string, nameEn: string | null | undefined, locale: FeedLocale): string =>
   (locale === "en" ? nameEn : name) || name
 
-const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale): FeedItem => ({
+const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale, now = new Date()): FeedItem => ({
   id: article.id,
   slug: article.slug,
   sectionSlug: article.section!.slug,
@@ -120,7 +117,7 @@ const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale): FeedItem =>
   author: {
     name: publicDisplayName(article.author.name, article.author.handle),
     handle: article.author.handle,
-    grade: gradeOf(article.author.planTier)
+    grade: authorGradeOf(article.author, now)
   },
   publishedAt: article.firstPublishedAt?.toISOString() ?? null,
   isTranslation: article.sourceLocale !== locale
@@ -153,10 +150,10 @@ export const buildHomeSections = (
   const sections: FeedSection[] = []
   // До запуска движка рейтинга топ — пять последних по дате с явной подписью (журнал §20.4).
   if (top.length > 0) {
-    sections.push({ key: "top", caption: "by_publication_date", items: top.map((a) => toFeedItem(a, locale)) })
+    sections.push({ key: "top", caption: "by_publication_date", items: top.map((a) => toFeedItem(a, locale, now)) })
   }
   if (fresh.length > 0) {
-    sections.push({ key: "new", caption: "by_publication_date", items: fresh.map((a) => toFeedItem(a, locale)) })
+    sections.push({ key: "new", caption: "by_publication_date", items: fresh.map((a) => toFeedItem(a, locale, now)) })
   }
   return sections
 }

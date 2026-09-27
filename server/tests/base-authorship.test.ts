@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql"
 import { describe, expect, it, vi } from "vitest"
 import articleResolver from "../src/graphql/article/resolver"
-import { BASE_AUTHORSHIP_REASON } from "../src/authorship/base-authorship"
+import { BASE_AUTHORSHIP_REASON, enableBaseAuthorship } from "../src/authorship/base-authorship"
 
 const NOW = new Date("2026-09-20T12:00:00.000Z")
 const PAST = new Date("2026-08-01T00:00:00.000Z")
@@ -19,14 +19,44 @@ const reader = {
 
 interface GrantRow {
   id: string
+  tier?: "standard" | "pro"
+  startsAt?: Date
   endsAt: Date | null
+  grantedById: string | null
   revokedAt: Date | null
 }
 
+/** Срочная админская выдача: со сроком и выдавшим сотрудником (`grants-and-promo.md`). */
+const adminGrant = (id: string, endsAt: Date, overrides: Partial<GrantRow> = {}): GrantRow => ({
+  id,
+  tier: "standard",
+  startsAt: PAST,
+  endsAt,
+  grantedById: "admin-1",
+  revokedAt: null,
+  ...overrides
+})
+
+/** Автоматическая базовая выдача первого запуска: бессрочная, без выдавшего (`plan-free.md` п. 6а). */
+const baseGrant = (overrides: Partial<GrantRow> = {}): GrantRow => ({
+  id: "grant-base",
+  tier: "standard",
+  startsAt: PAST,
+  endsAt: null,
+  grantedById: null,
+  revokedAt: null,
+  ...overrides
+})
+
 /** Один мок на обе транзакции: включение базового авторства и создание черновика. */
-const prismaMock = (grants: GrantRow[] = []) => {
+const prismaMock = (grants: GrantRow[] = [], role: "reader" | "author" = "reader") => {
   const planGrantFindMany = vi.fn().mockResolvedValue(grants)
-  const planGrantCreate = vi.fn().mockResolvedValue({ id: "grant-1" })
+  const planGrantCreate = vi.fn().mockImplementation(async () => {
+    // Созданная базовая выдача попадает в пересчёт кэша того же коммита.
+    grants.push(baseGrant({ id: "grant-1", startsAt: NOW }))
+    return { id: "grant-1" }
+  })
+  const userFindUnique = vi.fn().mockResolvedValue({ role, isServiceAccount: false })
   const userUpdate = vi.fn().mockResolvedValue({})
   const auditLogCreate = vi.fn().mockResolvedValue({})
   const articleCreate = vi.fn().mockResolvedValue({ id: "article-1", status: "draft" })
@@ -35,7 +65,7 @@ const prismaMock = (grants: GrantRow[] = []) => {
   const $transaction = vi.fn(async (operation: (client: unknown) => Promise<unknown>) =>
     operation({
       planGrant: { findMany: planGrantFindMany, create: planGrantCreate },
-      user: { update: userUpdate },
+      user: { findUnique: userFindUnique, update: userUpdate },
       auditLog: { create: auditLogCreate },
       article: { create: articleCreate },
       section: { findFirst: sectionFindFirst }
@@ -66,6 +96,7 @@ describe("базовое авторство при первом «Создать
       data: {
         userId: "reader-1",
         tier: "standard",
+        startsAt: expect.any(Date),
         endsAt: null,
         grantedById: null,
         reason: BASE_AUTHORSHIP_REASON
@@ -106,13 +137,13 @@ describe("базовое авторство при первом «Создать
   })
 
   it("чинит расхождение кэша по действующей бессрочной выдаче без второй выдачи и второго события", async () => {
-    const prisma = prismaMock([{ id: "grant-1", endsAt: null, revokedAt: null }])
+    const prisma = prismaMock([baseGrant()])
 
     await articleResolver.Mutation.createArticle(null, { input: {} }, context(prisma, reader))
 
     expect(prisma.planGrantFindMany).toHaveBeenCalledWith({
       where: { userId: "reader-1" },
-      select: { id: true, endsAt: true, revokedAt: true }
+      select: { id: true, endsAt: true, grantedById: true, revokedAt: true }
     })
     expect(prisma.planGrantCreate).not.toHaveBeenCalled()
     expect(prisma.auditLogCreate).not.toHaveBeenCalled()
@@ -131,21 +162,50 @@ describe("базовое авторство при первом «Создать
     expect(prisma.userUpdate).not.toHaveBeenCalled()
   })
 
-  it("не превращает истёкшую срочную выдачу в бессрочную: создание закрыто PLAN_LIMIT", async () => {
-    const prisma = prismaMock([{ id: "grant-past", endsAt: PAST, revokedAt: null }])
-    const expiredAuthor = { ...reader, id: "author-3", role: "author", planTier: "standard", planUntil: PAST }
+  // AC-3. На первом запуске платности нет, поэтому прошлая админская выдача первому нажатию не
+  // мешает: `plan-free.md` п. 3 начинает действовать только после включения платности (§24.1).
+  it("открывает базовое авторство читателю с истёкшей админской выдачей (AC-3)", async () => {
+    const prisma = prismaMock([adminGrant("grant-past", PAST)])
+    const expiredReader = { ...reader, id: "reader-2", planTier: "standard", planUntil: PAST }
 
     await expect(
-      articleResolver.Mutation.createArticle(null, { input: {} }, context(prisma, expiredAuthor))
-    ).rejects.toMatchObject<Partial<GraphQLError>>({ extensions: { code: "PLAN_LIMIT", requiredTier: "standard" } })
+      articleResolver.Mutation.createArticle(null, { input: {} }, context(prisma, expiredReader))
+    ).resolves.toMatchObject({ id: "article-1", status: "draft" })
 
-    expect(prisma.planGrantCreate).not.toHaveBeenCalled()
-    expect(prisma.userUpdate).not.toHaveBeenCalled()
-    expect(prisma.articleCreate).not.toHaveBeenCalled()
+    expect(prisma.planGrantCreate).toHaveBeenCalledWith({
+      data: {
+        userId: "reader-2",
+        tier: "standard",
+        startsAt: expect.any(Date),
+        endsAt: null,
+        grantedById: null,
+        reason: BASE_AUTHORSHIP_REASON
+      },
+      select: { id: true }
+    })
+    expect(prisma.userUpdate).toHaveBeenCalledWith({
+      where: { id: "reader-2" },
+      data: { role: "author", planTier: "standard", planUntil: null }
+    })
+    expect(prisma.auditLogCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ action: "author.enabled" }) })
+    )
   })
 
-  it("не выдаёт базовое авторство повторно после отзыва бессрочной выдачи", async () => {
-    const prisma = prismaMock([{ id: "grant-revoked", endsAt: null, revokedAt: PAST }])
+  it("открывает базовое авторство и после отозванной админской выдачи (AC-3)", async () => {
+    const prisma = prismaMock([adminGrant("grant-revoked", FUTURE, { revokedAt: PAST })])
+
+    await expect(
+      articleResolver.Mutation.createArticle(null, { input: {} }, context(prisma, reader))
+    ).resolves.toMatchObject({ id: "article-1" })
+
+    expect(prisma.planGrantCreate).toHaveBeenCalled()
+  })
+
+  // Отозванная базовая выдача — другой случай: её снимает согласованное архивирование аккаунта,
+  // и второй раз базовое авторство не открывается (журнал §27.1).
+  it("не выдаёт базовое авторство повторно после отзыва базовой выдачи", async () => {
+    const prisma = prismaMock([baseGrant({ revokedAt: PAST })])
 
     await expect(
       articleResolver.Mutation.createArticle(null, { input: {} }, context(prisma, reader))
@@ -153,6 +213,44 @@ describe("базовое авторство при первом «Создать
 
     expect(prisma.planGrantCreate).not.toHaveBeenCalled()
     expect(prisma.auditLogCreate).not.toHaveBeenCalled()
+    expect(prisma.userUpdate).not.toHaveBeenCalled()
+  })
+
+  // Устаревший кэш не должен понизить уровень: действующая админская выдача приоритетнее
+  // базовой (журнал §8.22), и дальше запрос идёт по пересчитанному значению.
+  it("при действующей админской выдаче кэш получает её уровень и срок, а не базовый", async () => {
+    const prisma = prismaMock([adminGrant("grant-pro", FUTURE, { tier: "pro" })])
+
+    await articleResolver.Mutation.createArticle(null, { input: {} }, context(prisma, reader))
+
+    expect(prisma.planGrantCreate).toHaveBeenCalled()
+    expect(prisma.userUpdate).toHaveBeenCalledWith({
+      where: { id: "reader-1" },
+      data: { role: "author", planTier: "pro", planUntil: FUTURE }
+    })
+  })
+})
+
+describe("начало базовой выдачи", () => {
+  // Со значением по умолчанию базу выставила бы `startsAt` позже переданного `now`, и пересчёт
+  // кэша в той же транзакции счёл бы свежую выдачу будущей, а план — отсутствующим.
+  it("совпадает с «сейчас» вызова, а не со значением по умолчанию базы", async () => {
+    const prisma = prismaMock()
+
+    const actor = await enableBaseAuthorship(
+      { prisma, currentUser: reader, requestId: "request-1" } as never,
+      "article.create",
+      NOW
+    )
+
+    expect(prisma.planGrantCreate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ startsAt: NOW }) })
+    )
+    expect(actor).toMatchObject({ role: "author", planTier: "standard", planUntil: null })
+    expect(prisma.userUpdate).toHaveBeenCalledWith({
+      where: { id: "reader-1" },
+      data: { role: "author", planTier: "standard", planUntil: null }
+    })
   })
 })
 

@@ -47,6 +47,7 @@ const userRow = (handle: string, name: string, overrides: Record<string, unknown
   bio: null,
   photoUrl: null,
   planTier: "standard",
+  planUntil: null,
   isServiceAccount: false,
   _count: { articles: 2 },
   articles: [
@@ -254,7 +255,15 @@ describe("каталог авторов", () => {
   })
 
   it("не отдаёт плана, срока и e-mail — только публичные поля", async () => {
-    const catalog = await call(prisma([userRow("anna", "Анна", { planTier: "pro", bio: "Пишет о городе. И ещё." })]))
+    const catalog = await call(
+      prisma([
+        userRow("anna", "Анна", {
+          planTier: "pro",
+          planUntil: new Date("2099-01-01T00:00:00.000Z"),
+          bio: "Пишет о городе. И ещё."
+        })
+      ])
+    )
 
     expect(catalog.items[0]).toEqual({
       id: "id-anna",
@@ -268,6 +277,15 @@ describe("каталог авторов", () => {
       isEditorial: false,
       recent: [{ title: "Материал anna", path: "/culture/slug-anna", author: "Анна" }]
     })
+  })
+
+  // AC-5: истёкшая выдача `pro` бейдж снимает — уровень читается вместе со сроком.
+  it("истёкшая выдача pro бейдж в каталоге снимает", async () => {
+    const catalog = await call(
+      prisma([userRow("anna", "Анна", { planTier: "pro", planUntil: new Date("2020-01-01T00:00:00.000Z") })])
+    )
+
+    expect(catalog.items[0]!.grade).toBe("standard")
   })
 
   it("автор без имени показан хэндлом и в карточке, и в подписи материала", async () => {

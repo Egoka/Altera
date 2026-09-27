@@ -44,7 +44,7 @@ const article = (overrides: Partial<FeedArticleRecord> & { id: string; daysAgo: 
   dek: null,
   featuredImage: null,
   sourceLocale: "ru",
-  author: { name: "Автор", handle: "author", planTier: "standard" },
+  author: { name: "Автор", handle: "author", planTier: "standard", planUntil: null },
   section: { slug: "culture", name: "Культура", nameEn: "Culture" },
   ...overrides,
   firstPublishedAt: new Date(now.getTime() - overrides.daysAgo * DAY_MS)
@@ -98,7 +98,7 @@ describe("подборки главной первого этапа", () => {
     const proAuthor = article({
       id: "pro",
       daysAgo: 0,
-      author: { name: "Про", handle: "pro-author", planTier: "pro" }
+      author: { name: "Про", handle: "pro-author", planTier: "pro", planUntil: new Date(now.getTime() + DAY_MS) }
     })
 
     const [item] = buildHomeSections([proAuthor], "en", now)[0]!.items
@@ -109,6 +109,20 @@ describe("подборки главной первого этапа", () => {
       author: { handle: "pro-author", grade: "pro" },
       isTranslation: true
     })
+  })
+
+  // AC-5: бейдж считается по плану вместе со сроком, поэтому истёкшая выдача `pro` его снимает
+  // и без отдельного пересчёта кэша (`role-derivation.md` п. 9).
+  it("истёкшая выдача pro бейдж в ленте снимает", () => {
+    const expired = article({
+      id: "expired",
+      daysAgo: 0,
+      author: { name: "Про", handle: "pro-author", planTier: "pro", planUntil: new Date(now.getTime() - DAY_MS) }
+    })
+
+    const [item] = buildHomeSections([expired], "ru", now)[0]!.items
+
+    expect(item!.author.grade).toBe("standard")
   })
 
   it("не выводит материал без рубрики: путь карточки без неё не собрать", () => {

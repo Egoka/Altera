@@ -5,6 +5,7 @@ import { createApiError } from "../../errors/graphql-error"
 import { publicArticleWhere } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
 import { localizedName } from "../feed/resolver"
+import { authorGradeOf } from "../../plans/plan-state"
 
 type CatalogLocale = "ru" | "en"
 type TagCatalogSort = "popular" | "name"
@@ -265,6 +266,7 @@ export default {
               bio: true,
               photoUrl: true,
               planTier: true,
+              planUntil: true,
               isServiceAccount: true,
               _count: { select: { articles: { where } } },
               articles: {
@@ -281,7 +283,7 @@ export default {
             handle: user.handle,
             name: publicDisplayName(user.name, user.handle),
             avatar: user.photoUrl,
-            grade: user.planTier === "pro" ? ("pro" as const) : ("standard" as const),
+            grade: authorGradeOf(user, new Date()),
             bioShort: firstSentence(user.bio),
             publishedCount: user._count.articles,
             lastPublishedAt: user.articles[0]?.firstPublishedAt?.toISOString() ?? null,

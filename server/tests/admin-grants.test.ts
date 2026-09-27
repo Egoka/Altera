@@ -1,9 +1,13 @@
 import { GraphQLError } from "graphql"
 import { describe, expect, it, vi } from "vitest"
 import type { GraphQLContext } from "../src/prisma"
-import { grantPlan, listAdminGrants, revokePlan } from "../src/admin/grants"
+import { getAdminGrant, grantPlan, listAdminGrants, revokePlan } from "../src/admin/grants"
+import { BASE_AUTHORSHIP_REASON } from "../src/authorship/base-authorship"
 
 const now = new Date("2026-09-19T12:00:00.000Z")
+const PAST = new Date("2026-09-18T00:00:00.000Z")
+const SOON = new Date("2026-10-19T00:00:00.000Z")
+const LATER = new Date("2026-11-19T00:00:00.000Z")
 
 function actor(role: "author" | "analyst" | "admin" | "owner" = "admin") {
   return {
@@ -32,12 +36,27 @@ function grant(overrides: Record<string, unknown> = {}) {
   }
 }
 
+/** Автоматическая базовая выдача первого запуска: бессрочная и без выдавшего (`plan-free.md` п. 6а). */
+function baseGrant(overrides: Record<string, unknown> = {}) {
+  return grant({
+    id: "grant-base",
+    endsAt: null,
+    grantedById: null,
+    grantedBy: null,
+    reason: BASE_AUTHORSHIP_REASON,
+    ...overrides
+  })
+}
+
 function context(
   options: {
     role?: "author" | "analyst" | "admin" | "owner"
     rows?: ReturnType<typeof grant>[]
     recipient?: Record<string, unknown> | null
     existing?: ReturnType<typeof grant> | null
+    /** Выдачи получателя, по которым пересчитывается кэш плана. */
+    userGrants?: Record<string, unknown>[]
+    recipientRole?: "reader" | "author" | "editor"
   } = {}
 ): GraphQLContext {
   const planGrant = {
@@ -54,14 +73,27 @@ function context(
         options.recipient === undefined
           ? { id: "user-1", name: "Иван", handle: "ivan", archivedAt: null, isServiceAccount: false }
           : options.recipient
-      )
+      ),
+    update: vi.fn().mockResolvedValue({})
+  }
+  // Пересчёт кэша плана внутри транзакции читает роль получателя и все его выдачи.
+  const txUser = {
+    findUnique: vi.fn().mockResolvedValue({ role: options.recipientRole ?? "reader", isServiceAccount: false }),
+    update: user.update
+  }
+  const txPlanGrant = {
+    ...planGrant,
+    findMany: vi.fn(async (args: { select?: Record<string, unknown> }) =>
+      args.select && "tier" in args.select ? (options.userGrants ?? []) : (options.rows ?? [])
+    )
   }
   const prisma = {
     planGrant,
     auditLog,
     user,
-    $transaction: vi.fn(async (callback: (tx: { planGrant: typeof planGrant; auditLog: typeof auditLog }) => unknown) =>
-      callback({ planGrant, auditLog })
+    $transaction: vi.fn(
+      async (callback: (tx: { planGrant: typeof txPlanGrant; auditLog: typeof auditLog }) => unknown) =>
+        callback({ planGrant: txPlanGrant, auditLog, user: txUser } as never)
     )
   }
 
@@ -71,6 +103,10 @@ function context(
     prisma
   } as unknown as GraphQLContext
 }
+
+/** Что записано в кэш плана получателя внутри транзакции. */
+const planCacheWrite = (ctx: GraphQLContext) =>
+  (ctx.prisma.user.update as unknown as { mock: { calls: [{ data: unknown }][] } }).mock.calls.at(-1)?.[0].data
 
 describe("admin grants", () => {
   it("derives queued, active, ended and revoked states from persisted dates", async () => {
@@ -147,7 +183,10 @@ describe("admin grants", () => {
   })
 
   it("creates a grant and plan.grant audit record in one transaction", async () => {
-    const ctx = context()
+    // Кэш пересчитывается по выдачам получателя — созданная выдача уже среди них.
+    const ctx = context({
+      userGrants: [{ tier: "standard", startsAt: PAST, endsAt: SOON, revokedAt: null }]
+    })
 
     const result = await grantPlan(
       ctx,
@@ -182,10 +221,16 @@ describe("admin grants", () => {
         requestId: "req-grants"
       })
     })
+    // AC-1: роль и кэш плана меняются в той же транзакции, иначе читатель с действующей
+    // выдачей продолжал бы получать `PLAN_LIMIT` (`role-derivation.md` §2 п. 2).
+    expect(planCacheWrite(ctx)).toEqual({ role: "author", planTier: "standard", planUntil: SOON })
   })
 
   it("revokes an active grant and records plan.revoke atomically", async () => {
-    const ctx = context({ existing: grant() })
+    const ctx = context({
+      existing: grant(),
+      userGrants: [{ tier: "standard", startsAt: PAST, endsAt: SOON, revokedAt: now }]
+    })
 
     const result = await revokePlan(ctx, { grantId: "grant-1", reason: "  Решение редакции  " }, now)
 
@@ -201,5 +246,74 @@ describe("admin grants", () => {
         requestId: "req-grants"
       })
     })
+    // AC-2: после отзыва единственной выдачи кэш возвращается к `free`/`reader`.
+    expect(planCacheWrite(ctx)).toEqual({ role: "reader", planTier: "free", planUntil: null })
+  })
+
+  it("оставляет действующей вторую выдачу: кэш идёт по оставшимся, а не по отозванной (AC-2)", async () => {
+    const ctx = context({
+      existing: grant(),
+      userGrants: [
+        { tier: "standard", startsAt: PAST, endsAt: SOON, revokedAt: now },
+        { tier: "pro", startsAt: PAST, endsAt: LATER, revokedAt: null }
+      ]
+    })
+
+    await revokePlan(ctx, { grantId: "grant-1", reason: "Решение редакции" }, now)
+
+    expect(planCacheWrite(ctx)).toEqual({ role: "author", planTier: "pro", planUntil: LATER })
+  })
+
+  it("служебной роли план роль не меняет (role-derivation.md п. 6)", async () => {
+    const ctx = context({
+      recipientRole: "editor",
+      userGrants: [{ tier: "pro", startsAt: PAST, endsAt: SOON, revokedAt: null }]
+    })
+
+    await grantPlan(
+      ctx,
+      {
+        userHandle: "ivan",
+        tier: "pro",
+        startsAt: "2026-09-19T00:00:00.000Z",
+        endsAt: "2026-10-19T00:00:00.000Z",
+        reason: "Редакционная выдача"
+      },
+      now
+    )
+
+    expect(planCacheWrite(ctx)).toEqual({ planTier: "pro", planUntil: SOON })
+  })
+})
+
+// Базовая выдача первого запуска в раздел грантов не попадает и вручную не отзывается: закрытие
+// доступа — только согласованное архивирование аккаунта (журнал §27.1).
+describe("базовые выдачи вне раздела грантов", () => {
+  it("список запрашивает только ручные выдачи (AC-4)", async () => {
+    const ctx = context({ rows: [grant()] })
+
+    await listAdminGrants(ctx, now)
+
+    expect(ctx.prisma.planGrant.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { NOT: { endsAt: null, grantedById: null } } })
+    )
+  })
+
+  it("карточка базовой выдачи по прямому идентификатору не открывается (AC-4)", async () => {
+    const ctx = context({ existing: baseGrant() })
+
+    await expect(getAdminGrant(ctx, "grant-base", now)).resolves.toBeNull()
+  })
+
+  it("отзыв базовой выдачи — FORBIDDEN, выдача остаётся действующей (AC-4)", async () => {
+    const ctx = context({ existing: baseGrant() })
+
+    await expect(revokePlan(ctx, { grantId: "grant-base", reason: "Отзыв" }, now)).rejects.toMatchObject<
+      Partial<GraphQLError>
+    >({ extensions: { code: "FORBIDDEN", action: "plan.revoke" } })
+
+    expect(ctx.prisma.planGrant.update).not.toHaveBeenCalled()
+    expect(ctx.prisma.auditLog.create).not.toHaveBeenCalled()
+    expect(ctx.prisma.user.update).not.toHaveBeenCalled()
   })
 })
