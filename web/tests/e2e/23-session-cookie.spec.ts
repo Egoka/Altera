@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type BrowserContext, type Page } from "./helpers/test"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { resetRateLimitCounters } from "./helpers/auth-fixtures"
 
 // T-023: ротация refresh, выход и httpOnly-cookie через BFF. Refresh никогда не попадает
 // в браузерный JS (ADR-0023 п. 2), а повторное предъявление ротированного токена отзывает
@@ -82,6 +83,10 @@ const LOGIN = `mutation ($token: String!) {
 const REFRESH = `mutation ($refreshToken: String! = "") {
   refreshSession(refreshToken: $refreshToken) { accessToken refreshToken user { id } }
 }`
+
+// Счётчики лимитов частоты общие для всех сценариев одного адреса (T-125): каждый сценарий
+// начинает со своей чистой корзины.
+test.beforeEach(resetRateLimitCounters)
 
 test("вход выдаёт httpOnly-cookie, ротирует её и отзывает все сессии при повторном предъявлении", async ({
   page,

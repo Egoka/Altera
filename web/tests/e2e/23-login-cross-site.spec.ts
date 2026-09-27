@@ -1,5 +1,11 @@
 import { expect, test, type Page, type Request } from "./helpers/test"
-import { ensurePublishedLegalVersions, readMagicLinkToken, uniqueEmail, withPrisma } from "./helpers/auth-fixtures"
+import {
+  ensurePublishedLegalVersions,
+  readMagicLinkToken,
+  resetRateLimitCounters,
+  uniqueEmail,
+  withPrisma
+} from "./helpers/auth-fixtures"
 
 /**
  * T-123: вход по ссылке из письма. Веб-почта живёт на другом домене, поэтому переход по ссылке
@@ -52,6 +58,10 @@ const requestLink = async (page: Page, email: string): Promise<void> => {
 
   expect(ok, "ссылка входа запрошена").toBe(true)
 }
+
+// Счётчики лимитов частоты общие для всех сценариев одного адреса (T-125): каждый сценарий
+// начинает со своей чистой корзины.
+test.beforeEach(resetRateLimitCounters)
 
 test("переход по ссылке из веб-почты завершает вход и оставляет httpOnly refresh-cookie", async ({
   page,

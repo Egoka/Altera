@@ -3,6 +3,7 @@ import {
   createArchivedUser,
   ensurePublishedLegalVersions,
   readMagicLinkToken,
+  resetRateLimitCounters,
   uniqueEmail,
   withPrisma
 } from "./helpers/auth-fixtures"
@@ -43,6 +44,10 @@ const requestLinkFrom = async (page: Page, email: string) => {
   await page.getByRole("checkbox").check()
   await page.getByRole("button", { name: /получить ссылку входа/i }).click()
 }
+
+// Счётчики лимитов частоты общие для всех сценариев одного адреса (T-125): каждый сценарий
+// начинает со своей чистой корзины.
+test.beforeEach(resetRateLimitCounters)
 
 test.describe("страница входа по таблице состояний", () => {
   test.beforeEach(async () => {

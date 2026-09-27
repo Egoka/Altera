@@ -28,7 +28,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     graphqlApiUrl: "http://127.0.0.1:4000/",
-    requestIdForwardSecret: ""
+    requestIdForwardSecret: "",
+    // Сколько доверенных прокси площадки стоит перед BFF: из `X-Forwarded-For` берётся элемент,
+    // добавленный самым внешним из них (`server/utils/clientAddress.ts`). Свойство площадки,
+    // а не продуктовое правило: за Cloudflare и Gateway значение 2, на Render — 1.
+    trustedProxyHops: 1
   },
 
   modules: [

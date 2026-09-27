@@ -3,6 +3,7 @@ import {
   createArchivedUser,
   ensurePublishedLegalVersions,
   readMagicLinkToken,
+  resetRateLimitCounters,
   uniqueEmail,
   withPrisma
 } from "./helpers/auth-fixtures"
@@ -21,6 +22,10 @@ const requestLink = async (page: Page, email: string) => {
 }
 
 // Flow #1: docs/spec/10-flows/register-and-login.md.
+// Счётчики лимитов частоты общие для всех сценариев одного адреса (T-125): каждый сценарий
+// начинает со своей чистой корзины.
+test.beforeEach(resetRateLimitCounters)
+
 test("flow #1 registers or logs in without disclosing whether the account exists", async ({ page, request }) => {
   await ensurePublishedLegalVersions()
   const email = uniqueEmail("t022-flow1")

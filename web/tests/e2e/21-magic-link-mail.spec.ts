@@ -1,5 +1,6 @@
 import { expect, test } from "./helpers/test"
 import { PrismaClient } from "../../../server/src/generated/prisma/index.js"
+import { resetRateLimitCounters } from "./helpers/auth-fixtures"
 
 // T-021: письмо входа уходит через mail-модуль в локальный SMTP-приёмник (Mailpit)
 // и записывается в историю писем; история проверяется прямым запросом к базе.
@@ -16,6 +17,10 @@ interface MailpitMessage {
   Text: string
   HTML: string
 }
+
+// Счётчики лимитов частоты общие для всех сценариев одного адреса (T-125): каждый сценарий
+// начинает со своей чистой корзины.
+test.beforeEach(resetRateLimitCounters)
 
 test("magic-link письмо появляется в локальном приёмнике и в истории писем без токена", async ({ page, request }) => {
   const email = `t021-${Date.now()}@example.test`

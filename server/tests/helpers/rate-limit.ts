@@ -16,16 +16,17 @@ export function createMemoryRateLimitStore(): RateLimitCounterStore {
 
   return {
     mode: "database",
-    async consume(bucket, key, windowSeconds, now): Promise<RateLimitWindow> {
+    async consume(bucket, key, windowSeconds, now, cost = 1): Promise<RateLimitWindow> {
       const id = `${bucket}\u0000${key}`
+      const hits = Math.max(1, Math.floor(cost))
       const current = windows.get(id)
       if (!current || current.resetAt.getTime() <= now.getTime()) {
-        const fresh = { hits: 1, resetAt: new Date(now.getTime() + windowSeconds * 1000) }
+        const fresh = { hits, resetAt: new Date(now.getTime() + windowSeconds * 1000) }
         windows.set(id, fresh)
         return { hits: fresh.hits, resetAt: fresh.resetAt }
       }
 
-      current.hits += 1
+      current.hits += hits
       return { hits: current.hits, resetAt: current.resetAt }
     }
   }
