@@ -162,10 +162,15 @@ export async function createSupportRequest(
 }
 
 /**
- * Уведомление сотрудникам очереди (`admin`/`owner`, матрица #117). Обращение к этому моменту уже
- * сохранено, поэтому отказ почты его не отменяет и наружу не поднимается: повторная отправка
- * формы создала бы дубль. Отказ фиксирует служба писем (`mail.failed`), а письмо остаётся в
- * истории `/admin/mail` со статусом `failed`.
+ * Уведомление сотрудникам очереди (`admin`/`owner`, матрица #117). Получатели — все активные
+ * `admin` и `owner`, контакты берутся из их служебных записей (журнал §40 п. 2): признак
+ * `isServiceAccount` получателя не фильтруется, потому что служебными являются как раз все
+ * `admin`/`owner` (`admin/staff.ts` назначает роль вместе с `isServiceAccount: true`).
+ *
+ * Обращение к этому моменту уже сохранено, поэтому ни один отказ шага уведомления его не отменяет
+ * и наружу не поднимается: ошибка мутации заставила бы отправить форму заново и создала бы дубль
+ * (`contact.md` §4). Отказ письма фиксирует служба писем (`mail.failed`), письмо остаётся в
+ * истории `/admin/mail` со статусом `failed`; остальные сбои шага пишутся как `backend.error`.
  */
 async function notifyStaff(
   context: SupportRequestContext,
@@ -178,28 +183,40 @@ async function notifyStaff(
     requestId: string | null
   }
 ): Promise<void> {
-  const staff = await context.store.user.findMany({
-    where: { role: { in: ["admin", "owner"] }, archivedAt: null, isServiceAccount: false },
-    select: { email: true, locale: true }
-  })
-
-  for (const recipient of staff) {
-    const { message, sanitizedBody } = createSupportRequestNoticeMail(recipient.locale, {
-      ticketNo: saved.ticketNo,
-      ...notice
+  try {
+    const staff = await context.store.user.findMany({
+      where: { role: { in: ["admin", "owner"] }, archivedAt: null },
+      select: { email: true, locale: true }
     })
-    try {
-      await context.mail.send({
-        template: SUPPORT_REQUEST_STAFF_TEMPLATE,
-        to: recipient.email,
-        content: { subject: message.subject, text: message.text, html: message.html },
-        sanitizedBody,
-        objectType: "supportRequest",
-        objectId: saved.id,
-        requestId: context.requestId
+
+    for (const recipient of staff) {
+      const { message, sanitizedBody } = createSupportRequestNoticeMail(recipient.locale, {
+        ticketNo: saved.ticketNo,
+        ...notice
       })
-    } catch {
-      // `mail.failed` уже записан службой писем; остальные сотрудники получают своё письмо.
+      try {
+        await context.mail.send({
+          template: SUPPORT_REQUEST_STAFF_TEMPLATE,
+          to: recipient.email,
+          content: { subject: message.subject, text: message.text, html: message.html },
+          sanitizedBody,
+          objectType: "supportRequest",
+          objectId: saved.id,
+          requestId: context.requestId
+        })
+      } catch {
+        // `mail.failed` уже записан службой писем; остальные сотрудники получают своё письмо.
+      }
     }
+  } catch (error: unknown) {
+    // Выборка получателей или сборка письма: обращение уже в очереди, отвечать ошибкой нельзя.
+    context.logger.log({
+      level: "error",
+      event: "backend.error",
+      requestId: context.requestId,
+      message: "Support request staff notice failed",
+      data: { ticketNo: saved.ticketNo },
+      error
+    })
   }
 }

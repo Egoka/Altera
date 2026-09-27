@@ -9,6 +9,8 @@ import { createTestRateLimiter } from "./helpers/rate-limit"
 /**
  * Письмо в редакцию и «битая ссылка» (`20-public/contact.md`, `not-found.md` §4, матрица #117).
  * Критерий T-059 №1 — обращение сохраняется и несёт `requestId`, если он передан.
+ * Критерии T-131 — уведомление доходит до реальных служебных записей `admin`/`owner`
+ * (журнал §40 п. 2), а сбой уведомления не превращает ответ в ошибку.
  */
 
 interface FakeUser {
@@ -17,7 +19,8 @@ interface FakeUser {
   role: "reader" | "author" | "admin" | "owner"
   locale: "ru" | "en"
   archivedAt: Date | null
-  isServiceAccount?: boolean
+  /** Как в базе: `admin`/`owner` создаются служебными записями (`admin/staff.ts`, `seed.ts`). */
+  isServiceAccount: boolean
 }
 
 const reader = (overrides: Partial<FakeUser> = {}): FakeUser => ({
@@ -26,17 +29,26 @@ const reader = (overrides: Partial<FakeUser> = {}): FakeUser => ({
   role: "reader",
   locale: "ru",
   archivedAt: null,
+  isServiceAccount: false,
   ...overrides
 })
 
 const staff: FakeUser[] = [
-  { id: "admin-1", email: "admin@example.test", role: "admin", locale: "ru", archivedAt: null },
-  { id: "owner-1", email: "owner@example.test", role: "owner", locale: "en", archivedAt: null }
+  { id: "admin-1", email: "admin@example.test", role: "admin", locale: "ru", archivedAt: null, isServiceAccount: true },
+  { id: "owner-1", email: "owner@example.test", role: "owner", locale: "en", archivedAt: null, isServiceAccount: true },
+  {
+    id: "admin-2",
+    email: "left@example.test",
+    role: "admin",
+    locale: "ru",
+    archivedAt: new Date("2026-09-10T00:00:00.000Z"),
+    isServiceAccount: true
+  }
 ]
 
 const MESSAGE = "Здравствуйте, после оплаты страница показала ошибку, что делать?"
 
-function createWorld(options: { currentUser?: FakeUser | null; mailFails?: boolean } = {}) {
+function createWorld(options: { currentUser?: FakeUser | null; mailFails?: boolean; staffLookupFails?: boolean } = {}) {
   const saved: Record<string, unknown>[] = []
   const logs: { event: string; data?: Record<string, unknown> }[] = []
   const sentMail: { to: string; template: string; text: string; sanitizedBody: string; objectId?: string }[] = []
@@ -51,10 +63,16 @@ function createWorld(options: { currentUser?: FakeUser | null; mailFails?: boole
       })
     },
     user: {
-      findMany: vi.fn(async ({ where }: { where: { role: { in: string[] } } }) =>
-        users
-          .filter((user) => where.role.in.includes(user.role) && !user.archivedAt && !user.isServiceAccount)
-          .map(({ email, locale }) => ({ email, locale }))
+      // Фильтры применяются как в базе: запрос, отсекающий служебные записи, не найдёт никого.
+      findMany: vi.fn(
+        async ({ where }: { where: { role: { in: string[] }; archivedAt?: null; isServiceAccount?: boolean } }) => {
+          if (options.staffLookupFails) throw new Error("database unavailable")
+          return users
+            .filter((user) => where.role.in.includes(user.role))
+            .filter((user) => where.archivedAt !== null || user.archivedAt === null)
+            .filter((user) => where.isServiceAccount === undefined || user.isServiceAccount === where.isServiceAccount)
+            .map(({ email, locale }) => ({ email, locale }))
+        }
       )
     }
   }
@@ -215,7 +233,7 @@ describe("createSupportRequest — событие и уведомление", ()
     })
   })
 
-  it("уведомляет admin и owner, копия для истории писем не повторяет адрес и текст", async () => {
+  it("уведомляет служебные записи admin и owner, копия для истории писем не повторяет адрес и текст", async () => {
     const world = createWorld()
 
     await create(world, { ...guestLetter, requestId: "t058-request-id" })
@@ -233,6 +251,15 @@ describe("createSupportRequest — событие и уведомление", ()
     expect(world.sentMail.find((mail) => mail.to === "owner@example.test")?.text).toContain("request No. 101")
   })
 
+  it("архивированная служебная запись письма не получает", async () => {
+    const world = createWorld()
+
+    await create(world, guestLetter)
+
+    expect(world.sentMail).toHaveLength(2)
+    expect(world.sentMail.map((mail) => mail.to)).not.toContain("left@example.test")
+  })
+
   it("отказ почты не отменяет сохранённое обращение", async () => {
     const world = createWorld({ mailFails: true })
 
@@ -240,6 +267,29 @@ describe("createSupportRequest — событие и уведомление", ()
 
     expect(result).toEqual({ ok: true, ticketNo: 101 })
     expect(world.saved).toHaveLength(1)
+  })
+
+  it("сбой выборки получателей даёт номер обращения и пишет backend.error", async () => {
+    const world = createWorld({ staffLookupFails: true })
+
+    const result = await create(world, guestLetter)
+
+    expect(result).toEqual({ ok: true, ticketNo: 101 })
+    expect(world.saved).toHaveLength(1)
+    expect(world.sentMail).toHaveLength(0)
+    expect(world.logs.map((entry) => entry.event)).toContain("backend.error")
+  })
+
+  it("сбой уведомления не провоцирует повтор: ответ успешен, а вторая отправка была бы дублем", async () => {
+    const world = createWorld({ mailFails: true, currentUser: reader() })
+
+    // Ответ успешный, поэтому зона 4 показывает номер обращения и форма не отправляется заново.
+    expect(await create(world, { topic: "general", message: MESSAGE })).toEqual({ ok: true, ticketNo: 101 })
+    expect(world.saved).toHaveLength(1)
+
+    // Дедупликации у мутации нет: повтор, которого избегает успешный ответ, создал бы второе обращение.
+    await create(world, { topic: "general", message: MESSAGE })
+    expect(world.saved).toHaveLength(2)
   })
 })
 
