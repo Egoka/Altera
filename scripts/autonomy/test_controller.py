@@ -158,6 +158,8 @@ class HeadReceiptOnlyTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = self.directory.name
         self.git("init", "-q", "-b", "app")
+        # Без фонового `git maintenance run --auto --detach`: он переживает commit и гоняется с cleanup.
+        self.git("config", "maintenance.auto", "false")
         self.live = c.Live({"repo": self.root})
         self.base = self.commit("README.md", "base\n")
         self.tested = self.commit("server/src/feature.ts", "export const feature = 1\n")
@@ -432,6 +434,9 @@ class FreshBaseTests(unittest.TestCase):
         self.remote = Path(self.temporary.name) / "remote.git"
         subprocess.run(["git", "init", "--bare", str(self.remote)], capture_output=True, check=True)
         subprocess.run(["git", "init", "-b", "app", str(self.repo)], capture_output=True, check=True)
+        # Без фонового автообслуживания после commit/push; receive-pack читает конфиг самого remote.
+        for repository in (self.remote, self.repo):
+            subprocess.run(["git", "-C", str(repository), "config", "maintenance.auto", "false"], capture_output=True, check=True)
         self.git("config", "user.name", "Test")
         self.git("config", "user.email", "test@example.invalid")
         self.git("remote", "add", "origin", str(self.remote))
@@ -546,6 +551,7 @@ class ReviewEquivalenceTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         self.repo = Path(temporary.name)
         self.git("init", "-b", "app")
+        self.git("config", "maintenance.auto", "false")
         self.git("config", "user.name", "Test")
         self.git("config", "user.email", "test@example.invalid")
         self.write("server/a.ts", "".join(f"line {i}\n" for i in range(1, 101)))

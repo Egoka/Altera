@@ -108,6 +108,10 @@ class PreflightTests(unittest.TestCase):
 
             git("init", "--bare", str(origin))
             git("init", "-b", "app", str(source))
+            # Без фонового `git maintenance run --auto --detach`: он переживает commit/push и гоняется
+            # с удалением временного каталога. receive-pack читает конфиг самого origin.
+            for repository in (origin, source):
+                git("config", "maintenance.auto", "false", cwd=repository)
             git("config", "user.email", "test@example.invalid", cwd=source)
             git("config", "user.name", "Test", cwd=source)
             git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-m", "initial", cwd=source)

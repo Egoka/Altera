@@ -6,6 +6,7 @@ import fcntl
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import tempfile
 import time
@@ -70,6 +71,9 @@ class CleanupTests(unittest.TestCase):
         self.repo = self.root / "repository"
         self.repo.mkdir()
         git(self.repo, "init", "-b", "app")
+        # Без фонового автообслуживания: `git maintenance run --auto --detach` переживает
+        # commit/push и пишет в objects/, пока TemporaryDirectory.cleanup удаляет каталог.
+        git(self.repo, "config", "maintenance.auto", "false")
         git(self.repo, "config", "user.name", "Cleanup Test")
         git(self.repo, "config", "user.email", "cleanup@example.invalid")
         git(self.repo, "config", "merge.ff", "true")
@@ -81,6 +85,8 @@ class CleanupTests(unittest.TestCase):
         self.base = git(self.repo, "rev-parse", "HEAD")
         self.remote = self.root / "origin.git"
         git(self.repo, "init", "--bare", str(self.remote))
+        # receive-pack читает конфиг самого remote; `-c` и GIT_CONFIG_* до него не доходят.
+        git(self.remote, "config", "maintenance.auto", "false")
         git(self.repo, "remote", "add", "origin", str(self.remote))
         self.owned = self.root / "owned"
         self.owned.mkdir()
@@ -363,6 +369,18 @@ class CleanupTests(unittest.TestCase):
         self.receipt["finalization"]["path"] = "docs/reports/../../product.txt"
         self.evidence["task"]["receipt_sha256"] = digest(self.receipt)
         self.assert_preserved("finalization")
+
+    def test_fixture_git_leaves_no_background_maintenance(self):
+        # Фоновый `git maintenance run --auto --detach` переживает commit/push и пишет в objects/,
+        # пока TemporaryDirectory.cleanup удаляет каталог: ENOTEMPTY на origin.git.
+        trace = self.root / "trace2.jsonl"
+        env = dict(os.environ, GIT_TRACE2_EVENT=str(trace))
+        (self.repo / "product.txt").write_text("traced\n")
+        for args in (("commit", "-qam", "traced"), ("push", "-q", "origin", "app")):
+            subprocess.run(["git", "-C", str(self.repo), *args], check=True, capture_output=True, env=env)
+        started = [event["argv"][1:] for event in map(json.loads, trace.read_text().splitlines())
+                   if event["event"] == "start"]
+        self.assertFalse([argv for argv in started if argv[:1] in (["maintenance"], ["gc"])], started)
 
     def test_runtime_gc_reports_unsupported_without_removal(self):
         result = cleanup_module.runtime_gc({"daemon": "multica"}, apply=True)
