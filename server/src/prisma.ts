@@ -9,6 +9,7 @@ import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
 import type { RateLimiter } from "./rate-limits"
 import type { SessionMeta } from "./auth/session"
+import type { AiCheckAdapter } from "./ai"
 import { getRequestId, setRequestUserSnapshot } from "./observability/request-tracing"
 
 if (!process.env.JWT_ACCESS_SECRET) {
@@ -38,6 +39,8 @@ export interface GraphQLContext {
   rateLimiter: RateLimiter
   // История `backend.error` и адаптер внешнего сборщика (`80-observability/error-collector.md`).
   errorCollector: ErrorCollector
+  // Автопроверка имени и аватара использует тот же утверждённый адаптер, что и подача статьи.
+  aiCheck: AiCheckAdapter
 }
 
 // Браузер ходит только через BFF, поэтому адрес приходит заголовком прокси; поле
@@ -60,7 +63,8 @@ export async function createContext(
   mail: MailService,
   media: MediaService,
   rateLimiter: RateLimiter,
-  errorCollector: ErrorCollector
+  errorCollector: ErrorCollector,
+  aiCheck: AiCheckAdapter
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const requestMeta = readRequestMeta(initialContext.request)
@@ -125,6 +129,7 @@ export async function createContext(
     mail,
     media,
     rateLimiter,
-    errorCollector
+    errorCollector,
+    aiCheck
   }
 }

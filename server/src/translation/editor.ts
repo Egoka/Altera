@@ -395,7 +395,7 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
   // Обложка обязательна перед публикацией и индивидуальна (журнал §29.1).
   await ensureCoverBeforeSubmit(ctx, translation.article.coverAssetId)
   if (!translation.article.firstPublishedAt) {
-    if (user.name.trim() === "" || user.handle.trim() === "") validationError(ctx, "profile", "required")
+    if (user.name.trim() === "" || !user.handleConfirmed) validationError(ctx, "profile", "required")
   }
 
   await ensureSubmissionQueue(ctx, translation.article.authorId)

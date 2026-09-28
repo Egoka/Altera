@@ -4,6 +4,8 @@ import articleResolver from "../src/graphql/article/resolver"
 
 const activeAuthor = {
   id: "author-1",
+  name: "Автор",
+  handleConfirmed: true,
   role: "author",
   archivedAt: null,
   planTier: "standard",
@@ -195,6 +197,26 @@ describe("section required before review and publication", () => {
       articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
     ).rejects.toMatchObject<Partial<GraphQLError>>({
       extensions: { code: "VALIDATION_ERROR", field: "sectionId", rule: "active" }
+    })
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [{ name: "", handleConfirmed: true }, "name", "required"],
+    [{ name: "Автор", handleConfirmed: false }, "handle", "confirmed"]
+  ])("blocks submission without a complete public identity", async (author, field, rule) => {
+    const update = vi.fn()
+    const prisma = {
+      article: {
+        findUnique: vi.fn().mockResolvedValue({ ...draft({ status: "active" }), author }),
+        update
+      }
+    }
+
+    await expect(
+      articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
+    ).rejects.toMatchObject<Partial<GraphQLError>>({
+      extensions: { code: "VALIDATION_ERROR", field, rule }
     })
     expect(update).not.toHaveBeenCalled()
   })

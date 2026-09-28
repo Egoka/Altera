@@ -138,6 +138,7 @@ type AccountUser {
   Состояние своей архивированной записи; полному аккаунту — `FORBIDDEN` (матрица #116).
   """
   archiveState: AccountArchiveState!
+  archivedAt: String
   articles: [Article!]
 
   """
@@ -146,6 +147,7 @@ type AccountUser {
   """
   avatar: Avatar
   avatarAssetId: ID
+  avatarCheckReason: String
   avatarCheckStatus: ProfileCheckStatus!
   bio: String
 
@@ -159,6 +161,8 @@ type AccountUser {
   """Состояние смены адреса своей записи (матрица #49)."""
   emailChange: EmailChangeState!
   handle: String!
+  handleChangedAt: String
+  handleConfirmed: Boolean!
 
   """
   Есть ли у аккаунта хотя бы одна статья: без неё авторские разделы скрыты (журнал §8.21).
@@ -173,6 +177,7 @@ type AccountUser {
   isArchived: Boolean!
   locale: Locale!
   name: String!
+  nameCheckReason: String
   nameCheckStatus: ProfileCheckStatus!
 
   """
@@ -180,6 +185,7 @@ type AccountUser {
   а в кабинете видит «задать пароль» вместо «сменить пароль».
   """
   passwordSet: Boolean!
+  pendingName: String
   photoUrl: String
   prevAvatarId: ID
 
@@ -1562,6 +1568,11 @@ input GrantPlanInput {
   userHandle: String!
 }
 
+type HandleAvailability {
+  available: Boolean!
+  handle: String!
+}
+
 scalar JSON
 
 """
@@ -1807,6 +1818,7 @@ type Mutation {
   createSupportRequest(acceptPrivacy: Boolean, email: String, locale: Locale, message: String, path: String, requestId: String, route: String, topic: SupportTopic!): SupportRequestResult!
   createTag(input: CreateTagInput!): Tag!
   deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
+  decideProfileCheck(field: ProfileReviewField!, reason: String, userId: ID!, verdict: ProfileReviewVerdict!): ProfileReviewResult!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
   exportAudit(filters: AuditLogFilters): AuditExport!
@@ -1885,7 +1897,7 @@ type Mutation {
   Откат аватара к предыдущей версии рецензентом (матрица #120, журнал §29.5): пишется
   `profile.check` (#85) с `verdict: reverted`. Прежней версии нет — `CONFLICT`.
   """
-  revertAvatar(reason: String, userId: ID!): Avatar
+  revertAvatar(reason: String!, userId: ID!): Avatar
   revertToDraft(id: ID!): Article!
   revokeAllSessions: SessionRevokeAllResult!
   revokeException(id: ID!, reason: String!): PermissionException!
@@ -1927,6 +1939,7 @@ type Mutation {
   submitTranslation(id: ID!): EditorTranslation!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
+  updateProfile(input: UpdateProfileInput!): AccountUser!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
 
@@ -2125,6 +2138,26 @@ enum ProfileCheckStatus {
   rejected
 }
 
+enum ProfileReviewField {
+  name
+}
+
+type ProfileReviewResult {
+  avatarCheckReason: String
+  avatarCheckStatus: ProfileCheckStatus!
+  handle: String!
+  id: ID!
+  name: String!
+  nameCheckReason: String
+  nameCheckStatus: ProfileCheckStatus!
+  pendingName: String
+}
+
+enum ProfileReviewVerdict {
+  approve
+  reject
+}
+
 type PublicSection {
   articleCount: Int!
   id: ID!
@@ -2178,6 +2211,7 @@ type Query {
   author(handle: String!): AuthorProfile!
   authorCatalog(letter: String, locale: Locale!, page: Int! = 1, section: String, sort: AuthorCatalogSort! = recent): AuthorCatalog!
   authoringTaxonomy: AuthoringTaxonomy!
+  checkHandle(handle: String!): HandleAvailability!
   feed(format: String, handle: String, limit: Int! = 50, locale: Locale!, page: Int! = 1, scope: FeedScope! = home, slug: String, tag: String): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
@@ -2629,6 +2663,14 @@ input UpdateFormatInput {
   name: String
   nameEn: String
   slug: String
+}
+
+input UpdateProfileInput {
+  bio: String
+  handle: String!
+  locale: Locale!
+  name: String!
+  socialLinks: JSON
 }
 
 input UpdateSectionInput {

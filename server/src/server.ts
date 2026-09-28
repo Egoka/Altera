@@ -88,6 +88,7 @@ const rateLimiter = createRateLimiter({
 })
 
 const jobStore = createPrismaJobStore(prisma)
+const aiCheck = createAiCheckAdapterFromEnv(process.env)
 // Очередь AI-описания: конвейеру нужна только постановка задания, поэтому идентификаторы задания
 // и AI-процесса остаются внутри модуля AI (`upload-pipeline.md` п. 6а).
 const aiAltQueue = createPrismaAiAltQueue(prisma, logger)
@@ -106,7 +107,7 @@ const media = createMediaService({
 const yoga = createYoga<GraphQLContext>({
   schema,
   context: (initialContext) =>
-    createContext(initialContext, cache, logger, piiHasher, mail, media, rateLimiter, errorCollector),
+    createContext(initialContext, cache, logger, piiHasher, mail, media, rateLimiter, errorCollector, aiCheck),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {
@@ -173,7 +174,7 @@ registerHousekeepingJob(prisma)
 registerMediaPurgeJob(createMediaPurgeDeps(prisma, storageConfig.storage))
 // AI-проверка допустимости: `real` ждёт утверждения владельцем (журнал §32 п. 2), поэтому вне
 // разработки адаптер отвечает недоступностью провайдера, а не выносит вердикт.
-registerAiCheckJob({ client: prisma, adapter: createAiCheckAdapterFromEnv(process.env), logger })
+registerAiCheckJob({ client: prisma, adapter: aiCheck, logger })
 // AI-описание изображений: выбор модели — отдельный проход (`upload-pipeline.md` п. 6а), поэтому
 // вне разработки адаптер отвечает недоступностью провайдера, а не выдумывает описание.
 registerAiAltJob({

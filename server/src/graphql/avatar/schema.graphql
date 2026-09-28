@@ -57,5 +57,5 @@ extend type Mutation {
   Откат аватара к предыдущей версии рецензентом (матрица #120, журнал §29.5): пишется
   `profile.check` (#85) с `verdict: reverted`. Прежней версии нет — `CONFLICT`.
   """
-  revertAvatar(userId: ID!, reason: String): Avatar
+  revertAvatar(userId: ID!, reason: String!): Avatar
 }

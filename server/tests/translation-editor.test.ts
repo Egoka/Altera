@@ -27,6 +27,7 @@ const author = {
   id: "author-1",
   name: "Пётр Соколов",
   handle: "petr",
+  handleConfirmed: true,
   role: "author",
   archivedAt: null,
   planTier: "standard",
@@ -277,6 +278,17 @@ describe("T-040 сохранение версии", () => {
 })
 
 describe("T-040 подача к публикации", () => {
+  it("не пропускает первую подачу с выданным, но не подтверждённым хэндлом", async () => {
+    const prisma = prismaDouble()
+
+    const extensions = await extensionsOf(
+      submitTranslation(context(prisma, { ...author, handleConfirmed: false }), "translation-1")
+    )
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
+    expect(prisma.articleTranslation.update).not.toHaveBeenCalled()
+  })
+
   it("критерий 2: подача без обложки отвечает VALIDATION_ERROR", async () => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(translation({}, { coverAssetId: null }))

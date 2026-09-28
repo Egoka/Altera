@@ -293,6 +293,42 @@
         "dataUnavailable": "The e-mail change data could not be loaded. Try again later."
       }
     },
+    "profile": {
+      "pageTitle": "Profile",
+      "eyebrow": "Public identity",
+      "lead": "Readers see your name, address, and avatar. A name and confirmed address are required before publication.",
+      "publishReady": "Profile is ready for publication",
+      "publishBlocked": "Add a name and save the address before publishing",
+      "avatarTitle": "Avatar",
+      "avatarUpload": "Upload",
+      "avatarRemove": "Remove",
+      "name": "Name",
+      "handle": "Profile address",
+      "bio": "About",
+      "site": "Website",
+      "language": "Interface language",
+      "languageRu": "Russian",
+      "languageEn": "English",
+      "handleChecking": "Checking the address…",
+      "handleAvailable": "Address is available",
+      "handleTaken": "This address has already been used",
+      "handleInvalid": "Use 3–32 lowercase Latin letters, digits, or hyphens",
+      "save": "Save profile",
+      "saving": "Saving…",
+      "saved": "Profile saved",
+      "retry": "Retry",
+      "status": {
+        "namePending": "The new name awaits an editorial decision; the old one remains public.",
+        "nameRejected": "The name was rejected.",
+        "avatarPending": "The avatar awaits an editorial decision and is already public.",
+        "avatarRejected": "The avatar was rejected; the previous version was restored."
+      },
+      "error": {
+        "dataUnavailable": "The profile could not be loaded.",
+        "forbidden": "A service account has no public profile.",
+        "save": "The profile could not be saved. Please try again."
+      }
+    },
     "sessions": {
       "pageTitle": "Sessions and devices",
       "intro": "A session is a sign-in from one device: access is renewed every 15 minutes while you use the site and ends after 30 days without activity.",

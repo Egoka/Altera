@@ -116,6 +116,21 @@ function ensureActiveSection(
   }
 }
 
+function ensurePublicIdentity(
+  article: { author?: { name: string; handleConfirmed: boolean } | null },
+  requestId: string
+): void {
+  // Старые изолированные двойники резолвера могли не вернуть include `author`; настоящий Prisma
+  // запрос всегда включает его. У живой записи оба условия проверяются до смены статуса.
+  if (!article.author) return
+  if (!article.author.name.trim()) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "name", rule: "required" })
+  }
+  if (!article.author.handleConfirmed) {
+    throw createApiError("VALIDATION_ERROR", { requestId, field: "handle", rule: "confirmed" })
+  }
+}
+
 function ensureArticleAuthoringAccess(ctx: GraphQLContext, action: string, currentUser = ctx.currentUser) {
   const user = ensureAuthenticated(currentUser, ctx.requestId)
   if (user.role === "reader" || user.role === "author") {
@@ -789,6 +804,7 @@ export default {
           actual: article.status
         })
       }
+      ensurePublicIdentity(article, ctx.requestId)
       ensureActiveSection(article, ctx.requestId)
       // Обложка обязательна перед публикацией (журнал §29.1, `article-edit.md` §4): подача без
       // неё — `VALIDATION_ERROR`, и до публикации материал без карточки не доходит.
@@ -834,9 +850,12 @@ export default {
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
       ensureRole(ctx.currentUser, "admin", "article.setStatus", ctx.requestId)
 
-      const article = await ctx.prisma.article.findUnique({ where: { id }, include: { section: true } })
+      const article = await ctx.prisma.article.findUnique({ where: { id }, include: { author: true, section: true } })
       if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (sectionRequiredStatuses.has(status)) ensureActiveSection(article, ctx.requestId)
+      if (sectionRequiredStatuses.has(status)) {
+        ensureActiveSection(article, ctx.requestId)
+        ensurePublicIdentity(article, ctx.requestId)
+      }
 
       const updatedArticle = await ctx.prisma.article.update({
         where: { id },
@@ -924,7 +943,10 @@ export default {
           throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
         }
         if (sectionRequiredStatuses.has(status)) {
-          for (const article of articlesToUpdate) ensureActiveSection(article, ctx.requestId)
+          for (const article of articlesToUpdate) {
+            ensureActiveSection(article, ctx.requestId)
+            ensurePublicIdentity(article, ctx.requestId)
+          }
         }
 
         // Обновляем статус статей
