@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "task_id": "T-066",
+  "issue_id": "01a0e7a0-36d9-7424-8f3c-91b13c83779b",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-066-article-covers.md",
+    "sha": "15aa72019af2a0da66ff36dd2337f3e885ca8c1e"
+  },
+  "baseline_sha": "59f74e5d8dcc774cb43d1f0ee1a5f688b9f6da18",
+  "tested_sha": "2b7f45e75700018ab8fbf24d8cda4ad48be7a569",
+  "branch": "feat/t066-article-covers",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e7d7-3712-7cc3-aad3-de99ab27ed3c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "подача без обложки → VALIDATION_ERROR (field cover, rule required/processing): server/tests/article-cover.test.ts и web/tests/e2e/66-article-cover.spec.ts (2b7f45e)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "карточка ленты опубликованного материала показывает его кадр `large` из раздачи /media, элементов заполнителя ноль: web/tests/e2e/66-article-cover.spec.ts, 2 passed (2b7f45e)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (2b7f45e)",
+    "lint": "passed: pnpm lint exit 0 (2b7f45e)",
+    "tests": "passed: server 1127 passed / 61 skipped, web 811 passed, content 99 passed (2b7f45e)",
+    "build": "passed: pnpm --filter server run build:ci exit 0, pnpm --filter nuxt-app run build exit 0 (2b7f45e)",
+    "typecheck": "passed: pnpm --filter nuxt-app run typecheck exit 0, четыре проекта, ошибок 0 (2b7f45e)",
+    "e2e": "passed: playwright tests/e2e/66-article-cover.spec.ts 2 passed; смежные наборы 30 passed; CI 36422302360 — 295 passed, повторный прогон изменённых спеков 6 passed (2b7f45e)"
+  },
+  "pr": {
+    "number": 350,
+    "url": "https://github.com/Egoka/Altera/pull/350",
+    "base_ref": "app",
+    "base_sha": "b47b273294c9e2a30e5433bcea171114ec065d05",
+    "head_sha": "2b7f45e75700018ab8fbf24d8cda4ad48be7a569",
+    "merge_sha": "cc362ff2a0eac917f490db6658fd6d2e86b9fe88"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "Миграций задача не добавляет: `Article.coverAssetId` и `MediaAsset.focalX/focalY` уже есть в схеме (миграция media_assets, T-063). Прод-окружения в РФ нет (журнал §34 п. 1, T-103); выкладка — за контроллером вместе с хостингом."
+  },
+  "usage": null
+}
