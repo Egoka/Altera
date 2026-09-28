@@ -9,6 +9,7 @@ const items = ref<Record<string, unknown>[]>([])
 const pagination = ref<Record<string, unknown> | null>(null)
 const stats = ref<Record<string, unknown> | null>(null)
 const health = ref<Record<string, unknown>[]>([])
+const healthStale = ref(false)
 const pending = ref(false)
 const failed = ref(false)
 const requestId = ref<string | null>(null)
@@ -17,6 +18,7 @@ const rateLimitRetryAfter = ref<number | null>(null)
 const load = vi.fn()
 const loadStats = vi.fn()
 const loadHealth = vi.fn()
+const checkHealthNow = vi.fn()
 const resolveMany = vi.fn()
 const exportCsv = vi.fn()
 let routeQuery: Record<string, string> = {}
@@ -26,6 +28,7 @@ beforeEach(() => {
   pagination.value = null
   stats.value = null
   health.value = []
+  healthStale.value = false
   pending.value = false
   failed.value = false
   requestId.value = null
@@ -38,7 +41,9 @@ beforeEach(() => {
   vi.stubGlobal("useRoute", () => ({ query: routeQuery }))
   vi.stubGlobal("useRouter", () => ({ replace: vi.fn() }))
   vi.stubGlobal("useState", (_key: string, init: () => string) => ref(init()))
-  vi.stubGlobal("useI18n", () => ({ t: (key: string) => key }))
+  vi.stubGlobal("useI18n", () => ({
+    t: (key: string, values?: Record<string, unknown>) => (values ? `${key}:${Object.values(values).join(",")}` : key)
+  }))
   vi.stubGlobal("useAsyncData", async (_key: string, handler: () => Promise<unknown>) => {
     await handler()
     return { status: ref("success"), refresh: vi.fn() }
@@ -48,6 +53,7 @@ beforeEach(() => {
     pagination,
     stats,
     health,
+    healthStale,
     pending,
     failed,
     requestId,
@@ -56,6 +62,7 @@ beforeEach(() => {
     load,
     loadStats,
     loadHealth,
+    checkHealthNow,
     resolveMany,
     exportCsv
   }))
@@ -143,6 +150,38 @@ describe("страница ошибок и состояния", () => {
 
     expect(wrapper.find("[data-errors-charts]").text()).toContain("INTERNAL_ERROR")
     expect(wrapper.find("[data-errors-charts]").text()).toContain("2")
+    expect(wrapper.find("[data-error-frequency-chart]").attributes("role")).toBe("img")
+    expect(wrapper.find("[data-error-frequency-chart] [style]").attributes("style")).toContain("width: 100%")
+  })
+
+  it("shows provider, latency and backup age and can check health now", async () => {
+    routeQuery = { tab: "health" }
+    health.value = [
+      {
+        id: "health-detail",
+        status: "ok",
+        checkedAt: "2026-09-28T10:00:00.000Z",
+        components: [{ name: "storage", status: "up", adapter: "s3", latencyMs: 12 }],
+        backups: [{ kind: "media", status: "ok", ageHours: 4 }]
+      }
+    ]
+
+    const wrapper = await render()
+    expect(wrapper.find("[data-health-history]").text()).toContain("storage: up · s3 · 12 ms")
+    expect(wrapper.find("[data-health-history]").text()).toContain("4")
+    await wrapper.find("[data-health-check-now]").trigger("click")
+    expect(checkHealthNow).toHaveBeenCalledOnce()
+  })
+
+  it("marks cached health as stale after a refresh failure", async () => {
+    healthStale.value = true
+    health.value = [
+      { id: "health-stale", status: "ok", checkedAt: "2026-09-28T10:00:00.000Z", components: [], backups: [] }
+    ]
+
+    const wrapper = await render()
+
+    expect(wrapper.find("[data-health-stale]").exists()).toBe(true)
   })
 
   it("показывает конфликт и превышение лимита экспорта", async () => {

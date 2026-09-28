@@ -15,6 +15,7 @@
     pagination,
     stats,
     health,
+    healthStale,
     pending,
     failed,
     requestId,
@@ -23,6 +24,7 @@
     load,
     loadStats,
     loadHealth,
+    checkHealthNow,
     resolveMany,
     exportCsv
   } = useAdminErrors()
@@ -60,6 +62,7 @@
   const degradedComponents = computed(
     () => latestHealth.value?.components.filter((component) => component.status === "down") ?? []
   )
+  const timelineMax = computed(() => Math.max(1, ...(stats.value?.timeline.map((point) => point.count) ?? [])))
 
   const refresh = async () => {
     await load(filters.value, Number(route.query.page) || 1)
@@ -77,6 +80,7 @@
   const onFilter = (key: string, event: Event) =>
     updateQuery({ [key]: (event.target as HTMLInputElement | HTMLSelectElement).value }).then(refresh)
   const goToPage = (page: number) => updateQuery({ page: String(page) }).then(refresh)
+  const checkNow = () => checkHealthNow(period.value)
   const resolveSelected = async () => {
     if (!(await resolveMany(selected.value))) return
     resolveConfirmOpen.value = false
@@ -141,6 +145,9 @@
         class="mt-2 font-sans text-sm text-amber-800 dark:text-amber-200">
         {{ t("admin.errors.healthDegraded") }}
       </p>
+      <p v-if="healthStale" data-health-stale class="mt-2 font-sans text-sm text-amber-800 dark:text-amber-200">
+        {{ t("admin.errors.healthStale") }}
+      </p>
     </aside>
 
     <nav class="mb-5 flex gap-1 border-b border-zinc-300 dark:border-zinc-700" :aria-label="t('admin.errors.tabs')">
@@ -195,13 +202,20 @@
       </article>
       <article class="border border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 class="mb-3 font-serif text-xl">{{ t("admin.errors.timeline") }}</h2>
-        <p
-          v-for="point in stats?.timeline ?? []"
-          :key="point.bucket"
-          class="flex justify-between gap-4 font-mono text-xs">
-          <time>{{ formatDate(point.bucket) }}</time
-          ><strong>{{ point.count }}</strong>
-        </p>
+        <ol data-error-frequency-chart role="img" :aria-label="t('admin.errors.timelineChart')" class="grid gap-2">
+          <li
+            v-for="point in stats?.timeline ?? []"
+            :key="point.bucket"
+            class="grid grid-cols-[8rem_1fr_2rem] items-center gap-3 font-mono text-xs">
+            <time>{{ formatDate(point.bucket) }}</time>
+            <span class="h-3 bg-zinc-100 dark:bg-zinc-800" aria-hidden="true">
+              <span
+                class="block h-full min-w-1 bg-red-600"
+                :style="{ width: `${(point.count / timelineMax) * 100}%` }" />
+            </span>
+            <strong class="text-right">{{ point.count }}</strong>
+          </li>
+        </ol>
       </article>
       <article class="border border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
         <h2 class="mb-3 font-serif text-xl">{{ t("admin.errors.byCode") }}</h2>
@@ -213,6 +227,15 @@
     </div>
 
     <div v-else-if="tab === 'health'" class="grid gap-3" data-health-history>
+      <div class="flex justify-end">
+        <button
+          type="button"
+          data-health-check-now
+          class="min-h-11 border border-zinc-950 px-4 font-sans text-sm dark:border-zinc-100"
+          @click="checkNow">
+          {{ t("admin.errors.checkNow") }}
+        </button>
+      </div>
       <article
         v-for="snapshot in health"
         :key="snapshot.id"
@@ -221,9 +244,22 @@
           <strong>{{ snapshot.status }}</strong
           ><time class="font-mono text-xs">{{ formatDate(snapshot.checkedAt) }}</time>
         </div>
-        <p class="mt-2 font-mono text-xs">
-          {{ snapshot.components.map((item) => `${item.name}: ${item.status}`).join(" · ") }}
-        </p>
+        <ul class="mt-3 grid gap-1 font-mono text-xs">
+          <li v-for="component in snapshot.components" :key="component.name">
+            {{ component.name }}: {{ component.status }} · {{ component.adapter }} ·
+            {{ component.latencyMs === null ? "—" : `${component.latencyMs} ms` }}
+          </li>
+        </ul>
+        <ul class="mt-3 grid gap-1 border-t border-zinc-200 pt-3 font-mono text-xs dark:border-zinc-800">
+          <li v-for="backup in snapshot.backups" :key="backup.kind">
+            {{ backup.kind }}: {{ backup.status }} ·
+            {{
+              backup.ageHours === null
+                ? t("admin.errors.backupAgeUnknown")
+                : t("admin.errors.backupAge", { hours: backup.ageHours })
+            }}
+          </li>
+        </ul>
       </article>
     </div>
 

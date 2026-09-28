@@ -1798,7 +1798,7 @@ type ErrorStatsPoint {
 
 type ErrorStatusHistoryItem {
   changedByActorId: ID!
-  changedByActorRole: Role!
+  changedByActorRole: Role
   comment: String
   createdAt: String!
   fromStatus: ErrorWorkStatus

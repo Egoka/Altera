@@ -135,7 +135,8 @@
             v-for="item in entry.statusHistory"
             :key="`${item.createdAt}-${item.toStatus}`"
             class="mt-2 border-l-2 border-zinc-300 pl-3 font-sans text-sm">
-            {{ item.fromStatus ?? "—" }} → {{ item.toStatus }} · {{ item.changedByActorRole }} ·
+            {{ item.fromStatus ?? "—" }} → {{ item.toStatus }} ·
+            {{ item.changedByActorRole ?? t("admin.errors.systemActor") }} ·
             <span class="font-mono text-xs">{{ item.changedByActorId }}</span
             ><br />
             <span class="font-mono text-xs text-zinc-500">{{ formatDate(item.createdAt) }}</span>

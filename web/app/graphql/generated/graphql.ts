@@ -817,7 +817,7 @@ export type GetAdminErrorQueryVariables = Exact<{
 }>;
 
 
-export type GetAdminErrorQuery = { errorEntry: { id: string, signature: string, service: string, code: string, route: string | null, requestId: string | null, message: string | null, stack: string | null, occurrencesCount: number, workStatus: ErrorWorkStatus, assignedActorId: string | null, assignedActorRole: Role | null, firstSeenAt: string, lastSeenAt: string, updatedAt: string, occurrences: Array<{ id: string, requestId: string | null, jobId: string | null, occurredAt: string }>, statusHistory: Array<{ fromStatus: ErrorWorkStatus | null, toStatus: ErrorWorkStatus, changedByActorId: string, changedByActorRole: Role, comment: string | null, createdAt: string }> } };
+export type GetAdminErrorQuery = { errorEntry: { id: string, signature: string, service: string, code: string, route: string | null, requestId: string | null, message: string | null, stack: string | null, occurrencesCount: number, workStatus: ErrorWorkStatus, assignedActorId: string | null, assignedActorRole: Role | null, firstSeenAt: string, lastSeenAt: string, updatedAt: string, occurrences: Array<{ id: string, requestId: string | null, jobId: string | null, occurredAt: string }>, statusHistory: Array<{ fromStatus: ErrorWorkStatus | null, toStatus: ErrorWorkStatus, changedByActorId: string, changedByActorRole: Role | null, comment: string | null, createdAt: string }> } };
 
 export type GetAdminErrorStatsQueryVariables = Exact<{
   period: ErrorPeriodInput;

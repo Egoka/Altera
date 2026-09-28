@@ -43,4 +43,26 @@ describe("T-081 health history", () => {
     expect(history).toHaveBeenNthCalledWith(1, healthy)
     expect(history).toHaveBeenNthCalledWith(2, degraded)
   })
+
+  it("records provider and backup-age changes even when alert reasons stay unchanged", async () => {
+    const history = vi.fn(async () => undefined)
+    const alerts = createHealthAlerts({ recipients: async () => [], logger: { log: vi.fn() }, history })
+
+    await alerts(healthy)
+    await alerts({
+      ...healthy,
+      checkedAt: "2026-09-28T11:00:00.000Z",
+      components: { ...healthy.components, mail: { status: "disabled", adapter: "disabled", latencyMs: null } }
+    })
+    await alerts({
+      ...healthy,
+      checkedAt: "2026-09-28T12:00:00.000Z",
+      backups: {
+        ...healthy.backups,
+        database: { ...healthy.backups.database, status: "ok", ageSeconds: 7_200 }
+      }
+    })
+
+    expect(history).toHaveBeenCalledTimes(3)
+  })
 })

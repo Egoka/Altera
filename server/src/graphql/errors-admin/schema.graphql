@@ -54,7 +54,7 @@ type ErrorStatusHistoryItem {
   fromStatus: ErrorWorkStatus
   toStatus: ErrorWorkStatus!
   changedByActorId: ID!
-  changedByActorRole: Role!
+  changedByActorRole: Role
   comment: String
   createdAt: String!
 }

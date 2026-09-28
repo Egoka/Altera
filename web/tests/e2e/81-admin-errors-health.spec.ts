@@ -170,6 +170,24 @@ test.describe("T-081 admin errors and health", () => {
     await expect(page.locator(`[data-error-select="${pageSignature}"]`)).toHaveCount(0)
   })
 
+  test("renders the frequency chart and complete health details and checks health now", async ({ page }) => {
+    await page.setExtraHTTPHeaders(authenticate("admin"))
+    await page.goto(`/admin/errors?tab=charts&q=${errorCode}`)
+    await expect(page.locator("[data-error-frequency-chart]")).toBeVisible()
+
+    await page.goto("/admin/errors?tab=health")
+    await expect(page.locator("[data-health-history]")).toContainText("storage: down · local")
+    await expect(page.locator("[data-health-history]")).toContainText("database: ok")
+
+    let checks = 0
+    await page.route("**/health", async (route) => {
+      checks += 1
+      await route.fulfill({ contentType: "application/json", body: JSON.stringify({ status: "ok" }) })
+    })
+    await page.locator("[data-health-check-now]").click()
+    await expect.poll(() => checks).toBe(1)
+  })
+
   test("changes status with audit and reports a stale-card conflict", async ({ page }) => {
     await page.setExtraHTTPHeaders(authenticate("admin"))
     await page.goto(`/admin/errors/${errorId}`)

@@ -19,14 +19,16 @@ const occurrence: ErrorOccurrence = {
 describe("T-081 error work projection", () => {
   it("reopens a resolved group when a new occurrence is appended", async () => {
     const createEvent = vi.fn(async () => undefined)
-    const updateGroup = vi.fn(async () => ({ count: 1 }))
+    const updateGroup = vi.fn(async () => [{ id: "error-1" }])
     const upsertGroup = vi.fn(async () => undefined)
+    const createHistory = vi.fn(async () => undefined)
     const tx = {
       backendErrorEvent: { create: createEvent },
       backendError: {
-        updateMany: updateGroup,
+        updateManyAndReturn: updateGroup,
         upsert: upsertGroup
-      }
+      },
+      backendErrorStatusHistory: { create: createHistory }
     }
     const client = {
       ...tx,
@@ -44,6 +46,16 @@ describe("T-081 error work projection", () => {
         assignedActorRole: null,
         lastSeenAt: occurrence.occurredAt,
         occurrenceCount: { increment: 1 }
+      }),
+      select: { id: true }
+    })
+    expect(createHistory).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        backendErrorId: "error-1",
+        fromStatus: "resolved",
+        toStatus: "new_record",
+        changedByActorId: "system:error-collector",
+        changedByActorRole: null
       })
     })
     expect(upsertGroup).not.toHaveBeenCalled()
@@ -53,7 +65,8 @@ describe("T-081 error work projection", () => {
     const upsertGroup = vi.fn(async () => undefined)
     const tx = {
       backendErrorEvent: { create: vi.fn(async () => undefined) },
-      backendError: { updateMany: vi.fn(async () => ({ count: 0 })), upsert: upsertGroup }
+      backendError: { updateManyAndReturn: vi.fn(async () => []), upsert: upsertGroup },
+      backendErrorStatusHistory: { create: vi.fn(async () => undefined) }
     }
     const client = {
       ...tx,
@@ -73,7 +86,8 @@ describe("T-081 error work projection", () => {
     const upsertGroup = vi.fn(async () => undefined)
     const tx = {
       backendErrorEvent: { create: vi.fn(async () => undefined) },
-      backendError: { updateMany: vi.fn(), upsert: upsertGroup }
+      backendError: { updateManyAndReturn: vi.fn(), upsert: upsertGroup },
+      backendErrorStatusHistory: { create: vi.fn(async () => undefined) }
     }
     const client = {
       ...tx,
@@ -87,7 +101,7 @@ describe("T-081 error work projection", () => {
       service: "web"
     })
 
-    expect(tx.backendError.updateMany).not.toHaveBeenCalled()
+    expect(tx.backendError.updateManyAndReturn).not.toHaveBeenCalled()
     expect(upsertGroup).not.toHaveBeenCalled()
   })
 })

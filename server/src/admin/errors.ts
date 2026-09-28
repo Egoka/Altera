@@ -96,48 +96,50 @@ const parseService = (service: string | null | undefined, requestId: string) => 
   return service as (typeof ERROR_SERVICES)[number]
 }
 
-const projectionWhere = (
-  filters: ErrorLogFilters,
-  signatures: string[],
-  options: { includeDefaultStatus: boolean }
-): Prisma.BackendErrorWhereInput => {
-  const requestedStatuses = filters.workStatus?.map(toDatabaseStatus)
-  const statuses = requestedStatuses?.length
-    ? requestedStatuses
-    : options.includeDefaultStatus
-      ? [BackendErrorWorkStatus.new_record, BackendErrorWorkStatus.in_progress]
-      : undefined
-  return {
-    signature: { in: signatures },
-    ...(statuses ? { workStatus: { in: statuses } } : {})
-  }
-}
-
-const eventWhere = (
+const eventSqlWhere = (
   filters: ErrorLogFilters,
   stream: "backend" | "page",
   period: { from: Date; to: Date },
   requestId: string
-): Prisma.BackendErrorEventWhereInput => {
+): Prisma.Sql => {
   const service = parseService(filters.service, requestId)
   const q = filters.q?.trim()
-  return {
-    stream,
-    occurredAt: { gte: period.from, lt: period.to },
-    ...(service ? { service } : {}),
-    ...(filters.code ? { code: filters.code } : {}),
-    ...(filters.route ? { route: filters.route } : {}),
-    ...(q
-      ? {
-          OR: [
-            { requestId: q },
-            { code: { contains: q, mode: "insensitive" } },
-            { route: { contains: q, mode: "insensitive" } },
-            { message: { contains: q, mode: "insensitive" } }
-          ]
-        }
-      : {})
+  const conditions: Prisma.Sql[] = [
+    Prisma.sql`e."stream" = ${stream}::"ErrorStream"`,
+    Prisma.sql`e."occurredAt" >= ${period.from}`,
+    Prisma.sql`e."occurredAt" < ${period.to}`
+  ]
+  if (service) conditions.push(Prisma.sql`e."service" = ${service}`)
+  if (filters.code) conditions.push(Prisma.sql`e."code" = ${filters.code}`)
+  if (filters.route) conditions.push(Prisma.sql`e."route" = ${filters.route}`)
+  if (q) {
+    const pattern = `%${q}%`
+    conditions.push(Prisma.sql`(
+      e."requestId" = ${q}
+      OR e."code" ILIKE ${pattern}
+      OR e."route" ILIKE ${pattern}
+      OR e."message" ILIKE ${pattern}
+    )`)
   }
+  return Prisma.join(conditions, " AND ")
+}
+
+const workStatusSql = (status: BackendErrorWorkStatus): Prisma.Sql => {
+  if (status === BackendErrorWorkStatus.new_record) return Prisma.sql`'new'::"BackendErrorWorkStatus"`
+  if (status === BackendErrorWorkStatus.in_progress) return Prisma.sql`'in_progress'::"BackendErrorWorkStatus"`
+  return Prisma.sql`'resolved'::"BackendErrorWorkStatus"`
+}
+
+const workStatusSqlWhere = (filters: ErrorLogFilters, includeDefaultStatus: boolean): Prisma.Sql => {
+  const requested = filters.workStatus?.map(toDatabaseStatus)
+  const statuses = requested?.length
+    ? requested
+    : includeDefaultStatus
+      ? [BackendErrorWorkStatus.new_record, BackendErrorWorkStatus.in_progress]
+      : null
+  return statuses?.length
+    ? Prisma.sql`AND b."workStatus" IN (${Prisma.join(statuses.map(workStatusSql))})`
+    : Prisma.empty
 }
 
 const presentLogItem = (
@@ -174,40 +176,128 @@ const presentLogItem = (
   updatedAt: record.updatedAt
 })
 
-const loadGroupedEvents = (ctx: AdminErrorsContext, filters: ErrorLogFilters, stream: "backend" | "page") => {
-  const period = parsePeriod(filters.period, ctx.requestId)
-  return ctx.prisma.backendErrorEvent.groupBy({
-    by: ["signature", "stream", "service", "code", "route"],
-    where: eventWhere(filters, stream, period, ctx.requestId),
-    _count: { _all: true },
-    _min: { occurredAt: true },
-    _max: { occurredAt: true }
-  })
+interface GroupCountRow {
+  totalItems: number
 }
 
-async function loadBackendLogItems(ctx: AdminErrorsContext, filters: ErrorLogFilters, includeDefaultStatus: boolean) {
-  const groups = await loadGroupedEvents(ctx, filters, "backend")
-  if (groups.length === 0) return []
-  const stats = new Map(
-    groups.map((group) => [
-      group.signature,
-      {
-        occurrences: group._count._all,
-        firstSeenAt: group._min.occurredAt!,
-        lastSeenAt: group._max.occurredAt!
-      }
-    ])
-  )
-  const records = await ctx.prisma.backendError.findMany({
-    where: projectionWhere(
-      filters,
-      groups.map((group) => group.signature),
-      { includeDefaultStatus }
-    )
-  })
-  return records
-    .map((record) => presentLogItem(record, stats.get(record.signature)))
-    .sort((left, right) => right.lastSeenAt.getTime() - left.lastSeenAt.getTime())
+interface PageGroupRow {
+  signature: string
+  service: string
+  code: string
+  route: string | null
+  occurrences: number
+  firstSeenAt: Date
+  lastSeenAt: Date
+}
+
+interface BackendGroupRow {
+  id: string
+  signature: string
+  service: string
+  code: string
+  route: string | null
+  requestId: string | null
+  occurrenceCount: number
+  workStatus: BackendErrorWorkStatus
+  assignedActorId: string | null
+  assignedActorRole: string | null
+  firstSeenAt: Date
+  lastSeenAt: Date
+  updatedAt: Date
+  periodOccurrences: number
+  periodFirstSeenAt: Date
+  periodLastSeenAt: Date
+}
+
+async function loadPageLogItems(ctx: AdminErrorsContext, filters: ErrorLogFilters, skip: number, take: number) {
+  const period = parsePeriod(filters.period, ctx.requestId)
+  const where = eventSqlWhere(filters, "page", period, ctx.requestId)
+  const [counts, rows] = await Promise.all([
+    ctx.prisma.$queryRaw<GroupCountRow[]>(Prisma.sql`
+      SELECT COUNT(*)::int AS "totalItems"
+      FROM (
+        SELECT 1
+        FROM "backend_error_events" e
+        WHERE ${where}
+        GROUP BY e."signature", e."service", e."code", e."route"
+      ) grouped
+    `),
+    ctx.prisma.$queryRaw<PageGroupRow[]>(Prisma.sql`
+      SELECT
+        e."signature",
+        e."service",
+        e."code",
+        e."route",
+        COUNT(*)::int AS "occurrences",
+        MIN(e."occurredAt") AS "firstSeenAt",
+        MAX(e."occurredAt") AS "lastSeenAt"
+      FROM "backend_error_events" e
+      WHERE ${where}
+      GROUP BY e."signature", e."service", e."code", e."route"
+      ORDER BY MAX(e."occurredAt") DESC, e."signature" ASC
+      LIMIT ${take} OFFSET ${skip}
+    `)
+  ])
+  return { rows, totalItems: counts[0]?.totalItems ?? 0 }
+}
+
+async function loadBackendLogItems(
+  ctx: AdminErrorsContext,
+  filters: ErrorLogFilters,
+  includeDefaultStatus: boolean,
+  skip: number,
+  take: number
+) {
+  const period = parsePeriod(filters.period, ctx.requestId)
+  const where = eventSqlWhere(filters, "backend", period, ctx.requestId)
+  const statusWhere = workStatusSqlWhere(filters, includeDefaultStatus)
+  const [counts, rows] = await Promise.all([
+    ctx.prisma.$queryRaw<GroupCountRow[]>(Prisma.sql`
+      SELECT COUNT(*)::int AS "totalItems"
+      FROM (
+        SELECT 1
+        FROM "backend_error_events" e
+        INNER JOIN "backend_errors" b ON b."signature" = e."signature"
+        WHERE ${where} ${statusWhere}
+        GROUP BY b."id"
+      ) grouped
+    `),
+    ctx.prisma.$queryRaw<BackendGroupRow[]>(Prisma.sql`
+      SELECT
+        b."id",
+        b."signature",
+        b."service",
+        b."code",
+        b."route",
+        b."requestId",
+        b."occurrenceCount",
+        b."workStatus",
+        b."assignedActorId",
+        b."assignedActorRole",
+        b."firstSeenAt",
+        b."lastSeenAt",
+        b."updatedAt",
+        COUNT(*)::int AS "periodOccurrences",
+        MIN(e."occurredAt") AS "periodFirstSeenAt",
+        MAX(e."occurredAt") AS "periodLastSeenAt"
+      FROM "backend_error_events" e
+      INNER JOIN "backend_errors" b ON b."signature" = e."signature"
+      WHERE ${where} ${statusWhere}
+      GROUP BY b."id"
+      ORDER BY MAX(e."occurredAt") DESC, b."id" ASC
+      LIMIT ${take} OFFSET ${skip}
+    `)
+  ])
+  return {
+    items: rows.map((row) =>
+      presentLogItem(row, {
+        occurrences: row.periodOccurrences,
+        firstSeenAt: row.periodFirstSeenAt,
+        lastSeenAt: row.periodLastSeenAt
+      })
+    ),
+    totalItems: counts[0]?.totalItems ?? 0
+  }
 }
 
 export async function listErrorLog(ctx: AdminErrorsContext, args: ErrorLogArgs = {}) {
@@ -220,12 +310,9 @@ export async function listErrorLog(ctx: AdminErrorsContext, args: ErrorLogArgs =
   const take = limit
 
   if (filters.stream === "page") {
-    const groups = await loadGroupedEvents(ctx, filters, "page")
-    const all = groups.sort(
-      (left, right) => (right._max.occurredAt?.getTime() ?? 0) - (left._max.occurredAt?.getTime() ?? 0)
-    )
+    const { rows, totalItems } = await loadPageLogItems(ctx, filters, skip, take)
     return {
-      items: all.slice(skip, skip + take).map((group) => ({
+      items: rows.map((group) => ({
         id: group.signature,
         signature: group.signature,
         stream: "page" as const,
@@ -233,22 +320,22 @@ export async function listErrorLog(ctx: AdminErrorsContext, args: ErrorLogArgs =
         code: group.code,
         route: group.route,
         requestId: null,
-        occurrences: group._count._all,
+        occurrences: group.occurrences,
         workStatus: null,
         assignedActorId: null,
         assignedActorRole: null,
-        firstSeenAt: group._min.occurredAt!,
-        lastSeenAt: group._max.occurredAt!,
-        updatedAt: group._max.occurredAt!
+        firstSeenAt: group.firstSeenAt,
+        lastSeenAt: group.lastSeenAt,
+        updatedAt: group.lastSeenAt
       })),
-      pagination: calculatePagination(page, limit, all.length).pagination
+      pagination: calculatePagination(page, limit, totalItems).pagination
     }
   }
 
-  const items = await loadBackendLogItems(ctx, filters, true)
+  const { items, totalItems } = await loadBackendLogItems(ctx, filters, true, skip, take)
   return {
-    items: items.slice(skip, skip + take),
-    pagination: calculatePagination(page, limit, items.length).pagination
+    items,
+    pagination: calculatePagination(page, limit, totalItems).pagination
   }
 }
 
@@ -399,7 +486,7 @@ export async function exportErrors(ctx: AdminErrorsContext, filters: ErrorLogFil
     throw createApiError("RATE_LIMITED", { requestId: ctx.requestId, retryAfter })
   }
 
-  const records = (await loadBackendLogItems(ctx, filters, false)).slice(0, ERROR_EXPORT_MAX_ROWS)
+  const { items: records } = await loadBackendLogItems(ctx, filters, false, 0, ERROR_EXPORT_MAX_ROWS)
   await ctx.prisma.auditLog.create({
     data: {
       action: ERROR_EXPORT_ACTION,

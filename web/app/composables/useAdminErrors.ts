@@ -51,6 +51,7 @@ export const useAdminErrors = () => {
   )
   const stats = useState<AdminErrorStats | null>("admin.errors.stats", () => null)
   const health = useState<AdminHealthSnapshot[]>("admin.errors.health", () => [])
+  const healthStale = ref(false)
   const pending = ref(false)
   const failed = ref(false)
   const requestId = ref<string | null>(null)
@@ -78,13 +79,17 @@ export const useAdminErrors = () => {
         filters,
         pagination: { page, limit: 25 }
       })) as GraphQLEnvelope<GetAdminErrorsQuery>
-      if (!envelope.data?.errorLog) return rememberError(envelope.errors)
+      if (!envelope.data?.errorLog) {
+        if (health.value.length) healthStale.value = true
+        return rememberError(envelope.errors)
+      }
       clearError()
       items.value = [...envelope.data.errorLog.items]
       pagination.value = envelope.data.errorLog.pagination
     } catch (error: unknown) {
       items.value = []
       pagination.value = null
+      if (health.value.length) healthStale.value = true
       rememberError(errorsFromThrown(error))
     } finally {
       pending.value = false
@@ -108,11 +113,29 @@ export const useAdminErrors = () => {
       const envelope = (await useGraphQL(GetAdminHealthHistoryDocument, {
         period
       })) as GraphQLEnvelope<GetAdminHealthHistoryQuery>
-      if (envelope.data?.healthHistory) health.value = [...envelope.data.healthHistory]
-      else rememberError(envelope.errors)
+      if (envelope.data?.healthHistory) {
+        health.value = [...envelope.data.healthHistory]
+        healthStale.value = false
+      } else {
+        healthStale.value = true
+        rememberError(envelope.errors)
+      }
     } catch (error: unknown) {
+      healthStale.value = true
       rememberError(errorsFromThrown(error))
     }
+  }
+
+  const checkHealthNow = async (period: ErrorPeriodInput) => {
+    try {
+      await $fetch("/health", { headers: { accept: "application/json" } })
+    } catch (error: unknown) {
+      healthStale.value = true
+      rememberError(errorsFromThrown(error))
+      return false
+    }
+    await loadHealth(period)
+    return !healthStale.value
   }
 
   const openEntry = async (id: string): Promise<AdminErrorDetail> => {
@@ -195,6 +218,7 @@ export const useAdminErrors = () => {
     pagination,
     stats,
     health,
+    healthStale,
     pending,
     failed,
     requestId,
@@ -203,6 +227,7 @@ export const useAdminErrors = () => {
     load,
     loadStats,
     loadHealth,
+    checkHealthNow,
     openEntry,
     changeStatus,
     resolveMany,

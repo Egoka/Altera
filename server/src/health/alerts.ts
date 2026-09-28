@@ -77,23 +77,38 @@ export interface HealthAlertsOptions {
   history?: (health: Health) => Promise<void>
 }
 
+const healthHistorySignature = (health: Health): string =>
+  JSON.stringify({
+    status: health.status,
+    components: COMPONENT_NAMES.map((name) => {
+      const component = health.components[name]
+      return [name, component.status, component.adapter]
+    }),
+    backups: BACKUP_KINDS.map((kind) => {
+      const backup = health.backups[kind]
+      return [kind, backup.status, backup.ageSeconds === null ? null : Math.floor(backup.ageSeconds / 3600)]
+    })
+  })
+
 /**
- * Запись `system.health` (#53) и оповещение получателям. Пишется при смене набора причин, а не на
- * каждой проверке: `/health` опрашивают постоянно, и запись на каждый опрос забила бы журнал, не
- * добавив нового. Уровни — `info` и `warn`: состояние не аудит (спецификация п. 8).
+ * Запись `system.health` (#53) и оповещение получателям. История сохраняет смену общего статуса,
+ * адаптера/статуса компонента и часового бакета возраста копии; оповещения дедуплицируются отдельно
+ * по набору причин. Так постоянный polling `/health` не забивает журнал одинаковыми снимками.
+ * Уровни — `info` и `warn`: состояние не аудит (спецификация п. 8).
  */
 export function createHealthAlerts(options: HealthAlertsOptions): (health: Health) => Promise<HealthAlert | null> {
   const nextRequestId = options.requestId ?? (() => `health:${randomUUID()}`)
   let reported: string | undefined
+  let recordedHealth: string | undefined
 
   return async (health) => {
     const reasons = healthAlertReasons(health)
     const signature = reasons.join(" ")
-    if (signature === reported) return null
-    const first = reported === undefined
-    reported = signature
+    const snapshotSignature = healthHistorySignature(health)
+    const shouldRecord = snapshotSignature !== recordedHealth
+    recordedHealth = snapshotSignature
 
-    if (options.history) {
+    if (shouldRecord && options.history) {
       try {
         await options.history(health)
       } catch (error: unknown) {
@@ -106,6 +121,10 @@ export function createHealthAlerts(options: HealthAlertsOptions): (health: Healt
         })
       }
     }
+
+    if (signature === reported) return null
+    const first = reported === undefined
+    reported = signature
 
     if (reasons.length === 0) {
       // Первая проверка здоровой системы — не «возврат в норму»: сообщать не о чем.

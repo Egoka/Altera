@@ -31,12 +31,19 @@ interface ErrorHistoryTransactionClient {
     create(args: { data: ErrorOccurrence }): Promise<unknown>
   }
   backendError: {
-    updateMany(args: { where: Record<string, unknown>; data: Record<string, unknown> }): Promise<{ count: number }>
+    updateManyAndReturn(args: {
+      where: Record<string, unknown>
+      data: Record<string, unknown>
+      select: { id: true }
+    }): Promise<Array<{ id: string }>>
     upsert(args: {
       where: { signature: string }
       create: Record<string, unknown>
       update: Record<string, unknown>
     }): Promise<unknown>
+  }
+  backendErrorStatusHistory: {
+    create(args: { data: Record<string, unknown> }): Promise<unknown>
   }
 }
 
@@ -57,7 +64,7 @@ async function appendOccurrence(client: ErrorHistoryTransactionClient, occurrenc
     lastSeenAt: occurrence.occurredAt
   }
 
-  const reopened = await client.backendError.updateMany({
+  const [reopened] = await client.backendError.updateManyAndReturn({
     where: { signature: occurrence.signature, workStatus: "resolved" },
     data: {
       ...latest,
@@ -65,9 +72,22 @@ async function appendOccurrence(client: ErrorHistoryTransactionClient, occurrenc
       workStatus: "new_record",
       assignedActorId: null,
       assignedActorRole: null
-    }
+    },
+    select: { id: true }
   })
-  if (reopened.count === 1) return
+  if (reopened) {
+    await client.backendErrorStatusHistory.create({
+      data: {
+        backendErrorId: reopened.id,
+        fromStatus: "resolved",
+        toStatus: "new_record",
+        changedByActorId: "system:error-collector",
+        changedByActorRole: null,
+        comment: "Reopened by a new occurrence"
+      }
+    })
+    return
+  }
 
   // Нативный upsert по уникальной сигнатуре не теряет событие при двух одновременных первых
   // вхождениях: один запрос создаёт проекцию, второй атомарно увеличивает её счётчик.
