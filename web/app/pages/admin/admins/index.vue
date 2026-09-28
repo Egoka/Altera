@@ -449,16 +449,18 @@
               t("admin.staff.deactivateOwner")
             }}</Button>
           </template>
-          <template v-else>
+          <template v-else-if="detail.status === 'active'">
             <Button variant="outline" @click="openReason('changeRole')">{{ t("admin.staff.changeRole") }}</Button>
             <Button variant="outline" @click="openReason('revokeRole')">{{ t("admin.staff.revokeRole") }}</Button>
-            <Button v-if="detail.status === 'active'" variant="outline" @click="openAssign">
-              {{ t("admin.staff.assignOwner") }}
-            </Button>
-            <Button v-if="detail.status === 'active'" variant="outline" @click="openReason('archive')">
-              {{ t("admin.staff.archive") }}
-            </Button>
-            <Button v-else variant="outline" @click="openReason('restore')">{{ t("admin.staff.restore") }}</Button>
+            <Button variant="outline" @click="openAssign">{{ t("admin.staff.assignOwner") }}</Button>
+            <Button variant="outline" @click="openReason('archive')">{{ t("admin.staff.archive") }}</Button>
+          </template>
+          <template v-else>
+            <!-- Роль архивированной записи возвращается только восстановлением (журнал §37 п. 8). -->
+            <p data-staff-archived-hint class="text-sm text-zinc-500 dark:text-zinc-400">
+              {{ t("admin.staff.archivedRoleHint") }}
+            </p>
+            <Button variant="outline" @click="openReason('restore')">{{ t("admin.staff.restore") }}</Button>
           </template>
         </div>
       </aside>
@@ -537,6 +539,9 @@
         {{ reasonAction ? t(`admin.staff.${reasonTitles[reasonAction]}`) : "" }}
       </h2>
       <div class="flex flex-col gap-4 p-4">
+        <p v-if="reasonAction === 'revokeRole'" class="text-sm text-zinc-600 dark:text-zinc-300">
+          {{ t("admin.staff.revokeRoleHint") }}
+        </p>
         <div v-if="reasonAction === 'changeRole'">
           <label for="staff-next-role" class="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             {{ t("admin.staff.fieldRole") }}

@@ -552,9 +552,10 @@ describe("смена и снятие служебной роли", () => {
     expect(extensions).toMatchObject({ code: "CONFLICT", entity: "user", expected: "editor", actual: "changed" })
   })
 
-  it("снимает роль и оставляет запись служебной без прав", async () => {
+  it("снимает роль, уводит запись в архив, отзывает сессии и пишет оба события", async () => {
     const editor = user({ id: "editor-7", role: "editor" })
     const prisma = new MemoryPrisma([ownerActor, editor], {
+      sessions: [{ id: "session-7", userId: editor.id, lastUsedAt: now, revokedAt: null }],
       exceptions: [
         {
           id: "exception-1",
@@ -577,9 +578,80 @@ describe("смена и снятие служебной роли", () => {
     const revoked = await revokeStaffRole(ctx, { id: editor.id, reason: "Ушёл" }, now)
 
     expect(revoked.role).toBe("reader")
+    // Снятие роли уводит запись в архив (журнал §37 п. 8): доступ закрыт, сессии отозваны.
+    expect(revoked.status).toBe("archived")
+    expect(revoked.archiveReason).toBe("Ушёл")
+    expect(prisma.sessions[0]?.revokedAt).toEqual(now)
     expect(prisma.users.find(({ id }) => id === editor.id)?.isServiceAccount).toBe(true)
     // Исключение выдано для роли editor и после снятия роли не действует.
     expect(revoked.activeExceptionCount).toBe(0)
+    // `admins.md` §5, строка «Снять роль»: аудит пишет и смену роли, и архив.
+    expect(prisma.audits.find(({ action }) => action === "user.role.change")?.diff).toMatchObject({
+      targetId: editor.id,
+      before: "editor",
+      after: "reader",
+      reason: "Ушёл"
+    })
+    expect(prisma.audits.find(({ action }) => action === "user.archive")?.diff).toMatchObject({
+      targetId: editor.id,
+      reason: "Ушёл",
+      mode: "admin"
+    })
+    // Закрытый доступ отвечает 410 сразу: кеш страницы автора сбрасывается тем же тегом.
+    expect(resetCacheTags(ctx)).toContainEqual([`author:${editor.handle}`])
+  })
+
+  it("не архивирует повторно запись, которая уже в архиве", async () => {
+    const archivedAt = new Date("2026-09-05T00:00:00.000Z")
+    const editor = user({ id: "editor-7b", role: "editor", archivedAt, archiveReason: "Отпуск" })
+    const prisma = new MemoryPrisma([ownerActor, editor])
+    const ctx = context(prisma, ownerActor)
+
+    const revoked = await revokeStaffRole(ctx, { id: editor.id, reason: "Ушёл" }, now)
+
+    expect(revoked.role).toBe("reader")
+    expect(revoked.status).toBe("archived")
+    // Дата и причина прежнего архива остаются: второго закрытия того же аккаунта нет.
+    expect(revoked.archivedAt).toEqual(archivedAt)
+    expect(prisma.audits.filter(({ action }) => action === "user.archive")).toHaveLength(0)
+  })
+
+  it("не возвращает роль архивированной записи без восстановления", async () => {
+    const editor = user({ id: "editor-7c", role: "reader", archivedAt: new Date("2026-09-05T00:00:00.000Z") })
+    const prisma = new MemoryPrisma([ownerActor, editor])
+    const ctx = context(prisma, ownerActor)
+
+    const extensions = await capture(() =>
+      changeStaffRole(ctx, { id: editor.id, role: "moderator", reason: "Вернулся" }, now)
+    )
+
+    expect(extensions).toMatchObject({ code: "ARCHIVED", entity: "user" })
+    expect(prisma.users.find(({ id }) => id === editor.id)?.role).toBe("reader")
+    expect(prisma.audits.some(({ action }) => action === "user.role.change")).toBe(false)
+  })
+
+  it("возвращает роль только после восстановления записи владельцем", async () => {
+    const editor = user({ id: "editor-7d", role: "editor" })
+    const prisma = new MemoryPrisma([ownerActor, editor])
+    const ctx = context(prisma, ownerActor)
+
+    await revokeStaffRole(ctx, { id: editor.id, reason: "Ушёл" }, now)
+    const restored = await restoreStaffAccount(ctx, { id: editor.id, reason: "Вернулся" }, now)
+    expect(restored.status).toBe("active")
+    expect(restored.role).toBe("reader")
+
+    const returned = await changeStaffRole(ctx, { id: editor.id, role: "editor", reason: "Вернулся" }, now)
+
+    // Путь возврата роли — `user.restore`, затем `user.role.change`
+    // (`escalation-and-demotion.md` §3, строка «Возврат роли снятой служебной записи»).
+    expect(returned.role).toBe("editor")
+    expect(returned.status).toBe("active")
+    expect(prisma.audits.map(({ action }) => action)).toEqual([
+      "user.role.change",
+      "user.archive",
+      "user.restore",
+      "user.role.change"
+    ])
   })
 
   it("не меняет роль владельца обычной сменой роли", async () => {
