@@ -10,49 +10,56 @@ datasource db {
 }
 
 model User {
-  id                          String                @id @default(uuid())
+  id                          String                 @id @default(uuid())
   name                        String
-  email                       String                @unique
+  email                       String                 @unique
   bio                         String?
   photoUrl                    String?
-  role                        Role                  @default(reader)
-  handle                      String                @unique
-  locale                      Locale                @default(ru)
+  role                        Role                   @default(reader)
+  handle                      String                 @unique
+  locale                      Locale                 @default(ru)
   avatarAssetId               String?
   prevAvatarId                String?
-  nameCheckStatus             ProfileCheckStatus    @default(ok)
-  avatarCheckStatus           ProfileCheckStatus    @default(ok)
+  nameCheckStatus             ProfileCheckStatus     @default(ok)
+  avatarCheckStatus           ProfileCheckStatus     @default(ok)
   socialLinks                 Json?
-  createdAt                   DateTime              @default(now())
-  updatedAt                   DateTime              @updatedAt
+  createdAt                   DateTime               @default(now())
+  updatedAt                   DateTime               @updatedAt
   archivedAt                  DateTime?
   archiveMode                 AccountArchiveMode?
   archivedByActorId           String?
   archivedByRole              Role?
   archiveReason               String?
-  isServiceAccount            Boolean               @default(false)
-  planTier                    PlanTier              @default(free)
+  isServiceAccount            Boolean                @default(false)
+  planTier                    PlanTier               @default(free)
   planUntil                   DateTime?
+  /// Пароль хранится PHC-строкой Argon2id; `null` — аккаунт без пароля, он входит по ссылке
+  /// (журнал §34 п. 8).
+  passwordHash                String?
+  passwordUpdatedAt           DateTime?
+  /// Когда адрес подтверждён: вход по ссылке подтверждает его сам, регистрация с паролем —
+  /// письмом до первого входа (журнал §34 п. 7).
+  emailVerifiedAt             DateTime?
   articles                    Article[]
   bookmarks                   Bookmark[]
-  planGrants                  PlanGrant[]           @relation("PlanGrantRecipient")
-  grantedPlanGrants           PlanGrant[]           @relation("PlanGrantActor")
-  permissionExceptions        PermissionException[] @relation("PermissionExceptionRecipient")
-  grantedPermissionExceptions PermissionException[] @relation("PermissionExceptionGrantActor")
-  revokedPermissionExceptions PermissionException[] @relation("PermissionExceptionRevokeActor")
+  planGrants                  PlanGrant[]            @relation("PlanGrantRecipient")
+  grantedPlanGrants           PlanGrant[]            @relation("PlanGrantActor")
+  permissionExceptions        PermissionException[]  @relation("PermissionExceptionRecipient")
+  grantedPermissionExceptions PermissionException[]  @relation("PermissionExceptionGrantActor")
+  revokedPermissionExceptions PermissionException[]  @relation("PermissionExceptionRevokeActor")
   sessions                    Session[]
   emailChangeRequest          EmailChangeRequest?
   accountArchiveRequest       AccountArchiveRequest?
-  currentHandle               HandleHistory         @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
-  handleHistory               HandleHistory[]       @relation("HandleOwner")
-  createdTags                 Tag[]                 @relation("TagCreator")
+  currentHandle               HandleHistory          @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
+  handleHistory               HandleHistory[]        @relation("HandleOwner")
+  createdTags                 Tag[]                  @relation("TagCreator")
   legalConsents               UserLegalConsent[]
-  translatedArticles          ArticleTranslation[]  @relation("ArticleTranslator")
-  articleRevisions            ArticleRevision[]     @relation("ArticleRevisionCreator")
-  ownedMediaAssets            MediaAsset[]          @relation("MediaAssetOwner")
-  avatarAsset                 MediaAsset?           @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
-  previousAvatar              MediaAsset?           @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
-  reviewNotes                 ReviewNote[]          @relation("ReviewNoteCreator")
+  translatedArticles          ArticleTranslation[]   @relation("ArticleTranslator")
+  articleRevisions            ArticleRevision[]      @relation("ArticleRevisionCreator")
+  ownedMediaAssets            MediaAsset[]           @relation("MediaAssetOwner")
+  avatarAsset                 MediaAsset?            @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
+  previousAvatar              MediaAsset?            @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
+  reviewNotes                 ReviewNote[]           @relation("ReviewNoteCreator")
   supportRequests             SupportRequest[]
 
   @@unique([id, role, isServiceAccount])
@@ -89,6 +96,24 @@ model MagicLinkToken {
   createdAt      DateTime  @default(now())
 
   @@map("magic_link_tokens")
+}
+
+/// Одноразовые токены ветки пароля (T-115, журнал §34 п. 7): подтверждение адреса после
+/// регистрации с паролем и сброс забытого пароля. Токен привязан к адресу и виду действия —
+/// повторный запрос того же вида отзывает прежний токен, как это делает ссылка входа.
+model PasswordToken {
+  id        String               @id @default(cuid())
+  tokenHash String               @unique @db.VarChar(64)
+  email     String
+  purpose   PasswordTokenPurpose
+  locale    Locale               @default(ru)
+  next      String?
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime             @default(now())
+
+  @@unique([email, purpose])
+  @@map("password_tokens")
 }
 
 model Session {
@@ -785,6 +810,11 @@ enum AccountArchiveMode {
 enum Locale {
   ru
   en
+}
+
+enum PasswordTokenPurpose {
+  email_confirm
+  password_reset
 }
 
 enum ProfileCheckStatus {

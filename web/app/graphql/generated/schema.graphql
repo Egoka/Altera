@@ -157,6 +157,12 @@ type AccountUser {
   locale: Locale!
   name: String!
   nameCheckStatus: ProfileCheckStatus!
+
+  """
+  Задан ли пароль. Аккаунт без пароля — обычное состояние: он входит по ссылке (журнал §34 п. 8),
+  а в кабинете видит «задать пароль» вместо «сменить пароль».
+  """
+  passwordSet: Boolean!
   photoUrl: String
   prevAvatarId: ID
   role: Role!
@@ -1325,6 +1331,11 @@ type Mutation {
   cancelSubscription: Boolean!
   changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
   confirmAccountArchive(token: String!): AccountArchiveResult!
+
+  """
+  Подтверждение адреса по ссылке из письма регистрации: адрес подтверждён, сессия выдана.
+  """
+  confirmEmail(token: String!): PasswordLoginResult!
   confirmEmailChange(code: String!): EmailChangeResult!
   confirmPriceChange(decision: PriceChangeDecision!): Boolean!
   createArticle(input: CreateArticleInput!): Article!
@@ -1348,6 +1359,12 @@ type Mutation {
   exportAudit(filters: AuditLogFilters): AuditExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
+
+  """
+  Вход по паролю. Неизвестный адрес и неверный пароль отвечают одинаково (`UNAUTHENTICATED`);
+  учитываются только неуспешные попытки — 5 за 15 минут на адрес и 30 на IP (журнал §44 п. 1).
+  """
+  loginWithPassword(email: String!, next: String, password: String!): PasswordLoginResult!
   logout(refreshToken: String): Boolean!
   logoutAll: Boolean!
   mergeTags(input: MergeTagsInput!): Tag!
@@ -1355,6 +1372,13 @@ type Mutation {
   """Только `owner`; аудит `legal.update`, сброс кеша публичной страницы."""
   publishLegalVersion(input: PublishLegalVersionInput!): AdminLegalVersion!
   refreshSession(refreshToken: String!): AuthPayload!
+
+  """
+  Регистрация с паролем (журнал §34 п. 7). Ответ одинаков для свободного и занятого адреса
+  (`20-public/login.md` §4): существование аккаунта не раскрывается, разница видна только в
+  письме. Вход возможен после подтверждения адреса.
+  """
+  registerWithPassword(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String, password: String!): MagicLinkRequestResult!
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
 
@@ -1368,10 +1392,20 @@ type Mutation {
   requestAccountArchive(mode: AccountArchiveMode! = self): AccountArchivePreview!
   requestEmailChange(newEmail: String!): EmailChangeState!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
+
+  """
+  Письмо со ссылкой сброса. Ответ одинаков для существующего и неизвестного адреса.
+  """
+  requestPasswordReset(email: String!, locale: Locale!): MagicLinkRequestResult!
   requestRefund(paymentId: ID!, reason: String): Boolean!
   requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
+
+  """
+  Новый пароль по ссылке из письма: прежние сессии отзываются, выдаётся новая.
+  """
+  resetPassword(password: String!, token: String!): PasswordLoginResult!
   restoreAccountSelf: AccountRestoreResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
@@ -1389,6 +1423,12 @@ type Mutation {
   revokeSession(id: ID!): SessionRevokeResult!
   revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
+
+  """
+  Установка и смена пароля в кабинете. Текущий пароль обязателен, если он задан; успешная смена
+  закрывает остальные сессии, текущая остаётся.
+  """
+  setPassword(currentPassword: String, newPassword: String!): Boolean!
   startCheckout(interval: BillingInterval!, promo: String, tier: PlanTier!): Boolean!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
@@ -1478,6 +1518,52 @@ input PaginationInput {
   limit: Int! = 20
   maxLimit: Int = 100
   page: Int! = 1
+}
+
+"""
+Исходы входа по паролю (журнал §34 п. 6–8, `10-flows/register-and-login.md` §3а). Ветки архива
+и повторного согласия те же, что у входа по ссылке: способ входа на состояние аккаунта не влияет.
+"""
+enum PasswordLoginOutcome {
+  """
+  Аккаунт заблокирован администратором: сессии нет, переход к форме оспаривания.
+  """
+  archived_admin
+
+  """
+  Аккаунт архивирован самим пользователем: ограниченная сессия и экран `/me/archived`.
+  """
+  archived_self
+
+  """Сессия создана: переход на `next` или `/me`."""
+  authenticated
+
+  """
+  Версия оферты или политики изменилась: экран повторного согласия по `consentToken`.
+  """
+  consent_required
+
+  """
+  Пароль верен, но адрес ещё не подтверждён письмом: вход закрыт до подтверждения (§34 п. 7).
+  Письмо с подтверждением отправляется заново.
+  """
+  email_unconfirmed
+}
+
+type PasswordLoginResult {
+  """Токен формы оспаривания — как у ветки ссылки (журнал #48)."""
+  appealToken: String
+
+  """
+  Одноразовый токен для экрана повторного согласия `/auth/verify?token=`: пароль уже доказал
+  владение аккаунтом, поэтому письмо для этого шага не нужно.
+  """
+  consentToken: String
+  next: String
+  outcome: PasswordLoginOutcome!
+  privacyVersion: Int
+  session: AuthPayload
+  termsVersion: Int
 }
 
 type PermissionException {

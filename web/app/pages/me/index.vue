@@ -76,6 +76,7 @@
   const serviceLinks = computed(() => [
     { to: "/me/sessions", label: t("account.dashboard.links.sessions"), testid: "dashboard-link-sessions" },
     { to: "/me/email", label: t("account.dashboard.links.email"), testid: "dashboard-link-email" },
+    { to: "/me/password", label: t("account.dashboard.links.password"), testid: "dashboard-link-password" },
     { to: "/me/export", label: t("account.dashboard.links.export"), testid: "dashboard-link-export" },
     { to: "/me/delete", label: t("account.dashboard.links.delete"), testid: "dashboard-link-delete" },
     { to: "/legal/terms", label: t("account.dashboard.links.terms"), testid: "dashboard-link-terms" },

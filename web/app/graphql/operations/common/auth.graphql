@@ -71,3 +71,70 @@ mutation Logout($refreshToken: String) {
 mutation LogoutAll {
   logoutAll
 }
+
+# Ветка пароля (T-115, журнал §34 п. 6–8). `refreshToken` выбирается ради BFF: маршрут
+# `/api/graphql` переносит его в httpOnly-cookie и возвращает браузеру null (ADR-0023 п. 2).
+fragment PasswordLoginOutcome on PasswordLoginResult {
+  outcome
+  next
+  termsVersion
+  privacyVersion
+  appealToken
+  consentToken
+  session {
+    accessToken
+    refreshToken
+    user {
+      id
+      name
+      email
+      role
+      handle
+      locale
+    }
+  }
+}
+
+mutation RegisterWithPassword(
+  $email: String!
+  $password: String!
+  $consentVersion: ConsentVersionsInput!
+  $locale: Locale!
+  $next: String
+) {
+  registerWithPassword(
+    email: $email
+    password: $password
+    consentVersion: $consentVersion
+    locale: $locale
+    next: $next
+  ) {
+    ok
+    retryAfterSec
+  }
+}
+
+mutation LoginWithPassword($email: String!, $password: String!, $next: String) {
+  loginWithPassword(email: $email, password: $password, next: $next) {
+    ...PasswordLoginOutcome
+  }
+}
+
+mutation ConfirmEmail($token: String!) {
+  confirmEmail(token: $token) {
+    ...PasswordLoginOutcome
+  }
+}
+
+mutation RequestPasswordReset($email: String!, $locale: Locale!) {
+  requestPasswordReset(email: $email, locale: $locale) {
+    ok
+    retryAfterSec
+  }
+}
+
+mutation ResetPassword($token: String!, $password: String!) {
+  resetPassword(token: $token, password: $password) {
+    ...PasswordLoginOutcome
+  }
+}

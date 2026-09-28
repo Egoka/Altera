@@ -51,6 +51,9 @@ describe("единые пороги корзин", () => {
     "auth.link.email": { limit: 5, windowSeconds: HOUR },
     "auth.link.ip": { limit: 20, windowSeconds: HOUR },
     "auth.verify.ip": { limit: 10, windowSeconds: HOUR },
+    // RL-14 и RL-15 утверждённого предложения T-116 (журнал §44 п. 1): неуспешный вход по паролю.
+    "auth.password.email": { limit: 5, windowSeconds: 15 * MINUTE },
+    "auth.password.ip": { limit: 30, windowSeconds: 15 * MINUTE },
     "contact.ip": { limit: 3, windowSeconds: HOUR },
     "contact.user": { limit: 10, windowSeconds: DAY },
     "search.ip": { limit: 60, windowSeconds: MINUTE },
@@ -69,7 +72,7 @@ describe("единые пороги корзин", () => {
     for (const bucket of RATE_LIMIT_BUCKETS) {
       const rule = RATE_LIMIT_RULES[bucket]
       expect({ limit: rule.limit, windowSeconds: rule.windowSeconds }).toEqual(specThresholds[bucket])
-      expect(rule.source).toMatch(/^rate-limits\.md §2 п\. \d+$/)
+      expect(rule.source).toMatch(/^rate-limits\.md §2 п\. \d+( \(RL-\d+, журнал §44 п\. 1\))?$/)
     }
   })
 
@@ -154,7 +157,12 @@ describe("применение лимита", () => {
 
   it("считает ключи независимо и хранит их обезличенными", async () => {
     const consume = vi.fn(async () => ({ hits: 1, resetAt: new Date("2026-09-21T11:00:00.000Z") }))
-    const store: RateLimitCounterStore = { mode: "database", consume }
+    const store: RateLimitCounterStore = {
+      mode: "database",
+      consume,
+      peek: async () => null,
+      reset: async () => undefined
+    }
     const limiter = createRateLimiter({
       store,
       logger: collectingLogger,

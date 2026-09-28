@@ -34,7 +34,7 @@ export interface SessionClient {
     findUnique(args: { where: { tokenHash: string } }): Promise<SessionRow | null>
     findFirst(args: { where: { previousTokenHash: string } }): Promise<SessionRow | null>
     updateMany(args: {
-      where: { userId?: string; id?: string; tokenHash?: string; revokedAt: null }
+      where: { userId?: string; id?: string | { not: string }; tokenHash?: string; revokedAt: null }
       data: SessionWriteData
     }): Promise<{ count: number }>
   }
@@ -91,13 +91,23 @@ export type RotationOutcome =
   | { status: "expired" | "revoked"; sessionId: string; userId: string }
   | { status: "unknown" }
 
+/**
+ * `exceptSessionId` оставляет одну сессию живой: смена пароля в кабинете закрывает остальные
+ * устройства, но не выбрасывает того, кто её сделал (T-115). Без исключения смена пароля
+ * заканчивалась бы повторным входом на том же экране.
+ */
 export async function revokeAllSessions(
   client: SessionClient,
   userId: string,
-  now: Date = new Date()
+  now: Date = new Date(),
+  options: { exceptSessionId?: string | null } = {}
 ): Promise<number> {
   const { count } = await client.session.updateMany({
-    where: { userId, revokedAt: null },
+    where: {
+      userId,
+      revokedAt: null,
+      ...(options.exceptSessionId ? { id: { not: options.exceptSessionId } } : {})
+    },
     data: { revokedAt: now }
   })
   return count

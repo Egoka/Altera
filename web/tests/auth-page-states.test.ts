@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { loginErrorKind, verifyErrorState } from "../app/utils/authStates"
+import { loginErrorKind, passwordErrorKind, passwordResetState, verifyErrorState } from "../app/utils/authStates"
 import { sanitizeNextPath } from "../app/utils/nextPath"
 
 // Таблицы состояний: docs/spec/20-public/login.md §8, docs/spec/20-public/verify.md §8.
@@ -35,5 +35,31 @@ describe("next path on the login page", () => {
 
   it.each(["https://evil.example", "//evil.example", "/\\evil.example", "me", "", 42, null])("drops %j", (value) => {
     expect(sanitizeNextPath(value)).toBeNull()
+  })
+})
+
+// Ветка пароля: docs/spec/20-public/login.md §3а, T-115.
+describe("password branch states", () => {
+  it.each([
+    ["RATE_LIMITED", undefined, undefined, "rateLimited"],
+    ["PROVIDER_UNAVAILABLE", undefined, undefined, "providerUnavailable"],
+    // Неизвестный адрес и неверный пароль отвечают одним кодом — и одним сообщением.
+    ["UNAUTHENTICATED", undefined, undefined, "wrongCredentials"],
+    ["VALIDATION_ERROR", "email", undefined, "invalidEmail"],
+    ["VALIDATION_ERROR", "consentVersion", undefined, "consentRequired"],
+    ["VALIDATION_ERROR", "currentPassword", "current password", "wrongCurrentPassword"],
+    ["VALIDATION_ERROR", "password", "15..128 characters", "weakPassword"],
+    ["VALIDATION_ERROR", "newPassword", "known password", "knownPassword"],
+    ["INTERNAL_ERROR", undefined, undefined, "generic"]
+  ])("maps %s/%s/%s to the %s message", (code, field, rule, expected) => {
+    expect(passwordErrorKind({ code, field, rule })).toBe(expected)
+  })
+
+  it.each([
+    ["NOT_FOUND", "invalid"],
+    ["INTERNAL_ERROR", "error"],
+    [undefined, "error"]
+  ])("maps %s to the %s state of the reset screen", (code, expected) => {
+    expect(passwordResetState(code)).toBe(expected)
   })
 })
