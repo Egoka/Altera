@@ -73,7 +73,46 @@
     },
     "register": "Register",
     "email": "Email",
-    "password": "Password",
+    "password": {
+      "modeLink": "Sign in with a link",
+      "modePassword": "Sign in with a password",
+      "emailLabel": "E-mail address",
+      "passwordLabel": "Password",
+      "newPasswordLabel": "New password",
+      "passwordHint": "From 15 to 128 characters. A phrase of several words works: there are no rules about capitals or digits.",
+      "show": "Show password",
+      "hide": "Hide password",
+      "loginButton": "Sign in",
+      "registerButton": "Create an account with a password",
+      "toRegister": "No account yet? Create one with a password",
+      "toLogin": "Already have an account? Sign in",
+      "forgot": "Forgot your password?",
+      "resetTitle": "A new password by e-mail",
+      "resetHint": "Enter the account address — we will send a link for setting a new password.",
+      "resetButton": "Send the link",
+      "backToLogin": "Back to sign-in",
+      "registerSent": {
+        "title": "Check your e-mail",
+        "body": "We have sent a confirmation to {email}. Follow the link from that e-mail — signing in with the password is closed until then.",
+        "resend": "Send the e-mail again"
+      },
+      "resetSent": {
+        "title": "Check your e-mail",
+        "body": "If an account with {email} exists, we have sent it a link for a new password. The link expires in 15 minutes."
+      },
+      "unconfirmed": {
+        "title": "Confirm your address",
+        "body": "The password is right, but the address is not confirmed yet. We have sent the letter again — follow its link to sign in."
+      },
+      "error": {
+        "wrongCredentials": "Wrong address or password",
+        "weakPassword": "The password must be from 15 to 128 characters",
+        "knownPassword": "This password is too predictable — choose another one",
+        "wrongCurrentPassword": "The current password is wrong",
+        "rateLimited": "Too many sign-in attempts. Try again in {retryAfter}.",
+        "generic": "Something went wrong. Try again (code: {requestId})"
+      }
+    },
     "forgotPassword": "Forgot Password?",
     "magicLink": "Login with Link",
     "sendMagicLink": "Send Login Link",
@@ -111,6 +150,27 @@
         "title": "Sign-in error",
         "body": "We were unable to sign you in. Please try again (code: {requestId})",
         "action": "Back to sign in"
+      }
+    },
+    "confirm": {
+      "loading": {
+        "title": "Confirming the address…",
+        "body": "Please wait."
+      },
+      "expired": {
+        "title": "The link is not valid",
+        "body": "The confirmation link has expired or has already been used. Sign in with the password — we will send the letter again.",
+        "action": "Back to sign-in"
+      }
+    },
+    "reset": {
+      "title": "Set a new password",
+      "body": "The new password replaces the old one, and other devices are signed out.",
+      "submit": "Save the password",
+      "expired": {
+        "title": "The link is not valid",
+        "body": "The link for a new password has expired or has already been used. Request a new one.",
+        "action": "Request a new link"
       }
     }
   },
@@ -321,6 +381,7 @@
         "title": "Account",
         "sessions": "Sessions and devices",
         "email": "Change email",
+        "password": "Password",
         "export": "Export data",
         "delete": "Delete account",
         "terms": "Terms of use",
@@ -363,6 +424,28 @@
         "description": "Please try again a little later."
       },
       "retry": "Try again"
+    },
+    "password": {
+      "pageTitle": "Password",
+      "currentLabel": "Current password",
+      "newLabel": "New password",
+      "hint": "From 15 to 128 characters. A phrase of several words works: there are no rules about capitals or digits.",
+      "setTitle": "No password set",
+      "setBody": "You sign in with a one-time link. You can set a password — signing in with a link stays available.",
+      "changeTitle": "Change the password",
+      "changeBody": "After the change other devices are signed out, and the current one stays.",
+      "submitSet": "Set the password",
+      "submitChange": "Change the password",
+      "saved": "The password is saved. Other devices have been signed out.",
+      "retry": "Retry",
+      "error": {
+        "dataUnavailable": "Could not read the password state. Try again later.",
+        "wrongCurrentPassword": "The current password is wrong",
+        "weakPassword": "The password must be from 15 to 128 characters",
+        "knownPassword": "This password is too predictable — choose another one",
+        "rateLimited": "Too many attempts. Try again in {retryAfter}.",
+        "generic": "Something went wrong. Try again (code: {requestId})"
+      }
     }
   },
   "mail": {

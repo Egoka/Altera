@@ -37,6 +37,21 @@ end
 return {hits, ttl}
 `
 
+/** Чтение без расхода: счёт и остаток окна одним обращением, ключ не создаётся. */
+const PEEK_LUA = `
+-- rate-limit-peek
+local hits = redis.call("GET", KEYS[1])
+if not hits then
+  return {0, -2}
+end
+return {tonumber(hits), redis.call("PTTL", KEYS[1])}
+`
+
+const RESET_LUA = `
+-- rate-limit-reset
+return redis.call("DEL", KEYS[1])
+`
+
 class IoredisRateLimitClient implements RateLimitRedisClient {
   private readonly client: Redis
 
@@ -93,6 +108,33 @@ export class RedisRateLimitStore implements RateLimitCounterStore {
       this.warn("Redis rate limit counter failed")
       return this.fallback.consume(bucket, key, windowSeconds, now, hits)
     }
+  }
+
+  async peek(bucket: string, key: string, now: Date): Promise<RateLimitWindow | null> {
+    try {
+      const result = await this.client.eval(PEEK_LUA, 1, rateLimitRedisKey(bucket, key))
+      const [hits, ttlMs] = result as [number, number]
+      if (typeof hits !== "number" || typeof ttlMs !== "number") throw new Error("Unexpected rate limit script result")
+      if (hits === 0 || ttlMs < 0) return null
+
+      return { hits, resetAt: new Date(now.getTime() + ttlMs) }
+    } catch {
+      this.warn("Redis rate limit peek failed")
+      return this.fallback.peek(bucket, key, now)
+    }
+  }
+
+  /**
+   * Счёт снимается в обоих хранилищах: во время сбоя Redis попадания уходили в таблицу, и
+   * очистка только кеша оставила бы успешному входу чужое окно из запасного счётчика.
+   */
+  async reset(bucket: string, key: string): Promise<void> {
+    try {
+      await this.client.eval(RESET_LUA, 1, rateLimitRedisKey(bucket, key))
+    } catch {
+      this.warn("Redis rate limit reset failed")
+    }
+    await this.fallback.reset(bucket, key)
   }
 
   async close(): Promise<void> {

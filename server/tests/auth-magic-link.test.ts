@@ -20,6 +20,9 @@ interface FakeUser {
   locale: "ru" | "en"
   archivedAt: Date | null
   archiveMode: "self" | "admin" | "emergency" | null
+  /** Ветка пароля (T-115): подтверждение адреса и хэш пароля неподтверждённой регистрации. */
+  emailVerifiedAt?: Date | null
+  passwordHash?: string | null
 }
 
 interface FakeToken {
@@ -120,6 +123,13 @@ function createWorld(options: WorldOptions = {}) {
         } as unknown as FakeUser
         users.push(created)
         return created
+      }),
+      // Вход по ссылке подтверждает адрес и снимает пароль неподтверждённой регистрации (T-115).
+      update: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+        const found = users.find((user) => user.id === where.id)
+        if (!found) throw new Error("not found")
+        Object.assign(found, data)
+        return found
       })
     },
     handleHistory: { create: vi.fn(async () => ({})), update: vi.fn(async () => ({})) },
@@ -782,5 +792,70 @@ describe("magic link token lifetime", () => {
     const lifetimeMs = world.tokens[0]!.expiresAt.getTime() - before
     expect(lifetimeMs).toBeGreaterThan(14 * 60_000)
     expect(lifetimeMs).toBeLessThanOrEqual(15 * 60_000 + 1_000)
+  })
+})
+
+/**
+ * Ветка пароля не должна позволять захватить чужой адрес: регистрация с паролем заводит запись
+ * до подтверждения, и владелец ящика, вошедший по ссылке, получает её уже без чужого пароля
+ * (T-115, журнал §34 п. 7).
+ */
+describe("link login and an unconfirmed password registration", () => {
+  it("confirms the address and drops the password nobody confirmed", async () => {
+    const world = createWorld({
+      users: [
+        {
+          id: "user-1",
+          email: "claimed@example.test",
+          name: "",
+          handle: "u-1",
+          locale: "ru",
+          archivedAt: null,
+          archiveMode: null,
+          emailVerifiedAt: null,
+          passwordHash: "$argon2id$v=19$m=19456,t=2,p=1$c2FsdA$dGFn"
+        }
+      ]
+    })
+    await resolver.Mutation.requestMagicLink(
+      {},
+      { email: "claimed@example.test", consentVersion: consent(null, null), locale: "ru" },
+      world.ctx as never
+    )
+    const token = world.sentMail.at(-1)!.text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)![1]!
+
+    const result = await resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
+
+    expect(result.outcome).toBe("authenticated")
+    expect(world.users[0]!.passwordHash).toBeNull()
+    expect(world.users[0]!.emailVerifiedAt).toBeInstanceOf(Date)
+  })
+
+  it("leaves a confirmed account and its password alone", async () => {
+    const world = createWorld({
+      users: [
+        {
+          id: "user-1",
+          email: "owner@example.test",
+          name: "",
+          handle: "u-1",
+          locale: "ru",
+          archivedAt: null,
+          archiveMode: null,
+          emailVerifiedAt: new Date("2026-01-01T00:00:00.000Z"),
+          passwordHash: "$argon2id$v=19$m=19456,t=2,p=1$c2FsdA$dGFn"
+        }
+      ]
+    })
+    await resolver.Mutation.requestMagicLink(
+      {},
+      { email: "owner@example.test", consentVersion: consent(null, null), locale: "ru" },
+      world.ctx as never
+    )
+    const token = world.sentMail.at(-1)!.text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)![1]!
+
+    await resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
+
+    expect(world.users[0]!.passwordHash).toBe("$argon2id$v=19$m=19456,t=2,p=1$c2FsdA$dGFn")
   })
 })

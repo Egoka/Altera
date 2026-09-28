@@ -194,3 +194,63 @@ describe("refresh cookie lifetime", () => {
     expect(REFRESH_COOKIE_MAX_AGE_SECONDS).toBe(60 * 60 * 24 * 30)
   })
 })
+
+/**
+ * Ветка пароля (T-115): вход, подтверждение адреса и сброс выдают сессию так же, как
+ * подтверждение ссылки, поэтому refresh из их ответа обязан уходить в httpOnly-cookie, а не в
+ * браузерный JS (ADR-0023 п. 2).
+ */
+describe("password branch session handling", () => {
+  const passwordLogin = {
+    data: {
+      loginWithPassword: {
+        outcome: "authenticated",
+        session: { accessToken: "access-token", refreshToken: "refresh-token" }
+      }
+    }
+  }
+
+  it.each(["loginWithPassword", "confirmEmail", "resetPassword"])(
+    "moves the refresh of %s into the cookie",
+    (field) => {
+      const payload = {
+        data: {
+          [field]: {
+            outcome: "authenticated",
+            session: { accessToken: "access-token", refreshToken: "refresh-token" }
+          }
+        }
+      }
+
+      const outcome = extractSessionCookie(payload, [field])
+
+      expect(outcome.token).toBe("refresh-token")
+      expect(outcome.accessToken).toBe("access-token")
+      expect(JSON.stringify(outcome.body)).not.toContain("refresh-token")
+    }
+  )
+
+  it("keeps the browser without the refresh token of a password login", () => {
+    const outcome = extractSessionCookie(passwordLogin, ["loginWithPassword"])
+
+    expect(
+      (outcome.body as { data: { loginWithPassword: { session: { refreshToken: string | null } } } }).data
+        .loginWithPassword.session.refreshToken
+    ).toBeNull()
+  })
+
+  it("lets the confirmation link from the letter through the origin check, but not other mutations", () => {
+    expect(isLoginTokenExchange(["confirmEmail"], { secFetchMode: "navigate", contentType: "application/json" })).toBe(
+      true
+    )
+    expect(isLoginTokenExchange(["resetPassword"], { secFetchMode: "navigate", contentType: "application/json" })).toBe(
+      false
+    )
+    expect(
+      isLoginTokenExchange(["confirmEmail", "setPassword"], {
+        secFetchMode: "navigate",
+        contentType: "application/json"
+      })
+    ).toBe(false)
+  })
+})

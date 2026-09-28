@@ -4,7 +4,9 @@ import { ensureAuthenticated, ensurePermission, hasPermission } from "../excepti
 import {
   ACCOUNT_ARCHIVE_CONFIRM_TEMPLATE,
   EMAIL_CHANGE_CODE_TEMPLATE,
+  EMAIL_CONFIRM_TEMPLATE,
   MAGIC_LINK_TEMPLATE,
+  PASSWORD_RESET_TEMPLATE,
   SUPPORT_REQUEST_STAFF_TEMPLATE
 } from "../mail/messages"
 import type { GraphQLContext } from "../prisma"
@@ -19,14 +21,17 @@ const SCOPED_ACCESS_ROLES = ["editor", "moderator"] as const
 const REVIEW_ARTICLE_STATUSES = ["review", "in_review", "rework"] as const
 
 /**
- * Шаблоны с секретом: ссылка входа, код смены почты и ссылка подтверждения архива аккаунта.
- * Копия письма их не содержит (§27.6), поэтому повтор ушёл бы получателю с пометкой вместо
- * секрета — секрет пользователь запрашивает заново.
+ * Шаблоны с секретом: ссылка входа, код смены почты, ссылка подтверждения архива аккаунта и
+ * одноразовые ссылки ветки пароля — подтверждение адреса и сброс (T-115). Копия письма их не
+ * содержит (§27.6), поэтому повтор ушёл бы получателю с пометкой вместо секрета — секрет
+ * пользователь запрашивает заново.
  */
 export const SECRET_MAIL_TEMPLATES: ReadonlySet<string> = new Set([
   MAGIC_LINK_TEMPLATE,
   EMAIL_CHANGE_CODE_TEMPLATE,
-  ACCOUNT_ARCHIVE_CONFIRM_TEMPLATE
+  ACCOUNT_ARCHIVE_CONFIRM_TEMPLATE,
+  EMAIL_CONFIRM_TEMPLATE,
+  PASSWORD_RESET_TEMPLATE
 ])
 /**
  * Шаблоны, у которых копия письма сокращена: ПДн отправителя обращения остаются в одной записи

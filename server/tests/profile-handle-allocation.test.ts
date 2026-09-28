@@ -40,7 +40,7 @@ const context = (
   prisma: {
     legalText: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]) },
     userLegalConsent: { findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn().mockResolvedValue({}) },
-    user: { findUnique: vi.fn().mockResolvedValue(null) },
+    user: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn().mockImplementation(async ({ data }) => data) },
     session: { create: vi.fn().mockResolvedValue({ id: "session-1" }) },
     magicLinkToken: {
       findUnique: vi.fn().mockResolvedValue(linkRecord(email, locale)),
@@ -172,7 +172,8 @@ describe("profile handle allocation", () => {
       {
         user: {
           findUnique: vi.fn().mockResolvedValue(null),
-          create: vi.fn().mockRejectedValue(uniqueError(["handle"]))
+          create: vi.fn().mockRejectedValue(uniqueError(["handle"])),
+          update: vi.fn().mockImplementation(async ({ data }) => data)
         },
         $transaction: transaction
       },
@@ -192,7 +193,9 @@ describe("profile handle allocation", () => {
         // Регистрация имени не придумывает: локальная часть адреса в имя не попадает (T-126).
         name: "",
         handle: "u-22222222",
-        locale: "en"
+        locale: "en",
+        // Переход по ссылке подтверждает адрес сам (T-115, журнал §34 п. 7).
+        emailVerifiedAt: expect.any(Date)
       }
     })
     expect(assignOwner).toHaveBeenCalledWith({
@@ -213,7 +216,11 @@ describe("profile handle allocation", () => {
     const transaction = vi.fn().mockRejectedValue(uniqueError(["email"]))
     const ctx = context({
       $transaction: transaction,
-      user: { findUnique, create: vi.fn().mockRejectedValue(uniqueError(["email"])) }
+      user: {
+        findUnique,
+        create: vi.fn().mockRejectedValue(uniqueError(["email"])),
+        update: vi.fn().mockImplementation(async ({ data }) => ({ ...existingUser, ...data }))
+      }
     })
 
     await expect(authMutations.verifyMagicLink(null, { token: "plain-token" }, ctx as never)).resolves.toMatchObject({

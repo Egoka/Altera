@@ -52,6 +52,104 @@ export const createMagicLinkMail = (locale: Locale, url: string): MagicLinkMail 
   sanitizedBody: createMagicLinkMessage(locale, secretPlaceholder[locale]).text
 })
 
+export const EMAIL_CONFIRM_TEMPLATE = "email_confirm"
+export const PASSWORD_RESET_TEMPLATE = "password_reset"
+export const PASSWORD_ACCOUNT_EXISTS_TEMPLATE = "password_account_exists"
+
+/**
+ * [ДОПУЩЕНИЕ] Тексты писем ветки пароля (журнал §34 п. 7): состав и шаблоны писем отложены до
+ * прохода почты (§25.13), поэтому письма повторяют тон письма входа и несут только ссылку и
+ * срок её действия. Письмо подтверждения адреса уходит после регистрации с паролем: до перехода
+ * по ссылке вход по паролю закрыт.
+ */
+export const createEmailConfirmMessage = (locale: Locale, url: string, expiryMinutes: number): MailMessage => {
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Confirm your Altera address",
+      preheader: "One-time link to confirm your address",
+      text: `Hello,\n\nyou created an Altera account with a password. Confirm the address to sign in.\n\nConfirm: ${url}\n\nThe link expires in ${expiryMinutes} minutes and works only once.\n\nIf you did not create the account, you can safely ignore this email — without confirmation it stays unusable.\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>you created an Altera account with a password. Confirm the address to sign in.</p><p><a href="${escapedUrl}">Confirm the address</a></p><p>The link expires in ${expiryMinutes} minutes and works only once.</p><p>If you did not create the account, you can safely ignore this email — without confirmation it stays unusable.</p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Подтвердите адрес в Altera",
+    preheader: "Одноразовая ссылка для подтверждения адреса",
+    text: `Здравствуйте,\n\nвы завели аккаунт Altera с паролем. Подтвердите адрес, чтобы войти.\n\nПодтвердить: ${url}\n\nСсылка действует ${expiryMinutes} минут и подходит только для одного подтверждения.\n\nЕсли аккаунт заводили не вы — просто проигнорируйте это письмо: без подтверждения им нельзя пользоваться.\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>вы завели аккаунт Altera с паролем. Подтвердите адрес, чтобы войти.</p><p><a href="${escapedUrl}">Подтвердить адрес</a></p><p>Ссылка действует ${expiryMinutes} минут и подходит только для одного подтверждения.</p><p>Если аккаунт заводили не вы — просто проигнорируйте это письмо: без подтверждения им нельзя пользоваться.</p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+/** [ДОПУЩЕНИЕ] Письмо сброса пароля (журнал §34 п. 7): ссылка одноразовая, как ссылка входа. */
+export const createPasswordResetMessage = (locale: Locale, url: string, expiryMinutes: number): MailMessage => {
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Reset your Altera password",
+      preheader: "One-time link to set a new password",
+      text: `Hello,\n\nyou asked to reset the password of your Altera account. Set a new one using the link below.\n\nSet a new password: ${url}\n\nThe link expires in ${expiryMinutes} minutes and works only once. The current password keeps working until you set a new one.\n\nIf you did not ask for this, you can safely ignore this email.\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>you asked to reset the password of your Altera account. Set a new one using the link below.</p><p><a href="${escapedUrl}">Set a new password</a></p><p>The link expires in ${expiryMinutes} minutes and works only once. The current password keeps working until you set a new one.</p><p>If you did not ask for this, you can safely ignore this email.</p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Сброс пароля в Altera",
+    preheader: "Одноразовая ссылка для нового пароля",
+    text: `Здравствуйте,\n\nвы попросили сбросить пароль аккаунта Altera. Задайте новый по ссылке ниже.\n\nЗадать новый пароль: ${url}\n\nСсылка действует ${expiryMinutes} минут и подходит только для одной попытки. Прежний пароль работает, пока новый не задан.\n\nЕсли вы не просили сброс — просто проигнорируйте это письмо.\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>вы попросили сбросить пароль аккаунта Altera. Задайте новый по ссылке ниже.</p><p><a href="${escapedUrl}">Задать новый пароль</a></p><p>Ссылка действует ${expiryMinutes} минут и подходит только для одной попытки. Прежний пароль работает, пока новый не задан.</p><p>Если вы не просили сброс — просто проигнорируйте это письмо.</p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+/**
+ * [ДОПУЩЕНИЕ] Регистрация на занятый адрес отвечает ровно тем же, что и на свободный
+ * (`20-public/login.md` §4: ответ не раскрывает существование аккаунта), поэтому сказать «такой
+ * аккаунт уже есть» можно только письмом — его прочитает лишь владелец ящика. Чужой аккаунт при
+ * этом не меняется: ни пароль, ни адрес.
+ */
+export const createAccountExistsMessage = (locale: Locale, url: string): MailMessage => {
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "You already have an Altera account",
+      preheader: "Someone tried to register this address again",
+      text: `Hello,\n\nsomebody tried to create an Altera account with this address, and it already has one. Nothing has changed: the password and the address stayed as they were.\n\nSign in: ${url}\n\nIf you have forgotten the password, use “Forgot password” on the sign-in page — or sign in with a one-time link instead.\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>somebody tried to create an Altera account with this address, and it already has one. Nothing has changed: the password and the address stayed as they were.</p><p><a href="${escapedUrl}">Sign in</a></p><p>If you have forgotten the password, use “Forgot password” on the sign-in page — or sign in with a one-time link instead.</p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "У вас уже есть аккаунт Altera",
+    preheader: "Кто-то пробовал зарегистрировать этот адрес снова",
+    text: `Здравствуйте,\n\nкто-то попробовал завести аккаунт Altera на этот адрес, а он уже есть. Ничего не изменилось: пароль и адрес остались прежними.\n\nВойти: ${url}\n\nЕсли пароль забыт — воспользуйтесь ссылкой «Забыли пароль?» на странице входа или войдите по одноразовой ссылке.\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>кто-то попробовал завести аккаунт Altera на этот адрес, а он уже есть. Ничего не изменилось: пароль и адрес остались прежними.</p><p><a href="${escapedUrl}">Войти</a></p><p>Если пароль забыт — воспользуйтесь ссылкой «Забыли пароль?» на странице входа или войдите по одноразовой ссылке.</p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export interface PasswordBranchMail {
+  message: MailMessage
+  sanitizedBody: string
+}
+
+export const createEmailConfirmMail = (locale: Locale, url: string, expiryMinutes: number): PasswordBranchMail => ({
+  message: createEmailConfirmMessage(locale, url, expiryMinutes),
+  sanitizedBody: createEmailConfirmMessage(locale, secretPlaceholder[locale], expiryMinutes).text
+})
+
+export const createPasswordResetMail = (locale: Locale, url: string, expiryMinutes: number): PasswordBranchMail => ({
+  message: createPasswordResetMessage(locale, url, expiryMinutes),
+  sanitizedBody: createPasswordResetMessage(locale, secretPlaceholder[locale], expiryMinutes).text
+})
+
+/** Ссылка на страницу входа секретом не является, поэтому копия истории повторяет письмо. */
+export const createAccountExistsMail = (locale: Locale, url: string): PasswordBranchMail => ({
+  message: createAccountExistsMessage(locale, url),
+  sanitizedBody: createAccountExistsMessage(locale, url).text
+})
+
 export const EMAIL_CHANGE_CODE_TEMPLATE = "email_change_code"
 export const EMAIL_CHANGE_NOTICE_TEMPLATE = "email_change_notice"
 
