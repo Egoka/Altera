@@ -1,5 +1,6 @@
 import type { PrismaClient } from "../generated/prisma"
 import { registerJobHandler } from "../jobs/job-handlers"
+import { createRecurringJobQueue } from "../jobs/recurring"
 import type { PrismaJobStore } from "../jobs/prisma-job-store"
 import { HOUSEKEEPING_JOB_KIND, runHousekeeping } from "./housekeeping"
 import type { HousekeepingQueue } from "./scheduler"
@@ -15,10 +16,5 @@ export function registerHousekeepingJob(client: PrismaClient): void {
 }
 
 export function createHousekeepingQueue(client: PrismaClient, store: PrismaJobStore): HousekeepingQueue {
-  return {
-    async hasPending(kind) {
-      return (await client.job.count({ where: { kind, status: { in: ["queued", "running"] } } })) > 0
-    },
-    enqueue: (input) => store.enqueue(input)
-  }
+  return createRecurringJobQueue(client, store)
 }

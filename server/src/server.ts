@@ -28,7 +28,15 @@ import {
 } from "./error-collector"
 import { createMailConfigFromEnv } from "./mail/config"
 import { createMailService } from "./mail/service"
-import { createMediaService, isMediaUploadEnabled } from "./media"
+import {
+  createMediaPurgeDeps,
+  createMediaPurgeQueue,
+  createMediaService,
+  isMediaPurgeEnabled,
+  isMediaUploadEnabled,
+  registerMediaPurgeJob,
+  startMediaPurgeSchedule
+} from "./media"
 import { createPrismaPublicAccessResolver, type MediaUsageClient } from "./storage/access"
 import { createStorageConfigFromEnv } from "./storage/config"
 import { withMedia } from "./storage/gateway"
@@ -154,6 +162,9 @@ const mediaGateway = storageConfig.local
   : yoga
 const server = createServer(withHealth(mediaGateway, health))
 registerHousekeepingJob(prisma)
+// Чистка медиа-сирот (`retention-and-orphans.md` §2 п. 5–6): обработчик задания есть всегда, а
+// расписание включается признаком — окно и интервал ещё не утверждены владельцем (журнал §33 п. 3).
+registerMediaPurgeJob(createMediaPurgeDeps(prisma, storageConfig.storage))
 // AI-проверка допустимости: `real` ждёт утверждения владельцем (журнал §32 п. 2), поэтому вне
 // разработки адаптер отвечает недоступностью провайдера, а не выносит вердикт.
 registerAiCheckJob({ client: prisma, adapter: createAiCheckAdapterFromEnv(process.env), logger })
@@ -163,4 +174,5 @@ server.on("close", () => jobWorker.stop())
 startPermissionExceptionExpiry(prisma as unknown as PermissionExceptionClient, logger)
 startRateLimitCounterPrune(rateLimitClient, logger)
 startHousekeepingSchedule(createHousekeepingQueue(prisma, jobStore), logger)
+if (isMediaPurgeEnabled(process.env)) startMediaPurgeSchedule(createMediaPurgeQueue(prisma, jobStore), logger)
 server.listen(PORT)

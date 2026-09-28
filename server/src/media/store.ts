@@ -1,4 +1,5 @@
-import type { Prisma, PrismaClient } from "../generated/prisma"
+import { Prisma, type PrismaClient } from "../generated/prisma"
+import type { MediaOrphanRecord, MediaOrphanStore } from "./orphans"
 import type { MediaAssetStore, MediaTranslationLookup, MediaTranslationOwner } from "./types"
 
 // Истина о файле — запись `MediaAsset` (`storage-layout.md` п. 2). Выборка закрыта перечнем полей:
@@ -124,6 +125,51 @@ export function createPrismaTranslationLookup(client: PrismaClient): MediaTransl
         isEditorial: translation.article.isEditorial
       }
       return owner
+    }
+  }
+}
+
+/**
+ * Выборка сирот (`retention-and-orphans.md` §2 п. 5) на SQL: ссылка из документа живёт внутри
+ * JSONB-тела узлом `figure` (`@altera/content`), и условие «на медиа никто не ссылается» иначе
+ * не выразить — `jsonb_path_exists` обходит документ целиком, как прореживание `autosave` в
+ * housekeeping. Статус материала в условиях не участвует: архив закрывает доступ к файлу, но
+ * связь остаётся (журнал #11, #28), поэтому медиа архивированной статьи в выборку не попадает.
+ *
+ * Окно тишины проверяется и по `createdAt`, и по `updatedAt`: запись, которую только что
+ * создала загрузка или только что изменил конвейер, сиротой не считается, даже если связь с
+ * документом ещё не появилась.
+ */
+export function createPrismaMediaOrphanStore(client: PrismaClient): MediaOrphanStore {
+  return {
+    async findOrphans({ quietBefore, limit }) {
+      return client.$queryRaw<MediaOrphanRecord[]>(Prisma.sql`
+        SELECT m."id", m."storageKey", m."byteSize", m."variants"
+        FROM "media_assets" AS m
+        WHERE m."createdAt" < ${quietBefore}
+          AND m."updatedAt" < ${quietBefore}
+          AND NOT EXISTS (SELECT 1 FROM "articles" AS a WHERE a."coverAssetId" = m."id")
+          AND NOT EXISTS (
+            SELECT 1 FROM "users" AS u WHERE u."avatarAssetId" = m."id" OR u."prevAvatarId" = m."id"
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM "article_translations" AS t
+            WHERE jsonb_path_exists(t."body", '$.**.assetId ? (@ == $assetId)', jsonb_build_object('assetId', m."id"))
+          )
+          AND NOT EXISTS (
+            SELECT 1 FROM "article_revisions" AS r
+            WHERE jsonb_path_exists(r."body", '$.**.assetId ? (@ == $assetId)', jsonb_build_object('assetId', m."id"))
+          )
+        ORDER BY m."createdAt" ASC
+        LIMIT ${limit}
+      `)
+    },
+
+    async deleteAsset(id) {
+      // `deleteMany`, а не `delete`: отсутствие записи здесь — обычный исход параллельного
+      // прохода или «удалить навсегда», а не ошибка.
+      const { count } = await client.mediaAsset.deleteMany({ where: { id } })
+      return count > 0
     }
   }
 }
