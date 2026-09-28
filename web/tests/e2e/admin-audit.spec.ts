@@ -237,7 +237,9 @@ test.describe("admin audit", () => {
       return route.continue()
     })
 
-    await page.goto("/admin/audit?period=30d")
+    // Фильтр по коду оставляет в списке только фикстуру этого прогона: страница отдаёт 20 записей,
+    // и соседние спеки, которые пишут свои записи аудита, иначе вытесняют её на вторую страницу.
+    await page.goto("/admin/audit?period=30d&action=settings.change")
     await requestStarted
 
     await expect(page.locator("[data-audit-loading]")).toBeVisible()
@@ -305,7 +307,7 @@ test.describe("admin audit", () => {
     const testActors = { actorId: { in: Object.values(userIds) } }
     const before = await prisma.auditLog.count({ where: testActors })
 
-    await page.goto("/admin/audit?period=30d")
+    await page.goto("/admin/audit?period=30d&action=settings.change")
     await expect(page.locator(`[data-audit-row="${entryIds.closed}"]`)).toBeVisible()
     await page.locator(`[data-audit-open="${entryIds.closed}"]`).click()
     await expect(page.locator("[data-audit-detail]")).toBeVisible()

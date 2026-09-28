@@ -1,0 +1,212 @@
+# Раздел админки «Пользователи» (`docs/spec/40-admin/users.md`, `00-registries/admin-sections.md` #6)
+# и flow #11 (`docs/spec/10-flows/archive-account.md`). Список читают `analyst`, `admin` и `owner`
+# (матрица #81), мутации выполняют `admin` и `owner` (матрица #52, #80, #105, #113).
+# Служебные записи в раздел не входят (журнал §25.2) — они в `adminStaff`.
+
+"""
+Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Список закрыт:
+новая категория — решение владельца, а не расширение контракта.
+"""
+enum AccountArchiveReasonCategory {
+  rules_violation
+  spam_and_manipulation
+  law_or_rights_violation
+  security_threat
+}
+
+enum AdminUserStatus {
+  active
+  archived
+}
+
+"""
+Фильтр плана (§4). `grant` — действующая выдача сотрудника, `expired` — план закончился и
+бесплатным авторством не стал (`plan-free.md` п. 3–4).
+"""
+enum AdminUserPlanFilter {
+  free
+  standard
+  pro
+  grant
+  expired
+}
+
+enum AdminUserSort {
+  registered
+  lastActive
+  name
+  publications
+}
+
+"""
+Строка списка. Адрес здесь всегда маска: полный отдаёт только карточка, и её открытие пишется
+в аудит `admin.read.personal` (журнал §28.7). Просмотр списка не аудируется (§8).
+"""
+type AdminUserRow {
+  id: ID!
+  name: String!
+  handle: String!
+  email: String!
+  "Адрес отдан маской: полный адрес в этом ответе не раскрыт."
+  emailMasked: Boolean!
+  role: Role!
+  status: AdminUserStatus!
+  "Как аккаунт попал в архив: сам, администратор или экстренно (§4)."
+  archiveMode: AccountArchiveMode
+  plan: AccountSubscription!
+  createdAt: String!
+  "Последняя активность — самая свежая сессия; IP и местоположение не показываются (журнал §25.9)."
+  lastActiveAt: String
+  articlesCount: Int!
+  publishedCount: Int!
+}
+
+type AdminUserArticleRow {
+  id: ID!
+  slug: String!
+  title: String!
+  status: ArticleStatus!
+  locale: Locale!
+  createdAt: String!
+  publishedAt: String
+  archivedAt: String
+  "Статью архивировал сотрудник: автор такую не восстанавливает (журнал §4.2–4)."
+  archivedByStaff: Boolean!
+}
+
+type AdminUserArticleStats {
+  total: Int!
+  draft: Int!
+  review: Int!
+  published: Int!
+  archived: Int!
+}
+
+type AdminUserConsent {
+  kind: LegalTextKind!
+  version: Int!
+  locale: Locale!
+  acceptedAt: String!
+}
+
+"""
+Базовое авторство первого запуска (§25.1, §27.1): дата первого «Создать статью». Закрывается
+только архивом аккаунта, поэтому у архивированной записи признак снят, а дата сохраняется.
+"""
+type AdminUserBaseAuthorship {
+  enabled: Boolean!
+  enabledAt: String
+}
+
+"""
+Карточка пользователя (§3, §5). Её открытие — чтение персональных данных: сервер пишет
+`admin.read.personal` (#67) с актором, субъектом, контекстом и целью от системы.
+"""
+type AdminUserCard {
+  id: ID!
+  name: String!
+  handle: String!
+  "Полный адрес: карточка — единственное место раздела, где он раскрывается."
+  email: String!
+  emailMasked: Boolean!
+  role: Role!
+  status: AdminUserStatus!
+  archiveMode: AccountArchiveMode
+  plan: AccountSubscription!
+  createdAt: String!
+  lastActiveAt: String
+  articlesCount: Int!
+  publishedCount: Int!
+  locale: Locale!
+  nameCheckStatus: ProfileCheckStatus!
+  avatarCheckStatus: ProfileCheckStatus!
+  archivedAt: String
+  archiveReasonCategory: AccountArchiveReasonCategory
+  "Короткое объяснение, которое видит пользователь (§26.9)."
+  archivePublicMessage: String
+  """
+  Внутренняя причина: пользователю она не показывается нигде (§26.9), а `analyst` её не получает —
+  коды `user.archive` и `user.restore` закрыты для служебных зон журнала (журнал #39).
+  """
+  archiveInternalReason: String
+  archivedByName: String
+  archivedByRole: Role
+  baseAuthorship: AdminUserBaseAuthorship!
+  articleStats: AdminUserArticleStats!
+  articles: [AdminUserArticleRow!]!
+  consents: [AdminUserConsent!]!
+  """
+  Активные сессии аккаунта — зона безопасности: `analyst` вкладку не видит и получает `null`
+  (журнал §26.6). Ни IP, ни местоположения в сессии нет (журнал §25.9).
+  """
+  sessions: [AccountSession!]
+  canArchive: Boolean!
+  canRestore: Boolean!
+  canRevokeSessions: Boolean!
+  canChangeEmail: Boolean!
+}
+
+type AdminUserList {
+  items: [AdminUserRow!]!
+  pagination: PaginationInfo!
+  "Роль зрителя: аналитик видит карточку без единой кнопки (§9)."
+  viewerRole: Role!
+  viewerCanManage: Boolean!
+}
+
+input AdminUserFiltersInput {
+  role: Role
+  status: AdminUserStatus
+  archiveMode: AccountArchiveMode
+  plan: AdminUserPlanFilter
+  registeredFrom: String
+  registeredTo: String
+  lastActiveFrom: String
+  hasPublications: Boolean
+  "Поиск по имени, хэндлу и адресу от трёх знаков; запрос пишется в аудит как чтение ПДн (§4)."
+  search: String
+  sort: AdminUserSort
+}
+
+type AdminUserSessionsRevokeResult {
+  revokedCount: Int!
+}
+
+type AdminEmailChangeResult {
+  "Новый адрес маской: подтверждение действия второй раз ПДн не раскрывает."
+  emailMasked: String!
+  changedAt: String!
+}
+
+extend type Query {
+  adminUsers(filters: AdminUserFiltersInput, pagination: PaginationInput): AdminUserList!
+  "Карточка обычного аккаунта; служебная запись и неизвестный `id` отвечают `null` (§2)."
+  adminUser(id: ID!): AdminUserCard
+}
+
+extend type Mutation {
+  """
+  Блокировка = архивирование аккаунта (журнал §5.5): доступ закрыт, сессии отозваны, статьи
+  каскадно в архиве с актором-сотрудником (журнал #4, #30). `mode: emergency` — экстренная
+  блокировка немедленно, даже при действующем плане (матрица #113). Оплаченный план идёт без
+  возврата (журнал #50). Повторная блокировка уже закрытого административно аккаунта — `CONFLICT`.
+  """
+  archiveAccount(
+    id: ID!
+    reasonCategory: AccountArchiveReasonCategory!
+    internalReason: String!
+    publicMessage: String
+    mode: AccountArchiveMode = admin
+  ): AdminUserCard!
+  """
+  Восстановление аккаунта сотрудником (матрица #105): доступ возвращён, статьи остаются в архиве —
+  автор возвращает их сам (журнал §5.4, §25.7).
+  """
+  restoreAccount(id: ID!, reason: String!): AdminUserCard!
+  revokeUserSessions(id: ID!): AdminUserSessionsRevokeResult!
+  """
+  Смена адреса в рамках восстановления доступа (flow #13 шаг Р2, матрица #50). Личность
+  проверяется вне продукта; сессии не отзываются (журнал §25.8).
+  """
+  adminChangeEmail(id: ID!, newEmail: String!, reason: String!): AdminEmailChangeResult!
+}

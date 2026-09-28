@@ -39,6 +39,17 @@ type AccountArchivePreview {
 }
 
 """
+Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Список закрыт:
+новая категория — решение владельца, а не расширение контракта.
+"""
+enum AccountArchiveReasonCategory {
+  law_or_rights_violation
+  rules_violation
+  security_threat
+  spam_and_manipulation
+}
+
+"""
 Итог подтверждения: архив выполнен, все сессии отозваны, страница уходит на `/`.
 """
 type AccountArchiveResult {
@@ -181,6 +192,15 @@ type AccountUser {
   """
   subscription: AccountSubscription
   updatedAt: String!
+}
+
+type AdminEmailChangeResult {
+  changedAt: String!
+
+  """
+  Новый адрес маской: подтверждение действия второй раз ПДн не раскрывает.
+  """
+  emailMasked: String!
 }
 
 type AdminFormat {
@@ -646,6 +666,180 @@ type AdminSupportRequestList {
   """Сколько обращений ещё без ответа — счётчик очереди."""
   openCount: Int!
   pagination: PaginationInfo!
+}
+
+type AdminUserArticleRow {
+  archivedAt: String
+
+  """
+  Статью архивировал сотрудник: автор такую не восстанавливает (журнал §4.2–4).
+  """
+  archivedByStaff: Boolean!
+  createdAt: String!
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  slug: String!
+  status: ArticleStatus!
+  title: String!
+}
+
+type AdminUserArticleStats {
+  archived: Int!
+  draft: Int!
+  published: Int!
+  review: Int!
+  total: Int!
+}
+
+"""
+Базовое авторство первого запуска (§25.1, §27.1): дата первого «Создать статью». Закрывается
+только архивом аккаунта, поэтому у архивированной записи признак снят, а дата сохраняется.
+"""
+type AdminUserBaseAuthorship {
+  enabled: Boolean!
+  enabledAt: String
+}
+
+"""
+Карточка пользователя (§3, §5). Её открытие — чтение персональных данных: сервер пишет
+`admin.read.personal` (#67) с актором, субъектом, контекстом и целью от системы.
+"""
+type AdminUserCard {
+  """
+  Внутренняя причина: пользователю она не показывается нигде (§26.9), а `analyst` её не получает —
+  коды `user.archive` и `user.restore` закрыты для служебных зон журнала (журнал #39).
+  """
+  archiveInternalReason: String
+  archiveMode: AccountArchiveMode
+
+  """Короткое объяснение, которое видит пользователь (§26.9)."""
+  archivePublicMessage: String
+  archiveReasonCategory: AccountArchiveReasonCategory
+  archivedAt: String
+  archivedByName: String
+  archivedByRole: Role
+  articleStats: AdminUserArticleStats!
+  articles: [AdminUserArticleRow!]!
+  articlesCount: Int!
+  avatarCheckStatus: ProfileCheckStatus!
+  baseAuthorship: AdminUserBaseAuthorship!
+  canArchive: Boolean!
+  canChangeEmail: Boolean!
+  canRestore: Boolean!
+  canRevokeSessions: Boolean!
+  consents: [AdminUserConsent!]!
+  createdAt: String!
+
+  """
+  Полный адрес: карточка — единственное место раздела, где он раскрывается.
+  """
+  email: String!
+  emailMasked: Boolean!
+  handle: String!
+  id: ID!
+  lastActiveAt: String
+  locale: Locale!
+  name: String!
+  nameCheckStatus: ProfileCheckStatus!
+  plan: AccountSubscription!
+  publishedCount: Int!
+  role: Role!
+
+  """
+  Активные сессии аккаунта — зона безопасности: `analyst` вкладку не видит и получает `null`
+  (журнал §26.6). Ни IP, ни местоположения в сессии нет (журнал §25.9).
+  """
+  sessions: [AccountSession!]
+  status: AdminUserStatus!
+}
+
+type AdminUserConsent {
+  acceptedAt: String!
+  kind: LegalTextKind!
+  locale: Locale!
+  version: Int!
+}
+
+input AdminUserFiltersInput {
+  archiveMode: AccountArchiveMode
+  hasPublications: Boolean
+  lastActiveFrom: String
+  plan: AdminUserPlanFilter
+  registeredFrom: String
+  registeredTo: String
+  role: Role
+
+  """
+  Поиск по имени, хэндлу и адресу от трёх знаков; запрос пишется в аудит как чтение ПДн (§4).
+  """
+  search: String
+  sort: AdminUserSort
+  status: AdminUserStatus
+}
+
+type AdminUserList {
+  items: [AdminUserRow!]!
+  pagination: PaginationInfo!
+  viewerCanManage: Boolean!
+
+  """Роль зрителя: аналитик видит карточку без единой кнопки (§9)."""
+  viewerRole: Role!
+}
+
+"""
+Фильтр плана (§4). `grant` — действующая выдача сотрудника, `expired` — план закончился и
+бесплатным авторством не стал (`plan-free.md` п. 3–4).
+"""
+enum AdminUserPlanFilter {
+  expired
+  free
+  grant
+  pro
+  standard
+}
+
+"""
+Строка списка. Адрес здесь всегда маска: полный отдаёт только карточка, и её открытие пишется
+в аудит `admin.read.personal` (журнал §28.7). Просмотр списка не аудируется (§8).
+"""
+type AdminUserRow {
+  """Как аккаунт попал в архив: сам, администратор или экстренно (§4)."""
+  archiveMode: AccountArchiveMode
+  articlesCount: Int!
+  createdAt: String!
+  email: String!
+
+  """Адрес отдан маской: полный адрес в этом ответе не раскрыт."""
+  emailMasked: Boolean!
+  handle: String!
+  id: ID!
+
+  """
+  Последняя активность — самая свежая сессия; IP и местоположение не показываются (журнал §25.9).
+  """
+  lastActiveAt: String
+  name: String!
+  plan: AccountSubscription!
+  publishedCount: Int!
+  role: Role!
+  status: AdminUserStatus!
+}
+
+type AdminUserSessionsRevokeResult {
+  revokedCount: Int!
+}
+
+enum AdminUserSort {
+  lastActive
+  name
+  publications
+  registered
+}
+
+enum AdminUserStatus {
+  active
+  archived
 }
 
 type Article {
@@ -1379,10 +1573,24 @@ type Mutation {
   addBookmark(articleId: ID!): BookmarkState!
 
   """
+  Смена адреса в рамках восстановления доступа (flow #13 шаг Р2, матрица #50). Личность
+  проверяется вне продукта; сессии не отзываются (журнал §25.8).
+  """
+  adminChangeEmail(id: ID!, newEmail: String!, reason: String!): AdminEmailChangeResult!
+
+  """
   Отметка ответа: ответ уходит письмом на указанный адрес (`contact.md` §4), продукт фиксирует
   факт ответа и пишет `support.request.answered` (events #91). Повторная отметка — `CONFLICT`.
   """
   answerSupportRequest(id: ID!): AdminSupportRequest!
+
+  """
+  Блокировка = архивирование аккаунта (журнал §5.5): доступ закрыт, сессии отозваны, статьи
+  каскадно в архиве с актором-сотрудником (журнал #4, #30). `mode: emergency` — экстренная
+  блокировка немедленно, даже при действующем плане (матрица #113). Оплаченный план идёт без
+  возврата (журнал #50). Повторная блокировка уже закрытого административно аккаунта — `CONFLICT`.
+  """
+  archiveAccount(id: ID!, internalReason: String!, mode: AccountArchiveMode = admin, publicMessage: String, reasonCategory: AccountArchiveReasonCategory!): AdminUserCard!
   archiveArticle(id: ID!): Article!
   archiveFormat(id: ID!): AdminFormat!
   archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
@@ -1472,6 +1680,12 @@ type Mutation {
   Новый пароль по ссылке из письма: прежние сессии отзываются, выдаётся новая.
   """
   resetPassword(password: String!, token: String!): PasswordLoginResult!
+
+  """
+  Восстановление аккаунта сотрудником (матрица #105): доступ возвращён, статьи остаются в архиве —
+  автор возвращает их сам (журнал §5.4, §25.7).
+  """
+  restoreAccount(id: ID!, reason: String!): AdminUserCard!
   restoreAccountSelf: AccountRestoreResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
@@ -1488,6 +1702,7 @@ type Mutation {
   revokePlan(input: RevokePlanInput!): AdminPlanGrant!
   revokeSession(id: ID!): SessionRevokeResult!
   revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
+  revokeUserSessions(id: ID!): AdminUserSessionsRevokeResult!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
 
   """
@@ -1718,7 +1933,12 @@ type Query {
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
   adminSupportRequest(id: ID!): AdminSupportRequest
   adminSupportRequests(filters: AdminSupportRequestFiltersInput, pagination: PaginationInput): AdminSupportRequestList!
-  adminUser(id: ID!): AccountUser
+
+  """
+  Карточка обычного аккаунта; служебная запись и неизвестный `id` отвечают `null` (§2).
+  """
+  adminUser(id: ID!): AdminUserCard
+  adminUsers(filters: AdminUserFiltersInput, pagination: PaginationInput): AdminUserList!
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
@@ -1776,7 +1996,6 @@ type Query {
   tags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
   taxonomyAudit(entityId: ID!, entityType: String!): [TaxonomyAuditEntry!]!
   user(handle: String!): User
-  users(filters: UserFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): UsersResponse!
 }
 
 type RelatedArticlesResponse {
@@ -2157,26 +2376,6 @@ type UserArticleStats {
 
 type UserCount {
   articles: Int!
-}
-
-type UserFilters {
-  base: BaseFiltersInfo
-  hasArticles: Boolean
-  role: [Role!]
-}
-
-input UserFiltersInput {
-  base: BaseFiltersInput
-  hasArticles: Boolean
-  role: [Role!]
-}
-
-type UsersResponse {
-  filters: UserFilters!
-  pagination: PaginationInfo!
-  search: SearchInfo
-  sort: SortInfo!
-  users: [AccountUser!]!
 }
 
 type VerifyMagicLinkResult {

@@ -30,6 +30,12 @@ model User {
   archivedByActorId           String?
   archivedByRole              Role?
   archiveReason               String?
+  /// Категория причины административной блокировки — одна из четырёх базовых (журнал §38 п. 1).
+  /// У самостоятельного архива её нет: пользователь себе причину не выбирает.
+  archiveReasonCategory       AccountArchiveReasonCategory?
+  /// Короткое объяснение для экрана и письма пользователю (§26.9); внутренняя причина остаётся
+  /// в `archiveReason` и наружу не уходит.
+  archivePublicMessage        String?
   isServiceAccount            Boolean                @default(false)
   planTier                    PlanTier               @default(free)
   planUntil                   DateTime?
@@ -812,6 +818,15 @@ enum AccountArchiveMode {
   self
   admin
   emergency
+}
+
+/// Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Названия для
+/// интерфейса берутся из словаря веба; список закрыт — новая категория требует решения владельца.
+enum AccountArchiveReasonCategory {
+  rules_violation
+  spam_and_manipulation
+  law_or_rights_violation
+  security_threat
 }
 
 enum Locale {

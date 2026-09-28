@@ -59,29 +59,6 @@ type UserCount {
   articles: Int!
 }
 
-# Специфичные для пользователей фильтры
-input UserFiltersInput {
-  base: BaseFiltersInput
-
-  # Специфичные для пользователей
-  role: [Role!]
-  hasArticles: Boolean
-}
-
-type UsersResponse {
-  users: [AccountUser!]!
-  pagination: PaginationInfo!
-  filters: UserFilters!
-  sort: SortInfo!
-  search: SearchInfo
-}
-
-type UserFilters {
-  base: BaseFiltersInfo
-  role: [Role!]
-  hasArticles: Boolean
-}
-
 type UserArticleStats {
   total: Int!
   published: Int!
@@ -100,7 +77,8 @@ extend type Query {
   # `articlesByAuthor` и `authorStats` отдавали полный `User` и ни архива аккаунта, ни
   # истории хэндлов, ни локали не знали, поэтому сняты вместе с T-057.
 
-  # Запросы для управления пользователями (требуют права admin)
-  users(pagination: PaginationInput!, sort: SortInput!, filters: UserFiltersInput!, search: SearchInput): UsersResponse!
-  adminUser(id: ID!): AccountUser
+  # Список и карточка обычных аккаунтов живут в модуле `admin-users`: `adminUsers(filters)`
+  # отдаёт маску адреса без записи аудита, `adminUser(id)` — полный адрес с записью
+  # `admin.read.personal` (`40-admin/users.md` §3, §8). Черновые `users` и `adminUser` отдавали
+  # весь `AccountUser` и писали чтение ПДн на каждую строку списка, поэтому сняты вместе с T-073.
 }
