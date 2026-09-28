@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "task_id": "T-040",
+  "issue_id": "01a0e834-7618-76a4-9e25-16ea1d8ec8bd",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-040-editor-shell.md",
+    "sha": "a45eb706f87d71dc8f5f27387599dbd2a4d80762"
+  },
+  "baseline_sha": "a990b782d335512dff12212042f064a7b5d22e4f",
+  "tested_sha": "6eed3c98304bfbc7c98cc9760eb009f23637cb0f",
+  "branch": "web/t040-editor-shell",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t040",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e851-dc82-7039-ae8e-bc308cbfaf33",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Saving with a stale baseRevisionId answers CONFLICT and the editor shows the banner (ADR-0033). server/tests/translation-editor.test.ts (29 passed): the error carries entity 'revision', expected — the fresh revision id, actual — the presented one, and neither the revision nor the translation is written. web/tests/editor-states.test.ts (34 passed) parses the refusal into the fresh revision id and refuses to read a translation-status CONFLICT as a revision conflict; web/tests/editor-components.nuxt.test.ts (12 passed) checks the banner offers both exits and reports the choice. Playwright web/tests/e2e/40-editor-shell.spec.ts against the real API and database: two tabs of one session open one translation, the first saves its edit, the second hits the banner, 'open the fresh version' shows the first tab's text, and after a second conflict 'save a copy as a revision' puts its own text on top of the fresh base revision — the database row holds exactly that text."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Submission without a cover is refused (journal §29.1, article-edit.md §4). server/tests/translation-editor.test.ts: submitTranslation answers VALIDATION_ERROR with field 'cover' and rule 'required' when the article has no cover and rule 'processing' when the media record is not ready; the translation status is not updated in either case. The same file covers the remaining mandatory fields of submission — title, body, section (journal §25.3) — and the review queue: the sixth submission with five translations already in review answers PLAN_LIMIT with limit 5."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Every state row of article-edit.md §8 is reproducible. web/tests/e2e/40-editor-shell.spec.ts (12 passed, Playwright, real API and database), one scenario per row: loading — an in-app navigation with a held response shows the editor skeleton and then the translation title; empty — a fresh draft has an empty title, the cover placeholder, a disabled submit button and the list of missing fields; data error — a translation with no revisions answers 500 for the navigation instead of a skeleton with 200; no access — a guest lands on /login?next= with the return path; not found — an unknown and a stranger's translation both answer 404; plan limit — an expired subscription gives read mode, the banner and the /pricing link with no save or submit buttons; blocked — a restricted session goes to /me/archived and an archived article opens read-only; paywall — no paid-material control is present. The same file also covers read mode for a rejected translation and for ai_check (with the withdraw button) and the full submission path."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "@altera/content 99 passed; server 1215 passed / 69 skipped; web 866 passed",
+    "server_build_ci": "passed",
+    "web_build": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "smoke": "passed: pnpm --filter server run smoke and pnpm --filter nuxt-app run smoke, exit 0",
+    "codegen": "passed: pnpm codegen left the generated files unchanged",
+    "lockfile": "passed: pnpm install --frozen-lockfile, exit 0",
+    "e2e": "passed: pnpm --filter nuxt-app run test:e2e on a disposable local database altera_e2e_t040 — 307 passed / 9 skipped, of which tests/e2e/40-editor-shell.spec.ts 12 passed",
+    "migrations": "passed: prisma migrate deploy applied every migration including 20260929130000_translation_first_editor to the disposable local databases; server/tests/translation-editor-database.test.ts (3 passed with T040_TEST_DATABASE_URL) proves the trigger opt-out on real PostgreSQL. Migrations were never applied to development Neon",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36445369610",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg ran with the configured core.hooksPath=.husky/_"
+  },
+  "pr": {
+    "number": 357,
+    "url": "https://github.com/Egoka/Altera/pull/357",
+    "base_ref": "app",
+    "base_sha": "a990b782d335512dff12212042f064a7b5d22e4f",
+    "head_sha": "6eed3c98304bfbc7c98cc9760eb009f23637cb0f",
+    "merge_sha": "d7724e2f78d5d3eafafdec6c2f84bb3aa345f1b0"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "The change carries a schema migration but there is no production environment in Russia yet (journal §34 item 1, T-103); migrations were applied only to disposable local databases."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-040.md",
+    "sha256": "007351a2acdb773286b264f0abe4f16447f8adc7c443bb62f55a69af2b0d3738"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Deviation from the specification: readOnlyReason gained the value 'published' beyond the §4 list. Editing a published translation goes through a copy and an AI check (journal §41), but that is T-122; until then the editor opens a published translation read-only instead of writing into public text",
+    "Owner question: until T-122 the author of a published article cannot fix even a typo. If that expectation must be met sooner, T-122 should be raised in the queue",
+    "The «Что сломано» section of CLAUDE.md still calls the editor a stub: the file belongs to the owner and was modified by a neighbouring task in the autopilot worktree while this work ran, so the edit was left to the owner",
+    "The T-040 row of docs/backlog/matrix.md is untouched: task statuses are kept by the controller",
+    "Not done and out of scope: the block catalogue and its interfaces (T-041, the 95-blocks/ pass, Q-02); status transitions after submission and the AI-check branch (T-048, T-049) — submission moves the translation to review, as the legacy requestReview already did; editing a published translation without unpublishing (T-122); the second language version and AI translation (F-09, T-046); the review panel with the verdict and reviewer notes on blocks; entry by ?token= from the rework mail (journal §34)",
+    "Assumptions recorded in the report: the 10 s autosave period and the 3 s media poll (article-edit.md §4), the 21 MB upload envelope limit in the BFF, the revision size measured in characters of text and the slug shape (lowercase Latin letters, digits and hyphens, at most 120 characters)"
+  ],
+  "usage": null
+}

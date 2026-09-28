@@ -197,6 +197,48 @@ T069_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<по�
 требует базы (`T069_TEST_DATABASE_URL`) и открытой загрузки — `MEDIA_UPLOAD_ENABLED=true`
 `playwright.config.ts` задаёт сам.
 
+## Обвязка редактора материала
+
+```bash
+pnpm --filter server exec vitest run tests/translation-editor.test.ts
+T040_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/<база> \
+  pnpm --filter server exec vitest run tests/translation-editor-database.test.ts
+pnpm --filter nuxt-app exec vitest run tests/editor-states.test.ts \
+  tests/editor-components.nuxt.test.ts tests/graphql-upload-proxy.test.ts
+T069_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/<база> \
+  pnpm --filter nuxt-app exec playwright test --project chromium --no-deps \
+  tests/e2e/40-editor-shell.spec.ts
+```
+
+Редактор (T-040) — первый писатель, который работает от `ArticleTranslation`, а не от наследной
+строки `articles`. Каждое сохранение — снимок версии (журнал §6.7, ADR-0007), и базовая ревизия
+защищает от правки в двух вкладках: `saveTranslation` с устаревшим `baseRevisionId` отвечает
+`CONFLICT` с `entity: revision`, а `expected` называет свежую ревизию — по ней редактор
+предлагает открыть свежую версию или сохранить свой текст копией (ADR-0033). Это критерий 1, и
+его проверяют набор сервера, `web/tests/editor-states.test.ts` (разбор отказа) и сценарий
+Playwright на настоящем API двумя вкладками.
+
+Критерий 2 — подача без обложки: `submitTranslation` отвечает `VALIDATION_ERROR` с полем `cover`
+и для отсутствующей записи, и для незаконченной обработки (журнал §29.1). Там же проверяются
+остальные обязательные поля подачи: заголовок, текст, рубрика (§25.3), публичное имя и адрес
+профиля перед первой публикацией (§25.4) и очередь проверки ≤ 5 (`rate-limits.md` п. 10).
+
+Набор на настоящей базе проверяет trigger `t015_sync_legacy_article`: без параметра сеанса
+`altera.legacy_sync` правка `articles.status` переписывает текст языковой версии наследными
+значениями, с `SET LOCAL "altera.legacy_sync" = 'off'` — нет, и второй ревизии от trigger не
+появляется. Это поведение живёт в PostgreSQL, двойник Prisma его не исполняет.
+
+Критерий 3 — строки состояний `article-edit.md` §8; каждую воспроизводит сценарий Playwright:
+загрузка (скелет при переходе из кабинета), пусто, ошибка данных (версия без ревизий — ответ
+500), нет доступа (302 на вход с путём возврата), не найдено (404 и на чужую версию), ограничение
+плана (режим чтения и ссылка на тарифы), заблокирован (ограниченная сессия уходит на
+`/me/archived`, материал в архиве открыт только на чтение) и paywall — признака платного
+материала в редакторе нет.
+
+`graphql-upload-proxy.test.ts` закрывает пропуск multipart-запроса через BFF: тело уходит наверх
+байт в байт с исходной границей конверта, не-multipart и слишком большой конверт до API не
+доходят, недоступный API отвечает 502.
+
 ## Аватары
 
 ```bash
