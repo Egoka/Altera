@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "task_id": "T-115",
+  "issue_id": "01a0e5b3-786e-79b8-81fe-9d54e1075466",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-115-password-login.md",
+    "sha": "8410f5fc5fbdb6211c7b0d7b9b264ea5328a07df"
+  },
+  "baseline_sha": "07922eec1f8686ef4ab4b0b8c217604df1a51493",
+  "tested_sha": "0cfce57f5e77ce85e5175741c59be28d6a839761",
+  "branch": "server/t115-password-login",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t115",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e611-286b-7523-8bd6-9701bfca9ebe",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Registration by link and with a password both create an account; with a password the first login is closed until the address is confirmed. End-to-end on the real stack with Mailpit (web/tests/e2e/115-password-login.spec.ts, steps 1-4): the account is created with emailVerifiedAt = null and a $argon2id$v=19$m=19456,t=2,p=1$ hash that does not contain the password; loginWithPassword before confirmation returns email_unconfirmed, no session row appears; the /auth/confirm?token= link from the letter confirms the address and issues a session; the same link a second time renders the invalid state. Resolver-level duplicates in server/tests/auth-password.test.ts ('creates the account without address confirmation', 'does not let in by password before confirmation', 'confirms the address, issues a session and burns the link')."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "An account created by a magic link stays passwordless and signs in by link: e2e scenario 'an account created by a link stays passwordless and signs in by link' checks passwordHash = null and emailVerifiedAt set after the link exchange, then sets the first password on /me/password and signs in with it. server/tests/auth-magic-link.test.ts additionally covers that a link login into an unconfirmed password registration confirms the address and drops that password, while a confirmed account keeps its password."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Password reset goes by e-mail and no answer discloses whether the account exists. server/tests/auth-password.test.ts: requestPasswordReset returns an identical payload for an existing and an unknown address and sends the letter only to the existing one; loginWithPassword returns the same UNAUTHENTICATED extensions and message for an unknown address and for a wrong password (the unknown address is verified against a dummy hash of equal cost); registerWithPassword answers a taken address exactly as a free one and leaves the other account's password untouched, the owner of the mailbox gets a 'you already have an account' letter. e2e: reset link from the letter sets a new password, the old one stops working and the new one signs in."
+    },
+    {
+      "id": "AC-4",
+      "status": "passed",
+      "evidence": "Login attempts are limited by the owner-approved thresholds RL-14 and RL-15 (journal §44 item 1): server/tests/auth-password.test.ts section 'лимит попыток входа по паролю' - five failed attempts on one address answer UNAUTHENTICATED and the sixth answers RATE_LIMITED with a positive retryAfter while a neighbouring address is unaffected; a successful check clears the address bucket, so there is no permanent lockout; the request-address bucket rejects the thirty-first attempt spread over different accounts; rate_limit.hit carries the bucket and contains neither the address nor the password. Only failed password checks are counted: the buckets are applied in the resolver, not in the middleware."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 996 passed / 58 skipped; web 756 passed; @altera/content 99 passed",
+    "codegen_drift": "passed (pnpm codegen --check)",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "e2e": "pnpm --filter nuxt-app run test:e2e on a disposable PostgreSQL 17 database: 266 passed, 9 skipped, including the new tests/e2e/115-password-login.spec.ts (3 scenarios)",
+    "migrations": "prisma migrate deploy applied all migrations, including 20260928200000_password_login, on a disposable database",
+    "database_test": "not_run: the new storage is covered by the schema contract test and by the e2e run on a real PostgreSQL; no concurrency invariant needed a dedicated *-database test",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36377391892",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg ran with the configured core.hooksPath=.husky/_"
+  },
+  "pr": {
+    "number": 334,
+    "url": "https://github.com/Egoka/Altera/pull/334",
+    "base_ref": "app",
+    "base_sha": "07922eec1f8686ef4ab4b0b8c217604df1a51493",
+    "head_sha": "0cfce57f5e77ce85e5175741c59be28d6a839761",
+    "merge_sha": "9124ea79f36db2d454c04e4a6cc74b1f043a7df2"
+  },
+  "review": null,
+  "deployment": {
+    "required": true,
+    "environment": null,
+    "status": "not_run",
+    "reason": "The task adds a migration (users.passwordHash, users.passwordUpdatedAt, users.emailVerifiedAt, table password_tokens), but there is no production environment in Russia yet (journal §34 item 1, T-103). The migration was applied only to a disposable local database and by the CI jobs; deployment belongs to the controller together with hosting."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-115.md",
+    "sha256": "d855aef241ce28b94bc83847285851362623436be873981ac7c495efb440dc6f"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Owner question: the events registry has no code for a password change, and this task does not invent one; whether auth.password.changed and an audit record are needed is a product rule for the owner",
+    "Moving the remaining approved thresholds RL-01..RL-13 into the text of rate-limits.md §2 stays a separate task (journal §44 item 1); this task updated only the login item",
+    "Real mail delivery is out of scope (journal §34 item 2): the transport is console locally and Mailpit in tests; the letters of the password branch stay [ДОПУЩЕНИЕ] until the mail pass (journal §25.13)",
+    "The Argon2id profile is the approved OWASP minimum measured only on the developer machine and CI; raising the parameters for the target environment needs that environment (T-103)",
+    "OAuth and MFA are explicitly out of scope"
+  ],
+  "usage": null
+}
