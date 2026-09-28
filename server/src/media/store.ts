@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../generated/prisma"
+import type { Prisma, PrismaClient } from "../generated/prisma"
 import type { MediaAssetStore, MediaTranslationLookup, MediaTranslationOwner } from "./types"
 
 // Истина о файле — запись `MediaAsset` (`storage-layout.md` п. 2). Выборка закрыта перечнем полей:
@@ -73,6 +73,15 @@ export function createPrismaMediaAssetStore(client: PrismaClient): MediaAssetSto
           width: input.width,
           height: input.height
         },
+        select: assetSelect
+      })
+    },
+
+    async saveVariants(id, variants) {
+      return client.mediaAsset.update({
+        where: { id },
+        // Набор — единое значение колонки: частичный набор переписывает прежний целиком.
+        data: { variants: variants as unknown as Prisma.InputJsonValue },
         select: assetSelect
       })
     }

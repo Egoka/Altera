@@ -108,6 +108,33 @@ EXIF, ни ориентации тегом. Третий набор работа
 него мутация `uploadMedia` отвечает `FORBIDDEN` с `action: media.upload`. Числовые пороги конвейера
 собраны в `server/src/media/limits.ts` и до утверждения владельцем остаются `[ДОПУЩЕНИЕ]`.
 
+## Варианты изображений
+
+```bash
+pnpm --filter server exec vitest run tests/media-variants.test.ts
+pnpm --filter server exec vitest run tests/media-variants-sharp.test.ts
+pnpm --filter nuxt-app exec vitest run tests/media-variants.test.ts tests/media-picture.nuxt.test.ts
+pnpm --filter nuxt-app exec playwright test --project chromium --no-deps \
+  tests/e2e/64-no-ipx-requests.spec.ts
+```
+
+Первый набор (T-064) проверяет централизованную матрицу (`server/src/media/variant-matrix.ts`:
+ширины 480/960/1440/2000 журнала §33 п. 2, форматы AVIF и WebP журнала §29.4, ширины не больше
+мастера) и её шаг в конвейере на двойниках: частичный набор при отказе, повтор без пересоздания
+готовых вариантов, восстановление потерянного объекта. Второй идёт через настоящий `sharp` и
+проверяет байты: формат каждого варианта определяется по содержимому (`sharp` зовёт AVIF по
+контейнеру `heif`, поэтому берётся та же проверка, что на приёме загрузки), размеры совпадают с
+пропорцией мастера, метаданные мастера в варианты не попадают, заполнитель — WebP в 48 px
+строкой `data:`.
+
+Веб-набор проверяет разбор поля `variants` и сборку `srcset`, а также компонент
+`web/app/components/media/Picture.vue`: `<picture>` с источником AVIF и запасным WebP, `sizes` от
+места использования, размеры атрибутами и единый `alt` медиафайла. Сценарий Playwright — критерий
+«в прод-сборке нет запросов к `/_ipx/`»: он идёт по публичным страницам собранного сервера
+(`playwright.config.ts` поднимает `pnpm run build && node .output/server/index.mjs`) и проверяет
+и запросы браузера, и разметку. Тот же запрет проверяется grep по сборке — единственное вхождение
+`_ipx` в `web/.output` это строка `Disallow: /_ipx/` в `robots.txt` (T-098).
+
 ## Вход по паролю
 
 ```bash

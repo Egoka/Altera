@@ -1,8 +1,21 @@
 import sharp from "sharp"
 import type { Metadata, Sharp } from "sharp"
 import { descriptorFor, isAcceptedFormat } from "./formats"
-import { MASTER_ENCODE_QUALITY } from "./limits"
-import { MediaRejectedError, type ImageInspection, type ImageProcessor, type MasterImage } from "./types"
+import {
+  MASTER_ENCODE_QUALITY,
+  PLACEHOLDER_BLUR,
+  PLACEHOLDER_QUALITY,
+  PLACEHOLDER_WIDTH,
+  VARIANT_ENCODE_QUALITY
+} from "./limits"
+import {
+  MediaRejectedError,
+  type ImageInspection,
+  type ImageProcessor,
+  type MasterImage,
+  type PlaceholderImage,
+  type VariantImage
+} from "./types"
 
 // Обработка изображений на `sharp` (ADR-0030 п. 3: `sharp` — обычная зависимость сервера,
 // варианты и мастер делаются при загрузке, а не на лету).
@@ -82,6 +95,49 @@ export function createSharpImageProcessor(): ImageProcessor {
         height: info.height
       }
       return master
+    },
+
+    /**
+     * Вариант делается из мастера, а не из байтов загрузки: мастер — источник всех производных
+     * (§29.2). Ориентация и цветовой профиль в нём уже приведены, поэтому здесь остаётся только
+     * масштабирование и кодирование. `withoutEnlargement` держит правило «не больше мастера»
+     * даже если в план попала бо́льшая ширина.
+     */
+    async createVariant(master, { width, format }) {
+      const pipeline = sharp(master, { failOn: "error" }).resize({ width, withoutEnlargement: true })
+      const encoded =
+        format === "avif"
+          ? pipeline.avif({ quality: VARIANT_ENCODE_QUALITY.avif })
+          : pipeline.webp({ quality: VARIANT_ENCODE_QUALITY.webp })
+
+      const { data, info } = await encoded.toBuffer({ resolveWithObject: true })
+      const variant: VariantImage = {
+        body: data,
+        mimeType: `image/${format}`,
+        width: info.width,
+        height: info.height
+      }
+      return variant
+    },
+
+    /**
+     * Заполнитель — WebP: он читается всеми браузерами, которым вообще показывается сайт, и
+     * поэтому не требует второго формата. Прозрачность мастера сохраняется, чтобы заполнитель
+     * PNG-логотипа не превращался в чёрный прямоугольник.
+     */
+    async createPlaceholder(master) {
+      const { data, info } = await sharp(master, { failOn: "error" })
+        .resize({ width: PLACEHOLDER_WIDTH, withoutEnlargement: true })
+        .blur(PLACEHOLDER_BLUR)
+        .webp({ quality: PLACEHOLDER_QUALITY, alphaQuality: PLACEHOLDER_QUALITY })
+        .toBuffer({ resolveWithObject: true })
+
+      const placeholder: PlaceholderImage = {
+        dataUri: `data:image/webp;base64,${data.toString("base64")}`,
+        width: info.width,
+        height: info.height
+      }
+      return placeholder
     }
   }
 }
