@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/server.ts",
+    "dev": "pnpm run build:content && ts-node src/server.ts",
     "build": "pnpm run clean && pnpm run build:content && prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "build:ci": "pnpm run clean && pnpm run build:content && prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "build:content": "pnpm --filter @altera/content run build",

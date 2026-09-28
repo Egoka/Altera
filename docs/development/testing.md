@@ -311,9 +311,11 @@ pnpm --filter nuxt-app run typecheck
 pnpm --filter nuxt-app run test:e2e
 ```
 
-С T-048 `server`-скрипты `build` и `build:ci` начинаются с `build:content`
+С T-048 `server`-скрипты `build`, `build:ci` и `dev` начинаются с `build:content`
 (`pnpm --filter @altera/content run build`): `server/src/**` импортирует `@altera/content`, а его
-`dist` в git не хранится, поэтому без этого шага `tsc` сервера не разрешил бы типы пакета. Тесты
+`dist` в git не хранится, поэтому без этого шага `tsc` сервера не разрешил бы типы пакета, а
+`ts-node` в `dev` не нашёл бы модуль. `dev` запускает и браузерная проверка: Playwright поднимает
+API командой `pnpm --filter server run dev`. Тесты
 сервера собранный пакет не требуют — `server/vitest.config.ts` направляет `@altera/content`
 на исходники.
 
