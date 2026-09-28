@@ -1079,6 +1079,12 @@ type FeedTagHeader {
   slug: String!
 }
 
+"""
+Файл multipart-запроса GraphQL. Имя файла и объявленный тип конвейер не использует: фактический
+тип определяется по содержимому (`upload-pipeline.md` п. 3).
+"""
+scalar File
+
 type Format {
   archivedAt: String
   createdAt: String!
@@ -1251,6 +1257,51 @@ type MagicLinkRequestResult {
   retryAfterSec: Int
 }
 
+type MediaAsset {
+  """
+  Единое описание медиафайла. Его создаёт конвейер; автор его не задаёт и не редактирует, а
+  размещение в статье не переопределяет (журнал §29.13).
+  """
+  alt: String
+  attribution: String!
+  byteSize: Int!
+  caption: String
+  createdAt: String!
+  height: Int
+  id: ID!
+  license: MediaLicense!
+  licenseNote: String
+  mimeType: String!
+  processingStatus: MediaProcessingStatus!
+
+  """Варианты изображения; их генерирует отдельный шаг конвейера (T-064)."""
+  variants: JSON!
+  width: Int
+}
+
+"""Справочник лицензий медиа (ADR-0008 п. 3)."""
+enum MediaLicense {
+  cc0
+  cc_by
+  cc_by_nc
+  cc_by_sa
+  own
+  permission
+  public_domain
+}
+
+"""
+Состояние обработки (журнал §29.12). Публичный доступ к файлу появляется только после `ready`
+(`access-and-signed-urls.md` п. 1).
+"""
+enum MediaProcessingStatus {
+  failed
+  processing
+  queued
+  ready
+  uploading
+}
+
 input MergeTagsInput {
   sourceTagIds: [ID!]!
   targetTagId: ID!
@@ -1343,6 +1394,12 @@ type Mutation {
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
+
+  """
+  Загрузка медиа версии статьи: файл принимается в карантин и обрабатывается заданием очереди.
+  Лицензия и атрибуция обязательны; `alt` автор не задаёт (журнал §29.13).
+  """
+  uploadMedia(attribution: String!, file: File!, license: MediaLicense!, translationId: ID!): MediaAsset!
   verifyMagicLink(token: String!): VerifyMagicLinkResult!
 }
 

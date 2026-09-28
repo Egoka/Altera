@@ -54,6 +54,27 @@ DATABASE_URL_UNPOOLED=postgresql://altera:altera@localhost:25432/altera_rehearsa
 (указывает на базу `postgres` того же сервера: тест создаёт и удаляет одноразовые базы сам).
 Без такой переменной набор соответствующей задачи пропускается, а не падает.
 
+## Конвейер загрузки медиа
+
+```bash
+pnpm --filter server exec vitest run tests/media-upload-pipeline.test.ts
+pnpm --filter server exec vitest run tests/media-master-exif.test.ts
+T063_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/postgres \
+  pnpm --filter server exec vitest run tests/media-pipeline-database.test.ts
+```
+
+Первый набор (T-063) проверяет приём файла в карантин, обязательные лицензию и атрибуцию, статусы
+`uploading → queued → processing → ready` и повтор после частичной ошибки на двойниках портов.
+Второй идёт через настоящий `sharp`: мастер-файл собирается из JPEG с геометкой и не содержит ни
+EXIF, ни ориентации тегом. Третий набор работает на настоящем PostgreSQL (одноразовая база, как у
+остальных `*-database.test.ts`) и проверяет связь с очередью T-047: задание `media.process`,
+обработчик в процессе API и запись `MediaAsset` после успешной обработки. Тот же прогон добавлен в
+джоб `server-smoke`.
+
+Загрузка закрыта признаком `MEDIA_UPLOAD_ENABLED` (по умолчанию выключена, журнал §33 п. 3): без
+него мутация `uploadMedia` отвечает `FORBIDDEN` с `action: media.upload`. Числовые пороги конвейера
+собраны в `server/src/media/limits.ts` и до утверждения владельцем остаются `[ДОПУЩЕНИЕ]`.
+
 ## Актуальное состояние инфраструктуры после Task 3
 
 Инфраструктура добавлена в `b8e00f13b53cd73db8571d248e6823165d5f3764`; исправление
