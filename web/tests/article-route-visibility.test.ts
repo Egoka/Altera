@@ -23,6 +23,15 @@ describe("article route visibility", () => {
     ).toEqual({ kind: "error", statusCode: 404, code: "NOT_FOUND", requestId: undefined })
   })
 
+  it("maps a denied authenticated preview to 403", () => {
+    expect(
+      getArticleRouteState({
+        data: { article: null },
+        errors: [{ message: "Preview denied", extensions: { code: "FORBIDDEN", requestId: "request-403" } }]
+      })
+    ).toEqual({ kind: "error", statusCode: 403, code: "FORBIDDEN", requestId: "request-403" })
+  })
+
   it("returns a published article as visible", () => {
     const article = { id: "article-1", title: "Visible article" }
 

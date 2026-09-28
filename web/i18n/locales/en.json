@@ -618,7 +618,30 @@
     "goneDescription": "This article is no longer publicly available.",
     "goneHome": "Go to the home page",
     "gonePublished": "First published",
-    "report": "Report this piece"
+    "report": "Report this piece",
+    "readingTime": "{count} min read",
+    "tags": "Article topics",
+    "published": "Published {date}",
+    "translationPublished": "Translation published {date}",
+    "updated": "Updated {date}",
+    "aboutAuthor": "About the author",
+    "preview": "Preview",
+    "previewStatus": "Status: {status}",
+    "reeditUntil": "Re-edit until {time}",
+    "openEditor": "Open editor",
+    "language": {
+      "ru": "Русская версия",
+      "en": "English version"
+    },
+    "status": {
+      "draft": "draft",
+      "ai_check": "automated check",
+      "review": "under review",
+      "in_review": "under review",
+      "rework": "needs revision",
+      "published": "published",
+      "archived": "archived"
+    }
   },
   "reading": {
     "translation": "Translation",

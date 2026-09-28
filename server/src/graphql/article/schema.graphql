@@ -186,13 +186,53 @@ type GoneArticle {
   section: Section
 }
 
+"Опубликованная языковая пара, доступная читателю из переключателя."
+type ArticlePageSibling {
+  locale: Locale!
+  path: String!
+}
+
+"Публичная языковая версия для SSR-страницы чтения (`20-public/article.md`)."
+type ArticlePage {
+  id: ID!
+  translationId: ID!
+  locale: Locale!
+  title: String!
+  slug: String!
+  dek: String
+  excerpt: String
+  featuredImage: String
+  "Документ каталога `@altera/content`; строкового HTML в базе нет."
+  body: JSON!
+  "Готовые медиафайлы, на которые ссылаются изображения документа."
+  bodyAssets: [MediaAsset!]!
+  cover: ArticleCover
+  "Статус виден только в session-bound предпросмотре."
+  status: ArticleStatus
+  publishedAt: String
+  firstPublishedAt: String
+  createdAt: String!
+  updatedAt: String!
+  author: User!
+  section: Section
+  format: Format
+  tags: [Tag!]!
+  sibling: ArticlePageSibling
+  isTranslation: Boolean!
+  readingTime: Int!
+  preview: Boolean!
+  reeditUntil: String
+}
+
 type RelatedArticlesResponse {
   articles: [Article!]!
   totalCount: Int!
 }
 
 extend type Query {
-  article(slug: String!): Article
+  article(locale: Locale, sectionSlug: String, slug: String!, preview: String): ArticlePage
+  "Короткоживущий токен предпросмотра, привязанный к текущей сессии."
+  articlePreviewToken(translationId: ID!): String!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
 
   # Комплексный запрос для страницы статьи

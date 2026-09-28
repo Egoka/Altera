@@ -25,17 +25,19 @@ beforeEach(() => {
         "article.gonePublished": "Был опубликован"
       })[key] ?? key
   }))
-  graphQLRequest.mockResolvedValue({
-    data: {
-      gone: {
-        title: "Снятый материал",
-        firstPublishedAt: "2026-09-01T00:00:00.000Z",
-        unpublishedAt: "2026-09-10T00:00:00.000Z",
-        author: { name: "Автор", handle: "author" },
-        section: { name: "Культура", slug: "culture" }
+  graphQLRequest
+    .mockResolvedValueOnce({ data: { article: null }, errors: [{ extensions: { code: "ARCHIVED" } }] })
+    .mockResolvedValueOnce({
+      data: {
+        gone: {
+          title: "Снятый материал",
+          firstPublishedAt: "2026-09-01T00:00:00.000Z",
+          unpublishedAt: "2026-09-10T00:00:00.000Z",
+          author: { name: "Автор", handle: "author" },
+          section: { name: "Культура", slug: "culture" }
+        }
       }
-    }
-  })
+    })
   vi.stubGlobal("useGraphQL", graphQLRequest)
   vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => ({
     data: ref(await handler()),
@@ -76,6 +78,6 @@ describe("archived article page", () => {
     expect(wrapper.text()).toContain("Культура")
     expect(wrapper.text()).not.toContain("Entity archived")
     expect(setResponseStatus).toHaveBeenCalledWith(event, 410)
-    expect(graphQLRequest).toHaveBeenCalledTimes(1)
+    expect(graphQLRequest).toHaveBeenCalledTimes(2)
   })
 })
