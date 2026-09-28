@@ -944,3 +944,36 @@ model BackendErrorEvent {
   @@index([requestId])
   @@map("backend_error_events")
 }
+
+/// Вид резервной копии (`85-media-and-binary/backups.md` п. 1–2): база — управляемый PostgreSQL и
+/// еженедельный `pg_dump`; медиа — версионирование бакета и еженедельная синхронизация во второй.
+enum BackupKind {
+  database
+  media
+}
+
+enum BackupRunStatus {
+  succeeded
+  failed
+}
+
+/// Отметка прогона резервного копирования. Копии делает эксплуатация вне продукта; продукт только
+/// читает отметки, чтобы показать возраст последней успешной копии в состоянии системы
+/// (`80-observability/health-and-alerts.md` п. 1, журнал §29.9) и оповестить о просрочке.
+/// Задание копирования ставит отметку командой `server/scripts/record-backup.ts`.
+/// Ни путей, ни адресов бакетов, ни учётных данных здесь нет: `detail` — короткая техническая
+/// пометка вида числа объектов или класса отказа.
+model BackupRun {
+  id          String          @id @default(uuid())
+  kind        BackupKind
+  status      BackupRunStatus
+  /// Момент завершения прогона по данным эксплуатации, а не время записи отметки.
+  completedAt DateTime
+  /// Чем сделана копия: `managed-postgres`, `pg_dump`, `bucket-sync` и подобное.
+  source      String
+  detail      String?
+  createdAt   DateTime        @default(now())
+
+  @@index([kind, status, completedAt])
+  @@map("backup_runs")
+}

@@ -2,11 +2,43 @@
 
 `GET /health` проверяет `SELECT 1` через серверный Prisma client и, если задан `REDIS_URL`, `PING`
 через тот же Redis client, который обслуживает кеш. Ответ — HTTP 200/503, `status`
-(`ok`/`degraded`/`unavailable`), `revision` (валидный `RENDER_GIT_COMMIT` либо `null`), булевы
-`checks.postgres`/`checks.migrations` и `checks.redis`: `true`/`false` для настроенного Redis либо
-`"disabled"` без `REDIS_URL` (кеш noop, ADR-0019). HTTP 503 (`unavailable`) — только неготовые база
-или миграции. Недоступный настроенный Redis даёт HTTP 200 и `degraded`: кеш отключён, API работает
-(`docs/spec/80-observability/health-and-alerts.md` п. 1, 7).
+(`ok`/`degraded`/`unavailable`), `revision` (валидный `RENDER_GIT_COMMIT` либо `null`), `checkedAt`,
+булевы `checks.postgres`/`checks.migrations` и `checks.redis`: `true`/`false` для настроенного Redis
+либо `"disabled"` без `REDIS_URL` (кеш noop, ADR-0019). HTTP 503 (`unavailable`) — только неготовые
+база или миграции. Недоступный настроенный Redis даёт HTTP 200 и `degraded`: кеш отключён, API
+работает (`docs/spec/80-observability/health-and-alerts.md` п. 1, 7).
+
+Кроме контракта готовности ответ несёт состояние зависимостей и возраст резервных копий (T-088).
+`components` — компоненты `db`, `redis`, `psp`, `ai`, `mail`, `storage` (§29.3) со статусом
+`up`/`down`/`disabled`, именем адаптера и задержкой; `disabled` — провайдер не подключён (AI до
+T-048, платежи до этапа платности, Redis без `REDIS_URL`), а не деградация. Хранилище проверяется
+одним `exists` по несуществующему карантинному ключу, почта — по последней завершённой отправке
+из `mail_messages` (у транспорта статус-эндпоинта нет, спецификация п. 2); эти проверки
+кешируются минуту. Любой `down` даёт `degraded` без 503. В ответе нет ни значений настроек, ни
+секретов, ни адресов — только имена адаптеров; это закреплено контрактным тестом
+`server/tests/health-secrets.test.ts`.
+
+`backups.database` и `backups.media` — статус (`ok`/`overdue`/`unknown`/`disabled`), время и возраст
+последней успешной копии и порог просрочки. Копии делает эксплуатация вне продукта
+(`docs/spec/85-media-and-binary/backups.md` п. 1–2); продукт читает отметки прогонов из
+`backup_runs`, которые ставит задание копирования:
+
+```bash
+pnpm --filter server run backup:record -- --kind database --status succeeded --source pg_dump
+```
+
+Порог просрочки `[ДОПУЩЕНИЕ]` равен объявленной периодичности копий (24 часа для базы, 7 суток для
+медиа) и переопределяется `BACKUP_DATABASE_MAX_AGE_HOURS` и `BACKUP_MEDIA_MAX_AGE_HOURS`. Без
+отметок вне production статус — `disabled` (копии приходят вместе с хостингом, журнал §34 п. 1);
+в production отсутствие отметок — `unknown` и деградация. Просрочка и любой `down` пишут
+`system.health` уровнем `warn` и формируют оповещение всем активным `owner` и `admin` (журнал §40
+п. 2); запись идёт при смене набора причин, а не на каждый опрос, возврат в норму — уровнем `info`.
+Канал доставки оповещений отложен (журнал §40 п. 1): получатели в записи есть, отправки нет.
+
+`/health` в Nuxt (`web/server/routes/health.get.ts`) отдаёт состояние веба и ответ API с этими же
+полями. Код ответа всегда 200, пока обработчик выполняется: платформенная проверка веба не должна
+перезапускать веб из-за недоступного API. Тяжесть состояния несёт `status` в теле — по нему
+оповещает внешняя проверка (T-106).
 Проверка миграций читает `_prisma_migrations`: все каталоги из `server/prisma/migrations`
 должны иметь завершённую, не откаченную запись; незавершённые попытки, отсутствующая таблица
 или каталог миграций дают HTTP 503. Проверка не применяет миграции и не возвращает их записи.
@@ -50,7 +82,8 @@ DATABASE_URL_UNPOOLED=postgresql://altera:altera@localhost:25432/altera_rehearsa
 ```
 
 `CREATE DATABASE … TEMPLATE` требует, чтобы к базе-шаблону не было подключений.
-Миграционные тесты баз данных берут адрес из переменных вида `T020_TEST_DATABASE_URL`
+Миграционные тесты баз данных берут адрес из переменных вида `T020_TEST_DATABASE_URL` или
+`T088_TEST_DATABASE_URL`
 (указывает на базу `postgres` того же сервера: тест создаёт и удаляет одноразовые базы сам).
 Без такой переменной набор соответствующей задачи пропускается, а не падает.
 

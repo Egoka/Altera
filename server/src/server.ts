@@ -5,7 +5,19 @@ import { useCSRFPrevention } from "@graphql-yoga/plugin-csrf-prevention"
 import { blockFieldSuggestionsPlugin } from "@escape.tech/graphql-armor-block-field-suggestions"
 import { schema } from "./graphql/schema"
 import { createContext, GraphQLContext, prisma } from "./prisma"
-import { checkMigrations, createHealthCheck, redisReadiness, withHealth } from "./health"
+import {
+  checkMigrations,
+  createBackupMonitorFromEnv,
+  createHealthAlerts,
+  createHealthCheck,
+  createProviderProbes,
+  createStaffRecipients,
+  redisReadiness,
+  withHealth,
+  type BackupRunsClient,
+  type MailHistoryClient,
+  type StaffRecipientsClient
+} from "./health"
 import { createCache } from "./cache"
 import { createErrorMasker } from "./errors/graphql-error"
 import {
@@ -95,6 +107,13 @@ const yoga = createYoga<GraphQLContext>({
   ].filter(Boolean)
 })
 
+// Состояние зависимостей и возраст копий (`health-and-alerts.md` п. 1): проверки провайдеров
+// кешируются минуту, оповещение о деградации формируется получателям — активным `owner` и `admin`
+// (журнал §40 п. 2); канал доставки отложен (§40 п. 1).
+const healthAlerts = createHealthAlerts({
+  recipients: createStaffRecipients(prisma as unknown as StaffRecipientsClient),
+  logger
+})
 const health = createHealthCheck(
   {
     postgres: () => prisma.$queryRaw`SELECT 1 AS ok`,
@@ -102,9 +121,27 @@ const health = createHealthCheck(
       checkMigrations(
         () => prisma.$queryRaw`SELECT migration_name, finished_at, rolled_back_at FROM "_prisma_migrations"`
       ),
-    redis: redisReadiness(cache)
+    redis: redisReadiness(cache),
+    providers: createProviderProbes({
+      storage: storageConfig.storage,
+      mail: mailConfig.transport,
+      mailHistory: prisma as unknown as MailHistoryClient
+    }),
+    backups: createBackupMonitorFromEnv(process.env, prisma as unknown as BackupRunsClient)
   },
-  process.env.RENDER_GIT_COMMIT
+  process.env.RENDER_GIT_COMMIT,
+  {
+    onCheck: (snapshot) =>
+      void healthAlerts(snapshot).catch((error: unknown) =>
+        logger.log({
+          level: "error",
+          event: "backend.error",
+          requestId: getRequestId(),
+          message: "Health alert failed",
+          error
+        })
+      )
+  }
 )
 // Локальная реализация раздаёт `/media/*` сама; у S3 публичные файлы идут через CDN провайдера.
 const mediaGateway = storageConfig.local

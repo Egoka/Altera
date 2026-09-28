@@ -8,6 +8,7 @@ Disallow: /preview
 Disallow: /_nuxt/
 Disallow: /_ipx/
 Disallow: /api/
+Disallow: /health
 
 User-agent: GPTBot
 Disallow: /
