@@ -1,6 +1,6 @@
 import { createApiError } from "../../errors/graphql-error"
-import { ensureActiveAuthor, ensureAuthenticated, ensurePermission } from "../../exceptions/permissions"
-import { publicVariantSet, type MediaAssetRecord, type UploadSource } from "../../media"
+import { ensureActiveAuthor, ensureAuthenticated, ensurePermission, ensureRole } from "../../exceptions/permissions"
+import { MEDIA_META_ACTION, publicVariantSet, type MediaAssetRecord, type UploadSource } from "../../media"
 import type { GraphQLContext } from "../../prisma"
 
 // Точка входа конвейера (`upload-pipeline.md` п. 1–4). Резолвер отвечает за права, лимит частоты и
@@ -97,6 +97,23 @@ export default {
         file: toUploadSource(args.file),
         license: args.license,
         attribution: args.attribution,
+        requestId: ctx.requestId
+      })
+      return asMediaAsset(record, ctx.media.mediaBaseUrl)
+    },
+
+    /**
+     * Исправление `alt` у медиафайла. `ensureRole` пропускает `admin` и `owner` как полный
+     * доступ; автору, рецензенту и остальным служебным ролям — `FORBIDDEN` (матрица #40).
+     */
+    adminUpdateMediaAlt: async (_parent: unknown, args: { assetId: string; alt: string }, ctx: GraphQLContext) => {
+      ensureRole(ctx.currentUser, "admin", MEDIA_META_ACTION, ctx.requestId)
+      const actor = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+
+      const record = await ctx.media.updateAlt({
+        assetId: args.assetId,
+        alt: args.alt,
+        actor: { id: actor.id, role: actor.role },
         requestId: ctx.requestId
       })
       return asMediaAsset(record, ctx.media.mediaBaseUrl)

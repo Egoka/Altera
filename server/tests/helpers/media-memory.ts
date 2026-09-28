@@ -8,6 +8,7 @@ import type {
   MasterImage,
   MediaAssetRecord,
   MediaAssetStore,
+  MediaAuditEntry,
   MediaVariantSet,
   PlaceholderImage,
   SaveMasterInput,
@@ -29,12 +30,15 @@ export interface MemoryMediaStore extends MediaAssetStore {
   readonly records: Map<string, MediaAssetRecord>
   /** Порядок статусов, через которые прошла запись — для проверки достижимости состояний. */
   statusHistory(id: string): readonly MediaProcessingStatus[]
+  /** Записи журнала, сделанные вместе с изменением медиафайла. */
+  readonly audit: MediaAuditEntry[]
 }
 
 export function createMemoryMediaStore(options: { now?: () => Date } = {}): MemoryMediaStore {
   const now = options.now ?? (() => new Date("2026-09-28T10:00:00.000Z"))
   const records = new Map<string, MediaAssetRecord>()
   const history = new Map<string, MediaProcessingStatus[]>()
+  const audit: MediaAuditEntry[] = []
 
   const track = (id: string, status: MediaProcessingStatus): void => {
     history.set(id, [...(history.get(id) ?? []), status])
@@ -48,6 +52,7 @@ export function createMemoryMediaStore(options: { now?: () => Date } = {}): Memo
 
   return {
     records,
+    audit,
 
     statusHistory(id) {
       return history.get(id) ?? []
@@ -119,6 +124,14 @@ export function createMemoryMediaStore(options: { now?: () => Date } = {}): Memo
     async saveFocal(id, focal: FocalPoint | null) {
       const updated: MediaAssetRecord = { ...mustFind(id), focalX: focal?.x ?? null, focalY: focal?.y ?? null }
       records.set(id, updated)
+      return updated
+    },
+
+    async saveAltWithAudit({ assetId, alt, audit: entry }) {
+      // Как в базе: значение и запись журнала появляются вместе или не появляются вовсе.
+      const updated: MediaAssetRecord = { ...mustFind(assetId), alt }
+      records.set(assetId, updated)
+      audit.push(entry)
       return updated
     }
   }

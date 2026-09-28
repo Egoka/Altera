@@ -6,6 +6,7 @@ import {
   MediaRejectedError,
   type ImageInspection,
   type ImageProcessor,
+  type MediaAltQueue,
   type MediaAssetRecord,
   type MediaAssetStore
 } from "./types"
@@ -23,6 +24,16 @@ export interface MediaProcessingDeps {
    * несёт связь в базе (`storage-layout.md` п. 3), поэтому вид файла знает вызывающий.
    */
   variantWidths?: readonly number[]
+  /**
+   * Очередь AI-описания. Необязательна: аватар идёт тем же конвейером синхронно и своего задания
+   * описания не получает — `alt` аватара нигде не выводится (`avatars.md` п. 1).
+   */
+  altQueue?: MediaAltQueue
+}
+
+export interface MediaProcessingOptions {
+  /** `requestId` загрузки: связывает задание описания с тем же запросом автора в логах. */
+  originRequestId?: string | null
 }
 
 export type MediaProcessingOutcome =
@@ -99,6 +110,20 @@ async function completeVariants(record: MediaAssetRecord, deps: MediaProcessingD
 }
 
 /**
+ * Задание AI-описания для готового файла (`upload-pipeline.md` п. 6а). Описание создаётся один
+ * раз (журнал §29.13), поэтому запись с уже заполненным `alt` задания не получает: повторный
+ * вызов ничего не стоил бы только на словах — обращение к модели платное.
+ */
+async function enqueueAltDescription(
+  record: MediaAssetRecord,
+  deps: MediaProcessingDeps,
+  options: MediaProcessingOptions
+): Promise<void> {
+  if (!deps.altQueue || record.alt !== null) return
+  await deps.altQueue.enqueue({ assetId: record.id, requestId: options.originRequestId ?? null })
+}
+
+/**
  * Обработка одного файла: `processing` → мастер без EXIF → варианты и заполнитель → снятие
  * карантина → `ready`.
  *
@@ -109,15 +134,27 @@ async function completeVariants(record: MediaAssetRecord, deps: MediaProcessingD
  * Отказ содержимого завершает задание: байты не изменятся, и повторять его незачем. Любая другая
  * ошибка выбрасывается наружу — повторы и исчерпание ведёт очередь (T-047).
  */
-export async function runMediaProcessing(assetId: string, deps: MediaProcessingDeps): Promise<MediaProcessingOutcome> {
+export async function runMediaProcessing(
+  assetId: string,
+  deps: MediaProcessingDeps,
+  options: MediaProcessingOptions = {}
+): Promise<MediaProcessingOutcome> {
   const record = await deps.store.findById(assetId)
   if (!record) return { result: "skipped", reason: "missing" }
   if (record.deletedAt) return { result: "skipped", reason: "deleted" }
-  if (record.processingStatus === "ready") return { result: "already_ready" }
+  if (record.processingStatus === "ready") {
+    // Готовая запись без описания встречается после отказа очереди на прошлом проходе: задание
+    // описания ставится и здесь, иначе `alt` у неё не появится никогда.
+    await enqueueAltDescription(record, deps, options)
+    return { result: "already_ready" }
+  }
 
   const processing = await deps.store.setStatus(assetId, "processing")
+  let ready: MediaAssetRecord
+  let masterCreated: boolean
   try {
     const existingMaster = await findExistingMaster(processing, deps.storage)
+    masterCreated = !existingMaster
     if (existingMaster) {
       await completeVariants(processing, deps)
     } else {
@@ -127,11 +164,15 @@ export async function runMediaProcessing(assetId: string, deps: MediaProcessingD
 
     // Карантин — временная зона: после мастера копия загрузки в ней не нужна.
     await deps.storage.delete(quarantineKey({ assetId }))
-    await deps.store.setStatus(assetId, "ready")
-    return { result: "ready", masterCreated: !existingMaster }
+    ready = await deps.store.setStatus(assetId, "ready")
   } catch (error) {
     await deps.store.setStatus(assetId, "failed")
     if (error instanceof MediaRejectedError) return { result: "rejected", rule: error.rule }
     throw error
   }
+
+  // Описание ставится после готовности и вне обработки: отказ очереди повторяет задание
+  // конвейера целиком, но уже собранный файл в `failed` не возвращает.
+  await enqueueAltDescription(ready, deps, options)
+  return { result: "ready", masterCreated }
 }

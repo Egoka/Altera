@@ -48,6 +48,7 @@ import { createJobWorker } from "./jobs/job-worker"
 import { createPrismaJobStore } from "./jobs/prisma-job-store"
 import { createHousekeepingQueue, registerHousekeepingJob, startHousekeepingSchedule } from "./housekeeping"
 import { createAiCheckAdapterFromEnv, registerAiCheckJob } from "./ai"
+import { createAiAltAdapterFromEnv, createPrismaAiAltQueue, registerAiAltJob } from "./ai/alt"
 import { startPermissionExceptionExpiry } from "./permission-exceptions/scheduler"
 import type { PermissionExceptionClient } from "./permission-exceptions/service"
 import {
@@ -87,6 +88,9 @@ const rateLimiter = createRateLimiter({
 })
 
 const jobStore = createPrismaJobStore(prisma)
+// Очередь AI-описания: конвейеру нужна только постановка задания, поэтому идентификаторы задания
+// и AI-процесса остаются внутри модуля AI (`upload-pipeline.md` п. 6а).
+const aiAltQueue = createPrismaAiAltQueue(prisma, logger)
 // Конвейер загрузки: сервис в контексте API и обработчик задания `media.process` в этом же
 // процессе (`upload-pipeline.md` п. 5). Загрузка закрыта до утверждения порогов (журнал §33 п. 3).
 const media = createMediaService({
@@ -94,7 +98,9 @@ const media = createMediaService({
   jobStore,
   storage: storageConfig.storage,
   mediaBaseUrl: storageConfig.mediaBaseUrl,
-  uploadEnabled: isMediaUploadEnabled(process.env)
+  uploadEnabled: isMediaUploadEnabled(process.env),
+  // Описание `alt` создаётся один раз после обработки файла (журнал §29.11, §29.13).
+  altQueue: { enqueue: async (input) => void (await aiAltQueue.enqueue(input)) }
 })
 
 const yoga = createYoga<GraphQLContext>({
@@ -168,6 +174,14 @@ registerMediaPurgeJob(createMediaPurgeDeps(prisma, storageConfig.storage))
 // AI-проверка допустимости: `real` ждёт утверждения владельцем (журнал §32 п. 2), поэтому вне
 // разработки адаптер отвечает недоступностью провайдера, а не выносит вердикт.
 registerAiCheckJob({ client: prisma, adapter: createAiCheckAdapterFromEnv(process.env), logger })
+// AI-описание изображений: выбор модели — отдельный проход (`upload-pipeline.md` п. 6а), поэтому
+// вне разработки адаптер отвечает недоступностью провайдера, а не выдумывает описание.
+registerAiAltJob({
+  client: prisma,
+  storage: storageConfig.storage,
+  adapter: createAiAltAdapterFromEnv(process.env),
+  logger
+})
 const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger, errorCollector })
 jobWorker.start()
 server.on("close", () => jobWorker.stop())
