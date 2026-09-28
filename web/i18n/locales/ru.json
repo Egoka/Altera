@@ -509,7 +509,8 @@
     "goneTitle": "Материал снят с публикации",
     "goneDescription": "Этот материал больше недоступен публично.",
     "goneHome": "На главную",
-    "gonePublished": "Был опубликован"
+    "gonePublished": "Был опубликован",
+    "report": "Пожаловаться"
   },
   "reading": {
     "translation": "Перевод",

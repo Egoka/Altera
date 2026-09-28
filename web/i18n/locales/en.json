@@ -509,7 +509,8 @@
     "goneTitle": "This article has been withdrawn",
     "goneDescription": "This article is no longer publicly available.",
     "goneHome": "Go to the home page",
-    "gonePublished": "First published"
+    "gonePublished": "First published",
+    "report": "Report this piece"
   },
   "reading": {
     "translation": "Translation",
