@@ -90,6 +90,16 @@ export default defineNuxtConfig({
     }
   },
 
+  /**
+   * `@altera/content` — рабочий пакет монорепозитория и единственный источник схемы документа
+   * (ADR-0029). Его собранный `dist` — CommonJS, и Rollup не видит в нём именованных экспортов,
+   * поэтому веб берёт исходники пакета: Vite компилирует их сам. Тот же алиас стоит в
+   * `vitest.config.ts`, чтобы набор и сборка читали один и тот же код.
+   */
+  alias: {
+    "@altera/content": fileURLToPath(new URL("../packages/content/src/index.ts", import.meta.url))
+  },
+
   vite: {
     plugins: [tailwindcss()]
   },

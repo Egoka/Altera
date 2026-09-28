@@ -980,6 +980,15 @@ export default {
      * статьи незачем.
      */
     cover: (parent: { coverAssetId?: string | null }, _args: unknown, ctx: GraphQLContext) =>
-      articleCoverView(ctx, parent.coverAssetId ?? null)
+      articleCoverView(ctx, parent.coverAssetId ?? null),
+
+    /** Выборки, которые уже включили версии (создание черновика), второго запроса не делают. */
+    translations: (parent: { id: string; translations?: unknown[] }, _args: unknown, ctx: GraphQLContext) =>
+      parent.translations ??
+      ctx.prisma.articleTranslation.findMany({
+        where: { articleId: parent.id },
+        select: { id: true, locale: true, status: true, rejected: true },
+        orderBy: { locale: "asc" }
+      })
   }
 }

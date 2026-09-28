@@ -14,7 +14,7 @@ interface UpstreamResponse {
 
 interface UpstreamRequestOptions {
   method: "POST"
-  body: GraphQLRequestBody
+  body: GraphQLRequestBody | Buffer
   headers: Record<string, string>
   ignoreResponseError: true
 }
@@ -30,6 +30,11 @@ interface ProxyGraphQLRequestOptions {
   requestId: string
   requestIdForwardSecret: string
   fetchRaw: FetchRaw
+}
+
+interface ProxyGraphQLUploadOptions extends Omit<ProxyGraphQLRequestOptions, "body"> {
+  body: Buffer
+  contentType: string | undefined
 }
 
 interface GraphQLRouteError {
@@ -119,6 +124,68 @@ const parseGraphQLRequestBody = (value: unknown): GraphQLRequestBody => {
     query,
     ...(operationName !== undefined ? { operationName: operationName as string | null } : {}),
     ...(variables !== undefined ? { variables: variables as Record<string, unknown> | null } : {})
+  }
+}
+
+/**
+ * Предел размера multipart-конверта. Файл ограничен конвейером в 20 МБ
+ * (`server/src/media/limits.ts`), и BFF держит тот же порог с запасом на границы и поля
+ * операции: буферизовать больше незачем — API всё равно откажет.
+ */
+export const MAX_UPLOAD_ENVELOPE_BYTES = 21 * 1024 * 1024
+
+/** Загрузка файла приходит `multipart/form-data` (спецификация multipart-запросов GraphQL). */
+export function isMultipartRequest(contentType: string | undefined): boolean {
+  return (contentType ?? "").toLowerCase().startsWith("multipart/form-data")
+}
+
+/**
+ * Пропуск multipart-запроса к API без разбора тела.
+ *
+ * Тело уходит наверх байт в байт с исходным `content-type`: граница конверта в нём, и повторная
+ * сборка формы на этой стороне только ломала бы порядок частей, от которого зависит разбор
+ * файла (`uploadMedia`, T-063). Проверка происхождения делается вызывающей стороной: операция в
+ * конверте не читается, а загрузка всегда мутация.
+ */
+export const proxyGraphQLUpload = async ({
+  graphqlApiUrl,
+  body,
+  contentType,
+  authorization,
+  userAgent,
+  clientIp,
+  requestId,
+  requestIdForwardSecret,
+  fetchRaw
+}: ProxyGraphQLUploadOptions) => {
+  if (!requestIdForwardSecret) throw new GraphQLProxyError(500, "Request tracing is not configured")
+  const envelopeContentType = contentType ?? ""
+  if (!isMultipartRequest(envelopeContentType)) throw new GraphQLProxyError(400, "Invalid GraphQL upload request")
+  if (body.byteLength === 0) throw new GraphQLProxyError(400, "Invalid GraphQL upload request")
+  if (body.byteLength > MAX_UPLOAD_ENVELOPE_BYTES) throw new GraphQLProxyError(413, "Upload is too large")
+
+  const url = parseGraphQLApiUrl(graphqlApiUrl)
+  const headers: Record<string, string> = {
+    accept: "application/graphql-response+json, application/json",
+    "content-type": envelopeContentType,
+    "x-graphql-yoga-csrf": "bff",
+    "x-request-id": requestId,
+    "x-request-id-signature": createHmac("sha256", requestIdForwardSecret).update(requestId).digest("hex")
+  }
+
+  if (authorization) headers.authorization = authorization
+  if (userAgent) headers["user-agent"] = userAgent
+  if (clientIp) headers["x-forwarded-for"] = clientIp
+
+  try {
+    const response = await fetchRaw(url, { method: "POST", body, headers, ignoreResponseError: true })
+    return {
+      status: response.status,
+      contentType: response.headers.get("content-type") ?? "application/json",
+      body: response._data
+    }
+  } catch {
+    throw new GraphQLProxyError(502, "GraphQL upstream is unavailable")
   }
 }
 

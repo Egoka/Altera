@@ -1,0 +1,148 @@
+# Обвязка редактора языковой версии (`docs/spec/30-account/author/article-edit.md` §4).
+#
+# Редактор работает от `ArticleTranslation`: `id` здесь — идентификатор языковой версии,
+# как в адресе `/me/articles/{id}/edit` (`00-registries/routes.md` #36).
+
+"""
+Почему редактор открыт только на чтение (`article-edit.md` §4).
+
+`published` спецификация в перечне не называет: по журналу §41 автор правит опубликованную
+версию копией через AI-проверку. Эта работа — T-122; до неё опубликованная версия открывается
+режимом чтения, а не записью в публичный текст.
+"""
+enum TranslationReadOnlyReason {
+  none
+  plan
+  rejected
+  archived
+  ai_check
+  in_review
+  published
+}
+
+"Автосохранение или снимок по кнопке (`article-edit.md` §4)."
+enum SaveTranslationKind {
+  autosave
+  manual
+}
+
+"Вид снимка версии (`03-data-model.md`, ADR-0007)."
+enum ArticleRevisionKind {
+  publish
+  editorial
+  manual
+  autosave
+}
+
+"SEO версии: описание и публичный адрес (`article-edit.md` §5 зона 5)."
+type TranslationSeo {
+  description: String
+  slug: String!
+  "Адрес закрыт после первой публикации (матрица #31)."
+  slugLocked: Boolean!
+}
+
+"Соседняя языковая версия для переключателя верхней панели (`article-edit.md` §5 зона 1)."
+type TranslationSibling {
+  id: ID!
+  locale: Locale!
+  status: ArticleStatus!
+  rejected: Boolean!
+}
+
+"""
+Материал языковой версии: обложка, рубрика, формат и теги общие для версий (ADR-0002).
+"""
+type EditorArticle {
+  id: ID!
+  cover: ArticleCover
+  section: Section
+  format: Format
+  tags: [Tag!]!
+  translations: [TranslationSibling!]!
+}
+
+"Языковая версия в редакторе."
+type EditorTranslation {
+  id: ID!
+  locale: Locale!
+  status: ArticleStatus!
+  rejected: Boolean!
+  title: String!
+  "Лид версии (`article_translations.dek`)."
+  lead: String
+  "Тело — документ каталога (`@altera/content`, ADR-0001, ADR-0029)."
+  body: JSON!
+  seo: TranslationSeo!
+  article: EditorArticle!
+  "Базовая ревизия сохранения: с ней сверяется `saveTranslation` (ADR-0033)."
+  currentRevisionId: ID!
+  reeditUntil: String
+  readOnlyReason: TranslationReadOnlyReason!
+  updatedAt: String!
+}
+
+type ArticleRevisionEntry {
+  id: ID!
+  createdAt: String!
+  kind: ArticleRevisionKind!
+  "Размер снимка в символах текста."
+  size: Int!
+}
+
+type ArticleRevisionsConnection {
+  items: [ArticleRevisionEntry!]!
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
+"Рубрики и форматы, доступные автору в редакторе (`article-edit.md` §6)."
+type AuthoringTaxonomy {
+  sections: [Section!]!
+  formats: [Format!]!
+}
+
+"""
+Изменения версии. Не переданное поле не меняется; `null` у лида и описания снимает значение.
+"""
+input SaveTranslationPatch {
+  title: String
+  lead: String
+  body: JSON
+  seoDescription: String
+}
+
+type SaveTranslationResult {
+  revisionId: ID!
+  savedAt: String!
+}
+
+extend type Query {
+  "Версия для редактора; чужая версия — `NOT_FOUND` (`article-edit.md` §3)."
+  translation(id: ID!): EditorTranslation
+  revisions(translationId: ID!, cursor: ID, limit: Int = 20): ArticleRevisionsConnection!
+  authoringTaxonomy: AuthoringTaxonomy!
+}
+
+extend type Mutation {
+  """
+  Сохранение версии снимком (журнал §6.7). Устаревшая `baseRevisionId` — `CONFLICT`, и его
+  `expected` называет свежую ревизию (ADR-0033).
+  """
+  saveTranslation(
+    id: ID!
+    baseRevisionId: ID!
+    patch: SaveTranslationPatch!
+    kind: SaveTranslationKind! = autosave
+  ): SaveTranslationResult!
+  """
+  Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
+  перед первой публикацией — публичное имя и адрес профиля (§25.4). Переход в `ai_check` и
+  решения проверки — T-049.
+  """
+  submitTranslation(id: ID!): EditorTranslation!
+  withdrawTranslation(id: ID!): EditorTranslation!
+  restoreRevision(translationId: ID!, revisionId: ID!): SaveTranslationResult!
+  setTaxonomy(articleId: ID!, sectionId: ID, formatId: ID, tagIds: [ID!]!): EditorArticle!
+  setSlug(translationId: ID!, slug: String!): TranslationSeo!
+}

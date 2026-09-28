@@ -40,6 +40,10 @@ mutation CreateArticle($input: CreateArticleInput!) {
     id
     slug
     title
+    translations {
+      id
+      locale
+    }
   }
 }
 

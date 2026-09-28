@@ -872,6 +872,13 @@ type Article {
   status: ArticleStatus!
   tags: [Tag!]!
   title: String!
+
+  """
+  Языковые версии материала. Адрес редактора называет версию, а не материал
+  (`30-account/author/article-edit.md` §3, `00-registries/routes.md` #36), поэтому создание
+  черновика возвращает и её идентификатор.
+  """
+  translations: [TranslationSibling!]!
   updatedAt: String!
 }
 
@@ -930,6 +937,29 @@ input ArticleFiltersInput {
   sectionId: [ID!]
   status: [ArticleStatus!]
   tagIds: [ID!]
+}
+
+type ArticleRevisionEntry {
+  createdAt: String!
+  id: ID!
+  kind: ArticleRevisionKind!
+
+  """Размер снимка в символах текста."""
+  size: Int!
+}
+
+"""Вид снимка версии (`03-data-model.md`, ADR-0007)."""
+enum ArticleRevisionKind {
+  autosave
+  editorial
+  manual
+  publish
+}
+
+type ArticleRevisionsConnection {
+  endCursor: ID
+  hasNextPage: Boolean!
+  items: [ArticleRevisionEntry!]!
 }
 
 type ArticleStats {
@@ -1100,6 +1130,14 @@ type AuthorProfile {
   name: String!
   publishedCount: Int!
   redirect: String
+}
+
+"""
+Рубрики и форматы, доступные автору в редакторе (`article-edit.md` §6).
+"""
+type AuthoringTaxonomy {
+  formats: [Format!]!
+  sections: [Section!]!
 }
 
 """
@@ -1291,6 +1329,43 @@ type DateRangeInfo {
 input DateRangeInput {
   from: String
   to: String
+}
+
+"""
+Материал языковой версии: обложка, рубрика, формат и теги общие для версий (ADR-0002).
+"""
+type EditorArticle {
+  cover: ArticleCover
+  format: Format
+  id: ID!
+  section: Section
+  tags: [Tag!]!
+  translations: [TranslationSibling!]!
+}
+
+"""Языковая версия в редакторе."""
+type EditorTranslation {
+  article: EditorArticle!
+
+  """Тело — документ каталога (`@altera/content`, ADR-0001, ADR-0029)."""
+  body: JSON!
+
+  """
+  Базовая ревизия сохранения: с ней сверяется `saveTranslation` (ADR-0033).
+  """
+  currentRevisionId: ID!
+  id: ID!
+
+  """Лид версии (`article_translations.dek`)."""
+  lead: String
+  locale: Locale!
+  readOnlyReason: TranslationReadOnlyReason!
+  reeditUntil: String
+  rejected: Boolean!
+  seo: TranslationSeo!
+  status: ArticleStatus!
+  title: String!
+  updatedAt: String!
 }
 
 """
@@ -1798,6 +1873,7 @@ type Mutation {
   restoreAccountSelf: AccountRestoreResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
+  restoreRevision(revisionId: ID!, translationId: ID!): SaveTranslationResult!
   restoreSection(id: ID!): Section!
   restoreStaffAccount(id: ID!, reason: String!): AdminStaffMember!
   restoreTag(id: ID!): Tag!
@@ -1820,6 +1896,12 @@ type Mutation {
   revokeUserSessions(id: ID!): AdminUserSessionsRevokeResult!
 
   """
+  Сохранение версии снимком (журнал §6.7). Устаревшая `baseRevisionId` — `CONFLICT`, и его
+  `expected` называет свежую ревизию (ADR-0033).
+  """
+  saveTranslation(baseRevisionId: ID!, id: ID!, kind: SaveTranslationKind! = autosave, patch: SaveTranslationPatch!): SaveTranslationResult!
+
+  """
   Выбор обложки и кадрирования (`article-covers.md` п. 1–3): запись медиа становится обложкой
   материала, фокусная точка задаёт кадр карточек, кадры собираются до ответа. `assetId: null`
   снимает обложку. Опубликованный материал обложку так не меняет — правка идёт в копии через
@@ -1833,7 +1915,16 @@ type Mutation {
   закрывает остальные сессии, текущая остаётся.
   """
   setPassword(currentPassword: String, newPassword: String!): Boolean!
+  setSlug(slug: String!, translationId: ID!): TranslationSeo!
+  setTaxonomy(articleId: ID!, formatId: ID, sectionId: ID, tagIds: [ID!]!): EditorArticle!
   startCheckout(interval: BillingInterval!, promo: String, tier: PlanTier!): Boolean!
+
+  """
+  Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
+  перед первой публикацией — публичное имя и адрес профиля (§25.4). Переход в `ai_check` и
+  решения проверки — T-049.
+  """
+  submitTranslation(id: ID!): EditorTranslation!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
@@ -1852,6 +1943,7 @@ type Mutation {
   """
   uploadMedia(attribution: String!, file: File!, license: MediaLicense!, translationId: ID!): MediaAsset!
   verifyMagicLink(token: String!): VerifyMagicLinkResult!
+  withdrawTranslation(id: ID!): EditorTranslation!
 }
 
 type MyArticle {
@@ -2085,6 +2177,7 @@ type Query {
   auditSummary(filters: AuditLogFilters): AuditSummary!
   author(handle: String!): AuthorProfile!
   authorCatalog(letter: String, locale: Locale!, page: Int! = 1, section: String, sort: AuthorCatalogSort! = recent): AuthorCatalog!
+  authoringTaxonomy: AuthoringTaxonomy!
   feed(format: String, handle: String, limit: Int! = 50, locale: Locale!, page: Int! = 1, scope: FeedScope! = home, slug: String, tag: String): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
@@ -2097,6 +2190,13 @@ type Query {
   legalVersions(locale: Locale!): LegalVersions!
   mailSummary(period: AdminSummaryPeriod!): [AdminMailSummaryRow!]!
   me: AccountUser
+
+  """
+  Запись медиа её владельцу: редактору нужно дождаться готовности обложки, чтобы показать
+  предпросмотр кадра и открыть подачу (`article-edit.md` §6, ADR-0030). Чужая запись —
+  `NOT_FOUND`.
+  """
+  mediaAsset(id: ID!): MediaAsset
   myArticles(cursor: ID, limit: Int = 20, status: [MyArticleStatus!]): MyArticlesConnection!
   myArticlesStats: UserArticleStats
   myBookmark(articleId: ID!): BookmarkState!
@@ -2113,6 +2213,7 @@ type Query {
   publicSections(locale: Locale!): [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
+  revisions(cursor: ID, limit: Int = 20, translationId: ID!): ArticleRevisionsConnection!
   section(slug: String!): Section
   sectionCatalog(locale: Locale!): [CatalogSection!]!
   sectionStats(sectionSlug: String!): SectionStats
@@ -2130,6 +2231,11 @@ type Query {
   tagStats(tagSlug: String!): TagStats
   tags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
   taxonomyAudit(entityId: ID!, entityType: String!): [TaxonomyAuditEntry!]!
+
+  """
+  Версия для редактора; чужая версия — `NOT_FOUND` (`article-edit.md` §3).
+  """
+  translation(id: ID!): EditorTranslation
   user(handle: String!): User
 }
 
@@ -2160,6 +2266,27 @@ enum Role {
   moderator
   owner
   reader
+}
+
+"""Автосохранение или снимок по кнопке (`article-edit.md` §4)."""
+enum SaveTranslationKind {
+  autosave
+  manual
+}
+
+"""
+Изменения версии. Не переданное поле не меняется; `null` у лида и описания снимает значение.
+"""
+input SaveTranslationPatch {
+  body: JSON
+  lead: String
+  seoDescription: String
+  title: String
+}
+
+type SaveTranslationResult {
+  revisionId: ID!
+  savedAt: String!
 }
 
 type SearchInfo {
@@ -2446,6 +2573,42 @@ type TaxonomyAuditEntry {
 enum TaxonomyStatus {
   active
   archived
+}
+
+"""
+Почему редактор открыт только на чтение (`article-edit.md` §4).
+
+`published` спецификация в перечне не называет: по журналу §41 автор правит опубликованную
+версию копией через AI-проверку. Эта работа — T-122; до неё опубликованная версия открывается
+режимом чтения, а не записью в публичный текст.
+"""
+enum TranslationReadOnlyReason {
+  ai_check
+  archived
+  in_review
+  none
+  plan
+  published
+  rejected
+}
+
+"""SEO версии: описание и публичный адрес (`article-edit.md` §5 зона 5)."""
+type TranslationSeo {
+  description: String
+  slug: String!
+
+  """Адрес закрыт после первой публикации (матрица #31)."""
+  slugLocked: Boolean!
+}
+
+"""
+Соседняя языковая версия для переключателя верхней панели (`article-edit.md` §5 зона 1).
+"""
+type TranslationSibling {
+  id: ID!
+  locale: Locale!
+  rejected: Boolean!
+  status: ArticleStatus!
 }
 
 input UpdateArticleInput {

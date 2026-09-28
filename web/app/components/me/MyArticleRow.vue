@@ -75,7 +75,9 @@
   })
 
   const updatedAt = computed(() => formatDate(translation.value.updatedAt))
-  const detailPath = computed(() => `/me/articles/${translation.value.slug}`)
+  // Адрес кабинета называет языковую версию, а не материал (`article-edit.md` §3,
+  // `00-registries/routes.md` #36): у материала их может быть две, и слаг у каждой свой.
+  const detailPath = computed(() => `/me/articles/${translation.value.id}`)
   const editPath = computed(() => `${detailPath.value}/edit`)
 </script>
 

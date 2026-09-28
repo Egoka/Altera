@@ -694,6 +694,171 @@
       "edit": "Edit",
       "open": "Open",
       "noCover": "No cover"
+    },
+    "editor": {
+      "pageTitle": "Editor",
+      "untitled": "Untitled",
+      "back": "Back to my articles",
+      "preview": "Preview",
+      "saveNow": "Save",
+      "submit": "Submit for publication",
+      "withdraw": "Withdraw",
+      "sectionEmpty": "No section selected",
+      "formatEmpty": "No format selected",
+      "missing": "Missing before submission: {fields}",
+      "fields": {
+        "title": "Title",
+        "lead": "Lead",
+        "body": "Text",
+        "section": "Section",
+        "format": "Format",
+        "cover": "Cover"
+      },
+      "placeholders": {
+        "title": "What the article is about",
+        "lead": "A short opening"
+      },
+      "statusName": {
+        "draft": "Draft",
+        "ai_check": "In automated check",
+        "review": "In review",
+        "in_review": "In review",
+        "rework": "Needs rework",
+        "published": "Published",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "locales": {
+        "ru": "Russian version",
+        "en": "English version"
+      },
+      "save": {
+        "idle": "No changes",
+        "pending": "Unsaved changes",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "error": "Not saved",
+        "conflict": "The version changed in another tab"
+      },
+      "notice": {
+        "plan": "Subscription is inactive: the article is open for reading and copying.",
+        "rejected": "The article was rejected by the editors: reading and copying only.",
+        "archived": "The article is archived: editing is closed, restore it from the article list.",
+        "aiCheck": "The article is being checked, editing is closed until the result.",
+        "inReview": "The article is with a reviewer: wait for the decision or withdraw it.",
+        "published": "The article is published: editing a published version comes separately.",
+        "offline": "No network: changes stay in the form and are saved once you are back online.",
+        "planLink": "See the plans"
+      },
+      "conflict": {
+        "title": "The version changed in another tab",
+        "description": "Simultaneous editing is not supported. Open the fresh version or save your text as a new revision on top of it.",
+        "fresh": "Open the fresh version",
+        "copy": "Save a copy as a revision"
+      },
+      "blocks": {
+        "label": "Article text",
+        "add": "Add a paragraph",
+        "remove": "Remove block",
+        "placeholder": "Block text",
+        "figure": "Image {id}: caption and description come from the media file.",
+        "divider": "Divider",
+        "kind": {
+          "paragraph": "Paragraph",
+          "heading": "Heading",
+          "blockquote": "Quote",
+          "bulletList": "List",
+          "orderedList": "Numbered list",
+          "listItem": "List item",
+          "figure": "Image",
+          "horizontalRule": "Divider",
+          "doc": "Document",
+          "text": "Text"
+        }
+      },
+      "cover": {
+        "title": "Cover",
+        "empty": "There is no cover. It is required before submission.",
+        "file": "Image file",
+        "license": "Licence",
+        "attribution": "Attribution",
+        "upload": "Upload cover",
+        "uploading": "Uploading…",
+        "remove": "Remove cover",
+        "altPending": "The image description appears after processing.",
+        "focalX": "Horizontal focus",
+        "focalY": "Vertical focus",
+        "licenses": {
+          "own": "My own image",
+          "cc_by": "CC BY",
+          "cc_by_sa": "CC BY-SA",
+          "cc_by_nc": "CC BY-NC",
+          "cc0": "CC0",
+          "public_domain": "Public domain",
+          "permission": "With the rights holder's permission"
+        }
+      },
+      "tags": {
+        "label": "Tags",
+        "placeholder": "Find or create a tag",
+        "create": "Create tag “{name}”",
+        "remove": "Remove tag {name}"
+      },
+      "panel": {
+        "label": "Editor panel",
+        "tabs": {
+          "review": "Check",
+          "revisions": "Revisions",
+          "seo": "SEO",
+          "languages": "Languages"
+        },
+        "review": {
+          "draft": "The article has not been submitted yet.",
+          "ai_check": "The article is being checked.",
+          "review": "The article is with a reviewer.",
+          "in_review": "The article is with a reviewer.",
+          "rework": "The reviewer sent the article back for rework.",
+          "published": "The article is published.",
+          "rejected": "The article was rejected by the editors.",
+          "archived": "The article is archived.",
+          "history": "Decision history"
+        },
+        "seo": {
+          "description": "Search description",
+          "slug": "Article address",
+          "slugSave": "Save address",
+          "slugLocked": "The address is fixed after the first publication."
+        },
+        "languages": {
+          "later": "The second language version comes as a separate task."
+        }
+      },
+      "revisions": {
+        "empty": "No snapshots yet.",
+        "restore": "Restore",
+        "size": "{size} characters",
+        "kind": {
+          "autosave": "Autosave",
+          "manual": "Snapshot",
+          "publish": "Publication",
+          "editorial": "Editorial change"
+        }
+      },
+      "errors": {
+        "planLimit": "The subscription is inactive or the limit is reached: the action is unavailable.",
+        "forbidden": "The article cannot be edited in this state.",
+        "contentInvalid": "The text does not match the block catalogue.",
+        "coverRequired": "Add a cover: the article is not submitted without one.",
+        "coverProcessing": "The cover is still being processed, try again.",
+        "sectionRequired": "Choose a section: the article is not submitted without one.",
+        "titleRequired": "Add a title.",
+        "bodyRequired": "Add the article text.",
+        "profileRequired": "Fill in your name and profile address before the first publication.",
+        "slugFormat": "The address uses Latin letters, digits and hyphens.",
+        "conflict": "The article is already in this state.",
+        "offline": "No network: we will retry once you are back online.",
+        "unknown": "The action did not go through, try again."
+      }
     }
   },
   "footer": {

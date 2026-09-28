@@ -69,6 +69,22 @@ function asMediaAsset(record: MediaAssetRecord, mediaBaseUrl: string) {
 }
 
 export default {
+  Query: {
+    /**
+     * Состояние обработки своей записи медиа. Конвейер доводит файл до `ready` заданием очереди,
+     * и редактор опрашивает это поле, пока обложка обрабатывается (`upload-pipeline.md` п. 4).
+     */
+    mediaAsset: async (_parent: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const record = await ctx.prisma.mediaAsset.findUnique({ where: { id: args.id } })
+      // Чужая запись отвечает так же, как несуществующая: её существование наружу не выдаётся.
+      if (!record || record.deletedAt || record.ownerId !== user.id) {
+        throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "mediaAsset" })
+      }
+      return asMediaAsset(record, ctx.media.mediaBaseUrl)
+    }
+  },
+
   Mutation: {
     uploadMedia: async (
       _parent: unknown,

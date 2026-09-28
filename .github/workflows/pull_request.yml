@@ -288,6 +288,12 @@ jobs:
       # виды — перечисления PostgreSQL; миграция и запрос проверяются на настоящей базе.
       - name: Проверить отметки резервного копирования T-088
         run: pnpm --filter server exec vitest run tests/health-backups-database.test.ts
+      # T-040: выключение наследной синхронизации живёт в trigger PostgreSQL — двойник Prisma
+      # его не исполняет, и потеря текста автора при правке статуса иначе не видна.
+      - name: Проверить наследную синхронизацию версии T-040
+        env:
+          T040_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/translation-editor-database.test.ts
       - name: Check build output
         run: test -f server/dist/server.js
       - name: Deploy migrations to isolated CI database
