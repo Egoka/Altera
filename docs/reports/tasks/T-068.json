@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "T-068",
+  "issue_id": "01a0e7a1-43fe-73f7-8629-334a1854c7fe",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-068-media-orphans-cleanup.md",
+    "sha": "1eb086d302ed222955ac3cf671bfb5110e23daa1"
+  },
+  "baseline_sha": "69ccaedad3ce44650f07fc97d153b5141b97db90",
+  "tested_sha": "205fb0b9617a5cb0e5b826d29988a0ed58792b3f",
+  "branch": "server/t068-media-orphans",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e812-9d2d-7d7e-9f98-13bfe407e0e6",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "медиа архивированной статьи (обложка и узел документа языковой версии), медиа из хранимой ревизии, текущий и прежний аватар и свежая загрузка остаются; удалены ровно две сироты вместе с файлами: server/tests/media-orphans-database.test.ts 1 passed на PostgreSQL 17 (205fb0b), тот же прогон в CI run 36426485483"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "история писем после удаления двух сирот не изменилась — одна прежняя запись, ни одной со ссылкой на медиа; порт почты проходу не передаётся: server/tests/media-orphans-database.test.ts 1 passed, server/tests/media-orphans.test.ts 8 passed (205fb0b)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (205fb0b)",
+    "lint": "passed: pnpm lint exit 0 (205fb0b)",
+    "tests": "passed: pnpm test exit 0 — server 1160 passed / 66 skipped, web 811 passed, content 99 passed (205fb0b)",
+    "build": "passed: pnpm --filter server run build:ci exit 0 (205fb0b)",
+    "codegen": "not_required: схема GraphQL не менялась, файлы web/app/graphql/generated не затронуты",
+    "typecheck": "not_required: изменений в web нет; типы сервера проверены build:ci",
+    "migrations": "not_required: задача не добавляет миграций, новых полей и таблиц нет",
+    "smoke": "passed: джоб server-smoke CI run 36426485483 — старт сервера с зарегистрированным заданием media.purge",
+    "database_tests": "passed: T068_TEST_DATABASE_URL vitest run tests/media-orphans-database.test.ts 1 passed локально и в CI; шаг добавлен в джоб server-smoke",
+    "ci": "passed: все проверки PR #352 зелёные на 205fb0b (run 36426485483), автослияние выполнено"
+  },
+  "pr": {
+    "number": 352,
+    "url": "https://github.com/Egoka/Altera/pull/352",
+    "base_ref": "app",
+    "base_sha": "69ccaedad3ce44650f07fc97d153b5141b97db90",
+    "head_sha": "205fb0b9617a5cb0e5b826d29988a0ed58792b3f",
+    "merge_sha": "ed77e4d76cc2e5e5db5ee465475d2363f93eb68e"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ — новый модуль media/orphans, обработчик задания media.purge и расписание в процессе API; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-068.md",
+    "sha256": "54c37cf55d30eea379d5eadf098856398e975b2a70b3206e33e6bb3ad1b030eb"
+  },
+  "usage": null
+}
