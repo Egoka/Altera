@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "task_id": "T-020",
+  "issue_id": "01a0e4af-8475-76d2-8fb4-a38d38edcb45",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-020-legacy-body-conversion-rehearsal.md",
+    "sha": "ce81c90c0896cb7d1a00ef783dc62cd816a61096"
+  },
+  "baseline_sha": "76e46e6ab48a98568f87d5c44c55c4b0d9a45eec",
+  "tested_sha": "825747aa2f36165338c8af3cef0d37e42ae5edb2",
+  "branch": "server/t020-legacy-body-conversion",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e4b4-6766-7321-9b71-bf74919dc52c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "pnpm verify:legacy-bodies на копии населённой базы: 0 неконвертируемых из 2453 тел, exit 0; каждое тело прошло readDocument из @altera/content (825747a)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Репетиция migrate deploy без ошибок на двух копиях; число статей до и после совпадает: 487→487 (Р2) и 6→6 (Р1); legacy-body-conversion-database.test.ts 3 passed (825747a)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (825747a)",
+    "lint": "passed: pnpm lint exit 0 (825747a)",
+    "tests": "passed: pnpm test exit 0 — server 889 passed / 50 skipped, web 723 passed, content 99 passed (825747a)",
+    "server_build": "passed: pnpm --filter server run build:ci exit 0 (825747a)",
+    "codegen": "passed: pnpm codegen --check exit 0 (825747a)",
+    "migrations": "passed: prisma migrate deploy на двух копиях без ошибок; prisma migrate diff --exit-code — No difference detected (825747a)",
+    "environment": "Node 24.12.0, pnpm 10.18.3, PostgreSQL 16.15"
+  },
+  "pr": {
+    "number": 324,
+    "url": "https://github.com/Egoka/Altera/pull/324",
+    "base_ref": "app",
+    "base_sha": "76e46e6ab48a98568f87d5c44c55c4b0d9a45eec",
+    "head_sha": "825747aa2f36165338c8af3cef0d37e42ae5edb2",
+    "merge_sha": "eade0b29470d855b610eb8b11318316f6bba2c11"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e514-30b7-7bdf-b89c-58243d137095",
+    "sha": "825747aa2f36165338c8af3cef0d37e42ae5edb2",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/, package.json, pnpm-lock.yaml — миграция и скрипт verify в процессе API"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-020.md",
+    "sha256": "3d613994936f8610c0e47bdfae2db418f5cd0385df0a618bdfd29740309ed5e6"
+  },
+  "remaining": [
+    "Deployment не выполнялся — проба выкладки через контроллер",
+    "Каталог блоков (Q-02) вне объёма: конверсия использует абзац [ДОПУЩЕНИЕ]",
+    "Legacy-поля articles.* и trigger T-015 не снимаются — cutover в отдельной задаче"
+  ],
+  "usage": null
+}
