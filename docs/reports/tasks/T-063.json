@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "task_id": "T-063",
+  "issue_id": "01a0e4af-a841-7ba7-a014-28519c386170",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-063-upload-pipeline.md",
+    "sha": "76e46e6ab48a98568f87d5c44c55c4b0d9a45eec"
+  },
+  "baseline_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
+  "tested_sha": "6ee31f3eab2030086f443731c11e4d68dda9c184",
+  "branch": "server/t063-upload-pipeline",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e50e-2f62-78a7-b617-47dcac125253",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "мастер из JPEG с каталогом GPS 0x8825 и ориентацией 6 не содержит exif, xmp, iptc, сегмента APP1 и байтов марки камеры; стороны 640x480 -> 480x640, профиль sRGB: server/tests/media-master-exif.test.ts 6 passed на настоящем sharp (6ee31f3)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "пустая атрибуция и лицензия вне справочника дают VALIDATION_ERROR с field и rule до чтения байтов файла: server/tests/media-upload-pipeline.test.ts 22 passed, server/tests/media-upload-access.test.ts 11 passed (6ee31f3)"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "история статусов uploading -> queued -> processing -> failed -> processing -> ready, мастер не пересоздан (masterCreated: false): server/tests/media-upload-pipeline.test.ts 22 passed; на PostgreSQL 17 задание media.process доводит запись до ready: server/tests/media-pipeline-database.test.ts 3 passed (6ee31f3)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (6ee31f3)",
+    "lint": "passed: pnpm lint exit 0 (6ee31f3)",
+    "tests": "passed: pnpm test exit 0 — server 928 passed / 56 skipped, web 723 passed, content 99 passed (6ee31f3)",
+    "build": "passed: pnpm --filter server run build:ci exit 0, dist/server.js и dist/graphql/media/schema.graphql на месте (6ee31f3)",
+    "codegen": "passed: pnpm codegen --check exit 0 (6ee31f3)",
+    "typecheck": "passed: pnpm --filter nuxt-app run typecheck exit 0 во всех четырёх проектах, 0 ошибок (6ee31f3)",
+    "migrations": "not_required: задача не добавляет миграций; prisma migrate diff --exit-code на копии altera_dev — No difference detected (6ee31f3)",
+    "smoke": "passed: pnpm run smoke на копии локальной базы (порт 4123) — GraphQL и /health ответили (6ee31f3)",
+    "database_tests": "passed: T063_TEST_DATABASE_URL vitest run tests/media-pipeline-database.test.ts 3 passed; тот же прогон добавлен в джоб server-smoke (6ee31f3)"
+  },
+  "pr": {
+    "number": 326,
+    "url": "https://github.com/Egoka/Altera/pull/326",
+    "base_ref": "app",
+    "base_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
+    "head_sha": "6ee31f3eab2030086f443731c11e4d68dda9c184",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ — новый модуль media, зависимость sharp и обработчик задания media.process в процессе API; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-063.md",
+    "sha256": "1346d094d3e815f2f4d3b796996222415a74d5e1826c06d9df076c36f70991a8"
+  },
+  "usage": null
+}
