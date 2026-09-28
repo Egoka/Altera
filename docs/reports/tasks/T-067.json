@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task_id": "T-067",
+  "issue_id": "01a0e811-a3cc-78e4-ab78-a3822c370272",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-067-ai-alt-once.md",
+    "sha": "1c8b14678f5a1c88f3021810738bf033ece53774"
+  },
+  "baseline_sha": "0c8deb4eb5beff2e223bd015cf13ae61c725fe4e",
+  "tested_sha": "e925b79ca96e9ce2bb65d9852a4a55fb238a43af",
+  "branch": "server/t067-ai-alt",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e835-2b29-795f-89d0-0f0a3ec263c3",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "мутация adminUpdateMediaAlt: author, moderator, editor и analyst — FORBIDDEN с action media.update.meta, значение alt не меняется и записей в журнале нет; admin и owner исправляют описание и пишут ровно одну запись admin.change с entityType mediaAsset, entityId и fields.alt = { from, to }: server/tests/media-alt-admin.test.ts 11 passed (e925b79), тот же прогон в CI run 36431063548"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "контрактный тест по собранной схеме GraphQL: у uploadMedia аргумента alt нет, перечень мутаций схемы с аргументом alt равен [\"adminUpdateMediaAlt\"] — граница держится и для updateMediaMeta, которой в схеме ещё нет: server/tests/media-schema-contract.test.ts 4 passed (e925b79)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (e925b79)",
+    "lint": "passed: pnpm lint exit 0 (e925b79)",
+    "tests": "passed: pnpm --filter server test exit 0 — 1186 passed / 66 skipped; в CI джоб «Формат, линт и тесты» pass 3m4s (run 36431063548)",
+    "build": "passed: pnpm --filter server run build:ci exit 0 (e925b79)",
+    "codegen": "passed: pnpm codegen --check без расхождений; web/app/graphql/generated/schema.graphql перегенерирован вместе с мутацией adminUpdateMediaAlt",
+    "typecheck": "passed: джоб «Сборка и типизация веба» pass 2m3s (run 36431063548); типы сервера проверены build:ci",
+    "migrations": "not_required: AiProcessKind.alt, AiCostAggregate.kind и MediaAsset.alt уже есть в схеме, вид задания ai.alt уже в KNOWN_JOB_KINDS",
+    "smoke": "passed: джоб «Сборка сервера и дымовая проверка старта» pass 3m22s (run 36431063548) — старт процесса API с зарегистрированным заданием ai.alt",
+    "database_tests": "not_required: задача не добавляет запросов, которых не воспроизводит двойник; условное обновление updateMany(where: { alt: null }) повторено той же семантикой в памяти",
+    "browser": "passed: джоб «Браузерная проверка веба» pass 6m38s (run 36431063548)",
+    "ci": "passed: все проверки PR #354 зелёные на e925b79 (run 36431063548), автослияние выполнено"
+  },
+  "pr": {
+    "number": 354,
+    "url": "https://github.com/Egoka/Altera/pull/354",
+    "base_ref": "app",
+    "base_sha": "0c8deb4eb5beff2e223bd015cf13ae61c725fe4e",
+    "head_sha": "e925b79ca96e9ce2bb65d9852a4a55fb238a43af",
+    "merge_sha": "f35c9c238fd7ec680428a2c194ec062d81ffbbcd"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ — новый модуль ai/alt, обработчик задания ai.alt, постановка задания в конвейере медиа и мутация adminUpdateMediaAlt в схеме GraphQL; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-067.md",
+    "sha256": "e5eca28bb8ca32c2cdb90fbba405d44471ffa87fdd4373e78ed53f24617a10dd"
+  },
+  "usage": null
+}
