@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "task_id": "T-073",
+  "issue_id": "01a0e5b3-5d87-772b-949e-f077f84a2971",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-073-admin-users-blocking.md",
+    "sha": "543ec0dbe3c128a99f97e94640532356e920db7a"
+  },
+  "baseline_sha": "d48eb5598db0bdfd523e187cf0a015b39ccb2ab0",
+  "tested_sha": "1ddcee0fec6d1d51b28b1071a905d3dd7a341d52",
+  "branch": "admin/t073-users-blocking",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t073",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e746-6d61-73b2-966f-51af61e2c6a0",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Opening the user card writes admin.read.personal (events #67, journal §14.4, §28.7). server/tests/admin-users.test.ts and server/tests/admin-pd-audit.test.ts: the card writes exactly one row carrying actor, subject, context 'admin.users' and purpose 'admin.user.read', and it reveals the full address; the masked list writes no row at all (users.md §8); a search writes one row keyed by the hashed query with purpose 'admin.users.search', while a query shorter than three characters is not a filter and adds nothing; a service record and an unknown id answer the same (null) and write nothing; editor and moderator get FORBIDDEN with action 'admin.users.read'. The browser scenario web/tests/e2e/73-admin-users.spec.ts checks the same rows in the database for both the card and the search."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Blocking archives the articles with a staff actor and the author cannot restore them (journal §3.3, §4.2–4, §5.4, #4, #30). server/tests/admin-users.test.ts: the cascade sets archivedByActorId to the staff id, archivedByRole to the staff role and archiveReason 'account_archive' on the active articles only, leaves an article the author archived earlier with its own actor, revokes every session and writes user.archive with mode, reasonCategory, cascadeArticles, sessionsRevoked and the running planUntil (journal #50); the real articleResolver.Mutation.restoreArticle then answers the author FORBIDDEN with no update and no audit row. server/tests/admin-users-database.test.ts repeats it on a real PostgreSQL, where the account archive, the session revocation and the article cascade are one transaction; web/tests/e2e/73-admin-users.spec.ts repeats it in the browser and additionally sees HTTP 410 on the public author page right after the block."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Every state row of users.md §9 is reproducible. web/tests/e2e/73-admin-users.spec.ts covers «Пусто» (a filter with no match), «Ошибка» (a rejected query shows ErrorState with the retry button), «Нет прав на часть действий» (analyst opens the card with no buttons, no sessions and no internal reason) and «Конфликт» twice — archiving an already archived account and restoring an active one. The same file shows the results of the actions: the block closes access, revokes sessions, archives the articles with the staff actor and answers 410 on the author page; the restore returns access and leaves the articles archived; the emergency mode records its own mode; session revocation keeps the account active; the staff address change leaves no address in the audit diff. «Загрузка» lasts a fraction of a second and is checked without the network in web/tests/admin-users-page.nuxt.test.ts, together with the requestId line — the error dictionary only exposes requestId for INTERNAL_ERROR and PROVIDER_UNAVAILABLE. «Лимит» is marked 'не применимо' in the specification: administrative actions are not rate limited."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 1051 passed / 61 skipped; web 802 passed; @altera/content 99 passed",
+    "server_build_ci": "passed",
+    "web_build": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "database_tests": "T073_TEST_DATABASE_URL on a local disposable database: server/tests/admin-users-database.test.ts 3 passed (the new reason-category column and its enum, the atomic block, and the plan/hasPublications/search filters that run entirely in SQL)",
+    "e2e": "playwright on a local disposable database: tests/e2e/73-admin-users.spec.ts 14 passed, and 42 passed with --repeat-each 3 --workers 1; the full suite `playwright test` 291 passed",
+    "migrations": "passed: prisma generate accepted the schema and prisma migrate deploy applied 20260929120000_account_archive_reason_category to the local disposable databases (t073_*, altera_e2e_t073, altera_e2e_full). Development Neon and production were never touched",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36408806534",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg ran with the configured core.hooksPath=.husky/_"
+  },
+  "pr": {
+    "number": 346,
+    "url": "https://github.com/Egoka/Altera/pull/346",
+    "base_ref": "app",
+    "base_sha": "d48eb5598db0bdfd523e187cf0a015b39ccb2ab0",
+    "head_sha": "1ddcee0fec6d1d51b28b1071a905d3dd7a341d52",
+    "merge_sha": "44eeac7656b2e063df683b66129db6f214417b4b"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "The change carries a schema migration but there is no production environment in Russia yet (journal §34 item 1, T-103); migrations were applied only to local disposable databases."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-073.md",
+    "sha256": "089bbfcb03d3f8576f4ca1939673030afd30ea465447c888c5180b29e9910f09"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Out of scope by the task boundaries: the blocking appeal (T-061) and «удалить навсегда» (T-076). The card has no appeal tab and no permanent-delete button for any role",
+    "Not done: the subscription, payments and views tabs of users.md §3. The schema has no Payment, Subscription or ReadEvent models and paid service is deferred (journal §24.1); the card shows the plan state derived from PlanGrant instead",
+    "Not done: the section CSV export (§4). It belongs to the stats.export right (#94) and the statistics section, needs its own rate-limit bucket (rate-limits.md item 12) and is not part of the task criteria; the §9 «Лимит» row stays 'не применимо'",
+    "Not done: the block and restore letters of flow #11 §6. Letter contents are deferred to the mail pass (§25.13) and the task does not require them; the user-facing category and explanation are stored on the account",
+    "Owner question: routes.md #46 describes the list and the card, but the card address should be confirmed — the section uses {id}, the same as the audit log link (auditEntityLink). The registries are frozen (§28.3), so nothing was edited",
+    "[ДОПУЩЕНИЕ] of this pass: the plan filter is selected by the record's planTier/planUntil cache, because otherwise the page could not be selected in the database itself and pagination would count something other than what it shows; 'expired' means 'no active tier but a grant existed'. «Последняя активность» is derived from the freshest session — the account has no such column",
+    "Pre-existing CI noise: 85 `[Vue warn]: Failed to resolve component: NuxtLink` lines and 9 `ClientOnly` lines in the «Формат, линт и тесты» job — the same count as in the T-119 run (36383890681). This pass neither added nor removed them"
+  ],
+  "usage": null
+}
