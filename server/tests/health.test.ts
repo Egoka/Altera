@@ -12,6 +12,40 @@ import { RedisCache, type CacheRedisClient } from "../src/cache/redis"
 const revision = "a".repeat(40)
 const servers: Server[] = []
 
+interface Checks {
+  postgres: boolean
+  redis: boolean | "disabled"
+  migrations: boolean
+}
+
+/** Проверка ответила: задержка измерена. */
+const measured = (status: "up" | "down", adapter: string) => ({ status, adapter, latencyMs: expect.any(Number) })
+/** Проверка не ответила до общего предела: состояние недоступно, задержки нет. */
+const unmeasured = (adapter: string) => ({ status: "down", adapter, latencyMs: null })
+const disabled = { status: "disabled", adapter: null, latencyMs: null }
+/** Провайдеры без проверки — неподключённые: это не деградация. */
+const providersOff = { psp: disabled, ai: disabled, mail: disabled, storage: disabled }
+/** Без монитора копий наблюдение за ними не настроено; пороги — из `health/backups.ts`. */
+const backupsOff = {
+  database: { status: "disabled", lastSuccessAt: null, ageSeconds: null, maxAgeSeconds: 86_400 },
+  media: { status: "disabled", lastSuccessAt: null, ageSeconds: null, maxAgeSeconds: 604_800 }
+}
+
+/** Полный контракт ответа: лишних полей в нём быть не должно, иначе наружу поедет неизвестное. */
+const body = (
+  status: string,
+  revisionValue: string | null,
+  checks: Checks,
+  components: { db: unknown; redis: unknown }
+) => ({
+  status,
+  revision: revisionValue,
+  checkedAt: expect.any(String),
+  checks,
+  components: { ...components, ...providersOff },
+  backups: backupsOff
+})
+
 function redisClient(ping: CacheRedisClient["ping"]): CacheRedisClient {
   const client: CacheRedisClient = {
     on: () => client,
@@ -74,11 +108,17 @@ describe("HTTP readiness", () => {
     const response = await fetch(`${url}/health?probe=1`)
     expect(response.status).toBe(200)
     expect(response.headers.get("cache-control")).toBe("no-store")
-    expect(await response.json()).toEqual({
-      status: "ok",
-      revision,
-      checks: { postgres: true, redis: true, migrations: true }
-    })
+    expect(await response.json()).toEqual(
+      body(
+        "ok",
+        revision,
+        { postgres: true, redis: true, migrations: true },
+        {
+          db: measured("up", "postgres"),
+          redis: measured("up", "redis")
+        }
+      )
+    )
     expect((await fetch(`${url}/`, { headers: { accept: "text/html" } })).status).toBe(418)
     expect((await fetch(`${url}/health`, { method: "POST" })).status).toBe(418)
   })
@@ -116,11 +156,17 @@ describe("HTTP readiness", () => {
     const url = await serve(check)
     const response = await fetch(`${url}/health`)
     expect(response.status).toBe(503)
-    expect(await response.json()).toEqual({
-      status: "unavailable",
-      revision: null,
-      checks: { postgres: false, redis: false, migrations: false }
-    })
+    expect(await response.json()).toEqual(
+      body(
+        "unavailable",
+        null,
+        { postgres: false, redis: false, migrations: false },
+        {
+          db: unmeasured("postgres"),
+          redis: measured("down", "redis")
+        }
+      )
+    )
   })
 
   it("requires SELECT 1 result instead of accepting arbitrary successful query output", async () => {
@@ -129,11 +175,17 @@ describe("HTTP readiness", () => {
       migrations: async () => true,
       redis: async () => true
     })
-    expect(await check()).toEqual({
-      status: "unavailable",
-      revision: null,
-      checks: { postgres: false, redis: true, migrations: true }
-    })
+    expect(await check()).toEqual(
+      body(
+        "unavailable",
+        null,
+        { postgres: false, redis: true, migrations: true },
+        {
+          db: measured("down", "postgres"),
+          redis: measured("up", "redis")
+        }
+      )
+    )
   })
 
   it("shares concurrent probes and caches completed results for two seconds", async () => {
@@ -166,11 +218,17 @@ describe("HTTP readiness", () => {
     const check = createHealthCheck({ postgres, redis, migrations: async () => true })
     const pending = check()
     await vi.advanceTimersByTimeAsync(4000)
-    expect(await pending).toEqual({
-      status: "unavailable",
-      revision: null,
-      checks: { postgres: false, redis: true, migrations: true }
-    })
+    expect(await pending).toEqual(
+      body(
+        "unavailable",
+        null,
+        { postgres: false, redis: true, migrations: true },
+        {
+          db: unmeasured("postgres"),
+          redis: measured("up", "redis")
+        }
+      )
+    )
     await vi.advanceTimersByTimeAsync(10000)
     expect((await check()).status).toBe("unavailable")
     expect(postgres).toHaveBeenCalledTimes(1)
@@ -193,11 +251,17 @@ describe("optional Redis (ADR-0019)", () => {
       )
       const response = await fetch(`${url}/health`)
       expect(response.status).toBe(200)
-      expect(await response.json()).toEqual({
-        status: "ok",
-        revision,
-        checks: { postgres: true, redis: "disabled", migrations: true }
-      })
+      expect(await response.json()).toEqual(
+        body(
+          "ok",
+          revision,
+          { postgres: true, redis: "disabled", migrations: true },
+          {
+            db: measured("up", "postgres"),
+            redis: disabled
+          }
+        )
+      )
     }
   )
 
@@ -213,13 +277,19 @@ describe("optional Redis (ADR-0019)", () => {
     )
     const response = await fetch(`${url}/health`)
     expect(response.status).toBe(503)
-    const body = await response.text()
-    expect(body).not.toContain("private-value")
-    expect(JSON.parse(body)).toEqual({
-      status: "unavailable",
-      revision: null,
-      checks: { postgres: false, redis: "disabled", migrations: true }
-    })
+    const payload = await response.text()
+    expect(payload).not.toContain("private-value")
+    expect(JSON.parse(payload)).toEqual(
+      body(
+        "unavailable",
+        null,
+        { postgres: false, redis: "disabled", migrations: true },
+        {
+          db: unmeasured("postgres"),
+          redis: disabled
+        }
+      )
+    )
   })
 
   it("degrades without 503 when configured Redis is unreachable", async () => {
@@ -232,23 +302,35 @@ describe("optional Redis (ADR-0019)", () => {
     const url = await serve(createHealthCheck({ ...ready, redis: redisReadiness(cache) }, revision))
     const response = await fetch(`${url}/health`)
     expect(response.status).toBe(200)
-    const body = await response.text()
-    expect(body).not.toContain("private-password")
-    expect(JSON.parse(body)).toEqual({
-      status: "degraded",
-      revision,
-      checks: { postgres: true, redis: false, migrations: true }
-    })
+    const payload = await response.text()
+    expect(payload).not.toContain("private-password")
+    expect(JSON.parse(payload)).toEqual(
+      body(
+        "degraded",
+        revision,
+        { postgres: true, redis: false, migrations: true },
+        {
+          db: measured("up", "postgres"),
+          redis: measured("down", "redis")
+        }
+      )
+    )
   })
 
   it("probes configured Redis through the cache client", async () => {
     const ping = vi.fn(async () => "PONG")
     const check = createHealthCheck({ ...ready, redis: redisReadiness(new RedisCache(redisClient(ping), 60)) })
-    expect(await check()).toEqual({
-      status: "ok",
-      revision: null,
-      checks: { postgres: true, redis: true, migrations: true }
-    })
+    expect(await check()).toEqual(
+      body(
+        "ok",
+        null,
+        { postgres: true, redis: true, migrations: true },
+        {
+          db: measured("up", "postgres"),
+          redis: measured("up", "redis")
+        }
+      )
+    )
     expect(ping).toHaveBeenCalledTimes(1)
   })
 
@@ -257,11 +339,17 @@ describe("optional Redis (ADR-0019)", () => {
     const check = createHealthCheck({ ...ready, redis: () => new Promise<boolean>(() => {}) })
     const pending = check()
     await vi.advanceTimersByTimeAsync(4000)
-    expect(await pending).toEqual({
-      status: "degraded",
-      revision: null,
-      checks: { postgres: true, redis: false, migrations: true }
-    })
+    expect(await pending).toEqual(
+      body(
+        "degraded",
+        null,
+        { postgres: true, redis: false, migrations: true },
+        {
+          db: measured("up", "postgres"),
+          redis: unmeasured("redis")
+        }
+      )
+    )
   })
 })
 
@@ -275,11 +363,17 @@ describe("migration readiness", () => {
     )
     const response = await fetch(`${url}/health`)
     expect(response.status).toBe(503)
-    expect(await response.json()).toEqual({
-      status: "unavailable",
-      revision,
-      checks: { postgres: true, redis: true, migrations: false }
-    })
+    expect(await response.json()).toEqual(
+      body(
+        "unavailable",
+        revision,
+        { postgres: true, redis: true, migrations: false },
+        {
+          db: measured("up", "postgres"),
+          redis: measured("up", "redis")
+        }
+      )
+    )
   })
 
   it("requires every local migration completed and no unresolved attempt", async () => {
@@ -331,11 +425,17 @@ describe("migration readiness", () => {
     const check = createHealthCheck({ postgres: async () => [{ ok: 1 }], redis: async () => true, migrations })
     const first = check()
     await vi.advanceTimersByTimeAsync(4000)
-    expect(await first).toEqual({
-      status: "unavailable",
-      revision: null,
-      checks: { postgres: true, redis: true, migrations: false }
-    })
+    expect(await first).toEqual(
+      body(
+        "unavailable",
+        null,
+        { postgres: true, redis: true, migrations: false },
+        {
+          db: measured("up", "postgres"),
+          redis: measured("up", "redis")
+        }
+      )
+    )
     await vi.advanceTimersByTimeAsync(10000)
     expect((await check()).status).toBe("unavailable")
     expect(migrations).toHaveBeenCalledTimes(1)

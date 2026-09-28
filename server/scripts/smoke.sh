@@ -60,7 +60,7 @@ fi
 
 echo "✓ сервер поднялся и ответил на GraphQL-запрос"
 
-echo "→ проверка HTTP readiness, PostgreSQL, Redis, миграций и deployment revision"
+echo "→ проверка HTTP readiness, зависимостей, копий, revision и отсутствия секретов"
 HEALTH="$(curl --fail --silent --show-error --retry 5 --retry-delay 2 --max-time 5 \
   "http://127.0.0.1:${PORT}/health")"
 printf '%s' "$HEALTH" | node -e '
@@ -69,7 +69,25 @@ process.stdin.on("data", (chunk) => { input += chunk })
 process.stdin.on("end", () => {
   const health = JSON.parse(input)
   const expected = /^[0-9a-f]{40}$/.test(process.env.RENDER_GIT_COMMIT || "") ? process.env.RENDER_GIT_COMMIT : null
-  if (health.status !== "ok" || health.checks?.postgres !== true || health.checks?.redis !== true || health.checks?.migrations !== true || health.revision !== expected) process.exit(1)
+  const fail = (message) => { console.error(`  ${message}`); process.exit(1) }
+  if (health.status !== "ok") fail(`status = ${health.status}`)
+  if (health.revision !== expected) fail("revision не равен ожидаемому")
+  for (const key of ["postgres", "redis", "migrations"]) {
+    if (health.checks?.[key] !== true) fail(`checks.${key} = ${health.checks?.[key]}`)
+  }
+  if (typeof health.checkedAt !== "string") fail("нет времени проверки")
+  // Состояние зависимостей (T-088): база, кеш, почта и хранилище подняты; AI и провайдер
+  // платежей ещё не подключены. Наблюдение за копиями вне production без отметок — disabled.
+  for (const [name, status] of Object.entries({ db: "up", redis: "up", mail: "up", storage: "up", ai: "disabled", psp: "disabled" })) {
+    if (health.components?.[name]?.status !== status) fail(`components.${name} = ${JSON.stringify(health.components?.[name])}`)
+  }
+  for (const kind of ["database", "media"]) {
+    if (typeof health.backups?.[kind]?.maxAgeSeconds !== "number") fail(`нет порога копии ${kind}`)
+  }
+  // Ответ не раскрывает секретов (docs/spec/80-observability/health-and-alerts.md п. 1).
+  for (const secret of [process.env.DATABASE_URL, process.env.REDIS_URL, process.env.JWT_ACCESS_SECRET, process.env.LOG_HASH_SECRET]) {
+    if (secret && input.includes(secret)) fail("в ответе нашлось значение секрета")
+  }
 })
 '
-echo "✓ HTTP readiness подтвердил зависимости и revision"
+echo "✓ HTTP readiness подтвердил зависимости, копии, revision и отсутствие секретов"
