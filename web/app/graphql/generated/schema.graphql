@@ -1335,7 +1335,12 @@ type MediaAsset {
   mimeType: String!
   processingStatus: MediaProcessingStatus!
 
-  """Варианты изображения; их генерирует отдельный шаг конвейера (T-064)."""
+  """
+  Набор производных изображения: `placeholder` — строка `data:` размытого заполнителя,
+  `thumbnailWidth` — ширина варианта для списков, `items` — публичные варианты
+  (`format`, `width`, `height`, `url`) в AVIF и WebP по централизованной матрице (журнал §29.4).
+  Пока шаг конвейера не прошёл — `items` пуст. Веб строит из набора `<picture>` с `srcset`.
+  """
   variants: JSON!
   width: Int
 }
