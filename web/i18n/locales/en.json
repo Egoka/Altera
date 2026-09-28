@@ -377,6 +377,15 @@
         "empty": "No bookmarks yet.",
         "read": "Start reading"
       },
+      "support": {
+        "title": "My support requests",
+        "ticket": "Request #{ticketNo}",
+        "status": {
+          "received": "Received",
+          "answered": "Answered"
+        },
+        "answer": "The reply was sent to the account address."
+      },
       "links": {
         "title": "Account",
         "sessions": "Sessions and devices",
@@ -854,6 +863,7 @@
       "audit": "Audit",
       "mail": "Mail",
       "errors": "Errors and health",
+      "support": "Support requests",
       "legal": "Legal texts",
       "settings": "System settings"
     },
@@ -1049,6 +1059,52 @@
       "bodyTitle": "Message body",
       "bodyHidden": "The message body is available to analyst, admin and owner only.",
       "eventsTitle": "Delivery history"
+    },
+    "support": {
+      "title": "Support requests",
+      "description": "Queue of support and editorial requests. The reply goes by mail to the address given; this section keeps the answered mark.",
+      "maskedNote": "Sender addresses are hidden in the list. The full address and the message are shown on the card — that is a personal data read and it is recorded in the audit log.",
+      "filterStatus": "Status",
+      "filterTopic": "Topic",
+      "allStatuses": "All statuses",
+      "allTopics": "All topics",
+      "status": {
+        "received": "Received",
+        "answered": "Answered"
+      },
+      "topic": {
+        "general": "General question",
+        "broken_link": "Broken link",
+        "refund": "Refund",
+        "copyright": "Rights to a piece",
+        "restore": "Account recovery",
+        "other": "Other"
+      },
+      "ticket": "Request #{ticketNo}",
+      "openCount": "Unanswered: {count}",
+      "columnTicket": "Request",
+      "columnTime": "Time",
+      "columnTopic": "Topic",
+      "columnEmail": "Sender address",
+      "columnPath": "Page",
+      "columnStatus": "Status",
+      "columnAction": "Action",
+      "columnRequestId": "Request code",
+      "emailAbsent": "No address",
+      "markAnswered": "Mark as answered",
+      "answeredAt": "Answered",
+      "answerHint": "Reply to the sender by mail at the address given, then mark the request answered: the sender sees the status in their account.",
+      "conflict": "This request is already marked as answered.",
+      "messageTitle": "Message",
+      "messageAbsent": "No message: a broken link report without a comment.",
+      "loading": "Loading support requests",
+      "empty": "No requests match this filter",
+      "loadError": "The support queue could not be loaded.",
+      "retry": "Try again",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}",
+      "backToList": "Back to the request list"
     },
     "audit": {
       "eyebrow": "Service journal",

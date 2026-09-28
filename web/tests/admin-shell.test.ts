@@ -35,6 +35,7 @@ describe("admin shell role navigation", () => {
         "/admin/ai",
         "/admin/audit",
         "/admin/mail",
+        "/admin/support",
         "/admin/errors",
         "/admin/legal",
         "/admin/settings"
@@ -52,6 +53,7 @@ describe("admin shell role navigation", () => {
         "/admin/articles",
         "/admin/review",
         "/admin/statistics",
+        "/admin/support",
         "/admin/errors",
         "/admin/ranking",
         "/admin/settings"

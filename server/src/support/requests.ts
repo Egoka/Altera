@@ -220,3 +220,47 @@ async function notifyStaff(
     })
   }
 }
+
+/** Число обращений в кабинете `[ДОПУЩЕНИЕ]`: зона сводки, а не отдельная страница со страницами. */
+export const MY_SUPPORT_REQUESTS_LIMIT = 20
+
+/** Статус обращения для кабинета: «принято» до ответа, «отвечено» после (журнал §37 п. 2). */
+export interface MySupportRequest {
+  id: string
+  ticketNo: number
+  topic: SupportTopic
+  status: "received" | "answered"
+  path: string | null
+  createdAt: Date
+  answeredAt: Date | null
+}
+
+/**
+ * Свои обращения в кабинете (журнал §37 п. 2). Записи привязаны к аккаунту полем `userId`:
+ * обращение гостя и обращение архивированной записи, отправленное как гостевое, в кабинет не
+ * попадают — у них нет владельца. Ни адреса, ни текста ответа здесь нет: отправитель их знает,
+ * а зона показывает только номер, тему и статус.
+ */
+export async function listMySupportRequests(
+  context: Pick<SupportRequestContext, "store" | "actor" | "requestId">
+): Promise<MySupportRequest[]> {
+  const actor = context.actor
+  if (!actor) throw createApiError("UNAUTHENTICATED", { requestId: context.requestId })
+
+  const records = await context.store.supportRequest.findMany({
+    where: { userId: actor.id },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: MY_SUPPORT_REQUESTS_LIMIT,
+    select: { id: true, ticketNo: true, topic: true, path: true, createdAt: true, answeredAt: true }
+  })
+
+  return records.map((record) => ({
+    id: record.id,
+    ticketNo: record.ticketNo,
+    topic: record.topic,
+    status: record.answeredAt ? "answered" : "received",
+    path: record.path,
+    createdAt: record.createdAt,
+    answeredAt: record.answeredAt
+  }))
+}

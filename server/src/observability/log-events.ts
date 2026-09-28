@@ -36,6 +36,7 @@ export const LOG_EVENT_CODES = [
   "error.unhandled",
   "plan.action.rejected",
   "support.request.created",
+  "support.request.answered",
   "backend.error",
   "engagement.anomaly",
   "review.reply",

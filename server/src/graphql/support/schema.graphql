@@ -45,3 +45,32 @@ extend type AccountUser {
   """
   isArchived: Boolean!
 }
+
+"""
+Статус обращения, который владелец аккаунта видит в кабинете (журнал §37 п. 2): «принято» до
+ответа сотрудника, «отвечено» после него.
+"""
+enum SupportRequestStatus {
+  received
+  answered
+}
+
+type MySupportRequest {
+  id: ID!
+  "Номер обращения из строки «Обращение №{ticketNo} принято»."
+  ticketNo: Int!
+  topic: SupportTopic!
+  status: SupportRequestStatus!
+  "Страница, о которой обращение, если она была указана."
+  path: String
+  createdAt: String!
+  answeredAt: String
+}
+
+extend type Query {
+  """
+  Свои обращения в кабинете (журнал §37 п. 2). Обращения гостя владельца не имеют и здесь не
+  показываются; ни адреса, ни текста ответа запрос не отдаёт.
+  """
+  mySupportRequests: [MySupportRequest!]!
+}
