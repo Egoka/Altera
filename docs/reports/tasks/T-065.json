@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task_id": "T-065",
+  "issue_id": "01a0e726-61c2-7553-827f-b1447281f716",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-065-avatars.md",
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
+  },
+  "baseline_sha": "11cc7a37538da89d0f9b24c2a1dacd16d4381fed",
+  "tested_sha": "d5bf40e290bf9892381154b0670f9eacb7dee6c9",
+  "branch": "server/t065-avatars",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e7a0-025e-7967-99cd-4c85c4b3e196",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "автор загружает аватар multipart-запросом GraphQL, гость без cookie получает на /authors/{handle} img с адресом варианта этой записи, раздача /media отвечает 200 и image/webp без подписи и без решения рецензента: web/tests/e2e/65-avatar.spec.ts 2 passed на собранном сервере и изолированной базе PostgreSQL 17 (d5bf40e)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "откат рецензентом ставит avatarAssetId в прежнюю версию, обнуляет prevAvatarId, переводит avatarCheckStatus в rejected и пишет одну запись profile.check с field: avatar, verdict: reverted, byRole и обеими версиями; CONFLICT без предыдущей версии журнала не пишет, автору FORBIDDEN, owner и admin откат выполняют: server/tests/account-avatar.test.ts 18 passed (d5bf40e)"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "удаление обнуляет обе связи и помечает запись deletedAt, повторный вызов без аватара транзакции не открывает, служебная запись и ограниченная сессия получают FORBIDDEN: server/tests/account-avatar.test.ts 18 passed; страница автора после удаления показывает инициалы: web/tests/e2e/65-avatar.spec.ts 2 passed (d5bf40e)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (d5bf40e)",
+    "lint": "passed: pnpm lint exit 0 (d5bf40e)",
+    "tests": "passed: pnpm test exit 0 — server 1093 passed / 61 skipped, web 802 passed, content 99 passed (d5bf40e)",
+    "build": "passed: pnpm --filter server run build:ci exit 0, dist/graphql/avatar/schema.graphql и dist/graphql/avatar/resolver.js на месте (d5bf40e)",
+    "codegen": "passed: pnpm codegen прогнан, повторный прогон изменений не даёт (d5bf40e)",
+    "typecheck": "passed: pnpm --filter nuxt-app run typecheck exit 0 во всех четырёх проектах, 0 ошибок (d5bf40e)",
+    "migrations": "not_required: задача не добавляет миграций — avatarAssetId, prevAvatarId и avatarCheckStatus пришли с моделью данных (d5bf40e)",
+    "browser_tests": "passed: playwright test --project chromium --no-deps tests/e2e/65-avatar.spec.ts 2 passed на изолированной базе PostgreSQL 17 и локальном Mailpit (d5bf40e)"
+  },
+  "pr": {
+    "number": 348,
+    "url": "https://github.com/Egoka/Altera/pull/348",
+    "base_ref": "app",
+    "base_sha": "11cc7a37538da89d0f9b24c2a1dacd16d4381fed",
+    "head_sha": "d5bf40e290bf9892381154b0670f9eacb7dee6c9",
+    "merge_sha": null
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ — новые точки входа uploadAvatar, removeAvatar и revertAvatar, изменённый шаг вариантов конвейера и публичный профиль автора; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-065.md",
+    "sha256": "17b2f003f41d9287285fa9b6c292b598aa69c6d3e5af28242c883a1cb60c3a3a"
+  },
+  "usage": null
+}
