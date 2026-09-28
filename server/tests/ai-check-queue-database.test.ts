@@ -181,6 +181,7 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       const log = vi.fn<AppLogger["log"]>()
       const logger: AppLogger = { log }
       const adapter = createFakeAiCheckAdapter()
+      await database.articleTranslation.update({ where: { id: translationId }, data: { status: "ai_check" } })
       const enqueued = await createPrismaAiCheckQueue(database, logger).enqueue({
         translationId,
         revisionId,
@@ -306,6 +307,7 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       const log = vi.fn<AppLogger["log"]>()
       const metric = vi.fn<NonNullable<AppLogger["metric"]>>()
       const logger: AppLogger = { log, metric }
+      const delByTags = vi.fn().mockResolvedValue(undefined)
       const adapter = createFakeAiCheckAdapter()
       const ctx = await editorContext(database, authorId, logger)
 
@@ -313,7 +315,9 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       const worker = createJobWorker({
         store: createPrismaJobStore(database),
         logger,
-        handlers: new Map([[AI_CHECK_JOB_KIND, createAiCheckJobHandler({ client: database, adapter, logger })]])
+        handlers: new Map([
+          [AI_CHECK_JOB_KIND, createAiCheckJobHandler({ client: database, adapter, logger, cache: { delByTags } })]
+        ])
       })
       await expect(worker.processNext()).resolves.toBe(true)
 
@@ -330,6 +334,27 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       expect(metric).toHaveBeenCalledWith(
         expect.objectContaining({ event: "translation.published", data: { translationId } })
       )
+      expect(delByTags).toHaveBeenCalledWith(expect.arrayContaining(["home"]))
+    })
+  })
+
+  it("отзыв из ai_check позволяет повторно подать неизменённый текст новой ревизией", async () => {
+    await withDatabase(async (database) => {
+      const { authorId, translationId } = await createArticle(database, "Первый абзац подачи.")
+      const logger: AppLogger = { log: vi.fn() }
+      const ctx = await editorContext(database, authorId, logger)
+
+      await expect(submitTranslation(ctx, translationId)).resolves.toMatchObject({ status: "ai_check" })
+      await expect(withdrawTranslation(ctx, translationId)).resolves.toMatchObject({ status: "draft" })
+      await expect(submitTranslation(ctx, translationId)).resolves.toMatchObject({ status: "ai_check" })
+
+      const processes = await database.aiProcess.findMany({
+        where: { objectId: translationId },
+        orderBy: { createdAt: "asc" }
+      })
+      expect(processes).toHaveLength(2)
+      expect(processes[0]?.revisionId).not.toBe(processes[1]?.revisionId)
+      await expect(database.job.count({ where: { kind: AI_CHECK_JOB_KIND } })).resolves.toBe(2)
     })
   })
 

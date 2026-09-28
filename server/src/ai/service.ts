@@ -6,8 +6,8 @@
  * записи стоимости нет), комментарий автору в историю решений при отказе
  * (`30-account/author/review-history.md` §4) и аудит `ai.decision` (реестр #71).
  *
- * Чего сервис **не** делает: не меняет статус версии статьи. Переходы `ai_check` → `published`
- * или `review` — задача T-049; проверка только выносит и записывает вердикт.
+ * Вердикт и условный переход ожидающей ревизии записываются одной транзакцией. Поздний результат
+ * отозванной или уже заменённой ревизии сохраняется для аудита, но публичный статус не меняет.
  */
 
 import { randomUUID } from "node:crypto"
@@ -49,6 +49,7 @@ interface AiCheckServiceOptions {
   store: AiCheckStore
   adapter: AiCheckAdapter
   logger: AppLogger
+  onPublished?: (translationId: string) => Promise<void>
   now?: () => Date
 }
 
@@ -70,7 +71,7 @@ function evidenceJson(result: AiCheckResult): Prisma.InputJsonValue {
 }
 
 export function createAiCheckService(options: AiCheckServiceOptions): AiCheckService {
-  const { store, adapter, logger } = options
+  const { store, adapter, logger, onPublished } = options
   const now = options.now ?? (() => new Date())
 
   async function markFailed(
@@ -234,7 +235,10 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
 
       // Повторный запуск задания после успеха второго вердикта не даёт: переиграть решение
       // проверки нельзя (журнал #14, `ai-processes.md` §5).
-      if (process.status === "completed") return { aiProcessId: process.id, verdict: null }
+      if (process.status === "completed") {
+        if (process.verdict === "publish") await onPublished?.(input.translationId)
+        return { aiProcessId: process.id, verdict: null }
+      }
 
       const startedAt = now()
       await store.updateProcess(process.id, {
@@ -323,12 +327,15 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         }
       })
 
-      if (published && originRequestId) {
-        logger.metric?.({
-          event: "translation.published",
-          requestId: originRequestId,
-          data: { translationId: input.translationId }
-        })
+      if (published) {
+        if (originRequestId) {
+          logger.metric?.({
+            event: "translation.published",
+            requestId: originRequestId,
+            data: { translationId: input.translationId }
+          })
+        }
+        await onPublished?.(input.translationId)
       }
 
       return { aiProcessId: process.id, verdict: result.verdict }

@@ -22,6 +22,7 @@ export interface AiCheckResultWriter {
 export interface AiCheckProcessRecord {
   id: string
   status: AiProcessStatus
+  verdict: string | null
 }
 
 export interface AiCheckStore extends AiCheckSubmissionStore {
@@ -46,7 +47,10 @@ export function createPrismaAiCheckStore(client: PrismaClient): AiCheckStore {
     mediaAsset: client.mediaAsset,
 
     async findProcessByJob(jobId) {
-      return client.aiProcess.findFirst({ where: { jobId, kind: "check" }, select: { id: true, status: true } })
+      return client.aiProcess.findFirst({
+        where: { jobId, kind: "check" },
+        select: { id: true, status: true, verdict: true }
+      })
     },
 
     async createProcess(input) {
@@ -60,7 +64,7 @@ export function createPrismaAiCheckStore(client: PrismaClient): AiCheckStore {
           revisionId: input.revisionId,
           ...(input.createdAt ? { createdAt: input.createdAt } : {})
         },
-        select: { id: true, status: true }
+        select: { id: true, status: true, verdict: true }
       })
     },
 

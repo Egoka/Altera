@@ -223,7 +223,9 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
 
     async findProcessByJob(jobId: string) {
       for (const process of processes.values()) {
-        if (process.jobId === jobId && process.kind === "check") return { id: process.id, status: process.status }
+        if (process.jobId === jobId && process.kind === "check") {
+          return { id: process.id, status: process.status, verdict: process.verdict }
+        }
       }
       return null
     },
@@ -250,7 +252,7 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
         durationMs: null
       }
       processes.set(process.id, process)
-      return { id: process.id, status: process.status }
+      return { id: process.id, status: process.status, verdict: process.verdict }
     },
 
     async updateProcess(processId: string, data: Record<string, unknown>) {

@@ -79,6 +79,7 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
   article: {
     id: "article-1",
     authorId: "author-1",
+    author: { name: "Пётр Соколов", handle: "petr" },
     isEditorial: false,
     status: "draft",
     sourceLocale: "ru",
@@ -104,6 +105,7 @@ interface PrismaDouble {
   section: Record<string, ReturnType<typeof vi.fn>>
   format: Record<string, ReturnType<typeof vi.fn>>
   tag: Record<string, ReturnType<typeof vi.fn>>
+  $queryRaw: ReturnType<typeof vi.fn>
   $executeRawUnsafe: ReturnType<typeof vi.fn>
   $transaction: ReturnType<typeof vi.fn>
 }
@@ -138,6 +140,7 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
     section: { findFirst: vi.fn().mockResolvedValue({ id: "section-1" }), findMany: vi.fn().mockResolvedValue([]) },
     format: { findFirst: vi.fn().mockResolvedValue({ id: "format-1" }), findMany: vi.fn().mockResolvedValue([]) },
     tag: { count: vi.fn().mockResolvedValue(0) },
+    $queryRaw: vi.fn().mockResolvedValue([]),
     $executeRawUnsafe: vi.fn().mockResolvedValue(0),
     $transaction: vi.fn(),
     ...(overrides as object)
@@ -213,6 +216,31 @@ describe("T-040 сохранение версии", () => {
     expect(prisma.articleTranslation.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "translation-1" } })
     )
+  })
+
+  it("повторно проверяет базовую ревизию под блокировкой перед записью", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique
+      .mockResolvedValueOnce(translation())
+      .mockResolvedValueOnce(translation({ revisions: [{ id: "revision-10" }] }))
+
+    const extensions = await extensionsOf(
+      saveTranslation(context(prisma), {
+        id: "translation-1",
+        baseRevisionId: "revision-9",
+        patch: { title: "Устаревшая правка" },
+        kind: "manual"
+      })
+    )
+
+    expect(extensions).toMatchObject({
+      code: "CONFLICT",
+      entity: "revision",
+      expected: "revision-10",
+      actual: "revision-9"
+    })
+    expect(prisma.$queryRaw).toHaveBeenCalled()
+    expect(prisma.articleRevision.create).not.toHaveBeenCalled()
   })
 
   it("наследная строка обновляется той же транзакцией с выключенной синхронизацией", async () => {
@@ -345,12 +373,26 @@ describe("T-040 подача к публикации", () => {
 
   it("первая подача без публичного имени или handle отклоняется", async () => {
     const prisma = prismaDouble()
-
-    const extensions = await extensionsOf(
-      submitTranslation(context(prisma, { ...author, handle: "" }), "translation-1")
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { author: { name: "Пётр Соколов", handle: "" } })
     )
 
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
+  })
+
+  it("для редакционного материала проверяет профиль автора, а не редактора", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { isEditorial: true, author: { name: "", handle: "" } })
+    )
+    const editor = { ...author, id: "editor-1", name: "Редактор", handle: "editor", role: "editor" }
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma, editor), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
+    expect(prisma.job.create).not.toHaveBeenCalled()
   })
 
   it("первая подача атомарно переводит версию в ai_check и ставит задание", async () => {
@@ -372,6 +414,11 @@ describe("T-040 подача к публикации", () => {
     expect(prisma.aiProcess.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ revisionId: "revision-9" }) })
     )
+    const locks = prisma.$queryRaw.mock.calls.map(([query]) => (query as { strings: string[] }).strings.join(" "))
+    expect(locks.some((query) => query.includes('FROM "article_translations"') && query.includes("FOR UPDATE"))).toBe(
+      true
+    )
+    expect(locks.some((query) => query.includes('FROM "users"') && query.includes("FOR UPDATE"))).toBe(true)
   })
 
   it("после сохранённого отказа AI повторная подача идёт в review без нового задания", async () => {
@@ -453,6 +500,21 @@ describe("T-040 подача к публикации", () => {
       where: { id: "translation-1", status: "review", rejected: false },
       data: { status: "draft" }
     })
+  })
+
+  it("повторная подача отозванной AI-проверки создаёт новую ревизию и новое задание", async () => {
+    const prisma = prismaDouble()
+    prisma.aiProcess.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "ai-process-withdrawn" })
+
+    const result = await submitTranslation(context(prisma), "translation-1")
+
+    expect(result.status).toBe("ai_check")
+    expect(prisma.articleRevision.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ translationId: "translation-1", kind: "manual" }) })
+    )
+    expect(prisma.aiProcess.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ revisionId: "revision-10" }) })
+    )
   })
 
   it.each(["draft", "rework", "published"])("отзыв из статуса %s отвечает CONFLICT", async (status) => {

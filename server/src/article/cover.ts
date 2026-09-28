@@ -10,6 +10,7 @@ import {
   type FocalPoint
 } from "../media"
 import type { GraphQLContext } from "../prisma"
+import type { PrismaClient } from "../generated/prisma"
 
 /**
  * Обложка материала (`docs/spec/85-media-and-binary/article-covers.md`, журнал §29.1).
@@ -36,7 +37,7 @@ const articleSelect = {
   coverAssetId: true
 } as const
 
-function validationError(ctx: GraphQLContext, field: string, rule: string): never {
+function validationError(ctx: Pick<GraphQLContext, "requestId">, field: string, rule: string): never {
   throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field, rule })
 }
 
@@ -135,7 +136,11 @@ export async function articleCoverView(ctx: GraphQLContext, assetId: string | nu
  * — `VALIDATION_ERROR`. Незаконченная запись обложкой тоже не считается: к моменту публикации
  * карточке нечего было бы показать, а дефолтных изображений в лентах нет (§29.1).
  */
-export async function ensureCoverBeforeSubmit(ctx: GraphQLContext, coverAssetId: string | null): Promise<void> {
+type CoverSubmitContext = Pick<GraphQLContext, "requestId"> & {
+  prisma: { mediaAsset: Pick<PrismaClient["mediaAsset"], "findUnique"> }
+}
+
+export async function ensureCoverBeforeSubmit(ctx: CoverSubmitContext, coverAssetId: string | null): Promise<void> {
   if (!coverAssetId) validationError(ctx, "cover", "required")
   const asset = await ctx.prisma.mediaAsset.findUnique({ where: { id: coverAssetId }, select: coverAssetSelect })
   if (!asset || asset.deletedAt) validationError(ctx, "cover", "required")

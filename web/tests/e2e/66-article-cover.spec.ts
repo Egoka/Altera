@@ -111,7 +111,11 @@ const SET_COVER = `
   }
 `
 
-const REQUEST_REVIEW = `mutation RequestReview($id: ID!) { requestReview(id: $id) { id status } }`
+const SUBMIT_TRANSLATION = `
+  mutation SubmitTranslation($id: ID!) {
+    submitTranslation(id: $id) { id status }
+  }
+`
 
 const callApi = async (request: APIRequestContext, token: string, query: string, variables: object) => {
   const response = await request.post(apiUrl, {
@@ -212,11 +216,11 @@ test.describe("T-066 обложка материала", () => {
   test("критерий 1: подача без обложки отвечает VALIDATION_ERROR", async ({ request }) => {
     const fixture = await createDraft()
 
-    const rejected = await callApi(request, fixture.token, REQUEST_REVIEW, { id: fixture.articleId })
+    const rejected = await callApi(request, fixture.token, SUBMIT_TRANSLATION, { id: fixture.translationId })
 
-    // Поле `requestReview` не обнуляемо, поэтому отказ обнуляет весь `data` — важно, что
+    // Поле `submitTranslation` не обнуляемо, поэтому отказ обнуляет весь `data` — важно, что
     // подача не прошла и ответ назвал поле и правило.
-    expect(rejected.data?.requestReview ?? null).toBeNull()
+    expect(rejected.data?.submitTranslation ?? null).toBeNull()
     expect(rejected.errors?.[0]?.extensions).toMatchObject({
       code: "VALIDATION_ERROR",
       field: "cover",
@@ -228,8 +232,8 @@ test.describe("T-066 обложка материала", () => {
     await waitForReady(assetId)
     await callApi(request, fixture.token, SET_COVER, { articleId: fixture.articleId, assetId, focal: null })
 
-    const accepted = await callApi(request, fixture.token, REQUEST_REVIEW, { id: fixture.articleId })
+    const accepted = await callApi(request, fixture.token, SUBMIT_TRANSLATION, { id: fixture.translationId })
     expect(accepted.errors, JSON.stringify(accepted.errors)).toBeUndefined()
-    expect(accepted.data?.requestReview).toMatchObject({ status: "review" })
+    expect(accepted.data?.submitTranslation).toMatchObject({ status: "ai_check" })
   })
 })

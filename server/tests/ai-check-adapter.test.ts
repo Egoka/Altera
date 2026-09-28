@@ -9,7 +9,7 @@
 
 import { createDocument, createParagraph, createText, createFigure } from "@altera/content"
 import { GraphQLError } from "graphql"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { createAiCheckAdapterFromEnv } from "../src/ai/config"
 import { createFakeAiCheckAdapter, parseFakeAiCheckMarker } from "../src/ai/adapters/fake"
 import { createUnavailableAiCheckAdapter } from "../src/ai/adapters/unavailable"
@@ -89,7 +89,7 @@ function fixture(overrides: Partial<AiCheckStoreFixture> = {}): AiCheckStoreFixt
   }
 }
 
-function createHarness(overrides: Partial<AiCheckStoreFixture> = {}) {
+function createHarness(overrides: Partial<AiCheckStoreFixture> = {}, onPublished = async (): Promise<void> => {}) {
   const memory = createAiCheckMemoryStore(fixture(overrides))
   const adapter = createFakeAiCheckAdapter()
   const { logger, entries } = createLogCollector()
@@ -98,6 +98,7 @@ function createHarness(overrides: Partial<AiCheckStoreFixture> = {}) {
     store: memory.store,
     adapter,
     logger,
+    onPublished,
     // Часы шагают на секунду за вызов: длительность записи становится проверяемой величиной.
     now: () => new Date(Date.UTC(2026, 8, 28, 12, 0, tick++))
   })
@@ -296,8 +297,25 @@ describe("AI-адаптер проверки допустимости", () => {
     expect(adapter.submissions).toHaveLength(1)
   })
 
+  it("повтор завершённой публикации повторяет только инвалидацию кеша", async () => {
+    const onPublished = vi
+      .fn<(translationId: string) => Promise<void>>()
+      .mockRejectedValueOnce(new Error("cache unavailable"))
+      .mockResolvedValueOnce()
+    const { memory, adapter, service } = createHarness({}, onPublished)
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    await expect(service.runCheck(jobInput)).rejects.toThrow("cache unavailable")
+    await expect(service.runCheck(jobInput)).resolves.toMatchObject({ verdict: null })
+
+    expect(onPublished).toHaveBeenCalledTimes(2)
+    expect(adapter.submissions).toHaveLength(1)
+    expect(memory.fixture.status).toBe("published")
+  })
+
   it("вердикт «публиковать» сразу публикует ожидающую ревизию и открывает часовое окно", async () => {
-    const { memory, adapter, service, entries } = createHarness()
+    const onPublished = vi.fn<(translationId: string) => Promise<void>>().mockResolvedValue()
+    const { memory, adapter, service, entries } = createHarness({}, onPublished)
     adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
 
     await service.runCheck(jobInput)
@@ -310,6 +328,7 @@ describe("AI-адаптер проверки допустимости", () => {
     expect(entries).toContainEqual(
       expect.objectContaining({ event: "translation.published", data: { translationId: TRANSLATION_ID } })
     )
+    expect(onPublished).toHaveBeenCalledWith(TRANSLATION_ID)
   })
 
   it("вердикт «не публиковать» возвращает ожидающую ревизию в review с причинами", async () => {
