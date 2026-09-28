@@ -46,7 +46,7 @@
     "base_ref": "app",
     "base_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
     "head_sha": "6ee31f3eab2030086f443731c11e4d68dda9c184",
-    "merge_sha": null
+    "merge_sha": "931102de2cabb5272f5c54d46b0ef1b9ceb93d3b"
   },
   "review": {
     "actor_id": null,
