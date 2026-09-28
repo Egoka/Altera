@@ -90,13 +90,17 @@ describe("T-081 admin error work status", () => {
     } as unknown as AdminErrorsContext
 
     const result = await listErrorLog(ctx, {
-      filters: { period: { from: firstSeenAt.toISOString(), to: NEXT_UPDATED_AT.toISOString() } },
+      filters: {
+        q: "50%_",
+        period: { from: firstSeenAt.toISOString(), to: NEXT_UPDATED_AT.toISOString() }
+      },
       pagination: { page: 1, limit: 20 }
     })
 
     expect(result.pagination).toMatchObject({ currentPage: 1, totalItems: 1, totalPages: 1 })
     expect(result.items[0]).toMatchObject({ occurrences: 2, firstSeenAt, lastSeenAt: UPDATED_AT })
     expect(queryRaw).toHaveBeenCalledTimes(2)
+    expect(queryRaw.mock.calls[1]?.[0].values).toContain("%50\\%\\_%")
     expect(queryRaw.mock.calls[1]?.[0].values.slice(-2)).toEqual([20, 0])
   })
 

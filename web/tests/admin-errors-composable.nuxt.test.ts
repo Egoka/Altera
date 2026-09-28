@@ -69,4 +69,34 @@ describe("useAdminErrors", () => {
     expect(vi.mocked($fetch)).toHaveBeenCalledWith("/health", { headers: { accept: "application/json" } })
     expect(useGraphQL).toHaveBeenCalledOnce()
   })
+
+  it("shows a live unavailable result instead of an older green history snapshot", async () => {
+    vi.stubGlobal(
+      "$fetch",
+      vi.fn().mockResolvedValue({
+        status: "unavailable",
+        checkedAt: "2026-09-28T12:00:00.000Z",
+        api: { reachable: false, health: null }
+      })
+    )
+    vi.stubGlobal(
+      "useGraphQL",
+      vi.fn().mockResolvedValue({
+        data: {
+          healthHistory: [
+            { id: "health-old", status: "ok", checkedAt: "2026-09-28T10:00:00.000Z", components: [], backups: [] }
+          ]
+        }
+      })
+    )
+    const errors = useAdminErrors()
+
+    await errors.checkHealthNow({ from: "2026-09-27T10:00:00.000Z", to: "2026-09-28T10:00:00.000Z" })
+
+    expect(errors.health.value[0]).toMatchObject({ status: "unavailable", checkedAt: "2026-09-28T12:00:00.000Z" })
+    expect(errors.health.value[0]?.components).toEqual([
+      { name: "api", status: "down", adapter: "http", latencyMs: null }
+    ])
+    expect(errors.healthStale.value).toBe(false)
+  })
 })

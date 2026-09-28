@@ -100,26 +100,35 @@ export function createHealthAlerts(options: HealthAlertsOptions): (health: Healt
   const nextRequestId = options.requestId ?? (() => `health:${randomUUID()}`)
   let reported: string | undefined
   let recordedHealth: string | undefined
+  const recordingHealth = new Map<string, Promise<boolean>>()
 
   return async (health) => {
     const reasons = healthAlertReasons(health)
     const signature = reasons.join(" ")
     const snapshotSignature = healthHistorySignature(health)
     const shouldRecord = snapshotSignature !== recordedHealth
-    recordedHealth = snapshotSignature
 
     if (shouldRecord && options.history) {
-      try {
-        await options.history(health)
-      } catch (error: unknown) {
-        options.logger.log({
-          level: "error",
-          event: "backend.error",
-          requestId: nextRequestId(),
-          message: "Health history write failed",
-          error
-        })
+      let write = recordingHealth.get(snapshotSignature)
+      if (!write) {
+        write = options
+          .history(health)
+          .then(() => true)
+          .catch((error: unknown) => {
+            options.logger.log({
+              level: "error",
+              event: "backend.error",
+              requestId: nextRequestId(),
+              message: "Health history write failed",
+              error
+            })
+            return false
+          })
+        recordingHealth.set(snapshotSignature, write)
       }
+      const written = await write
+      if (recordingHealth.get(snapshotSignature) === write) recordingHealth.delete(snapshotSignature)
+      if (written) recordedHealth = snapshotSignature
     }
 
     if (signature === reported) return null

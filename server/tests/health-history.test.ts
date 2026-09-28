@@ -65,4 +65,14 @@ describe("T-081 health history", () => {
 
     expect(history).toHaveBeenCalledTimes(3)
   })
+
+  it("retries an unchanged snapshot after a transient history write failure", async () => {
+    const history = vi.fn().mockRejectedValueOnce(new Error("database unavailable")).mockResolvedValueOnce(undefined)
+    const alerts = createHealthAlerts({ recipients: async () => [], logger: { log: vi.fn() }, history })
+
+    await alerts(healthy)
+    await alerts(healthy)
+
+    expect(history).toHaveBeenCalledTimes(2)
+  })
 })

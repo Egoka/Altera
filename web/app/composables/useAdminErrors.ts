@@ -27,6 +27,57 @@ interface GraphQLEnvelope<T> {
   errors?: readonly GraphQLErrorLike[]
 }
 
+type UnknownRecord = Record<string, unknown>
+
+const record = (value: unknown): UnknownRecord =>
+  value && typeof value === "object" && !Array.isArray(value) ? (value as UnknownRecord) : {}
+
+const liveHealthSnapshot = (value: unknown): AdminHealthSnapshot | null => {
+  const web = record(value)
+  const api = record(record(web.api).health)
+  const checkedAt =
+    typeof api.checkedAt === "string"
+      ? api.checkedAt
+      : typeof web.checkedAt === "string"
+        ? web.checkedAt
+        : new Date().toISOString()
+  const status = typeof api.status === "string" ? api.status : typeof web.status === "string" ? web.status : null
+  if (!status) return null
+
+  if (!Object.keys(api).length) {
+    return {
+      id: `live:${checkedAt}`,
+      status,
+      checkedAt,
+      components: [{ name: "api", status: "down", adapter: "http", latencyMs: null }],
+      backups: []
+    }
+  }
+
+  return {
+    id: `live:${checkedAt}`,
+    status,
+    checkedAt,
+    components: Object.entries(record(api.components)).map(([name, raw]) => {
+      const component = record(raw)
+      return {
+        name,
+        status: typeof component.status === "string" ? component.status : "down",
+        adapter: typeof component.adapter === "string" ? component.adapter : "unknown",
+        latencyMs: typeof component.latencyMs === "number" ? Math.round(component.latencyMs) : null
+      }
+    }),
+    backups: Object.entries(record(api.backups)).map(([kind, raw]) => {
+      const backup = record(raw)
+      return {
+        kind,
+        status: typeof backup.status === "string" ? backup.status : "unknown",
+        ageHours: typeof backup.ageSeconds === "number" ? Math.floor(backup.ageSeconds / 3600) : null
+      }
+    })
+  }
+}
+
 export type AdminErrorRow = GetAdminErrorsQuery["errorLog"]["items"][number]
 export type AdminErrorDetail = GetAdminErrorQuery["errorEntry"]
 export type AdminErrorStats = GetAdminErrorStatsQuery["errorStats"]
@@ -127,15 +178,23 @@ export const useAdminErrors = () => {
   }
 
   const checkHealthNow = async (period: ErrorPeriodInput) => {
+    let live: AdminHealthSnapshot | null
     try {
-      await $fetch("/health", { headers: { accept: "application/json" } })
+      live = liveHealthSnapshot(await $fetch("/health", { headers: { accept: "application/json" } }))
     } catch (error: unknown) {
       healthStale.value = true
       rememberError(errorsFromThrown(error))
       return false
     }
+    if (!live) {
+      healthStale.value = true
+      rememberError(undefined)
+      return false
+    }
     await loadHealth(period)
-    return !healthStale.value
+    health.value = [live, ...health.value.filter((snapshot) => snapshot.checkedAt !== live.checkedAt)]
+    healthStale.value = false
+    return true
   }
 
   const openEntry = async (id: string): Promise<AdminErrorDetail> => {

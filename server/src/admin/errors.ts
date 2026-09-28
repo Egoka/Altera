@@ -113,12 +113,12 @@ const eventSqlWhere = (
   if (filters.code) conditions.push(Prisma.sql`e."code" = ${filters.code}`)
   if (filters.route) conditions.push(Prisma.sql`e."route" = ${filters.route}`)
   if (q) {
-    const pattern = `%${q}%`
+    const pattern = `%${q.replace(/[\\%_]/g, "\\$&")}%`
     conditions.push(Prisma.sql`(
       e."requestId" = ${q}
-      OR e."code" ILIKE ${pattern}
-      OR e."route" ILIKE ${pattern}
-      OR e."message" ILIKE ${pattern}
+      OR e."code" ILIKE ${pattern} ESCAPE E'\\\\'
+      OR e."route" ILIKE ${pattern} ESCAPE E'\\\\'
+      OR e."message" ILIKE ${pattern} ESCAPE E'\\\\'
     )`)
   }
   return Prisma.join(conditions, " AND ")
