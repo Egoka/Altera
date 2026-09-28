@@ -38,5 +38,65 @@ services:
       timeout: 5s
       retries: 10
 
+  # Локальный сборщик ошибок по Sentry-протоколу (T-114, журнал §34 п. 3). Под профилем `errors`:
+  # обычный `docker compose up` поднимает только то, без чего сервер не работает, а сборщик со
+  # своей базой включается явно:
+  #   docker compose --profile errors up -d
+  # Развёртывание сборщика на сервере в РФ отложено вместе с хостингом (§34 п. 1, T-103).
+  glitchtip-postgres:
+    profiles: ["errors"]
+    image: postgres:18-alpine
+    # Запрос, который не сводится к одной секции, блокирует все секции и их индексы, поэтому
+    # сборщику мало стандартных 64 блокировок (рекомендация его же compose-файла).
+    command: -c max_locks_per_transaction=512
+    environment:
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: glitchtip
+      # Только локальная разработка: порт этой базы наружу не публикуется.
+      POSTGRES_PASSWORD: glitchtip
+    volumes:
+      # PostgreSQL 18 ждёт один том на `/var/lib/postgresql` и сам кладёт данные в подкаталог
+      # версии; том на `/var/lib/postgresql/data` этот образ считает ошибкой настройки.
+      - glitchtip_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glitchtip -d glitchtip"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Сборщик — один процесс: он же отдаёт интерфейс, принимает события и разбирает очередь.
+  # Миграции своей базы он применяет сам при запуске.
+  glitchtip:
+    profiles: ["errors"]
+    image: glitchtip/glitchtip:6.2.6
+    depends_on:
+      glitchtip-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Один контейнер вместо тройки «веб + обработчик + миграции»: роль по умолчанию (`web`)
+      # только отдаёт интерфейс и не применяет миграции своей базы.
+      SERVER_ROLE: all_in_one
+      DATABASE_URL: postgres://glitchtip:glitchtip@glitchtip-postgres:5432/glitchtip
+      # Общий локальный Redis, но своя база: счётчики лимитов Altera живут в базе 0.
+      VALKEY_URL: redis://redis:6379/1
+      SECRET_KEY: local-development-only
+      GLITCHTIP_DOMAIN: http://localhost:28000
+      # Первый вход создаёт учётную запись, организацию и проект локально; письма — в вывод
+      # контейнера, наружу сборщик ничего не отправляет.
+      ENABLE_USER_REGISTRATION: "true"
+      ENABLE_ORGANIZATION_CREATION: "true"
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+    ports:
+      - "28000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 /code/healthcheck.py || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
 volumes:
   postgres_data:
+  glitchtip_postgres_data:

@@ -141,8 +141,12 @@ describe("T-089 noop adapter", () => {
       expect(createErrorCollectorAdapterFromEnv({ ERROR_COLLECTOR_DRIVER: driver }).name).toBe("noop")
     }
     expect(createErrorCollectorAdapterFromEnv({ NODE_ENV: "production" }).name).toBe("noop")
-    expect(() => createErrorCollectorAdapterFromEnv({ ERROR_COLLECTOR_DRIVER: "sentry" })).toThrow(
+    expect(() => createErrorCollectorAdapterFromEnv({ ERROR_COLLECTOR_DRIVER: "glitchtip" })).toThrow(
       "Unknown ERROR_COLLECTOR_DRIVER"
+    )
+    // T-114: адаптер Sentry-протокола выбирается явно и требует адрес сборщика.
+    expect(() => createErrorCollectorAdapterFromEnv({ ERROR_COLLECTOR_DRIVER: "sentry" })).toThrow(
+      "ERROR_COLLECTOR_DSN is required"
     )
 
     const { collector, history, logs } = createWorld({ adapter: createErrorCollectorAdapterFromEnv({}) })
