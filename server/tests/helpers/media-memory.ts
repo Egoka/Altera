@@ -1,5 +1,16 @@
 import type { MediaProcessingStatus } from "../../src/generated/prisma"
-import type { CreateMediaAssetInput, MediaAssetRecord, MediaAssetStore, SaveMasterInput } from "../../src/media/types"
+import type {
+  CreateMediaAssetInput,
+  ImageInspection,
+  ImageProcessor,
+  MasterImage,
+  MediaAssetRecord,
+  MediaAssetStore,
+  MediaVariantSet,
+  PlaceholderImage,
+  SaveMasterInput,
+  VariantImage
+} from "../../src/media/types"
 import {
   assertStorageKey,
   StorageUnavailableError,
@@ -89,6 +100,13 @@ export function createMemoryMediaStore(options: { now?: () => Date } = {}): Memo
       const updated: MediaAssetRecord = { ...mustFind(id), ...input }
       records.set(id, updated)
       return updated
+    },
+
+    async saveVariants(id, variants: MediaVariantSet) {
+      // Как в базе: значение колонки переписывается целиком, без слияния с прежним набором.
+      const updated: MediaAssetRecord = { ...mustFind(id), variants: structuredClone(variants) }
+      records.set(id, updated)
+      return updated
     }
   }
 }
@@ -172,3 +190,84 @@ export const uploadSourceOf = (bytes: Buffer) => ({
   size: bytes.length,
   bytes: async () => bytes
 })
+
+export interface FakeProcessorOptions {
+  width?: number
+  height?: number
+  frames?: number
+  failInspect?: boolean
+  /** Сколько вариантов отказывают: так проверяется частичный набор. */
+  failVariants?: number
+  /** Сколько вариантов успевают получиться до первого отказа. */
+  failVariantsAfter?: number
+}
+
+/**
+ * Двойник обработчика изображений: предсказуемые байты вместо кодирования. Размеры вариантов
+ * считаются той же пропорцией, что и у настоящего `sharp`, чтобы тесты матрицы проверяли план,
+ * а не реализацию кодека. Настоящие AVIF и WebP проверяет `media-variants-sharp.test.ts`.
+ */
+export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
+  const calls = { inspect: 0, createMaster: 0, createVariant: 0, createPlaceholder: 0 }
+  let remainingVariantFailures = options.failVariants ?? 0
+  let successesBeforeFailure = options.failVariantsAfter ?? 0
+  const width = options.width ?? 1200
+  const height = options.height ?? 800
+
+  const processor: ImageProcessor = {
+    name: "fake",
+
+    async inspect(bytes) {
+      calls.inspect += 1
+      if (options.failInspect) throw new Error("decode failed")
+      const inspection: ImageInspection = {
+        format: "jpeg",
+        width,
+        height,
+        frames: options.frames ?? 1,
+        hasMetadata: bytes.includes(Buffer.from("exif"))
+      }
+      return inspection
+    },
+
+    async createMaster(_bytes, inspection) {
+      calls.createMaster += 1
+      const master: MasterImage = {
+        body: Buffer.from("master-bytes"),
+        mimeType: "image/jpeg",
+        extension: "jpg",
+        width: inspection.width,
+        height: inspection.height
+      }
+      return master
+    },
+
+    async createVariant(_master, spec) {
+      calls.createVariant += 1
+      if (remainingVariantFailures > 0 && successesBeforeFailure <= 0) {
+        remainingVariantFailures -= 1
+        throw new StorageUnavailableError(`Fake variant ${spec.width}.${spec.format} failed`)
+      }
+      if (successesBeforeFailure > 0) successesBeforeFailure -= 1
+      const variant: VariantImage = {
+        body: Buffer.from(`variant-${spec.format}-${spec.width}`),
+        mimeType: `image/${spec.format}`,
+        width: Math.min(spec.width, width),
+        height: Math.max(1, Math.round((height * Math.min(spec.width, width)) / width))
+      }
+      return variant
+    },
+
+    async createPlaceholder() {
+      calls.createPlaceholder += 1
+      const placeholder: PlaceholderImage = {
+        dataUri: "data:image/webp;base64,ZmFrZS1wbGFjZWhvbGRlcg==",
+        width: 48,
+        height: 32
+      }
+      return placeholder
+    }
+  }
+
+  return { processor, calls }
+}

@@ -84,6 +84,7 @@ const media = createMediaService({
   client: prisma,
   jobStore,
   storage: storageConfig.storage,
+  mediaBaseUrl: storageConfig.mediaBaseUrl,
   uploadEnabled: isMediaUploadEnabled(process.env)
 })
 

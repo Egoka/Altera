@@ -1,6 +1,6 @@
 import { createApiError } from "../../errors/graphql-error"
 import { ensureActiveAuthor, ensureAuthenticated, ensurePermission } from "../../exceptions/permissions"
-import type { MediaAssetRecord, UploadSource } from "../../media"
+import { publicVariantSet, type MediaAssetRecord, type UploadSource } from "../../media"
 import type { GraphQLContext } from "../../prisma"
 
 // Точка входа конвейера (`upload-pipeline.md` п. 1–4). Резолвер отвечает за права, лимит частоты и
@@ -50,7 +50,7 @@ async function ensureUploadAccess(ctx: GraphQLContext, translationId: string) {
   return user
 }
 
-function asMediaAsset(record: MediaAssetRecord) {
+function asMediaAsset(record: MediaAssetRecord, mediaBaseUrl: string) {
   return {
     id: record.id,
     processingStatus: record.processingStatus,
@@ -63,7 +63,7 @@ function asMediaAsset(record: MediaAssetRecord) {
     attribution: record.attribution,
     license: record.license,
     licenseNote: record.licenseNote,
-    variants: record.variants,
+    variants: publicVariantSet(record.variants, mediaBaseUrl),
     createdAt: record.createdAt.toISOString()
   }
 }
@@ -99,7 +99,7 @@ export default {
         attribution: args.attribution,
         requestId: ctx.requestId
       })
-      return asMediaAsset(record)
+      return asMediaAsset(record, ctx.media.mediaBaseUrl)
     }
   }
 }

@@ -11,7 +11,9 @@ import type { ImageProcessor, MediaAssetRecord, MediaProcessingQueue, MediaTrans
 export { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingOutcome } from "./pipeline"
 export { acceptMediaUpload, isMediaLicense, MEDIA_LICENSES } from "./upload"
 export { detectImageFormat } from "./formats"
-export { MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES, MIN_IMAGE_SIDE } from "./limits"
+export { MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES, MIN_IMAGE_SIDE, VARIANT_WIDTHS } from "./limits"
+export { planVariants, variantWidthsFor, THUMBNAIL_WIDTH } from "./variant-matrix"
+export { ensureVariants, publicVariantSet, readVariantSet, type PublicVariant, type PublicVariantSet } from "./variants"
 export { createSharpImageProcessor } from "./sharp-processor"
 export { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "./store"
 export {
@@ -30,6 +32,8 @@ export {
  */
 export interface MediaService {
   readonly uploadEnabled: boolean
+  /** Префикс публичных адресов вариантов: ключи хранятся в базе, домен подставляется при чтении. */
+  readonly mediaBaseUrl: string
   translations: MediaTranslationLookup
   upload(input: AcceptUploadInput): Promise<MediaAssetRecord>
 }
@@ -38,6 +42,7 @@ export interface MediaServiceOptions {
   client: PrismaClient
   jobStore: Pick<PrismaJobStore, "enqueue">
   storage: ObjectStorage
+  mediaBaseUrl: string
   processor?: ImageProcessor
   /**
    * Журнал §33 п. 3: до утверждения владельцем числовых порогов конвейера загрузка пользователям
@@ -84,6 +89,7 @@ export function createMediaService(options: MediaServiceOptions): MediaService {
   const uploadDeps: MediaUploadDeps = { store, storage: options.storage, queue }
   return {
     uploadEnabled: options.uploadEnabled ?? false,
+    mediaBaseUrl: options.mediaBaseUrl,
     translations: createPrismaTranslationLookup(options.client),
     upload: (input) => acceptMediaUpload(input, uploadDeps)
   }

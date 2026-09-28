@@ -1,5 +1,5 @@
 import type { MediaLicense, MediaProcessingStatus } from "../generated/prisma"
-import type { MasterExtension } from "../storage/keys"
+import type { MasterExtension, VariantFormat } from "../storage/keys"
 
 // Порты конвейера загрузки (`upload-pipeline.md` п. 5, журнал §29.2, §29.12). Библиотека
 // обработки, хранилище записей и очередь заданий подключаются через интерфейсы: тесты конвейера
@@ -42,15 +42,59 @@ export interface MasterImage {
   height: number
 }
 
+/** Публичный вариант: готовые к раздаче байты одного размера в одном формате (журнал §29.4). */
+export interface VariantImage {
+  body: Buffer
+  mimeType: string
+  width: number
+  height: number
+}
+
+/**
+ * Размытый заполнитель показывается мгновенно, до загрузки варианта (`image-variants.md` §2 п. 4),
+ * поэтому он не отдельный объект хранилища, а строка `data:` в записи медиа: лишний запрос за
+ * картинкой в 48 px стоил бы дороже самих байтов.
+ */
+export interface PlaceholderImage {
+  dataUri: string
+  width: number
+  height: number
+}
+
 /**
  * Обработчик изображений. `inspect` отвечает за целостность и фактические свойства,
  * `createMaster` — за безопасный мастер: без метаданных, с применённой ориентацией EXIF и единым
- * цветовым профилем (заметка владельца п. 3–4, журнал §29.2).
+ * цветовым профилем (заметка владельца п. 3–4, журнал §29.2); `createVariant` и
+ * `createPlaceholder` — за производные из мастера (§29.4, ADR-0030 п. 1).
  */
 export interface ImageProcessor {
   readonly name: string
   inspect(bytes: Buffer): Promise<ImageInspection>
   createMaster(bytes: Buffer, inspection: ImageInspection): Promise<MasterImage>
+  createVariant(master: Buffer, spec: { width: number; format: VariantFormat }): Promise<VariantImage>
+  createPlaceholder(master: Buffer): Promise<PlaceholderImage>
+}
+
+/** Один вариант в записи медиа: ключ хранилища, не адрес (`access-and-signed-urls.md` п. 9). */
+export interface MediaVariantEntry {
+  format: VariantFormat
+  width: number
+  height: number
+  key: string
+  byteSize: number
+}
+
+/**
+ * Набор вариантов записи. Хранится в `MediaAsset.variants`; `version` отличает его от значения по
+ * умолчанию (`[]`) и от наборов, которые появятся после замены матрицы (`image-variants.md` §2 п. 6).
+ */
+export interface MediaVariantSet {
+  version: 1
+  /** `data:`-строка размытого заполнителя; `null`, если шаг ещё не дошёл до него. */
+  placeholder: string | null
+  /** Ширина варианта для списков и выбора медиа в редакторе. */
+  thumbnailWidth: number | null
+  items: MediaVariantEntry[]
 }
 
 export interface MediaAssetRecord {
@@ -101,6 +145,8 @@ export interface MediaAssetStore {
   create(input: CreateMediaAssetInput): Promise<MediaAssetRecord>
   setStatus(id: string, status: MediaProcessingStatus): Promise<MediaAssetRecord>
   saveMaster(id: string, input: SaveMasterInput): Promise<MediaAssetRecord>
+  /** Набор пишется и при частичной ошибке: полученные варианты не теряются (§2 п. 8). */
+  saveVariants(id: string, variants: MediaVariantSet): Promise<MediaAssetRecord>
 }
 
 export interface MediaProcessingQueue {

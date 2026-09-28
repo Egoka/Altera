@@ -4,10 +4,10 @@ import { detectImageFormat } from "../src/media/formats"
 import { MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES } from "../src/media/limits"
 import { runMediaProcessing } from "../src/media/pipeline"
 import { acceptMediaUpload, isMediaLicense, type MediaUploadDeps } from "../src/media/upload"
-import type { ImageInspection, ImageProcessor, MasterImage } from "../src/media/types"
 import { decidePublicAccess } from "../src/storage/access"
 import { masterKey, parseStorageKey, quarantineKey } from "../src/storage/keys"
 import {
+  createFakeImageProcessor as createFakeProcessor,
   createMemoryMediaQueue,
   createMemoryMediaStore,
   createMemoryStorage,
@@ -29,45 +29,6 @@ const jpegBytes = (marker: string): Buffer =>
 const pngBytes = (): Buffer =>
   Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("png-body")])
 const gifBytes = (): Buffer => Buffer.concat([Buffer.from("GIF89a"), Buffer.from("gif-body")])
-
-interface FakeProcessorOptions {
-  width?: number
-  height?: number
-  frames?: number
-  failInspect?: boolean
-}
-
-/** Двойник обработчика: мастер — предсказуемые байты, размеры и формат задаёт тест. */
-function createFakeProcessor(options: FakeProcessorOptions = {}) {
-  const calls = { inspect: 0, createMaster: 0 }
-  const processor: ImageProcessor = {
-    name: "fake",
-    async inspect(bytes) {
-      calls.inspect += 1
-      if (options.failInspect) throw new Error("decode failed")
-      const inspection: ImageInspection = {
-        format: "jpeg",
-        width: options.width ?? 1200,
-        height: options.height ?? 800,
-        frames: options.frames ?? 1,
-        hasMetadata: bytes.includes(Buffer.from("exif"))
-      }
-      return inspection
-    },
-    async createMaster(_bytes, inspection) {
-      calls.createMaster += 1
-      const master: MasterImage = {
-        body: Buffer.from("master-bytes"),
-        mimeType: "image/jpeg",
-        extension: "jpg",
-        width: inspection.width,
-        height: inspection.height
-      }
-      return master
-    }
-  }
-  return { processor, calls }
-}
 
 describe("T-063 конвейер загрузки медиа", () => {
   let store: MemoryMediaStore
@@ -224,8 +185,9 @@ describe("T-063 конвейер загрузки медиа", () => {
       expect(record.width).toBe(1200)
       expect(record.height).toBe(800)
       expect(record.byteSize).toBe(Buffer.from("master-bytes").length)
-      // Карантин снят: постоянным оригиналом остаётся только мастер (§29.2).
-      expect([...storage.objects.keys()]).toEqual([expectedKey])
+      // Карантин снят: постоянным оригиналом остаётся мастер (§29.2), рядом — варианты (T-064).
+      expect(storage.objects.has(quarantineKey({ assetId }))).toBe(false)
+      expect(storage.objects.has(expectedKey)).toBe(true)
       expect(calls.createMaster).toBe(1)
     })
 
@@ -256,14 +218,16 @@ describe("T-063 конвейер загрузки медиа", () => {
       expect(failed.processingStatus).toBe("failed")
       expect(failed.storageKey).toBe(expectedKey)
       expect(storage.objects.has(expectedKey)).toBe(true)
+      const variantsAfterFirstRun = calls.createVariant
 
       const retry = await runMediaProcessing(assetId, { store, storage, processor })
 
       expect(retry).toEqual({ result: "ready", masterCreated: false })
-      // Мастер не пересоздан: повтор доделал только недостающий шаг.
+      // Ни мастер, ни варианты не пересозданы: повтор доделал только недостающий шаг.
       expect(calls.createMaster).toBe(1)
+      expect(calls.createVariant).toBe(variantsAfterFirstRun)
       expect(store.records.get(assetId)?.storageKey).toBe(expectedKey)
-      expect([...storage.objects.keys()]).toEqual([expectedKey])
+      expect(storage.objects.has(quarantineKey({ assetId }))).toBe(false)
       expect(store.statusHistory(assetId)).toEqual([
         "uploading",
         "queued",

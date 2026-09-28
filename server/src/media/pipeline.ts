@@ -1,6 +1,7 @@
 import { masterKey, parseStorageKey, quarantineKey } from "../storage/keys"
 import type { ObjectStorage } from "../storage/types"
 import { MAX_IMAGE_PIXELS, MIN_IMAGE_SIDE } from "./limits"
+import { ensureVariants, isVariantSetIntact } from "./variants"
 import {
   MediaRejectedError,
   type ImageInspection,
@@ -50,7 +51,10 @@ async function findExistingMaster(record: MediaAssetRecord, storage: ObjectStora
   return (await storage.exists(record.storageKey)) ? record.storageKey : null
 }
 
-async function createMaster(record: MediaAssetRecord, deps: MediaProcessingDeps): Promise<void> {
+async function createMaster(
+  record: MediaAssetRecord,
+  deps: MediaProcessingDeps
+): Promise<{ record: MediaAssetRecord; body: Buffer }> {
   const key = quarantineKey({ assetId: record.id })
   const quarantined = await deps.storage.get(key)
   if (!quarantined) {
@@ -64,22 +68,37 @@ async function createMaster(record: MediaAssetRecord, deps: MediaProcessingDeps)
   const master = await deps.processor.createMaster(quarantined.body, inspection)
   const target = masterKey({ assetId: record.id, createdAt: record.createdAt, extension: master.extension })
   await deps.storage.put(target, master.body, { contentType: master.mimeType })
-  await deps.store.saveMaster(record.id, {
+  const saved = await deps.store.saveMaster(record.id, {
     storageKey: target,
     mimeType: master.mimeType,
     byteSize: master.body.length,
     width: master.width,
     height: master.height
   })
+  return { record: saved, body: master.body }
 }
 
 /**
- * Обработка одного файла: `processing` → мастер без EXIF → снятие карантина → `ready`.
+ * Набор вариантов для записи с уже существующим мастером. Полный набор повторно не собирается и
+ * мастер за ним не читается: повтор после частичной ошибки не должен стоить как первая обработка.
+ */
+async function completeVariants(record: MediaAssetRecord, deps: MediaProcessingDeps): Promise<void> {
+  const size = record.width && record.height ? { width: record.width, height: record.height } : null
+  if (size && (await isVariantSetIntact(record, size, deps.storage))) return
+
+  const master = await deps.storage.get(record.storageKey)
+  // Мастер только что был на месте (`findExistingMaster`): пропал между проверкой и чтением.
+  if (!master) throw new MediaRejectedError("file.missing", "Master file is gone")
+  await ensureVariants(record, master.body, deps)
+}
+
+/**
+ * Обработка одного файла: `processing` → мастер без EXIF → варианты и заполнитель → снятие
+ * карантина → `ready`.
  *
  * Повтор после частичной ошибки (§29.12) держится на состоянии самой записи: если `storageKey`
- * уже указывает на существующий мастер, задание его не пересоздаёт, а доделывает оставшиеся шаги.
- * Единственный шаг после мастера в этом проходе — снятие карантина; варианты добавляет T-064, и
- * модель повтора от этого не меняется.
+ * уже указывает на существующий мастер, задание его не пересоздаёт, а доделывает оставшиеся шаги —
+ * недостающие варианты (`image-variants.md` §2 п. 8) и снятие карантина.
  *
  * Отказ содержимого завершает задание: байты не изменятся, и повторять его незачем. Любая другая
  * ошибка выбрасывается наружу — повторы и исчерпание ведёт очередь (T-047).
@@ -93,7 +112,12 @@ export async function runMediaProcessing(assetId: string, deps: MediaProcessingD
   const processing = await deps.store.setStatus(assetId, "processing")
   try {
     const existingMaster = await findExistingMaster(processing, deps.storage)
-    if (!existingMaster) await createMaster(processing, deps)
+    if (existingMaster) {
+      await completeVariants(processing, deps)
+    } else {
+      const created = await createMaster(processing, deps)
+      await ensureVariants(created.record, created.body, deps)
+    }
 
     // Карантин — временная зона: после мастера копия загрузки в ней не нужна.
     await deps.storage.delete(quarantineKey({ assetId }))

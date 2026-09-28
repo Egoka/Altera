@@ -7,6 +7,7 @@ import { createJobWorker } from "../src/jobs/job-worker"
 import { createPrismaJobStore } from "../src/jobs/prisma-job-store"
 import { createMediaProcessingQueue, registerMediaProcessingJob, MEDIA_PROCESS_JOB_KIND } from "../src/media"
 import { createSharpImageProcessor } from "../src/media/sharp-processor"
+import { readVariantSet } from "../src/media/variants"
 import { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "../src/media/store"
 import { acceptMediaUpload } from "../src/media/upload"
 import { parseStorageKey } from "../src/storage/keys"
@@ -116,6 +117,11 @@ describe.skipIf(!testDatabaseUrl)("T-063 конвейер загрузки на 
       // Ориентация применена: стороны поменялись местами относительно загрузки.
       expect([processed.width, processed.height]).toEqual([240, 320])
       expect((await sharp(storage.objects.get(processed.storageKey)!.body).metadata()).exif).toBeUndefined()
+      // T-064: набор вариантов доезжает до JSONB-колонки, а не остаётся в памяти процесса.
+      const variants = readVariantSet(processed.variants)
+      expect(variants.items.map((item) => `${item.format}:${item.width}`)).toEqual(["avif:240", "webp:240"])
+      expect(variants.placeholder).toMatch(/^data:image\/webp;base64,/)
+      expect(variants.items.every((item) => storage.objects.has(item.key))).toBe(true)
       expect(await database.job.findUniqueOrThrow({ where: { id: job.id } })).toMatchObject({ status: "completed" })
     })
   }, 60_000)
