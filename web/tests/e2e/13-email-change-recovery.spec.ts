@@ -2,11 +2,14 @@ import { expect, test } from "./helpers/test"
 
 /**
  * Шаги 1–3 закрыты T-032 и проверяются в `32-email-change.spec.ts` на живой базе и почте.
- * Здесь остаётся ветка восстановления доступа: она ждёт страницу обращений (`/contact`, T-073)
- * и экран смены e-mail в карточке пользователя (`40-admin/users.md`, заход 7).
+ * Шаг Р2 — смену адреса сотрудником — закрыла T-073: он проверяется в `73-admin-users.spec.ts`
+ * на живой базе вместе с записью `user.email.change`. Здесь остаётся связка всего потока #13
+ * одним сценарием: она ждёт обращение темы «восстановление доступа» на `/contact` с ответом
+ * сотрудника (справочник `contact.md` §3 называет тему `restore`, а этот черновик — `access_recovery`)
+ * и вкладку аудита с фильтром по пользователю.
  */
 test("flow #13 changes email without ending sessions and supports audited recovery", async ({ page }) => {
-  test.skip(true, "Recovery branch requires /contact (T-073) and the admin e-mail change screen (matrix #50)")
+  test.skip(true, "Whole-flow link needs the /contact restore request and the per-user audit filter")
 
   await test.step("Шаг 1: запросить одноразовый код на новый e-mail", async () => {
     await page.goto("/me/email")

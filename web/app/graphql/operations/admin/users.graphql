@@ -1,0 +1,167 @@
+fragment AdminUserRowFields on AdminUserRow {
+  id
+  name
+  handle
+  email
+  emailMasked
+  role
+  status
+  archiveMode
+  createdAt
+  lastActiveAt
+  articlesCount
+  publishedCount
+  plan {
+    state
+    tier
+    until
+    endedAt
+  }
+}
+
+fragment AdminUserCardFields on AdminUserCard {
+  id
+  name
+  handle
+  email
+  emailMasked
+  role
+  status
+  archiveMode
+  createdAt
+  lastActiveAt
+  articlesCount
+  publishedCount
+  locale
+  nameCheckStatus
+  avatarCheckStatus
+  archivedAt
+  archiveReasonCategory
+  archivePublicMessage
+  archiveInternalReason
+  archivedByName
+  archivedByRole
+  canArchive
+  canRestore
+  canRevokeSessions
+  canChangeEmail
+  plan {
+    state
+    tier
+    until
+    endedAt
+  }
+  baseAuthorship {
+    enabled
+    enabledAt
+  }
+  articleStats {
+    total
+    draft
+    review
+    published
+    archived
+  }
+  articles {
+    id
+    slug
+    title
+    status
+    locale
+    createdAt
+    publishedAt
+    archivedAt
+    archivedByStaff
+  }
+  consents {
+    kind
+    version
+    locale
+    acceptedAt
+  }
+  sessions {
+    id
+    deviceClass
+    browserClass
+    createdAt
+    lastActiveAt
+  }
+}
+
+query GetAdminUsers($filters: AdminUserFiltersInput, $pagination: PaginationInput) {
+  adminUsers(filters: $filters, pagination: $pagination) {
+    viewerRole
+    viewerCanManage
+    items {
+      ...AdminUserRowFields
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+query GetAdminUser($id: ID!) {
+  adminUser(id: $id) {
+    ...AdminUserCardFields
+  }
+}
+
+query GetAdminUserAudit($entityId: ID!) {
+  auditLog(filters: { entityType: "user", entityId: $entityId }, limit: 20) {
+    entries {
+      id
+      action
+      createdAt
+      requestId
+      actor {
+        id
+        role
+        name
+        isSystem
+      }
+    }
+  }
+}
+
+mutation ArchiveAccount(
+  $id: ID!
+  $reasonCategory: AccountArchiveReasonCategory!
+  $internalReason: String!
+  $publicMessage: String
+  $mode: AccountArchiveMode
+) {
+  archiveAccount(
+    id: $id
+    reasonCategory: $reasonCategory
+    internalReason: $internalReason
+    publicMessage: $publicMessage
+    mode: $mode
+  ) {
+    ...AdminUserCardFields
+  }
+}
+
+mutation RestoreAccount($id: ID!, $reason: String!) {
+  restoreAccount(id: $id, reason: $reason) {
+    ...AdminUserCardFields
+  }
+}
+
+mutation RevokeUserSessions($id: ID!) {
+  revokeUserSessions(id: $id) {
+    revokedCount
+  }
+}
+
+mutation AdminChangeEmail($id: ID!, $newEmail: String!, $reason: String!) {
+  adminChangeEmail(id: $id, newEmail: $newEmail, reason: $reason) {
+    emailMasked
+    changedAt
+  }
+}

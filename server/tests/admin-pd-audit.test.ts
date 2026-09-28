@@ -1,97 +1,82 @@
 import { describe, expect, it, vi } from "vitest"
-import userResolver from "../src/graphql/user/resolver"
 import articleResolver from "../src/graphql/article/resolver"
+import { getAdminUser, listAdminUsers } from "../src/admin/users"
+import { adminUsersContext, auditsOf, MemoryPrisma, memoryUser } from "./helpers/admin-users-double"
 
-const SUBJECT_USER = {
+/**
+ * Чтение персональных данных административным инструментом (матрица #104, журнал #6, §14.4, §28.7).
+ *
+ * AC-1: карточка пользователя раскрывает адрес и записывает `admin.read.personal`; список с
+ * маской такой записи не делает — иначе журнал захламляется просмотром без раскрытия ПДн
+ * (`40-admin/users.md` §8). AC-2: публичный тип `User` в `Article.author` адреса не содержит,
+ * поэтому модератор его не получает и в обход карточки.
+ */
+
+const now = new Date("2026-09-28T12:00:00.000Z")
+
+const subject = memoryUser({
   id: "user-42",
-  name: "Alice",
-  email: "alice@example.com",
   role: "author",
   handle: "alice",
-  locale: "ru",
-  archivedAt: null,
-  planTier: "free",
-  planUntil: null,
-  nameCheckStatus: "ok",
-  avatarCheckStatus: "ok",
-  socialLinks: null,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  _count: { articles: 0 }
-}
+  name: "Alice",
+  email: "alice@example.com"
+})
 
-const ADMIN_USER = {
-  id: "admin-1",
-  role: "admin",
-  archivedAt: null,
-  planTier: "free",
-  planUntil: null
-}
+const admin = memoryUser({ id: "admin-1", role: "admin", isServiceAccount: true, handle: "staff-admin" })
+const moderator = memoryUser({ id: "mod-1", role: "moderator", isServiceAccount: true, handle: "staff-moderator" })
 
-function makeCtx(auditCreate: ReturnType<typeof vi.fn>, prismaExtra: Record<string, unknown> = {}) {
-  return {
-    currentUser: ADMIN_USER,
-    requestId: "req-pd-audit",
-    logger: { log: vi.fn() },
-    piiHasher: { email: (e: string) => `hash-${e}`, ip: (i: string) => `hash-${i}` },
-    cache: { delByTags: vi.fn(), get: vi.fn().mockResolvedValue(null), set: vi.fn(), del: vi.fn(), mode: "noop" },
-    prisma: {
-      auditLog: { create: auditCreate },
-      ...prismaExtra
-    }
-  }
-}
-
-// AC-1: adminUser запрос создаёт запись admin.read.personal в auditLog
 describe("adminUser", () => {
   it("создаёт auditLog запись admin.read.personal при чтении карточки", async () => {
-    const auditCreate = vi.fn().mockResolvedValue({})
-    const ctx = makeCtx(auditCreate, {
-      user: { findUnique: vi.fn().mockResolvedValue(SUBJECT_USER) }
+    const prisma = new MemoryPrisma({ users: [subject, admin] })
+    const ctx = adminUsersContext(prisma, admin)
+
+    const result = await getAdminUser(ctx, "user-42", now)
+
+    expect(result).toMatchObject({ id: "user-42", email: "alice@example.com", emailMasked: false })
+    const records = auditsOf(prisma, "admin.read.personal")
+    expect(records).toHaveLength(1)
+    expect(records[0]).toMatchObject({
+      action: "admin.read.personal",
+      actorId: "admin-1",
+      actorRole: "admin",
+      entityType: "user",
+      entityId: "user-42",
+      context: "admin.users",
+      purpose: "admin.user.read",
+      requestId: "req-admin-users"
     })
-
-    const result = await userResolver.Query.adminUser({}, { id: "user-42" }, ctx as never)
-
-    expect(result).toMatchObject({ id: "user-42", email: "alice@example.com" })
-    expect(auditCreate).toHaveBeenCalledOnce()
-    const call = auditCreate.mock.calls[0][0]
-    expect(call.data.action).toBe("admin.read.personal")
-    expect(call.data.actorId).toBe("admin-1")
-    expect(call.data.entityId).toBe("user-42")
-    expect(call.data.entityType).toBe("user")
-    expect(call.data.context).toBe("users")
-    expect(call.data.purpose).toBe("admin.user.read")
-    expect(call.data.requestId).toBe("req-pd-audit")
   })
 
   it("не создаёт audit запись если пользователь не найден", async () => {
-    const auditCreate = vi.fn()
-    const ctx = makeCtx(auditCreate, {
-      user: { findUnique: vi.fn().mockResolvedValue(null) }
-    })
+    const prisma = new MemoryPrisma({ users: [admin] })
 
-    const result = await userResolver.Query.adminUser({}, { id: "not-found" }, ctx as never)
+    const result = await getAdminUser(adminUsersContext(prisma, admin), "not-found", now)
 
     expect(result).toBeNull()
-    expect(auditCreate).not.toHaveBeenCalled()
+    expect(auditsOf(prisma, "admin.read.personal")).toHaveLength(0)
   })
 
-  it("отклоняет запрос без права accounts", async () => {
-    const auditCreate = vi.fn()
-    const ctx = {
-      currentUser: { id: "mod-1", role: "moderator", archivedAt: null, planTier: "free", planUntil: null },
-      requestId: "req-no-accounts",
-      logger: { log: vi.fn() },
-      piiHasher: { email: (e: string) => e, ip: (i: string) => i },
-      prisma: { auditLog: { create: auditCreate }, user: { findUnique: vi.fn() } }
-    }
+  it("отклоняет запрос роли без доступа к разделу", async () => {
+    const prisma = new MemoryPrisma({ users: [subject, moderator] })
 
-    await expect(userResolver.Query.adminUser({}, { id: "user-42" }, ctx as never)).rejects.toThrow()
-    expect(auditCreate).not.toHaveBeenCalled()
+    await expect(getAdminUser(adminUsersContext(prisma, moderator), "user-42", now)).rejects.toThrow()
+    expect(auditsOf(prisma, "admin.read.personal")).toHaveLength(0)
   })
 })
 
-// AC-2: moderator не получает email через Article.author (публичный тип User без email)
+describe("список пользователей — аудит", () => {
+  it("не пишет чтение ПДн на строки списка: адрес идёт маской", async () => {
+    const prisma = new MemoryPrisma({
+      users: [subject, memoryUser({ id: "user-43", handle: "bob", email: "bob@example.com" }), admin]
+    })
+
+    const list = await listAdminUsers(adminUsersContext(prisma, admin), {}, now)
+
+    expect(list.items.map(({ email }) => email)).toEqual(["b***b@example.com", "a***e@example.com"])
+    expect(auditsOf(prisma, "admin.read.personal")).toHaveLength(0)
+  })
+})
+
 describe("публичный тип User не содержит email в Article.author", () => {
   it("article resolver не возвращает email в поле author", async () => {
     const auditCreate = vi.fn()
@@ -120,36 +105,8 @@ describe("публичный тип User не содержит email в Article.
 
     expect(article).toBeDefined()
     // Поле author — публичный тип User, не AccountUser: email не включён в ответ
-    const author = (article as any)?.author
+    const author = (article as { author?: { email?: string } } | null)?.author
     expect(author).toBeDefined()
     expect(author?.email).toBeUndefined()
-  })
-})
-
-// users list тоже пишет audit-записи
-describe("users list — audit", () => {
-  it("создаёт auditLog запись для каждого возвращённого пользователя", async () => {
-    const auditCreate = vi.fn().mockResolvedValue({})
-    const users = [SUBJECT_USER, { ...SUBJECT_USER, id: "user-43", email: "bob@example.com", handle: "bob" }]
-    const ctx = makeCtx(auditCreate, {
-      user: {
-        count: vi.fn().mockResolvedValue(2),
-        findMany: vi.fn().mockResolvedValue(users)
-      }
-    })
-
-    await userResolver.Query.users(
-      {},
-      {
-        pagination: { page: 1, limit: 10 },
-        sort: { field: "createdAt", direction: "DESC" },
-        filters: { base: {} }
-      },
-      ctx as never
-    )
-
-    expect(auditCreate).toHaveBeenCalledTimes(2)
-    expect(auditCreate.mock.calls[0][0].data.entityId).toBe("user-42")
-    expect(auditCreate.mock.calls[1][0].data.entityId).toBe("user-43")
   })
 })
