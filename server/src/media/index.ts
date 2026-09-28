@@ -1,10 +1,19 @@
 import type { PrismaClient } from "../generated/prisma"
 import { registerJobHandler } from "../jobs/job-handlers"
 import type { PrismaJobStore } from "../jobs/prisma-job-store"
+import { createRecurringJobQueue, startRecurringJobSchedule, type RecurringJobQueue } from "../jobs/recurring"
+import type { AppLogger } from "../observability/logger"
 import type { ObjectStorage } from "../storage/types"
+import {
+  MEDIA_ORPHAN_POLICY,
+  MEDIA_PURGE_JOB_KIND,
+  runMediaPurge,
+  type MediaOrphanStore,
+  type MediaPurgeDeps
+} from "./orphans"
 import { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingDeps } from "./pipeline"
 import { createSharpImageProcessor } from "./sharp-processor"
-import { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "./store"
+import { createPrismaMediaAssetStore, createPrismaMediaOrphanStore, createPrismaTranslationLookup } from "./store"
 import { acceptAvatarUpload, type AvatarUploadDeps, type AvatarUploadInput } from "./avatars"
 import { applyCoverFocal, type CoverFocalDeps } from "./covers"
 import { acceptMediaUpload, type AcceptUploadInput, type MediaUploadDeps } from "./upload"
@@ -49,6 +58,18 @@ export {
   type CoverView
 } from "./covers"
 export { detectImageFormat } from "./formats"
+export {
+  isMediaPurgeEnabled,
+  MEDIA_ORPHAN_POLICY,
+  MEDIA_PURGE_JOB_KIND,
+  orphanByteSize,
+  orphanObjectKeys,
+  runMediaPurge,
+  type MediaOrphanPolicy,
+  type MediaOrphanRecord,
+  type MediaOrphanStore,
+  type MediaPurgeResult
+} from "./orphans"
 export { AVATAR_VARIANT_WIDTHS, MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES, MIN_IMAGE_SIDE, VARIANT_WIDTHS } from "./limits"
 export { planAllVariants, planCropVariants, planVariants, variantWidthsFor, THUMBNAIL_WIDTH } from "./variant-matrix"
 export {
@@ -60,7 +81,7 @@ export {
   type PublicVariantSet
 } from "./variants"
 export { createSharpImageProcessor } from "./sharp-processor"
-export { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "./store"
+export { createPrismaMediaAssetStore, createPrismaMediaOrphanStore, createPrismaTranslationLookup } from "./store"
 export {
   MediaRejectedError,
   type CropRect,
@@ -136,6 +157,42 @@ export function registerMediaProcessingJob(deps: MediaProcessingDeps): void {
     const assetId = readAssetId(job.parameters)
     if (!assetId) throw new Error(`${MEDIA_PROCESS_JOB_KIND} job without assetId`)
     await runMediaProcessing(assetId, deps)
+  })
+}
+
+/**
+ * Регистрация задания `media.purge`: чистка сирот (`retention-and-orphans.md` §2 п. 5–6).
+ * Первая ошибка прохода бросается наружу — повторы и исчерпание ведёт очередь T-047, и класс
+ * ошибки доходит до `job.failed`; удалённые в этом же проходе записи остаются удалёнными.
+ */
+export function registerMediaPurgeJob(deps: MediaPurgeDeps): void {
+  registerJobHandler(MEDIA_PURGE_JOB_KIND, async () => {
+    const result = await runMediaPurge(deps)
+    if (result.failure) throw result.failure
+  })
+}
+
+/** Зависимости чистки поверх Prisma и хранилища: своего порта почты у неё нет (§29.8). */
+export function createMediaPurgeDeps(client: PrismaClient, storage: ObjectStorage): MediaPurgeDeps {
+  const store: MediaOrphanStore = createPrismaMediaOrphanStore(client)
+  return { store, storage }
+}
+
+export function createMediaPurgeQueue(client: PrismaClient, store: PrismaJobStore): RecurringJobQueue {
+  return createRecurringJobQueue(client, store)
+}
+
+export function startMediaPurgeSchedule(
+  queue: RecurringJobQueue,
+  logger: AppLogger,
+  intervalMs: number = MEDIA_ORPHAN_POLICY.runIntervalMs
+): NodeJS.Timeout {
+  return startRecurringJobSchedule({
+    queue,
+    kind: MEDIA_PURGE_JOB_KIND,
+    logger,
+    intervalMs,
+    failureMessage: "Media purge scheduling failed"
   })
 }
 

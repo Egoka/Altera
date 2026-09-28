@@ -238,6 +238,12 @@ jobs:
       # проверяются на настоящем PostgreSQL — двойник порта ни схему, ни триггеры не проверяет.
       - name: Проверить конвейер загрузки медиа T-063
         run: pnpm --filter server exec vitest run tests/media-pipeline-database.test.ts
+      # T-068: выборка медиа-сирот ищет ссылку на файл внутри JSONB-тела языковой версии и
+      # ревизии (`jsonb_path_exists`) — условие «нет активных связей» двойник не проверяет.
+      - name: Проверить чистку медиа-сирот T-068
+        env:
+          T068_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/media-orphans-database.test.ts
       # T-048: «одна проверка на ревизию» держится на уникальном индексе, а постановка задания
       # вместе с записью процесса — на транзакции; двойник ни то ни другое не проверяет.
       - name: Проверить AI-проверку в очереди T-048
