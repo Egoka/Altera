@@ -137,8 +137,8 @@ extend type Mutation {
   ): SaveTranslationResult!
   """
   Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
-  перед первой публикацией — публичное имя и адрес профиля (§25.4). Переход в `ai_check` и
-  решения проверки — T-049.
+  перед первой публикацией — публичное имя и адрес профиля (§25.4). Первая подача переходит в
+  `ai_check`; повтор после отказа AI — в `review` без нового AI.
   """
   submitTranslation(id: ID!): EditorTranslation!
   withdrawTranslation(id: ID!): EditorTranslation!

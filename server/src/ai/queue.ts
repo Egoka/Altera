@@ -34,6 +34,43 @@ export interface AiCheckQueue {
   enqueue(input: EnqueueAiCheckInput): Promise<EnqueuedAiCheck>
 }
 
+/** Запись задания внутри уже открытой транзакции подачи. */
+export async function enqueueAiCheck(
+  transaction: Prisma.TransactionClient,
+  input: EnqueueAiCheckInput
+): Promise<EnqueuedAiCheck> {
+  const parameters: Prisma.InputJsonValue = {
+    translationId: input.translationId,
+    revisionId: input.revisionId
+  }
+  const job = await transaction.job.create({
+    data: {
+      kind: AI_CHECK_JOB_KIND,
+      parameters,
+      objectType: AI_CHECK_OBJECT_TYPE,
+      objectId: input.translationId,
+      originRequestId: input.requestId,
+      maxAttempts: DEFAULT_JOB_MAX_ATTEMPTS,
+      // Технический повтор упавшего задания разрешён владельцу (`jobs.md` §5); вердикт
+      // при этом не пересматривается — повтор идёт по той же записи проверки.
+      manualRetryAllowed: true
+    },
+    select: { id: true }
+  })
+  const process = await transaction.aiProcess.create({
+    data: {
+      jobId: job.id,
+      kind: "check",
+      status: "created",
+      objectType: AI_CHECK_OBJECT_TYPE,
+      objectId: input.translationId,
+      revisionId: input.revisionId
+    },
+    select: { id: true }
+  })
+  return { jobId: job.id, aiProcessId: process.id }
+}
+
 /** Разбор параметров задания: очередь хранит их как JSON, поэтому форма проверяется явно. */
 export function parseAiCheckJobParameters(parameters: unknown): AiCheckJobParameters {
   const value = parameters as Partial<AiCheckJobParameters> | null
@@ -46,39 +83,7 @@ export function parseAiCheckJobParameters(parameters: unknown): AiCheckJobParame
 export function createPrismaAiCheckQueue(client: PrismaClient, logger: AppLogger): AiCheckQueue {
   return {
     async enqueue(input) {
-      const parameters: Prisma.InputJsonValue = {
-        translationId: input.translationId,
-        revisionId: input.revisionId
-      }
-
-      const enqueued = await client.$transaction(async (transaction) => {
-        const job = await transaction.job.create({
-          data: {
-            kind: AI_CHECK_JOB_KIND,
-            parameters,
-            objectType: AI_CHECK_OBJECT_TYPE,
-            objectId: input.translationId,
-            originRequestId: input.requestId,
-            maxAttempts: DEFAULT_JOB_MAX_ATTEMPTS,
-            // Технический повтор упавшего задания разрешён владельцу (`jobs.md` §5); вердикт
-            // при этом не пересматривается — повтор идёт по той же записи проверки.
-            manualRetryAllowed: true
-          },
-          select: { id: true }
-        })
-        const process = await transaction.aiProcess.create({
-          data: {
-            jobId: job.id,
-            kind: "check",
-            status: "created",
-            objectType: AI_CHECK_OBJECT_TYPE,
-            objectId: input.translationId,
-            revisionId: input.revisionId
-          },
-          select: { id: true }
-        })
-        return { jobId: job.id, aiProcessId: process.id }
-      })
+      const enqueued = await client.$transaction((transaction) => enqueueAiCheck(transaction, input))
 
       logger.log({
         level: "info",

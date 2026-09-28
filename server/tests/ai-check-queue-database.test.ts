@@ -18,6 +18,7 @@ import { AI_CHECK_JOB_KIND, createPrismaAiCheckQueue } from "../src/ai/queue"
 import { createJobWorker } from "../src/jobs/job-worker"
 import { createPrismaJobStore } from "../src/jobs/prisma-job-store"
 import type { AppLogger } from "../src/observability/logger"
+import { submitTranslation, withdrawTranslation } from "../src/translation/editor"
 import { applyAllMigrations } from "./helpers/migration-database"
 
 const testDatabaseUrl = process.env.T048_TEST_DATABASE_URL
@@ -61,7 +62,16 @@ const withDatabase = async (run: (database: PrismaClient) => Promise<void>): Pro
 const createArticle = async (database: PrismaClient, body: string) => {
   await database.handleHistory.create({ data: { handle: "author" } })
   const author = await database.user.create({
-    data: { name: "Автор Материала", email: "author@example.test", handle: "author" }
+    data: {
+      name: "Автор Материала",
+      email: "author@example.test",
+      handle: "author",
+      role: "author",
+      planTier: "standard"
+    }
+  })
+  const section = await database.section.create({
+    data: { name: "Культура", slug: `culture-${randomUUID()}`, order: 1 }
   })
   const owner = await database.mediaAsset.create({
     data: {
@@ -70,6 +80,25 @@ const createArticle = async (database: PrismaClient, body: string) => {
       mimeType: "image/webp",
       byteSize: 1024,
       sha256: "a".repeat(64),
+      processingStatus: "ready",
+      variants: {
+        version: 1,
+        placeholder: null,
+        thumbnailWidth: 480,
+        focal: { x: 0.5, y: 0.5 },
+        items: [
+          {
+            format: "webp",
+            width: 960,
+            height: 480,
+            key: `media/${randomUUID()}/lede-w960.webp`,
+            byteSize: 1024,
+            crop: "lede"
+          }
+        ]
+      },
+      focalX: 0.5,
+      focalY: 0.5,
       attribution: "Фото: пресс-служба музея",
       license: "own",
       caption: "Ока у Каширы",
@@ -83,6 +112,7 @@ const createArticle = async (database: PrismaClient, body: string) => {
       dek: "Как выглядит река в октябре",
       body,
       authorId: author.id,
+      sectionId: section.id,
       coverAssetId: owner.id
     }
   })
@@ -93,6 +123,19 @@ const createArticle = async (database: PrismaClient, body: string) => {
     revisionId: `revision-${article.id}`
   }
 }
+
+const editorContext = async (database: PrismaClient, authorId: string, logger: AppLogger) =>
+  ({
+    prisma: database,
+    currentUser: await database.user.findUniqueOrThrow({
+      where: { id: authorId },
+      include: { permissionExceptions: { where: { revokedAt: null } } }
+    }),
+    requestId: "req-submit",
+    logger,
+    cache: { delByTags: vi.fn() },
+    media: { mediaBaseUrl: "https://media.example" }
+  }) as never
 
 describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди заданий", () => {
   it("постановка задания пишет задание и запись процесса одной транзакцией", async () => {
@@ -190,7 +233,7 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       expect(JSON.stringify(adapter.submissions[0])).not.toContain("Автор Материала")
       expect(adapter.submissions[0].images).toMatchObject([{ role: "cover", license: "own" }])
 
-      // Статус версии остаётся прежним: переходы — T-049.
+      // Прямая постановка без перехода подачи не выдаёт черновик за ожидающий AI-результат.
       await expect(
         database.articleTranslation.findUniqueOrThrow({ where: { id: translationId } })
       ).resolves.toMatchObject({ status: "draft" })
@@ -254,6 +297,67 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       await expect(database.aiProcess.count()).resolves.toBe(1)
       // Задание второй постановки тоже не осталось: транзакция откатилась целиком.
       await expect(database.job.count()).resolves.toBe(1)
+    })
+  })
+
+  it("полный путь подачи публикует ожидающую ревизию и открывает часовое окно", async () => {
+    await withDatabase(async (database) => {
+      const { authorId, translationId } = await createArticle(database, "Первый абзац подачи.")
+      const log = vi.fn<AppLogger["log"]>()
+      const metric = vi.fn<NonNullable<AppLogger["metric"]>>()
+      const logger: AppLogger = { log, metric }
+      const adapter = createFakeAiCheckAdapter()
+      const ctx = await editorContext(database, authorId, logger)
+
+      await expect(submitTranslation(ctx, translationId)).resolves.toMatchObject({ status: "ai_check" })
+      const worker = createJobWorker({
+        store: createPrismaJobStore(database),
+        logger,
+        handlers: new Map([[AI_CHECK_JOB_KIND, createAiCheckJobHandler({ client: database, adapter, logger })]])
+      })
+      await expect(worker.processNext()).resolves.toBe(true)
+
+      const translation = await database.articleTranslation.findUniqueOrThrow({ where: { id: translationId } })
+      expect(translation.status).toBe("published")
+      expect(translation.publishedAt).not.toBeNull()
+      expect(translation.reeditUntil?.getTime()).toBe(translation.publishedAt!.getTime() + 60 * 60 * 1000)
+      await expect(database.article.findUniqueOrThrow({ where: { id: translation.articleId } })).resolves.toMatchObject(
+        {
+          status: "published",
+          firstPublishedAt: translation.publishedAt
+        }
+      )
+      expect(metric).toHaveBeenCalledWith(
+        expect.objectContaining({ event: "translation.published", data: { translationId } })
+      )
+    })
+  })
+
+  it("после отказа AI повторная подача не создаёт второе задание", async () => {
+    await withDatabase(async (database) => {
+      const { authorId, translationId } = await createArticle(database, "Первый абзац подачи.")
+      const logger: AppLogger = { log: vi.fn() }
+      const adapter = createFakeAiCheckAdapter()
+      adapter.setFixture(translationId, { verdict: "reject", categories: ["topic_rules"] })
+      const ctx = await editorContext(database, authorId, logger)
+
+      await submitTranslation(ctx, translationId)
+      const worker = createJobWorker({
+        store: createPrismaJobStore(database),
+        logger,
+        handlers: new Map([[AI_CHECK_JOB_KIND, createAiCheckJobHandler({ client: database, adapter, logger })]])
+      })
+      await worker.processNext()
+      await expect(
+        database.articleTranslation.findUniqueOrThrow({ where: { id: translationId } })
+      ).resolves.toMatchObject({
+        status: "review"
+      })
+
+      await withdrawTranslation(ctx, translationId)
+      await expect(submitTranslation(ctx, translationId)).resolves.toMatchObject({ status: "review" })
+      await expect(database.job.count({ where: { kind: AI_CHECK_JOB_KIND } })).resolves.toBe(1)
+      await expect(database.aiProcess.count({ where: { objectId: translationId } })).resolves.toBe(1)
     })
   })
 })

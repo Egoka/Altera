@@ -63,4 +63,15 @@ describe("public GraphQL schema", () => {
 
     expect(createTag.getFields().slug.type.toString()).toBe("String")
   })
+
+  test("exposes translation transitions without legacy article-level bypasses", () => {
+    const typeDefs = loadFilesSync(path.resolve(__dirname, "../src/graphql"), { extensions: ["graphql"] })
+    const schema = buildASTSchema(mergeTypeDefs(typeDefs))
+    const mutation = schema.getMutationType()
+
+    expect(mutation?.getFields()).toHaveProperty("submitTranslation")
+    expect(mutation?.getFields()).toHaveProperty("withdrawTranslation")
+    expect(mutation?.getFields()).not.toHaveProperty("requestReview")
+    expect(mutation?.getFields()).not.toHaveProperty("revertToDraft")
+  })
 })

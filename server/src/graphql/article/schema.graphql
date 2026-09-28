@@ -254,7 +254,6 @@ extend type Mutation {
   # Мутации для смены статуса
   archiveArticle(id: ID!): Article!
   restoreArticle(id: ID!): Article!
-  requestReview(id: ID!): Article!
 
   """
   Выбор обложки и кадрирования (`article-covers.md` п. 1–3): запись медиа становится обложкой
@@ -263,7 +262,6 @@ extend type Mutation {
   AI-проверку (журнал §41, T-122).
   """
   setArticleCover(articleId: ID!, assetId: ID, focal: FocalPointInput): ArticleCover
-  revertToDraft(id: ID!): Article!
 
   # Только для администраторов
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!

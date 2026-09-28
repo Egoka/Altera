@@ -12,7 +12,13 @@
  * `20260929130000_translation_first_editor`) и обновляют `articles` сами.
  */
 
-import { ContentInvalidError, assertValidDocument, toPlainText, type ContentDocument } from "@altera/content"
+import {
+  ContentInvalidError,
+  assertValidDocument,
+  extractImages,
+  toPlainText,
+  type ContentDocument
+} from "@altera/content"
 import type { Prisma, PrismaClient } from "../generated/prisma"
 import { createApiError } from "../errors/graphql-error"
 import {
@@ -22,6 +28,8 @@ import {
   hasActiveAuthorPlan
 } from "../exceptions/permissions"
 import { ensureCoverBeforeSubmit } from "../article/cover"
+import { enqueueAiCheck, type EnqueuedAiCheck } from "../ai/queue"
+import { AI_CHECK_OBJECT_TYPE } from "../ai/store"
 import type { GraphQLContext } from "../prisma"
 
 /** Статусы, в которых автор правит версию (`article-edit.md` §4). */
@@ -145,6 +153,20 @@ function ensureOwnTranslation(ctx: GraphQLContext, translation: EditorTranslatio
     return
   }
   throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "translation" })
+}
+
+function ensureOwnTranslationMutation(
+  ctx: GraphQLContext,
+  translation: EditorTranslation,
+  user: EditorActor,
+  action: string
+): void {
+  if (translation.article.authorId === user.id) return
+  if (translation.article.isEditorial && user.role !== "reader" && user.role !== "author") {
+    ensurePermission(user, "editorial", action, ctx.requestId)
+    return
+  }
+  throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action })
 }
 
 export function readOnlyReasonFor(translation: EditorTranslation, user: EditorActor, now: Date): ReadOnlyReason {
@@ -377,7 +399,7 @@ async function mirrorLegacyArticle(
 export async function submitTranslation(ctx: GraphQLContext, id: string): Promise<EditorTranslationView> {
   const user = ensureEditorActor(ctx, "translation.submit")
   const translation = await loadTranslation(ctx, id)
-  ensureOwnTranslation(ctx, translation, user)
+  ensureOwnTranslationMutation(ctx, translation, user, "translation.submit")
 
   if (!EDITABLE_STATUSES.has(translation.status) || translation.rejected) {
     throw createApiError("CONFLICT", {
@@ -394,6 +416,7 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
   if (translation.article.section.status !== "active") validationError(ctx, "sectionId", "active")
   // Обложка обязательна перед публикацией и индивидуальна (журнал §29.1).
   await ensureCoverBeforeSubmit(ctx, translation.article.coverAssetId)
+  await ensureImageLicenses(ctx, translation)
   if (!translation.article.firstPublishedAt) {
     if (user.name.trim() === "" || user.handle.trim() === "") validationError(ctx, "profile", "required")
   }
@@ -401,27 +424,88 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
   await ensureSubmissionQueue(ctx, translation.article.authorId)
 
   const now = new Date()
-  await ctx.prisma.$transaction(async (tx) => {
+  const previousAiReject = await ctx.prisma.aiProcess.findFirst({
+    where: {
+      kind: "check",
+      status: "completed",
+      objectType: AI_CHECK_OBJECT_TYPE,
+      objectId: translation.id,
+      verdict: "reject"
+    },
+    select: { id: true }
+  })
+  const targetStatus = previousAiReject || translation.status === "rework" ? "review" : "ai_check"
+  const revisionId = translation.revisions[0]?.id
+  if (!revisionId) throw createApiError("INTERNAL_ERROR", { requestId: ctx.requestId })
+
+  const enqueued = await ctx.prisma.$transaction(async (tx): Promise<EnqueuedAiCheck | null> => {
     await disableLegacySync(tx)
-    await tx.articleTranslation.update({ where: { id: translation.id }, data: { status: "review" } })
+    const changed = await tx.articleTranslation.updateMany({
+      where: { id: translation.id, status: translation.status, rejected: false },
+      data: { status: targetStatus }
+    })
+    if (changed.count !== 1) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "translation",
+        expected: translation.status,
+        actual: "changed"
+      })
+    }
     await mirrorLegacyArticle(tx, translation, {
       title: translation.title,
       dek: translation.dek,
       excerpt: translation.excerpt,
       body: asDocument(translation.body),
-      status: "review"
+      status: targetStatus
     })
+    if (targetStatus === "review") return null
+    return enqueueAiCheck(tx, { translationId: translation.id, revisionId, requestId: ctx.requestId })
   })
+
+  if (enqueued) {
+    ctx.logger.log({
+      level: "info",
+      event: "ai.job.created",
+      jobId: enqueued.jobId,
+      originRequestId: ctx.requestId,
+      message: "AI check job created",
+      data: { kind: "check", translationId: translation.id, revisionId }
+    })
+  }
 
   ctx.logger.log({
     level: "info",
     event: "translation.submit",
     requestId: ctx.requestId,
     message: "Translation submitted for review",
-    data: { translationId: translation.id, status: "review" }
+    data: { translationId: translation.id, status: targetStatus }
   })
 
-  return toView(ctx, { ...translation, status: "review" }, user, now)
+  return toView(ctx, { ...translation, status: targetStatus, updatedAt: now }, user, now)
+}
+
+async function ensureImageLicenses(ctx: GraphQLContext, translation: EditorTranslation): Promise<void> {
+  const assetIds = [
+    ...(translation.article.coverAssetId ? [translation.article.coverAssetId] : []),
+    ...extractImages(asDocument(translation.body)).map((image) => image.assetId)
+  ].filter((id, index, all) => all.indexOf(id) === index)
+  const assets = await ctx.prisma.mediaAsset.findMany({
+    where: { id: { in: assetIds } },
+    select: { id: true, attribution: true, license: true, deletedAt: true, processingStatus: true }
+  })
+  const byId = new Map(assets.map((asset) => [asset.id, asset]))
+  const invalid = assetIds.some((id) => {
+    const asset = byId.get(id)
+    return (
+      !asset ||
+      asset.deletedAt !== null ||
+      asset.processingStatus !== "ready" ||
+      !asset.license ||
+      asset.attribution.trim() === ""
+    )
+  })
+  if (invalid) validationError(ctx, "images", "license")
 }
 
 /** Очередь проверки автора: одновременно не более пяти материалов (`rate-limits.md` п. 10). */
@@ -453,7 +537,7 @@ async function ensureSubmissionQueue(ctx: GraphQLContext, authorId: string): Pro
 export async function withdrawTranslation(ctx: GraphQLContext, id: string): Promise<EditorTranslationView> {
   const user = ensureEditorActor(ctx, "translation.withdraw")
   const translation = await loadTranslation(ctx, id)
-  ensureOwnTranslation(ctx, translation, user)
+  ensureOwnTranslationMutation(ctx, translation, user, "translation.withdraw")
 
   if (!WITHDRAWABLE_STATUSES.has(translation.status) || translation.rejected) {
     throw createApiError("CONFLICT", {
@@ -466,7 +550,18 @@ export async function withdrawTranslation(ctx: GraphQLContext, id: string): Prom
 
   await ctx.prisma.$transaction(async (tx) => {
     await disableLegacySync(tx)
-    await tx.articleTranslation.update({ where: { id: translation.id }, data: { status: "draft" } })
+    const changed = await tx.articleTranslation.updateMany({
+      where: { id: translation.id, status: translation.status, rejected: false },
+      data: { status: "draft" }
+    })
+    if (changed.count !== 1) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "translation",
+        expected: translation.status,
+        actual: "changed"
+      })
+    }
     await mirrorLegacyArticle(tx, translation, {
       title: translation.title,
       dek: translation.dek,
@@ -484,7 +579,8 @@ export async function withdrawTranslation(ctx: GraphQLContext, id: string): Prom
     data: { translationId: translation.id, status: "draft" }
   })
 
-  return toView(ctx, { ...translation, status: "draft" }, user, new Date())
+  const now = new Date()
+  return toView(ctx, { ...translation, status: "draft", updatedAt: now }, user, now)
 }
 
 export interface RevisionEntry {

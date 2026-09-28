@@ -19,6 +19,7 @@ export { createUnavailableAiCheckAdapter } from "./adapters/unavailable"
 export {
   AI_CHECK_JOB_KIND,
   createPrismaAiCheckQueue,
+  enqueueAiCheck,
   parseAiCheckJobParameters,
   type AiCheckQueue,
   type EnqueueAiCheckInput
