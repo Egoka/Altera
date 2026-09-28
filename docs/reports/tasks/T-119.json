@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "task_id": "T-119",
+  "issue_id": "01a0e650-2eaf-796e-b267-e5d7914336a7",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-119-support-requests-section-and-status.md",
+    "sha": "6c422aebed2e974aea8b7be4a3fd86c4d926f694"
+  },
+  "baseline_sha": "194fa94e27f127e0c91d762daf827a7b0c3d6864",
+  "tested_sha": "e8a631164257b3581a3d73819a32683fe4dec9e3",
+  "branch": "server/t119-support-requests-section",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t119",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e677-9c47-7ee3-8846-63c508ee7f03",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Staff sees the queue in the «Обращения» section (registry of admin sections #23, journal §37 item 13). e2e web/tests/e2e/119-admin-support-queue.spec.ts: `admin` opens /admin/support?topic=copyright and sees the queue rows with the masked sender address t***r@example.test, no message text in the table and the unanswered counter; `owner` checks the status filter and the answered row leaves the list; `editor`, `moderator` and `analyst` receive HTTP 403 and see no table; the card under `owner` shows the full address and the message and an admin.read.personal row appears in the database with context 'support' and purpose 'admin.support.read' (journal §28.7). Domain-level permissions are covered by server/tests/admin-support.test.ts: admin and owner read the queue, the other service roles and an account get FORBIDDEN, a guest gets UNAUTHENTICATED, the list masks the address and hides the message with no audit row, the card returns both and writes the audit row."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "The sender sees the status of their own request in the cabinet (journal §37 item 2). e2e of the same file: on /me the zone dashboard-support shows «Принято» for the unanswered request and «Отвечено» for the answered one, and the message text is not in the zone. server/tests/admin-support.test.ts covers the selection itself: mySupportRequests returns only rows bound to the account by userId with the derived status, other accounts' and guest requests are excluded, and a guest gets UNAUTHENTICATED."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "The answer writes support.request.answered (events registry #91). server/tests/admin-support.test.ts: marking the request answered stores answeredAt and answeredById and logs support.request.answered with topic and status only — the entry carries neither the sender address nor the message; a second mark answers CONFLICT, keeps the first date and logs no second event; an unknown request answers NOT_FOUND and writes no event; `moderator` gets FORBIDDEN and no update is issued. The code was added to LOG_EVENT_CODES and is tied to the registry by the bijective test server/tests/event-code-registry.test.ts, whose filter required bringing the #91 status row to the fact."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 1009 passed / 58 skipped; web 764 passed; @altera/content 99 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "e2e": "playwright --project chromium --no-deps on a local disposable database t119_e2e: tests/e2e/119-admin-support-queue.spec.ts 5 passed; regression tests/e2e/59-about-contact.spec.ts + 30-account-dashboard.spec.ts + admin-dashboard.spec.ts + 22-admin-mail.spec.ts 49 passed",
+    "migrations": "passed: prisma validate reported a valid schema; prisma migrate deploy applied every migration to the disposable database t119_shadow and prisma migrate diff against the datamodel reported 'No difference detected'. Migrations were applied only to the local disposable databases t119_shadow and t119_e2e, never to development Neon",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36383890681",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg ran with the configured core.hooksPath=.husky/_"
+  },
+  "pr": {
+    "number": 338,
+    "url": "https://github.com/Egoka/Altera/pull/338",
+    "base_ref": "app",
+    "base_sha": "194fa94e27f127e0c91d762daf827a7b0c3d6864",
+    "head_sha": "e8a631164257b3581a3d73819a32683fe4dec9e3",
+    "merge_sha": "8c77f33d9b2f97dc298b23260a9fe9f9c8158c9b"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "The change carries a schema migration but there is no production environment in Russia yet (journal §34 item 1, T-103); migrations were applied only to local disposable databases."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-119.md",
+    "sha256": "56b7065e1064bd39caf9ea5a7ebca468273d4f2ca4c4675aac671c9f7ad688fb"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Owner question: docs/spec/00-registries/routes.md has no row for /admin/support. The registries are frozen (§28.3) and the owner's exception covers the admin sections registry (#23) and the events registry (#91), so the row was not added on a guess",
+    "Owner question: the product stores only the answered mark. Whether the answer text should be stored in the request and whether the sender should be notified of the status change by mail belongs to the mail stage (journal §42, stage F-05)",
+    "Owner question: registry row #23 sets the minimum role to admin and marks analyst read-only as unavailable ([ДОПУЩЕНИЕ]). The section is closed to editor, moderator and analyst entirely; opening a read-only view to analyst would be a registry change",
+    "There is no docs/spec/40-admin/*.md file for section #23 (the registry says 'не создан'). The screen follows the registry row and contact.md; the filter set, the page size and the absence of bulk operations are this task's [ДОПУЩЕНИЕ], not an approved section spec",
+    "Not done: search by sender address (a personal data search needs its own audit rule from the owner), bulk operations, notifying the sender about the answer, reply mail templates (F-05)",
+    "[Vue warn]: Failed to resolve component: NuxtLink lines in the «Формат, линт и тесты» job are pre-existing web suite noise: the T-118 run (36380094483) and this run (36383890681) both contain 85 such lines; this task neither added nor removed them"
+  ],
+  "usage": null
+}
