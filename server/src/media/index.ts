@@ -6,8 +6,15 @@ import { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingDeps } 
 import { createSharpImageProcessor } from "./sharp-processor"
 import { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "./store"
 import { acceptAvatarUpload, type AvatarUploadDeps, type AvatarUploadInput } from "./avatars"
+import { applyCoverFocal, type CoverFocalDeps } from "./covers"
 import { acceptMediaUpload, type AcceptUploadInput, type MediaUploadDeps } from "./upload"
-import type { ImageProcessor, MediaAssetRecord, MediaProcessingQueue, MediaTranslationLookup } from "./types"
+import type {
+  FocalPoint,
+  ImageProcessor,
+  MediaAssetRecord,
+  MediaProcessingQueue,
+  MediaTranslationLookup
+} from "./types"
 
 export { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingOutcome } from "./pipeline"
 export { acceptMediaUpload, isMediaLicense, MEDIA_LICENSES } from "./upload"
@@ -21,14 +28,43 @@ export {
   type AvatarUploadInput,
   type AvatarView
 } from "./avatars"
+export {
+  CARD_VARIANT_CROPS,
+  CENTER_FOCAL,
+  COVER_CROP_RATIOS,
+  COVER_CROPS,
+  coverCropRect,
+  focalCropRect,
+  focalOf,
+  isFocalShare,
+  sameFocal,
+  type ArticleCardVariant
+} from "./cover-crops"
+export {
+  applyCoverFocal,
+  coverAssetSelect,
+  coverViewOf,
+  isCoverReady,
+  type CoverAssetRecord,
+  type CoverView
+} from "./covers"
 export { detectImageFormat } from "./formats"
 export { AVATAR_VARIANT_WIDTHS, MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES, MIN_IMAGE_SIDE, VARIANT_WIDTHS } from "./limits"
-export { planVariants, variantWidthsFor, THUMBNAIL_WIDTH } from "./variant-matrix"
-export { ensureVariants, publicVariantSet, readVariantSet, type PublicVariant, type PublicVariantSet } from "./variants"
+export { planAllVariants, planCropVariants, planVariants, variantWidthsFor, THUMBNAIL_WIDTH } from "./variant-matrix"
+export {
+  cropsFor,
+  ensureVariants,
+  publicVariantSet,
+  readVariantSet,
+  type PublicVariant,
+  type PublicVariantSet
+} from "./variants"
 export { createSharpImageProcessor } from "./sharp-processor"
 export { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "./store"
 export {
   MediaRejectedError,
+  type CropRect,
+  type FocalPoint,
   type ImageProcessor,
   type MediaAssetRecord,
   type MediaAssetStore,
@@ -54,6 +90,12 @@ export interface MediaService {
    * файлом. Связь с аккаунтом ведёт `account/avatar.ts`, а не сервис медиа.
    */
   uploadAvatar(input: AvatarUploadInput): Promise<MediaAssetRecord>
+  /**
+   * Фокусная точка обложки и кадры карточек по ней (`article-covers.md` п. 3). Как и у аватара,
+   * очереди здесь нет: автор выбирает кадрирование с предпросмотром и должен увидеть результат
+   * выбора, а не обещание задания.
+   */
+  setCoverFocal(input: { assetId: string; focal: FocalPoint | null }): Promise<MediaAssetRecord>
 }
 
 export interface MediaServiceOptions {
@@ -106,12 +148,14 @@ export function createMediaService(options: MediaServiceOptions): MediaService {
 
   const uploadDeps: MediaUploadDeps = { store, storage: options.storage, queue }
   const avatarDeps: AvatarUploadDeps = { store, storage: options.storage, processor }
+  const coverDeps: CoverFocalDeps = { store, storage: options.storage, processor }
   return {
     uploadEnabled: options.uploadEnabled ?? false,
     mediaBaseUrl: options.mediaBaseUrl,
     translations: createPrismaTranslationLookup(options.client),
     upload: (input) => acceptMediaUpload(input, uploadDeps),
-    uploadAvatar: (input) => acceptAvatarUpload(input, avatarDeps)
+    uploadAvatar: (input) => acceptAvatarUpload(input, avatarDeps),
+    setCoverFocal: ({ assetId, focal }) => applyCoverFocal(assetId, focal, coverDeps)
   }
 }
 

@@ -1,8 +1,16 @@
 import { publicMediaUrl } from "../storage/access"
-import { parseStorageKey, variantKey, type VariantFormat } from "../storage/keys"
+import { parseStorageKey, variantKey, VARIANT_CROPS, type VariantCrop, type VariantFormat } from "../storage/keys"
 import type { ObjectStorage } from "../storage/types"
-import { planVariants, thumbnailWidthFor, type MasterSize } from "./variant-matrix"
-import type { ImageProcessor, MediaAssetRecord, MediaAssetStore, MediaVariantEntry, MediaVariantSet } from "./types"
+import { COVER_CROPS, focalOf, sameFocal } from "./cover-crops"
+import { planAllVariants, thumbnailWidthFor, type MasterSize } from "./variant-matrix"
+import type {
+  FocalPoint,
+  ImageProcessor,
+  MediaAssetRecord,
+  MediaAssetStore,
+  MediaVariantEntry,
+  MediaVariantSet
+} from "./types"
 
 // Шаг конвейера после мастера (`upload-pipeline.md` п. 5, `image-variants.md` §2 п. 2): из
 // мастер-файла делаются размытый заполнитель и публичные варианты матрицы в AVIF и WebP.
@@ -19,19 +27,42 @@ export const EMPTY_VARIANT_SET: MediaVariantSet = {
   version: 1,
   placeholder: null,
   thumbnailWidth: null,
+  focal: null,
   items: []
+}
+
+/**
+ * Кадры карточек собираются для записи с фокусной точкой. Фокус ставится только при выборе
+ * обложки (`setArticleCover`), поэтому признак назначения не заводится второй раз: в записи
+ * медиа его нет, его несёт связь в базе (`storage-layout.md` п. 3). Повторное задание очереди
+ * по той же причине не теряет кадры — фокус остаётся в записи.
+ */
+export function cropsFor(record: Pick<MediaAssetRecord, "focalX" | "focalY">): readonly VariantCrop[] {
+  // Проверка по типу, а не по `!== null`: у записи без фокуса поле может отсутствовать вовсе,
+  // и такая запись кадров не получает — иначе их собрал бы себе и аватар.
+  const set = typeof record.focalX === "number" && typeof record.focalY === "number"
+  return set ? COVER_CROPS : []
 }
 
 function isVariantEntry(value: unknown): value is MediaVariantEntry {
   if (typeof value !== "object" || value === null) return false
   const entry = value as Partial<MediaVariantEntry>
+  const cropKnown = entry.crop === undefined || (VARIANT_CROPS as readonly string[]).includes(entry.crop)
   return (
     (entry.format === "avif" || entry.format === "webp") &&
     typeof entry.width === "number" &&
     typeof entry.height === "number" &&
     typeof entry.key === "string" &&
-    typeof entry.byteSize === "number"
+    typeof entry.byteSize === "number" &&
+    cropKnown
   )
+}
+
+function readFocal(value: unknown): FocalPoint | null {
+  if (typeof value !== "object" || value === null) return null
+  const point = value as Partial<FocalPoint>
+  if (typeof point.x !== "number" || typeof point.y !== "number") return null
+  return { x: point.x, y: point.y }
 }
 
 /**
@@ -47,6 +78,7 @@ export function readVariantSet(value: unknown): MediaVariantSet {
     version: 1,
     placeholder: typeof stored.placeholder === "string" ? stored.placeholder : null,
     thumbnailWidth: typeof stored.thumbnailWidth === "number" ? stored.thumbnailWidth : null,
+    focal: readFocal(stored.focal),
     items: stored.items.filter(isVariantEntry)
   }
 }
@@ -68,6 +100,10 @@ async function masterSize(record: MediaAssetRecord, body: Buffer, processor: Ima
  *
  * Варианты прежней матрицы, которых нет в плане, в набор не переносятся; удаление их объектов —
  * шаг миграции набора ширин (§2 п. 6), а не обработки одного файла.
+ *
+ * Запись с фокусной точкой получает сверх базовых варианты-кадры под соотношения карточек
+ * (`article-covers.md` п. 3). Смена фокуса пересобирает только их: мастер и базовые варианты
+ * от фокуса не зависят (`image-variants.md` §2 п. 3).
  */
 export async function ensureVariants(
   record: MediaAssetRecord,
@@ -77,11 +113,17 @@ export async function ensureVariants(
   const master = await masterSize(record, masterBody, deps.processor)
   const known = readVariantSet(record.variants)
   const byKey = new Map(known.items.map((item) => [item.key, item]))
+  const crops = cropsFor(record)
+  const focal = crops.length > 0 ? focalOf(record) : null
+  // Ключ кадра фокуса не называет: при смене фокуса под тем же ключом должны лечь другие байты,
+  // поэтому прежние кадры не переиспользуются, даже когда объект в хранилище есть.
+  const cropsStale = !sameFocal(known.focal, focal)
 
   const set: MediaVariantSet = {
     version: 1,
     placeholder: known.placeholder,
     thumbnailWidth: thumbnailWidthFor(master, deps.variantWidths),
+    focal,
     items: []
   }
 
@@ -90,33 +132,47 @@ export async function ensureVariants(
       set.placeholder = (await deps.processor.createPlaceholder(masterBody)).dataUri
     }
 
-    for (const planned of planVariants(master, deps.variantWidths)) {
+    for (const planned of planAllVariants(master, {
+      widths: deps.variantWidths,
+      crops,
+      focal: focal ?? undefined
+    })) {
       const key = variantKey({
         assetId: record.id,
         createdAt: record.createdAt,
         width: planned.width,
-        format: planned.format
+        format: planned.format,
+        crop: planned.crop
       })
 
       const existing = byKey.get(key)
-      if (existing && (await deps.storage.exists(key))) {
+      const reusable = !planned.crop || !cropsStale
+      if (reusable && existing && (await deps.storage.exists(key))) {
         set.items.push(existing)
         continue
       }
 
-      const variant = await deps.processor.createVariant(masterBody, { width: planned.width, format: planned.format })
+      const variant = await deps.processor.createVariant(masterBody, {
+        width: planned.width,
+        format: planned.format,
+        crop: planned.rect
+      })
       await deps.storage.put(key, variant.body, { contentType: variant.mimeType })
       set.items.push({
         format: planned.format,
         width: variant.width,
         height: variant.height,
         key,
-        byteSize: variant.body.length
+        byteSize: variant.body.length,
+        ...(planned.crop ? { crop: planned.crop } : {})
       })
     }
   } catch (error) {
     // Часть набора уже в хранилище: без этой записи повтор не знал бы, что пересоздавать не нужно.
-    await deps.store.saveVariants(record.id, set)
+    // Новый фокус при этом не объявляется: под ключами недоделанных кадров ещё лежат байты
+    // прежнего фокуса, и повтор должен считать негодными все кадры, а не часть.
+    const unfinishedFocal = crops.length > 0 && cropsStale ? known.focal : focal
+    await deps.store.saveVariants(record.id, { ...set, focal: unfinishedFocal })
     throw error
   }
 
@@ -137,13 +193,19 @@ export async function isVariantSetIntact(
   const set = readVariantSet(record.variants)
   if (!set.placeholder) return false
 
+  const crops = cropsFor(record)
+  const focal = crops.length > 0 ? focalOf(record) : null
+  // Набор, нарезанный по другому фокусу, целым не считается: кадры карточек в нём не те.
+  if (!sameFocal(set.focal, focal)) return false
+
   const byKey = new Set(set.items.map((item) => item.key))
-  for (const planned of planVariants(master, variantWidths)) {
+  for (const planned of planAllVariants(master, { widths: variantWidths, crops, focal: focal ?? undefined })) {
     const key = variantKey({
       assetId: record.id,
       createdAt: record.createdAt,
       width: planned.width,
-      format: planned.format
+      format: planned.format,
+      crop: planned.crop
     })
     if (!byKey.has(key)) return false
     if (!(await storage.exists(key))) return false
@@ -157,6 +219,8 @@ export interface PublicVariant {
   width: number
   height: number
   url: string
+  /** Метка кадра карточки; без неё вариант сохраняет композицию мастера. */
+  crop?: VariantCrop
 }
 
 export interface PublicVariantSet {
@@ -183,7 +247,8 @@ export function publicVariantSet(value: unknown, mediaBaseUrl: string): PublicVa
         format: item.format,
         width: item.width,
         height: item.height,
-        url: publicMediaUrl(mediaBaseUrl, item.key)
+        url: publicMediaUrl(mediaBaseUrl, item.key),
+        ...(item.crop ? { crop: item.crop } : {})
       }))
   }
 }

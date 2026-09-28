@@ -20,6 +20,8 @@ const assetSelect = {
   alt: true,
   caption: true,
   variants: true,
+  focalX: true,
+  focalY: true,
   deletedAt: true,
   createdAt: true
 } as const
@@ -93,6 +95,15 @@ export function createPrismaMediaAssetStore(client: PrismaClient): MediaAssetSto
         where: { id },
         // Набор — единое значение колонки: частичный набор переписывает прежний целиком.
         data: { variants: variants as unknown as Prisma.InputJsonValue },
+        select: assetSelect
+      })
+    },
+
+    async saveFocal(id, focal) {
+      // Фокус пишется парой: половина точки кадр не задаёт, и `focalOf` такую пару читает как центр.
+      return client.mediaAsset.update({
+        where: { id },
+        data: { focalX: focal?.x ?? null, focalY: focal?.y ?? null },
         select: assetSelect
       })
     }

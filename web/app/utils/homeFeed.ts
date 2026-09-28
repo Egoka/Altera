@@ -29,7 +29,7 @@ export const toReadingArticle = (item: FeedCardFragment): ReadingArticle => ({
   title: item.title,
   slug: item.slug,
   dek: item.dek,
-  featuredImage: item.cover,
+  cover: item.cover,
   publishedAt: item.publishedAt,
   isTranslation: item.isTranslation,
   author: { name: item.author.name, slug: item.author.handle, grade: item.author.grade },

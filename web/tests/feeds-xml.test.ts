@@ -33,7 +33,7 @@ const item = (overrides: Partial<RssItem> = {}): RssItem => ({
   sectionName: "Культура",
   title: "Письмо о театре",
   dek: "Короткий дек",
-  cover: "/images/cover.jpg",
+  cover: { url: "/images/cover.jpg" },
   author: { name: "Иван Петров" },
   publishedAt: "2026-09-20T12:00:00.000Z",
   ...overrides

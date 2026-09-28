@@ -35,6 +35,7 @@ const record = (id: string, overrides: Record<string, unknown> = {}) => ({
   title: `Материал ${id}`,
   dek: null,
   featuredImage: null,
+  coverAsset: null,
   firstPublishedAt: new Date("2026-09-18T10:00:00.000Z"),
   sourceLocale: "ru",
   author: { name: "Автор", handle: "author", planTier: "standard" },
@@ -95,6 +96,7 @@ const callFeed = (
     {
       cache: new MemoryCache(),
       prisma: context.prisma,
+      media: { mediaBaseUrl: "https://media.example/altera" },
       requestId: "req-feed",
       currentUser: null
     } as never

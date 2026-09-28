@@ -125,9 +125,17 @@ export function createSharpImageProcessor(): ImageProcessor {
      * (§29.2). Ориентация и цветовой профиль в нём уже приведены, поэтому здесь остаётся только
      * масштабирование и кодирование. `withoutEnlargement` держит правило «не больше мастера»
      * даже если в план попала бо́льшая ширина.
+     *
+     * Кадр (`crop`) вырезается до масштабирования: обложка карточки — обрезка мастера по
+     * фокусной точке (`article-covers.md` п. 3), и уменьшать до обрезки значило бы терять
+     * пиксели, которые кадру ещё нужны.
      */
-    async createVariant(master, { width, format }) {
-      const pipeline = sharp(master, { failOn: "error" }).resize({ width, withoutEnlargement: true })
+    async createVariant(master, { width, format, crop }) {
+      const source = sharp(master, { failOn: "error" })
+      const cropped = crop
+        ? source.extract({ left: crop.x, top: crop.y, width: crop.width, height: crop.height })
+        : source
+      const pipeline = cropped.resize({ width, withoutEnlargement: true })
       const encoded =
         format === "avif"
           ? pipeline.avif({ quality: VARIANT_ENCODE_QUALITY.avif })

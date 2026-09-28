@@ -28,6 +28,8 @@ import {
   publicationDatesForStatus
 } from "../../visibility/article"
 import { randomUUID } from "node:crypto"
+import { articleCoverView, ensureCoverBeforeSubmit, setArticleCover } from "../../article/cover"
+import type { FocalPoint } from "../../media"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
 
@@ -48,6 +50,7 @@ interface MyArticleRecord {
   id: string
   status: string
   archivedByActorId: string | null
+  coverAssetId: string | null
   updatedAt: Date
   section: unknown
   format: unknown
@@ -72,6 +75,7 @@ const isoOrNull = (value: Date | null): string | null => value?.toISOString() ??
 const mapMyArticle = (article: MyArticleRecord, userId: string) => ({
   id: article.id,
   status: effectiveArticleStatus(article),
+  coverAssetId: article.coverAssetId,
   archivedBy:
     effectiveArticleStatus(article) === "archived" ? (article.archivedByActorId === userId ? "self" : "staff") : null,
   section: article.section,
@@ -786,6 +790,9 @@ export default {
         })
       }
       ensureActiveSection(article, ctx.requestId)
+      // Обложка обязательна перед публикацией (журнал §29.1, `article-edit.md` §4): подача без
+      // неё — `VALIDATION_ERROR`, и до публикации материал без карточки не доходит.
+      await ensureCoverBeforeSubmit(ctx, article.coverAssetId)
 
       return ctx.prisma.article.update({
         where: { id },
@@ -793,6 +800,12 @@ export default {
         include: { author: true, section: true, tags: true }
       })
     },
+
+    setArticleCover: async (
+      _parent: unknown,
+      args: { articleId: string; assetId?: string | null; focal?: FocalPoint | null },
+      ctx: GraphQLContext
+    ) => setArticleCover(ctx, { articleId: args.articleId, assetId: args.assetId ?? null, focal: args.focal ?? null }),
 
     revertToDraft: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureArticleAuthoringAccess(ctx, "translation.withdraw")
@@ -949,5 +962,24 @@ export default {
         handleAdminError(error, ctx.requestId, "article")
       }
     }
+  },
+
+  MyArticle: {
+    /**
+     * Обложка материала в кабинете автора. Черновик без обложки показывает заполнитель именно
+     * здесь и только здесь (`article-covers.md` п. 4): в лентах дефолтных изображений нет.
+     */
+    cover: (parent: { coverAssetId?: string | null }, _args: unknown, ctx: GraphQLContext) =>
+      articleCoverView(ctx, parent.coverAssetId ?? null)
+  },
+
+  Article: {
+    /**
+     * Обложка читается отдельным полем, а не приходит со статьёй: адреса вариантов собираются из
+     * ключей при чтении (`access-and-signed-urls.md` п. 9), и включать их в каждую выборку
+     * статьи незачем.
+     */
+    cover: (parent: { coverAssetId?: string | null }, _args: unknown, ctx: GraphQLContext) =>
+      articleCoverView(ctx, parent.coverAssetId ?? null)
   }
 }

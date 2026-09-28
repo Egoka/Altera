@@ -45,7 +45,12 @@ type FeedItem {
   sectionName: String!
   title: String!
   dek: String
-  cover: String
+  """
+  Обложка материала (`article-covers.md`): у опубликованного она есть всегда, дефолтных
+  изображений в лентах нет (журнал §29.1). `null` бывает только у материала, чья обложка ещё
+  обрабатывается или удалена. Карточка берёт из `variants` кадр своего варианта.
+  """
+  cover: ArticleCover
   author: FeedAuthor!
   publishedAt: String
   isTranslation: Boolean!

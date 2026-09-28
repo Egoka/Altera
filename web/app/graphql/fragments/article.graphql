@@ -14,7 +14,11 @@ fragment FeedCard on FeedItem {
   sectionName
   title
   dek
-  cover
+  cover {
+    url
+    alt
+    variants
+  }
   publishedAt
   isTranslation
   author {

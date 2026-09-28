@@ -12,6 +12,8 @@ import feedResolver, {
 
 const now = new Date("2026-09-20T12:00:00.000Z")
 const DAY_MS = 24 * 60 * 60 * 1000
+/** Префикс публичных адресов вариантов: ключи лежат в записи, домен подставляется при чтении. */
+const MEDIA_BASE_URL = "https://media.example/altera"
 
 class MemoryCache implements Cache {
   readonly mode = "noop" as const
@@ -43,6 +45,7 @@ const article = (overrides: Partial<FeedArticleRecord> & { id: string; daysAgo: 
   title: `Материал ${overrides.id}`,
   dek: null,
   featuredImage: null,
+  coverAsset: null,
   sourceLocale: "ru",
   author: { name: "Автор", handle: "author", planTier: "standard", planUntil: null },
   section: { slug: "culture", name: "Культура", nameEn: "Culture" },
@@ -55,7 +58,7 @@ const candidates = (count: number, daysAgo = 0) =>
 
 describe("подборки главной первого этапа", () => {
   it("отдаёт ровно пять материалов в топе и подпись «по дате публикации»", () => {
-    const sections = buildHomeSections(candidates(HOME_TOP_SIZE + 3), "ru", now)
+    const sections = buildHomeSections(candidates(HOME_TOP_SIZE + 3), "ru", now, MEDIA_BASE_URL)
     const top = sections.find((section) => section.key === "top")!
 
     expect(top.items).toHaveLength(HOME_TOP_SIZE)
@@ -64,7 +67,7 @@ describe("подборки главной первого этапа", () => {
   })
 
   it("не повторяет материал в двух подборках и добирает освободившееся место", () => {
-    const sections = buildHomeSections(candidates(HOME_TOP_SIZE + HOME_NEW_SIZE), "ru", now)
+    const sections = buildHomeSections(candidates(HOME_TOP_SIZE + HOME_NEW_SIZE), "ru", now, MEDIA_BASE_URL)
     const top = sections.find((section) => section.key === "top")!
     const fresh = sections.find((section) => section.key === "new")!
     const all = [...top.items, ...fresh.items].map((item) => item.id)
@@ -78,18 +81,19 @@ describe("подборки главной первого этапа", () => {
     const sections = buildHomeSections(
       [...candidates(HOME_TOP_SIZE, 0), article({ id: "old", daysAgo: HOME_NEW_WINDOW_DAYS + 1 })],
       "ru",
-      now
+      now,
+      MEDIA_BASE_URL
     )
 
     expect(sections.map((section) => section.key)).toEqual(["top"])
   })
 
   it("на пустой базе возвращает пустой список подборок без ошибки", () => {
-    expect(buildHomeSections([], "ru", now)).toEqual([])
+    expect(buildHomeSections([], "ru", now, MEDIA_BASE_URL)).toEqual([])
   })
 
   it("не показывает «Популярное» до контура вовлечённости", () => {
-    const sections = buildHomeSections(candidates(HOME_TOP_SIZE + HOME_NEW_SIZE), "ru", now)
+    const sections = buildHomeSections(candidates(HOME_TOP_SIZE + HOME_NEW_SIZE), "ru", now, MEDIA_BASE_URL)
 
     expect(sections.map((section) => section.key)).not.toContain("popular")
   })
@@ -101,7 +105,7 @@ describe("подборки главной первого этапа", () => {
       author: { name: "Про", handle: "pro-author", planTier: "pro", planUntil: new Date(now.getTime() + DAY_MS) }
     })
 
-    const [item] = buildHomeSections([proAuthor], "en", now)[0]!.items
+    const [item] = buildHomeSections([proAuthor], "en", now, MEDIA_BASE_URL)[0]!.items
 
     expect(item).toMatchObject({
       sectionSlug: "culture",
@@ -120,7 +124,7 @@ describe("подборки главной первого этапа", () => {
       author: { name: "Про", handle: "pro-author", planTier: "pro", planUntil: new Date(now.getTime() - DAY_MS) }
     })
 
-    const [item] = buildHomeSections([expired], "ru", now)[0]!.items
+    const [item] = buildHomeSections([expired], "ru", now, MEDIA_BASE_URL)[0]!.items
 
     expect(item!.author.grade).toBe("standard")
   })
@@ -128,7 +132,7 @@ describe("подборки главной первого этапа", () => {
   it("не выводит материал без рубрики: путь карточки без неё не собрать", () => {
     const orphan = { ...article({ id: "orphan", daysAgo: 0 }), section: null }
 
-    expect(buildHomeSections([orphan], "ru", now)).toEqual([])
+    expect(buildHomeSections([orphan], "ru", now, MEDIA_BASE_URL)).toEqual([])
   })
 })
 
@@ -146,6 +150,7 @@ describe("резолвер feed", () => {
     feedResolver.Query.feed({}, { scope: "home", locale }, {
       cache,
       prisma: { article: { findMany } },
+      media: { mediaBaseUrl: MEDIA_BASE_URL },
       requestId: "req-feed",
       currentUser: null
     } as never)

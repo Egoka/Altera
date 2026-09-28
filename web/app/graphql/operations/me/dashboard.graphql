@@ -24,6 +24,11 @@ fragment DashboardArticleFields on MyArticle {
   id
   status
   archivedBy
+  cover {
+    url
+    alt
+    variants
+  }
   section {
     id
     name

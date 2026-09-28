@@ -17,12 +17,17 @@
    * значением `sizes`: разных файлов под них нет (§2 п. 5).
    */
   import { computed } from "vue"
-  import { pictureSources } from "~/utils/mediaVariants"
+  import { pictureSources, type MediaVariantCrop } from "~/utils/mediaVariants"
 
   const props = withDefaults(
     defineProps<{
       /** Поле `variants` медиафайла как пришло из API. */
       variants: unknown
+      /**
+       * Кадр обложки под соотношение места использования (`article-covers.md` п. 3). Без него —
+       * исходная композиция; кадра нет в наборе — тоже исходная.
+       */
+      crop?: MediaVariantCrop | null
       /** Единое описание медиафайла; пустая строка — декоративное изображение. */
       alt: string
       /** Какую ширину займёт изображение в вёрстке места использования. */
@@ -32,6 +37,7 @@
       imgClass?: string
     }>(),
     {
+      crop: null,
       sizes: "100vw",
       loading: "lazy",
       fetchpriority: "auto",
@@ -39,7 +45,7 @@
     }
   )
 
-  const picture = computed(() => pictureSources(props.variants))
+  const picture = computed(() => pictureSources(props.variants, props.crop ?? null))
   // Размеры ставятся атрибутами, чтобы место под изображение резервировалось до его загрузки.
   const fallback = computed(() => picture.value.fallback)
   const placeholderStyle = computed(() =>

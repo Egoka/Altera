@@ -6,6 +6,7 @@ import { publicArticleWhere } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
 import { findPageAuthor, normalizeHandle } from "../author/resolver"
 import { authorGradeOf, type AuthorGrade } from "../../plans/plan-state"
+import { coverAssetSelect, coverViewOf, type CoverAssetRecord, type CoverView } from "../../media"
 
 type FeedLocale = "ru" | "en"
 type FeedScope = "home" | "section" | "tag" | "author" | "latest"
@@ -37,6 +38,7 @@ export interface FeedArticleRecord {
   sourceLocale: string
   author: { name: string; handle: string; planTier: string; planUntil: Date | null }
   section: { slug: string; name: string; nameEn: string | null } | null
+  coverAsset: CoverAssetRecord | null
 }
 
 interface FeedItem {
@@ -46,7 +48,7 @@ interface FeedItem {
   sectionName: string
   title: string
   dek: string | null
-  cover: string | null
+  cover: CoverView | null
   author: { name: string; handle: string; grade: AuthorGrade }
   publishedAt: string | null
   isTranslation: boolean
@@ -99,21 +101,32 @@ const feedArticleSelect = {
   firstPublishedAt: true,
   sourceLocale: true,
   author: { select: { name: true, handle: true, planTier: true, planUntil: true } },
-  section: { select: { slug: true, name: true, nameEn: true } }
+  section: { select: { slug: true, name: true, nameEn: true } },
+  coverAsset: { select: coverAssetSelect }
 } as const
 
 /** Слово локали с откатом на русское: `nameEn` у рубрики необязателен. */
 export const localizedName = (name: string, nameEn: string | null | undefined, locale: FeedLocale): string =>
   (locale === "en" ? nameEn : name) || name
 
-const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale, now = new Date()): FeedItem => ({
+/**
+ * Карточка ленты. Обложка приходит записью медиа и превращается в набор адресов здесь, а не
+ * полем-резолвером: лента лежит в публичном кеше целиком (`readThroughPublicCache`), и хранить
+ * в нём внутренние ключи хранилища значило бы собирать адреса на каждое чтение из кеша.
+ */
+const toFeedItem = (
+  article: FeedArticleRecord,
+  locale: FeedLocale,
+  mediaBaseUrl: string,
+  now = new Date()
+): FeedItem => ({
   id: article.id,
   slug: article.slug,
   sectionSlug: article.section!.slug,
   sectionName: localizedName(article.section!.name, article.section!.nameEn, locale),
   title: article.title,
   dek: article.dek,
-  cover: article.featuredImage,
+  cover: coverViewOf(article.coverAsset, mediaBaseUrl),
   author: {
     name: publicDisplayName(article.author.name, article.author.handle),
     handle: article.author.handle,
@@ -137,7 +150,8 @@ const toFeedItem = (article: FeedArticleRecord, locale: FeedLocale, now = new Da
 export const buildHomeSections = (
   articles: readonly FeedArticleRecord[],
   locale: FeedLocale,
-  now: Date
+  now: Date,
+  mediaBaseUrl: string
 ): FeedSection[] => {
   const ranked = articles.filter((article) => article.section !== null && article.firstPublishedAt !== null)
   const top = ranked.slice(0, HOME_TOP_SIZE)
@@ -150,10 +164,18 @@ export const buildHomeSections = (
   const sections: FeedSection[] = []
   // До запуска движка рейтинга топ — пять последних по дате с явной подписью (журнал §20.4).
   if (top.length > 0) {
-    sections.push({ key: "top", caption: "by_publication_date", items: top.map((a) => toFeedItem(a, locale, now)) })
+    sections.push({
+      key: "top",
+      caption: "by_publication_date",
+      items: top.map((a) => toFeedItem(a, locale, mediaBaseUrl, now))
+    })
   }
   if (fresh.length > 0) {
-    sections.push({ key: "new", caption: "by_publication_date", items: fresh.map((a) => toFeedItem(a, locale, now)) })
+    sections.push({
+      key: "new",
+      caption: "by_publication_date",
+      items: fresh.map((a) => toFeedItem(a, locale, mediaBaseUrl, now))
+    })
   }
   return sections
 }
@@ -225,7 +247,9 @@ const readFeedPage = async (
   })) as unknown as FeedArticleRecord[]
 
   // Материал без рубрики в ленту не попадает: путь его карточки без неё не собрать.
-  return articles.filter((article) => article.section !== null).map((article) => toFeedItem(article, locale))
+  return articles
+    .filter((article) => article.section !== null)
+    .map((article) => toFeedItem(article, locale, ctx.media.mediaBaseUrl))
 }
 
 const buildSectionFeed = async (
@@ -433,7 +457,9 @@ const buildLatestFeed = async (ctx: GraphQLContext, locale: FeedLocale, limit: n
 
   return {
     ...emptyFeed("latest", locale),
-    items: articles.filter((article) => article.section !== null).map((article) => toFeedItem(article, locale)),
+    items: articles
+      .filter((article) => article.section !== null)
+      .map((article) => toFeedItem(article, locale, ctx.media.mediaBaseUrl)),
     caption: "by_publication_date"
   }
 }
@@ -450,7 +476,10 @@ const buildHomeFeed = async (ctx: GraphQLContext, locale: FeedLocale): Promise<F
     select: feedArticleSelect
   })) as unknown as FeedArticleRecord[]
 
-  return { ...emptyFeed("home", locale), sections: buildHomeSections(articles, locale, new Date()) }
+  return {
+    ...emptyFeed("home", locale),
+    sections: buildHomeSections(articles, locale, new Date(), ctx.media.mediaBaseUrl)
+  }
 }
 
 export default {
