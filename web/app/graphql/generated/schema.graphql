@@ -593,6 +593,61 @@ enum AdminSummaryPeriod {
   DAYS_30
 }
 
+type AdminSupportRequest {
+  answeredAt: String
+  answeredBy: AdminSupportRequestActor
+  createdAt: String!
+
+  """
+  Адрес ответа: в списке — маска, полный адрес отдаёт только карточка, и её открытие пишется в
+  аудит `admin.read.personal` (журнал §28.7). У анонимного сообщения о битой ссылке адреса нет.
+  """
+  email: String
+
+  """Адрес отдан маской: полный адрес в этом ответе не раскрыт."""
+  emailMasked: Boolean!
+
+  """
+  Обращение оставил аккаунт: он видит статус в кабинете (журнал §37 п. 2).
+  """
+  fromAccount: Boolean!
+  id: ID!
+  locale: Locale!
+
+  """
+  Текст обращения — только карточка. В списке всегда `null`: иначе список был бы обходом записи
+  чтения персональных данных.
+  """
+  message: String
+
+  """Страница, о которой обращение (`contact.md` §3)."""
+  path: String
+
+  """`requestId` сбоя со страницы 500: ведёт сотрудника к записи ошибки."""
+  requestId: String
+  status: SupportRequestStatus!
+  ticketNo: Int!
+  topic: SupportTopic!
+}
+
+type AdminSupportRequestActor {
+  id: ID!
+  name: String!
+}
+
+input AdminSupportRequestFiltersInput {
+  status: SupportRequestStatus
+  topic: [SupportTopic!]
+}
+
+type AdminSupportRequestList {
+  items: [AdminSupportRequest!]!
+
+  """Сколько обращений ещё без ответа — счётчик очереди."""
+  openCount: Int!
+  pagination: PaginationInfo!
+}
+
 type Article {
   author: User!
   body: String!
@@ -1317,6 +1372,12 @@ type Mutation {
   _empty: String
   acceptConsent(privacyVersion: Int, termsVersion: Int, token: String!): VerifyMagicLinkResult!
   addBookmark(articleId: ID!): BookmarkState!
+
+  """
+  Отметка ответа: ответ уходит письмом на указанный адрес (`contact.md` §4), продукт фиксирует
+  факт ответа и пишет `support.request.answered` (events #91). Повторная отметка — `CONFLICT`.
+  """
+  answerSupportRequest(id: ID!): AdminSupportRequest!
   archiveArticle(id: ID!): Article!
   archiveFormat(id: ID!): AdminFormat!
   archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
@@ -1505,6 +1566,20 @@ type MyBookmarksConnection {
   pageInfo: BookmarksPageInfo!
 }
 
+type MySupportRequest {
+  answeredAt: String
+  createdAt: String!
+  id: ID!
+
+  """Страница, о которой обращение, если она была указана."""
+  path: String
+  status: SupportRequestStatus!
+
+  """Номер обращения из строки «Обращение №{ticketNo} принято»."""
+  ticketNo: Int!
+  topic: SupportTopic!
+}
+
 type PaginationInfo {
   currentPage: Int!
   hasNextPage: Boolean!
@@ -1636,6 +1711,8 @@ type Query {
   adminStaff(filters: AdminStaffFiltersInput): [AdminStaffMember!]!
   adminStaffMember(id: ID!): AdminStaffMember
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
+  adminSupportRequest(id: ID!): AdminSupportRequest
+  adminSupportRequests(filters: AdminSupportRequestFiltersInput, pagination: PaginationInput): AdminSupportRequestList!
   adminUser(id: ID!): AccountUser
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
@@ -1664,6 +1741,12 @@ type Query {
   myArticlesStats: UserArticleStats
   myBookmark(articleId: ID!): BookmarkState!
   myBookmarks(cursor: ID, limit: Int = 20, unavailable: Boolean): MyBookmarksConnection!
+
+  """
+  Свои обращения в кабинете (журнал §37 п. 2). Обращения гостя владельца не имеют и здесь не
+  показываются; ни адреса, ни текста ответа запрос не отдаёт.
+  """
+  mySupportRequests: [MySupportRequest!]!
   owners: [AdminOwner!]!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
@@ -1874,6 +1957,15 @@ type SupportRequestResult {
   Номер обращения для строки «Обращение №{ticketNo} принято» (`contact.md` §5 зона 4).
   """
   ticketNo: Int!
+}
+
+"""
+Статус обращения, который владелец аккаунта видит в кабинете (журнал §37 п. 2): «принято» до
+ответа сотрудника, «отвечено» после него.
+"""
+enum SupportRequestStatus {
+  answered
+  received
 }
 
 """

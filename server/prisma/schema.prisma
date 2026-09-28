@@ -61,6 +61,7 @@ model User {
   previousAvatar              MediaAsset?            @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
   reviewNotes                 ReviewNote[]           @relation("ReviewNoteCreator")
   supportRequests             SupportRequest[]
+  answeredSupportRequests     SupportRequest[]       @relation("SupportRequestAnswer")
 
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
@@ -765,9 +766,15 @@ model SupportRequest {
   /// Запрос, которым обращение создано, — для сверки с логом `support.request.created`.
   createdByRequestId String
   createdAt          DateTime     @default(now())
+  /// Отметка ответа сотрудника: `null` — «принято», дата — «отвечено» (журнал §37 п. 2).
+  /// Второго поля статуса нет: один факт — один источник правды.
+  answeredAt         DateTime?
+  answeredById       String?
+  answeredBy         User?        @relation("SupportRequestAnswer", fields: [answeredById], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([userId])
+  @@index([answeredAt])
   @@map("support_requests")
 }
 
