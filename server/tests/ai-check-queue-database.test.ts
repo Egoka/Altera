@@ -18,10 +18,9 @@ import { AI_CHECK_JOB_KIND, createPrismaAiCheckQueue } from "../src/ai/queue"
 import { createJobWorker } from "../src/jobs/job-worker"
 import { createPrismaJobStore } from "../src/jobs/prisma-job-store"
 import type { AppLogger } from "../src/observability/logger"
-import { applyBaselineMigrations, applyMigration } from "./helpers/migration-database"
+import { applyAllMigrations } from "./helpers/migration-database"
 
 const testDatabaseUrl = process.env.T048_TEST_DATABASE_URL
-const targetMigration = "20260928150000_ai_check_result"
 
 const databaseUrl = (name: string): string => {
   const url = new URL(testDatabaseUrl!)
@@ -37,9 +36,9 @@ const withDatabase = async (run: (database: PrismaClient) => Promise<void>): Pro
   const url = databaseUrl(name)
   try {
     await admin.$executeRawUnsafe(`CREATE DATABASE "${name}"`)
-    applyBaselineMigrations(targetMigration, url)
-    const migration = applyMigration(targetMigration, url)
-    expect(migration.status, `${migration.stdout}\n${migration.stderr}`).toBe(0)
+    // Тест идёт через Prisma-клиент действующей схемы, поэтому нужны все миграции, а не срез
+    // до `20260928150000_ai_check_result`: иначе клиент ждёт колонок более поздних миграций.
+    applyAllMigrations(url)
     const database = prismaFor(url)
     try {
       await run(database)
