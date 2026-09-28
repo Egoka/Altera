@@ -42,6 +42,17 @@ export interface MasterImage {
   height: number
 }
 
+/**
+ * Квадрат кадра в пикселях исходного изображения: левый верхний угол и сторона. Кадрирование
+ * выбирает автор с предпросмотром (`image-variants.md` §2 п. 3, `avatars.md` п. 3), поэтому
+ * прямоугольник приходит снаружи, а не выводится обработчиком.
+ */
+export interface SquareCrop {
+  x: number
+  y: number
+  size: number
+}
+
 /** Публичный вариант: готовые к раздаче байты одного размера в одном формате (журнал §29.4). */
 export interface VariantImage {
   body: Buffer
@@ -65,7 +76,8 @@ export interface PlaceholderImage {
  * Обработчик изображений. `inspect` отвечает за целостность и фактические свойства,
  * `createMaster` — за безопасный мастер: без метаданных, с применённой ориентацией EXIF и единым
  * цветовым профилем (заметка владельца п. 3–4, журнал §29.2); `createVariant` и
- * `createPlaceholder` — за производные из мастера (§29.4, ADR-0030 п. 1).
+ * `createPlaceholder` — за производные из мастера (§29.4, ADR-0030 п. 1); `cropSquare` — за
+ * кадр, выбранный автором до мастера (`avatars.md` п. 3).
  */
 export interface ImageProcessor {
   readonly name: string
@@ -73,6 +85,11 @@ export interface ImageProcessor {
   createMaster(bytes: Buffer, inspection: ImageInspection): Promise<MasterImage>
   createVariant(master: Buffer, spec: { width: number; format: VariantFormat }): Promise<VariantImage>
   createPlaceholder(master: Buffer): Promise<PlaceholderImage>
+  /**
+   * Квадрат исходника теми же байтами формата, что и вход: кадр применяется до конвейера, а
+   * снятие метаданных и единый профиль остаются шагом мастера, а не этой операции.
+   */
+  cropSquare(bytes: Buffer, crop: SquareCrop): Promise<Buffer>
 }
 
 /** Один вариант в записи медиа: ключ хранилища, не адрес (`access-and-signed-urls.md` п. 9). */
@@ -140,7 +157,12 @@ export interface SaveMasterInput {
 /** Истина о файле — запись в базе (`storage-layout.md` п. 2), поэтому статусы ведёт этот порт. */
 export interface MediaAssetStore {
   findById(id: string): Promise<MediaAssetRecord | null>
-  /** Дедупликация по `sha256` в пределах владельца (`storage-layout.md` п. 6). */
+  /**
+   * Дедупликация по `sha256` в пределах владельца (`storage-layout.md` п. 6). Файлы, связанные
+   * как текущий или предыдущий аватар, в поиск не попадают: у аватара свой квадратный набор
+   * вариантов и нет атрибуции, и отдать его как медиа статьи значило бы обойти обязательную
+   * лицензию (`avatars.md` п. 2, `image-variants.md` §3).
+   */
   findByChecksum(input: { ownerId: string; sha256: string }): Promise<MediaAssetRecord | null>
   create(input: CreateMediaAssetInput): Promise<MediaAssetRecord>
   setStatus(id: string, status: MediaProcessingStatus): Promise<MediaAssetRecord>

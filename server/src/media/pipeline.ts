@@ -17,6 +17,12 @@ export interface MediaProcessingDeps {
   store: MediaAssetStore
   storage: ObjectStorage
   processor: ImageProcessor
+  /**
+   * Набор ширин вариантов. По умолчанию — матрица медиа статьи; аватар передаёт свои квадратные
+   * размеры (`avatars.md` п. 3, `image-variants.md` §3). Признака назначения в записи нет: его
+   * несёт связь в базе (`storage-layout.md` п. 3), поэтому вид файла знает вызывающий.
+   */
+  variantWidths?: readonly number[]
 }
 
 export type MediaProcessingOutcome =
@@ -33,7 +39,7 @@ export type MediaProcessingOutcome =
  * Пороги содержимого проверяются здесь, а не в мутации: число пикселей известно только после
  * декодирования. Числа — предложение архитектора (`limits.ts`, журнал §33 п. 3).
  */
-function assertAcceptable(inspection: ImageInspection): void {
+export function assertAcceptableImage(inspection: ImageInspection): void {
   if (inspection.frames > 1) {
     throw new MediaRejectedError("file.animation", "Animated images are out of this pass")
   }
@@ -63,7 +69,7 @@ async function createMaster(
   }
 
   const inspection = await deps.processor.inspect(quarantined.body)
-  assertAcceptable(inspection)
+  assertAcceptableImage(inspection)
 
   const master = await deps.processor.createMaster(quarantined.body, inspection)
   const target = masterKey({ assetId: record.id, createdAt: record.createdAt, extension: master.extension })
@@ -84,7 +90,7 @@ async function createMaster(
  */
 async function completeVariants(record: MediaAssetRecord, deps: MediaProcessingDeps): Promise<void> {
   const size = record.width && record.height ? { width: record.width, height: record.height } : null
-  if (size && (await isVariantSetIntact(record, size, deps.storage))) return
+  if (size && (await isVariantSetIntact(record, size, deps.storage, deps.variantWidths))) return
 
   const master = await deps.storage.get(record.storageKey)
   // Мастер только что был на месте (`findExistingMaster`): пропал между проверкой и чтением.

@@ -41,10 +41,12 @@
         :alt="author.name"
         width="128"
         height="128"
+        data-testid="author-avatar"
         class="size-32 shrink-0 rounded-full object-cover" />
       <span
         v-else
         aria-hidden="true"
+        data-testid="author-initials"
         class="flex size-32 shrink-0 items-center justify-center rounded-full bg-zinc-100 font-waterway text-3xl text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
         {{ initials }}
       </span>

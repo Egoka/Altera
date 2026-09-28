@@ -135,6 +135,37 @@ pnpm --filter nuxt-app exec playwright test --project chromium --no-deps \
 и запросы браузера, и разметку. Тот же запрет проверяется grep по сборке — единственное вхождение
 `_ipx` в `web/.output` это строка `Disallow: /_ipx/` в `robots.txt` (T-098).
 
+## Аватары
+
+```bash
+pnpm --filter server exec vitest run tests/media-avatar-upload.test.ts \
+  tests/media-avatar-sharp.test.ts tests/account-avatar.test.ts tests/avatar-schema-contract.test.ts
+pnpm --filter nuxt-app exec playwright test --project chromium --no-deps \
+  tests/e2e/65-avatar.spec.ts
+```
+
+Аватар (T-065) идёт тем же конвейером, что и медиа статьи, с двумя отличиями: кадр автора
+применяется до карантина, поэтому мастер уже квадратный, а обработка выполняется синхронно — по
+журналу §29.5 новая версия применяется публично сразу, и мутация отвечает готовой записью.
+Квадратный набор `[ДОПУЩЕНИЕ]` 64/128/256/512 (`avatars.md` п. 3) задаётся
+`AVATAR_VARIANT_WIDTHS` и приходит в конвейер параметром: признака назначения в записи медиа нет,
+его несёт связь в базе (`storage-layout.md` п. 3).
+
+Наборы на двойниках проверяют кадр по умолчанию (наибольший центральный квадрат), границы кадра,
+отказ содержимого как `VALIDATION_ERROR`, квадратные ширины и адрес наибольшего варианта WebP;
+`media-avatar-sharp.test.ts` — те же правила на настоящем `sharp`, включая кадр по изображению с
+применённой ориентацией EXIF. `account-avatar.test.ts` проверяет применение и предыдущую версию,
+удаление до инициалов, `FORBIDDEN` служебной записи (журнал §25.2) и откат рецензентом: запись
+`profile.check` (#85) с `verdict: reverted`, `CONFLICT` без предыдущей версии и отказ автору
+(матрица #120).
+
+Браузерный сценарий проходит путь целиком: файл уходит в API multipart-запросом GraphQL, а гость
+без сессии получает вариант на `/authors/{handle}` и тот же файл из раздачи `/media` — без
+участия рецензента. Загрузка закрыта признаком `MEDIA_UPLOAD_ENABLED` (журнал §33 п. 3), поэтому
+`web/playwright.config.ts` открывает её тестовому API и задаёт `STORAGE_MEDIA_BASE_URL` на том же
+адресе, что и API. Исходник лежит файлом `web/tests/e2e/fixtures/avatar-source.jpg`: `sharp` —
+зависимость сервера, в рабочем пространстве веба её нет.
+
 ## Вход по паролю
 
 ```bash

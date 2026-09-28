@@ -33,8 +33,19 @@ export function createPrismaMediaAssetStore(client: PrismaClient): MediaAssetSto
     async findByChecksum({ ownerId, sha256 }) {
       // Один и тот же файл мог загружаться несколько раз до того, как дедупликация появилась:
       // берётся самая старая запись, чтобы результат не зависел от порядка чтения.
+      //
+      // Аватары исключены связью, а не признаком в записи: назначение файла определяет связь в
+      // базе (`storage-layout.md` п. 3). У аватара свой квадратный набор вариантов и пустая
+      // атрибуция (`avatars.md` п. 2–3), поэтому отдать его как медиа статьи значило бы и
+      // показать обрезанный кадр, и обойти обязательную лицензию.
       return client.mediaAsset.findFirst({
-        where: { ownerId, sha256, deletedAt: null },
+        where: {
+          ownerId,
+          sha256,
+          deletedAt: null,
+          currentAvatarUsers: { none: {} },
+          previousAvatarUsers: { none: {} }
+        },
         orderBy: { createdAt: "asc" },
         select: assetSelect
       })

@@ -14,6 +14,7 @@ import {
   type ImageProcessor,
   type MasterImage,
   type PlaceholderImage,
+  type SquareCrop,
   type VariantImage
 } from "./types"
 
@@ -62,8 +63,13 @@ export function createSharpImageProcessor(): ImageProcessor {
 
       // При `animated: true` высота — сумма кадров, поэтому размер кадра берётся из `pageHeight`.
       const frames = metadata.pages ?? 1
-      const width = metadata.width ?? 0
-      const height = metadata.pageHeight ?? metadata.height ?? 0
+      const stored = { width: metadata.width ?? 0, height: metadata.pageHeight ?? metadata.height ?? 0 }
+      // Ориентация EXIF 5–8 разворачивает кадр на четверть оборота: в файле стороны записаны
+      // до разворота, а видят изображение — и выбирают по нему кадр — уже после. Мастер тоже
+      // применяет ориентацию, поэтому сведения описывают изображение так, как оно выглядит.
+      const turned = (metadata.orientation ?? 1) >= 5
+      const width = turned ? stored.height : stored.width
+      const height = turned ? stored.width : stored.height
       if (width < 1 || height < 1) {
         throw new MediaRejectedError("file.integrity", "Image has no readable dimensions")
       }
@@ -76,6 +82,23 @@ export function createSharpImageProcessor(): ImageProcessor {
         hasMetadata: Boolean(metadata.exif || metadata.icc || metadata.iptc || metadata.xmp)
       }
       return inspection
+    },
+
+    /**
+     * Кадр автора (`avatars.md` п. 3). Байты остаются в исходном формате и с исходными
+     * метаданными: их снимает мастер, и делать это дважды незачем. `rotate()` нужен здесь
+     * потому, что координаты кадра автор выбирал по изображению, уже развёрнутому по EXIF, —
+     * без разворота квадрат лёг бы не туда, где его видел автор.
+     */
+    async cropSquare(bytes, crop: SquareCrop) {
+      try {
+        return await sharp(bytes, { failOn: "error" })
+          .rotate()
+          .extract({ left: crop.x, top: crop.y, width: crop.size, height: crop.size })
+          .toBuffer()
+      } catch (error) {
+        throw new MediaRejectedError("file.crop", `Image could not be cropped: ${String(error)}`)
+      }
     },
 
     async createMaster(bytes, inspection) {

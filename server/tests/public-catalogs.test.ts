@@ -31,7 +31,14 @@ class MemoryCache implements Cache {
 }
 
 const context = (prisma: unknown) =>
-  ({ cache: new MemoryCache(), prisma, requestId: "req-catalog", currentUser: null }) as never
+  ({
+    cache: new MemoryCache(),
+    prisma,
+    requestId: "req-catalog",
+    currentUser: null,
+    // Публичный аватар — вариант записи медиа, поэтому профилю нужен префикс адресов.
+    media: { mediaBaseUrl: "https://media.altera.test" }
+  }) as never
 
 const tagRow = (slug: string, name: string, articles: number, nameEn = name) => ({
   slug,

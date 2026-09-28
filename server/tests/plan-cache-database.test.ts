@@ -98,7 +98,14 @@ const seedUser = async (
 
 /** Контекст запроса от лица сотрудника: раздел грантов читает только `prisma` и `currentUser`. */
 const ctxFor = (db: PrismaClient, currentUser: unknown): GraphQLContext =>
-  ({ prisma: db, currentUser, requestId: `req-${randomUUID()}`, cache: new NoopCache() }) as unknown as GraphQLContext
+  ({
+    prisma: db,
+    currentUser,
+    requestId: `req-${randomUUID()}`,
+    cache: new NoopCache(),
+    // Публичный профиль собирает адрес аватара из вариантов записи медиа (T-065).
+    media: { mediaBaseUrl: "https://media.altera.test" }
+  }) as unknown as GraphQLContext
 
 const planCache = async (db: PrismaClient, id: string) =>
   db.user.findUniqueOrThrow({ where: { id }, select: { role: true, planTier: true, planUntil: true } })

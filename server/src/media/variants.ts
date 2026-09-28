@@ -11,6 +11,8 @@ export interface VariantGenerationDeps {
   store: MediaAssetStore
   storage: ObjectStorage
   processor: ImageProcessor
+  /** Набор ширин: по умолчанию матрица статьи, у аватара — квадратные размеры (`avatars.md` п. 3). */
+  variantWidths?: readonly number[]
 }
 
 export const EMPTY_VARIANT_SET: MediaVariantSet = {
@@ -79,7 +81,7 @@ export async function ensureVariants(
   const set: MediaVariantSet = {
     version: 1,
     placeholder: known.placeholder,
-    thumbnailWidth: thumbnailWidthFor(master),
+    thumbnailWidth: thumbnailWidthFor(master, deps.variantWidths),
     items: []
   }
 
@@ -88,7 +90,7 @@ export async function ensureVariants(
       set.placeholder = (await deps.processor.createPlaceholder(masterBody)).dataUri
     }
 
-    for (const planned of planVariants(master)) {
+    for (const planned of planVariants(master, deps.variantWidths)) {
       const key = variantKey({
         assetId: record.id,
         createdAt: record.createdAt,
@@ -129,13 +131,14 @@ export async function ensureVariants(
 export async function isVariantSetIntact(
   record: MediaAssetRecord,
   master: MasterSize,
-  storage: ObjectStorage
+  storage: ObjectStorage,
+  variantWidths?: readonly number[]
 ): Promise<boolean> {
   const set = readVariantSet(record.variants)
   if (!set.placeholder) return false
 
   const byKey = new Set(set.items.map((item) => item.key))
-  for (const planned of planVariants(master)) {
+  for (const planned of planVariants(master, variantWidths)) {
     const key = variantKey({
       assetId: record.id,
       createdAt: record.createdAt,
