@@ -559,7 +559,17 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
     data: { translationId: submitted.current.id, status: submitted.targetStatus }
   })
 
-  return toView(ctx, { ...submitted.current, status: submitted.targetStatus, updatedAt: now }, user, now)
+  return toView(
+    ctx,
+    {
+      ...submitted.current,
+      status: submitted.targetStatus,
+      updatedAt: now,
+      revisions: [{ id: submitted.revisionId }]
+    },
+    user,
+    now
+  )
 }
 
 async function ensureImageLicenses(

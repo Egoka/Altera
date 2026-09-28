@@ -401,6 +401,7 @@ describe("T-040 подача к публикации", () => {
     const result = await submitTranslation(context(prisma), "translation-1")
 
     expect(result.status).toBe("ai_check")
+    expect(result.currentRevisionId).toBe("revision-9")
     expect(prisma.articleTranslation.updateMany).toHaveBeenCalledWith({
       where: { id: "translation-1", status: "draft", rejected: false },
       data: { status: "ai_check" }
@@ -509,6 +510,7 @@ describe("T-040 подача к публикации", () => {
     const result = await submitTranslation(context(prisma), "translation-1")
 
     expect(result.status).toBe("ai_check")
+    expect(result.currentRevisionId).toBe("revision-10")
     expect(prisma.articleRevision.create).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ translationId: "translation-1", kind: "manual" }) })
     )
