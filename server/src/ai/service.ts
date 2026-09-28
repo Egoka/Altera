@@ -13,6 +13,7 @@
 import { randomUUID } from "node:crypto"
 import type { Prisma, Locale } from "../generated/prisma"
 import type { AppLogger } from "../observability/logger"
+import { aiCostBucket } from "./cost"
 import { renderAiDecisionComment } from "./reasons"
 import { buildAiCheckSubmission, loadAiCheckSource } from "./submission"
 import { AI_CHECK_OBJECT_TYPE, type AiCheckStore } from "./store"
@@ -23,6 +24,8 @@ import {
   type AiCheckSubmission,
   type AiCheckVerdict
 } from "./types"
+
+export { aiCostBucket } from "./cost"
 
 export interface RunAiCheckInput {
   jobId: string
@@ -56,15 +59,6 @@ function errorClassOf(error: unknown): string {
   const name = error instanceof Error ? error.name : ""
   if (errorClassPattern.test(name)) return name
   return error instanceof Error ? error.constructor.name : "UnknownError"
-}
-
-/**
- * Суточная корзина агрегата в UTC `[ДОПУЩЕНИЕ]`: `AiCostAggregate` требует границ периода, а
- * спецификация величину корзины не задаёт — раздел показывает стоимость «за период» (§27.4).
- */
-export function aiCostBucket(at: Date): { bucketStart: Date; bucketEnd: Date } {
-  const bucketStart = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()))
-  return { bucketStart, bucketEnd: new Date(bucketStart.getTime() + 24 * 60 * 60 * 1_000) }
 }
 
 function reasonsJson(result: AiCheckResult): Prisma.InputJsonValue {

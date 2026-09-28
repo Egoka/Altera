@@ -107,6 +107,30 @@ export function createPrismaMediaAssetStore(client: PrismaClient): MediaAssetSto
         data: { focalX: focal?.x ?? null, focalY: focal?.y ?? null },
         select: assetSelect
       })
+    },
+
+    async saveAltWithAudit({ assetId, alt, audit }) {
+      // Одна транзакция: исправление администратора без записи в журнале недопустимо (#75).
+      return client.$transaction(async (transaction) => {
+        const saved = await transaction.mediaAsset.update({
+          where: { id: assetId },
+          data: { alt },
+          select: assetSelect
+        })
+        await transaction.auditLog.create({
+          data: {
+            action: audit.action,
+            actorId: audit.actorId,
+            actorRole: audit.actorRole,
+            entityType: audit.entityType,
+            entityId: audit.entityId,
+            diff: audit.diff as Prisma.InputJsonValue,
+            requestId: audit.requestId
+          },
+          select: { id: true }
+        })
+        return saved
+      })
     }
   }
 }

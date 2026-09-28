@@ -1,4 +1,4 @@
-import type { MediaLicense, MediaProcessingStatus } from "../generated/prisma"
+import type { MediaLicense, MediaProcessingStatus, Role } from "../generated/prisma"
 import type { MasterExtension, VariantCrop, VariantFormat } from "../storage/keys"
 
 // Порты конвейера загрузки (`upload-pipeline.md` п. 5, журнал §29.2, §29.12). Библиотека
@@ -202,10 +202,40 @@ export interface MediaAssetStore {
   saveVariants(id: string, variants: MediaVariantSet): Promise<MediaAssetRecord>
   /** Фокусная точка — свойство медиафайла (`media.update.meta`, матрица #40). */
   saveFocal(id: string, focal: FocalPoint | null): Promise<MediaAssetRecord>
+  /**
+   * Исправление `alt` администратором вместе с записью аудита — одной транзакцией: исправление
+   * без следа в журнале недопустимо (матрица #40, реестр #75). Обычного пути записи `alt` у
+   * этого порта нет: описание создаёт шаг AI (журнал §29.13).
+   */
+  saveAltWithAudit(input: { assetId: string; alt: string; audit: MediaAuditEntry }): Promise<MediaAssetRecord>
+}
+
+/**
+ * Запись журнала администратора о медиафайле. Поля повторяют колонки `AuditLog`; состав `diff`
+ * задаёт общая оболочка `admin.change` (реестр #75): `entity`, `entityId`, `fields` со
+ * значениями до и после.
+ */
+export interface MediaAuditEntry {
+  action: string
+  actorId: string
+  actorRole: Role
+  entityType: string
+  entityId: string
+  diff: Record<string, unknown>
+  requestId: string
 }
 
 export interface MediaProcessingQueue {
   enqueue(input: { assetId: string; requestId: string }): Promise<void>
+}
+
+/**
+ * Постановка задания AI-описания `alt` после готовности файла (журнал §29.11,
+ * `upload-pipeline.md` п. 6а). Порт, а не прямая связь с модулем AI: конвейеру важно только то,
+ * что задание поставлено, а вид модели и запись AI-процесса — дело самого шага.
+ */
+export interface MediaAltQueue {
+  enqueue(input: { assetId: string; requestId: string | null }): Promise<void>
 }
 
 /** Права на медиа версии статьи: автор версии, редакционные — по праву `editorial` (матрица #39). */

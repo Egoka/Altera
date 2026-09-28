@@ -14,18 +14,33 @@ import {
 import { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingDeps } from "./pipeline"
 import { createSharpImageProcessor } from "./sharp-processor"
 import { createPrismaMediaAssetStore, createPrismaMediaOrphanStore, createPrismaTranslationLookup } from "./store"
+import { applyAdminAlt, type AdminAltActor } from "./alt"
 import { acceptAvatarUpload, type AvatarUploadDeps, type AvatarUploadInput } from "./avatars"
 import { applyCoverFocal, type CoverFocalDeps } from "./covers"
 import { acceptMediaUpload, type AcceptUploadInput, type MediaUploadDeps } from "./upload"
 import type {
   FocalPoint,
   ImageProcessor,
+  MediaAltQueue,
   MediaAssetRecord,
   MediaProcessingQueue,
   MediaTranslationLookup
 } from "./types"
 
-export { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingOutcome } from "./pipeline"
+export {
+  MEDIA_PROCESS_JOB_KIND,
+  runMediaProcessing,
+  type MediaProcessingOptions,
+  type MediaProcessingOutcome
+} from "./pipeline"
+export {
+  applyAdminAlt,
+  MAX_ALT_LENGTH,
+  MEDIA_ASSET_ENTITY,
+  MEDIA_META_ACTION,
+  type AdminAltActor,
+  type ApplyAdminAltInput
+} from "./alt"
 export { acceptMediaUpload, isMediaLicense, MEDIA_LICENSES } from "./upload"
 export {
   acceptAvatarUpload,
@@ -87,8 +102,10 @@ export {
   type CropRect,
   type FocalPoint,
   type ImageProcessor,
+  type MediaAltQueue,
   type MediaAssetRecord,
   type MediaAssetStore,
+  type MediaAuditEntry,
   type MediaProcessingQueue,
   type MediaTranslationLookup,
   type SquareCrop,
@@ -117,6 +134,11 @@ export interface MediaService {
    * выбора, а не обещание задания.
    */
   setCoverFocal(input: { assetId: string; focal: FocalPoint | null }): Promise<MediaAssetRecord>
+  /**
+   * Исправление описания `alt` администратором — редкое исключение из «описание создаёт
+   * конвейер» (журнал §29.13, матрица #40). Права проверяет резолвер, аудит пишет сервис.
+   */
+  updateAlt(input: { assetId: string; alt: string; actor: AdminAltActor; requestId: string }): Promise<MediaAssetRecord>
 }
 
 export interface MediaServiceOptions {
@@ -130,6 +152,11 @@ export interface MediaServiceOptions {
    * не открывается. Признак держит это ограничение в коде, а не только в отсутствии интерфейса.
    */
   uploadEnabled?: boolean
+  /**
+   * Очередь AI-описания (`upload-pipeline.md` п. 6а). Без неё конвейер работает как прежде, а
+   * `alt` остаётся пустым: описание — шаг обработки, а не свойство, которое кто-то вводит.
+   */
+  altQueue?: MediaAltQueue
 }
 
 export function createMediaProcessingQueue(jobStore: Pick<PrismaJobStore, "enqueue">): MediaProcessingQueue {
@@ -156,7 +183,7 @@ export function registerMediaProcessingJob(deps: MediaProcessingDeps): void {
   registerJobHandler(MEDIA_PROCESS_JOB_KIND, async (job) => {
     const assetId = readAssetId(job.parameters)
     if (!assetId) throw new Error(`${MEDIA_PROCESS_JOB_KIND} job without assetId`)
-    await runMediaProcessing(assetId, deps)
+    await runMediaProcessing(assetId, deps, { originRequestId: job.originRequestId })
   })
 }
 
@@ -201,7 +228,7 @@ export function createMediaService(options: MediaServiceOptions): MediaService {
   const store = createPrismaMediaAssetStore(options.client)
   const processor = options.processor ?? createSharpImageProcessor()
   const queue = createMediaProcessingQueue(options.jobStore)
-  registerMediaProcessingJob({ store, storage: options.storage, processor })
+  registerMediaProcessingJob({ store, storage: options.storage, processor, altQueue: options.altQueue })
 
   const uploadDeps: MediaUploadDeps = { store, storage: options.storage, queue }
   const avatarDeps: AvatarUploadDeps = { store, storage: options.storage, processor }
@@ -212,7 +239,8 @@ export function createMediaService(options: MediaServiceOptions): MediaService {
     translations: createPrismaTranslationLookup(options.client),
     upload: (input) => acceptMediaUpload(input, uploadDeps),
     uploadAvatar: (input) => acceptAvatarUpload(input, avatarDeps),
-    setCoverFocal: ({ assetId, focal }) => applyCoverFocal(assetId, focal, coverDeps)
+    setCoverFocal: ({ assetId, focal }) => applyCoverFocal(assetId, focal, coverDeps),
+    updateAlt: (input) => applyAdminAlt(input, { store })
   }
 }
 

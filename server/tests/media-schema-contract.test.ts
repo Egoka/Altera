@@ -73,6 +73,25 @@ describe("T-063 контракт uploadMedia", () => {
     )
   })
 
+  // T-067, критерий готовности 2: `alt` не входит в аргументы `uploadMedia` и `updateMediaMeta`.
+  // Описание создаёт конвейер один раз, автор его не задаёт и не редактирует (журнал §29.13),
+  // поэтому единственная точка, где `alt` приходит аргументом, — исправление администратором.
+  it("`alt` не входит в аргументы `uploadMedia` и `updateMediaMeta`", () => {
+    const fields = mergedSchema.getMutationType()!.getFields()
+
+    for (const name of ["uploadMedia", "updateMediaMeta"]) {
+      const args = fields[name]?.args.map((argument) => argument.name) ?? []
+      expect(args).not.toContain("alt")
+    }
+
+    // Список держит границу и для мутаций, которых ещё нет: `updateMediaMeta` появится вместе с
+    // редактором свойств медиа и с аргументом `alt` этот список уже не совпадёт.
+    const withAltArgument = Object.values(fields)
+      .filter((field) => field.args.some((argument) => argument.name === "alt"))
+      .map((field) => field.name)
+    expect(withAltArgument).toEqual(["adminUpdateMediaAlt"])
+  })
+
   it("скаляр File принимает файл multipart-запроса и отдаёт его байты конвейеру", async () => {
     // Сборка и исполнение те же, что в процессе API: `createSchema` и `createYoga` из graphql-yoga,
     // а запрос — настоящий multipart по спецификации загрузки файлов GraphQL.
