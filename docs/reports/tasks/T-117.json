@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "task_id": "T-117",
+  "issue_id": "01a0e610-2231-7d2b-abc2-3a3acbc2ecbf",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-117-staff-record-archive-on-demotion.md",
+    "sha": "ea2707fde0de37c5066773026d82382ec6d7f62f"
+  },
+  "baseline_sha": "1b61fa0652ef20d353ed0ddba46a816ef13c1e50",
+  "tested_sha": "b830d71de3124fb8b73d0074f09f21cc1cfaa3eb",
+  "branch": "server/t117-staff-archive-on-demotion",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t117",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e6a8-5d6f-7748-afbe-a76cc1a62d74",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Revoking a service role archives the record and revokes its sessions (journal §37 item 8; docs/spec/40-admin/admins.md §5, row «Снять роль»). revokeStaffRole now closes access through the same closeAccess step used by archiveStaffAccount and deactivateOwner — archivedAt, archiveMode 'admin', the acting owner, their role and the reason — and revokes every live session, then writes user.archive next to user.role.change and drops the author page cache tag author:{handle}. server/tests/admin-staff.test.ts covers it end to end: after the revoke the member comes back with status 'archived' and archiveReason 'Ушёл', the session row carries revokedAt, the record stays a service account, the exception granted for the previous role stops counting, both audit rows carry the target, the before/after roles and the reason, and the cache tag is among the reset tags. A second test shows a record already in the archive is not archived twice: the role is revoked, the earlier archive date and reason survive and no second user.archive row appears."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "The role of an archived record comes back only through an owner's account restore (docs/spec/50-access/escalation-and-demotion.md §3, row «Возврат роли снятой служебной записи»). changeStaffRole now answers ARCHIVED for an archived target, exactly as assignOwner already did. server/tests/admin-staff.test.ts: changing the role of an archived record answers ARCHIVED with entity 'user', leaves the role at reader and writes no user.role.change row; a second test runs the whole path — revoke, restoreStaffAccount by the owner (status back to active, role reader), then changeStaffRole returns the editor role — and asserts the audit sequence is exactly user.role.change, user.archive, user.restore, user.role.change. Both mutations were already owner-only through ensureOwnerActor (journal §26.7), and the T-074 tests covering that were not touched. On screen, web/tests/e2e/22-admin-admins.spec.ts checks an archived card offers no «Сменить роль», «Снять роль» or «Назначить владельцем» button, shows the hint that the role returns only after a restore and the «Восстановить запись» button, and that the revoke dialog warns the record will be archived."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 1012 passed / 58 skipped; web 764 passed; @altera/content 99 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "e2e": "playwright --project chromium --no-deps on the local disposable database t117_e2e: tests/e2e/22-admin-admins.spec.ts 17 passed",
+    "migrations": "not_required: the change touches no Prisma schema field — the archive is already described by archivedAt, archiveMode, archivedByActorId, archivedByRole and archiveReason, so the task adds no migration. No migration was applied anywhere, and development Neon was not touched",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36388025845",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg ran with the configured core.hooksPath=.husky/_"
+  },
+  "pr": {
+    "number": 341,
+    "url": "https://github.com/Egoka/Altera/pull/341",
+    "base_ref": "app",
+    "base_sha": "1b61fa0652ef20d353ed0ddba46a816ef13c1e50",
+    "head_sha": "b830d71de3124fb8b73d0074f09f21cc1cfaa3eb",
+    "merge_sha": "291089d82462907962ba6e3c96275b85a1dc94f5"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "The change carries no migration and no infrastructure step, and there is still no production environment in Russia (journal §34 item 1, T-103)."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-117.md",
+    "sha256": "f97098659b5168636dce0ddd1909e31623bc2db3371ec704ca1c818362513e8e"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Out of scope by specification: revokeOwner and deactivateOwner. admins.md §5 keeps revoking an owner's role and closing an owner's access as separate actions, and the archive is named only in the «Снять роль» row, so neither was changed",
+    "The staff member still receives no mail when the role is revoked: mailings are deferred (escalation-and-demotion.md item 11 [ДОПУЩЕНИЕ], journal §34 item 1)",
+    "The remaining T-074 rules — creating service records, exceptions and the two-step owner assignment — were outside this task's boundary and were not touched",
+    "[Vue warn]: Failed to resolve component: NuxtLink lines in the «Формат, линт и тесты» job are pre-existing web suite noise: this run (36388025845) and the T-119 run (36383890681) both contain 85 of them; the task neither added nor removed any"
+  ],
+  "usage": null
+}
