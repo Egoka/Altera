@@ -990,6 +990,8 @@
       "selectFromList": "Select a record from the list",
       "changeRole": "Change role",
       "revokeRole": "Revoke role",
+      "revokeRoleHint": "Revoking the role archives the record: access is closed, sessions are revoked, and the role comes back only by restoring the record.",
+      "archivedRoleHint": "The record is archived: the role comes back only after the owner restores the record.",
       "assignOwner": "Assign as owner",
       "revokeOwner": "Revoke the owner role",
       "deactivateOwner": "Deactivate the owner",
