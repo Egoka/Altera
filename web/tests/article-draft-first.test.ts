@@ -10,7 +10,14 @@ afterEach(() => {
 describe("new article action", () => {
   it("creates an empty draft and opens its editor", async () => {
     const requestFetch = vi.fn().mockResolvedValue({
-      data: { createArticle: { id: "article-1", slug: "draft-article-1", title: "" } }
+      data: {
+        createArticle: {
+          id: "article-1",
+          slug: "draft-article-1",
+          title: "",
+          translations: [{ id: "translation-1", locale: "ru" }]
+        }
+      }
     })
     const navigate = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal("useRequestFetch", () => requestFetch)
@@ -25,7 +32,8 @@ describe("new article action", () => {
         variables: { input: { sectionId: "section-1" } }
       }
     })
-    expect(navigate).toHaveBeenCalledWith("/me/articles/article-1/edit", { redirectCode: 302, replace: true })
+    // Адрес редактора называет языковую версию, а не материал (`article-edit.md` §3).
+    expect(navigate).toHaveBeenCalledWith("/me/articles/translation-1/edit", { redirectCode: 302, replace: true })
   })
 
   const failWith = (code: string) => {

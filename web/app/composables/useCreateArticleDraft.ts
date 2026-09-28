@@ -11,9 +11,9 @@ export const createArticleDraftAndOpenEditor = async (sectionId?: string) => {
   const response = await useGraphQL(CREATE_ARTICLE, {
     input: sectionId ? { sectionId } : {}
   })
-  const articleId = response.data?.createArticle.id
+  const created = response.data?.createArticle
 
-  if (!articleId) {
+  if (!created) {
     const error = response.errors?.[0]
     const code = typeof error?.extensions?.code === "string" ? error.extensions.code : undefined
 
@@ -28,5 +28,7 @@ export const createArticleDraftAndOpenEditor = async (sectionId?: string) => {
     })
   }
 
-  return navigateTo(`/me/articles/${articleId}/edit`, { redirectCode: 302, replace: true })
+  // Адрес редактора называет языковую версию, а не материал (`article-edit.md` §3,
+  // `00-registries/routes.md` #36): у материала их может быть две.
+  return navigateTo(`/me/articles/${created.translations[0]!.id}/edit`, { redirectCode: 302, replace: true })
 }

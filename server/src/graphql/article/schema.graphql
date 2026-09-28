@@ -76,6 +76,12 @@ type Article {
   section: Section
   format: Format
   tags: [Tag!]!
+  """
+  Языковые версии материала. Адрес редактора называет версию, а не материал
+  (`30-account/author/article-edit.md` §3, `00-registries/routes.md` #36), поэтому создание
+  черновика возвращает и её идентификатор.
+  """
+  translations: [TranslationSibling!]!
 }
 
 type MyArticleTranslation {

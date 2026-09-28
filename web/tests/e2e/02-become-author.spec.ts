@@ -54,14 +54,22 @@ const openNewArticle = async (page: Page) => {
 
 test("шаг 1: «Создать статью» создаёт черновик и сразу открывает его редактор", async ({ page }) => {
   const createVariables = await mockApi(page, {
-    data: { createArticle: { id: "article-1", slug: "draft-article-1", title: "" } }
+    data: {
+      createArticle: {
+        id: "article-1",
+        slug: "draft-article-1",
+        title: "",
+        translations: [{ id: "translation-1", locale: "ru" }]
+      }
+    }
   })
 
   await setSessionCookie(page, "t022-become-author")
   await page.goto("/me/articles")
   await openNewArticle(page)
 
-  await expect(page).toHaveURL(/\/me\/articles\/article-1\/edit$/)
+  // Адрес редактора называет языковую версию, а не материал (`article-edit.md` §3).
+  await expect(page).toHaveURL(/\/me\/articles\/translation-1\/edit$/)
   // Рубрика, формат и теги при создании не требуются (article-new.md §1).
   expect(createVariables).toEqual([{ input: {} }])
 })

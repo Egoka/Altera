@@ -1,0 +1,176 @@
+# Обвязка редактора `/me/articles/{id}/edit` (`docs/spec/30-account/author/article-edit.md`).
+
+fragment EditorCoverFields on ArticleCover {
+  assetId
+  url
+  alt
+  variants
+  focal {
+    x
+    y
+  }
+}
+
+fragment EditorTranslationFields on EditorTranslation {
+  id
+  locale
+  status
+  rejected
+  title
+  lead
+  body
+  currentRevisionId
+  readOnlyReason
+  reeditUntil
+  updatedAt
+  seo {
+    description
+    slug
+    slugLocked
+  }
+  article {
+    id
+    cover {
+      ...EditorCoverFields
+    }
+    section {
+      id
+      name
+      slug
+      description
+    }
+    format {
+      id
+      name
+      slug
+    }
+    tags {
+      id
+      name
+      slug
+    }
+    translations {
+      id
+      locale
+      status
+      rejected
+    }
+  }
+}
+
+query GetEditorTranslation($id: ID!) {
+  translation(id: $id) {
+    ...EditorTranslationFields
+  }
+}
+
+# Рубрики и форматы редактора приходят отдельным запросом: справочник один на все версии и
+# перезапрашивать его вместе с версией незачем.
+query GetAuthoringTaxonomy {
+  authoringTaxonomy {
+    sections {
+      id
+      name
+      slug
+      description
+    }
+    formats {
+      id
+      name
+      slug
+      description
+    }
+  }
+}
+
+mutation SaveTranslation($id: ID!, $baseRevisionId: ID!, $patch: SaveTranslationPatch!, $kind: SaveTranslationKind!) {
+  saveTranslation(id: $id, baseRevisionId: $baseRevisionId, patch: $patch, kind: $kind) {
+    revisionId
+    savedAt
+  }
+}
+
+mutation SubmitTranslation($id: ID!) {
+  submitTranslation(id: $id) {
+    ...EditorTranslationFields
+  }
+}
+
+mutation WithdrawTranslation($id: ID!) {
+  withdrawTranslation(id: $id) {
+    ...EditorTranslationFields
+  }
+}
+
+query GetTranslationRevisions($translationId: ID!, $cursor: ID, $limit: Int = 20) {
+  revisions(translationId: $translationId, cursor: $cursor, limit: $limit) {
+    items {
+      id
+      createdAt
+      kind
+      size
+    }
+    endCursor
+    hasNextPage
+  }
+}
+
+mutation RestoreTranslationRevision($translationId: ID!, $revisionId: ID!) {
+  restoreRevision(translationId: $translationId, revisionId: $revisionId) {
+    revisionId
+    savedAt
+  }
+}
+
+mutation SetTranslationTaxonomy($articleId: ID!, $sectionId: ID, $formatId: ID, $tagIds: [ID!]!) {
+  setTaxonomy(articleId: $articleId, sectionId: $sectionId, formatId: $formatId, tagIds: $tagIds) {
+    id
+    section {
+      id
+      name
+      slug
+    }
+    format {
+      id
+      name
+      slug
+    }
+    tags {
+      id
+      name
+      slug
+    }
+  }
+}
+
+mutation SetTranslationSlug($translationId: ID!, $slug: String!) {
+  setSlug(translationId: $translationId, slug: $slug) {
+    description
+    slug
+    slugLocked
+  }
+}
+
+# Загрузка обложки идёт multipart-запросом GraphQL: тело собирает `useCoverUpload`, а BFF
+# пропускает его к API без разбора.
+mutation UploadEditorMedia($translationId: ID!, $file: File!, $license: MediaLicense!, $attribution: String!) {
+  uploadMedia(translationId: $translationId, file: $file, license: $license, attribution: $attribution) {
+    id
+    processingStatus
+    alt
+  }
+}
+
+query GetEditorMediaAsset($assetId: ID!) {
+  mediaAsset(id: $assetId) {
+    id
+    processingStatus
+    alt
+  }
+}
+
+mutation SetEditorArticleCover($articleId: ID!, $assetId: ID, $focal: FocalPointInput) {
+  setArticleCover(articleId: $articleId, assetId: $assetId, focal: $focal) {
+    ...EditorCoverFields
+  }
+}
