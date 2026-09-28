@@ -31,12 +31,12 @@ interface ErrorHistoryTransactionClient {
     create(args: { data: ErrorOccurrence }): Promise<unknown>
   }
   backendError: {
-    findUnique(args: {
+    updateMany(args: { where: Record<string, unknown>; data: Record<string, unknown> }): Promise<{ count: number }>
+    upsert(args: {
       where: { signature: string }
-      select: { id: true; workStatus: true }
-    }): Promise<{ id: string; workStatus: "new_record" | "in_progress" | "resolved" } | null>
-    create(args: { data: Record<string, unknown> }): Promise<unknown>
-    update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<unknown>
+      create: Record<string, unknown>
+      update: Record<string, unknown>
+    }): Promise<unknown>
   }
 }
 
@@ -45,10 +45,6 @@ async function appendOccurrence(client: ErrorHistoryTransactionClient, occurrenc
   // Клиентские ошибки остаются отдельным неизменяемым потоком без рабочих статусов (§2 п. 1).
   if (occurrence.stream === "page") return
 
-  const current = await client.backendError.findUnique({
-    where: { signature: occurrence.signature },
-    select: { id: true, workStatus: true }
-  })
   const latest = {
     service: occurrence.service,
     code: occurrence.code,
@@ -61,26 +57,31 @@ async function appendOccurrence(client: ErrorHistoryTransactionClient, occurrenc
     lastSeenAt: occurrence.occurredAt
   }
 
-  if (!current) {
-    await client.backendError.create({
-      data: {
-        signature: occurrence.signature,
-        ...latest,
-        firstSeenAt: occurrence.occurredAt,
-        occurrenceCount: 1
-      }
-    })
-    return
-  }
-
-  await client.backendError.update({
-    where: { id: current.id },
+  const reopened = await client.backendError.updateMany({
+    where: { signature: occurrence.signature, workStatus: "resolved" },
     data: {
       ...latest,
       occurrenceCount: { increment: 1 },
-      ...(current.workStatus === "resolved"
-        ? { workStatus: "new_record", assignedActorId: null, assignedActorRole: null }
-        : {})
+      workStatus: "new_record",
+      assignedActorId: null,
+      assignedActorRole: null
+    }
+  })
+  if (reopened.count === 1) return
+
+  // Нативный upsert по уникальной сигнатуре не теряет событие при двух одновременных первых
+  // вхождениях: один запрос создаёт проекцию, второй атомарно увеличивает её счётчик.
+  await client.backendError.upsert({
+    where: { signature: occurrence.signature },
+    create: {
+      signature: occurrence.signature,
+      ...latest,
+      firstSeenAt: occurrence.occurredAt,
+      occurrenceCount: 1
+    },
+    update: {
+      ...latest,
+      occurrenceCount: { increment: 1 }
     }
   })
 }

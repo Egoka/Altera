@@ -75,6 +75,10 @@
       <dl class="mt-6 grid gap-3 font-sans text-sm sm:grid-cols-[11rem_minmax(0,1fr)]">
         <dt class="text-zinc-500">{{ t("admin.errors.statusLabel") }}</dt>
         <dd>{{ t(`admin.errors.status.${entry.workStatus}`) }}</dd>
+        <template v-if="entry.assignedActorId">
+          <dt class="text-zinc-500">{{ t("admin.errors.assignee") }}</dt>
+          <dd class="font-mono text-xs">{{ entry.assignedActorRole }} · {{ entry.assignedActorId }}</dd>
+        </template>
         <dt class="text-zinc-500">{{ t("admin.errors.occurrences") }}</dt>
         <dd>{{ entry.occurrencesCount }}</dd>
         <dt class="text-zinc-500">requestId</dt>
@@ -131,7 +135,9 @@
             v-for="item in entry.statusHistory"
             :key="`${item.createdAt}-${item.toStatus}`"
             class="mt-2 border-l-2 border-zinc-300 pl-3 font-sans text-sm">
-            {{ item.fromStatus ?? "—" }} → {{ item.toStatus }} · {{ item.changedByActorRole }}<br />
+            {{ item.fromStatus ?? "—" }} → {{ item.toStatus }} · {{ item.changedByActorRole }} ·
+            <span class="font-mono text-xs">{{ item.changedByActorId }}</span
+            ><br />
             <span class="font-mono text-xs text-zinc-500">{{ formatDate(item.createdAt) }}</span>
             <span v-if="item.comment" class="block text-zinc-600 dark:text-zinc-300">{{ item.comment }}</span>
           </p>

@@ -8,6 +8,7 @@ fragment AdminErrorRow on ErrorLogItem {
   requestId
   occurrences
   workStatus
+  assignedActorId
   assignedActorRole
   firstSeenAt
   lastSeenAt
@@ -42,6 +43,7 @@ query GetAdminError($id: ID!) {
     stack
     occurrencesCount
     workStatus
+    assignedActorId
     assignedActorRole
     firstSeenAt
     lastSeenAt
@@ -55,6 +57,7 @@ query GetAdminError($id: ID!) {
     statusHistory {
       fromStatus
       toStatus
+      changedByActorId
       changedByActorRole
       comment
       createdAt

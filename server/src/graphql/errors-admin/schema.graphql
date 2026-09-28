@@ -36,6 +36,7 @@ type ErrorLogItem {
   requestId: String
   occurrences: Int!
   workStatus: ErrorWorkStatus
+  assignedActorId: ID
   assignedActorRole: Role
   firstSeenAt: String!
   lastSeenAt: String!
@@ -52,6 +53,7 @@ type ErrorOccurrenceItem {
 type ErrorStatusHistoryItem {
   fromStatus: ErrorWorkStatus
   toStatus: ErrorWorkStatus!
+  changedByActorId: ID!
   changedByActorRole: Role!
   comment: String
   createdAt: String!
@@ -68,6 +70,7 @@ type ErrorEntry {
   stack: String
   occurrencesCount: Int!
   workStatus: ErrorWorkStatus!
+  assignedActorId: ID
   assignedActorRole: Role
   firstSeenAt: String!
   lastSeenAt: String!

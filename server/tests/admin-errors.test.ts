@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest"
-import { buildErrorsCsv, setErrorWorkStatus, type AdminErrorsContext } from "../src/admin/errors"
+import {
+  buildErrorsCsv,
+  listErrorLog,
+  listHealthHistory,
+  resolveErrors,
+  setErrorWorkStatus,
+  type AdminErrorsContext
+} from "../src/admin/errors"
 
 const UPDATED_AT = new Date("2026-09-28T10:00:00.000Z")
 const NEXT_UPDATED_AT = new Date("2026-09-28T10:05:00.000Z")
@@ -59,6 +66,91 @@ function createContext() {
 }
 
 describe("T-081 admin error work status", () => {
+  it("returns flat pagination and counts occurrences inside the selected period", async () => {
+    const firstSeenAt = new Date("2026-09-28T09:30:00.000Z")
+    const prisma = {
+      backendErrorEvent: {
+        groupBy: vi.fn(async () => [
+          {
+            signature: group.signature,
+            stream: "backend",
+            service: "api",
+            code: group.code,
+            route: group.route,
+            _count: { _all: 2 },
+            _min: { occurredAt: firstSeenAt },
+            _max: { occurredAt: UPDATED_AT }
+          }
+        ])
+      },
+      backendError: { findMany: vi.fn(async () => [group]) }
+    }
+    const ctx = {
+      prisma,
+      currentUser: { id: "admin-1", role: "admin", status: "active" },
+      requestId: "req-list"
+    } as unknown as AdminErrorsContext
+
+    const result = await listErrorLog(ctx, {
+      filters: { period: { from: firstSeenAt.toISOString(), to: NEXT_UPDATED_AT.toISOString() } },
+      pagination: { page: 1, limit: 20 }
+    })
+
+    expect(result.pagination).toMatchObject({ currentPage: 1, totalItems: 1, totalPages: 1 })
+    expect(result.items[0]).toMatchObject({ occurrences: 2, firstSeenAt, lastSeenAt: UPDATED_AT })
+  })
+
+  it("uses the last known health state when the selected period has no transition", async () => {
+    const previous = { id: "health-1", checkedAt: new Date("2026-09-20T10:00:00.000Z") }
+    const prisma = {
+      systemHealthSnapshot: {
+        findMany: vi.fn(async () => []),
+        findFirst: vi.fn(async () => previous)
+      }
+    }
+    const ctx = {
+      prisma,
+      currentUser: { id: "admin-1", role: "admin", status: "active" },
+      requestId: "req-health"
+    } as unknown as AdminErrorsContext
+
+    await expect(
+      listHealthHistory(ctx, {
+        from: "2026-09-27T10:00:00.000Z",
+        to: "2026-09-28T10:00:00.000Z"
+      })
+    ).resolves.toEqual([previous])
+  })
+
+  it("runs a bulk status change inside one transaction", async () => {
+    const ids = ["11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"]
+    const current = new Map(ids.map((id) => [id, { ...group, id }]))
+    const transaction = {
+      backendError: {
+        findMany: vi.fn(async () => ids.map((id) => ({ id, updatedAt: UPDATED_AT }))),
+        findUnique: vi.fn(async ({ where }: { where: { id: string } }) => current.get(where.id)),
+        updateMany: vi.fn(async ({ where, data }: { where: { id: string }; data: Record<string, unknown> }) => {
+          const item = current.get(where.id)
+          if (item) current.set(where.id, { ...item, ...data, updatedAt: NEXT_UPDATED_AT })
+          return { count: 1 }
+        })
+      },
+      backendErrorStatusHistory: { create: vi.fn(async () => undefined) },
+      auditLog: { create: vi.fn(async () => undefined) }
+    }
+    const runTransaction = vi.fn(async <T>(run: (tx: typeof transaction) => Promise<T>) => run(transaction))
+    const ctx = {
+      prisma: { $transaction: runTransaction },
+      currentUser: { id: "admin-1", role: "admin", status: "active" },
+      requestId: "req-bulk"
+    } as unknown as AdminErrorsContext
+
+    await resolveErrors(ctx, ids)
+
+    expect(runTransaction).toHaveBeenCalledTimes(1)
+    expect(transaction.backendError.findMany).toHaveBeenCalledOnce()
+  })
+
   it("writes status history and admin.change in the same transaction", async () => {
     const { ctx, createHistory, createAudit } = createContext()
 
@@ -130,6 +222,7 @@ describe("T-081 admin error work status", () => {
         requestId: group.requestId,
         occurrences: group.occurrenceCount,
         workStatus: "new",
+        assignedActorId: null,
         assignedActorRole: null,
         firstSeenAt: group.firstSeenAt,
         lastSeenAt: group.lastSeenAt,

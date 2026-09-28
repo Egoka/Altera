@@ -58,15 +58,13 @@
   }))
   const latestHealth = computed(() => health.value[0] ?? null)
   const degradedComponents = computed(
-    () => latestHealth.value?.components.filter((component) => component.status !== "ok") ?? []
+    () => latestHealth.value?.components.filter((component) => component.status === "down") ?? []
   )
 
   const refresh = async () => {
-    await Promise.all([
-      load(filters.value, Number(route.query.page) || 1),
-      loadStats(period.value),
-      loadHealth(period.value)
-    ])
+    await load(filters.value, Number(route.query.page) || 1)
+    if (failed.value) return
+    await Promise.all([loadStats(period.value), loadHealth(period.value)])
   }
   useAsyncData("admin-errors", refresh, { lazy: true, server: false })
 
@@ -128,7 +126,7 @@
       class="mb-6 border-l-4 border-emerald-600 bg-white p-4 dark:bg-zinc-900"
       :class="{
         '!border-amber-500': latestHealth?.status === 'degraded',
-        '!border-red-600': latestHealth?.status === 'down'
+        '!border-red-600': latestHealth?.status === 'unavailable'
       }">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
         <strong class="font-mono text-xs uppercase tracking-wider">{{ t("admin.errors.health") }}</strong>
@@ -189,8 +187,26 @@
         </p>
       </article>
       <article class="border border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <h2 class="mb-3 font-serif text-xl">{{ t("admin.errors.byService") }}</h2>
         <p v-for="bucket in stats?.byService ?? []" :key="bucket.key" class="flex justify-between font-mono text-sm">
           <span>{{ bucket.key }}</span
+          ><strong>{{ bucket.count }}</strong>
+        </p>
+      </article>
+      <article class="border border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <h2 class="mb-3 font-serif text-xl">{{ t("admin.errors.timeline") }}</h2>
+        <p
+          v-for="point in stats?.timeline ?? []"
+          :key="point.bucket"
+          class="flex justify-between gap-4 font-mono text-xs">
+          <time>{{ formatDate(point.bucket) }}</time
+          ><strong>{{ point.count }}</strong>
+        </p>
+      </article>
+      <article class="border border-zinc-300 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <h2 class="mb-3 font-serif text-xl">{{ t("admin.errors.byCode") }}</h2>
+        <p v-for="bucket in stats?.byCode ?? []" :key="bucket.key" class="flex justify-between gap-4 font-mono text-xs">
+          <span class="truncate">{{ bucket.key }}</span
           ><strong>{{ bucket.count }}</strong>
         </p>
       </article>
@@ -346,7 +362,12 @@
                 ><span class="block max-w-md truncate text-xs text-zinc-500">{{ item.route ?? item.signature }}</span>
               </td>
               <td>{{ item.service }}</td>
-              <td>{{ item.workStatus ? t(`admin.errors.status.${item.workStatus}`) : "—" }}</td>
+              <td>
+                {{ item.workStatus ? t(`admin.errors.status.${item.workStatus}`) : "—" }}
+                <span v-if="item.assignedActorId" class="block font-mono text-xs text-zinc-500">
+                  {{ item.assignedActorRole }} · {{ item.assignedActorId }}
+                </span>
+              </td>
               <td>{{ item.occurrences }}</td>
               <td class="font-mono text-xs">{{ formatDate(item.lastSeenAt) }}</td>
             </tr>

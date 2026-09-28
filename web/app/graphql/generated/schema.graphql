@@ -1708,6 +1708,7 @@ type EmailChangeState {
 }
 
 type ErrorEntry {
+  assignedActorId: ID
   assignedActorRole: Role
   code: String!
   firstSeenAt: String!
@@ -1744,6 +1745,7 @@ input ErrorLogFilters {
 }
 
 type ErrorLogItem {
+  assignedActorId: ID
   assignedActorRole: Role
   code: String!
   firstSeenAt: String!
@@ -1795,6 +1797,7 @@ type ErrorStatsPoint {
 }
 
 type ErrorStatusHistoryItem {
+  changedByActorId: ID!
   changedByActorRole: Role!
   comment: String
   createdAt: String!

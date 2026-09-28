@@ -21,6 +21,7 @@ const operation = /* GraphQL */ `
         requestId
         occurrences
         workStatus
+        assignedActorId
         assignedActorRole
         firstSeenAt
         lastSeenAt
@@ -40,6 +41,7 @@ const operation = /* GraphQL */ `
       statusHistory {
         fromStatus
         toStatus
+        changedByActorId
         changedByActorRole
         comment
         createdAt

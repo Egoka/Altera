@@ -19,13 +19,13 @@ const occurrence: ErrorOccurrence = {
 describe("T-081 error work projection", () => {
   it("reopens a resolved group when a new occurrence is appended", async () => {
     const createEvent = vi.fn(async () => undefined)
-    const updateGroup = vi.fn(async () => undefined)
+    const updateGroup = vi.fn(async () => ({ count: 1 }))
+    const upsertGroup = vi.fn(async () => undefined)
     const tx = {
       backendErrorEvent: { create: createEvent },
       backendError: {
-        findUnique: vi.fn(async () => ({ id: "error-1", workStatus: "resolved" as const })),
-        create: vi.fn(async () => undefined),
-        update: updateGroup
+        updateMany: updateGroup,
+        upsert: upsertGroup
       }
     }
     const client = {
@@ -37,7 +37,7 @@ describe("T-081 error work projection", () => {
 
     expect(createEvent).toHaveBeenCalledWith({ data: occurrence })
     expect(updateGroup).toHaveBeenCalledWith({
-      where: { id: "error-1" },
+      where: { signature: occurrence.signature, workStatus: "resolved" },
       data: expect.objectContaining({
         workStatus: "new_record",
         assignedActorId: null,
@@ -46,13 +46,34 @@ describe("T-081 error work projection", () => {
         occurrenceCount: { increment: 1 }
       })
     })
+    expect(upsertGroup).not.toHaveBeenCalled()
+  })
+
+  it("uses an atomic upsert when the signature is not resolved", async () => {
+    const upsertGroup = vi.fn(async () => undefined)
+    const tx = {
+      backendErrorEvent: { create: vi.fn(async () => undefined) },
+      backendError: { updateMany: vi.fn(async () => ({ count: 0 })), upsert: upsertGroup }
+    }
+    const client = {
+      ...tx,
+      $transaction: async <T>(run: (transaction: typeof tx) => Promise<T>) => run(tx)
+    } as unknown as ErrorHistoryClient
+
+    await createPrismaErrorHistory(client).append(occurrence)
+
+    expect(upsertGroup).toHaveBeenCalledWith({
+      where: { signature: occurrence.signature },
+      create: expect.objectContaining({ signature: occurrence.signature, occurrenceCount: 1 }),
+      update: expect.objectContaining({ occurrenceCount: { increment: 1 } })
+    })
   })
 
   it("does not create a work item for the page-error stream", async () => {
-    const createGroup = vi.fn(async () => undefined)
+    const upsertGroup = vi.fn(async () => undefined)
     const tx = {
       backendErrorEvent: { create: vi.fn(async () => undefined) },
-      backendError: { findUnique: vi.fn(), create: createGroup, update: vi.fn() }
+      backendError: { updateMany: vi.fn(), upsert: upsertGroup }
     }
     const client = {
       ...tx,
@@ -66,7 +87,7 @@ describe("T-081 error work projection", () => {
       service: "web"
     })
 
-    expect(tx.backendError.findUnique).not.toHaveBeenCalled()
-    expect(createGroup).not.toHaveBeenCalled()
+    expect(tx.backendError.updateMany).not.toHaveBeenCalled()
+    expect(upsertGroup).not.toHaveBeenCalled()
   })
 })
