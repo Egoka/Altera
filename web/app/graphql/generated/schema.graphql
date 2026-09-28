@@ -139,6 +139,12 @@ type AccountUser {
   """
   archiveState: AccountArchiveState!
   articles: [Article!]
+
+  """
+  Аватар своего аккаунта; `null` — аватара нет, интерфейс показывает инициалы (журнал §25.4).
+  У служебной записи аватара не бывает (§25.2).
+  """
+  avatar: Avatar
   avatarAssetId: ID
   avatarCheckStatus: ProfileCheckStatus!
   bio: String
@@ -176,6 +182,12 @@ type AccountUser {
   passwordSet: Boolean!
   photoUrl: String
   prevAvatarId: ID
+
+  """
+  Предыдущая версия аватара: её возвращает рецензент при откате (журнал §29.5). `null` — прежней
+  версии нет и возвращать нечего.
+  """
+  previousAvatar: Avatar
   role: Role!
 
   """
@@ -1060,6 +1072,39 @@ type AuthorProfile {
   redirect: String
 }
 
+"""
+Аватар аккаунта (`docs/spec/85-media-and-binary/avatars.md`). Один на аккаунт; после базовой
+технической обработки применяется публично сразу, без ожидания проверки (журнал §29.5).
+"""
+type Avatar {
+  """Запись медиа, которой сейчас служит аватар."""
+  assetId: ID!
+
+  """
+  Адрес наибольшего готового квадратного варианта в WebP — один адрес для `<img>`. Полный набор
+  для `<picture>` и `srcset` лежит в `variants`.
+  """
+  url: String!
+
+  """
+  Набор квадратных вариантов (`avatars.md` п. 3): `placeholder` — строка `data:` размытого
+  заполнителя, `items` — публичные варианты (`format`, `width`, `height`, `url`) в AVIF и WebP.
+  У аватара свой набор ширин, а не матрица медиа статьи (`image-variants.md` §3).
+  """
+  variants: JSON!
+}
+
+"""
+Квадрат кадра в пикселях изображения, каким его видит автор (ориентация EXIF уже применена).
+Кадрирование выбирает автор с предпросмотром (`image-variants.md` §2 п. 3); без аргумента
+берётся наибольший центральный квадрат `[ДОПУЩЕНИЕ: поля и поведение по умолчанию]`.
+"""
+input AvatarCropInput {
+  size: Int!
+  x: Int!
+  y: Int!
+}
+
 type BaseFiltersInfo {
   createdAt: DateRangeInfo
   updatedAt: DateRangeInfo
@@ -1653,6 +1698,11 @@ type Mutation {
   письме. Вход возможен после подтверждения адреса.
   """
   registerWithPassword(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String, password: String!): MagicLinkRequestResult!
+
+  """
+  Удаление аватара (`avatars.md` п. 8): запись помечается удалённой, аккаунт показывает инициалы.
+  """
+  removeAvatar: Avatar
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
 
@@ -1695,6 +1745,12 @@ type Mutation {
   resumeSubscription: Boolean!
   retryJob(id: ID!): AdminJob!
   retryJobs(ids: [ID!]!): AdminJobsRetryResult!
+
+  """
+  Откат аватара к предыдущей версии рецензентом (матрица #120, журнал §29.5): пишется
+  `profile.check` (#85) с `verdict: reverted`. Прежней версии нет — `CONFLICT`.
+  """
+  revertAvatar(reason: String, userId: ID!): Avatar
   revertToDraft(id: ID!): Article!
   revokeAllSessions: SessionRevokeAllResult!
   revokeException(id: ID!, reason: String!): PermissionException!
@@ -1715,6 +1771,13 @@ type Mutation {
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
+
+  """
+  Загрузка аватара (`profile-edit.md` §4): кадр применяется до конвейера, запись доводится до
+  готовой и применяется сразу. Прежняя версия сохраняется для отката рецензентом.
+  Служебная запись — `FORBIDDEN` (§25.2).
+  """
+  uploadAvatar(crop: AvatarCropInput, file: File!): Avatar
 
   """
   Загрузка медиа версии статьи: файл принимается в карантин и обрабатывается заданием очереди.

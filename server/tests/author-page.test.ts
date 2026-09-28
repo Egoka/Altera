@@ -82,7 +82,14 @@ const prismaStub = (stubs: AuthorStubs) => {
 }
 
 const context = (prisma: unknown) =>
-  ({ cache: new MemoryCache(), prisma, requestId: "req-author", currentUser: null }) as never
+  ({
+    cache: new MemoryCache(),
+    prisma,
+    requestId: "req-author",
+    currentUser: null,
+    // Публичный аватар — вариант записи медиа, поэтому профилю нужен префикс адресов.
+    media: { mediaBaseUrl: "https://media.altera.test" }
+  }) as never
 
 const callAuthor = (stubs: AuthorStubs, handle = "vera", stub = prismaStub(stubs)) =>
   authorResolver.Query.author({}, { handle }, context(stub.prisma))

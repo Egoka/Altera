@@ -5,13 +5,24 @@ import type { ObjectStorage } from "../storage/types"
 import { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingDeps } from "./pipeline"
 import { createSharpImageProcessor } from "./sharp-processor"
 import { createPrismaMediaAssetStore, createPrismaTranslationLookup } from "./store"
+import { acceptAvatarUpload, type AvatarUploadDeps, type AvatarUploadInput } from "./avatars"
 import { acceptMediaUpload, type AcceptUploadInput, type MediaUploadDeps } from "./upload"
 import type { ImageProcessor, MediaAssetRecord, MediaProcessingQueue, MediaTranslationLookup } from "./types"
 
 export { MEDIA_PROCESS_JOB_KIND, runMediaProcessing, type MediaProcessingOutcome } from "./pipeline"
 export { acceptMediaUpload, isMediaLicense, MEDIA_LICENSES } from "./upload"
+export {
+  acceptAvatarUpload,
+  avatarAssetSelect,
+  avatarUrlOf,
+  avatarViewOf,
+  centerSquare,
+  type AvatarAssetRecord,
+  type AvatarUploadInput,
+  type AvatarView
+} from "./avatars"
 export { detectImageFormat } from "./formats"
-export { MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES, MIN_IMAGE_SIDE, VARIANT_WIDTHS } from "./limits"
+export { AVATAR_VARIANT_WIDTHS, MAX_IMAGE_PIXELS, MAX_UPLOAD_BYTES, MIN_IMAGE_SIDE, VARIANT_WIDTHS } from "./limits"
 export { planVariants, variantWidthsFor, THUMBNAIL_WIDTH } from "./variant-matrix"
 export { ensureVariants, publicVariantSet, readVariantSet, type PublicVariant, type PublicVariantSet } from "./variants"
 export { createSharpImageProcessor } from "./sharp-processor"
@@ -23,6 +34,7 @@ export {
   type MediaAssetStore,
   type MediaProcessingQueue,
   type MediaTranslationLookup,
+  type SquareCrop,
   type UploadSource
 } from "./types"
 
@@ -36,6 +48,12 @@ export interface MediaService {
   readonly mediaBaseUrl: string
   translations: MediaTranslationLookup
   upload(input: AcceptUploadInput): Promise<MediaAssetRecord>
+  /**
+   * Приём аватара: кадр автора, карантин и обработка до готовой записи в одном вызове. Очереди
+   * здесь нет — аватар применяется сразу (журнал §29.5), поэтому мутация отвечает уже готовым
+   * файлом. Связь с аккаунтом ведёт `account/avatar.ts`, а не сервис медиа.
+   */
+  uploadAvatar(input: AvatarUploadInput): Promise<MediaAssetRecord>
 }
 
 export interface MediaServiceOptions {
@@ -87,11 +105,13 @@ export function createMediaService(options: MediaServiceOptions): MediaService {
   registerMediaProcessingJob({ store, storage: options.storage, processor })
 
   const uploadDeps: MediaUploadDeps = { store, storage: options.storage, queue }
+  const avatarDeps: AvatarUploadDeps = { store, storage: options.storage, processor }
   return {
     uploadEnabled: options.uploadEnabled ?? false,
     mediaBaseUrl: options.mediaBaseUrl,
     translations: createPrismaTranslationLookup(options.client),
-    upload: (input) => acceptMediaUpload(input, uploadDeps)
+    upload: (input) => acceptMediaUpload(input, uploadDeps),
+    uploadAvatar: (input) => acceptAvatarUpload(input, avatarDeps)
   }
 }
 

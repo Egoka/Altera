@@ -52,6 +52,12 @@ export default defineConfig({
         LOG_HASH_SECRET: "t053-test-log-hash-secret",
         MAGIC_LINK_BASE_URL: `http://127.0.0.1:${port}/auth/verify`,
         MAIL_TRANSPORT: "smtp",
+        // Признак §33 п. 3 закрывает загрузку до утверждения порогов владельцем; браузерный
+        // сценарий аватара (T-065) проверяет сам путь загрузки, поэтому здесь он открыт.
+        MEDIA_UPLOAD_ENABLED: "true",
+        // Раздача локального хранилища идёт этим же процессом; адрес совпадает с хостом API,
+        // чтобы браузер не ходил на другое имя того же порта.
+        STORAGE_MEDIA_BASE_URL: "http://127.0.0.1:4000/media",
         SMTP_HOST: "127.0.0.1",
         SMTP_PORT: smtpPort,
         PORT: "4000",

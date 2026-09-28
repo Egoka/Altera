@@ -2,6 +2,7 @@ import type { GraphQLContext } from "../../prisma"
 import { authorCacheTag, buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
+import { avatarAssetSelect, avatarUrlOf } from "../../media"
 import { publicArticleWhere } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
 import { authorGradeOf, type AuthorGrade } from "../../plans/plan-state"
@@ -72,7 +73,10 @@ const authorSelect = {
   socialLinks: true,
   planTier: true,
   planUntil: true,
-  archivedAt: true
+  archivedAt: true,
+  // Аватар публичной страницы — вариант готовой записи медиа (`avatars.md` п. 6). Устаревший
+  // `photoUrl` остаётся запасным, пока по нему живут прежние данные.
+  avatarAsset: { select: avatarAssetSelect }
 } as const
 
 /**
@@ -142,7 +146,7 @@ export default {
             handle: user.handle,
             name: publicDisplayName(user.name, user.handle),
             bio: user.bio,
-            avatar: user.photoUrl,
+            avatar: avatarUrlOf(user.avatarAsset, ctx.media.mediaBaseUrl) ?? user.photoUrl,
             links: toAuthorLinks(user.socialLinks),
             grade: authorGradeOf(user, new Date()),
             publishedCount,

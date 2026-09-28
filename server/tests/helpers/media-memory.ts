@@ -55,6 +55,8 @@ export function createMemoryMediaStore(options: { now?: () => Date } = {}): Memo
     },
 
     async findByChecksum({ ownerId, sha256 }) {
+      // Связей у двойника нет, поэтому аватары исключает тест, а не хранилище: их приём своей
+      // дедупликации не делает вовсе (`media/avatars.ts`).
       const found = [...records.values()]
         .filter((record) => record.ownerId === ownerId && record.sha256 === sha256 && !record.deletedAt)
         .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime())
@@ -208,7 +210,10 @@ export interface FakeProcessorOptions {
  * а не реализацию кодека. Настоящие AVIF и WebP проверяет `media-variants-sharp.test.ts`.
  */
 export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
-  const calls = { inspect: 0, createMaster: 0, createVariant: 0, createPlaceholder: 0 }
+  const calls = { inspect: 0, createMaster: 0, createVariant: 0, createPlaceholder: 0, cropSquare: 0 }
+  let lastCrop: SquareCrop | null = null
+  /** Размер мастера, из которого считаются стороны вариантов: у аватара он квадратный. */
+  let master = { width: 0, height: 0 }
   let remainingVariantFailures = options.failVariants ?? 0
   let successesBeforeFailure = options.failVariantsAfter ?? 0
   const width = options.width ?? 1200
@@ -216,6 +221,16 @@ export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
 
   const processor: ImageProcessor = {
     name: "fake",
+
+    /**
+     * Кадр двойника — отметка в байтах, а не настоящая обрезка: конвейер проверяет, что квадрат
+     * дошёл до карантина, а точность обрезки проверяет `sharp` в `media-avatar-sharp.test.ts`.
+     */
+    async cropSquare(bytes, crop: SquareCrop) {
+      calls.cropSquare += 1
+      lastCrop = crop
+      return Buffer.concat([bytes, Buffer.from(`|crop:${crop.x},${crop.y},${crop.size}`)])
+    },
 
     async inspect(bytes) {
       calls.inspect += 1
@@ -232,14 +247,16 @@ export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
 
     async createMaster(_bytes, inspection) {
       calls.createMaster += 1
-      const master: MasterImage = {
+      // Мастер аватара квадратный: кадр применяется до конвейера, и сторона мастера — сторона кадра.
+      const side = lastCrop?.size ?? null
+      master = { width: side ?? inspection.width, height: side ?? inspection.height }
+      const created: MasterImage = {
         body: Buffer.from("master-bytes"),
         mimeType: "image/jpeg",
         extension: "jpg",
-        width: inspection.width,
-        height: inspection.height
+        ...master
       }
-      return master
+      return created
     },
 
     async createVariant(_master, spec) {
@@ -249,11 +266,13 @@ export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
         throw new StorageUnavailableError(`Fake variant ${spec.width}.${spec.format} failed`)
       }
       if (successesBeforeFailure > 0) successesBeforeFailure -= 1
+      const source = master.width > 0 ? master : { width, height }
+      const scaled = Math.min(spec.width, source.width)
       const variant: VariantImage = {
         body: Buffer.from(`variant-${spec.format}-${spec.width}`),
         mimeType: `image/${spec.format}`,
-        width: Math.min(spec.width, width),
-        height: Math.max(1, Math.round((height * Math.min(spec.width, width)) / width))
+        width: scaled,
+        height: Math.max(1, Math.round((source.height * scaled) / source.width))
       }
       return variant
     },
@@ -269,5 +288,5 @@ export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
     }
   }
 
-  return { processor, calls }
+  return { processor, calls, lastCrop: () => lastCrop }
 }

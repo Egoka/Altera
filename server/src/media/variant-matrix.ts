@@ -36,22 +36,27 @@ function scaledHeight(master: MasterSize, width: number): number {
  * Мастер уже мельче наименьшей ширины матрицы — вариант всё равно нужен: публичен только вариант,
  * сам мастер публичным не бывает (`access-and-signed-urls.md` п. 1–2), и без варианта у готовой
  * записи нечего показать. В этом случае единственная ширина — ширина мастера.
+ *
+ * Набор ширин приходит аргументом, потому что у аватара он свой — квадратные размеры
+ * `avatars.md` п. 3 (`image-variants.md` §3: аватары названы исключением из общей матрицы).
+ * Вид файла определяет вызывающий: в записи медиа признака назначения нет, его несёт связь в
+ * базе (`storage-layout.md` п. 3).
  */
-export function variantWidthsFor(master: MasterSize): number[] {
-  const fitting = VARIANT_WIDTHS.filter((width) => width <= master.width)
+export function variantWidthsFor(master: MasterSize, widths: readonly number[] = VARIANT_WIDTHS): number[] {
+  const fitting = widths.filter((width) => width <= master.width)
   return fitting.length > 0 ? [...fitting] : [master.width]
 }
 
 /** Полный план набора: каждая подходящая ширина в каждом публичном формате (журнал §29.4). */
-export function planVariants(master: MasterSize): PlannedVariant[] {
-  const widths = variantWidthsFor(master)
+export function planVariants(master: MasterSize, widths?: readonly number[]): PlannedVariant[] {
+  const planned = variantWidthsFor(master, widths)
   return VARIANT_FORMATS.flatMap((format) =>
-    widths.map((width) => ({ format, width, height: scaledHeight(master, width) }))
+    planned.map((width) => ({ format, width, height: scaledHeight(master, width) }))
   )
 }
 
 /** Ширина thumbnail для этого мастера: наименьшая из полученных, если мастер мельче матрицы. */
-export function thumbnailWidthFor(master: MasterSize): number {
-  const widths = variantWidthsFor(master)
-  return widths[0] ?? master.width
+export function thumbnailWidthFor(master: MasterSize, widths?: readonly number[]): number {
+  const planned = variantWidthsFor(master, widths)
+  return planned[0] ?? master.width
 }

@@ -2,6 +2,7 @@ import type { GraphQLContext } from "../../prisma"
 import { buildCacheKey, CACHE_TTL_SECONDS } from "../../cache"
 import { readThroughPublicCache } from "../../cache/read-through"
 import { createApiError } from "../../errors/graphql-error"
+import { avatarAssetSelect, avatarUrlOf } from "../../media"
 import { publicArticleWhere } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
 import { localizedName } from "../feed/resolver"
@@ -265,6 +266,7 @@ export default {
               name: true,
               bio: true,
               photoUrl: true,
+              avatarAsset: { select: avatarAssetSelect },
               planTier: true,
               planUntil: true,
               isServiceAccount: true,
@@ -282,7 +284,7 @@ export default {
             id: user.id,
             handle: user.handle,
             name: publicDisplayName(user.name, user.handle),
-            avatar: user.photoUrl,
+            avatar: avatarUrlOf(user.avatarAsset, ctx.media.mediaBaseUrl) ?? user.photoUrl,
             grade: authorGradeOf(user, new Date()),
             bioShort: firstSentence(user.bio),
             publishedCount: user._count.articles,
