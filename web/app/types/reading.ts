@@ -1,4 +1,15 @@
 export type ArticleCardVariant = "lede" | "large" | "small" | "rank"
+
+/**
+ * Обложка материала в карточке (`docs/spec/85-media-and-binary/article-covers.md`). Набор
+ * вариантов приходит полем `JSON`, поэтому здесь он остаётся `unknown` и разбирается
+ * `~/utils/mediaVariants`.
+ */
+export interface ReadingCover {
+  url: string
+  alt: string | null
+  variants: unknown
+}
 export type ArticleCardMedia = "above" | "beside"
 export type BookmarkState = "idle" | "busy"
 
@@ -8,7 +19,7 @@ export interface ReadingArticle {
   slug: string
   dek?: string | null
   excerpt?: string | null
-  featuredImage?: string | null
+  cover?: ReadingCover | null
   publishedAt?: string | null
   isTranslation?: boolean
   author: {

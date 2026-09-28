@@ -857,6 +857,9 @@ enum AdminUserStatus {
 type Article {
   author: User!
   body: String!
+
+  """Обложка материала; `null` — обложки нет или её обработка не завершена."""
+  cover: ArticleCover
   createdAt: String!
   dek: String
   excerpt: String
@@ -875,6 +878,33 @@ type Article {
 enum ArticleArchiveActor {
   self
   staff
+}
+
+"""
+Обложка материала (`docs/spec/85-media-and-binary/article-covers.md`). Одна на материал и общая
+для языковых версий (ADR-0002); обязательна перед публикацией (журнал §29.1).
+"""
+type ArticleCover {
+  """
+  Единое описание медиафайла; узел документа его не переопределяет (журнал §29.13).
+  """
+  alt: String
+
+  """Запись медиа, которой служит обложка."""
+  assetId: ID!
+  focal: FocalPoint!
+
+  """
+  Адрес наибольшего готового варианта WebP исходной композиции — один адрес для `<img>`.
+  """
+  url: String!
+
+  """
+  Набор вариантов: базовые по общей матрице и кадры карточек по фокусной точке. У кадра есть
+  поле `crop` (`lede`, `large`); вариант без него сохраняет композицию мастера. Веб строит
+  `<picture>` с `srcset` из нужного кадра (`image-variants.md` §2 п. 5).
+  """
+  variants: JSON!
 }
 
 type ArticleDetail {
@@ -1324,7 +1354,13 @@ type FeedFacet {
 
 type FeedItem {
   author: FeedAuthor!
-  cover: String
+
+  """
+  Обложка материала (`article-covers.md`): у опубликованного она есть всегда, дефолтных
+  изображений в лентах нет (журнал §29.1). `null` бывает только у материала, чья обложка ещё
+  обрабатывается или удалена. Карточка берёт из `variants` кадр своего варианта.
+  """
+  cover: ArticleCover
   dek: String
   id: ID!
   isTranslation: Boolean!
@@ -1384,6 +1420,21 @@ type FeedTagHeader {
 тип определяется по содержимому (`upload-pipeline.md` п. 3).
 """
 scalar File
+
+"""
+Фокусная точка обложки долями стороны (`03-data-model.md`: `focalX`, `focalY`). Кадр карточки
+ставится по ней так же, как CSS `object-position`, поэтому предпросмотр в редакторе совпадает с
+тем, что нарежет сервер.
+"""
+type FocalPoint {
+  x: Float!
+  y: Float!
+}
+
+input FocalPointInput {
+  x: Float!
+  y: Float!
+}
 
 type Format {
   archivedAt: String
@@ -1759,6 +1810,14 @@ type Mutation {
   revokeSession(id: ID!): SessionRevokeResult!
   revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
   revokeUserSessions(id: ID!): AdminUserSessionsRevokeResult!
+
+  """
+  Выбор обложки и кадрирования (`article-covers.md` п. 1–3): запись медиа становится обложкой
+  материала, фокусная точка задаёт кадр карточек, кадры собираются до ответа. `assetId: null`
+  снимает обложку. Опубликованный материал обложку так не меняет — правка идёт в копии через
+  AI-проверку (журнал §41, T-122).
+  """
+  setArticleCover(articleId: ID!, assetId: ID, focal: FocalPointInput): ArticleCover
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
 
   """
@@ -1789,6 +1848,11 @@ type Mutation {
 
 type MyArticle {
   archivedBy: ArticleArchiveActor
+
+  """
+  Обложка материала; `null` — обложки нет, и кабинет показывает заполнитель (`article-covers.md` п. 4).
+  """
+  cover: ArticleCover
   format: Format
   id: ID!
   section: Section

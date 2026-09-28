@@ -11,11 +11,31 @@ export const MEDIA_VARIANT_FORMATS = ["avif", "webp"] as const
 
 export type MediaVariantFormat = (typeof MEDIA_VARIANT_FORMATS)[number]
 
+/**
+ * Метки кадра обложки (`article-covers.md` п. 3). Вариант без метки сохраняет композицию
+ * мастера — так показывается изображение в тексте и шапке материала.
+ */
+export const MEDIA_VARIANT_CROPS = ["lede", "large"] as const
+
+export type MediaVariantCrop = (typeof MEDIA_VARIANT_CROPS)[number]
+
+/**
+ * Кадр, которым показывается каждый вариант карточки (`06-design-system.md` §5). `small` и
+ * `large` делят один кадр: в вёрстке у них одно соотношение, а разный размер задаётся `sizes`,
+ * не отдельными файлами (`image-variants.md` §2 п. 5).
+ */
+export const CARD_VARIANT_CROPS = {
+  lede: "lede",
+  large: "large",
+  small: "large"
+} as const satisfies Record<string, MediaVariantCrop>
+
 export interface MediaVariant {
   format: MediaVariantFormat
   width: number
   height: number
   url: string
+  crop?: MediaVariantCrop
 }
 
 export interface MediaVariants {
@@ -31,6 +51,7 @@ const EMPTY: MediaVariants = { placeholder: null, thumbnailWidth: null, variants
 function isVariant(value: unknown): value is MediaVariant {
   if (typeof value !== "object" || value === null) return false
   const item = value as Partial<MediaVariant>
+  const cropKnown = item.crop === undefined || (MEDIA_VARIANT_CROPS as readonly string[]).includes(item.crop as string)
   return (
     (MEDIA_VARIANT_FORMATS as readonly string[]).includes(item.format as string) &&
     typeof item.width === "number" &&
@@ -38,7 +59,8 @@ function isVariant(value: unknown): value is MediaVariant {
     typeof item.height === "number" &&
     item.height > 0 &&
     typeof item.url === "string" &&
-    item.url.length > 0
+    item.url.length > 0 &&
+    cropKnown
   )
 }
 
@@ -61,6 +83,18 @@ export function readMediaVariants(value: unknown): MediaVariants {
 
 export function variantsOfFormat(set: MediaVariants, format: MediaVariantFormat): MediaVariant[] {
   return set.variants.filter((variant) => variant.format === format)
+}
+
+/**
+ * Набор одного кадра. Без метки остаются варианты исходной композиции; с меткой — кадры карточки.
+ * Кадра в наборе может не быть (обычное медиа статьи кадров не получает) — тогда набор пуст, и
+ * место использования само решает, показывать ли исходную композицию.
+ */
+export function variantsOfCrop(set: MediaVariants, crop: MediaVariantCrop | null): MediaVariants {
+  return {
+    ...set,
+    variants: set.variants.filter((variant) => (variant.crop ?? null) === crop)
+  }
 }
 
 /** `srcset` одного формата: браузер выбирает ширину сам по `sizes` (ADR-0030 п. 2). */
@@ -103,8 +137,12 @@ export interface PictureSources {
  * Источники `<picture>`: AVIF, затем WebP запасным (журнал §29.4). Формат без вариантов
  * источником не становится — пустой `srcset` заставил бы браузер выбрать несуществующий файл.
  */
-export function pictureSources(value: unknown): PictureSources {
-  const set = readMediaVariants(value)
+export function pictureSources(value: unknown, crop: MediaVariantCrop | null = null): PictureSources {
+  const whole = readMediaVariants(value)
+  // Кадра нет — берётся исходная композиция: пустой `<picture>` показал бы дыру там, где
+  // картинка есть, просто не обрезанная.
+  const cropped = variantsOfCrop(whole, crop)
+  const set = cropped.variants.length > 0 ? cropped : variantsOfCrop(whole, null)
   const sources = MEDIA_VARIANT_FORMATS.map((format) => ({
     type: `image/${format}`,
     srcset: variantSrcset(set, format)

@@ -105,7 +105,13 @@ describe("T-064 шаг конвейера", () => {
     }
     // Каждый вариант лежит в хранилище по ключу своей раскладки (`storage-layout.md`).
     for (const item of set.items) {
-      expect(parseStorageKey(item.key)).toEqual({ kind: "variant", assetId, width: item.width, format: item.format })
+      expect(parseStorageKey(item.key)).toEqual({
+        kind: "variant",
+        assetId,
+        width: item.width,
+        format: item.format,
+        crop: null
+      })
       expect(storage.objects.get(item.key)?.contentType).toBe(`image/${item.format}`)
     }
   })
@@ -199,7 +205,7 @@ describe("T-064 шаг конвейера", () => {
 
 describe("T-064 чтение набора", () => {
   it("значение колонки по умолчанию читается как «вариантов нет»", () => {
-    expect(readVariantSet([])).toEqual({ version: 1, placeholder: null, thumbnailWidth: null, items: [] })
+    expect(readVariantSet([])).toEqual({ version: 1, placeholder: null, thumbnailWidth: null, focal: null, items: [] })
     expect(readVariantSet(null).items).toEqual([])
     expect(readVariantSet({ version: 2, items: [{ format: "avif" }] }).items).toEqual([])
   })

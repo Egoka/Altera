@@ -1,5 +1,5 @@
 import type { MediaLicense, MediaProcessingStatus } from "../generated/prisma"
-import type { MasterExtension, VariantFormat } from "../storage/keys"
+import type { MasterExtension, VariantCrop, VariantFormat } from "../storage/keys"
 
 // Порты конвейера загрузки (`upload-pipeline.md` п. 5, журнал §29.2, §29.12). Библиотека
 // обработки, хранилище записей и очередь заданий подключаются через интерфейсы: тесты конвейера
@@ -53,6 +53,27 @@ export interface SquareCrop {
   size: number
 }
 
+/**
+ * Прямоугольник кадра в пикселях мастера. Кадр обложки считается из фокусной точки под
+ * соотношение карточки (`article-covers.md` п. 3), поэтому стороны у него разные, а не одна
+ * как у квадрата аватара.
+ */
+export interface CropRect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/**
+ * Фокусная точка медиафайла долями стороны (`03-data-model.md`: `focalX`, `focalY`). Доли, а не
+ * пиксели: точка переживает смену матрицы ширин и не зависит от размера мастера.
+ */
+export interface FocalPoint {
+  x: number
+  y: number
+}
+
 /** Публичный вариант: готовые к раздаче байты одного размера в одном формате (журнал §29.4). */
 export interface VariantImage {
   body: Buffer
@@ -83,7 +104,7 @@ export interface ImageProcessor {
   readonly name: string
   inspect(bytes: Buffer): Promise<ImageInspection>
   createMaster(bytes: Buffer, inspection: ImageInspection): Promise<MasterImage>
-  createVariant(master: Buffer, spec: { width: number; format: VariantFormat }): Promise<VariantImage>
+  createVariant(master: Buffer, spec: { width: number; format: VariantFormat; crop?: CropRect }): Promise<VariantImage>
   createPlaceholder(master: Buffer): Promise<PlaceholderImage>
   /**
    * Квадрат исходника теми же байтами формата, что и вход: кадр применяется до конвейера, а
@@ -99,6 +120,8 @@ export interface MediaVariantEntry {
   height: number
   key: string
   byteSize: number
+  /** Метка кадра карточки; без неё вариант сохраняет композицию мастера. */
+  crop?: VariantCrop
 }
 
 /**
@@ -111,6 +134,12 @@ export interface MediaVariantSet {
   placeholder: string | null
   /** Ширина варианта для списков и выбора медиа в редакторе. */
   thumbnailWidth: number | null
+  /**
+   * Фокусная точка, с которой нарезаны варианты-кадры. Смена фокуса делает прежние кадры
+   * негодными (`image-variants.md` §2 п. 3), и повтор задания пересобирает только их: базовые
+   * варианты и мастер фокус не затрагивает.
+   */
+  focal: FocalPoint | null
   items: MediaVariantEntry[]
 }
 
@@ -130,6 +159,8 @@ export interface MediaAssetRecord {
   alt: string | null
   caption: string | null
   variants: unknown
+  focalX: number | null
+  focalY: number | null
   deletedAt: Date | null
   createdAt: Date
 }
@@ -169,6 +200,8 @@ export interface MediaAssetStore {
   saveMaster(id: string, input: SaveMasterInput): Promise<MediaAssetRecord>
   /** Набор пишется и при частичной ошибке: полученные варианты не теряются (§2 п. 8). */
   saveVariants(id: string, variants: MediaVariantSet): Promise<MediaAssetRecord>
+  /** Фокусная точка — свойство медиафайла (`media.update.meta`, матрица #40). */
+  saveFocal(id: string, focal: FocalPoint | null): Promise<MediaAssetRecord>
 }
 
 export interface MediaProcessingQueue {

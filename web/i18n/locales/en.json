@@ -692,7 +692,8 @@
       "reeditUntil": "Re-edit until {date}",
       "openReadOnly": "Open read-only",
       "edit": "Edit",
-      "open": "Open"
+      "open": "Open",
+      "noCover": "No cover"
     }
   },
   "footer": {

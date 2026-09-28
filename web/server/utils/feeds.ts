@@ -25,7 +25,7 @@ export interface RssItem {
   sectionName: string
   title: string
   dek: string | null
-  cover: string | null
+  cover: { url: string } | null
   author: { name: string }
   publishedAt: string | null
 }
@@ -90,7 +90,7 @@ const tag = (name: string, value: string, indent: string): string => `${indent}<
  */
 const itemDescription = (item: RssItem, origin: string): string | null => {
   const parts: string[] = []
-  if (item.cover) parts.push(`<img src="${escapeXml(absoluteAsset(origin, item.cover))}" alt="" />`)
+  if (item.cover) parts.push(`<img src="${escapeXml(absoluteAsset(origin, item.cover.url))}" alt="" />`)
   if (item.dek) parts.push(`<p>${escapeXml(item.dek)}</p>`)
   return parts.length > 0 ? escapeXml(parts.join("")) : null
 }
@@ -220,7 +220,9 @@ export const LATEST_FEED_QUERY = `query LatestFeed($locale: Locale!, $limit: Int
       sectionName
       title
       dek
-      cover
+      cover {
+        url
+      }
       author {
         name
       }

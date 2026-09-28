@@ -7,17 +7,24 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const MASTER_EXTENSIONS = ["jpg", "png", "webp", "avif", "gif"] as const
 /** Форматы публичных вариантов (журнал §29.4). */
 export const VARIANT_FORMATS = ["avif", "webp"] as const
+/**
+ * Метки кадра варианта: обложка нарезается по фокусной точке под соотношения карточек
+ * (`article-covers.md` п. 3). Метка входит в ключ, иначе кадр и базовый вариант той же ширины
+ * переписывали бы друг друга. Варианты без метки — исходная композиция мастера.
+ */
+export const VARIANT_CROPS = ["lede", "large"] as const
 /** Формат выгрузки аккаунта (`exports.md` п. 2 — ZIP `[ДОПУЩЕНИЕ]`). */
 export const EXPORT_EXTENSIONS = ["zip"] as const
 
 export type MasterExtension = (typeof MASTER_EXTENSIONS)[number]
 export type VariantFormat = (typeof VARIANT_FORMATS)[number]
+export type VariantCrop = (typeof VARIANT_CROPS)[number]
 export type ExportExtension = (typeof EXPORT_EXTENSIONS)[number]
 
 export type ParsedStorageKey =
   | { kind: "quarantine"; assetId: string }
   | { kind: "master"; assetId: string; extension: MasterExtension }
-  | { kind: "variant"; assetId: string; width: number; format: VariantFormat }
+  | { kind: "variant"; assetId: string; width: number; format: VariantFormat; crop: VariantCrop | null }
   | { kind: "export"; userId: string; exportId: string; extension: ExportExtension }
 
 const MAX_VARIANT_WIDTH = 10_000
@@ -57,11 +64,19 @@ export function masterKey(input: { assetId: string; createdAt: Date; extension: 
   return `${datePrefix(input.createdAt)}/${input.assetId}.${input.extension}`
 }
 
-export function variantKey(input: { assetId: string; createdAt: Date; width: number; format: VariantFormat }): string {
+export function variantKey(input: {
+  assetId: string
+  createdAt: Date
+  width: number
+  format: VariantFormat
+  crop?: VariantCrop | null
+}): string {
   assertUuid(input.assetId, "assetId")
   assertWidth(input.width)
   assertOneOf(input.format, VARIANT_FORMATS, "variant format")
-  return `${datePrefix(input.createdAt)}/${input.assetId}/w${input.width}.${input.format}`
+  if (input.crop) assertOneOf(input.crop, VARIANT_CROPS, "variant crop")
+  const prefix = input.crop ? `${input.crop}-` : ""
+  return `${datePrefix(input.createdAt)}/${input.assetId}/${prefix}w${input.width}.${input.format}`
 }
 
 export function exportKey(input: { userId: string; exportId: string; extension: ExportExtension }): string {
@@ -73,7 +88,7 @@ export function exportKey(input: { userId: string; exportId: string; extension: 
 
 const QUARANTINE_KEY = /^quarantine\/([0-9a-f-]{36})\.upload$/
 const MASTER_KEY = /^(\d{4})\/(0[1-9]|1[0-2])\/([0-9a-f-]{36})\.([a-z]+)$/
-const VARIANT_KEY = /^(\d{4})\/(0[1-9]|1[0-2])\/([0-9a-f-]{36})\/w(\d{1,5})\.([a-z]+)$/
+const VARIANT_KEY = /^(\d{4})\/(0[1-9]|1[0-2])\/([0-9a-f-]{36})\/(?:([a-z]+)-)?w(\d{1,5})\.([a-z]+)$/
 const EXPORT_KEY = /^exports\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.([a-z]+)$/
 
 const isOneOf = <T extends string>(value: string, allowed: readonly T[]): value is T =>
@@ -95,11 +110,15 @@ export function parseStorageKey(key: string): ParsedStorageKey | null {
   }
   const variant = VARIANT_KEY.exec(key)
   if (variant) {
-    const [, , , assetId, rawWidth, format] = variant
+    const [, , , assetId, , rawWidth, format] = variant
+    // Метка кадра необязательна: у варианта исходной композиции группы в ключе нет.
+    const rawCrop: string | undefined = variant[4]
     const width = Number(rawWidth)
     if (!UUID.test(assetId) || !isOneOf(format, VARIANT_FORMATS)) return null
+    if (rawCrop !== undefined && !isOneOf(rawCrop, VARIANT_CROPS)) return null
     if (width < 1 || width > MAX_VARIANT_WIDTH || rawWidth.startsWith("0")) return null
-    return { kind: "variant", assetId, width, format }
+    const crop = rawCrop === undefined ? null : (rawCrop as VariantCrop)
+    return { kind: "variant", assetId, width, format, crop }
   }
   const exported = EXPORT_KEY.exec(key)
   if (exported) {

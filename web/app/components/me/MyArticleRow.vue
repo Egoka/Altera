@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import type { GetMyArticlesQuery } from "~/graphql/generated/graphql"
+  import MediaPicture from "~/components/media/Picture.vue"
 
   type MyArticle = GetMyArticlesQuery["myArticles"]["items"][number]
   type Translation = MyArticle["translations"][number]
@@ -81,7 +82,28 @@
 <template>
   <article
     :aria-label="translation.title"
-    class="group grid gap-5 border-t border-zinc-200 py-6 first:border-t-0 dark:border-zinc-800 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+    class="group grid gap-5 border-t border-zinc-200 py-6 first:border-t-0 dark:border-zinc-800 md:grid-cols-[7rem_minmax(0,1fr)_auto] md:items-center">
+    <!--
+      Обложка материала в кабинете автора. Черновик без обложки показывает заполнитель именно
+      здесь и только здесь (`article-covers.md` п. 4): обложка обязательна перед публикацией
+      (журнал §29.1), и до неё автору нужно видеть, чего материалу не хватает.
+    -->
+    <div class="aspect-3/2 w-28 overflow-hidden bg-zinc-100 dark:bg-zinc-900 md:w-full">
+      <MediaPicture
+        v-if="article.cover"
+        :variants="article.cover.variants"
+        crop="large"
+        :alt="article.cover.alt ?? ''"
+        sizes="7rem"
+        img-class="h-full w-full object-cover" />
+      <p
+        v-else
+        data-cover-placeholder
+        class="flex h-full items-center justify-center px-2 text-center text-xs font-semibold text-zinc-400 dark:text-zinc-600">
+        {{ t("myArticles.row.noCover") }}
+      </p>
+    </div>
+
     <div class="min-w-0">
       <div class="mb-3 flex flex-wrap items-center gap-2">
         <Badge :class="['ring-1 ring-inset', statusClass]">

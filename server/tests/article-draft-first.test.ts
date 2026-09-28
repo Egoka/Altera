@@ -147,7 +147,44 @@ describe("section required before review and publication", () => {
     publishedAt: null,
     sectionId: section ? "section-1" : null,
     section: section ? { id: "section-1", slug: "culture", ...section } : null,
+    // Обложка обязательна перед публикацией (T-066): без неё подача не дошла бы до рубрики.
+    coverAssetId: "cover-1",
     tags: []
+  })
+
+  /** Готовая обложка с собранным кадром карточки: подача такую принимает. */
+  const readyCover = () => ({
+    findUnique: vi.fn().mockResolvedValue({
+      id: "cover-1",
+      processingStatus: "ready",
+      deletedAt: null,
+      alt: null,
+      focalX: 0.5,
+      focalY: 0.5,
+      variants: {
+        version: 1,
+        placeholder: "data:image/webp;base64,AA==",
+        thumbnailWidth: 480,
+        focal: { x: 0.5, y: 0.5 },
+        items: [
+          {
+            format: "webp",
+            width: 480,
+            height: 320,
+            key: "2026/09/0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7b/w480.webp",
+            byteSize: 10
+          },
+          {
+            format: "webp",
+            width: 480,
+            height: 320,
+            key: "2026/09/0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7b/large-w480.webp",
+            byteSize: 10,
+            crop: "large"
+          }
+        ]
+      }
+    })
   })
 
   it("rejects review submission when the draft section is archived", async () => {
@@ -164,7 +201,10 @@ describe("section required before review and publication", () => {
 
   it("submits a draft with an active section", async () => {
     const update = vi.fn().mockResolvedValue({ id: "article-1", status: "review" })
-    const prisma = { article: { findUnique: vi.fn().mockResolvedValue(draft({ status: "active" })), update } }
+    const prisma = {
+      article: { findUnique: vi.fn().mockResolvedValue(draft({ status: "active" })), update },
+      mediaAsset: readyCover()
+    }
 
     await articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
 

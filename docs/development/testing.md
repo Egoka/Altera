@@ -135,6 +135,46 @@ pnpm --filter nuxt-app exec playwright test --project chromium --no-deps \
 и запросы браузера, и разметку. Тот же запрет проверяется grep по сборке — единственное вхождение
 `_ipx` в `web/.output` это строка `Disallow: /_ipx/` в `robots.txt` (T-098).
 
+## Обложки материалов
+
+```bash
+pnpm --filter server exec vitest run tests/media-covers.test.ts tests/media-covers-sharp.test.ts \
+  tests/article-cover.test.ts tests/article-draft-first.test.ts
+pnpm --filter nuxt-app exec vitest run tests/media-variants.test.ts tests/my-articles-cover.nuxt.test.ts \
+  tests/reading-components.nuxt.test.ts
+T069_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/<база> \
+  pnpm --filter nuxt-app exec playwright test --project chromium --no-deps \
+  tests/e2e/66-article-cover.spec.ts
+```
+
+Обложка (T-066) — одна запись медиа на материал, общая для языковых версий (ADR-0002): связь
+`Article.coverAssetId`, а не поле языковой версии. Она обязательна перед публикацией
+(журнал §29.1): подача без неё отвечает `VALIDATION_ERROR` с полем `cover` — это критерий 1, и
+его проверяют `article-cover.test.ts` (правила `required` и `processing`) и сценарий Playwright
+на настоящем API.
+
+Кадрирование идёт по фокусной точке (`MediaAsset.focalX/focalY`, доли стороны). Соотношения
+кадров — `lede` 2:1 и `large` 3:2 (`article-covers.md` п. 3, вёрстка `ArticleCard`); варианту
+карточки `small` отдельного кадра не заводится: в вёрстке у него то же соотношение, что у
+`large`, и различаются они значением `sizes`, а не файлами (`image-variants.md` §2 п. 5). Кадр
+ставится так же, как CSS `object-position` — предпросмотр в браузере совпадает с тем, что
+нарежет `sharp`, и второй реализации той же арифметики на вебе не нужно. Метка кадра входит в
+ключ варианта (`{assetId}/lede-w960.webp`), фокус — нет: смена фокуса переписывает байты под
+теми же ключами, и набор помнит фокус, которым нарезан, чтобы повтор пересобрал только кадры.
+
+`media-covers.test.ts` проверяет геометрию, план кадров и перегенерацию на двойниках;
+`media-covers-sharp.test.ts` — настоящие байты: пропорцию кадра и то, что при фокусе у верхней
+границы в кадр попадает верхняя половина исходника, а базовые варианты композицию мастера
+сохраняют. Веб-наборы проверяют выбор кадра карточкой и отсутствие заполнителя в ленте;
+заполнитель «Без обложки» показывает только строка кабинета автора (`article-covers.md` п. 4) —
+это `my-articles-cover.nuxt.test.ts`.
+
+Сценарий Playwright — критерий 2: файл уходит в API multipart-запросом, конвейер доводит запись
+до готовой, `setArticleCover` кадрирует её по фокусу, материал публикуется, и гость без сессии
+видит в ленте рубрики кадр `large` из раздачи `/media`, а заполнителя на странице нет. Набор
+требует базы (`T069_TEST_DATABASE_URL`) и открытой загрузки — `MEDIA_UPLOAD_ENABLED=true`
+`playwright.config.ts` задаёт сам.
+
 ## Аватары
 
 ```bash

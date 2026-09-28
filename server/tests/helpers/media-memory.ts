@@ -1,6 +1,8 @@
 import type { MediaProcessingStatus } from "../../src/generated/prisma"
 import type {
   CreateMediaAssetInput,
+  CropRect,
+  FocalPoint,
   ImageInspection,
   ImageProcessor,
   MasterImage,
@@ -9,6 +11,7 @@ import type {
   MediaVariantSet,
   PlaceholderImage,
   SaveMasterInput,
+  SquareCrop,
   VariantImage
 } from "../../src/media/types"
 import {
@@ -83,6 +86,8 @@ export function createMemoryMediaStore(options: { now?: () => Date } = {}): Memo
         alt: null,
         caption: null,
         variants: [],
+        focalX: null,
+        focalY: null,
         deletedAt: null,
         createdAt: now()
       }
@@ -107,6 +112,12 @@ export function createMemoryMediaStore(options: { now?: () => Date } = {}): Memo
     async saveVariants(id, variants: MediaVariantSet) {
       // Как в базе: значение колонки переписывается целиком, без слияния с прежним набором.
       const updated: MediaAssetRecord = { ...mustFind(id), variants: structuredClone(variants) }
+      records.set(id, updated)
+      return updated
+    },
+
+    async saveFocal(id, focal: FocalPoint | null) {
+      const updated: MediaAssetRecord = { ...mustFind(id), focalX: focal?.x ?? null, focalY: focal?.y ?? null }
       records.set(id, updated)
       return updated
     }
@@ -211,6 +222,8 @@ export interface FakeProcessorOptions {
  */
 export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
   const calls = { inspect: 0, createMaster: 0, createVariant: 0, createPlaceholder: 0, cropSquare: 0 }
+  /** Кадры, с которыми запрашивались варианты: так проверяется обрезка обложки по фокусу. */
+  const variantCrops: (CropRect | null)[] = []
   let lastCrop: SquareCrop | null = null
   /** Размер мастера, из которого считаются стороны вариантов: у аватара он квадратный. */
   let master = { width: 0, height: 0 }
@@ -261,15 +274,17 @@ export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
 
     async createVariant(_master, spec) {
       calls.createVariant += 1
+      variantCrops.push(spec.crop ?? null)
       if (remainingVariantFailures > 0 && successesBeforeFailure <= 0) {
         remainingVariantFailures -= 1
         throw new StorageUnavailableError(`Fake variant ${spec.width}.${spec.format} failed`)
       }
       if (successesBeforeFailure > 0) successesBeforeFailure -= 1
-      const source = master.width > 0 ? master : { width, height }
+      // Кадр задаёт стороны варианта: двойник считает их так же, как настоящий `sharp`.
+      const source = spec.crop ?? (master.width > 0 ? master : { width, height })
       const scaled = Math.min(spec.width, source.width)
       const variant: VariantImage = {
-        body: Buffer.from(`variant-${spec.format}-${spec.width}`),
+        body: Buffer.from(`variant-${spec.format}-${spec.crop ? "crop-" : ""}${spec.width}`),
         mimeType: `image/${spec.format}`,
         width: scaled,
         height: Math.max(1, Math.round((source.height * scaled) / source.width))
@@ -288,5 +303,5 @@ export function createFakeImageProcessor(options: FakeProcessorOptions = {}) {
     }
   }
 
-  return { processor, calls, lastCrop: () => lastCrop }
+  return { processor, calls, lastCrop: () => lastCrop, variantCrops }
 }

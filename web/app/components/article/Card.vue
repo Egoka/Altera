@@ -1,6 +1,8 @@
 <script setup lang="ts">
   import { computed } from "vue"
   import type { ArticleCardMedia, ArticleCardVariant, ReadingArticle } from "~/types/reading"
+  import { CARD_VARIANT_CROPS } from "~/utils/mediaVariants"
+  import MediaPicture from "~/components/media/Picture.vue"
   import ReadingBookmarkButton from "~/components/reading/BookmarkButton.vue"
   import ReadingByline from "~/components/reading/Byline.vue"
   import ReadingDateStamp from "~/components/reading/DateStamp.vue"
@@ -42,8 +44,25 @@
     props.article.section ? localePath(`/${props.article.section.slug}/${props.article.slug}`) : ""
   )
   const showsBookmark = computed(() => props.canBookmark || props.guest)
-  const showImage = computed(() => props.variant !== "rank" && Boolean(props.article.featuredImage))
+  /**
+   * Обложка показывается своя или не показывается вовсе: дефолтных изображений в лентах нет
+   * (журнал §29.1, `article-covers.md` п. 4), а заполнитель черновика живёт в кабинете автора.
+   * У варианта `rank` изображения нет по вёрстке (`06-design-system.md` §5).
+   */
+  const showImage = computed(() => props.variant !== "rank" && Boolean(props.article.cover))
   const isBeside = computed(() => props.variant === "small" || (props.variant === "large" && props.media === "beside"))
+  /** Кадр обложки под соотношение карточки; `rank` изображения не показывает. */
+  const cardCrop = computed(() => (props.variant === "rank" ? null : CARD_VARIANT_CROPS[props.variant]))
+  /**
+   * Ширина места под изображение: `lede` занимает колонку целиком, `large` — половину сетки,
+   * `small` — узкую колонку рядом с текстом. Разные `sizes`, а не разные файлы
+   * (`image-variants.md` §2 п. 5).
+   */
+  const imageSizes = computed(() => {
+    if (props.variant === "lede") return "(min-width: 1024px) 64rem, 100vw"
+    if (isBeside.value) return "(min-width: 640px) 20rem, 7rem"
+    return "(min-width: 640px) 32rem, 100vw"
+  })
 </script>
 
 <template>
@@ -72,10 +91,13 @@
       <NuxtLink
         :to="articlePath"
         class="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-600">
-        <NuxtImg
-          :src="article.featuredImage ?? undefined"
-          :alt="article.title"
-          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+        <MediaPicture
+          v-if="article.cover"
+          :variants="article.cover.variants"
+          :crop="cardCrop"
+          :alt="article.cover.alt ?? ''"
+          :sizes="imageSizes"
+          img-class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
       </NuxtLink>
     </figure>
 

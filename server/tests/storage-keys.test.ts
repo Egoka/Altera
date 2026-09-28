@@ -32,8 +32,18 @@ describe("раскладка ключей хранилища", () => {
       kind: "variant",
       assetId,
       width: 1280,
-      format: "webp"
+      format: "webp",
+      crop: null
     })
+    // Метка кадра обложки входит в ключ и разбирается обратно (`article-covers.md` п. 3).
+    expect(parseStorageKey(`2026/01/${assetId}/lede-w960.avif`)).toEqual({
+      kind: "variant",
+      assetId,
+      width: 960,
+      format: "avif",
+      crop: "lede"
+    })
+    expect(parseStorageKey(`2026/01/${assetId}/square-w960.avif`)).toBeNull()
     expect(parseStorageKey(`exports/${userId}/${assetId}.zip`)).toEqual({
       kind: "export",
       userId,

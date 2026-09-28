@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest"
 import {
+  CARD_VARIANT_CROPS,
   fallbackVariant,
   pictureSources,
   readMediaVariants,
   thumbnailVariant,
-  variantSrcset
+  variantSrcset,
+  variantsOfCrop
 } from "../app/utils/mediaVariants"
 
 // T-064: веб строит `<picture>` из вариантов, сделанных при загрузке (ADR-0030 п. 2).
@@ -98,5 +100,55 @@ describe("варианты изображения", () => {
     const urls = [...picture.sources.map((source) => source.srcset), picture.fallback?.url ?? ""]
 
     expect(urls.some((url) => url.includes("/_ipx/"))).toBe(false)
+  })
+
+  describe("кадры обложки (T-066)", () => {
+    const withCrops = {
+      ...set,
+      items: [
+        ...set.items,
+        { format: "webp", width: 960, height: 480, url: `${base}/lede-w960.webp`, crop: "lede" },
+        { format: "avif", width: 960, height: 480, url: `${base}/lede-w960.avif`, crop: "lede" },
+        { format: "webp", width: 960, height: 640, url: `${base}/large-w960.webp`, crop: "large" }
+      ]
+    }
+
+    it("набор кадра содержит только его варианты, без метки — исходная композиция", () => {
+      expect(
+        variantsOfCrop(readMediaVariants(withCrops), "lede")
+          .variants.map((item) => item.url)
+          .sort()
+      ).toEqual([`${base}/lede-w960.avif`, `${base}/lede-w960.webp`])
+      expect(variantsOfCrop(readMediaVariants(withCrops), null).variants).toHaveLength(4)
+    })
+
+    it("`<picture>` собирается из запрошенного кадра", () => {
+      const picture = pictureSources(withCrops, "lede")
+
+      expect(picture.fallbackSrcset).toBe(`${base}/lede-w960.webp 960w`)
+      expect(picture.fallback?.url).toBe(`${base}/lede-w960.webp`)
+    })
+
+    it("кадра в наборе нет — берётся исходная композиция, а не пустая картинка", () => {
+      // Обычное медиа статьи кадров не получает (`image-variants.md` §2 п. 3).
+      const picture = pictureSources(set, "lede")
+
+      expect(picture.fallback?.url).toBe(`${base}/w960.webp`)
+    })
+
+    it("вариант карточки выбирает кадр: `small` делит его с `large`", () => {
+      expect(CARD_VARIANT_CROPS.lede).toBe("lede")
+      expect(CARD_VARIANT_CROPS.small).toBe("large")
+      expect(CARD_VARIANT_CROPS.large).toBe("large")
+    })
+
+    it("незнакомая метка кадра в набор не попадает", () => {
+      const parsed = readMediaVariants({
+        ...set,
+        items: [...set.items, { format: "webp", width: 960, height: 480, url: `${base}/x.webp`, crop: "square" }]
+      })
+
+      expect(parsed.variants).toHaveLength(4)
+    })
   })
 })

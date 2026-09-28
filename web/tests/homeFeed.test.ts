@@ -7,6 +7,13 @@ import { feedRequestId } from "../app/utils/publicFeed"
 
 const appDir = fileURLToPath(new URL("../app", import.meta.url))
 
+/** Обложка карточки: адрес одного варианта, описание медиафайла и набор для `<picture>`. */
+const COVER = {
+  url: "/media/cover.webp",
+  alt: "Вид на залив",
+  variants: { version: 1, placeholder: null, thumbnailWidth: 480, items: [] }
+}
+
 const item = (id: string, overrides: Record<string, unknown> = {}) => ({
   id,
   slug: `slug-${id}`,
@@ -44,7 +51,7 @@ describe("подборки главной на стороне страницы",
   it("переводит карточку подборки в поля компонентов чтения", () => {
     const article = toReadingArticle(
       item("4", {
-        cover: "/media/cover.jpg",
+        cover: COVER,
         isTranslation: true,
         author: { name: "Про", handle: "pro", grade: "pro" }
       })
@@ -55,7 +62,7 @@ describe("подборки главной на стороне страницы",
       title: "Материал 4",
       slug: "slug-4",
       dek: "Подзаголовок",
-      featuredImage: "/media/cover.jpg",
+      cover: COVER,
       publishedAt: "2026-09-20T10:00:00.000Z",
       isTranslation: true,
       author: { name: "Про", slug: "pro", grade: "pro" },

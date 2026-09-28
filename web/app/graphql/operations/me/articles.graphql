@@ -73,6 +73,11 @@ query GetMyArticles($status: [MyArticleStatus!], $cursor: ID, $limit: Int = 20) 
       id
       status
       archivedBy
+      cover {
+        url
+        alt
+        variants
+      }
       section {
         id
         name
