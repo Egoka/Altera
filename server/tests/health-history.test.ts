@@ -75,4 +75,36 @@ describe("T-081 health history", () => {
 
     expect(history).toHaveBeenCalledTimes(2)
   })
+
+  it("records concurrent A to B to A transitions in observation order", async () => {
+    const releases: Array<() => void> = []
+    const history = vi.fn(
+      async () =>
+        new Promise<void>((resolve) => {
+          releases.push(resolve)
+        })
+    )
+    const alerts = createHealthAlerts({ recipients: async () => [], logger: { log: vi.fn() }, history })
+    const disabledMail: Health = {
+      ...healthy,
+      checkedAt: "2026-09-28T10:01:00.000Z",
+      components: { ...healthy.components, mail: { status: "disabled", adapter: "disabled", latencyMs: null } }
+    }
+    const healthyAgain = { ...healthy, checkedAt: "2026-09-28T10:02:00.000Z" }
+
+    const writes = [alerts(healthy), alerts(disabledMail), alerts(healthyAgain)]
+    await vi.waitFor(() => expect(history).toHaveBeenCalledTimes(1))
+    releases.shift()?.()
+    await vi.waitFor(() => expect(history).toHaveBeenCalledTimes(2))
+    releases.shift()?.()
+    await vi.waitFor(() => expect(history).toHaveBeenCalledTimes(3))
+    releases.shift()?.()
+    await Promise.all(writes)
+
+    expect(history.mock.calls.map(([snapshot]) => snapshot.checkedAt)).toEqual([
+      healthy.checkedAt,
+      disabledMail.checkedAt,
+      healthyAgain.checkedAt
+    ])
+  })
 })

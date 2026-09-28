@@ -100,35 +100,43 @@ export function createHealthAlerts(options: HealthAlertsOptions): (health: Healt
   const nextRequestId = options.requestId ?? (() => `health:${randomUUID()}`)
   let reported: string | undefined
   let recordedHealth: string | undefined
-  const recordingHealth = new Map<string, Promise<boolean>>()
+  let scheduledHealth: string | undefined
+  let scheduledWrite: Promise<boolean> | undefined
+  let historyQueue: Promise<void> = Promise.resolve()
 
   return async (health) => {
     const reasons = healthAlertReasons(health)
     const signature = reasons.join(" ")
     const snapshotSignature = healthHistorySignature(health)
-    const shouldRecord = snapshotSignature !== recordedHealth
+    const shouldRecord = snapshotSignature !== scheduledHealth
 
     if (shouldRecord && options.history) {
-      let write = recordingHealth.get(snapshotSignature)
-      if (!write) {
-        write = options
-          .history(health)
-          .then(() => true)
-          .catch((error: unknown) => {
-            options.logger.log({
-              level: "error",
-              event: "backend.error",
-              requestId: nextRequestId(),
-              message: "Health history write failed",
-              error
-            })
-            return false
+      scheduledHealth = snapshotSignature
+      const write = historyQueue.then(async () => {
+        try {
+          await options.history!(health)
+          recordedHealth = snapshotSignature
+          return true
+        } catch (error: unknown) {
+          options.logger.log({
+            level: "error",
+            event: "backend.error",
+            requestId: nextRequestId(),
+            message: "Health history write failed",
+            error
           })
-        recordingHealth.set(snapshotSignature, write)
-      }
+          return false
+        }
+      })
+      scheduledWrite = write
+      historyQueue = write.then(() => undefined)
       const written = await write
-      if (recordingHealth.get(snapshotSignature) === write) recordingHealth.delete(snapshotSignature)
-      if (written) recordedHealth = snapshotSignature
+      if (scheduledWrite === write) {
+        scheduledWrite = undefined
+        if (!written) scheduledHealth = recordedHealth
+      }
+    } else if (options.history && scheduledWrite) {
+      await scheduledWrite
     }
 
     if (signature === reported) return null
