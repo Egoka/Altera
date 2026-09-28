@@ -370,24 +370,37 @@ model JobAttempt {
 }
 
 model AiProcess {
-  id                 String          @id @default(uuid())
-  jobId              String?
-  job                Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
-  kind               AiProcessKind
-  status             AiProcessStatus @default(created)
-  objectType         String
-  objectId           String
-  model              String?
-  promptVersion      String?
-  verdict            String?
-  reasons            Json?
-  providerErrorClass String?
-  startedAt          DateTime?
-  finishedAt         DateTime?
-  durationMs         Int?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  id                  String          @id @default(uuid())
+  jobId               String?
+  job                 Job?            @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  kind                AiProcessKind
+  status              AiProcessStatus @default(created)
+  objectType          String
+  objectId            String
+  /// Ревизия подачи для проверки статьи (T-048): аудит `ai.decision` (реестр #71) называет её
+  /// рядом с версией. У проверки профиля и описания изображения ревизии нет — там NULL.
+  revisionId          String?
+  model               String?
+  promptVersion       String?
+  verdict             String?
+  reasons             Json?
+  /// Фрагменты подачи, на которых основан отказ: видят `moderator`/`reviewer` и `owner`
+  /// (`40-admin/ai-check-criteria.md` §5).
+  evidence            Json?
+  /// Попытка манипулировать проверкой (журнал §43 п. 2): пометка ревьюеру, не текст автору.
+  manipulationAttempt Boolean         @default(false)
+  /// Пометка 18+ по решению проверки (журнал §43 п. 8): сама по себе не отказ.
+  adult               Boolean         @default(false)
+  providerErrorClass  String?
+  startedAt           DateTime?
+  finishedAt          DateTime?
+  durationMs          Int?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
+  /// Одна проверка на ревизию: повторного запуска ради другого вердикта нет (журнал #14).
+  /// Ограничение действует только на записи с ревизией — NULL в PostgreSQL не конфликтует.
+  @@unique([objectType, objectId, revisionId])
   @@index([kind, status, createdAt])
   @@index([objectType, objectId])
   @@index([jobId])
@@ -653,7 +666,9 @@ model ReviewMessage {
   kind            ReviewMessageKind
   text            String?
   recommendations String?
-  byRole          Role
+  /// NULL — запись автоматической проверки (`ai_decision`): решение принимает система, роли
+  /// сотрудника у такой записи нет (журнал §16.3; `30-account/author/review-history.md` §3).
+  byRole          Role?
   parentId        String?
   readAt          DateTime?
   createdAt       DateTime           @default(now())

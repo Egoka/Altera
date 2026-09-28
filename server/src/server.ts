@@ -39,6 +39,7 @@ import { jobHandlers } from "./jobs/job-handlers"
 import { createJobWorker } from "./jobs/job-worker"
 import { createPrismaJobStore } from "./jobs/prisma-job-store"
 import { createHousekeepingQueue, registerHousekeepingJob, startHousekeepingSchedule } from "./housekeeping"
+import { createAiCheckAdapterFromEnv, registerAiCheckJob } from "./ai"
 import { startPermissionExceptionExpiry } from "./permission-exceptions/scheduler"
 import type { PermissionExceptionClient } from "./permission-exceptions/service"
 import {
@@ -153,6 +154,9 @@ const mediaGateway = storageConfig.local
   : yoga
 const server = createServer(withHealth(mediaGateway, health))
 registerHousekeepingJob(prisma)
+// AI-проверка допустимости: `real` ждёт утверждения владельцем (журнал §32 п. 2), поэтому вне
+// разработки адаптер отвечает недоступностью провайдера, а не выносит вердикт.
+registerAiCheckJob({ client: prisma, adapter: createAiCheckAdapterFromEnv(process.env), logger })
 const jobWorker = createJobWorker({ store: jobStore, handlers: jobHandlers, logger, errorCollector })
 jobWorker.start()
 server.on("close", () => jobWorker.stop())
