@@ -45,7 +45,12 @@
     "head_sha": "b830d71de3124fb8b73d0074f09f21cc1cfaa3eb",
     "merge_sha": "291089d82462907962ba6e3c96275b85a1dc94f5"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e6e4-a251-7481-a7c0-0f740319a738",
+    "sha": "b830d71de3124fb8b73d0074f09f21cc1cfaa3eb",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": false,
     "environment": null,
