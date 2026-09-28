@@ -1,0 +1,61 @@
+# Раздел админки «Обращения» (`docs/spec/00-registries/admin-sections.md` #23, журнал §37 п. 13).
+# Очередь ведут `admin` и `owner` (матрица #117).
+
+type AdminSupportRequestActor {
+  id: ID!
+  name: String!
+}
+
+type AdminSupportRequest {
+  id: ID!
+  ticketNo: Int!
+  topic: SupportTopic!
+  status: SupportRequestStatus!
+  """
+  Адрес ответа: в списке — маска, полный адрес отдаёт только карточка, и её открытие пишется в
+  аудит `admin.read.personal` (журнал §28.7). У анонимного сообщения о битой ссылке адреса нет.
+  """
+  email: String
+  "Адрес отдан маской: полный адрес в этом ответе не раскрыт."
+  emailMasked: Boolean!
+  """
+  Текст обращения — только карточка. В списке всегда `null`: иначе список был бы обходом записи
+  чтения персональных данных.
+  """
+  message: String
+  "Страница, о которой обращение (`contact.md` §3)."
+  path: String
+  "`requestId` сбоя со страницы 500: ведёт сотрудника к записи ошибки."
+  requestId: String
+  locale: Locale!
+  createdAt: String!
+  answeredAt: String
+  answeredBy: AdminSupportRequestActor
+  "Обращение оставил аккаунт: он видит статус в кабинете (журнал §37 п. 2)."
+  fromAccount: Boolean!
+}
+
+type AdminSupportRequestList {
+  items: [AdminSupportRequest!]!
+  pagination: PaginationInfo!
+  "Сколько обращений ещё без ответа — счётчик очереди."
+  openCount: Int!
+}
+
+input AdminSupportRequestFiltersInput {
+  status: SupportRequestStatus
+  topic: [SupportTopic!]
+}
+
+extend type Query {
+  adminSupportRequests(filters: AdminSupportRequestFiltersInput, pagination: PaginationInput): AdminSupportRequestList!
+  adminSupportRequest(id: ID!): AdminSupportRequest
+}
+
+extend type Mutation {
+  """
+  Отметка ответа: ответ уходит письмом на указанный адрес (`contact.md` §4), продукт фиксирует
+  факт ответа и пишет `support.request.answered` (events #91). Повторная отметка — `CONFLICT`.
+  """
+  answerSupportRequest(id: ID!): AdminSupportRequest!
+}

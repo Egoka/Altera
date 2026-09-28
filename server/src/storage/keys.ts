@@ -15,6 +15,7 @@ export type VariantFormat = (typeof VARIANT_FORMATS)[number]
 export type ExportExtension = (typeof EXPORT_EXTENSIONS)[number]
 
 export type ParsedStorageKey =
+  | { kind: "quarantine"; assetId: string }
   | { kind: "master"; assetId: string; extension: MasterExtension }
   | { kind: "variant"; assetId: string; width: number; format: VariantFormat }
   | { kind: "export"; userId: string; exportId: string; extension: ExportExtension }
@@ -40,6 +41,16 @@ function datePrefix(createdAt: Date): string {
   return `${createdAt.getUTCFullYear()}/${month}`
 }
 
+/**
+ * Карантинная зона конвейера — отдельный префикс (`storage-layout.md` §6 `[ДОПУЩЕНИЕ]`;
+ * `upload-pipeline.md` п. 5). Расширение нейтральное: на этом шаге фактический тип содержимого
+ * ещё не доверенный, и ключ не должен утверждать формат, которого в байтах может не быть.
+ */
+export function quarantineKey(input: { assetId: string }): string {
+  assertUuid(input.assetId, "assetId")
+  return `quarantine/${input.assetId}.upload`
+}
+
 export function masterKey(input: { assetId: string; createdAt: Date; extension: MasterExtension }): string {
   assertUuid(input.assetId, "assetId")
   assertOneOf(input.extension, MASTER_EXTENSIONS, "master extension")
@@ -60,6 +71,7 @@ export function exportKey(input: { userId: string; exportId: string; extension: 
   return `exports/${input.userId}/${input.exportId}.${input.extension}`
 }
 
+const QUARANTINE_KEY = /^quarantine\/([0-9a-f-]{36})\.upload$/
 const MASTER_KEY = /^(\d{4})\/(0[1-9]|1[0-2])\/([0-9a-f-]{36})\.([a-z]+)$/
 const VARIANT_KEY = /^(\d{4})\/(0[1-9]|1[0-2])\/([0-9a-f-]{36})\/w(\d{1,5})\.([a-z]+)$/
 const EXPORT_KEY = /^exports\/([0-9a-f-]{36})\/([0-9a-f-]{36})\.([a-z]+)$/
@@ -69,6 +81,12 @@ const isOneOf = <T extends string>(value: string, allowed: readonly T[]): value 
 
 /** Разбирает ключ; всё, что не соответствует раскладке, — `null` (в том числе `..` и лишние сегменты). */
 export function parseStorageKey(key: string): ParsedStorageKey | null {
+  const quarantine = QUARANTINE_KEY.exec(key)
+  if (quarantine) {
+    const [, assetId] = quarantine
+    if (!UUID.test(assetId)) return null
+    return { kind: "quarantine", assetId }
+  }
   const master = MASTER_KEY.exec(key)
   if (master) {
     const [, , , assetId, extension] = master

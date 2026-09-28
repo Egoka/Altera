@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { GetAboutPageDocument, GetAboutViewerDocument } from "~/graphql/generated/graphql"
+  import { splitAboutText } from "~/utils/aboutText"
   import { formatLegalDate } from "~/utils/legalDocument"
   import { errorRequestId, requestLocale, throwOnFeedError } from "~/utils/publicFeed"
 
@@ -28,6 +29,9 @@
   }
 
   const text = computed(() => data.value?.staticText ?? null)
+  // Раздел «что ещё не работает» выносится из текста владельца отдельной зоной (журнал §37 п. 1).
+  const parsed = computed(() => splitAboutText(text.value?.html ?? ""))
+  const notWorking = computed(() => parsed.value.notWorking)
   const sections = computed(() => (data.value?.sectionCatalog ?? []).filter((section) => section.articleCount > 0))
   const requestId = computed(() => errorRequestId(error.value))
 
@@ -173,7 +177,7 @@
         </p>
         <!-- Текст публикует владелец; разметка проверяется при публикации (`server/src/legal/texts.ts`). -->
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="about-body mt-4" data-testid="about-body" v-html="text.html" />
+        <div class="about-body mt-4" data-testid="about-body" v-html="parsed.body" />
       </template>
 
       <LegalNoticeCard v-if="ownerHint" class="mt-6" data-testid="about-owner-hint">
@@ -186,6 +190,26 @@
         data-testid="about-edit">
         {{ t("about.text.edit") }}
       </NuxtLink>
+    </section>
+
+    <section
+      v-if="notWorking"
+      class="mt-16 max-w-3xl"
+      aria-labelledby="about-not-working-title"
+      data-testid="about-not-working">
+      <h2 id="about-not-working-title" class="font-waterway text-3xl tracking-wide text-zinc-950 dark:text-zinc-100">
+        {{ notWorking.title }}
+      </h2>
+      <!-- Список без линеек: пункты разделяет воздух, маркеры — как у списков текста владельца. -->
+      <ul class="mt-6 list-disc space-y-4 pl-6">
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <li
+          v-for="(item, index) in notWorking.items"
+          :key="index"
+          class="font-garamond-libre text-lg leading-relaxed text-zinc-700 dark:text-zinc-300"
+          data-testid="about-not-working-item"
+          v-html="item" />
+      </ul>
     </section>
 
     <section class="mt-16" aria-labelledby="about-cta-title" data-testid="about-cta">

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-  import { GetDashboardArticlesDocument, GetMyBookmarksDocument } from "~/graphql/generated/graphql"
+  import {
+    GetDashboardArticlesDocument,
+    GetMyBookmarksDocument,
+    GetMySupportRequestsDocument
+  } from "~/graphql/generated/graphql"
   import { useAccountDashboardState } from "~/middleware/account-dashboard"
   import { selectAttention } from "~/utils/accountDashboard"
   import AccountCard from "~/components/me/AccountCard.vue"
@@ -50,6 +54,18 @@
     { server: false }
   )
 
+  // Статус своего обращения в поддержку (журнал §37 п. 2): зона появляется, только когда
+  // обращения есть, — сводка не показывает пустых блоков (§5 «Пусто — зона скрыта»).
+  const supportRequests = await useAsyncData(
+    "dashboard-support",
+    async () => {
+      const result = await useGraphQL(GetMySupportRequestsDocument)
+      if (!result.data) throw new Error(String(result.errors?.[0]?.extensions?.code ?? "INTERNAL_ERROR"))
+      return result.data.mySupportRequests
+    },
+    { server: false }
+  )
+
   // Обратный отсчёт окна «перередактировать» (журнал #9) обновляется раз в полминуты.
   const now = ref(Date.now())
   let clock: ReturnType<typeof setInterval> | null = null
@@ -63,6 +79,7 @@
   const attention = computed(() => selectAttention(articles.data.value?.attention.items ?? [], now.value))
   const latest = computed(() => articles.data.value?.latest.items ?? [])
   const bookmarkItems = computed(() => bookmarks.data.value?.items ?? [])
+  const supportItems = computed(() => supportRequests.data.value ?? [])
   const expired = computed(() => subscription.value?.state === "expired")
 
   const pageState = computed(() => {
@@ -76,6 +93,7 @@
   const serviceLinks = computed(() => [
     { to: "/me/sessions", label: t("account.dashboard.links.sessions"), testid: "dashboard-link-sessions" },
     { to: "/me/email", label: t("account.dashboard.links.email"), testid: "dashboard-link-email" },
+    { to: "/me/password", label: t("account.dashboard.links.password"), testid: "dashboard-link-password" },
     { to: "/me/export", label: t("account.dashboard.links.export"), testid: "dashboard-link-export" },
     { to: "/me/delete", label: t("account.dashboard.links.delete"), testid: "dashboard-link-delete" },
     { to: "/legal/terms", label: t("account.dashboard.links.terms"), testid: "dashboard-link-terms" },
@@ -220,7 +238,31 @@
           </div>
         </section>
 
-        <LinkList class="order-6" :title="t('account.dashboard.links.title')" :links="serviceLinks" />
+        <section v-if="supportItems.length" class="order-6 flex flex-col gap-3" data-testid="dashboard-support">
+          <h2 class="font-sans text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            {{ t("account.dashboard.support.title") }}
+          </h2>
+          <ul class="flex flex-col gap-3">
+            <li
+              v-for="item in supportItems"
+              :key="item.id"
+              :data-support-request="item.ticketNo"
+              :data-support-status="item.status"
+              class="flex flex-col">
+              <span class="font-sans text-base font-medium text-zinc-950 dark:text-zinc-50">
+                {{ t("account.dashboard.support.ticket", { ticketNo: item.ticketNo }) }}
+              </span>
+              <span class="font-sans text-sm text-zinc-500 dark:text-zinc-400">
+                {{ t(`contact.topics.${item.topic}`) }} — {{ t(`account.dashboard.support.status.${item.status}`) }}
+              </span>
+              <span v-if="item.status === 'answered'" class="font-sans text-sm text-zinc-500 dark:text-zinc-400">
+                {{ t("account.dashboard.support.answer") }}
+              </span>
+            </li>
+          </ul>
+        </section>
+
+        <LinkList class="order-7" :title="t('account.dashboard.links.title')" :links="serviceLinks" />
       </div>
     </div>
   </section>

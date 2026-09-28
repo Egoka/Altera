@@ -73,7 +73,46 @@
     },
     "register": "Register",
     "email": "Email",
-    "password": "Password",
+    "password": {
+      "modeLink": "Sign in with a link",
+      "modePassword": "Sign in with a password",
+      "emailLabel": "E-mail address",
+      "passwordLabel": "Password",
+      "newPasswordLabel": "New password",
+      "passwordHint": "From 15 to 128 characters. A phrase of several words works: there are no rules about capitals or digits.",
+      "show": "Show password",
+      "hide": "Hide password",
+      "loginButton": "Sign in",
+      "registerButton": "Create an account with a password",
+      "toRegister": "No account yet? Create one with a password",
+      "toLogin": "Already have an account? Sign in",
+      "forgot": "Forgot your password?",
+      "resetTitle": "A new password by e-mail",
+      "resetHint": "Enter the account address — we will send a link for setting a new password.",
+      "resetButton": "Send the link",
+      "backToLogin": "Back to sign-in",
+      "registerSent": {
+        "title": "Check your e-mail",
+        "body": "We have sent a confirmation to {email}. Follow the link from that e-mail — signing in with the password is closed until then.",
+        "resend": "Send the e-mail again"
+      },
+      "resetSent": {
+        "title": "Check your e-mail",
+        "body": "If an account with {email} exists, we have sent it a link for a new password. The link expires in 15 minutes."
+      },
+      "unconfirmed": {
+        "title": "Confirm your address",
+        "body": "The password is right, but the address is not confirmed yet. We have sent the letter again — follow its link to sign in."
+      },
+      "error": {
+        "wrongCredentials": "Wrong address or password",
+        "weakPassword": "The password must be from 15 to 128 characters",
+        "knownPassword": "This password is too predictable — choose another one",
+        "wrongCurrentPassword": "The current password is wrong",
+        "rateLimited": "Too many sign-in attempts. Try again in {retryAfter}.",
+        "generic": "Something went wrong. Try again (code: {requestId})"
+      }
+    },
     "forgotPassword": "Forgot Password?",
     "magicLink": "Login with Link",
     "sendMagicLink": "Send Login Link",
@@ -111,6 +150,27 @@
         "title": "Sign-in error",
         "body": "We were unable to sign you in. Please try again (code: {requestId})",
         "action": "Back to sign in"
+      }
+    },
+    "confirm": {
+      "loading": {
+        "title": "Confirming the address…",
+        "body": "Please wait."
+      },
+      "expired": {
+        "title": "The link is not valid",
+        "body": "The confirmation link has expired or has already been used. Sign in with the password — we will send the letter again.",
+        "action": "Back to sign-in"
+      }
+    },
+    "reset": {
+      "title": "Set a new password",
+      "body": "The new password replaces the old one, and other devices are signed out.",
+      "submit": "Save the password",
+      "expired": {
+        "title": "The link is not valid",
+        "body": "The link for a new password has expired or has already been used. Request a new one.",
+        "action": "Request a new link"
       }
     }
   },
@@ -317,10 +377,20 @@
         "empty": "No bookmarks yet.",
         "read": "Start reading"
       },
+      "support": {
+        "title": "My support requests",
+        "ticket": "Request #{ticketNo}",
+        "status": {
+          "received": "Received",
+          "answered": "Answered"
+        },
+        "answer": "The reply was sent to the account address."
+      },
       "links": {
         "title": "Account",
         "sessions": "Sessions and devices",
         "email": "Change email",
+        "password": "Password",
         "export": "Export data",
         "delete": "Delete account",
         "terms": "Terms of use",
@@ -363,6 +433,28 @@
         "description": "Please try again a little later."
       },
       "retry": "Try again"
+    },
+    "password": {
+      "pageTitle": "Password",
+      "currentLabel": "Current password",
+      "newLabel": "New password",
+      "hint": "From 15 to 128 characters. A phrase of several words works: there are no rules about capitals or digits.",
+      "setTitle": "No password set",
+      "setBody": "You sign in with a one-time link. You can set a password — signing in with a link stays available.",
+      "changeTitle": "Change the password",
+      "changeBody": "After the change other devices are signed out, and the current one stays.",
+      "submitSet": "Set the password",
+      "submitChange": "Change the password",
+      "saved": "The password is saved. Other devices have been signed out.",
+      "retry": "Retry",
+      "error": {
+        "dataUnavailable": "Could not read the password state. Try again later.",
+        "wrongCurrentPassword": "The current password is wrong",
+        "weakPassword": "The password must be from 15 to 128 characters",
+        "knownPassword": "This password is too predictable — choose another one",
+        "rateLimited": "Too many attempts. Try again in {retryAfter}.",
+        "generic": "Something went wrong. Try again (code: {requestId})"
+      }
     }
   },
   "mail": {
@@ -426,7 +518,8 @@
     "goneTitle": "This article has been withdrawn",
     "goneDescription": "This article is no longer publicly available.",
     "goneHome": "Go to the home page",
-    "gonePublished": "First published"
+    "gonePublished": "First published",
+    "report": "Report this piece"
   },
   "reading": {
     "translation": "Translation",
@@ -666,7 +759,153 @@
       "close": "Close"
     },
     "contentTypes": "Content Types",
-    "users": "Users",
+    "users": {
+      "allModes": "Any mode",
+      "allPlans": "Any plan",
+      "allPublications": "Any",
+      "allRoles": "All roles",
+      "archiveAction": "Archive the account",
+      "archiveArticlesWarning": "Articles archived together with the account: {count}.",
+      "archiveDone": "The account is archived: access closed, sessions revoked, articles archived.",
+      "archiveMode": {
+        "self": "Archived: by the user",
+        "admin": "Archived: by an administrator",
+        "emergency": "Archived: emergency"
+      },
+      "archivedAt": "Archived since",
+      "archivedByStaff": "archived by staff",
+      "articleStats": "{total} in total: {published} published, {draft} drafts, {review} in review, {archived} archived",
+      "articleStatus": {
+        "draft": "draft",
+        "ai_check": "AI check",
+        "review": "in review",
+        "in_review": "under review",
+        "rework": "rework",
+        "published": "published",
+        "archived": "archived"
+      },
+      "articlesTitle": "Articles",
+      "auditTitle": "Audit for this user",
+      "backToList": "Back to the user list",
+      "baseAuthorship": "Base authorship",
+      "baseAuthorshipOff": "Not enabled",
+      "baseAuthorshipOn": "Enabled {date}",
+      "cancel": "Cancel",
+      "cardError": "The user card is unavailable.",
+      "changeEmailAction": "Change the address",
+      "changeEmailNote": "Change the address only after verifying identity through an access recovery request.",
+      "check": {
+        "ok": "name — passed",
+        "pending": "name — under review",
+        "rejected": "name — rejected"
+      },
+      "columnArticles": "Articles",
+      "columnEmail": "Address",
+      "columnLastActive": "Last activity",
+      "columnName": "Name",
+      "columnPlan": "Plan",
+      "columnRegistered": "Registered",
+      "columnRole": "Role",
+      "columnStatus": "Status",
+      "confirm": "Confirm",
+      "conflict": "Another administrator changed the account. Refresh the card.",
+      "consentsTitle": "Consent versions",
+      "description": "Readers and authors: the list, the full card, blocking as account archiving, and restoring. Staff records live in the Administrators section.",
+      "device": {
+        "desktop": "desktop",
+        "mobile": "phone",
+        "tablet": "tablet",
+        "unknown": "unknown device"
+      },
+      "emailDone": "The address is now {email}.",
+      "emergencyAction": "Emergency block",
+      "emergencyDone": "Emergency block applied: access closed immediately.",
+      "emergencyWarning": "The block takes effect immediately, even with an active plan.",
+      "empty": "No users match the filter.",
+      "filterMode": "Archive mode",
+      "filterPlan": "Plan",
+      "filterPublished": "Publications",
+      "filterRole": "Role",
+      "filterStatus": "Status",
+      "internalReasonHint": "Stays in the audit log and is never shown to the user",
+      "internalReasonLabel": "Internal reason",
+      "loadError": "The user list is unavailable.",
+      "loading": "Loading the section",
+      "locale": "Language",
+      "maskedNote": "The address is masked in the list. Only the card reveals it in full — that is a personal data read, and it is written to the audit log.",
+      "newEmailLabel": "New address",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}",
+      "plan": {
+        "free": "No plan",
+        "standard": "Standard",
+        "pro": "Pro",
+        "grant": "Staff grant",
+        "expired": "Plan expired"
+      },
+      "planState": {
+        "free": "No plan",
+        "base": "Base authorship ({tier})",
+        "active": "{tier} active",
+        "expired": "Plan expired"
+      },
+      "planWarning": "The paid plan keeps running with no refund until {date}.",
+      "planWarningNone": "There is no active paid period.",
+      "previous": "Previous",
+      "profileChecks": "Name and avatar checks",
+      "publicMessageHint": "A short, plain explanation; it goes to the user",
+      "publicMessageLabel": "Explanation for the user",
+      "readOnlyCardNote": "The card is read-only: your role has no actions here.",
+      "readOnlyNote": "An analyst reads the section without actions: blocking, restoring, session revocation and address change belong to admin and owner.",
+      "reasonCategory": {
+        "rules_violation": "Publication rules violation",
+        "spam_and_manipulation": "Spam and manipulation",
+        "law_or_rights_violation": "Violation of law or third-party rights",
+        "security_threat": "Security threat"
+      },
+      "reasonCategoryLabel": "Reason category",
+      "reasonLabel": "Reason",
+      "restoreAction": "Restore the account",
+      "restoreArticlesNote": "Access returns, articles stay archived: the author restores them.",
+      "restoreDone": "The account is restored; the articles stayed archived.",
+      "retry": "Retry",
+      "revokeSessionsAction": "Revoke sessions",
+      "revokeSessionsNote": "Every session of the account will be closed; the account itself stays active.",
+      "role": {
+        "reader": "Reader",
+        "author": "Author",
+        "editor": "Editor",
+        "moderator": "Moderator",
+        "analyst": "Analyst",
+        "admin": "Administrator",
+        "owner": "Owner"
+      },
+      "searchHint": "Name, handle or address, three characters minimum",
+      "searchLabel": "Search",
+      "sessionsDone": "Sessions revoked: {count}.",
+      "sessionsEmpty": "No active sessions.",
+      "sessionsTitle": "Sessions",
+      "sort": {
+        "registered": "By registration",
+        "lastActive": "By last activity",
+        "name": "By name",
+        "publications": "By publications"
+      },
+      "sortLabel": "Sorting",
+      "status": {
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "tier": {
+        "free": "free",
+        "standard": "Standard",
+        "pro": "Pro"
+      },
+      "title": "Users",
+      "validation": "Check the fields: the internal reason is required, the address must be new and free.",
+      "withPublications": "With publications",
+      "withoutPublications": "Without publications"
+    },
     "statistics": "Statistics",
     "moderation": "Moderation",
     "settings": "Settings",
@@ -715,16 +954,12 @@
       "forbidden": "Not enough rights for this action.",
       "ownerArchiveNote": "Archived by the owner — only the owner restores it"
     },
-    "usersTitle": "User management",
-    "usersDescription": "View and manage system users",
     "active": "Active",
     "inactive": "Inactive",
     "table": {
       "empty": "No data",
       "emptyDesc": "No records yet"
     },
-    "editUser": "Edit user",
-    "editUserDescription": "Change the user details and click “Save”",
     "menu": {
       "Dashboard": "Dashboard",
       "Articles": "Articles",
@@ -770,6 +1005,7 @@
       "audit": "Audit",
       "mail": "Mail",
       "errors": "Errors and health",
+      "support": "Support requests",
       "legal": "Legal texts",
       "settings": "System settings"
     },
@@ -896,6 +1132,8 @@
       "selectFromList": "Select a record from the list",
       "changeRole": "Change role",
       "revokeRole": "Revoke role",
+      "revokeRoleHint": "Revoking the role archives the record: access is closed, sessions are revoked, and the role comes back only by restoring the record.",
+      "archivedRoleHint": "The record is archived: the role comes back only after the owner restores the record.",
       "assignOwner": "Assign as owner",
       "revokeOwner": "Revoke the owner role",
       "deactivateOwner": "Deactivate the owner",
@@ -965,6 +1203,52 @@
       "bodyTitle": "Message body",
       "bodyHidden": "The message body is available to analyst, admin and owner only.",
       "eventsTitle": "Delivery history"
+    },
+    "support": {
+      "title": "Support requests",
+      "description": "Queue of support and editorial requests. The reply goes by mail to the address given; this section keeps the answered mark.",
+      "maskedNote": "Sender addresses are hidden in the list. The full address and the message are shown on the card — that is a personal data read and it is recorded in the audit log.",
+      "filterStatus": "Status",
+      "filterTopic": "Topic",
+      "allStatuses": "All statuses",
+      "allTopics": "All topics",
+      "status": {
+        "received": "Received",
+        "answered": "Answered"
+      },
+      "topic": {
+        "general": "General question",
+        "broken_link": "Broken link",
+        "refund": "Refund",
+        "copyright": "Rights to a piece",
+        "restore": "Account recovery",
+        "other": "Other"
+      },
+      "ticket": "Request #{ticketNo}",
+      "openCount": "Unanswered: {count}",
+      "columnTicket": "Request",
+      "columnTime": "Time",
+      "columnTopic": "Topic",
+      "columnEmail": "Sender address",
+      "columnPath": "Page",
+      "columnStatus": "Status",
+      "columnAction": "Action",
+      "columnRequestId": "Request code",
+      "emailAbsent": "No address",
+      "markAnswered": "Mark as answered",
+      "answeredAt": "Answered",
+      "answerHint": "Reply to the sender by mail at the address given, then mark the request answered: the sender sees the status in their account.",
+      "conflict": "This request is already marked as answered.",
+      "messageTitle": "Message",
+      "messageAbsent": "No message: a broken link report without a comment.",
+      "loading": "Loading support requests",
+      "empty": "No requests match this filter",
+      "loadError": "The support queue could not be loaded.",
+      "retry": "Try again",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}",
+      "backToList": "Back to the request list"
     },
     "audit": {
       "eyebrow": "Service journal",

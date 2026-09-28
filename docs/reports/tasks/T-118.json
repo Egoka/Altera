@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "task_id": "T-118",
+  "issue_id": "01a0e610-3be1-7c4c-a213-cdfa34c9956a",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-118-about-not-working-and-report-button.md",
+    "sha": "8207f9902b5bdf4c40dda5a4ce447b544517de17"
+  },
+  "baseline_sha": "39514ade78a924f8bfc93f5157f976815fec33cb",
+  "tested_sha": "8b09d5a0052ebfb366cda41691e133f491df7c31",
+  "branch": "web/t118-about-not-working-and-report",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t118",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e64c-bc2d-72e6-a6cf-b4191afd1d2c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "The honest list is rendered from the published owner text: a level-two section anchored `not-working` is lifted out of the `about` static text into its own zone, and the rest of the text keeps rendering without the lifted items. e2e web/tests/e2e/118-about-not-working-report.spec.ts, scenario 'список выводится из опубликованного текста владельца отдельной зоной': the zone shows the owner heading and two items, the owner link inside an item points at /legal/terms, and the body contains the other sections but not the lifted items. The negative scenario 'без раздела «что ещё не работает» зоны нет' shows the whole text with no zone. Parsing is covered by web/tests/about-not-working.test.ts (lifting with links, text without the section, a section without a list read as paragraphs, an empty section, empty text). No new API field: the list ships with the text and is published by the same /admin/legal action (journal §37 item 1)."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "The article page carries a «Пожаловаться» button leading to /contact with a link to the piece. e2e of the same file, scenario 'ведёт на «Письмо в редакцию» со ссылкой на материал': the button href is /contact?topic=other&path=%2Fculture%2Ft118-gorod-slushaet-more; after the click the form shows the line «Страница: /culture/t118-gorod-slushaet-more», the expanded field holds the same path and the topic select holds «другое». The complaints flow itself stays deferred (journal §42, stage F-06)."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "web 762 passed; server 996 passed / 58 skipped; @altera/content 99 passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "e2e": "playwright --project chromium --no-deps on a local disposable database t118_e2e: tests/e2e/118-about-not-working-report.spec.ts 3 passed; regression tests/e2e/59-about-contact.spec.ts + tests/e2e/service-pages.spec.ts 31 passed",
+    "server_build_ci": "not_run: the task changes only web (pages, components, utils, locales, tests) and docs; the server job ran in CI",
+    "migrations": "not_run: no schema change. prisma migrate deploy was applied only to the local disposable database t118_e2e to make the browser run possible",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36380094483",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg ran with the configured core.hooksPath=.husky/_"
+  },
+  "pr": {
+    "number": 336,
+    "url": "https://github.com/Egoka/Altera/pull/336",
+    "base_ref": "app",
+    "base_sha": "39514ade78a924f8bfc93f5157f976815fec33cb",
+    "head_sha": "8b09d5a0052ebfb366cda41691e133f491df7c31",
+    "merge_sha": "6fe5cac0d14e35a66b2417111a93a79c865f3e70"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "Web-only change with no schema, settings or provider change; there is no production environment in Russia yet (journal §34 item 1, T-103)."
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-118.md",
+    "sha256": "4fe8fe111aa846897509656e1f6e50732506fcad1c1795ab0e99ed65a1b28f2d"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Owner question: the topic the «Пожаловаться» button preselects is «другое» ([ДОПУЩЕНИЕ], REPORT_CONTACT_TOPIC). The topic dictionary (contact.md §3) has no complaint topic, and «права на материал» does not fit because its hint asks the visitor to prove their own rights to the piece. A dedicated complaint topic with its own hint is an owner decision and a separate task",
+    "The complaints and rights-claim flow stays deferred (journal §42, stage F-06): this task only routes the visitor into the general support form",
+    "Support request status in the account cabinet and the admin «Обращения» queue (T-119) are separate tasks of the same decision (journal §37 items 2, 13, 16)",
+    "Publishing the list itself is up to the owner: the zone appears once the `about` text contains a section anchored `not-working`; the development database has no such section yet",
+    "Ritual gap: the plan file was written during the pass, not before the first commit"
+  ],
+  "usage": null
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task_id": "T-088",
+  "issue_id": "01a0e50e-fd87-741a-a5a4-5b3eab70e013",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-088-health-and-alerts.md",
+    "sha": "f6578e1d33bc0d37034330b66ec8491a591fa71c"
+  },
+  "baseline_sha": "c3c84072062628d43015e942d070ba30ea2ac206",
+  "tested_sha": "45d8dd59846d55183182ac4cf2a40024352f53b3",
+  "branch": "server/t088-health-and-alerts",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e55a-6ce4-7706-8e68-a7e4e8dd39fd",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "просроченная копия даёт деградацию и оповещение: server/tests/health-backups.test.ts 17 passed — подмена даты → overdue, общий degraded, оповещение owner/admin с причиной backup.database.overdue; повторная проверка второго оповещения не формирует; живая проверка на копии базы: degraded, 4 получателя без адресов (45d8dd5)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "/health не раскрывает секретов: server/tests/health-secrets.test.ts 2 passed — при заданных SMTP_PASSWORD, S3_SECRET_ACCESS_KEY, DATABASE_URL, JWT_ACCESS_SECRET в теле нет ни одного значения секрета; набор ключей ответа закреплён списком (45d8dd5)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (45d8dd5)",
+    "lint": "passed: pnpm lint exit 0 (45d8dd5)",
+    "tests": "passed: pnpm test exit 0 — server 958 passed / 58 skipped, web 738 passed, content 99 passed (45d8dd5)",
+    "build": "passed: pnpm --filter server run build:ci exit 0, dist/server.js и dist/health/index.js на месте (45d8dd5)",
+    "codegen": "passed: pnpm codegen --check exit 0 (45d8dd5)",
+    "typecheck": "passed: pnpm --filter nuxt-app run typecheck exit 0 во всех четырёх проектах, 0 ошибок (45d8dd5)",
+    "migrations": "passed: prisma migrate deploy на копии altera_dev применил 20260928170000_backup_runs; prisma migrate diff --exit-code — No difference detected (45d8dd5)",
+    "smoke": "passed: pnpm --filter server run smoke на копии локальной базы (порт 4123) — GraphQL и /health ответили (45d8dd5)",
+    "database_tests": "passed: T088_TEST_DATABASE_URL vitest run tests/health-backups-database.test.ts 2 passed; тот же прогон добавлен в джоб server-smoke (45d8dd5)"
+  },
+  "pr": {
+    "number": 329,
+    "url": "https://github.com/Egoka/Altera/pull/329",
+    "base_ref": "app",
+    "base_sha": "c3c84072062628d43015e942d070ba30ea2ac206",
+    "head_sha": "45d8dd59846d55183182ac4cf2a40024352f53b3",
+    "merge_sha": "7d10987d0c6beb445a98873f37b1f52edb96d8aa"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e5c9-59cb-73e3-a862-8fb913477595",
+    "sha": "45d8dd59846d55183182ac4cf2a40024352f53b3",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ — миграция backup_runs, модуль health с компонентами, оповещениями и записью prune; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-088.md",
+    "sha256": "38002d7f6467bd3490cc1caf0d7b7ef02e27b879bb4f7ad534c2193fa2e47a33"
+  },
+  "usage": null
+}

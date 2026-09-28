@@ -28,6 +28,17 @@ export function createMemoryRateLimitStore(): RateLimitCounterStore {
 
       current.hits += hits
       return { hits: current.hits, resetAt: current.resetAt }
+    },
+
+    async peek(bucket, key, now): Promise<RateLimitWindow | null> {
+      const current = windows.get(`${bucket}\u0000${key}`)
+      if (!current || current.resetAt.getTime() <= now.getTime()) return null
+
+      return { hits: current.hits, resetAt: current.resetAt }
+    },
+
+    async reset(bucket, key): Promise<void> {
+      windows.delete(`${bucket}\u0000${key}`)
     }
   }
 }

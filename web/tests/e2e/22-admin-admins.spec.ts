@@ -74,7 +74,39 @@ const ownerCard = {
   exceptions: []
 }
 
-const staffCards: Record<string, unknown> = { "staff-editor": staffCard, "staff-owner": ownerCard }
+/**
+ * Снятая служебная запись: после снятия роли она уходит в архив, и роль возвращается только
+ * восстановлением (журнал §37 п. 8, `escalation-and-demotion.md` п. 6).
+ */
+const archivedRow = {
+  id: "staff-archived",
+  name: "Бывший редактор",
+  email: "b***р@altera.test",
+  emailMasked: true,
+  role: "reader",
+  status: "archived",
+  createdAt: "2026-08-15T00:00:00.000Z",
+  createdByName: "Первый владелец",
+  lastActiveAt: "2026-09-18T10:00:00.000Z",
+  activeExceptionCount: 0,
+  archivedAt: "2026-09-21T00:00:00.000Z",
+  archiveReason: "Ушёл"
+}
+
+const archivedCard = {
+  ...archivedRow,
+  email: "byvshiy@altera.test",
+  emailMasked: false,
+  sessionCount: 0,
+  roleHistory: [],
+  exceptions: []
+}
+
+const staffCards: Record<string, unknown> = {
+  "staff-editor": staffCard,
+  "staff-owner": ownerCard,
+  "staff-archived": archivedCard
+}
 
 /** Поле ответа мутации: composable считает действие выполненным только по своему полю. */
 const MUTATION_FIELDS: Record<string, string> = {
@@ -245,6 +277,29 @@ test.describe("раздел «Администраторы»: состояния
     await page.getByRole("button", { name: /подтвердить/i }).click()
 
     await expect.poll(() => lists).toBeGreaterThan(before)
+  })
+
+  test("у записи в архиве не даёт вернуть роль без восстановления", async ({ page }) => {
+    await mockAdminStaff(page, { rows: [...staffRows, archivedRow] })
+    await openAdmins(page)
+
+    await page.locator("tbody").getByText("Бывший редактор").click()
+
+    await expect(page.locator("[data-staff-archived-hint]")).toContainText(/только после восстановления/i)
+    await expect(page.getByRole("button", { name: /^сменить роль$/i })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: /^снять роль$/i })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: /назначить владельцем/i })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: /восстановить запись/i })).toBeVisible()
+  })
+
+  test("предупреждает об архиве записи перед снятием роли", async ({ page }) => {
+    await mockAdminStaff(page)
+    await openAdmins(page)
+
+    await page.locator("tbody").getByText("Редактор журнала").click()
+    await page.getByRole("button", { name: /^снять роль$/i }).click()
+
+    await expect(page.getByText(/после снятия роли запись уходит в архив/i)).toBeVisible()
   })
 
   test("не показывает ограничений по лимиту: административные действия не лимитируются", async ({ page }) => {

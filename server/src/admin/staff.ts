@@ -533,6 +533,9 @@ export async function changeStaffRole(
     if (target.role === "owner") {
       throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "staff.role.change.owner" })
     }
+    // Роль архивированной записи возвращается только после восстановления аккаунта владельцем
+    // (журнал §37 п. 8; `escalation-and-demotion.md` §3).
+    if (target.archivedAt) throw createApiError("ARCHIVED", { requestId: ctx.requestId, entity: "user" })
     if (target.role === nextRole) {
       throw createApiError("CONFLICT", {
         requestId: ctx.requestId,
@@ -565,7 +568,8 @@ export async function revokeStaffRole(
   const actor = ensureOwnerActor(ctx, "staff.role.revoke")
   const reason = requiredText(input.reason, "reason", ctx.requestId)
 
-  return ctx.prisma.$transaction(async (tx) => {
+  let revokedHandle = ""
+  const member = await ctx.prisma.$transaction(async (tx) => {
     const target = await loadTarget(ctx, tx, input.id, "staff.role.revoke")
     if (target.role === "owner") {
       throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "staff.role.revoke.owner" })
@@ -578,8 +582,7 @@ export async function revokeStaffRole(
         actual: "reader"
       })
     }
-    // `[ДОПУЩЕНИЕ, временное]` Снятая запись остаётся служебной без прав
-    // (`escalation-and-demotion.md` п. 6; Q-08 не закрыт).
+    revokedHandle = target.handle
     await replaceRole(ctx, tx, target, "reader")
     await tx.auditLog.create({
       data: {
@@ -592,8 +595,29 @@ export async function revokeStaffRole(
         requestId: ctx.requestId
       }
     })
+    // Снятие роли уводит служебную запись в архив; вернуть роль можно только после
+    // восстановления аккаунта владельцем (журнал §37 п. 8, `admins.md` §5). Запись, уже
+    // закрытую архивом, второй раз не архивируем: доступ и так закрыт, а `user.archive`
+    // означал бы второе закрытие того же аккаунта.
+    if (!target.archivedAt) {
+      await closeAccess(ctx, tx, target, actor.role, actor.id, reason, now)
+      await tx.auditLog.create({
+        data: {
+          action: "user.archive",
+          actorId: actor.id,
+          actorRole: actor.role,
+          entityType: "user",
+          entityId: target.id,
+          diff: { targetId: target.id, reason, mode: "admin" },
+          requestId: ctx.requestId
+        }
+      })
+    }
     return reloadMember(ctx, tx, target.id, now)
   })
+  // Закрытый доступ отвечает 410 сразу: страница автора не ждёт TTL (`author.md` §4).
+  await resetAuthorPageCache(ctx, revokedHandle)
+  return member
 }
 
 export async function assignOwner(

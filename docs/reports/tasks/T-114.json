@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "task_id": "T-114",
+  "issue_id": "01a0e4de-0c5f-7839-b551-3697a6759083",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-114-error-collector-sentry-adapter.md",
+    "sha": "6552bbbbd7ed5031667b1fbf9ce420c23f7b64a2"
+  },
+  "baseline_sha": "7d10987d0c6beb445a98873f37b1f52edb96d8aa",
+  "tested_sha": "7a18c9a04d87101e98c89618d953dd377cf088f8",
+  "branch": "server/t114-sentry-adapter",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/t114",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e5bc-229b-7cb9-9c1e-516b9d8264f8",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "server/tests/error-collector-sentry.test.ts: integration test with a local node:http ingest endpoint; the driver is chosen by createErrorCollectorAdapterFromEnv(env) exactly as in src/server.ts and the transport is not stubbed. An unhandled resolver error travels through the GraphQL masker and the test reads the real request: POST /api/7/envelope/, X-Sentry-Auth with sentry_version=7 and the DSN public key, item header length in bytes, fingerprint equal to the recorded occurrence signature, stack frames oldest-first. The body contains no email address, no IP, no 64-char token, no DSN public key and no 'dsn' substring; redacted values arrive as [REDACTED]. Separate cases: page.error goes as a message event without a stack; HTTP 413 and an unreachable address keep the own history and log backend.error with adapter: sentry; DSN parsing including a path prefix and a rejection that does not repeat the value. Live run against GlitchTip 6.2.6 from the same compose profile: 4 occurrences became 2 groups of 2, the group hash 213883f740b19793b4ac782265976f91 equals md5 of our signature, tags carried stream/service/code/event/request_id/environment, transaction was graphql:feed, the issue title arrived as 'Error: live check: db failed for [REDACTED] from [REDACTED]', and no backend.error adapter failure was logged. CI run 36372217876 green on 7a18c9a."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "server/tests/error-collector.test.ts ('is the default driver and the system works without an external service'): noop is chosen for an unset, empty and 'noop' ERROR_COLLECTOR_DRIVER and for NODE_ENV=production; an unknown driver still throws 'Unknown ERROR_COLLECTOR_DRIVER' (checked on 'glitchtip', since 'sentry' is now an accepted value); ERROR_COLLECTOR_DRIVER=sentry without ERROR_COLLECTOR_DSN throws 'ERROR_COLLECTOR_DSN is required'. The unhandled resolver error still reaches the own history with the INTERNAL_ERROR requestId and no failure log. CI run 36372217876 green on 7a18c9a."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 965 passed / 58 skipped; web 738 passed; @altera/content 99 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "compose_config": "docker compose --profile errors config: exit 0",
+    "live_collector": "GlitchTip 6.2.6 started from the new compose profile on the developer machine, healthy; four occurrences ingested into two groups; containers and volume removed afterwards",
+    "database_test": "not_run: no schema change in this task",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36372217876",
+    "environment": "Node 24.12.0, pnpm 10.18.3",
+    "hooks": "pre-commit and commit-msg did not run on 7a18c9a: the commit was made with an incorrect -c core.hooksPath=.husky instead of the configured .husky/_. Their checks were run separately instead: format, lint, test exit 0 and commitlint on the actual commit message exit 0; no MULTICA-RUNTIME block in the commit"
+  },
+  "pr": {
+    "number": 332,
+    "url": "https://github.com/Egoka/Altera/pull/332",
+    "base_ref": "app",
+    "base_sha": "7d10987d0c6beb445a98873f37b1f52edb96d8aa",
+    "head_sha": "7a18c9a04d87101e98c89618d953dd377cf088f8",
+    "merge_sha": "cb466de0cc65ef6701bb04570459c2faa3310dcf"
+  },
+  "review": null,
+  "deployment": {
+    "required": false,
+    "environment": null,
+    "status": "not_run",
+    "reason": "No schema change and no behaviour change in deployed environments: ERROR_COLLECTOR_DRIVER stays noop on CI and Render, so the new adapter code is not executed there. Deploying the collector itself is deferred with hosting (journal §34 item 1, T-103)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-114.md",
+    "sha256": "fb587b02a4d3392261c9d647e05b02e68b8c0d1751e93548fb67bfbe42e76c1d"
+  },
+  "remaining": [
+    "Independent native review of the tested SHA is pending; Done stays with the controller",
+    "Deploying the collector on a server in Russia is deferred with hosting (journal §34 item 1, T-103); until then the default driver is noop and the adapter code does not run in CI or on Render",
+    "The live check ran against GlitchTip 6.2.6 only; compatibility with Sentry itself and with other GlitchTip versions follows from the protocol but was not exercised",
+    "The external collector is not part of the /health components set: the set is fixed by health-and-alerts.md item 1 (§29.3) and was not extended here",
+    "Send rate limiting, 90-day retention and spike alerts stay outside the adapter (retention-and-pd.md, health-and-alerts.md item 6; the alert channel is deferred, journal §40 item 1)",
+    "Frontend errors still reach the collector through the server-side page.error stream from T-089; there is no direct browser-to-collector path",
+    "/admin/errors, group work statuses (ErrorWorkItem) and admin.change audit belong to T-081"
+  ],
+  "usage": null
+}

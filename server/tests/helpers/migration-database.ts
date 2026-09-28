@@ -47,3 +47,8 @@ export const applyBaselineMigrations = (target: string, url: string): void => {
 // Целевая миграция — отдельным запуском, чтобы тест проверял её собственный код выхода.
 export const applyMigration = (migration: string, url: string): SpawnSyncReturns<string> =>
   prismaDbExecute(["--file", migrationFile(migration)], url)
+
+// Все миграции каталога: имя-ограничитель заведомо больше любого каталога вида `2026…`, поэтому
+// в базовый набор попадают все существующие миграции. Нужно тестам, которым важна не отдельная
+// миграция, а действующая схема целиком.
+export const applyAllMigrations = (url: string): void => applyBaselineMigrations("9999", url)

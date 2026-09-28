@@ -83,14 +83,18 @@ interface MailpitMessage {
 }
 
 /**
- * Достаёт одноразовую ссылку входа из локального приёмника писем (T-021). `notToken`
- * нужен для повторного запроса: письмо с прежним токеном остаётся в ящике.
+ * Достаёт одноразовую ссылку из локального приёмника писем (T-021). `notToken` нужен для
+ * повторного запроса: письмо с прежним токеном остаётся в ящике. `path` различает ссылки веток
+ * входа: `/auth/verify` — ссылка входа, `/auth/confirm` и `/auth/reset` — письма ветки пароля
+ * (T-115).
  */
-export const readMagicLinkToken = async (
+export const readAuthLinkToken = async (
   request: APIRequestContext,
   email: string,
-  notToken?: string
+  options: { path?: string; notToken?: string } = {}
 ): Promise<string> => {
+  const path = options.path ?? "/auth/verify"
+  const pattern = new RegExp(`${path.replace(/\//g, "\\/")}\\?token=([0-9a-f]{64})`)
   const deadline = Date.now() + 20_000
 
   for (;;) {
@@ -101,14 +105,17 @@ export const readMagicLinkToken = async (
       const delivered = (await (
         await request.get(`${mailpitUrl}/api/v1/message/${message.ID}`)
       ).json()) as MailpitMessage
-      const token = delivered.Text.match(/\/auth\/verify\?token=([0-9a-f]{64})/)?.[1]
-      if (token && token !== notToken) return token
+      const token = delivered.Text.match(pattern)?.[1]
+      if (token && token !== options.notToken) return token
     }
 
-    if (Date.now() > deadline) throw new Error(`No fresh login link delivered to ${email}`)
+    if (Date.now() > deadline) throw new Error(`No fresh ${path} link delivered to ${email}`)
     await new Promise((resolve) => setTimeout(resolve, 300))
   }
 }
+
+export const readMagicLinkToken = (request: APIRequestContext, email: string, notToken?: string): Promise<string> =>
+  readAuthLinkToken(request, email, { notToken })
 
 export const uniqueEmail = (prefix: string): string =>
   `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}@example.test`

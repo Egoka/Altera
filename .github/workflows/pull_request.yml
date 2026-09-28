@@ -206,6 +206,8 @@ jobs:
       T016_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
       T047_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
       T048_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
+      T063_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/altera_ci"
+      T088_TEST_DATABASE_URL: "postgresql://test:test@127.0.0.1:5432/postgres"
       MAGIC_LINK_EXPIRY_MINUTES: 15
       MAGIC_LINK_BASE_URL: "http://localhost:3000/auth/verify"
       JWT_ACCESS_TOKEN_EXPIRY: "15m"
@@ -232,6 +234,10 @@ jobs:
         run: pnpm --filter server exec vitest run tests/media-asset-migration-database.test.ts
       - name: Test database job queue
         run: pnpm --filter server exec vitest run tests/job-queue-database.test.ts
+      # T-063: статусы конвейера загрузки, уникальность ключа хранилища и связь с очередью
+      # проверяются на настоящем PostgreSQL — двойник порта ни схему, ни триггеры не проверяет.
+      - name: Проверить конвейер загрузки медиа T-063
+        run: pnpm --filter server exec vitest run tests/media-pipeline-database.test.ts
       # T-048: «одна проверка на ревизию» держится на уникальном индексе, а постановка задания
       # вместе с записью процесса — на транзакции; двойник ни то ни другое не проверяет.
       - name: Проверить AI-проверку в очереди T-048
@@ -272,6 +278,10 @@ jobs:
         env:
           T089_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm --filter server exec vitest run tests/error-history-database.test.ts
+      # T-088: возраст последней успешной копии читается группировкой по виду и состоянию, а сами
+      # виды — перечисления PostgreSQL; миграция и запрос проверяются на настоящей базе.
+      - name: Проверить отметки резервного копирования T-088
+        run: pnpm --filter server exec vitest run tests/health-backups-database.test.ts
       - name: Check build output
         run: test -f server/dist/server.js
       - name: Deploy migrations to isolated CI database

@@ -1,0 +1,54 @@
+fragment AdminSupportRequestRow on AdminSupportRequest {
+  id
+  ticketNo
+  topic
+  status
+  email
+  emailMasked
+  path
+  requestId
+  locale
+  createdAt
+  answeredAt
+  fromAccount
+  answeredBy {
+    id
+    name
+  }
+}
+
+query GetAdminSupportRequests($filters: AdminSupportRequestFiltersInput, $pagination: PaginationInput) {
+  adminSupportRequests(filters: $filters, pagination: $pagination) {
+    openCount
+    items {
+      ...AdminSupportRequestRow
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+query GetAdminSupportRequest($id: ID!) {
+  adminSupportRequest(id: $id) {
+    ...AdminSupportRequestRow
+    message
+  }
+}
+
+mutation AnswerSupportRequest($id: ID!) {
+  answerSupportRequest(id: $id) {
+    id
+    status
+    answeredAt
+    answeredBy {
+      id
+      name
+    }
+  }
+}

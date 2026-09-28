@@ -12,9 +12,9 @@ import {
   revokeAllSessions,
   revokeSession,
   rotateSession,
-  startSession,
   type SessionClient
 } from "../../auth/session"
+import { issueLoginSession } from "../../auth/login"
 import { sanitizeNextPath } from "../../auth/next-path"
 import { findOutdatedConsent, readLegalVersions, recordConsent, type LegalVersions } from "../../auth/legal"
 import { createMagicLinkMail, MAGIC_LINK_TEMPLATE } from "../../mail/messages"
@@ -55,13 +55,7 @@ const sessionClient = (ctx: GraphQLContext): SessionClient => ctx.prisma as unkn
  * остаётся контрактом T-022, поэтому ветки подтверждения ссылки получают ту же полезную нагрузку.
  */
 async function issueSession(ctx: GraphQLContext, user: User, options: { limited?: boolean } = {}) {
-  // Метаданные запроса приходят от BFF; серверные и тестовые вызовы могут их не передавать.
-  const meta = ctx.requestMeta ?? { userAgent: null, ip: null }
-  const { session, refreshToken } = await startSession(sessionClient(ctx), user.id, meta, new Date(), {
-    limited: options.limited ?? false
-  })
-
-  return { accessToken: issueAccessToken(user.id, session.id), refreshToken, user, sessionId: session.id }
+  return issueLoginSession(sessionClient(ctx), user, ctx.requestMeta, options)
 }
 
 interface VerifyMagicLinkResult {
@@ -180,6 +174,25 @@ async function archivedOutcome(
   }
 }
 
+/**
+ * Переход по ссылке доказывает владение адресом, поэтому вход по ссылке подтверждает адрес сам.
+ * Если запись завела регистрация с паролем и адрес ещё не подтверждён, пароль снимается: его
+ * знает тот, кто начал регистрацию, а владельцем ящика он не подтверждён — иначе
+ * «зарегистрировавший» чужой адрес получил бы пароль к чужому аккаунту (T-115, журнал §34 п. 7).
+ * Свой пароль владелец задаёт в кабинете.
+ */
+async function confirmAddressOnLinkLogin(ctx: GraphQLContext, user: User): Promise<User> {
+  if (user.emailVerifiedAt) return user
+
+  const now = new Date()
+  const data = user.passwordHash
+    ? { emailVerifiedAt: now, passwordHash: null, passwordUpdatedAt: now }
+    : { emailVerifiedAt: now }
+  await ctx.prisma.user.update({ where: { id: user.id }, data })
+
+  return { ...user, ...data }
+}
+
 async function completeLogin(
   ctx: GraphQLContext,
   record: MagicLinkToken,
@@ -189,7 +202,8 @@ async function completeLogin(
   const { logger, piiHasher, requestId } = ctx
 
   await consumeToken(ctx, record)
-  const { sessionId, ...session } = await issueSession(ctx, user)
+  const confirmed = await confirmAddressOnLinkLogin(ctx, user)
+  const { sessionId, ...session } = await issueSession(ctx, confirmed)
 
   logger.log({
     level: "info",
@@ -322,7 +336,10 @@ export default {
             // Имя не выводится из адреса: e-mail не попадает ни в хэндл, ни в имя
             // (ADR-0018 п. 3, журнал §25.4, T-126). Своё имя пользователь задаёт в профиле.
             name: EMPTY_ACCOUNT_NAME,
-            locale: record.locale
+            locale: record.locale,
+            // Переход по ссылке доказывает владение адресом: отдельного подтверждения новой
+            // записи не требуется (журнал §34 п. 7).
+            emailVerifiedAt: new Date()
           })
         } catch (error: unknown) {
           // Параллельный обмен ссылки из второй вкладки мог уже завести аккаунт.

@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/server.ts",
-    "build": "pnpm run build:content && prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
-    "build:ci": "pnpm run build:content && prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
+    "build": "pnpm run clean && pnpm run build:content && prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
+    "build:ci": "pnpm run clean && pnpm run build:content && prisma generate && tsc && pnpm run copy-graphql && cp -r src/generated dist/",
     "build:content": "pnpm --filter @altera/content run build",
+    "clean": "rm -rf dist",
     "start": "npx prisma migrate deploy && node dist/server.js",
     "copy-graphql": "node scripts/copy-graphql.js",
     "prisma:dev": "npx prisma studio",
@@ -21,7 +22,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "bash scripts/smoke.sh",
-    "verify:legacy-bodies": "ts-node scripts/verify-legacy-bodies.ts"
+    "verify:legacy-bodies": "ts-node scripts/verify-legacy-bodies.ts",
+    "backup:record": "ts-node scripts/record-backup.ts"
   },
   "prisma": {
     "seed": "ts-node seed/seed.ts"
@@ -44,7 +46,8 @@
     "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^10.0.10",
-    "pino": "^10.3.1"
+    "pino": "^10.3.1",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",

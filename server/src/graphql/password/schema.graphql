@@ -1,0 +1,83 @@
+"""
+Исходы входа по паролю (журнал §34 п. 6–8, `10-flows/register-and-login.md` §3а). Ветки архива
+и повторного согласия те же, что у входа по ссылке: способ входа на состояние аккаунта не влияет.
+"""
+enum PasswordLoginOutcome {
+  """
+  Сессия создана: переход на `next` или `/me`.
+  """
+  authenticated
+  """
+  Пароль верен, но адрес ещё не подтверждён письмом: вход закрыт до подтверждения (§34 п. 7).
+  Письмо с подтверждением отправляется заново.
+  """
+  email_unconfirmed
+  """
+  Версия оферты или политики изменилась: экран повторного согласия по `consentToken`.
+  """
+  consent_required
+  """
+  Аккаунт архивирован самим пользователем: ограниченная сессия и экран `/me/archived`.
+  """
+  archived_self
+  """
+  Аккаунт заблокирован администратором: сессии нет, переход к форме оспаривания.
+  """
+  archived_admin
+}
+
+type PasswordLoginResult {
+  outcome: PasswordLoginOutcome!
+  session: AuthPayload
+  next: String
+  termsVersion: Int
+  privacyVersion: Int
+  """
+  Токен формы оспаривания — как у ветки ссылки (журнал #48).
+  """
+  appealToken: String
+  """
+  Одноразовый токен для экрана повторного согласия `/auth/verify?token=`: пароль уже доказал
+  владение аккаунтом, поэтому письмо для этого шага не нужно.
+  """
+  consentToken: String
+}
+
+extend type AccountUser {
+  """
+  Задан ли пароль. Аккаунт без пароля — обычное состояние: он входит по ссылке (журнал §34 п. 8),
+  а в кабинете видит «задать пароль» вместо «сменить пароль».
+  """
+  passwordSet: Boolean!
+}
+
+extend type Mutation {
+  """
+  Регистрация с паролем (журнал §34 п. 7). Ответ одинаков для свободного и занятого адреса
+  (`20-public/login.md` §4): существование аккаунта не раскрывается, разница видна только в
+  письме. Вход возможен после подтверждения адреса.
+  """
+  registerWithPassword(
+    email: String!
+    password: String!
+    consentVersion: ConsentVersionsInput!
+    locale: Locale!
+    next: String
+  ): MagicLinkRequestResult!
+  "Подтверждение адреса по ссылке из письма регистрации: адрес подтверждён, сессия выдана."
+  confirmEmail(token: String!): PasswordLoginResult!
+  """
+  Вход по паролю. Неизвестный адрес и неверный пароль отвечают одинаково (`UNAUTHENTICATED`);
+  учитываются только неуспешные попытки — 5 за 15 минут на адрес и 30 на IP (журнал §44 п. 1).
+  """
+  loginWithPassword(email: String!, password: String!, next: String): PasswordLoginResult!
+  "Письмо со ссылкой сброса. Ответ одинаков для существующего и неизвестного адреса."
+  requestPasswordReset(email: String!, locale: Locale!): MagicLinkRequestResult!
+  "Новый пароль по ссылке из письма: прежние сессии отзываются, выдаётся новая."
+  resetPassword(token: String!, password: String!): PasswordLoginResult!
+  """
+  Установка и смена пароля в кабинете. Текущий пароль обязателен, если он задан; успешная смена
+  закрывает остальные сессии, текущая остаётся.
+  """
+  setPassword(currentPassword: String, newPassword: String!): Boolean!
+}

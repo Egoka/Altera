@@ -74,7 +74,10 @@ const reader = {
   planTier: "free",
   planUntil: subDays(new Date(), 1),
   archivedAt: null,
-  archiveMode: null
+  archiveMode: null,
+  // Аккаунт заведён входом по ссылке: адрес подтверждён самим переходом (T-115).
+  emailVerifiedAt: new Date("2026-01-01T00:00:00.000Z"),
+  passwordHash: null
 }
 
 let resolver: {
@@ -112,7 +115,8 @@ const context = (overrides: Record<string, unknown> = {}) =>
       ...store.client,
       user: {
         findUnique: async ({ where }: { where: { id?: string; email?: string } }) =>
-          where.id === reader.id || where.email === reader.email ? reader : null
+          where.id === reader.id || where.email === reader.email ? reader : null,
+        update: async ({ data }: { data: Record<string, unknown> }) => ({ ...reader, ...data })
       },
       magicLinkToken: {
         findUnique: async () => magicLinkToken,

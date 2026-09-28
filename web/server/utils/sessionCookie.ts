@@ -10,8 +10,18 @@ export const ACCESS_COOKIE_MAX_AGE_SECONDS = 15 * 60
 // Мутации, которым BFF подставляет refresh из cookie вместо клиента.
 const REFRESH_INPUT_FIELDS = new Set(["refreshSession", "logout"])
 // Мутации, ответ которых содержит новый refresh. Самостоятельное восстановление аккаунта здесь
-// потому, что меняет ограниченную сессию на полную (`30-account/reader/archived-state.md` §4).
-const REFRESH_OUTPUT_FIELDS = new Set(["verifyMagicLink", "acceptConsent", "refreshSession", "restoreAccountSelf"])
+// потому, что меняет ограниченную сессию на полную (`30-account/reader/archived-state.md` §4);
+// ветка пароля (T-115) — потому, что вход, подтверждение адреса и сброс выдают сессию так же,
+// как подтверждение ссылки, и refresh из их ответа браузеру тоже не показывается.
+const REFRESH_OUTPUT_FIELDS = new Set([
+  "verifyMagicLink",
+  "acceptConsent",
+  "refreshSession",
+  "restoreAccountSelf",
+  "loginWithPassword",
+  "confirmEmail",
+  "resetPassword"
+])
 // По контракту входа (T-022) ветки подтверждения ссылки возвращают сессию вложенным полем,
 // а `refreshSession` — плоской полезной нагрузкой. Ищется и то, и другое.
 const NESTED_SESSION_FIELD = "session"
@@ -27,7 +37,8 @@ const SESSION_END_FIELDS = new Map<string, string | null>([
   ["confirmAccountArchive", "archived"]
 ])
 // Обмен одноразового токена входа: полномочие даёт секрет в теле запроса, а не cookie браузера.
-const LOGIN_EXCHANGE_FIELDS = new Set(["verifyMagicLink", "acceptConsent"])
+// Подтверждение адреса из письма ветки пароля — такой же межсайтовый переход по ссылке.
+const LOGIN_EXCHANGE_FIELDS = new Set(["verifyMagicLink", "acceptConsent", "confirmEmail"])
 
 export interface ParsedOperation {
   isMutation: boolean

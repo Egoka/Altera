@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "T-064",
+  "issue_id": "01a0e6db-aac5-772b-8fbe-36444e464e99",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-064-image-variants.md",
+    "sha": "1c8b14678f5a1c88f3021810738bf033ece53774"
+  },
+  "baseline_sha": "55bbb1cab0e587db4ef82502c0735d847582affb",
+  "tested_sha": "154b45cc31cae21993513b0ae83c475c2626c5c4",
+  "branch": "feat/t064-image-variants",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e72b-b86c-7c37-8bf8-0cbe71ab5271",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "для тестового изображения созданы оба формата всех размеров матрицы: server/tests/media-variants-sharp.test.ts 4 passed на настоящем sharp — формат каждого варианта определён по содержимому байтов, размеры совпадают с пропорцией мастера, метаданные мастера в варианты не попадают, заполнитель WebP 48 px строкой data:; правила матрицы и шаг конвейера — server/tests/media-variants.test.ts 14 passed (154b45c)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "в прод-сборке нет запросов к /_ipx/: web/tests/e2e/64-no-ipx-requests.spec.ts 3 passed в джобе «Браузерная проверка веба» — по /, /sections, /pricing, /about, /en собранного сервера проверены и запросы браузера, и разметка; grep -r _ipx web/.output после pnpm --filter nuxt-app run build даёт единственное вхождение — Disallow: /_ipx/ в robots.txt (T-098) (154b45c)"
+    }
+  ],
+  "checks": {
+    "format": "passed: джоб «Формат, линт и тесты» pass (run 36395540535, 154b45c)",
+    "lint": "passed: джоб «Формат, линт и тесты» pass (run 36395540535, 154b45c)",
+    "tests": "passed: pnpm --filter server exec vitest run 1030 passed / 58 skipped, pnpm --filter nuxt-app exec vitest run 780 passed (154b45c)",
+    "build": "passed: джоб «Сборка сервера и дымовая проверка старта» pass, джоб «Сборка и типизация веба» pass (run 36395540535, 154b45c)",
+    "codegen": "passed: зеркало web/app/graphql/generated/schema.graphql обновлено после описания поля variants; codegen --check в джобе «Формат, линт и тесты» pass (154b45c)",
+    "typecheck": "passed: джоб «Сборка и типизация веба» pass (run 36395540535, 154b45c)",
+    "migrations": "not_required: задача не добавляет миграций; колонка MediaAsset.variants Json @default(\"[]\") пришла с T-016, раскладка ключей вариантов — с T-063",
+    "smoke": "passed: джоб «Сборка сервера и дымовая проверка старта» pass (run 36395540535, 154b45c)",
+    "database_tests": "passed: tests/media-pipeline-database.test.ts 3 passed на PostgreSQL 17 в джобе server-smoke (154b45c)",
+    "browser_tests": "passed: браузерный набор 277 passed, повторный прогон изменённого спека tests/e2e/64-no-ipx-requests.spec.ts 3 passed (run 36395540535, 154b45c)"
+  },
+  "pr": {
+    "number": 344,
+    "url": "https://github.com/Egoka/Altera/pull/344",
+    "base_ref": "app",
+    "base_sha": "55bbb1cab0e587db4ef82502c0735d847582affb",
+    "head_sha": "154b45cc31cae21993513b0ae83c475c2626c5c4",
+    "merge_sha": "4da313dfbe86e67ce828dee9de117193b6117fbc"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "PR меняет server/ — шаг вариантов в обработчике задания media.process, новые методы sharp-обработчика и поле variants в ответе GraphQL; Render dev live включает merge SHA"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-064.md",
+    "sha256": "e580eed637cf8fa964b1d0a2910d6aa5808ecf1285f169c355c7c7004ab2f403"
+  },
+  "usage": null
+}

@@ -39,6 +39,17 @@ type AccountArchivePreview {
 }
 
 """
+Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Список закрыт:
+новая категория — решение владельца, а не расширение контракта.
+"""
+enum AccountArchiveReasonCategory {
+  law_or_rights_violation
+  rules_violation
+  security_threat
+  spam_and_manipulation
+}
+
+"""
 Итог подтверждения: архив выполнен, все сессии отозваны, страница уходит на `/`.
 """
 type AccountArchiveResult {
@@ -157,6 +168,12 @@ type AccountUser {
   locale: Locale!
   name: String!
   nameCheckStatus: ProfileCheckStatus!
+
+  """
+  Задан ли пароль. Аккаунт без пароля — обычное состояние: он входит по ссылке (журнал §34 п. 8),
+  а в кабинете видит «задать пароль» вместо «сменить пароль».
+  """
+  passwordSet: Boolean!
   photoUrl: String
   prevAvatarId: ID
   role: Role!
@@ -175,6 +192,15 @@ type AccountUser {
   """
   subscription: AccountSubscription
   updatedAt: String!
+}
+
+type AdminEmailChangeResult {
+  changedAt: String!
+
+  """
+  Новый адрес маской: подтверждение действия второй раз ПДн не раскрывает.
+  """
+  emailMasked: String!
 }
 
 type AdminFormat {
@@ -585,6 +611,235 @@ type AdminSummaryMetric {
 enum AdminSummaryPeriod {
   DAYS_7
   DAYS_30
+}
+
+type AdminSupportRequest {
+  answeredAt: String
+  answeredBy: AdminSupportRequestActor
+  createdAt: String!
+
+  """
+  Адрес ответа: в списке — маска, полный адрес отдаёт только карточка, и её открытие пишется в
+  аудит `admin.read.personal` (журнал §28.7). У анонимного сообщения о битой ссылке адреса нет.
+  """
+  email: String
+
+  """Адрес отдан маской: полный адрес в этом ответе не раскрыт."""
+  emailMasked: Boolean!
+
+  """
+  Обращение оставил аккаунт: он видит статус в кабинете (журнал §37 п. 2).
+  """
+  fromAccount: Boolean!
+  id: ID!
+  locale: Locale!
+
+  """
+  Текст обращения — только карточка. В списке всегда `null`: иначе список был бы обходом записи
+  чтения персональных данных.
+  """
+  message: String
+
+  """Страница, о которой обращение (`contact.md` §3)."""
+  path: String
+
+  """`requestId` сбоя со страницы 500: ведёт сотрудника к записи ошибки."""
+  requestId: String
+  status: SupportRequestStatus!
+  ticketNo: Int!
+  topic: SupportTopic!
+}
+
+type AdminSupportRequestActor {
+  id: ID!
+  name: String!
+}
+
+input AdminSupportRequestFiltersInput {
+  status: SupportRequestStatus
+  topic: [SupportTopic!]
+}
+
+type AdminSupportRequestList {
+  items: [AdminSupportRequest!]!
+
+  """Сколько обращений ещё без ответа — счётчик очереди."""
+  openCount: Int!
+  pagination: PaginationInfo!
+}
+
+type AdminUserArticleRow {
+  archivedAt: String
+
+  """
+  Статью архивировал сотрудник: автор такую не восстанавливает (журнал §4.2–4).
+  """
+  archivedByStaff: Boolean!
+  createdAt: String!
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  slug: String!
+  status: ArticleStatus!
+  title: String!
+}
+
+type AdminUserArticleStats {
+  archived: Int!
+  draft: Int!
+  published: Int!
+  review: Int!
+  total: Int!
+}
+
+"""
+Базовое авторство первого запуска (§25.1, §27.1): дата первого «Создать статью». Закрывается
+только архивом аккаунта, поэтому у архивированной записи признак снят, а дата сохраняется.
+"""
+type AdminUserBaseAuthorship {
+  enabled: Boolean!
+  enabledAt: String
+}
+
+"""
+Карточка пользователя (§3, §5). Её открытие — чтение персональных данных: сервер пишет
+`admin.read.personal` (#67) с актором, субъектом, контекстом и целью от системы.
+"""
+type AdminUserCard {
+  """
+  Внутренняя причина: пользователю она не показывается нигде (§26.9), а `analyst` её не получает —
+  коды `user.archive` и `user.restore` закрыты для служебных зон журнала (журнал #39).
+  """
+  archiveInternalReason: String
+  archiveMode: AccountArchiveMode
+
+  """Короткое объяснение, которое видит пользователь (§26.9)."""
+  archivePublicMessage: String
+  archiveReasonCategory: AccountArchiveReasonCategory
+  archivedAt: String
+  archivedByName: String
+  archivedByRole: Role
+  articleStats: AdminUserArticleStats!
+  articles: [AdminUserArticleRow!]!
+  articlesCount: Int!
+  avatarCheckStatus: ProfileCheckStatus!
+  baseAuthorship: AdminUserBaseAuthorship!
+  canArchive: Boolean!
+  canChangeEmail: Boolean!
+  canRestore: Boolean!
+  canRevokeSessions: Boolean!
+  consents: [AdminUserConsent!]!
+  createdAt: String!
+
+  """
+  Полный адрес: карточка — единственное место раздела, где он раскрывается.
+  """
+  email: String!
+  emailMasked: Boolean!
+  handle: String!
+  id: ID!
+  lastActiveAt: String
+  locale: Locale!
+  name: String!
+  nameCheckStatus: ProfileCheckStatus!
+  plan: AccountSubscription!
+  publishedCount: Int!
+  role: Role!
+
+  """
+  Активные сессии аккаунта — зона безопасности: `analyst` вкладку не видит и получает `null`
+  (журнал §26.6). Ни IP, ни местоположения в сессии нет (журнал §25.9).
+  """
+  sessions: [AccountSession!]
+  status: AdminUserStatus!
+}
+
+type AdminUserConsent {
+  acceptedAt: String!
+  kind: LegalTextKind!
+  locale: Locale!
+  version: Int!
+}
+
+input AdminUserFiltersInput {
+  archiveMode: AccountArchiveMode
+  hasPublications: Boolean
+  lastActiveFrom: String
+  plan: AdminUserPlanFilter
+  registeredFrom: String
+  registeredTo: String
+  role: Role
+
+  """
+  Поиск по имени, хэндлу и адресу от трёх знаков; запрос пишется в аудит как чтение ПДн (§4).
+  """
+  search: String
+  sort: AdminUserSort
+  status: AdminUserStatus
+}
+
+type AdminUserList {
+  items: [AdminUserRow!]!
+  pagination: PaginationInfo!
+  viewerCanManage: Boolean!
+
+  """Роль зрителя: аналитик видит карточку без единой кнопки (§9)."""
+  viewerRole: Role!
+}
+
+"""
+Фильтр плана (§4). `grant` — действующая выдача сотрудника, `expired` — план закончился и
+бесплатным авторством не стал (`plan-free.md` п. 3–4).
+"""
+enum AdminUserPlanFilter {
+  expired
+  free
+  grant
+  pro
+  standard
+}
+
+"""
+Строка списка. Адрес здесь всегда маска: полный отдаёт только карточка, и её открытие пишется
+в аудит `admin.read.personal` (журнал §28.7). Просмотр списка не аудируется (§8).
+"""
+type AdminUserRow {
+  """Как аккаунт попал в архив: сам, администратор или экстренно (§4)."""
+  archiveMode: AccountArchiveMode
+  articlesCount: Int!
+  createdAt: String!
+  email: String!
+
+  """Адрес отдан маской: полный адрес в этом ответе не раскрыт."""
+  emailMasked: Boolean!
+  handle: String!
+  id: ID!
+
+  """
+  Последняя активность — самая свежая сессия; IP и местоположение не показываются (журнал §25.9).
+  """
+  lastActiveAt: String
+  name: String!
+  plan: AccountSubscription!
+  publishedCount: Int!
+  role: Role!
+  status: AdminUserStatus!
+}
+
+type AdminUserSessionsRevokeResult {
+  revokedCount: Int!
+}
+
+enum AdminUserSort {
+  lastActive
+  name
+  publications
+  registered
+}
+
+enum AdminUserStatus {
+  active
+  archived
 }
 
 type Article {
@@ -1079,6 +1334,12 @@ type FeedTagHeader {
   slug: String!
 }
 
+"""
+Файл multipart-запроса GraphQL. Имя файла и объявленный тип конвейер не использует: фактический
+тип определяется по содержимому (`upload-pipeline.md` п. 3).
+"""
+scalar File
+
 type Format {
   archivedAt: String
   createdAt: String!
@@ -1251,6 +1512,56 @@ type MagicLinkRequestResult {
   retryAfterSec: Int
 }
 
+type MediaAsset {
+  """
+  Единое описание медиафайла. Его создаёт конвейер; автор его не задаёт и не редактирует, а
+  размещение в статье не переопределяет (журнал §29.13).
+  """
+  alt: String
+  attribution: String!
+  byteSize: Int!
+  caption: String
+  createdAt: String!
+  height: Int
+  id: ID!
+  license: MediaLicense!
+  licenseNote: String
+  mimeType: String!
+  processingStatus: MediaProcessingStatus!
+
+  """
+  Набор производных изображения: `placeholder` — строка `data:` размытого заполнителя,
+  `thumbnailWidth` — ширина варианта для списков, `items` — публичные варианты
+  (`format`, `width`, `height`, `url`) в AVIF и WebP по централизованной матрице (журнал §29.4).
+  Пока шаг конвейера не прошёл — `items` пуст. Веб строит из набора `<picture>` с `srcset`.
+  """
+  variants: JSON!
+  width: Int
+}
+
+"""Справочник лицензий медиа (ADR-0008 п. 3)."""
+enum MediaLicense {
+  cc0
+  cc_by
+  cc_by_nc
+  cc_by_sa
+  own
+  permission
+  public_domain
+}
+
+"""
+Состояние обработки (журнал §29.12). Публичный доступ к файлу появляется только после `ready`
+(`access-and-signed-urls.md` п. 1).
+"""
+enum MediaProcessingStatus {
+  failed
+  processing
+  queued
+  ready
+  uploading
+}
+
 input MergeTagsInput {
   sourceTagIds: [ID!]!
   targetTagId: ID!
@@ -1260,6 +1571,26 @@ type Mutation {
   _empty: String
   acceptConsent(privacyVersion: Int, termsVersion: Int, token: String!): VerifyMagicLinkResult!
   addBookmark(articleId: ID!): BookmarkState!
+
+  """
+  Смена адреса в рамках восстановления доступа (flow #13 шаг Р2, матрица #50). Личность
+  проверяется вне продукта; сессии не отзываются (журнал §25.8).
+  """
+  adminChangeEmail(id: ID!, newEmail: String!, reason: String!): AdminEmailChangeResult!
+
+  """
+  Отметка ответа: ответ уходит письмом на указанный адрес (`contact.md` §4), продукт фиксирует
+  факт ответа и пишет `support.request.answered` (events #91). Повторная отметка — `CONFLICT`.
+  """
+  answerSupportRequest(id: ID!): AdminSupportRequest!
+
+  """
+  Блокировка = архивирование аккаунта (журнал §5.5): доступ закрыт, сессии отозваны, статьи
+  каскадно в архиве с актором-сотрудником (журнал #4, #30). `mode: emergency` — экстренная
+  блокировка немедленно, даже при действующем плане (матрица #113). Оплаченный план идёт без
+  возврата (журнал #50). Повторная блокировка уже закрытого административно аккаунта — `CONFLICT`.
+  """
+  archiveAccount(id: ID!, internalReason: String!, mode: AccountArchiveMode = admin, publicMessage: String, reasonCategory: AccountArchiveReasonCategory!): AdminUserCard!
   archiveArticle(id: ID!): Article!
   archiveFormat(id: ID!): AdminFormat!
   archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
@@ -1274,6 +1605,11 @@ type Mutation {
   cancelSubscription: Boolean!
   changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
   confirmAccountArchive(token: String!): AccountArchiveResult!
+
+  """
+  Подтверждение адреса по ссылке из письма регистрации: адрес подтверждён, сессия выдана.
+  """
+  confirmEmail(token: String!): PasswordLoginResult!
   confirmEmailChange(code: String!): EmailChangeResult!
   confirmPriceChange(decision: PriceChangeDecision!): Boolean!
   createArticle(input: CreateArticleInput!): Article!
@@ -1297,6 +1633,12 @@ type Mutation {
   exportAudit(filters: AuditLogFilters): AuditExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
+
+  """
+  Вход по паролю. Неизвестный адрес и неверный пароль отвечают одинаково (`UNAUTHENTICATED`);
+  учитываются только неуспешные попытки — 5 за 15 минут на адрес и 30 на IP (журнал §44 п. 1).
+  """
+  loginWithPassword(email: String!, next: String, password: String!): PasswordLoginResult!
   logout(refreshToken: String): Boolean!
   logoutAll: Boolean!
   mergeTags(input: MergeTagsInput!): Tag!
@@ -1304,6 +1646,13 @@ type Mutation {
   """Только `owner`; аудит `legal.update`, сброс кеша публичной страницы."""
   publishLegalVersion(input: PublishLegalVersionInput!): AdminLegalVersion!
   refreshSession(refreshToken: String!): AuthPayload!
+
+  """
+  Регистрация с паролем (журнал §34 п. 7). Ответ одинаков для свободного и занятого адреса
+  (`20-public/login.md` §4): существование аккаунта не раскрывается, разница видна только в
+  письме. Вход возможен после подтверждения адреса.
+  """
+  registerWithPassword(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String, password: String!): MagicLinkRequestResult!
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
 
@@ -1317,10 +1666,26 @@ type Mutation {
   requestAccountArchive(mode: AccountArchiveMode! = self): AccountArchivePreview!
   requestEmailChange(newEmail: String!): EmailChangeState!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
+
+  """
+  Письмо со ссылкой сброса. Ответ одинаков для существующего и неизвестного адреса.
+  """
+  requestPasswordReset(email: String!, locale: Locale!): MagicLinkRequestResult!
   requestRefund(paymentId: ID!, reason: String): Boolean!
   requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
+
+  """
+  Новый пароль по ссылке из письма: прежние сессии отзываются, выдаётся новая.
+  """
+  resetPassword(password: String!, token: String!): PasswordLoginResult!
+
+  """
+  Восстановление аккаунта сотрудником (матрица #105): доступ возвращён, статьи остаются в архиве —
+  автор возвращает их сам (журнал §5.4, §25.7).
+  """
+  restoreAccount(id: ID!, reason: String!): AdminUserCard!
   restoreAccountSelf: AccountRestoreResult!
   restoreArticle(id: ID!): Article!
   restoreFormat(id: ID!): AdminFormat!
@@ -1337,12 +1702,25 @@ type Mutation {
   revokePlan(input: RevokePlanInput!): AdminPlanGrant!
   revokeSession(id: ID!): SessionRevokeResult!
   revokeStaffRole(id: ID!, reason: String!): AdminStaffMember!
+  revokeUserSessions(id: ID!): AdminUserSessionsRevokeResult!
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
+
+  """
+  Установка и смена пароля в кабинете. Текущий пароль обязателен, если он задан; успешная смена
+  закрывает остальные сессии, текущая остаётся.
+  """
+  setPassword(currentPassword: String, newPassword: String!): Boolean!
   startCheckout(interval: BillingInterval!, promo: String, tier: PlanTier!): Boolean!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
+
+  """
+  Загрузка медиа версии статьи: файл принимается в карантин и обрабатывается заданием очереди.
+  Лицензия и атрибуция обязательны; `alt` автор не задаёт (журнал §29.13).
+  """
+  uploadMedia(attribution: String!, file: File!, license: MediaLicense!, translationId: ID!): MediaAsset!
   verifyMagicLink(token: String!): VerifyMagicLinkResult!
 }
 
@@ -1408,6 +1786,20 @@ type MyBookmarksConnection {
   pageInfo: BookmarksPageInfo!
 }
 
+type MySupportRequest {
+  answeredAt: String
+  createdAt: String!
+  id: ID!
+
+  """Страница, о которой обращение, если она была указана."""
+  path: String
+  status: SupportRequestStatus!
+
+  """Номер обращения из строки «Обращение №{ticketNo} принято»."""
+  ticketNo: Int!
+  topic: SupportTopic!
+}
+
 type PaginationInfo {
   currentPage: Int!
   hasNextPage: Boolean!
@@ -1421,6 +1813,52 @@ input PaginationInput {
   limit: Int! = 20
   maxLimit: Int = 100
   page: Int! = 1
+}
+
+"""
+Исходы входа по паролю (журнал §34 п. 6–8, `10-flows/register-and-login.md` §3а). Ветки архива
+и повторного согласия те же, что у входа по ссылке: способ входа на состояние аккаунта не влияет.
+"""
+enum PasswordLoginOutcome {
+  """
+  Аккаунт заблокирован администратором: сессии нет, переход к форме оспаривания.
+  """
+  archived_admin
+
+  """
+  Аккаунт архивирован самим пользователем: ограниченная сессия и экран `/me/archived`.
+  """
+  archived_self
+
+  """Сессия создана: переход на `next` или `/me`."""
+  authenticated
+
+  """
+  Версия оферты или политики изменилась: экран повторного согласия по `consentToken`.
+  """
+  consent_required
+
+  """
+  Пароль верен, но адрес ещё не подтверждён письмом: вход закрыт до подтверждения (§34 п. 7).
+  Письмо с подтверждением отправляется заново.
+  """
+  email_unconfirmed
+}
+
+type PasswordLoginResult {
+  """Токен формы оспаривания — как у ветки ссылки (журнал #48)."""
+  appealToken: String
+
+  """
+  Одноразовый токен для экрана повторного согласия `/auth/verify?token=`: пароль уже доказал
+  владение аккаунтом, поэтому письмо для этого шага не нужно.
+  """
+  consentToken: String
+  next: String
+  outcome: PasswordLoginOutcome!
+  privacyVersion: Int
+  session: AuthPayload
+  termsVersion: Int
 }
 
 type PermissionException {
@@ -1493,7 +1931,14 @@ type Query {
   adminStaff(filters: AdminStaffFiltersInput): [AdminStaffMember!]!
   adminStaffMember(id: ID!): AdminStaffMember
   adminSummary(period: AdminSummaryPeriod!): AdminSummary!
-  adminUser(id: ID!): AccountUser
+  adminSupportRequest(id: ID!): AdminSupportRequest
+  adminSupportRequests(filters: AdminSupportRequestFiltersInput, pagination: PaginationInput): AdminSupportRequestList!
+
+  """
+  Карточка обычного аккаунта; служебная запись и неизвестный `id` отвечают `null` (§2).
+  """
+  adminUser(id: ID!): AdminUserCard
+  adminUsers(filters: AdminUserFiltersInput, pagination: PaginationInput): AdminUserList!
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
@@ -1521,6 +1966,12 @@ type Query {
   myArticlesStats: UserArticleStats
   myBookmark(articleId: ID!): BookmarkState!
   myBookmarks(cursor: ID, limit: Int = 20, unavailable: Boolean): MyBookmarksConnection!
+
+  """
+  Свои обращения в кабинете (журнал §37 п. 2). Обращения гостя владельца не имеют и здесь не
+  показываются; ни адреса, ни текста ответа запрос не отдаёт.
+  """
+  mySupportRequests: [MySupportRequest!]!
   owners: [AdminOwner!]!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
@@ -1545,7 +1996,6 @@ type Query {
   tags(filters: TagFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): TagsResponse!
   taxonomyAudit(entityId: ID!, entityType: String!): [TaxonomyAuditEntry!]!
   user(handle: String!): User
-  users(filters: UserFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): UsersResponse!
 }
 
 type RelatedArticlesResponse {
@@ -1734,6 +2184,15 @@ type SupportRequestResult {
 }
 
 """
+Статус обращения, который владелец аккаунта видит в кабинете (журнал §37 п. 2): «принято» до
+ответа сотрудника, «отвечено» после него.
+"""
+enum SupportRequestStatus {
+  answered
+  received
+}
+
+"""
 Справочник тем обращения (`contact.md` §3). `broken_link` — кнопка страницы 404 (журнал §20.15).
 """
 enum SupportTopic {
@@ -1917,26 +2376,6 @@ type UserArticleStats {
 
 type UserCount {
   articles: Int!
-}
-
-type UserFilters {
-  base: BaseFiltersInfo
-  hasArticles: Boolean
-  role: [Role!]
-}
-
-input UserFiltersInput {
-  base: BaseFiltersInput
-  hasArticles: Boolean
-  role: [Role!]
-}
-
-type UsersResponse {
-  filters: UserFilters!
-  pagination: PaginationInfo!
-  search: SearchInfo
-  sort: SortInfo!
-  users: [AccountUser!]!
 }
 
 type VerifyMagicLinkResult {

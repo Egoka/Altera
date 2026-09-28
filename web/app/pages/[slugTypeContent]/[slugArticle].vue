@@ -98,8 +98,10 @@
   </section>
   <div v-else-if="article">
     <HeaderTag :tag="{ name: article.title }" />
-    <div class="mx-auto flex max-w-3xl justify-end px-4 py-6">
+    <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-end gap-6 px-4 py-6">
       <ReadingArticleBookmark :article-id="article.id" :login-path="`/login?next=${route.fullPath}`" />
+      <!-- Кнопка «Пожаловаться» ведёт в редакцию со ссылкой на этот материал (журнал §37 п. 9). -->
+      <ReadingReportButton :path="route.path" />
     </div>
   </div>
 </template>

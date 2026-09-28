@@ -24,6 +24,7 @@ const sections: Record<string, AdminNavigationItem> = {
   audit: { id: "audit", icon: "lucide:notebook-tabs", to: "/admin/audit" },
   mail: { id: "mail", icon: "lucide:mail", to: "/admin/mail" },
   errors: { id: "errors", icon: "lucide:circle-alert", to: "/admin/errors" },
+  support: { id: "support", icon: "lucide:life-buoy", to: "/admin/support" },
   legal: { id: "legal", icon: "lucide:scale", to: "/admin/legal" },
   settings: { id: "settings", icon: "lucide:settings", to: "/admin/settings" }
 }
@@ -46,6 +47,7 @@ const roleSectionIds: Partial<Record<Role, readonly string[]>> = {
     "ai",
     "audit",
     "mail",
+    "support",
     "errors",
     "legal",
     "settings"
@@ -67,6 +69,7 @@ const roleSectionIds: Partial<Record<Role, readonly string[]>> = {
     "ranking",
     "audit",
     "mail",
+    "support",
     "errors",
     "legal",
     "settings"
@@ -80,6 +83,10 @@ export const canManageTaxonomy = (role: Role): boolean => role === "admin" || ro
 
 // Настройки системы: `admin` читает без секретов (журнал §28.11), `owner` — владелец раздела.
 export const canReadSystemSettings = (role: Role): boolean => role === "admin" || role === "owner"
+
+// Обращения (`00-registries/admin-sections.md` #23, журнал §37 п. 13): очередь ведут `admin` и
+// `owner` (матрица #117); прочим служебным ролям раздел недоступен `[ДОПУЩЕНИЕ]`.
+export const canReadSupportRequests = (role: Role): boolean => role === "admin" || role === "owner"
 
 // Юридические тексты (`40-admin/legal-texts.md` §1): `admin` читает версии и статистику согласий,
 // черновик и публикацию делает только `owner` (матрица #96).
@@ -119,3 +126,22 @@ export const getAdminAccessDecision = (envelope: AdminSummaryEnvelope, target: s
 
   return { kind: "error", requestId: typeof extensions?.requestId === "string" ? extensions.requestId : null }
 }
+
+// Пользователи (`40-admin/users.md` §1, матрица #81): список и карточки читают `analyst`, `admin`
+// и `owner`; `editor` и `moderator` раздел не открывают (журнал §5.3).
+export const canReadUsers = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
+
+// Мутации раздела — `role(admin)`: блокировка, восстановление, отзыв сессий и смена адреса
+// (матрица #52, #80, #105, #113). `analyst` видит карточку без единой кнопки (§9).
+export const canManageUsers = (role: Role): boolean => role === "admin" || role === "owner"
+
+// Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Порядок — порядок
+// журнала; названия для экрана лежат в словаре (`admin.users.reasonCategory.*`).
+export const ARCHIVE_REASON_CATEGORIES = [
+  "rules_violation",
+  "spam_and_manipulation",
+  "law_or_rights_violation",
+  "security_threat"
+] as const
+
+export type ArchiveReasonCategory = (typeof ARCHIVE_REASON_CATEGORIES)[number]

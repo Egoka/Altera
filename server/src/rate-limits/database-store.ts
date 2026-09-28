@@ -47,6 +47,22 @@ export class DatabaseRateLimitStore implements RateLimitCounterStore {
     return { hits: toNumber(row.hits), resetAt: row.expiresAt }
   }
 
+  async peek(bucket: string, key: string, now: Date): Promise<RateLimitWindow | null> {
+    const rows = await this.client.$queryRaw<CounterRow[]>(Prisma.sql`
+      SELECT "hits", "expiresAt" FROM "rate_limit_counters"
+      WHERE "bucket" = ${bucket} AND "key" = ${key} AND "expiresAt" > ${now}
+    `)
+
+    const row = rows[0]
+    return row ? { hits: toNumber(row.hits), resetAt: row.expiresAt } : null
+  }
+
+  async reset(bucket: string, key: string): Promise<void> {
+    await this.client.$executeRaw(
+      Prisma.sql`DELETE FROM "rate_limit_counters" WHERE "bucket" = ${bucket} AND "key" = ${key}`
+    )
+  }
+
   /** Удаляет закрытые окна. Вызывается по расписанию: на решение о лимите не влияет. */
   async pruneExpired(now: Date): Promise<number> {
     return this.client.$executeRaw(Prisma.sql`DELETE FROM "rate_limit_counters" WHERE "expiresAt" <= ${now}`)

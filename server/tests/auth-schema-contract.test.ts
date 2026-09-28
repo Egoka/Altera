@@ -104,3 +104,44 @@ describe("auth persistence schema", () => {
     expect(migration).not.toMatch(/IF (NOT )?EXISTS/)
   })
 })
+
+/**
+ * Ветка пароля T-115: хэш пароля и отметка подтверждения адреса лежат в самой записи, а
+ * одноразовые ссылки подтверждения и сброса — в отдельной таблице по паре «адрес + вид».
+ */
+describe("password branch persistence schema", () => {
+  it("stores only a password hash and the address confirmation mark on the account", () => {
+    const user = model("User")
+
+    expect(user).toMatch(/^\s*passwordHash\s+String\?$/m)
+    expect(user).toMatch(/^\s*passwordUpdatedAt\s+DateTime\?$/m)
+    expect(user).toMatch(/^\s*emailVerifiedAt\s+DateTime\?$/m)
+    // Открытого пароля в схеме нет ни под каким именем.
+    expect(user).not.toMatch(/^\s*password\s+String/m)
+  })
+
+  it("keeps confirmation and reset tokens hash-only, one per address and purpose", () => {
+    const token = model("PasswordToken")
+
+    expect(token).toMatch(/^\s*tokenHash\s+String\s+@unique\s+@db\.VarChar\(64\)$/m)
+    expect(token).not.toMatch(/^\s*token\s+/m)
+    expect(token).toMatch(/^\s*purpose\s+PasswordTokenPurpose$/m)
+    expect(token).toMatch(/^\s*usedAt\s+DateTime\?$/m)
+    expect(token).toContain("@@unique([email, purpose])")
+    expect(schema).toMatch(/enum PasswordTokenPurpose \{\n\s*email_confirm\n\s*password_reset\n\}/)
+  })
+
+  it("confirms existing addresses in the password-login migration", () => {
+    const migration = readFileSync(
+      path.join(prismaDir, "migrations/20260928200000_password_login/migration.sql"),
+      "utf8"
+    )
+
+    expect(migration).toContain('CREATE TYPE "PasswordTokenPurpose"')
+    expect(migration).toContain('ADD COLUMN "passwordHash" TEXT')
+    // Записи до ветки пароля заведены подтверждением ссылки: их адрес уже подтверждён.
+    expect(migration).toContain('UPDATE "users" SET "emailVerifiedAt" = "createdAt"')
+    expect(migration).toContain('CREATE UNIQUE INDEX "password_tokens_email_purpose_key"')
+    expect(migration).not.toMatch(/IF (NOT )?EXISTS/)
+  })
+})

@@ -26,6 +26,10 @@ describe("robots.txt", () => {
     expect(robotsContent).toContain("Disallow: /api/")
   })
 
+  it("disallows service health route /health", () => {
+    expect(robotsContent).toContain("Disallow: /health")
+  })
+
   it("blocks GPTBot AI training bot", () => {
     expect(robotsContent).toContain("User-agent: GPTBot")
   })

@@ -1,0 +1,12 @@
+# Статус своего обращения в кабинете (журнал §37 п. 2).
+query GetMySupportRequests {
+  mySupportRequests {
+    id
+    ticketNo
+    topic
+    status
+    path
+    createdAt
+    answeredAt
+  }
+}
