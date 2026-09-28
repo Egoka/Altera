@@ -10,11 +10,13 @@ import {
   createBackupMonitorFromEnv,
   createHealthAlerts,
   createHealthCheck,
+  createPrismaHealthHistory,
   createProviderProbes,
   createStaffRecipients,
   redisReadiness,
   withHealth,
   type BackupRunsClient,
+  type HealthHistoryClient,
   type MailHistoryClient,
   type StaffRecipientsClient
 } from "./health"
@@ -133,7 +135,8 @@ const yoga = createYoga<GraphQLContext>({
 // (журнал §40 п. 2); канал доставки отложен (§40 п. 1).
 const healthAlerts = createHealthAlerts({
   recipients: createStaffRecipients(prisma as unknown as StaffRecipientsClient),
-  logger
+  logger,
+  history: createPrismaHealthHistory(prisma as unknown as HealthHistoryClient)
 })
 const health = createHealthCheck(
   {

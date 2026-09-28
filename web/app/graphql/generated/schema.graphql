@@ -1707,6 +1707,112 @@ type EmailChangeState {
   pending: EmailChangePending
 }
 
+type ErrorEntry {
+  assignedActorRole: Role
+  code: String!
+  firstSeenAt: String!
+  id: ID!
+  lastSeenAt: String!
+  message: String
+  occurrences: [ErrorOccurrenceItem!]!
+  occurrencesCount: Int!
+  requestId: String
+  route: String
+  service: String!
+  signature: String!
+  stack: String
+  statusHistory: [ErrorStatusHistoryItem!]!
+  updatedAt: String!
+  workStatus: ErrorWorkStatus!
+}
+
+type ErrorExport {
+  contentType: String!
+  csv: String!
+  filename: String!
+  rows: Int!
+}
+
+input ErrorLogFilters {
+  code: String
+  period: ErrorPeriodInput
+  q: String
+  route: String
+  service: String
+  stream: ErrorStreamFilter
+  workStatus: [ErrorWorkStatus!]
+}
+
+type ErrorLogItem {
+  assignedActorRole: Role
+  code: String!
+  firstSeenAt: String!
+  id: ID!
+  lastSeenAt: String!
+  occurrences: Int!
+  requestId: String
+  route: String
+  service: String!
+  signature: String!
+  stream: ErrorStreamFilter!
+  updatedAt: String!
+  workStatus: ErrorWorkStatus
+}
+
+type ErrorLogPage {
+  items: [ErrorLogItem!]!
+  pagination: PaginationInfo!
+}
+
+type ErrorOccurrenceItem {
+  id: ID!
+  jobId: String
+  occurredAt: String!
+  requestId: String
+}
+
+input ErrorPeriodInput {
+  from: String!
+  to: String!
+}
+
+type ErrorStats {
+  byCode: [ErrorStatsBucket!]!
+  byService: [ErrorStatsBucket!]!
+  currentTotal: Int!
+  previousTotal: Int!
+  timeline: [ErrorStatsPoint!]!
+}
+
+type ErrorStatsBucket {
+  count: Int!
+  key: String!
+}
+
+type ErrorStatsPoint {
+  bucket: String!
+  count: Int!
+}
+
+type ErrorStatusHistoryItem {
+  changedByActorRole: Role!
+  comment: String
+  createdAt: String!
+  fromStatus: ErrorWorkStatus
+  toStatus: ErrorWorkStatus!
+}
+
+enum ErrorStreamFilter {
+  backend
+  page
+}
+
+enum ErrorWorkStatus {
+  in_progress
+  new
+  resolved
+}
+
 type Feed {
   caption: FeedCaption
   formats: [FeedFacet!]!
@@ -1871,6 +1977,27 @@ input GrantPlanInput {
   startsAt: String!
   tier: AdminPlanTier!
   userHandle: String!
+}
+
+type HealthBackupHistoryItem {
+  ageHours: Int
+  kind: String!
+  status: String!
+}
+
+type HealthComponentHistoryItem {
+  adapter: String!
+  latencyMs: Int
+  name: String!
+  status: String!
+}
+
+type HealthHistoryItem {
+  backups: [HealthBackupHistoryItem!]!
+  checkedAt: String!
+  components: [HealthComponentHistoryItem!]!
+  id: ID!
+  status: String!
 }
 
 scalar JSON
@@ -2130,6 +2257,7 @@ type Mutation {
   deleteTag(id: ID!): Tag!
   exportAudit(filters: AuditLogFilters): AuditExport!
   exportDownload(id: ID!): String!
+  exportErrors(filters: ErrorLogFilters): ErrorExport!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
 
@@ -2198,6 +2326,7 @@ type Mutation {
   Новый пароль по ссылке из письма: прежние сессии отзываются, выдаётся новая.
   """
   resetPassword(password: String!, token: String!): PasswordLoginResult!
+  resolveErrors(ids: [ID!]!): [ErrorEntry!]!
   resolveReviewNote(noteId: ID!): AuthorReviewNote!
 
   """
@@ -2243,6 +2372,7 @@ type Mutation {
   """
   setArticleCover(articleId: ID!, assetId: ID, focal: FocalPointInput): ArticleCover
   setArticleStatus(id: ID!, status: ArticleStatus!): Article!
+  setErrorWorkStatus(comment: String, expectedUpdatedAt: String!, id: ID!, status: ErrorWorkStatus!): ErrorEntry!
 
   """
   Установка и смена пароля в кабинете. Текущий пароль обязателен, если он задан; успешная смена
@@ -2576,9 +2706,13 @@ type Query {
   author(handle: String!): AuthorProfile!
   authorCatalog(letter: String, locale: Locale!, page: Int! = 1, section: String, sort: AuthorCatalogSort! = recent): AuthorCatalog!
   authoringTaxonomy: AuthoringTaxonomy!
+  errorEntry(id: ID!): ErrorEntry!
+  errorLog(filters: ErrorLogFilters, pagination: PaginationInput): ErrorLogPage!
+  errorStats(period: ErrorPeriodInput!): ErrorStats!
   feed(format: String, handle: String, limit: Int! = 50, locale: Locale!, page: Int! = 1, scope: FeedScope! = home, slug: String, tag: String): Feed!
   formats(filters: FormatFiltersInput!, pagination: PaginationInput!, sort: SortInput!): FormatsResponse!
   gone(locale: Locale!, sectionSlug: String!, slug: String!): GoneArticle
+  healthHistory(period: ErrorPeriodInput!): [HealthHistoryItem!]!
   jobsSummary: AdminJobsSummary!
 
   """

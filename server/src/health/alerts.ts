@@ -73,6 +73,8 @@ export interface HealthAlertsOptions {
   recipients: () => Promise<readonly AlertRecipient[]>
   logger: AppLogger
   requestId?: () => string
+  /** Append-only история для `/admin/errors`; сбой записи не влияет на readiness и оповещение. */
+  history?: (health: Health) => Promise<void>
 }
 
 /**
@@ -90,6 +92,20 @@ export function createHealthAlerts(options: HealthAlertsOptions): (health: Healt
     if (signature === reported) return null
     const first = reported === undefined
     reported = signature
+
+    if (options.history) {
+      try {
+        await options.history(health)
+      } catch (error: unknown) {
+        options.logger.log({
+          level: "error",
+          event: "backend.error",
+          requestId: nextRequestId(),
+          message: "Health history write failed",
+          error
+        })
+      }
+    }
 
     if (reasons.length === 0) {
       // Первая проверка здоровой системы — не «возврат в норму»: сообщать не о чем.

@@ -1,0 +1,142 @@
+# Рабочий журнал поверх неизменяемой истории `backend.error` (T-081).
+
+enum ErrorWorkStatus {
+  new
+  in_progress
+  resolved
+}
+
+enum ErrorStreamFilter {
+  backend
+  page
+}
+
+input ErrorPeriodInput {
+  from: String!
+  to: String!
+}
+
+input ErrorLogFilters {
+  stream: ErrorStreamFilter
+  service: String
+  code: String
+  route: String
+  workStatus: [ErrorWorkStatus!]
+  q: String
+  period: ErrorPeriodInput
+}
+
+type ErrorLogItem {
+  id: ID!
+  signature: String!
+  stream: ErrorStreamFilter!
+  service: String!
+  code: String!
+  route: String
+  requestId: String
+  occurrences: Int!
+  workStatus: ErrorWorkStatus
+  assignedActorRole: Role
+  firstSeenAt: String!
+  lastSeenAt: String!
+  updatedAt: String!
+}
+
+type ErrorOccurrenceItem {
+  id: ID!
+  requestId: String
+  jobId: String
+  occurredAt: String!
+}
+
+type ErrorStatusHistoryItem {
+  fromStatus: ErrorWorkStatus
+  toStatus: ErrorWorkStatus!
+  changedByActorRole: Role!
+  comment: String
+  createdAt: String!
+}
+
+type ErrorEntry {
+  id: ID!
+  signature: String!
+  service: String!
+  code: String!
+  route: String
+  requestId: String
+  message: String
+  stack: String
+  occurrencesCount: Int!
+  workStatus: ErrorWorkStatus!
+  assignedActorRole: Role
+  firstSeenAt: String!
+  lastSeenAt: String!
+  updatedAt: String!
+  occurrences: [ErrorOccurrenceItem!]!
+  statusHistory: [ErrorStatusHistoryItem!]!
+}
+
+type ErrorLogPage {
+  items: [ErrorLogItem!]!
+  pagination: PaginationInfo!
+}
+
+type ErrorStatsPoint {
+  bucket: String!
+  count: Int!
+}
+
+type ErrorStatsBucket {
+  key: String!
+  count: Int!
+}
+
+type ErrorStats {
+  currentTotal: Int!
+  previousTotal: Int!
+  timeline: [ErrorStatsPoint!]!
+  byService: [ErrorStatsBucket!]!
+  byCode: [ErrorStatsBucket!]!
+}
+
+type HealthComponentHistoryItem {
+  name: String!
+  status: String!
+  adapter: String!
+  latencyMs: Int
+}
+
+type HealthBackupHistoryItem {
+  kind: String!
+  status: String!
+  ageHours: Int
+}
+
+type HealthHistoryItem {
+  id: ID!
+  status: String!
+  checkedAt: String!
+  components: [HealthComponentHistoryItem!]!
+  backups: [HealthBackupHistoryItem!]!
+}
+
+# CSV возвращается строкой: браузер формирует локальный файл. Стек и сообщение сюда не входят.
+type ErrorExport {
+  filename: String!
+  contentType: String!
+  rows: Int!
+  csv: String!
+}
+
+extend type Query {
+  errorLog(filters: ErrorLogFilters, pagination: PaginationInput): ErrorLogPage!
+  errorEntry(id: ID!): ErrorEntry!
+  errorStats(period: ErrorPeriodInput!): ErrorStats!
+  healthHistory(period: ErrorPeriodInput!): [HealthHistoryItem!]!
+}
+
+extend type Mutation {
+  setErrorWorkStatus(id: ID!, status: ErrorWorkStatus!, expectedUpdatedAt: String!, comment: String): ErrorEntry!
+  resolveErrors(ids: [ID!]!): [ErrorEntry!]!
+  exportErrors(filters: ErrorLogFilters): ErrorExport!
+}

@@ -103,6 +103,9 @@ export const canReadSystemSettings = (role: Role): boolean => role === "admin" |
 // `owner` (матрица #117); прочим служебным ролям раздел недоступен `[ДОПУЩЕНИЕ]`.
 export const canReadSupportRequests = (role: Role): boolean => role === "admin" || role === "owner"
 
+// Ошибки и состояние содержат технические детали инцидентов и доступны только `admin`/`owner`.
+export const canReadErrors = (role: Role): boolean => role === "admin" || role === "owner"
+
 // Юридические тексты (`40-admin/legal-texts.md` §1): `admin` читает версии и статистику согласий,
 // черновик и публикацию делает только `owner` (матрица #96).
 export const canReadLegalTexts = (role: Role): boolean => role === "admin" || role === "owner"
