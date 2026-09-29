@@ -1,22 +1,54 @@
 {
+  "schema_version": 1,
   "task_id": "T-052",
+  "issue_id": "01a0eacc-0a1f-7e95-9216-4cc2d5f42b4d",
+  "work_class": "feature",
+  "source": {
+    "path": "docs/backlog/tasks/T-052-editorial-articles.md",
+    "sha": "16916a756fc5225d0d88e5a0e3639f22e1add26d"
+  },
+  "baseline_sha": "72f2ba8da35644d31f77552b570bba6b99591534",
   "tested_sha": "25d1a55172f70c57a4fe60e4b19997010f0c0702",
+  "branch": "server/t052-editorial-articles",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0eaec-9698-7975-93e7-2ca978bbe355",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Архив служебной записи editor не меняет статус редакционных статей — тест passed"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Второй editor может сохранить чужую редакционную статью — тест passed"
+    }
+  ],
+  "checks": {
+    "format": "exit 0",
+    "lint": "exit 0",
+    "tests": "passed"
+  },
   "pr": {
     "number": 378,
+    "url": "https://github.com/Egoka/Altera/pull/378",
+    "base_ref": "app",
+    "base_sha": "72f2ba8da35644d31f77552b570bba6b99591534",
     "head_sha": "25d1a55172f70c57a4fe60e4b19997010f0c0702",
     "merge_sha": "4eaed4bb249f0f3e7fd7aab361da74d6516b145a"
   },
   "review": {
-    "sha": "25d1a55172f70c57a4fe60e4b19997010f0c0702",
-    "verdict": "approved",
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
     "run_id": "01a0ecc3-c22e-73d2-b3b4-a53afeab1b27",
-    "reviewer_agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4"
+    "sha": "25d1a55172f70c57a4fe60e4b19997010f0c0702",
+    "verdict": "approved"
   },
   "deployment": {
-    "probe_actor_id": null,
-    "probe_run_id": null
+    "required": true
   },
   "finalization": {
+    "path": "docs/reports/tasks/T-052.md",
     "sha256": "c6cf523f497c53c01172960d4c08b733c2fd5c8aee27ec774d9478876f6ed473"
-  }
+  },
+  "usage": null
 }
