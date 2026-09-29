@@ -2,10 +2,6 @@
 # административном `Article` — страница автора — перешла на `author` и `feed(scope: author)`.
 # Форма карточки показа живёт в `~/types/reading` как `DemoArticleCard`.
 
-fragment ArticleStatusValue on Article {
-  status
-}
-
 # Карточка подборки главной: поля приходят из `feed`, а не из административного `Article`.
 fragment FeedCard on FeedItem {
   id

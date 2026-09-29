@@ -31,12 +31,13 @@ const sections: Record<string, AdminNavigationItem> = {
 
 const roleSectionIds: Partial<Record<Role, readonly string[]>> = {
   editor: ["dashboard", "articles", "mail", "audit"],
-  moderator: ["dashboard", "review", "ai", "audit", "mail"],
+  moderator: ["dashboard", "articles", "review", "ai", "audit", "mail"],
   analyst: ["dashboard", "users", "subscriptions", "payments", "grants", "statistics", "ai", "audit", "mail"],
   admin: [
     "dashboard",
     "categories",
     "tags",
+    "articles",
     "review",
     "users",
     "admins",
@@ -85,6 +86,15 @@ export const canManageTaxonomy = (role: Role): boolean => role === "admin" || ro
 export const canReadReviews = (role: Role): boolean => role === "moderator" || role === "admin" || role === "owner"
 
 export const canDecideReviews = (role: Role): boolean => role === "moderator" || role === "owner"
+
+export const canReadArticles = (role: Role): boolean =>
+  role === "editor" || role === "moderator" || role === "admin" || role === "owner"
+
+export const canArchiveArticles = (role: Role): boolean => role === "moderator" || role === "admin" || role === "owner"
+
+export const canRestoreArticles = (role: Role): boolean => role === "owner"
+
+export const canRejectArticles = (role: Role): boolean => role === "moderator" || role === "owner"
 
 // Настройки системы: `admin` читает без секретов (журнал §28.11), `owner` — владелец раздела.
 export const canReadSystemSettings = (role: Role): boolean => role === "admin" || role === "owner"

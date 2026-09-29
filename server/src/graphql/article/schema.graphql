@@ -252,7 +252,7 @@ extend type Mutation {
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
 
   # Мутации для смены статуса
-  archiveArticle(id: ID!): Article!
+  archiveArticle(id: ID!, reason: String): Article!
   restoreArticle(id: ID!): Article!
 
   """

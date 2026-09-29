@@ -1,8 +1,6 @@
 export {
   AddBookmarkDocument as ADD_BOOKMARK,
   ArchiveSectionDocument as ARCHIVE_SECTION,
-  BulkDeleteArticlesDocument as BULK_DELETE_ARTICLES,
-  ChangeArticleStatusDocument as CHANGE_ARTICLE_STATUS,
   CreateArticleDocument as CREATE_ARTICLE,
   CreateSectionDocument as CREATE_SECTION,
   CreateTagDocument as CREATE_TAG,

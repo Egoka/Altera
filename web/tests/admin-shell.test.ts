@@ -11,7 +11,7 @@ import {
 describe("admin shell role navigation", () => {
   it.each([
     ["editor", ["/admin", "/admin/articles", "/admin/mail", "/admin/audit"]],
-    ["moderator", ["/admin", "/admin/review", "/admin/ai", "/admin/audit", "/admin/mail"]],
+    ["moderator", ["/admin", "/admin/articles", "/admin/review", "/admin/ai", "/admin/audit", "/admin/mail"]],
     [
       "analyst",
       [
@@ -32,6 +32,7 @@ describe("admin shell role navigation", () => {
         "/admin",
         "/admin/categories",
         "/admin/tags",
+        "/admin/articles",
         "/admin/review",
         "/admin/users",
         "/admin/admins",
