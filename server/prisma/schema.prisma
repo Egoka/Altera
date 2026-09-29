@@ -10,21 +10,22 @@ datasource db {
 }
 
 model User {
-  id                          String                 @id @default(uuid())
+  id                          String                        @id @default(uuid())
   name                        String
-  email                       String                 @unique
+  pendingName                 String?
+  email                       String                        @unique
   bio                         String?
   photoUrl                    String?
-  role                        Role                   @default(reader)
-  handle                      String                 @unique
-  locale                      Locale                 @default(ru)
+  role                        Role                          @default(reader)
+  handle                      String                        @unique
+  locale                      Locale                        @default(ru)
   avatarAssetId               String?
   prevAvatarId                String?
-  nameCheckStatus             ProfileCheckStatus     @default(ok)
-  avatarCheckStatus           ProfileCheckStatus     @default(ok)
+  nameCheckStatus             ProfileCheckStatus            @default(ok)
+  avatarCheckStatus           ProfileCheckStatus            @default(ok)
   socialLinks                 Json?
-  createdAt                   DateTime               @default(now())
-  updatedAt                   DateTime               @updatedAt
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
   archivedAt                  DateTime?
   archiveMode                 AccountArchiveMode?
   archivedByActorId           String?
@@ -36,8 +37,8 @@ model User {
   /// Короткое объяснение для экрана и письма пользователю (§26.9); внутренняя причина остаётся
   /// в `archiveReason` и наружу не уходит.
   archivePublicMessage        String?
-  isServiceAccount            Boolean                @default(false)
-  planTier                    PlanTier               @default(free)
+  isServiceAccount            Boolean                       @default(false)
+  planTier                    PlanTier                      @default(free)
   planUntil                   DateTime?
   /// Пароль хранится PHC-строкой Argon2id; `null` — аккаунт без пароля, он входит по ссылке
   /// (журнал §34 п. 8).
@@ -48,26 +49,26 @@ model User {
   emailVerifiedAt             DateTime?
   articles                    Article[]
   bookmarks                   Bookmark[]
-  planGrants                  PlanGrant[]            @relation("PlanGrantRecipient")
-  grantedPlanGrants           PlanGrant[]            @relation("PlanGrantActor")
-  permissionExceptions        PermissionException[]  @relation("PermissionExceptionRecipient")
-  grantedPermissionExceptions PermissionException[]  @relation("PermissionExceptionGrantActor")
-  revokedPermissionExceptions PermissionException[]  @relation("PermissionExceptionRevokeActor")
+  planGrants                  PlanGrant[]                   @relation("PlanGrantRecipient")
+  grantedPlanGrants           PlanGrant[]                   @relation("PlanGrantActor")
+  permissionExceptions        PermissionException[]         @relation("PermissionExceptionRecipient")
+  grantedPermissionExceptions PermissionException[]         @relation("PermissionExceptionGrantActor")
+  revokedPermissionExceptions PermissionException[]         @relation("PermissionExceptionRevokeActor")
   sessions                    Session[]
   emailChangeRequest          EmailChangeRequest?
   accountArchiveRequest       AccountArchiveRequest?
-  currentHandle               HandleHistory          @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
-  handleHistory               HandleHistory[]        @relation("HandleOwner")
-  createdTags                 Tag[]                  @relation("TagCreator")
+  currentHandle               HandleHistory                 @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
+  handleHistory               HandleHistory[]               @relation("HandleOwner")
+  createdTags                 Tag[]                         @relation("TagCreator")
   legalConsents               UserLegalConsent[]
-  translatedArticles          ArticleTranslation[]   @relation("ArticleTranslator")
-  articleRevisions            ArticleRevision[]      @relation("ArticleRevisionCreator")
-  ownedMediaAssets            MediaAsset[]           @relation("MediaAssetOwner")
-  avatarAsset                 MediaAsset?            @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
-  previousAvatar              MediaAsset?            @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
-  reviewNotes                 ReviewNote[]           @relation("ReviewNoteCreator")
+  translatedArticles          ArticleTranslation[]          @relation("ArticleTranslator")
+  articleRevisions            ArticleRevision[]             @relation("ArticleRevisionCreator")
+  ownedMediaAssets            MediaAsset[]                  @relation("MediaAssetOwner")
+  avatarAsset                 MediaAsset?                   @relation("CurrentAvatar", fields: [avatarAssetId], references: [id], onDelete: SetNull)
+  previousAvatar              MediaAsset?                   @relation("PreviousAvatar", fields: [prevAvatarId], references: [id], onDelete: SetNull)
+  reviewNotes                 ReviewNote[]                  @relation("ReviewNoteCreator")
   supportRequests             SupportRequest[]
-  answeredSupportRequests     SupportRequest[]       @relation("SupportRequestAnswer")
+  answeredSupportRequests     SupportRequest[]              @relation("SupportRequestAnswer")
   accountExports              AccountExport[]
 
   @@unique([id, role, isServiceAccount])
@@ -582,6 +583,14 @@ model ArticleTranslation {
   status           ArticleStatus     @default(draft)
   rejected         Boolean           @default(false)
   publishedAt      DateTime?
+  /// Точное число квалифицированных прочтений из контура вовлечённости. Порог и приём событий
+  /// задаются отдельной спецификацией; очередь ревью только читает сохранённый агрегат (§26.4).
+  readCount        Int               @default(0)
+  /// Закрепление ручной проверки. Идентификатор хранится без relation намеренно: удаление или
+  /// архив сотрудника не должно менять историческое состояние материала.
+  reviewerId       String?
+  reviewerRole     Role?
+  reviewClaimedAt  DateTime?
   reeditUntil      DateTime?
   reeditedAt       DateTime?
   translatorId     String?
@@ -597,6 +606,7 @@ model ArticleTranslation {
   @@unique([articleId, locale])
   @@unique([locale, slug])
   @@index([status, publishedAt])
+  @@index([status, reviewerId, updatedAt])
   @@index([translatorId])
   @@index([sourceRevisionId])
   @@map("article_translations")

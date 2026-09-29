@@ -575,6 +575,109 @@ enum AdminPlanTier {
   standard
 }
 
+type AdminReviewAiDecision {
+  finishedAt: String
+  reasons: JSON
+  verdict: String
+}
+
+type AdminReviewAuthor {
+  handle: String!
+  id: ID!
+  name: String!
+}
+
+type AdminReviewClaim {
+  mine: Boolean!
+  role: Role!
+}
+
+type AdminReviewDecision {
+  byRole: Role
+  createdAt: String!
+  id: ID!
+  kind: ReviewHistoryKind!
+  recommendations: String
+  replies: [AdminReviewReply!]!
+  text: String
+}
+
+type AdminReviewItem {
+  aiDecision: AdminReviewAiDecision
+  articleId: ID!
+  author: AdminReviewAuthor!
+  body: JSON!
+  createdAt: String!
+  decisions: [AdminReviewDecision!]!
+  editorial: Boolean!
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  readCount: Int!
+  rejected: Boolean!
+  reviewer: AdminReviewClaim
+  revisions: [AdminReviewRevision!]!
+  section: AdminReviewSection
+  slug: String!
+  state: ReviewQueueState
+  status: ArticleStatus!
+  title: String!
+  updatedAt: String!
+}
+
+type AdminReviewNote {
+  blockId: ID!
+  createdAt: String!
+  id: ID!
+  resolved: Boolean!
+  text: String!
+  updatedAt: String
+}
+
+type AdminReviewQueueItem {
+  articleId: ID!
+  author: AdminReviewAuthor!
+  createdAt: String!
+  editorial: Boolean!
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  readCount: Int!
+  rejected: Boolean!
+  reviewer: AdminReviewClaim
+  section: AdminReviewSection
+  slug: String!
+  state: ReviewQueueState
+  status: ArticleStatus!
+  title: String!
+  updatedAt: String!
+}
+
+type AdminReviewQueuePage {
+  items: [AdminReviewQueueItem!]!
+  pagination: PaginationInfo!
+}
+
+type AdminReviewReply {
+  byRole: Role
+  createdAt: String!
+  id: ID!
+  text: String!
+}
+
+type AdminReviewRevision {
+  body: JSON!
+  createdAt: String!
+  id: ID!
+  notes: [AdminReviewNote!]!
+  title: String!
+}
+
+type AdminReviewSection {
+  name: String!
+  slug: String!
+}
+
 enum AdminStaffExceptionTerm {
   expiring
   indefinite
@@ -1313,6 +1416,13 @@ input ConsentVersionsInput {
   termsVersion: Int
 }
 
+input CreateAdminReviewNoteInput {
+  blockId: ID!
+  revisionId: ID!
+  text: String!
+  translationId: ID!
+}
+
 input CreateArticleInput {
   locale: Locale
   sectionId: ID
@@ -1824,6 +1934,7 @@ type Mutation {
   cancelJob(id: ID!, reason: String!): AdminJob!
   cancelSubscription: Boolean!
   changeStaffRole(id: ID!, reason: String!, role: AssignableStaffRole!): AdminStaffMember!
+  claimReview(id: ID!): AdminReviewItem!
   confirmAccountArchive(token: String!): AccountArchiveResult!
 
   """
@@ -1837,6 +1948,7 @@ type Mutation {
 
   """Только `owner`; аудит `legal.update`."""
   createLegalDraft(input: CreateLegalDraftInput!): AdminLegalVersion!
+  createReviewNote(input: CreateAdminReviewNoteInput!): AdminReviewNote!
   createSection(input: CreateSectionInput!): Section!
   createStaff(input: CreateStaffInput!): AdminStaffMember!
 
@@ -1848,6 +1960,7 @@ type Mutation {
   createSupportRequest(acceptPrivacy: Boolean, email: String, locale: Locale, message: String, path: String, requestId: String, route: String, topic: SupportTopic!): SupportRequestResult!
   createTag(input: CreateTagInput!): Tag!
   deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
+  decideProfileCheck(input: ProfileReviewDecisionInput!): ProfileReviewItem!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
   exportAudit(filters: AuditLogFilters): AuditExport!
@@ -1867,6 +1980,7 @@ type Mutation {
 
   """Только `owner`; аудит `legal.update`, сброс кеша публичной страницы."""
   publishLegalVersion(input: PublishLegalVersionInput!): AdminLegalVersion!
+  publishReviewManual(id: ID!, message: String): AdminReviewItem!
   refreshSession(refreshToken: String!): AuthPayload!
 
   """
@@ -1875,6 +1989,8 @@ type Mutation {
   письме. Вход возможен после подтверждения адреса.
   """
   registerWithPassword(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String, password: String!): MagicLinkRequestResult!
+  rejectReviewFinal(id: ID!, reason: String): AdminReviewItem!
+  releaseReview(id: ID!): AdminReviewItem!
 
   """
   Удаление аватара (`avatars.md` п. 8): запись помечается удалённой, аккаунт показывает инициалы.
@@ -1882,6 +1998,7 @@ type Mutation {
   removeAvatar: Avatar
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
+  replyInReviewDecision(decisionId: ID!, text: String!): AdminReviewReply!
   replyToDecision(decisionId: ID!, text: String!): ReviewThreadMessage!
 
   """
@@ -1901,6 +2018,7 @@ type Mutation {
   """
   requestPasswordReset(email: String!, locale: Locale!): MagicLinkRequestResult!
   requestRefund(paymentId: ID!, reason: String): Boolean!
+  requestReviewRework(id: ID!, recommendations: String!): AdminReviewItem!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
 
@@ -1969,6 +2087,7 @@ type Mutation {
   `ai_check`; повтор после отказа AI — в `review` без нового AI.
   """
   submitTranslation(id: ID!): EditorTranslation!
+  unpublishReview(id: ID!, reason: String!): AdminReviewItem!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
@@ -2169,6 +2288,43 @@ enum ProfileCheckStatus {
   rejected
 }
 
+input ProfileReviewDecisionInput {
+  field: ProfileReviewField!
+  reason: String
+  userId: ID!
+  verdict: ProfileReviewVerdict!
+}
+
+enum ProfileReviewField {
+  avatar
+  name
+}
+
+type ProfileReviewItem {
+  avatarAssetId: ID
+  avatarStatus: String!
+  avatarUrl: String
+  fields: [ProfileReviewField!]!
+  handle: String!
+  name: String!
+  nameStatus: String!
+  previousAvatarId: ID
+  previousAvatarUrl: String
+  previousName: String
+  updatedAt: String!
+  userId: ID!
+}
+
+type ProfileReviewQueuePage {
+  items: [ProfileReviewItem!]!
+  pagination: PaginationInfo!
+}
+
+enum ProfileReviewVerdict {
+  accept
+  reject
+}
+
 type PublicSection {
   articleCount: Int!
   id: ID!
@@ -2254,9 +2410,12 @@ type Query {
   owners: [AdminOwner!]!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
+  profileReviewQueue(pagination: PaginationInput): ProfileReviewQueuePage!
   publicSections(locale: Locale!): [PublicSection!]!
   recommendedArticles(articleSlug: String!, limit: Int = 5): [Article!]!
   relatedArticles(articleSlug: String!, limit: Int = 10): [Article!]!
+  reviewItem(id: ID!): AdminReviewItem!
+  reviewQueue(filters: ReviewQueueFiltersInput, pagination: PaginationInput, sort: ReviewQueueSort = age): AdminReviewQueuePage!
   revisions(cursor: ID, limit: Int = 20, translationId: ID!): ArticleRevisionsConnection!
   section(slug: String!): Section
   sectionCatalog(locale: Locale!): [CatalogSection!]!
@@ -2320,6 +2479,26 @@ enum ReviewHistoryKind {
   submitted
   unpublish
   withdrawn
+}
+
+input ReviewQueueFiltersInput {
+  editorial: Boolean
+  locale: Locale
+  search: String
+  sectionId: ID
+  states: [ReviewQueueState!]
+}
+
+enum ReviewQueueSort {
+  age
+  updated
+}
+
+enum ReviewQueueState {
+  in_review
+  published
+  queued
+  rework
 }
 
 type ReviewReason {
