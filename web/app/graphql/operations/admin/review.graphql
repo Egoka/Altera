@@ -117,9 +117,12 @@ query GetProfileReviewQueue($pagination: PaginationInput) {
     items {
       userId
       name
+      previousName
       handle
       avatarAssetId
       previousAvatarId
+      avatarUrl
+      previousAvatarUrl
       nameStatus
       avatarStatus
       fields
@@ -196,9 +199,12 @@ mutation DecideAdminProfileCheck($input: ProfileReviewDecisionInput!) {
   decideProfileCheck(input: $input) {
     userId
     name
+    previousName
     handle
     avatarAssetId
     previousAvatarId
+    avatarUrl
+    previousAvatarUrl
     nameStatus
     avatarStatus
     fields

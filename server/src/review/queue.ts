@@ -2,13 +2,14 @@ import type { Prisma, Role } from "../generated/prisma"
 import { buildArticleCacheTags } from "../cache/key"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
+import { avatarAssetSelect, avatarUrlOf } from "../media"
 import type { GraphQLContext } from "../prisma"
 import { calculatePagination, validatePagination, type PaginationInput } from "../utils/admin"
 
 const REVIEW_ACTION = "admin.review.decide"
 const REVIEW_READ_ACTION = "admin.review.read"
 const QUEUE_ROLES = new Set<Role>(["moderator", "admin", "owner"])
-const REVIEW_STATES = new Set(["queued", "in_review", "rework"])
+const REVIEW_STATES = new Set(["queued", "in_review", "rework", "published"])
 const PROFILE_FIELDS = new Set(["name", "avatar"])
 const PROFILE_VERDICTS = new Set(["accept", "reject"])
 
@@ -51,8 +52,23 @@ const reviewItemInclude = {
   }
 } satisfies Prisma.ArticleTranslationInclude
 
+const profileReviewSelect = {
+  id: true,
+  name: true,
+  prevName: true,
+  handle: true,
+  avatarAssetId: true,
+  prevAvatarId: true,
+  nameCheckStatus: true,
+  avatarCheckStatus: true,
+  updatedAt: true,
+  avatarAsset: { select: avatarAssetSelect },
+  previousAvatar: { select: avatarAssetSelect }
+} satisfies Prisma.UserSelect
+
 type ReviewRowRecord = Prisma.ArticleTranslationGetPayload<{ include: typeof reviewRowInclude }>
 type ReviewItemRecord = Prisma.ArticleTranslationGetPayload<{ include: typeof reviewItemInclude }>
+type ProfileReviewRecord = Prisma.UserGetPayload<{ select: typeof profileReviewSelect }>
 type ReviewActor = NonNullable<GraphQLContext["currentUser"]>
 type TransactionClient = Prisma.TransactionClient
 
@@ -77,7 +93,7 @@ export interface ReviewQueueItem {
   slug: string
   locale: "ru" | "en"
   status: string
-  state: "queued" | "in_review" | "rework" | null
+  state: "queued" | "in_review" | "rework" | "published" | null
   rejected: boolean
   publishedAt: Date | null
   readCount: number
@@ -112,9 +128,12 @@ export interface ProfileReviewInput {
 export interface ProfileReviewItem {
   userId: string
   name: string
+  previousName: string | null
   handle: string
   avatarAssetId: string | null
   previousAvatarId: string | null
+  avatarUrl: string | null
+  previousAvatarUrl: string | null
   nameStatus: string
   avatarStatus: string
   fields: Array<"name" | "avatar">
@@ -157,6 +176,7 @@ function reviewState(record: Pick<ReviewRowRecord, "status" | "rejected">): Revi
   if (record.rejected) return null
   if (record.status === "review") return "queued"
   if (record.status === "in_review" || record.status === "rework") return record.status
+  if (record.status === "published") return "published"
   return null
 }
 
@@ -196,7 +216,7 @@ function normalizePagination(ctx: GraphQLContext, input: PaginationInput | null 
 function normalizeStates(ctx: GraphQLContext, states: readonly string[] | null | undefined) {
   if (!states?.length) return null
   for (const state of states) {
-    if (!REVIEW_STATES.has(state)) validationError(ctx, "filters.states", "enum:queued,in_review,rework")
+    if (!REVIEW_STATES.has(state)) validationError(ctx, "filters.states", "enum:queued,in_review,rework,published")
   }
   return states.map((state) => (state === "queued" ? "review" : state))
 }
@@ -209,12 +229,18 @@ function queueWhere(ctx: GraphQLContext, actor: ReviewActor, filters: ReviewQueu
   const where: Prisma.ArticleTranslationWhereInput = {
     rejected: false,
     ...(states
-      ? { status: { in: states as Array<"review" | "in_review" | "rework"> } }
+      ? { status: { in: states as Array<"review" | "in_review" | "rework" | "published"> } }
       : { OR: [{ status: "review" }, { status: "in_review", reviewerId: actor.id }] }),
     ...(filters?.locale ? { locale: filters.locale } : {}),
-    ...(filters?.sectionId ? { article: { sectionId: filters.sectionId } } : {}),
-    ...(filters?.editorial !== null && filters?.editorial !== undefined
-      ? { article: { isEditorial: filters.editorial } }
+    ...(filters?.sectionId || (filters?.editorial !== null && filters?.editorial !== undefined)
+      ? {
+          article: {
+            ...(filters?.sectionId ? { sectionId: filters.sectionId } : {}),
+            ...(filters?.editorial !== null && filters?.editorial !== undefined
+              ? { isEditorial: filters.editorial }
+              : {})
+          }
+        }
       : {}),
     ...(search
       ? {
@@ -627,25 +653,19 @@ export async function createReviewNote(ctx: GraphQLContext, input: CreateReviewN
   })
 }
 
-function toProfileItem(record: {
-  id: string
-  name: string
-  handle: string
-  avatarAssetId: string | null
-  prevAvatarId: string | null
-  nameCheckStatus: string
-  avatarCheckStatus: string
-  updatedAt: Date
-}): ProfileReviewItem {
+function toProfileItem(record: ProfileReviewRecord, mediaBaseUrl: string): ProfileReviewItem {
   const fields: Array<"name" | "avatar"> = []
   if (record.nameCheckStatus === "pending") fields.push("name")
   if (record.avatarCheckStatus === "pending") fields.push("avatar")
   return {
     userId: record.id,
     name: record.name,
+    previousName: record.prevName,
     handle: record.handle,
     avatarAssetId: record.avatarAssetId,
     previousAvatarId: record.prevAvatarId,
+    avatarUrl: avatarUrlOf(record.avatarAsset, mediaBaseUrl),
+    previousAvatarUrl: avatarUrlOf(record.previousAvatar, mediaBaseUrl),
     nameStatus: record.nameCheckStatus,
     avatarStatus: record.avatarCheckStatus,
     fields,
@@ -667,21 +687,12 @@ export async function listProfileReviewQueue(
   const page = calculatePagination(pagination.page, pagination.limit, total)
   const items = await ctx.prisma.user.findMany({
     where,
-    select: {
-      id: true,
-      name: true,
-      handle: true,
-      avatarAssetId: true,
-      prevAvatarId: true,
-      nameCheckStatus: true,
-      avatarCheckStatus: true,
-      updatedAt: true
-    },
+    select: profileReviewSelect,
     orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
     skip: page.skip,
     take: page.take
   })
-  return { items: items.map(toProfileItem), pagination: page.pagination }
+  return { items: items.map((item) => toProfileItem(item, ctx.media.mediaBaseUrl)), pagination: page.pagination }
 }
 
 export async function decideProfileCheck(
@@ -698,16 +709,7 @@ export async function decideProfileCheck(
   const updated = await ctx.prisma.$transaction(async (tx) => {
     const profile = await tx.user.findUnique({
       where: { id: input.userId },
-      select: {
-        id: true,
-        name: true,
-        handle: true,
-        avatarAssetId: true,
-        prevAvatarId: true,
-        nameCheckStatus: true,
-        avatarCheckStatus: true,
-        updatedAt: true
-      }
+      select: profileReviewSelect
     })
     if (!profile) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "user" })
     if (profile[field] !== "pending") {
@@ -720,8 +722,30 @@ export async function decideProfileCheck(
     }
     const status = input.verdict === "accept" ? "ok" : "rejected"
     const data: Prisma.UserUncheckedUpdateManyInput = { [field]: status }
-    if (input.field === "avatar") {
+    if (input.field === "name") {
+      const previousName = profile.prevName
       if (input.verdict === "reject") {
+        if (!previousName) {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "profileName",
+            expected: "previousVersion",
+            actual: "none"
+          })
+        }
+        data.name = previousName
+      }
+      data.prevName = null
+    } else {
+      if (input.verdict === "reject") {
+        if (!profile.prevAvatarId) {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "avatar",
+            expected: "previousVersion",
+            actual: "none"
+          })
+        }
         data.avatarAssetId = profile.prevAvatarId
         data.prevAvatarId = null
       } else {
@@ -753,20 +777,11 @@ export async function decideProfileCheck(
     )
     const result = await tx.user.findUnique({
       where: { id: input.userId },
-      select: {
-        id: true,
-        name: true,
-        handle: true,
-        avatarAssetId: true,
-        prevAvatarId: true,
-        nameCheckStatus: true,
-        avatarCheckStatus: true,
-        updatedAt: true
-      }
+      select: profileReviewSelect
     })
     if (!result) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "user" })
     return result
   })
   await ctx.cache.delByTags([`author:${updated.handle.toLowerCase()}`, "home"])
-  return toProfileItem(updated)
+  return toProfileItem(updated, ctx.media.mediaBaseUrl)
 }

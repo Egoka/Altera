@@ -2,6 +2,7 @@ enum ReviewQueueState {
   queued
   in_review
   rework
+  published
 }
 
 enum ReviewQueueSort {
@@ -125,9 +126,12 @@ type AdminReviewItem {
 type ProfileReviewItem {
   userId: ID!
   name: String!
+  previousName: String
   handle: String!
   avatarAssetId: ID
   previousAvatarId: ID
+  avatarUrl: String
+  previousAvatarUrl: String
   nameStatus: String!
   avatarStatus: String!
   fields: [ProfileReviewField!]!

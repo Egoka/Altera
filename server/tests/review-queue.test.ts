@@ -94,9 +94,12 @@ const createHarness = (input: { role?: "moderator" | "admin" | "owner"; reviewer
   const profile = {
     id: "profile-1",
     name: "Новая подпись",
+    prevName: "Старая подпись",
     handle: "profile-one",
     avatarAssetId: "avatar-new",
     prevAvatarId: "avatar-old",
+    avatarAsset: null,
+    previousAvatar: null,
     nameCheckStatus: "pending",
     avatarCheckStatus: "pending",
     createdAt: new Date("2026-09-28T10:00:00.000Z"),
@@ -199,7 +202,14 @@ const createHarness = (input: { role?: "moderator" | "admin" | "owner"; reviewer
   const cache = { delByTags: vi.fn(async () => undefined) }
   const logger = { log: vi.fn(), metric: vi.fn() }
   const currentUser = actor(input.role ?? "moderator")
-  const ctx = { prisma, currentUser, requestId: "req-review", cache, logger }
+  const ctx = {
+    prisma,
+    currentUser,
+    requestId: "req-review",
+    cache,
+    logger,
+    media: { mediaBaseUrl: "https://media.test" }
+  }
   return { ctx, translation, profile, messages, notes, audits, cache, logger }
 }
 
@@ -217,6 +227,28 @@ describe("review queue", () => {
     })
     expect(page.items[0]?.author).not.toHaveProperty("email")
     expect(page.pagination).toMatchObject({ currentPage: 1, totalItems: 1, itemsPerPage: 20 })
+  })
+
+  it("combines section and editorial filters on the same article predicate", async () => {
+    const { ctx } = createHarness({ role: "admin" })
+
+    await listReviewQueue(ctx as never, { filters: { sectionId: "section-1", editorial: false } })
+
+    expect(ctx.prisma.articleTranslation.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ article: { sectionId: "section-1", isEditorial: false } })
+      })
+    )
+  })
+
+  it("can list published materials so unpublish is reachable from the review workspace", async () => {
+    const harness = createHarness({ role: "admin" })
+    harness.translation.status = "published"
+    harness.translation.publishedAt = now
+
+    const page = await listReviewQueue(harness.ctx as never, { filters: { states: ["published"] } })
+
+    expect(page.items[0]).toMatchObject({ state: "published", status: "published" })
   })
 
   it("lets one moderator claim a queued item and rejects another moderator's decision", async () => {
@@ -254,7 +286,7 @@ describe("review queue", () => {
     const harness = createHarness({ reviewerId: "moderator-1" })
     const item = await publishReviewManual(harness.ctx as never, "translation-1", "Проверено вручную", now)
 
-    expect(item).toMatchObject({ status: "published", state: null, publishedAt: now })
+    expect(item).toMatchObject({ status: "published", state: "published", publishedAt: now })
     expect(harness.translation.article).toMatchObject({ firstPublishedAt: now })
     expect(harness.audits.map(({ action }) => action).sort()).toEqual(
       ["translation.publish.manual", "review.message"].sort()
@@ -338,6 +370,7 @@ describe("profile review queue", () => {
       expect.objectContaining({
         userId: "profile-1",
         name: "Новая подпись",
+        previousName: "Старая подпись",
         handle: "profile-one",
         fields: ["name", "avatar"]
       })
@@ -353,5 +386,32 @@ describe("profile review queue", () => {
     expect(harness.audits).toContainEqual(
       expect.objectContaining({ action: "profile.check", entityType: "user", entityId: "profile-1" })
     )
+  })
+
+  it("restores the previous name on rejection and refuses an avatar rejection without a previous version", async () => {
+    const nameHarness = createHarness()
+    const rejected = await decideProfileCheck(
+      nameHarness.ctx as never,
+      { userId: "profile-1", field: "name", verdict: "reject", reason: "Не соответствует правилам" },
+      now
+    )
+    expect(rejected).toMatchObject({ name: "Старая подпись", previousName: null, nameStatus: "rejected" })
+
+    const avatarHarness = createHarness()
+    avatarHarness.profile.prevAvatarId = null
+    const extensions = await errorExtensions(
+      decideProfileCheck(
+        avatarHarness.ctx as never,
+        { userId: "profile-1", field: "avatar", verdict: "reject", reason: null },
+        now
+      )
+    )
+    expect(extensions).toMatchObject({
+      code: "CONFLICT",
+      entity: "avatar",
+      expected: "previousVersion",
+      actual: "none"
+    })
+    expect(avatarHarness.profile.avatarAssetId).toBe("avatar-new")
   })
 })

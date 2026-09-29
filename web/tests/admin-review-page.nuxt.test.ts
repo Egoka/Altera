@@ -5,6 +5,7 @@ import { computed, ref } from "vue"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import AdminReviewListPage from "../app/pages/admin/review/index.vue"
 import AdminReviewCardPage from "../app/pages/admin/review/[id].vue"
+import { reviewItemLoadStatus } from "../app/composables/useAdminReview"
 
 const t = (key: string, params?: Record<string, unknown>) =>
   params ? `${key}:${Object.values(params).join(",")}` : key
@@ -145,7 +146,12 @@ describe("очередь ревью", () => {
       {
         userId: "user-1",
         name: "Новая подпись",
+        previousName: "Старая подпись",
         handle: "profile-one",
+        avatarAssetId: "avatar-new",
+        previousAvatarId: "avatar-old",
+        avatarUrl: "https://media.test/avatar-new.webp",
+        previousAvatarUrl: "https://media.test/avatar-old.webp",
         fields: ["name", "avatar"],
         updatedAt: "2026-09-29T10:00:00Z"
       }
@@ -153,7 +159,15 @@ describe("очередь ревью", () => {
 
     const wrapper = mountList()
     expect(wrapper.get("[data-review-profile-row]").text()).toContain("@profile-one")
+    expect(wrapper.get('[data-review-profile-field="name"]').text()).toContain("Старая подпись")
+    expect(wrapper.get('[data-review-profile-field="name"]').text()).toContain("Новая подпись")
+    expect(wrapper.findAll('[data-review-profile-field="avatar"] img')).toHaveLength(2)
     expect(wrapper.find("[data-review-table]").exists()).toBe(false)
+  })
+
+  it("делает опубликованные материалы достижимыми из фильтра очереди", () => {
+    const wrapper = mountList()
+    expect(wrapper.get('option[value="published"]').exists()).toBe(true)
   })
 })
 
@@ -192,5 +206,15 @@ describe("карточка ревью", () => {
     await wrapper.get("[data-review-conflict-refresh]").trigger("click")
 
     expect(refresh).toHaveBeenCalled()
+  })
+
+  it("показывает снятие с публикации в карточке опубликованного материала", () => {
+    item.value = reviewCard({ status: "published", state: "published", reviewer: null })
+    expect(mountCard().find('[data-review-open-action="unpublish"]').exists()).toBe(true)
+  })
+
+  it("сохраняет NOT_FOUND как HTTP 404", () => {
+    expect(reviewItemLoadStatus("NOT_FOUND")).toBe(404)
+    expect(reviewItemLoadStatus("INTERNAL_ERROR")).toBe(500)
   })
 })

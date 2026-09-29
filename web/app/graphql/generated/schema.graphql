@@ -2303,11 +2303,14 @@ enum ProfileReviewField {
 type ProfileReviewItem {
   avatarAssetId: ID
   avatarStatus: String!
+  avatarUrl: String
   fields: [ProfileReviewField!]!
   handle: String!
   name: String!
   nameStatus: String!
   previousAvatarId: ID
+  previousAvatarUrl: String
+  previousName: String
   updatedAt: String!
   userId: ID!
 }
@@ -2493,6 +2496,7 @@ enum ReviewQueueSort {
 
 enum ReviewQueueState {
   in_review
+  published
   queued
   rework
 }

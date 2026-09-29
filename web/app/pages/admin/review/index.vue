@@ -76,7 +76,7 @@
           class="min-h-11 border border-zinc-300 bg-white px-3 text-sm dark:border-zinc-700 dark:bg-zinc-900"
           @change="onSelect('state', $event)">
           <option value="">{{ t("admin.review.allStates") }}</option>
-          <option v-for="state in ['queued', 'in_review', 'rework']" :key="state" :value="state">
+          <option v-for="state in ['queued', 'in_review', 'rework', 'published']" :key="state" :value="state">
             {{ t(`admin.review.state.${state}`) }}
           </option>
         </select>
@@ -171,14 +171,46 @@
           :key="profile.userId"
           data-review-profile-row
           class="border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <p class="font-medium">
-            {{ profile.name }} <span class="text-zinc-500">@{{ profile.handle }}</span>
-          </p>
+          <p class="font-medium">@{{ profile.handle }}</p>
+          <time :datetime="profile.updatedAt" class="mt-1 block text-xs text-zinc-500">
+            {{ t("admin.review.profileSince") }}: {{ new Date(profile.updatedAt).toLocaleString() }}
+          </time>
           <div class="mt-3 flex flex-wrap gap-2">
             <template v-for="field in profile.fields" :key="field">
-              <span class="self-center text-xs uppercase tracking-wide text-zinc-500">{{
-                t(`admin.review.profileField.${field}`)
-              }}</span>
+              <div class="w-full border-t border-zinc-200 pt-3 dark:border-zinc-800" :data-review-profile-field="field">
+                <p class="text-xs uppercase tracking-wide text-zinc-500">
+                  {{ t(`admin.review.profileField.${field}`) }}
+                </p>
+                <div v-if="field === 'name'" class="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                  <p data-review-profile-previous>
+                    <span class="text-zinc-500">{{ t("admin.review.previousValue") }}:</span>
+                    {{ profile.previousName ?? "—" }}
+                  </p>
+                  <p data-review-profile-current>
+                    <span class="text-zinc-500">{{ t("admin.review.newValue") }}:</span> {{ profile.name }}
+                  </p>
+                </div>
+                <div v-else class="mt-2 grid gap-3 sm:grid-cols-2">
+                  <figure data-review-profile-previous>
+                    <figcaption class="mb-1 text-xs text-zinc-500">{{ t("admin.review.previousValue") }}</figcaption>
+                    <img
+                      v-if="profile.previousAvatarUrl"
+                      :src="profile.previousAvatarUrl"
+                      alt=""
+                      class="size-16 rounded-full object-cover" />
+                    <span v-else class="font-mono text-xs">{{ profile.previousAvatarId ?? "—" }}</span>
+                  </figure>
+                  <figure data-review-profile-current>
+                    <figcaption class="mb-1 text-xs text-zinc-500">{{ t("admin.review.newValue") }}</figcaption>
+                    <img
+                      v-if="profile.avatarUrl"
+                      :src="profile.avatarUrl"
+                      alt=""
+                      class="size-16 rounded-full object-cover" />
+                    <span v-else class="font-mono text-xs">{{ profile.avatarAssetId ?? "—" }}</span>
+                  </figure>
+                </div>
+              </div>
               <button
                 v-if="canDecide"
                 type="button"

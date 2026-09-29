@@ -36,7 +36,7 @@ export type AdminReviewItem = GetAdminReviewItemQuery["reviewItem"]
 export type ProfileReviewRow = GetProfileReviewQueueQuery["profileReviewQueue"]["items"][number]
 export type ReviewAction = "claim" | "release" | "rework" | "publish" | "reject" | "unpublish"
 
-const states: readonly ReviewQueueState[] = ["queued", "in_review", "rework"]
+const states: readonly ReviewQueueState[] = ["queued", "in_review", "rework", "published"]
 const sorts: readonly ReviewQueueSort[] = ["age", "updated"]
 
 const firstQueryValue = (value: unknown): string | null => {
@@ -53,6 +53,8 @@ const readExtension = (errors: readonly GraphQLErrorLike[] | undefined, key: str
   const value = errors?.[0]?.extensions?.[key]
   return typeof value === "string" ? value : null
 }
+
+export const reviewItemLoadStatus = (code: string | null): 404 | 500 => (code === "NOT_FOUND" ? 404 : 500)
 
 export const parseReviewFilters = (query: Record<string, unknown>): ReviewQueueFiltersInput => ({
   states: pick(states, query.state) ? [pick(states, query.state)!] : null,
@@ -155,7 +157,10 @@ export const useAdminReviewCard = (id: string) => {
     if (!envelope.data || envelope.errors?.length) {
       requestId.value = readExtension(envelope.errors, "requestId")
       errorCode.value = readExtension(envelope.errors, "code")
-      throw createError({ statusCode: 500, statusMessage: "Review item is unavailable" })
+      throw createError({
+        statusCode: reviewItemLoadStatus(errorCode.value),
+        statusMessage: errorCode.value === "NOT_FOUND" ? "Review item not found" : "Review item is unavailable"
+      })
     }
     return envelope.data.reviewItem
   }

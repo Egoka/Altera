@@ -1117,6 +1117,9 @@
       "accept": "Принять",
       "reject": "Отклонить",
       "profileField": { "name": "Имя", "avatar": "Аватар" },
+      "previousValue": "Прежнее значение",
+      "newValue": "Новое значение",
+      "profileSince": "Ожидает с",
       "action": {
         "rework": "Вернуть на доработку",
         "publish": "Опубликовать вручную",

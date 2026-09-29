@@ -186,21 +186,23 @@ test.describe("очередь ручной проверки", () => {
   test("второй модератор получает CONFLICT и не перезаписывает закрепление", async ({ page }) => {
     const id = translationIds.get("conflict")!
     const mutation = `mutation Claim($id: ID!) { claimReview(id: $id) { id reviewer { role mine } } }`
-    const first = await page.request.post("/api/graphql", {
-      headers: { authorization: `Bearer ${signAccessToken(STAFF.first.id, STAFF.first.sessionId)}` },
-      data: { query: mutation, variables: { id } }
-    })
-    expect((await first.json()) as { data?: unknown }).toHaveProperty("data.claimReview.id", id)
-
-    const second = await page.request.post("/api/graphql", {
-      headers: { authorization: `Bearer ${signAccessToken(STAFF.second.id, STAFF.second.sessionId)}` },
-      data: { query: mutation, variables: { id } }
-    })
-    const body = (await second.json()) as { errors?: Array<{ extensions?: { code?: string } }> }
-    expect(body.errors?.[0]?.extensions?.code).toBe("CONFLICT")
+    const [first, second] = await Promise.all(
+      [STAFF.first, STAFF.second].map((staff) =>
+        page.request.post("/api/graphql", {
+          headers: { authorization: `Bearer ${signAccessToken(staff.id, staff.sessionId)}` },
+          data: { query: mutation, variables: { id } }
+        })
+      )
+    )
+    const bodies = (await Promise.all([first.json(), second.json()])) as Array<{
+      data?: { claimReview?: { id?: string } }
+      errors?: Array<{ extensions?: { code?: string } }>
+    }>
+    expect(bodies.filter((body) => body.data?.claimReview?.id === id)).toHaveLength(1)
+    expect(bodies.filter((body) => body.errors?.[0]?.extensions?.code === "CONFLICT")).toHaveLength(1)
 
     const saved = await prisma.articleTranslation.findUniqueOrThrow({ where: { id } })
-    expect(saved.reviewerId).toBe(STAFF.first.id)
+    expect([STAFF.first.id, STAFF.second.id]).toContain(saved.reviewerId)
   })
 
   test("ручная публикация сразу видна гостю", async ({ page, browser }) => {

@@ -1117,6 +1117,9 @@
       "accept": "Accept",
       "reject": "Reject",
       "profileField": { "name": "Name", "avatar": "Avatar" },
+      "previousValue": "Previous value",
+      "newValue": "New value",
+      "profileSince": "Waiting since",
       "action": {
         "rework": "Request rework",
         "publish": "Publish manually",
