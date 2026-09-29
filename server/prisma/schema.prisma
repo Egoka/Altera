@@ -57,6 +57,8 @@ model User {
   sessions                    Session[]
   emailChangeRequest          EmailChangeRequest?
   accountArchiveRequest       AccountArchiveRequest?
+  accountAppealToken          AccountAppealToken?
+  accountAppeal               AccountAppeal?
   currentHandle               HandleHistory                 @relation("CurrentUserHandle", fields: [handle], references: [handle], onDelete: Restrict, onUpdate: Restrict)
   handleHistory               HandleHistory[]               @relation("HandleOwner")
   createdTags                 Tag[]                         @relation("TagCreator")
@@ -105,6 +107,43 @@ model MagicLinkToken {
   createdAt      DateTime  @default(now())
 
   @@map("magic_link_tokens")
+}
+
+/// Одно обращение на аккаунт: уникальность `userId` одновременно фиксирует продуктовое правило
+/// и закрывает гонку двух отправок формы (`blocked-appeal.md` §4, журнал #48).
+model AccountAppeal {
+  id               String                       @id @default(uuid())
+  userId           String                       @unique
+  user             User                         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  message          String                       @db.VarChar(2000)
+  status           AccountAppealStatus          @default(submitted)
+  submittedAt      DateTime                     @default(now())
+  decidedAt        DateTime?
+  decidedByActorId String?
+  decidedByRole    Role?
+  decisionReason   String?
+  /// Снимок публичных данных блокировки нужен и после восстановления, когда поля `User`
+  /// очищены: старая ссылка всё ещё показывает итог решения без внутренних деталей.
+  archivedAt       DateTime
+  reasonCategory   AccountArchiveReasonCategory
+  staffMessage     String?
+  planTier         PlanTier
+  planUntil        DateTime?
+
+  @@index([status, submittedAt])
+  @@map("account_appeals")
+}
+
+model AccountAppealToken {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @db.VarChar(64)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("account_appeal_tokens")
 }
 
 /// Одноразовые токены ветки пароля (T-115, журнал §34 п. 7): подтверждение адреса после
@@ -588,42 +627,42 @@ model UserLegalConsent {
 }
 
 model ArticleTranslation {
-  id               String            @id @default(uuid())
-  articleId        String
-  locale           Locale
-  slug             String
-  title            String
-  dek              String?
-  excerpt          String?
-  featuredImage    String?
-  body             Json
-  status           ArticleStatus     @default(draft)
-  rejected         Boolean           @default(false)
-  publishedAt      DateTime?
+  id                 String            @id @default(uuid())
+  articleId          String
+  locale             Locale
+  slug               String
+  title              String
+  dek                String?
+  excerpt            String?
+  featuredImage      String?
+  body               Json
+  status             ArticleStatus     @default(draft)
+  rejected           Boolean           @default(false)
+  publishedAt        DateTime?
   /// Точное число квалифицированных прочтений из контура вовлечённости. Порог и приём событий
   /// задаются отдельной спецификацией; очередь ревью только читает сохранённый агрегат (§26.4).
-  readCount        Int               @default(0)
+  readCount          Int               @default(0)
   /// Закрепление ручной проверки. Идентификатор хранится без relation намеренно: удаление или
   /// архив сотрудника не должно менять историческое состояние материала.
-  reviewerId       String?
-  reviewerRole     Role?
-  reviewClaimedAt  DateTime?
-  reeditUntil      DateTime?
-  reeditedAt       DateTime?
+  reviewerId         String?
+  reviewerRole       Role?
+  reviewClaimedAt    DateTime?
+  reeditUntil        DateTime?
+  reeditedAt         DateTime?
   /// Токен ссылки из письма о доработке или снятии с публикации (`routes.md` #68). Срок и то,
   /// что новое решение заменяет прежний токен — [ДОПУЩЕНИЕ] (`moderation.md` §8,
   /// `write-and-publish.md` §8): семь дней, один активный токен на версию.
-  editTokenHash    String?           @unique @db.VarChar(64)
+  editTokenHash      String?           @unique @db.VarChar(64)
   editTokenExpiresAt DateTime?
-  translatorId     String?
-  sourceRevisionId String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  article          Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  translator       User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
-  sourceRevision   ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
-  revisions        ArticleRevision[] @relation("TranslationRevisions")
-  reviewMessages   ReviewMessage[]
+  translatorId       String?
+  sourceRevisionId   String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  article            Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  translator         User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
+  sourceRevision     ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
+  revisions          ArticleRevision[] @relation("TranslationRevisions")
+  reviewMessages     ReviewMessage[]
 
   @@unique([articleId, locale])
   @@unique([locale, slug])
@@ -896,6 +935,12 @@ enum AccountArchiveReasonCategory {
   spam_and_manipulation
   law_or_rights_violation
   security_threat
+}
+
+enum AccountAppealStatus {
+  submitted
+  restored
+  confirmed
 }
 
 enum Locale {

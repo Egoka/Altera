@@ -152,6 +152,66 @@
         "action": "Back to sign in"
       }
     },
+    "appeal": {
+      "eyebrow": "Account access is restricted",
+      "title": "Appeal an account restriction",
+      "loading": {
+        "title": "Loading restriction details"
+      },
+      "restrictedAt": "Access was restricted on {date}",
+      "reasonCategory": {
+        "rules_violation": "Publication rules violation",
+        "spam_and_manipulation": "Spam and manipulation",
+        "law_or_rights_violation": "Violation of law or third-party rights",
+        "security_threat": "Security threat"
+      },
+      "hiddenData": "Your account and articles are hidden, but the data is preserved.",
+      "rules": "Publication rules",
+      "plan": {
+        "title": "Paid plan",
+        "body": "Your {tier} plan is paid through {date}. Its term keeps running and restricted time is not refunded. If access is restored, the remaining period becomes available again."
+      },
+      "form": {
+        "label": "Why the decision should be reviewed",
+        "hint": "Describe the circumstances and facts that should be checked",
+        "once": "You can submit this appeal only once.",
+        "validation": "Write between 20 and 2000 characters.",
+        "submit": "Submit appeal",
+        "submitting": "Submitting…"
+      },
+      "submitted": {
+        "title": "Appeal submitted",
+        "body": "Submitted on {date}. A staff member will review it; it cannot be submitted again."
+      },
+      "restored": {
+        "title": "Account restored",
+        "body": "Account access is open again. Articles remain archived and can be restored one by one after signing in.",
+        "login": "Sign in"
+      },
+      "confirmed": {
+        "title": "Restriction confirmed",
+        "body": "The decision was made on {date}. Another appeal is not available.",
+        "contact": "Request a data export through support"
+      },
+      "notFound": {
+        "title": "The link is not valid",
+        "body": "The link is unknown, expired, or already used. Request a new sign-in link."
+      },
+      "forbidden": {
+        "title": "An appeal is not available",
+        "body": "This account was archived by its owner. Contact support to restore it."
+      },
+      "rateLimited": {
+        "title": "Too many attempts",
+        "body": "Try opening the form again in about {minutes} min."
+      },
+      "error": {
+        "title": "The appeal form is unavailable",
+        "body": "Try again later or give support code {requestId}."
+      },
+      "newLink": "Request a new sign-in link",
+      "contact": "Contact the editorial team"
+    },
     "confirm": {
       "loading": {
         "title": "Confirming the address…",
@@ -1328,6 +1388,18 @@
       "profileChecks": "Name and avatar checks",
       "publicMessageHint": "A short, plain explanation; it goes to the user",
       "publicMessageLabel": "Explanation for the user",
+      "appealTitle": "Account restriction appeal",
+      "appealStatus": {
+        "submitted": "Awaiting a decision",
+        "restored": "Account restored",
+        "confirmed": "Restriction confirmed"
+      },
+      "appealDecisionReason": "Decision reason for the user",
+      "appealRestore": "Restore after appeal",
+      "appealConfirm": "Confirm restriction",
+      "appealConfirmWarning": "This decision is final: another appeal will not be available.",
+      "appealRestoredDone": "Appeal accepted: the account was restored and the decision was saved.",
+      "appealConfirmedDone": "Restriction confirmed and the decision was saved.",
       "readOnlyCardNote": "The card is read-only: your role has no actions here.",
       "readOnlyNote": "An analyst reads the section without actions: blocking, restoring, session revocation and address change belong to admin and owner.",
       "reasonCategory": {

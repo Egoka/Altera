@@ -1,3 +1,39 @@
+enum AccountAppealDecision {
+  confirm_block
+  restore
+}
+
+type AccountAppealPlan {
+  tier: PlanTier!
+  until: String!
+}
+
+type AccountAppealRecord {
+  decidedAt: String
+  id: ID
+  status: AccountAppealStatus!
+  submittedAt: String
+}
+
+enum AccountAppealStatus {
+  confirmed
+  none
+  restored
+  submitted
+}
+
+"""Публичное состояние блокировки по короткоживущему токену, без сессии."""
+type AccountAppealView {
+  appeal: AccountAppealRecord!
+  archivedAt: String!
+  canSubmit: Boolean!
+  explanation: String!
+  locale: Locale!
+  plan: AccountAppealPlan
+  reasonCategory: AccountArchiveReasonCategory!
+  staffMessage: String
+}
+
 """
 Как аккаунт попал в архив (`50-access/session-lifecycle.md` п. 7): `self` — самостоятельно,
 вход выдаёт ограниченную сессию и экран состояния; `admin` и `emergency` — административно,
@@ -1069,6 +1105,16 @@ type AdminSupportRequestList {
   pagination: PaginationInfo!
 }
 
+type AdminUserAppeal {
+  decidedAt: String
+  decidedByRole: Role
+  decisionReason: String
+  id: ID!
+  message: String!
+  status: AccountAppealStatus!
+  submittedAt: String!
+}
+
 type AdminUserArticleRow {
   archivedAt: String
 
@@ -1107,6 +1153,9 @@ type AdminUserBaseAuthorship {
 `admin.read.personal` (#67) с актором, субъектом, контекстом и целью от системы.
 """
 type AdminUserCard {
+  """Оспаривание скрыто от analyst вместе с действиями решения."""
+  appeal: AdminUserAppeal
+
   """
   Внутренняя причина: пользователю она не показывается нигде (§26.9), а `analyst` её не получает —
   коды `user.archive` и `user.restore` закрыты для служебных зон журнала (журнал #39).
@@ -1127,6 +1176,7 @@ type AdminUserCard {
   baseAuthorship: AdminUserBaseAuthorship!
   canArchive: Boolean!
   canChangeEmail: Boolean!
+  canDecideAppeal: Boolean!
   canRestore: Boolean!
   canRevokeSessions: Boolean!
   consents: [AdminUserConsent!]!
@@ -2220,6 +2270,7 @@ type Mutation {
   createSupportRequest(acceptPrivacy: Boolean, email: String, locale: Locale, message: String, path: String, requestId: String, route: String, topic: SupportTopic!): SupportRequestResult!
   createTag(input: CreateTagInput!): Tag!
   deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
+  decideAppeal(decision: AccountAppealDecision!, id: ID!, reason: String!): AccountAppealRecord!
   decideProfileCheck(input: ProfileReviewDecisionInput!): ProfileReviewItem!
 
   """
@@ -2352,6 +2403,7 @@ type Mutation {
   setSlug(slug: String!, translationId: ID!): TranslationSeo!
   setTaxonomy(articleId: ID!, formatId: ID, sectionId: ID, tagIds: [ID!]!): EditorArticle!
   startCheckout(interval: BillingInterval!, promo: String, tier: PlanTier!): Boolean!
+  submitAccountAppeal(message: String!, token: String!): AccountAppealRecord!
 
   """
   Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
@@ -2639,6 +2691,7 @@ input PublishLegalVersionInput {
 
 type Query {
   _empty: String
+  accountAppeal(token: String!): AccountAppealView!
   adminAiRecord(id: ID!): AdminAiProcess
   adminAiRecords(filters: AdminAiRecordsFilterInput, limit: Int = 20, page: Int = 1, sort: AdminAiProcessSort = createdAt): AdminAiRecordsResponse!
   adminArticle(id: ID!): AdminArticle!

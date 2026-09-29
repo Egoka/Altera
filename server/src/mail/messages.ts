@@ -260,6 +260,43 @@ export const createAccountArchiveConfirmMail = (
 
 export const SUPPORT_REQUEST_STAFF_TEMPLATE = "support_request_staff"
 
+export const ACCOUNT_APPEAL_DECISION_TEMPLATE = "account_appeal_decision"
+
+/**
+ * [ДОПУЩЕНИЕ] Технический текст уведомления о решении. Финальная редактура письма относится к
+ * F-05; T-061 обязана только доставить решение и причину, не раскрывая внутреннюю причину
+ * блокировки (`blocked-appeal.md` §1, §4).
+ */
+export const createAccountAppealDecisionMail = (
+  locale: Locale,
+  input: { decision: "restore" | "confirm_block"; reason: string }
+): { message: MailMessage; sanitizedBody: string } => {
+  const restored = input.decision === "restore"
+  const subject =
+    locale === "en"
+      ? restored
+        ? "Your Altera account has been restored"
+        : "Your Altera account restriction has been confirmed"
+      : restored
+        ? "Аккаунт Altera восстановлен"
+        : "Ограничение аккаунта Altera подтверждено"
+  const intro =
+    locale === "en"
+      ? restored
+        ? "We reviewed your appeal and restored access to your account."
+        : "We reviewed your appeal and confirmed the account restriction."
+      : restored
+        ? "Мы рассмотрели оспаривание и восстановили доступ к аккаунту."
+        : "Мы рассмотрели оспаривание и подтвердили ограничение аккаунта."
+  const reasonLabel = locale === "en" ? "Decision reason" : "Причина решения"
+  const text = `${intro}\n\n${reasonLabel}: ${input.reason}`
+  const html = `<p>${escapeHtml(intro)}</p><p><strong>${escapeHtml(reasonLabel)}:</strong> ${escapeHtml(input.reason)}</p>`
+  return {
+    message: { subject, preheader: subject, text, html },
+    sanitizedBody: text
+  }
+}
+
 export interface SupportRequestNotice {
   ticketNo: number
   topic: string

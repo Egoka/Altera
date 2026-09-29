@@ -1,0 +1,46 @@
+enum AccountAppealStatus {
+  none
+  submitted
+  restored
+  confirmed
+}
+
+enum AccountAppealDecision {
+  restore
+  confirm_block
+}
+
+type AccountAppealPlan {
+  tier: PlanTier!
+  until: String!
+}
+
+type AccountAppealRecord {
+  id: ID
+  status: AccountAppealStatus!
+  submittedAt: String
+  decidedAt: String
+}
+
+"""
+Публичное состояние блокировки по короткоживущему токену, без сессии.
+"""
+type AccountAppealView {
+  locale: Locale!
+  archivedAt: String!
+  reasonCategory: AccountArchiveReasonCategory!
+  explanation: String!
+  staffMessage: String
+  plan: AccountAppealPlan
+  appeal: AccountAppealRecord!
+  canSubmit: Boolean!
+}
+
+extend type Query {
+  accountAppeal(token: String!): AccountAppealView!
+}
+
+extend type Mutation {
+  submitAccountAppeal(token: String!, message: String!): AccountAppealRecord!
+  decideAppeal(id: ID!, decision: AccountAppealDecision!, reason: String!): AccountAppealRecord!
+}

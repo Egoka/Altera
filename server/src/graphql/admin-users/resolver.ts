@@ -57,7 +57,14 @@ const presentCard = (card: AdminUserCard) => ({
       ...session,
       createdAt: session.createdAt.toISOString(),
       lastActiveAt: session.lastActiveAt.toISOString()
-    })) ?? null
+    })) ?? null,
+  appeal: card.appeal
+    ? {
+        ...card.appeal,
+        submittedAt: card.appeal.submittedAt.toISOString(),
+        decidedAt: card.appeal.decidedAt?.toISOString() ?? null
+      }
+    : null
 })
 
 export default {

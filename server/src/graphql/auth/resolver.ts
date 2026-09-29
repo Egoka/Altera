@@ -18,6 +18,7 @@ import { issueLoginSession } from "../../auth/login"
 import { sanitizeNextPath } from "../../auth/next-path"
 import { findOutdatedConsent, readLegalVersions, recordConsent, type LegalVersions } from "../../auth/legal"
 import { createMagicLinkMail, MAGIC_LINK_TEMPLATE } from "../../mail/messages"
+import { issueAccountAppealToken } from "../../account/appeal"
 import type { Locale, MagicLinkToken, User } from "../../generated/prisma"
 
 if (!process.env.JWT_ACCESS_SECRET) {
@@ -120,14 +121,14 @@ async function consumeToken(ctx: GraphQLContext, record: MagicLinkToken): Promis
 /**
  * Архив аккаунта закрывает вход одинаково для обеих мутаций подтверждения ссылки: иначе
  * `acceptConsent` выдаёт полноценную сессию заблокированному аккаунту. Административный архив
- * сессии не получает и токен не гасит — той же ссылкой открывается форма оспаривания
- * (журнал #48); самостоятельный получает ограниченную сессию (`session-lifecycle.md` п. 7).
+ * сессии не получает и ссылку входа не гасит: вместо неё выдаётся отдельный 24-часовой токен
+ * формы оспаривания (журнал #48); самостоятельный получает ограниченную сессию
+ * (`session-lifecycle.md` п. 7).
  */
 async function archivedOutcome(
   ctx: GraphQLContext,
   record: MagicLinkToken,
-  user: User,
-  token: string
+  user: User
 ): Promise<VerifyMagicLinkResult | null> {
   if (!user.archivedAt) return null
   const { logger, piiHasher, requestId } = ctx
@@ -163,6 +164,8 @@ async function archivedOutcome(
     data: { reason: "archived_admin" }
   })
 
+  const appealToken = await issueAccountAppealToken(ctx, user.id)
+
   return {
     outcome: "archived_admin",
     session: null,
@@ -170,7 +173,7 @@ async function archivedOutcome(
     isNewAccount: false,
     termsVersion: null,
     privacyVersion: null,
-    appealToken: token
+    appealToken
   }
 }
 
@@ -359,7 +362,7 @@ export default {
         return completeLogin(ctx, record, created, { isNewAccount: true })
       }
 
-      const archived = await archivedOutcome(ctx, record, user, token)
+      const archived = await archivedOutcome(ctx, record, user)
       if (archived) return archived
 
       const outdated = await findOutdatedConsent(prisma, user.id, user.locale)
@@ -395,7 +398,7 @@ export default {
 
       // Архив проверяется до записи согласия: заблокированный аккаунт не должен получить ни
       // сессию, ни отметку о принятии новых условий.
-      const archived = await archivedOutcome(ctx, record, user, token)
+      const archived = await archivedOutcome(ctx, record, user)
       if (archived) return archived
 
       const current = await readLegalVersions(prisma, user.locale)

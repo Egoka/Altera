@@ -45,6 +45,16 @@ fragment AdminUserCardFields on AdminUserCard {
   canRestore
   canRevokeSessions
   canChangeEmail
+  canDecideAppeal
+  appeal {
+    id
+    message
+    status
+    submittedAt
+    decidedAt
+    decidedByRole
+    decisionReason
+  }
   plan {
     state
     tier
@@ -163,5 +173,14 @@ mutation AdminChangeEmail($id: ID!, $newEmail: String!, $reason: String!) {
   adminChangeEmail(id: $id, newEmail: $newEmail, reason: $reason) {
     emailMasked
     changedAt
+  }
+}
+
+mutation DecideAppeal($id: ID!, $decision: AccountAppealDecision!, $reason: String!) {
+  decideAppeal(id: $id, decision: $decision, reason: $reason) {
+    id
+    status
+    submittedAt
+    decidedAt
   }
 }

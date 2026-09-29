@@ -111,6 +111,16 @@ export interface AdminUserBaseAuthorship {
   enabledAt: Date | null
 }
 
+export interface AdminUserAppeal {
+  id: string
+  message: string
+  status: "submitted" | "restored" | "confirmed"
+  submittedAt: Date
+  decidedAt: Date | null
+  decidedByRole: Role | null
+  decisionReason: string | null
+}
+
 export interface AdminUserCard extends AdminUserRow {
   locale: string
   nameCheckStatus: string
@@ -132,6 +142,9 @@ export interface AdminUserCard extends AdminUserRow {
   consents: AdminUserConsent[]
   /** Сессии — зона безопасности: `analyst` вкладку не видит и получает `null` (журнал §26.6). */
   sessions: AccountSessionView[] | null
+  /** Текст обращения и решение видят только `admin`/`owner`; analyst получает `null`. */
+  appeal: AdminUserAppeal | null
+  canDecideAppeal: boolean
   canArchive: boolean
   canRestore: boolean
   canRevokeSessions: boolean
@@ -181,7 +194,18 @@ const userSelect = {
   archivedByActorId: true,
   archivedByRole: true,
   planTier: true,
-  planUntil: true
+  planUntil: true,
+  accountAppeal: {
+    select: {
+      id: true,
+      message: true,
+      status: true,
+      submittedAt: true,
+      decidedAt: true,
+      decidedByRole: true,
+      decisionReason: true
+    }
+  }
 } as const satisfies Prisma.UserSelect
 
 type UserRecord = Prisma.UserGetPayload<{ select: typeof userSelect }>
@@ -592,6 +616,8 @@ export async function getAdminUser(ctx: GraphQLContext, id: string, now = new Da
     articles: articles.rows,
     consents,
     sessions,
+    appeal: viewer.canManage ? (record.accountAppeal ?? null) : null,
+    canDecideAppeal: viewer.canManage && record.accountAppeal?.status === "submitted",
     canArchive: viewer.canManage && record.archivedAt === null,
     canRestore: viewer.canManage && record.archivedAt !== null,
     canRevokeSessions: viewer.canManage,

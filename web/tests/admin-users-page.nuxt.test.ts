@@ -29,6 +29,7 @@ const archive = vi.fn()
 const restore = vi.fn()
 const revokeSessions = vi.fn()
 const changeEmail = vi.fn()
+const decideAppeal = vi.fn()
 const query = ref<Record<string, string>>({})
 
 const nuxtLink = { props: ["to"], template: '<a :href="to"><slot /></a>' }
@@ -67,6 +68,8 @@ const userCard = (overrides: Record<string, unknown> = {}) => ({
   canRestore: false,
   canRevokeSessions: true,
   canChangeEmail: true,
+  appeal: null,
+  canDecideAppeal: false,
   baseAuthorship: { enabled: true, enabledAt: "2026-09-02T10:00:00.000Z" },
   articleStats: { total: 3, draft: 1, review: 0, published: 1, archived: 1 },
   articles: [
@@ -112,6 +115,7 @@ beforeEach(() => {
   restore.mockReset()
   revokeSessions.mockReset()
   changeEmail.mockReset()
+  decideAppeal.mockReset()
 
   vi.stubGlobal("definePageMeta", vi.fn())
   vi.stubGlobal("useHead", vi.fn())
@@ -128,7 +132,8 @@ beforeEach(() => {
     archive,
     restore,
     revokeSessions,
-    changeEmail
+    changeEmail,
+    decideAppeal
   }))
   vi.stubGlobal("useAdminUsersList", () => ({
     items: computed(() => items.value),
@@ -311,6 +316,41 @@ describe("карточка пользователя", () => {
     await wrapper.get("[data-users-open-restore]").trigger("click")
 
     expect(wrapper.get("[data-users-dialog-articles-stay]").text()).toBe("admin.users.restoreArticlesNote")
+  })
+
+  it("показывает открытое оспаривание и отправляет решение сотрудника с причиной", async () => {
+    card.value = userCard({
+      status: "archived",
+      archiveMode: "admin",
+      archivedAt: "2026-09-20T00:00:00.000Z",
+      appeal: {
+        id: "appeal-1",
+        message: "Прошу повторно проверить обстоятельства блокировки аккаунта.",
+        status: "submitted",
+        submittedAt: "2026-09-21T00:00:00.000Z",
+        decidedAt: null,
+        decidedByRole: null,
+        decisionReason: null
+      },
+      canDecideAppeal: true,
+      canArchive: false,
+      canRestore: true
+    })
+    decideAppeal.mockResolvedValue({ decideAppeal: { id: "appeal-1", status: "restored" } })
+    const wrapper = mountCard()
+
+    expect(wrapper.get("[data-users-appeal]").text()).toContain(
+      "Прошу повторно проверить обстоятельства блокировки аккаунта."
+    )
+    await wrapper.get("[data-users-open-appeal-restore]").trigger("click")
+    await wrapper.get("[data-users-appeal-reason]").setValue("Основания подтверждены повторной проверкой")
+    await wrapper.get("[data-users-confirm-appeal]").trigger("click")
+
+    expect(decideAppeal).toHaveBeenCalledWith({
+      id: "appeal-1",
+      decision: "restore",
+      reason: "Основания подтверждены повторной проверкой"
+    })
   })
 
   it("показывает конфликт, когда аккаунт изменил другой администратор", async () => {

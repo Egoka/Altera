@@ -68,6 +68,15 @@ export default defineNuxtConfig({
     "/subscribe": { redirect: { to: "/pricing", statusCode: 301 } },
     "/en/plans": { redirect: { to: "/en/pricing", statusCode: 301 } },
     "/en/subscribe": { redirect: { to: "/en/pricing", statusCode: 301 } },
+    // Токен в URL открывает персональные данные архивированного аккаунта: ответ не индексируется,
+    // не кешируется и не передаёт исходный URL сторонним ресурсам (`blocked-appeal.md` §4, §7).
+    "/auth/appeal": {
+      headers: {
+        "cache-control": "private, no-store",
+        "referrer-policy": "no-referrer",
+        "x-robots-tag": "noindex, nofollow"
+      }
+    },
     // Сводка кабинета (`docs/spec/30-account/reader/dashboard.md` §4): все ответы персональные.
     "/me": { headers: { "cache-control": "private, no-store" } },
     // Страница «Подписка» (`docs/spec/30-account/reader/subscription.md` §3, §10): старые адреса
