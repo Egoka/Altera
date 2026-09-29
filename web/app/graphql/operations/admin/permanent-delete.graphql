@@ -1,0 +1,13 @@
+query PermanentDeletePreview($entity: PermanentDeleteEntity!, $id: ID!) {
+  permanentDeletePreview(entity: $entity, id: $id) {
+    entityType
+    entityId
+    name
+    willDelete
+    willKeep
+  }
+}
+
+mutation DeletePermanently($entity: PermanentDeleteEntity!, $id: ID!, $confirmedName: String!, $reason: String!) {
+  deletePermanently(entity: $entity, id: $id, confirmedName: $confirmedName, reason: $reason)
+}

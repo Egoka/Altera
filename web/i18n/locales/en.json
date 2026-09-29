@@ -1427,6 +1427,23 @@
       "forbidden": "Not enough rights for this action.",
       "ownerArchiveNote": "Archived by the owner — only the owner restores it"
     },
+    "permanentDelete": {
+      "action": "Delete permanently",
+      "title": "Delete permanently",
+      "hint": "This action is irreversible: the entity and its related data will be physically deleted, with no way to restore them.",
+      "willDelete": "Will be deleted",
+      "willKeep": "Will remain",
+      "confirmLabel": "Type exactly \"{name}\" to confirm",
+      "reasonLabel": "Reason for deletion",
+      "cancel": "Cancel",
+      "confirm": "Delete permanently",
+      "previewError": "Could not load the deletion preview.",
+      "errorForbidden": "Not enough rights for this action.",
+      "errorNotFound": "Record not found.",
+      "errorConflict": "This entity cannot be deleted: check its archive status and related materials.",
+      "errorValidation": "The typed name does not match, or the reason is empty.",
+      "errorGeneric": "The deletion could not be completed."
+    },
     "active": "Active",
     "inactive": "Inactive",
     "table": {

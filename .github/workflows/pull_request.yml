@@ -341,6 +341,14 @@ jobs:
         env:
           T128_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: cd server && pnpm exec vitest run tests/plan-cache-database.test.ts
+      # T-076: адрес удалённого навсегда материала остаётся занятым через append-only реестр
+      # `article_slug_history` (внешний ключ `ON DELETE SET NULL`), а запись аудита переживает
+      # удаление сущности благодаря trigger, блокирующему UPDATE/DELETE `audit_logs` — оба
+      # ограничения проверяются на настоящем PostgreSQL, а не на двойнике.
+      - name: Проверить «Удалить навсегда» T-076
+        env:
+          T076_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: cd server && pnpm exec vitest run tests/permanent-delete-database.test.ts
       - name: Require PostgreSQL 17 and Redis readiness
         run: node scripts/autonomy/infra_probe.mjs
       # Раньше здесь стояло `timeout 2s pnpm start || true`: падение старта не делало

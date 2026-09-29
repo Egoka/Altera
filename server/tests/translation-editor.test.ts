@@ -97,6 +97,7 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
 
 interface PrismaDouble {
   articleTranslation: Record<string, ReturnType<typeof vi.fn>>
+  articleSlugHistory: Record<string, ReturnType<typeof vi.fn>>
   articleRevision: Record<string, ReturnType<typeof vi.fn>>
   article: Record<string, ReturnType<typeof vi.fn>>
   mediaAsset: Record<string, ReturnType<typeof vi.fn>>
@@ -118,6 +119,10 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
       update: vi.fn().mockResolvedValue({}),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       count: vi.fn().mockResolvedValue(0)
+    },
+    articleSlugHistory: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({})
     },
     articleRevision: {
       create: vi.fn().mockResolvedValue({ id: "revision-10", createdAt: new Date("2026-09-28T10:05:00.000Z") }),
