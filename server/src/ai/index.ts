@@ -5,6 +5,8 @@
  */
 
 import type { PrismaClient } from "../generated/prisma"
+import type { Cache } from "../cache"
+import { buildArticleCacheTags } from "../cache/key"
 import { registerJobHandler } from "../jobs/job-handlers"
 import type { JobHandler } from "../jobs/job-worker"
 import type { AppLogger } from "../observability/logger"
@@ -19,6 +21,7 @@ export { createUnavailableAiCheckAdapter } from "./adapters/unavailable"
 export {
   AI_CHECK_JOB_KIND,
   createPrismaAiCheckQueue,
+  enqueueAiCheck,
   parseAiCheckJobParameters,
   type AiCheckQueue,
   type EnqueueAiCheckInput
@@ -43,14 +46,34 @@ interface AiCheckJobOptions {
   client: PrismaClient
   adapter: AiCheckAdapter
   logger: AppLogger
+  cache?: Pick<Cache, "delByTags">
 }
 
 /** Обработчик задания `ai.check`: параметры очереди → вердикт и его запись. */
 export function createAiCheckJobHandler(options: AiCheckJobOptions): JobHandler {
+  const cache = options.cache
   const service = createAiCheckService({
     store: createPrismaAiCheckStore(options.client),
     adapter: options.adapter,
-    logger: options.logger
+    logger: options.logger,
+    onPublished: cache
+      ? async (translationId) => {
+          const translation = await options.client.articleTranslation.findUnique({
+            where: { id: translationId },
+            select: {
+              article: {
+                select: {
+                  slug: true,
+                  author: { select: { handle: true } },
+                  section: { select: { slug: true } },
+                  tags: { select: { slug: true } }
+                }
+              }
+            }
+          })
+          if (translation) await cache.delByTags(buildArticleCacheTags(translation.article))
+        }
+      : undefined
   })
 
   return async (job) => {

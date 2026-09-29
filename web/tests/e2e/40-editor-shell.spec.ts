@@ -364,7 +364,7 @@ test.describe("T-040 обвязка редактора", () => {
     await expect(page.getByTestId("editor-withdraw")).toBeVisible()
   })
 
-  test("подача с обложкой и рубрикой переводит версию на проверку и открывает отзыв", async ({ page }) => {
+  test("подача с обложкой и рубрикой переводит версию в AI-проверку и открывает отзыв", async ({ page }) => {
     const fixture = await createDraft({ title: "Готовый материал", text: "Текст материала", withCover: true })
     await authenticate(page, fixture)
 
@@ -373,8 +373,8 @@ test.describe("T-040 обвязка редактора", () => {
     await expect(page.getByTestId("editor-missing")).toHaveCount(0)
     await page.getByTestId("editor-submit").click()
 
-    await expect(page.getByTestId("editor-status")).toHaveText("На проверке")
+    await expect(page.getByTestId("editor-status")).toHaveText("Проверяется")
     await expect(page.getByTestId("editor-withdraw")).toBeVisible()
-    await expect(page.getByTestId("editor-notice-in-review")).toBeVisible()
+    await expect(page.getByTestId("editor-notice-ai-check")).toBeVisible()
   })
 })

@@ -1,7 +1,6 @@
 import { GraphQLError } from "graphql"
 import { describe, expect, it, vi } from "vitest"
-import articleResolver from "../src/graphql/article/resolver"
-import { articleCoverView, setArticleCover } from "../src/article/cover"
+import { articleCoverView, ensureCoverBeforeSubmit, setArticleCover } from "../src/article/cover"
 
 // T-066: обложка материала (`docs/spec/85-media-and-binary/article-covers.md`, журнал §29.1).
 // Критерий 1 — подача без обложки отвечает `VALIDATION_ERROR`.
@@ -83,33 +82,21 @@ const context = (prisma: unknown, currentUser: object = author, media: object = 
 
 describe("T-066 подача без обложки", () => {
   it("критерий 1: подача черновика без обложки — VALIDATION_ERROR", async () => {
-    const update = vi.fn()
-    const prisma = {
-      article: { findUnique: vi.fn().mockResolvedValue(draft()), update },
-      mediaAsset: { findUnique: vi.fn() }
-    }
+    const prisma = { mediaAsset: { findUnique: vi.fn() } }
 
-    await expect(
-      articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
-    ).rejects.toMatchObject<Partial<GraphQLError>>({
+    await expect(ensureCoverBeforeSubmit(context(prisma), null)).rejects.toMatchObject<Partial<GraphQLError>>({
       extensions: { code: "VALIDATION_ERROR", field: "cover", rule: "required" }
     })
-    expect(update).not.toHaveBeenCalled()
   })
 
   it("обложка, чья обработка не закончена, подачу не открывает", async () => {
-    const update = vi.fn()
     const prisma = {
-      article: { findUnique: vi.fn().mockResolvedValue(draft({ coverAssetId: "cover-1" })), update },
       mediaAsset: { findUnique: vi.fn().mockResolvedValue(readyAsset({ processingStatus: "processing" })) }
     }
 
-    await expect(
-      articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
-    ).rejects.toMatchObject<Partial<GraphQLError>>({
+    await expect(ensureCoverBeforeSubmit(context(prisma), "cover-1")).rejects.toMatchObject<Partial<GraphQLError>>({
       extensions: { code: "VALIDATION_ERROR", field: "cover", rule: "processing" }
     })
-    expect(update).not.toHaveBeenCalled()
   })
 
   it("обложка без кадров карточки к публикации не готова", async () => {
@@ -131,40 +118,30 @@ describe("T-066 подача без обложки", () => {
       }
     })
     const prisma = {
-      article: { findUnique: vi.fn().mockResolvedValue(draft({ coverAssetId: "cover-1" })), update: vi.fn() },
       mediaAsset: { findUnique: vi.fn().mockResolvedValue(withoutCrops) }
     }
 
-    await expect(
-      articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
-    ).rejects.toMatchObject<Partial<GraphQLError>>({
+    await expect(ensureCoverBeforeSubmit(context(prisma), "cover-1")).rejects.toMatchObject<Partial<GraphQLError>>({
       extensions: { code: "VALIDATION_ERROR", field: "cover", rule: "processing" }
     })
   })
 
   it("удалённая запись обложкой не считается", async () => {
     const prisma = {
-      article: { findUnique: vi.fn().mockResolvedValue(draft({ coverAssetId: "cover-1" })), update: vi.fn() },
       mediaAsset: { findUnique: vi.fn().mockResolvedValue(readyAsset({ deletedAt: new Date() })) }
     }
 
-    await expect(
-      articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
-    ).rejects.toMatchObject<Partial<GraphQLError>>({
+    await expect(ensureCoverBeforeSubmit(context(prisma), "cover-1")).rejects.toMatchObject<Partial<GraphQLError>>({
       extensions: { code: "VALIDATION_ERROR", field: "cover", rule: "required" }
     })
   })
 
   it("с готовой обложкой подача проходит", async () => {
-    const update = vi.fn().mockResolvedValue({ id: "article-1", status: "review" })
     const prisma = {
-      article: { findUnique: vi.fn().mockResolvedValue(draft({ coverAssetId: "cover-1" })), update },
       mediaAsset: { findUnique: vi.fn().mockResolvedValue(readyAsset()) }
     }
 
-    await articleResolver.Mutation.requestReview(null, { id: "article-1" }, context(prisma))
-
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ data: { status: "review" } }))
+    await expect(ensureCoverBeforeSubmit(context(prisma), "cover-1")).resolves.toBeUndefined()
   })
 })
 

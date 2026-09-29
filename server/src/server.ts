@@ -179,7 +179,7 @@ registerAccountExportJob(accountExports)
 registerMediaPurgeJob(createMediaPurgeDeps(prisma, storageConfig.storage))
 // AI-проверка допустимости: `real` ждёт утверждения владельцем (журнал §32 п. 2), поэтому вне
 // разработки адаптер отвечает недоступностью провайдера, а не выносит вердикт.
-registerAiCheckJob({ client: prisma, adapter: createAiCheckAdapterFromEnv(process.env), logger })
+registerAiCheckJob({ client: prisma, adapter: createAiCheckAdapterFromEnv(process.env), logger, cache })
 // AI-описание изображений: выбор модели — отдельный проход (`upload-pipeline.md` п. 6а), поэтому
 // вне разработки адаптер отвечает недоступностью провайдера, а не выдумывает описание.
 registerAiAltJob({

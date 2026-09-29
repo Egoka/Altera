@@ -9,7 +9,7 @@
 
 import { createDocument, createParagraph, createText, createFigure } from "@altera/content"
 import { GraphQLError } from "graphql"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { createAiCheckAdapterFromEnv } from "../src/ai/config"
 import { createFakeAiCheckAdapter, parseFakeAiCheckMarker } from "../src/ai/adapters/fake"
 import { createUnavailableAiCheckAdapter } from "../src/ai/adapters/unavailable"
@@ -19,7 +19,7 @@ import { AI_CHECK_JOB_KIND, parseAiCheckJobParameters } from "../src/ai/queue"
 import { KNOWN_JOB_KINDS } from "../src/admin/jobs"
 import { AUDIT_CODE_ZONES } from "../src/audit/registry"
 import { LOG_EVENT_CODES } from "../src/observability/log-events"
-import type { AppLogger, LogEntry } from "../src/observability/logger"
+import type { AppLogger, LogEntry, MetricEntry } from "../src/observability/logger"
 import { createAiCheckMemoryStore, type AiCheckStoreFixture } from "./helpers/ai-check-memory-store"
 
 /** Идентификаторы узлов и медиафайлов каталог проверяет как uuid (`@altera/content`). */
@@ -36,8 +36,11 @@ const BLOCK_TWO = uuid(2)
 const BLOCK_THREE = uuid(3)
 
 function createLogCollector() {
-  const entries: LogEntry[] = []
-  const logger: AppLogger = { log: (entry) => void entries.push(entry) }
+  const entries: Array<LogEntry | MetricEntry> = []
+  const logger: AppLogger = {
+    log: (entry) => void entries.push(entry),
+    metric: (entry) => void entries.push(entry)
+  }
   return { logger, entries }
 }
 
@@ -45,6 +48,14 @@ function fixture(overrides: Partial<AiCheckStoreFixture> = {}): AiCheckStoreFixt
   return {
     translationId: TRANSLATION_ID,
     revisionId: REVISION_ID,
+    latestRevisionId: REVISION_ID,
+    articleId: "article-1",
+    status: "ai_check",
+    articleStatus: "ai_check",
+    updatedAt: new Date("2026-09-28T11:59:00.000Z"),
+    publishedAt: null,
+    firstPublishedAt: null,
+    reeditUntil: null,
     locale: "ru",
     title: "Вечер на Оке",
     dek: "Как выглядит река в октябре",
@@ -78,7 +89,7 @@ function fixture(overrides: Partial<AiCheckStoreFixture> = {}): AiCheckStoreFixt
   }
 }
 
-function createHarness(overrides: Partial<AiCheckStoreFixture> = {}) {
+function createHarness(overrides: Partial<AiCheckStoreFixture> = {}, onPublished = async (): Promise<void> => {}) {
   const memory = createAiCheckMemoryStore(fixture(overrides))
   const adapter = createFakeAiCheckAdapter()
   const { logger, entries } = createLogCollector()
@@ -87,6 +98,7 @@ function createHarness(overrides: Partial<AiCheckStoreFixture> = {}) {
     store: memory.store,
     adapter,
     logger,
+    onPublished,
     // Часы шагают на секунду за вызов: длительность записи становится проверяемой величиной.
     now: () => new Date(Date.UTC(2026, 8, 28, 12, 0, tick++))
   })
@@ -285,15 +297,70 @@ describe("AI-адаптер проверки допустимости", () => {
     expect(adapter.submissions).toHaveLength(1)
   })
 
-  it("сервис не трогает статус версии статьи: переходы остаются за T-049", async () => {
-    const { memory, adapter, service } = createHarness()
+  it("повтор завершённой публикации повторяет только инвалидацию кеша", async () => {
+    const onPublished = vi
+      .fn<(translationId: string) => Promise<void>>()
+      .mockRejectedValueOnce(new Error("cache unavailable"))
+      .mockResolvedValueOnce()
+    const { memory, adapter, service } = createHarness({}, onPublished)
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    await expect(service.runCheck(jobInput)).rejects.toThrow("cache unavailable")
+    await expect(service.runCheck(jobInput)).resolves.toMatchObject({ verdict: null })
+
+    expect(onPublished).toHaveBeenCalledTimes(2)
+    expect(adapter.submissions).toHaveLength(1)
+    expect(memory.fixture.status).toBe("published")
+  })
+
+  it("вердикт «публиковать» сразу публикует ожидающую ревизию и открывает часовое окно", async () => {
+    const onPublished = vi.fn<(translationId: string) => Promise<void>>().mockResolvedValue()
+    const { memory, adapter, service, entries } = createHarness({}, onPublished)
     adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
 
     await service.runCheck(jobInput)
 
-    // Двойник умеет только чтение версии; попытка записи статуса была бы видна как отсутствие
-    // метода `update` у `articleTranslation`.
-    expect("update" in (memory.store.articleTranslation as Record<string, unknown>)).toBe(false)
+    expect(memory.fixture.status).toBe("published")
+    expect(memory.fixture.articleStatus).toBe("published")
+    expect(memory.fixture.publishedAt?.toISOString()).toBe("2026-09-28T12:00:01.000Z")
+    expect(memory.fixture.firstPublishedAt?.toISOString()).toBe("2026-09-28T12:00:01.000Z")
+    expect(memory.fixture.reeditUntil?.toISOString()).toBe("2026-09-28T13:00:01.000Z")
+    expect(entries).toContainEqual(
+      expect.objectContaining({ event: "translation.published", data: { translationId: TRANSLATION_ID } })
+    )
+    expect(onPublished).toHaveBeenCalledWith(TRANSLATION_ID)
+  })
+
+  it("вердикт «не публиковать» возвращает ожидающую ревизию в review с причинами", async () => {
+    const { memory, adapter, service } = createHarness()
+    adapter.setFixture(TRANSLATION_ID, { verdict: "reject", categories: ["rights"] })
+
+    await service.runCheck(jobInput)
+
+    expect(memory.fixture.status).toBe("review")
+    expect(memory.fixture.articleStatus).toBe("review")
+    expect(memory.reviewMessages).toHaveLength(1)
+  })
+
+  it("поздний результат после withdraw не меняет черновик и не публикует событие", async () => {
+    const { memory, adapter, service, entries } = createHarness({ status: "draft", articleStatus: "draft" })
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    await service.runCheck(jobInput)
+
+    expect(memory.fixture.status).toBe("draft")
+    expect(memory.fixture.articleStatus).toBe("draft")
+    expect(entries.some((entry) => entry.event === "translation.published")).toBe(false)
+  })
+
+  it("результат старой ревизии не применяется к новой подаче", async () => {
+    const { memory, adapter, service, entries } = createHarness({ latestRevisionId: "revision-2" })
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    await service.runCheck(jobInput)
+
+    expect(memory.fixture.status).toBe("ai_check")
+    expect(entries.some((entry) => entry.event === "translation.published")).toBe(false)
   })
 
   it("несобираемая подача не выдаётся за недоступность провайдера", async () => {

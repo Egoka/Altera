@@ -6,8 +6,8 @@
  * записи стоимости нет), комментарий автору в историю решений при отказе
  * (`30-account/author/review-history.md` §4) и аудит `ai.decision` (реестр #71).
  *
- * Чего сервис **не** делает: не меняет статус версии статьи. Переходы `ai_check` → `published`
- * или `review` — задача T-049; проверка только выносит и записывает вердикт.
+ * Вердикт и условный переход ожидающей ревизии записываются одной транзакцией. Поздний результат
+ * отозванной или уже заменённой ревизии сохраняется для аудита, но публичный статус не меняет.
  */
 
 import { randomUUID } from "node:crypto"
@@ -49,6 +49,7 @@ interface AiCheckServiceOptions {
   store: AiCheckStore
   adapter: AiCheckAdapter
   logger: AppLogger
+  onPublished?: (translationId: string) => Promise<void>
   now?: () => Date
 }
 
@@ -70,7 +71,7 @@ function evidenceJson(result: AiCheckResult): Prisma.InputJsonValue {
 }
 
 export function createAiCheckService(options: AiCheckServiceOptions): AiCheckService {
-  const { store, adapter, logger } = options
+  const { store, adapter, logger, onPublished } = options
   const now = options.now ?? (() => new Date())
 
   async function markFailed(
@@ -106,11 +107,11 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
     finishedAt: Date
     durationMs: number
     originRequestId: string | null
-  }): Promise<void> {
+  }): Promise<boolean> {
     const { result } = write
     const bucket = aiCostBucket(write.finishedAt)
 
-    await store.writeResult(async (writer) => {
+    return store.writeResult(async (writer) => {
       await writer.aiProcess.update({
         where: { id: write.processId },
         data: {
@@ -138,7 +139,54 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         select: { id: true }
       })
 
-      if (result.verdict === "reject") {
+      const translation = await writer.articleTranslation.findUnique({
+        where: { id: write.input.translationId },
+        select: {
+          id: true,
+          articleId: true,
+          locale: true,
+          status: true,
+          updatedAt: true,
+          revisions: { select: { id: true }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 1 },
+          article: { select: { sourceLocale: true, firstPublishedAt: true } }
+        }
+      })
+      const applies = translation?.status === "ai_check" && translation.revisions[0]?.id === write.input.revisionId
+      let transitioned = false
+      if (applies) {
+        const publishedAt = result.verdict === "publish" ? write.finishedAt : undefined
+        const changed = await writer.articleTranslation.updateMany({
+          where: {
+            id: write.input.translationId,
+            status: "ai_check",
+            updatedAt: translation.updatedAt
+          },
+          data: {
+            status: result.verdict === "publish" ? "published" : "review",
+            ...(publishedAt
+              ? { publishedAt, reeditUntil: new Date(publishedAt.getTime() + 60 * 60 * 1000), rejected: false }
+              : {})
+          }
+        })
+        transitioned = changed.count === 1
+        if (transitioned && translation.locale === translation.article.sourceLocale) {
+          await writer.article.update({
+            where: { id: translation.articleId },
+            data: {
+              status: result.verdict === "publish" ? "published" : "review",
+              ...(publishedAt
+                ? {
+                    publishedAt,
+                    firstPublishedAt: translation.article.firstPublishedAt ?? publishedAt
+                  }
+                : {})
+            },
+            select: { id: true }
+          })
+        }
+      }
+
+      if (transitioned && result.verdict === "reject") {
         await writer.reviewMessage.create({
           data: {
             translationId: write.input.translationId,
@@ -169,6 +217,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         },
         select: { id: true }
       })
+      return transitioned && result.verdict === "publish"
     })
   }
 
@@ -186,7 +235,10 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
 
       // Повторный запуск задания после успеха второго вердикта не даёт: переиграть решение
       // проверки нельзя (журнал #14, `ai-processes.md` §5).
-      if (process.status === "completed") return { aiProcessId: process.id, verdict: null }
+      if (process.status === "completed") {
+        if (process.verdict === "publish") await onPublished?.(input.translationId)
+        return { aiProcessId: process.id, verdict: null }
+      }
 
       const startedAt = now()
       await store.updateProcess(process.id, {
@@ -247,7 +299,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
 
       const finishedAt = now()
       const durationMs = finishedAt.getTime() - startedAt.getTime()
-      await writeResult({
+      const published = await writeResult({
         processId: process.id,
         input,
         locale: submission.locale,
@@ -274,6 +326,17 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
           reasons: result.reasons.map((reason) => reason.category)
         }
       })
+
+      if (published) {
+        if (originRequestId) {
+          logger.metric?.({
+            event: "translation.published",
+            requestId: originRequestId,
+            data: { translationId: input.translationId }
+          })
+        }
+        await onPublished?.(input.translationId)
+      }
 
       return { aiProcessId: process.id, verdict: result.verdict }
     }

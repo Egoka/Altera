@@ -1901,7 +1901,6 @@ type Mutation {
   """
   requestPasswordReset(email: String!, locale: Locale!): MagicLinkRequestResult!
   requestRefund(paymentId: ID!, reason: String): Boolean!
-  requestReview(id: ID!): Article!
   resendMail(id: ID!): AdminMail!
   resendMails(ids: [ID!]!): AdminMailResendResult!
 
@@ -1932,7 +1931,6 @@ type Mutation {
   `profile.check` (#85) с `verdict: reverted`. Прежней версии нет — `CONFLICT`.
   """
   revertAvatar(reason: String, userId: ID!): Avatar
-  revertToDraft(id: ID!): Article!
   revokeAllSessions: SessionRevokeAllResult!
   revokeException(id: ID!, reason: String!): PermissionException!
   revokeOwner(id: ID!, reason: String!): AdminStaffMember!
@@ -1967,8 +1965,8 @@ type Mutation {
 
   """
   Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
-  перед первой публикацией — публичное имя и адрес профиля (§25.4). Переход в `ai_check` и
-  решения проверки — T-049.
+  перед первой публикацией — публичное имя и адрес профиля (§25.4). Первая подача переходит в
+  `ai_check`; повтор после отказа AI — в `review` без нового AI.
   """
   submitTranslation(id: ID!): EditorTranslation!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!

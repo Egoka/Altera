@@ -14,6 +14,17 @@ import { createSessionId, signAccessToken } from "./helpers/session-token"
  */
 
 const apiUrl = process.env.T066_API_URL ?? "http://127.0.0.1:4000/"
+const document = {
+  type: "doc",
+  attrs: { schemaVersion: 1 },
+  content: [
+    {
+      type: "paragraph",
+      attrs: { id: "0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7b" },
+      content: [{ type: "text", text: "Текст материала" }]
+    }
+  ]
+}
 
 /** Исходник 1600×900 лежит файлом: `sharp` — зависимость сервера, в рабочем пространстве веба её нет. */
 const sourceImage = () => readFile(new URL("fixtures/cover-source.jpg", import.meta.url))
@@ -80,6 +91,8 @@ const createDraft = async (): Promise<Fixture> =>
       }
     })
     const translation = await prisma.articleTranslation.findFirstOrThrow({ where: { articleId: article.id } })
+    await prisma.articleTranslation.update({ where: { id: translation.id }, data: { body: document } })
+    await prisma.articleRevision.updateMany({ where: { translationId: translation.id }, data: { body: document } })
 
     const sessionId = await createSessionId(prisma, user.id)
     return {
@@ -111,7 +124,11 @@ const SET_COVER = `
   }
 `
 
-const REQUEST_REVIEW = `mutation RequestReview($id: ID!) { requestReview(id: $id) { id status } }`
+const SUBMIT_TRANSLATION = `
+  mutation SubmitTranslation($id: ID!) {
+    submitTranslation(id: $id) { id status }
+  }
+`
 
 const callApi = async (request: APIRequestContext, token: string, query: string, variables: object) => {
   const response = await request.post(apiUrl, {
@@ -212,11 +229,11 @@ test.describe("T-066 обложка материала", () => {
   test("критерий 1: подача без обложки отвечает VALIDATION_ERROR", async ({ request }) => {
     const fixture = await createDraft()
 
-    const rejected = await callApi(request, fixture.token, REQUEST_REVIEW, { id: fixture.articleId })
+    const rejected = await callApi(request, fixture.token, SUBMIT_TRANSLATION, { id: fixture.translationId })
 
-    // Поле `requestReview` не обнуляемо, поэтому отказ обнуляет весь `data` — важно, что
+    // Поле `submitTranslation` не обнуляемо, поэтому отказ обнуляет весь `data` — важно, что
     // подача не прошла и ответ назвал поле и правило.
-    expect(rejected.data?.requestReview ?? null).toBeNull()
+    expect(rejected.data?.submitTranslation ?? null).toBeNull()
     expect(rejected.errors?.[0]?.extensions).toMatchObject({
       code: "VALIDATION_ERROR",
       field: "cover",
@@ -228,8 +245,8 @@ test.describe("T-066 обложка материала", () => {
     await waitForReady(assetId)
     await callApi(request, fixture.token, SET_COVER, { articleId: fixture.articleId, assetId, focal: null })
 
-    const accepted = await callApi(request, fixture.token, REQUEST_REVIEW, { id: fixture.articleId })
+    const accepted = await callApi(request, fixture.token, SUBMIT_TRANSLATION, { id: fixture.translationId })
     expect(accepted.errors, JSON.stringify(accepted.errors)).toBeUndefined()
-    expect(accepted.data?.requestReview).toMatchObject({ status: "review" })
+    expect(accepted.data?.submitTranslation).toMatchObject({ status: "ai_check" })
   })
 })
