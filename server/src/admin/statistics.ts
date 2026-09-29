@@ -1,15 +1,15 @@
 import type { AiProcessKind, AiProcessStatus, Locale, Role } from "../generated/prisma"
+import { AI_ALT_OBJECT_TYPE } from "../ai/alt/queue"
+import { AI_CHECK_OBJECT_TYPE } from "../ai/store"
 import { createApiError } from "../errors/graphql-error"
-import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
+import { ensureAuthenticated } from "../exceptions/permissions"
 import type { GraphQLContext } from "../prisma"
-import { RATE_LIMIT_RULES } from "../rate-limits"
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const EXPORT_ACTION = "stats.export"
-const EXPORT_RULE = RATE_LIMIT_RULES["admin.export.user"]
-const EXPORT_WINDOW_MS = EXPORT_RULE.windowSeconds * 1000
 const QUEUE_STATUSES = new Set(["review", "in_review", "rework"])
 const DECISION_KINDS = new Set(["manual_publish", "published_auto", "final_reject", "rework_request"])
+const STATISTICS_ROLES = new Set<Role>(["analyst", "admin", "owner"])
 
 export type StatisticsPeriod = "DAYS_7" | "DAYS_30" | "DAYS_90" | "CUSTOM"
 export type StatisticsTab = "GROWTH" | "CONTENT" | "AI"
@@ -134,7 +134,7 @@ interface ArticleRow {
   slug: string
   section: { id: string; name: string } | null
   author: { id: string; name: string; handle: string }
-  bookmarks: Array<{ userId: string }>
+  bookmarks: Array<{ userId: string; createdAt: Date }>
   translations: TranslationRow[]
 }
 
@@ -142,6 +142,8 @@ interface AiProcessRow {
   kind: AiProcessKind
   status: AiProcessStatus
   durationMs: number | null
+  objectType: string
+  objectId: string
 }
 
 interface AiCostRow {
@@ -157,8 +159,11 @@ const publicAccountWhere = {
 } as const
 
 function ensureStatisticsReader(ctx: GraphQLContext) {
-  ensurePermission(ctx.currentUser, "finance", "stats.read", ctx.requestId)
-  return ensureAuthenticated(ctx.currentUser, ctx.requestId)
+  const actor = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+  if (!STATISTICS_ROLES.has(actor.role)) {
+    throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "stats.read" })
+  }
+  return actor
 }
 
 function parseCalendarDate(value: string | null | undefined, edge: "from" | "to", requestId: string): Date {
@@ -214,7 +219,11 @@ async function readUsers(ctx: GraphQLContext, range: StatisticsRange): Promise<U
   })) as UserRow[]
 }
 
-async function readArticles(ctx: GraphQLContext, input: StatisticsRangeInput): Promise<ArticleRow[]> {
+async function readArticles(
+  ctx: GraphQLContext,
+  input: StatisticsRangeInput,
+  range: StatisticsRange
+): Promise<ArticleRow[]> {
   return (await ctx.prisma.article.findMany({
     where: {
       author: { ...publicAccountWhere },
@@ -227,7 +236,10 @@ async function readArticles(ctx: GraphQLContext, input: StatisticsRangeInput): P
       slug: true,
       section: { select: { id: true, name: true } },
       author: { select: { id: true, name: true, handle: true } },
-      bookmarks: { where: { user: { ...publicAccountWhere } }, select: { userId: true } },
+      bookmarks: {
+        where: { createdAt: { gte: range.from, lte: range.to }, user: { ...publicAccountWhere } },
+        select: { userId: true, createdAt: true }
+      },
       translations: {
         where: input.locale ? { locale: input.locale } : undefined,
         select: {
@@ -261,7 +273,7 @@ export async function getGrowthStatistics(
       },
       select: { userId: true }
     }),
-    readArticles(ctx, input)
+    readArticles(ctx, input, range)
   ])
 
   const registrations = users.filter((user) => inRange(user.createdAt, range))
@@ -305,13 +317,28 @@ export async function getContentStatistics(
 ): Promise<ContentStatistics> {
   ensureStatisticsReader(ctx)
   const range = resolveRange(input, now, ctx.requestId)
-  const articles = await readArticles(ctx, input)
+  const articles = await readArticles(ctx, input, range)
+  const translationIds = articles.flatMap((article) => article.translations.map(({ id }) => id))
+  const rejectedChecks =
+    translationIds.length === 0
+      ? []
+      : await ctx.prisma.aiProcess.findMany({
+          where: {
+            kind: "check",
+            status: "completed",
+            verdict: "reject",
+            objectType: AI_CHECK_OBJECT_TYPE,
+            objectId: { in: translationIds }
+          },
+          select: { objectId: true }
+        })
+  const rejectedTranslationIds = new Set(rejectedChecks.map(({ objectId }) => objectId))
   const publicationsByLocale = new Map<string, number>([
     ["en", 0],
     ["ru", 0]
   ])
   const publicationsBySection = new Map<string, { label: string; count: number }>()
-  const decisions: Array<{ kind: string; durationHours: number }> = []
+  const decisions: Array<{ kind: string; durationHours: number; manualOverride: boolean }> = []
   const queueSubmittedAt: Date[] = []
   let drafts = 0
   let queueSize = 0
@@ -336,7 +363,8 @@ export async function getContentStatistics(
       if (submitted && decision && inRange(decision.createdAt, range)) {
         decisions.push({
           kind: decision.kind,
-          durationHours: (decision.createdAt.getTime() - submitted.createdAt.getTime()) / 3_600_000
+          durationHours: (decision.createdAt.getTime() - submitted.createdAt.getTime()) / 3_600_000,
+          manualOverride: decision.kind === "manual_publish" && rejectedTranslationIds.has(translation.id)
         })
       }
 
@@ -376,7 +404,7 @@ export async function getContentStatistics(
   }
 
   const publicationCount = [...publicationsByLocale.values()].reduce((sum, count) => sum + count, 0)
-  const manualPublishes = decisions.filter(({ kind }) => kind === "manual_publish").length
+  const manualPublishes = decisions.filter(({ manualOverride }) => manualOverride).length
   const publishDecisions = decisions.filter(({ kind }) => kind === "manual_publish" || kind === "published_auto").length
   const rejected = decisions.filter(({ kind }) => kind === "final_reject" || kind === "rework_request").length
 
@@ -414,16 +442,44 @@ export async function getAiStatistics(
 ): Promise<AiStatistics> {
   ensureStatisticsReader(ctx)
   const range = resolveRange(input, now, ctx.requestId)
-  const [processes, costs] = (await Promise.all([
+  const [unfilteredProcesses, costs] = (await Promise.all([
     ctx.prisma.aiProcess.findMany({
       where: { createdAt: { gte: range.from, lte: range.to } },
-      select: { kind: true, status: true, durationMs: true }
+      select: { kind: true, status: true, durationMs: true, objectType: true, objectId: true }
     }),
     ctx.prisma.aiCostAggregate.findMany({
-      where: { bucketStart: { lte: range.to }, bucketEnd: { gte: range.from } },
+      where: { bucketStart: { gte: range.from }, bucketEnd: { lte: range.to } },
       select: { kind: true, totalCostMinor: true, processCount: true }
     })
   ])) as [AiProcessRow[], AiCostRow[]]
+
+  const translationIds = unfilteredProcesses
+    .filter(({ objectType }) => objectType === AI_CHECK_OBJECT_TYPE)
+    .map(({ objectId }) => objectId)
+  const assetIds = unfilteredProcesses
+    .filter(({ objectType }) => objectType === AI_ALT_OBJECT_TYPE)
+    .map(({ objectId }) => objectId)
+  const [publicTranslations, publicAssets] = await Promise.all([
+    translationIds.length === 0
+      ? []
+      : ctx.prisma.articleTranslation.findMany({
+          where: { id: { in: translationIds }, article: { author: { ...publicAccountWhere } } },
+          select: { id: true }
+        }),
+    assetIds.length === 0
+      ? []
+      : ctx.prisma.mediaAsset.findMany({
+          where: { id: { in: assetIds }, owner: { ...publicAccountWhere } },
+          select: { id: true }
+        })
+  ])
+  const allowedObjects = new Set([
+    ...publicTranslations.map(({ id }) => `${AI_CHECK_OBJECT_TYPE}:${id}`),
+    ...publicAssets.map(({ id }) => `${AI_ALT_OBJECT_TYPE}:${id}`)
+  ])
+  const processes = unfilteredProcesses.filter(({ objectType, objectId }) =>
+    allowedObjects.has(`${objectType}:${objectId}`)
+  )
 
   const byKind = new Map<string, number>()
   const byStatus = new Map<string, number>()
@@ -460,27 +516,13 @@ function rowsToCsv(rows: ReadonlyArray<readonly [string, string | number | null]
   return `metric,value\n${rows.map((row) => row.map(csvCell).join(",")).join("\n")}\n`
 }
 
-async function ensureExportAvailable(ctx: GraphQLContext, now: Date) {
-  ensurePermission(ctx.currentUser, "finance", EXPORT_ACTION, ctx.requestId)
-  const actor = ensureAuthenticated(ctx.currentUser, ctx.requestId)
-  const windowStart = new Date(now.getTime() - EXPORT_WINDOW_MS)
-  const recent = await ctx.prisma.auditLog.findMany({
-    where: { action: EXPORT_ACTION, actorId: actor.id, createdAt: { gte: windowStart } },
-    orderBy: { createdAt: "asc" },
-    select: { createdAt: true }
-  })
-  if (recent.length < EXPORT_RULE.limit) return actor
-
-  const oldest = recent[0]?.createdAt ?? windowStart
-  const retryAfter = Math.max(1, Math.ceil((oldest.getTime() + EXPORT_WINDOW_MS - now.getTime()) / 1000))
-  ctx.logger.log({
-    level: "info",
-    event: "rate_limit.hit",
+async function ensureExportAvailable(ctx: GraphQLContext) {
+  const actor = ensureStatisticsReader(ctx)
+  await ctx.rateLimiter.enforce("admin.export.user", actor.id, {
     requestId: ctx.requestId,
-    message: "Rate limit exceeded",
-    data: { bucket: EXPORT_RULE.bucket, ipHash: null }
+    ip: ctx.requestMeta.ip
   })
-  throw createApiError("RATE_LIMITED", { requestId: ctx.requestId, retryAfter })
+  return actor
 }
 
 export async function exportStatisticsCsv(
@@ -488,7 +530,7 @@ export async function exportStatisticsCsv(
   input: { tab: StatisticsTab; range: StatisticsRangeInput },
   now = new Date()
 ): Promise<StatisticsExport> {
-  const actor = await ensureExportAvailable(ctx, now)
+  const actor = await ensureExportAvailable(ctx)
   let rows: Array<readonly [string, string | number | null]>
   const tab = input.tab.toLowerCase()
 
@@ -498,7 +540,11 @@ export async function exportStatisticsCsv(
       ["registrations", stats.registrations],
       ["activeAccounts", stats.activeAccounts],
       ["enabledAuthors", stats.enabledAuthors],
-      ["authorsWithPublications", stats.authorsWithPublications]
+      ["authorsWithPublications", stats.authorsWithPublications],
+      ...stats.daily.flatMap((day) => [
+        [`daily.${day.date}.registrations`, day.registrations] as const,
+        [`daily.${day.date}.publications`, day.publications] as const
+      ])
     ]
   } else if (input.tab === "CONTENT") {
     const stats = await getContentStatistics(ctx, input.range, now)
@@ -509,7 +555,9 @@ export async function exportStatisticsCsv(
       ["oldestQueueAgeHours", stats.oldestQueueAgeHours],
       ["medianDecisionHours", stats.medianDecisionHours],
       ["rejectionRate", stats.rejectionRate],
-      ["manualOverrideRate", stats.manualOverrideRate]
+      ["manualOverrideRate", stats.manualOverrideRate],
+      ...stats.byLocale.map((bucket) => [`locale.${bucket.key}.publications`, bucket.count] as const),
+      ...stats.bySection.map((bucket) => [`section.${bucket.label}.publications`, bucket.count] as const)
     ]
   } else {
     const stats = await getAiStatistics(ctx, input.range, now)
@@ -518,7 +566,9 @@ export async function exportStatisticsCsv(
       ["failed", stats.failed],
       ["failureRate", stats.failureRate],
       ["averageDurationMs", stats.averageDurationMs],
-      ["costMinor", stats.costMinor]
+      ["costMinor", stats.costMinor],
+      ...stats.byKind.map((bucket) => [`kind.${bucket.key}`, bucket.count] as const),
+      ...stats.byStatus.map((bucket) => [`status.${bucket.key}`, bucket.count] as const)
     ]
   }
 

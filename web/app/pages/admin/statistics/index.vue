@@ -309,6 +309,36 @@
         </div>
 
         <div class="mt-8 grid gap-8 xl:grid-cols-2">
+          <section data-statistics-breakdown="locale">
+            <h2 class="mb-4 font-serif text-2xl text-zinc-950 dark:text-zinc-50">
+              {{ t("admin.statisticsPage.byLocale") }}
+            </h2>
+            <dl class="border border-zinc-300 dark:border-zinc-700">
+              <div
+                v-for="bucket in content.byLocale"
+                :key="bucket.key"
+                class="flex justify-between border-b border-zinc-200 p-3 last:border-b-0 dark:border-zinc-800">
+                <dt class="font-sans uppercase text-zinc-600 dark:text-zinc-300">{{ bucket.key }}</dt>
+                <dd class="font-mono font-semibold">{{ bucket.count }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section data-statistics-breakdown="section">
+            <h2 class="mb-4 font-serif text-2xl text-zinc-950 dark:text-zinc-50">
+              {{ t("admin.statisticsPage.bySection") }}
+            </h2>
+            <dl class="border border-zinc-300 dark:border-zinc-700">
+              <div
+                v-for="bucket in content.bySection"
+                :key="bucket.key"
+                class="flex justify-between border-b border-zinc-200 p-3 last:border-b-0 dark:border-zinc-800">
+                <dt class="font-sans text-zinc-600 dark:text-zinc-300">{{ bucket.label }}</dt>
+                <dd class="font-mono font-semibold">{{ bucket.count }}</dd>
+              </div>
+            </dl>
+          </section>
+
           <section>
             <h2 class="mb-4 font-serif text-2xl text-zinc-950 dark:text-zinc-50">
               {{ t("admin.statisticsPage.topAuthors") }}
@@ -405,6 +435,36 @@
               {{ metric[1] }}
             </p>
           </article>
+        </div>
+        <div class="mt-8 grid gap-8 xl:grid-cols-2">
+          <section data-statistics-breakdown="ai-kind">
+            <h2 class="mb-4 font-serif text-2xl text-zinc-950 dark:text-zinc-50">
+              {{ t("admin.statisticsPage.aiByKind") }}
+            </h2>
+            <dl class="border border-zinc-300 dark:border-zinc-700">
+              <div
+                v-for="bucket in ai.byKind"
+                :key="bucket.key"
+                class="flex justify-between border-b border-zinc-200 p-3 last:border-b-0 dark:border-zinc-800">
+                <dt class="font-mono text-zinc-600 dark:text-zinc-300">{{ bucket.key }}</dt>
+                <dd class="font-mono font-semibold">{{ bucket.count }}</dd>
+              </div>
+            </dl>
+          </section>
+          <section data-statistics-breakdown="ai-status">
+            <h2 class="mb-4 font-serif text-2xl text-zinc-950 dark:text-zinc-50">
+              {{ t("admin.statisticsPage.aiByStatus") }}
+            </h2>
+            <dl class="border border-zinc-300 dark:border-zinc-700">
+              <div
+                v-for="bucket in ai.byStatus"
+                :key="bucket.key"
+                class="flex justify-between border-b border-zinc-200 p-3 last:border-b-0 dark:border-zinc-800">
+                <dt class="font-mono text-zinc-600 dark:text-zinc-300">{{ bucket.key }}</dt>
+                <dd class="font-mono font-semibold">{{ bucket.count }}</dd>
+              </div>
+            </dl>
+          </section>
         </div>
       </template>
     </template>

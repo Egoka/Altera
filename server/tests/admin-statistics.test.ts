@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import { createApiError } from "../src/errors/graphql-error"
 import type { GraphQLContext } from "../src/prisma"
 import {
   exportStatisticsCsv,
@@ -13,6 +14,7 @@ const NOW = new Date("2026-09-29T12:00:00.000Z")
 
 function context(role: ServiceRole) {
   const auditCreate = vi.fn().mockResolvedValue({})
+  const enforce = vi.fn().mockResolvedValue({ allowed: true, remaining: 9, retryAfter: 3_600 })
   const ctx = {
     currentUser: {
       id: `${role}-1`,
@@ -43,7 +45,7 @@ function context(role: ServiceRole) {
             slug: "first-article",
             section: { id: "section-1", name: "Культура" },
             author: { id: "author-1", name: "Анна Автор", handle: "anna" },
-            bookmarks: [{ userId: "reader-1" }],
+            bookmarks: [{ userId: "reader-1", createdAt: new Date("2026-09-20T10:00:00.000Z") }],
             translations: [
               {
                 id: "translation-1",
@@ -88,11 +90,46 @@ function context(role: ServiceRole) {
         ])
       },
       aiProcess: {
-        findMany: vi.fn().mockResolvedValue([
-          { kind: "check", status: "completed", durationMs: 1_000 },
-          { kind: "check", status: "failed", durationMs: 99_000 },
-          { kind: "translate", status: "completed", durationMs: 3_000 }
-        ])
+        findMany: vi.fn().mockImplementation((args) =>
+          args.where?.verdict === "reject"
+            ? Promise.resolve([{ objectId: "translation-1" }])
+            : Promise.resolve([
+                {
+                  kind: "check",
+                  status: "completed",
+                  durationMs: 1_000,
+                  objectType: "ArticleTranslation",
+                  objectId: "translation-1"
+                },
+                {
+                  kind: "check",
+                  status: "failed",
+                  durationMs: 99_000,
+                  objectType: "ArticleTranslation",
+                  objectId: "translation-2"
+                },
+                {
+                  kind: "alt",
+                  status: "completed",
+                  durationMs: 3_000,
+                  objectType: "mediaAsset",
+                  objectId: "asset-1"
+                },
+                {
+                  kind: "translate",
+                  status: "completed",
+                  durationMs: 5_000,
+                  objectType: "ArticleTranslation",
+                  objectId: "service-translation"
+                }
+              ])
+        )
+      },
+      articleTranslation: {
+        findMany: vi.fn().mockResolvedValue([{ id: "translation-1" }, { id: "translation-2" }])
+      },
+      mediaAsset: {
+        findMany: vi.fn().mockResolvedValue([{ id: "asset-1" }])
       },
       aiCostAggregate: {
         findMany: vi.fn().mockResolvedValue([
@@ -104,10 +141,12 @@ function context(role: ServiceRole) {
         findMany: vi.fn().mockResolvedValue([]),
         create: auditCreate
       }
-    }
+    },
+    requestMeta: { ip: "127.0.0.1", userAgent: null },
+    rateLimiter: { enforce }
   } as unknown as GraphQLContext
 
-  return { ctx, auditCreate }
+  return { ctx, auditCreate, enforce }
 }
 
 describe("статистика роста", () => {
@@ -155,6 +194,9 @@ describe("статистика роста", () => {
 
   it.each(["editor", "moderator"] as const)("не выполняет запросы для роли %s", async (role) => {
     const { ctx } = context(role)
+    ctx.currentUser!.permissionExceptions = [
+      { id: "grant-finance", permission: "finance", kind: "grant", expiresAt: null, revokedAt: null }
+    ] as never
 
     await expect(getGrowthStatistics(ctx, { period: "DAYS_30" }, NOW)).rejects.toMatchObject({
       extensions: { code: "FORBIDDEN", action: "stats.read" }
@@ -213,14 +255,18 @@ describe("статистика контента", () => {
       expect.objectContaining({
         select: expect.objectContaining({
           bookmarks: {
-            where: {
+            where: expect.objectContaining({
+              createdAt: {
+                gte: new Date("2026-08-31T12:00:00.000Z"),
+                lte: new Date("2026-09-29T12:00:00.000Z")
+              },
               user: {
                 isServiceAccount: false,
                 isTestAccount: false,
                 email: { not: { endsWith: "@example.test" } }
               }
-            },
-            select: { userId: true }
+            }),
+            select: { userId: true, createdAt: true }
           }
         })
       })
@@ -236,26 +282,35 @@ describe("статистика AI", () => {
 
     expect(result).toMatchObject({ total: 3, failed: 1, failureRate: 1 / 3, averageDurationMs: 2_000 })
     expect(result.byKind).toEqual([
-      { key: "check", count: 2 },
-      { key: "translate", count: 1 }
+      { key: "alt", count: 1 },
+      { key: "check", count: 2 }
     ])
     expect(result.byStatus).toEqual([
       { key: "completed", count: 2 },
       { key: "failed", count: 1 }
     ])
     expect(result.costMinor).toBe("200")
+    expect(ctx.prisma.aiCostAggregate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          bucketStart: { gte: new Date("2026-08-31T12:00:00.000Z") },
+          bucketEnd: { lte: new Date("2026-09-29T12:00:00.000Z") }
+        }
+      })
+    )
   })
 })
 
 describe("экспорт статистики", () => {
   it("отдаёт агрегированный CSV аналитику и пишет stats.export без идентификаторов пользователей", async () => {
-    const { ctx, auditCreate } = context("analyst")
+    const { ctx, auditCreate, enforce } = context("analyst")
 
     const result = await exportStatisticsCsv(ctx, { tab: "GROWTH", range: { period: "DAYS_30" } }, NOW)
 
     expect(result.filename).toBe("statistics-growth-2026-09-29.csv")
     expect(result.csv).toContain("metric,value")
     expect(result.csv).toContain("registrations,2")
+    expect(result.csv).toContain("daily.2026-09-12.publications,1")
     expect(result.csv).not.toContain("reader-1")
     expect(result.csv).not.toContain("author-1")
     expect(auditCreate).toHaveBeenCalledWith({
@@ -268,12 +323,16 @@ describe("экспорт статистики", () => {
         diff: expect.objectContaining({ tab: "growth", period: "DAYS_30" })
       })
     })
+    expect(enforce).toHaveBeenCalledWith("admin.export.user", "analyst-1", {
+      requestId: "req-statistics",
+      ip: "127.0.0.1"
+    })
   })
 
   it("возвращает RATE_LIMITED после десяти экспортов в час и не пишет аудит повторно", async () => {
     const { ctx, auditCreate } = context("admin")
-    vi.mocked(ctx.prisma.auditLog.findMany).mockResolvedValue(
-      Array.from({ length: 10 }, (_, index) => ({ createdAt: new Date(NOW.getTime() - (9 - index) * 1_000) }))
+    vi.mocked(ctx.rateLimiter.enforce).mockRejectedValue(
+      createApiError("RATE_LIMITED", { requestId: "req-statistics", retryAfter: 3_591 })
     )
 
     await expect(exportStatisticsCsv(ctx, { tab: "CONTENT", range: { period: "DAYS_30" } }, NOW)).rejects.toMatchObject(
@@ -282,8 +341,5 @@ describe("экспорт статистики", () => {
       }
     )
     expect(auditCreate).not.toHaveBeenCalled()
-    expect(ctx.logger.log).toHaveBeenCalledWith(
-      expect.objectContaining({ level: "info", event: "rate_limit.hit", requestId: "req-statistics" })
-    )
   })
 })

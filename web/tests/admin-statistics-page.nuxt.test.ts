@@ -181,6 +181,16 @@ describe("состояния раздела статистики", () => {
 
     expect(wrapper.get('[data-statistics-filter="section"]').text()).toContain("Культура")
     expect(wrapper.get('[data-statistics-filter="locale"]').findAll("option")).toHaveLength(3)
+    expect(wrapper.get('[data-statistics-breakdown="locale"]').text()).toContain("ru")
+    expect(wrapper.get('[data-statistics-breakdown="section"]').text()).toContain("Культура")
+  })
+
+  it("показывает распределения AI по типам и статусам", () => {
+    routeQuery.value = { tab: "ai" }
+    const wrapper = mountPage()
+
+    expect(wrapper.get('[data-statistics-breakdown="ai-kind"]').text()).toContain("check")
+    expect(wrapper.get('[data-statistics-breakdown="ai-status"]').text()).toContain("completed")
   })
 
   it("показывает нули и пояснение для пустого периода", () => {

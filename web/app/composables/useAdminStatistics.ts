@@ -111,8 +111,10 @@ export const useAdminStatistics = () => {
   const loading = ref(false)
   const failure = ref<StatisticsFailure | null>(null)
   const retryAfter = ref<number | null>(null)
+  let loadSequence = 0
 
   const load = async (state: StatisticsQueryState) => {
+    const sequence = ++loadSequence
     failure.value = null
     if (state.tab === "engagement" || state.tab === "finance" || state.tab === "ranking") {
       loading.value = false
@@ -125,21 +127,26 @@ export const useAdminStatistics = () => {
         const envelope = (await useGraphQL(GetStatisticsGrowthDocument, {
           range
         })) as GraphQLEnvelope<GetStatisticsGrowthQuery>
+        if (sequence !== loadSequence) return
         if (!envelope.data?.statisticsGrowth) failure.value = readFailure(envelope.errors)
         else growth.value = envelope.data.statisticsGrowth
       } else if (state.tab === "content") {
         const envelope = (await useGraphQL(GetStatisticsContentDocument, {
           range
         })) as GraphQLEnvelope<GetStatisticsContentQuery>
+        if (sequence !== loadSequence) return
         if (!envelope.data?.statisticsContent) failure.value = readFailure(envelope.errors)
         else content.value = envelope.data.statisticsContent
       } else {
         const envelope = (await useGraphQL(GetStatisticsAiDocument, { range })) as GraphQLEnvelope<GetStatisticsAiQuery>
+        if (sequence !== loadSequence) return
         if (!envelope.data?.statisticsAi) failure.value = readFailure(envelope.errors)
         else ai.value = envelope.data.statisticsAi
       }
+    } catch {
+      if (sequence === loadSequence) failure.value = { code: null, requestId: null }
     } finally {
-      loading.value = false
+      if (sequence === loadSequence) loading.value = false
     }
   }
 
@@ -147,10 +154,16 @@ export const useAdminStatistics = () => {
     if (state.tab === "engagement" || state.tab === "finance" || state.tab === "ranking") return null
     retryAfter.value = null
     const tab = state.tab.toUpperCase() as ApiStatisticsTab
-    const envelope = (await useGraphQL(ExportStatisticsDocument, {
-      tab,
-      range: toRange(state)
-    })) as GraphQLEnvelope<ExportStatisticsMutation>
+    let envelope: GraphQLEnvelope<ExportStatisticsMutation>
+    try {
+      envelope = (await useGraphQL(ExportStatisticsDocument, {
+        tab,
+        range: toRange(state)
+      })) as GraphQLEnvelope<ExportStatisticsMutation>
+    } catch {
+      failure.value = { code: null, requestId: null }
+      return null
+    }
     if (envelope.data?.exportStatistics) return envelope.data.exportStatistics
 
     const parsed = readFailure(envelope.errors)
