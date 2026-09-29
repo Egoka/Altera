@@ -14,6 +14,17 @@ import { createSessionId, signAccessToken } from "./helpers/session-token"
  */
 
 const apiUrl = process.env.T066_API_URL ?? "http://127.0.0.1:4000/"
+const document = {
+  type: "doc",
+  attrs: { schemaVersion: 1 },
+  content: [
+    {
+      type: "paragraph",
+      attrs: { id: "0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7b" },
+      content: [{ type: "text", text: "Текст материала" }]
+    }
+  ]
+}
 
 /** Исходник 1600×900 лежит файлом: `sharp` — зависимость сервера, в рабочем пространстве веба её нет. */
 const sourceImage = () => readFile(new URL("fixtures/cover-source.jpg", import.meta.url))
@@ -80,6 +91,8 @@ const createDraft = async (): Promise<Fixture> =>
       }
     })
     const translation = await prisma.articleTranslation.findFirstOrThrow({ where: { articleId: article.id } })
+    await prisma.articleTranslation.update({ where: { id: translation.id }, data: { body: document } })
+    await prisma.articleRevision.updateMany({ where: { translationId: translation.id }, data: { body: document } })
 
     const sessionId = await createSessionId(prisma, user.id)
     return {
