@@ -2121,6 +2121,11 @@ type Mutation {
   createTag(input: CreateTagInput!): Tag!
   deactivateOwner(id: ID!, reason: String!): AdminStaffMember!
   decideProfileCheck(input: ProfileReviewDecisionInput!): ProfileReviewItem!
+
+  """
+  Необратимое физическое удаление. `confirmedName` должно точно совпасть с именем сущности.
+  """
+  deletePermanently(confirmedName: String!, entity: PermanentDeleteEntity!, id: ID!, reason: String!): Boolean!
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
   exportAudit(filters: AuditLogFilters): AuditExport!
@@ -2411,6 +2416,29 @@ type PasswordLoginResult {
   termsVersion: Int
 }
 
+"""
+Тип сущности «Удалить навсегда» (T-076): `user`/`staff` — записи `users`, различаемые по роли.
+"""
+enum PermanentDeleteEntity {
+  article
+  section
+  staff
+  tag
+  user
+}
+
+type PermanentDeletePreview {
+  entityId: ID!
+  entityType: PermanentDeleteEntity!
+
+  """
+  Имя, которое диалог просит ввести точно: заголовок статьи, имя пользователя, название рубрики или тега.
+  """
+  name: String!
+  willDelete: [String!]!
+  willKeep: [String!]!
+}
+
 type PermissionException {
   endsAt: String
   expiredAt: String
@@ -2571,6 +2599,11 @@ type Query {
   """
   mySupportRequests: [MySupportRequest!]!
   owners: [AdminOwner!]!
+
+  """
+  Усиленный диалог перед необратимым удалением (`owner`, только из архива).
+  """
+  permanentDeletePreview(entity: PermanentDeleteEntity!, id: ID!): PermanentDeletePreview!
   permissionExceptions(userId: ID): [PermissionException!]!
   popularTags(limit: Int! = 30, locale: Locale!): [CatalogTag!]!
   profileReviewQueue(pagination: PaginationInput): ProfileReviewQueuePage!

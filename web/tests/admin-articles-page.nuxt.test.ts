@@ -97,6 +97,7 @@ beforeEach(() => {
   vi.stubGlobal("useI18n", () => ({ t }))
   vi.stubGlobal("useRoute", () => ({ query: query.value, params: { slug: "translation-1" } }))
   vi.stubGlobal("useRouter", () => ({ replace }))
+  vi.stubGlobal("useAdminDashboard", () => ({ summary: computed(() => ({ role: viewerRole.value })) }))
   vi.stubGlobal("useAdminArticlesList", () => ({
     items: computed(() => items.value),
     pagination: computed(() => pagination.value),

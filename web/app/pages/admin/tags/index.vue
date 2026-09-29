@@ -2,6 +2,7 @@
   import { computed, onMounted, ref } from "vue"
   import type { AdminTag, AdminTagStatus } from "~/composables/useAdminTags"
   import { TAG_BULK_LIMIT } from "~/composables/useAdminTags"
+  import PermanentDeleteDialog from "~/components/admin/PermanentDeleteDialog.vue"
 
   const { t } = useI18n()
   const route = useRoute()
@@ -20,6 +21,7 @@
   const mergeOpen = ref(false)
   const targetId = ref("")
   const archiveId = ref<string | null>(null)
+  const permanentDeleteId = ref<string | null>(null)
   const detail = ref<AdminTag | null>(null)
   const audit = ref<Awaited<ReturnType<typeof loadAudit>>>([])
 
@@ -99,6 +101,13 @@
   const showDetail = async (tag: AdminTag) => {
     detail.value = tag
     audit.value = await loadAudit(tag.id).catch(() => [])
+  }
+
+  // Пункт T-076: только тег в архиве и только у владельца (`10-flows/permanent-delete.md` §1).
+  const onPermanentlyDeleted = () => {
+    permanentDeleteId.value = null
+    detail.value = null
+    void refresh(status.value)
   }
 
   onMounted(() => refresh(status.value))
@@ -237,6 +246,14 @@
           <span v-else :data-no-restore="tag.slug" class="font-sans text-xs text-zinc-500">
             {{ tag.mergedInto ? t("admin.tags.mergedNoRestore") : t("admin.tags.ownerArchiveNote") }}
           </span>
+          <button
+            v-if="isOwner && tag.status === 'archived'"
+            type="button"
+            class="tag-action text-red-700"
+            :data-permanent-delete-tag="tag.slug"
+            @click="permanentDeleteId = tag.id">
+            {{ t("admin.permanentDelete.action") }}
+          </button>
         </div>
       </article>
 
@@ -303,6 +320,14 @@
         </button>
       </div>
     </dialog>
+
+    <PermanentDeleteDialog
+      v-if="permanentDeleteId"
+      entity="tag"
+      :id="permanentDeleteId"
+      :open="Boolean(permanentDeleteId)"
+      @update:open="permanentDeleteId = null"
+      @deleted="onPermanentlyDeleted" />
 
     <aside
       v-if="detail"

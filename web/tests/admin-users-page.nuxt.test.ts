@@ -118,6 +118,7 @@ beforeEach(() => {
   vi.stubGlobal("useI18n", () => ({ t }))
   vi.stubGlobal("useRoute", () => ({ query: query.value, params: { id: "reader-1" } }))
   vi.stubGlobal("useRouter", () => ({ replace: vi.fn() }))
+  vi.stubGlobal("useAdminDashboard", () => ({ summary: computed(() => ({ role: "admin" })) }))
   vi.stubGlobal("useAdminUser", () => ({
     requestId,
     errorCode,

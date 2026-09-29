@@ -2,6 +2,7 @@
   import { computed, ref } from "vue"
   import type { AdminUserAuditEntry, AdminUserCard } from "~/composables/useAdminUsers"
   import { ARCHIVE_REASON_CATEGORIES, type ArchiveReasonCategory } from "~/utils/admin"
+  import PermanentDeleteDialog from "~/components/admin/PermanentDeleteDialog.vue"
 
   /**
    * Карточка пользователя (`docs/spec/40-admin/users.md` §3, §5, §7, §9) и шаги 1–2 flow #11.
@@ -10,8 +11,11 @@
    */
   const { t } = useI18n()
   const route = useRoute()
+  const { summary } = useAdminDashboard()
   const { loadCard, loadAudit, archive, restore, revokeSessions, changeEmail, requestId, errorCode, actionPending } =
     useAdminUser()
+
+  const isOwner = computed(() => summary.value?.role === "owner")
 
   definePageMeta({ i18n: false, layout: "admin", middleware: ["admin", "admin-users"] })
   useHead({ meta: [{ name: "robots", content: "noindex,nofollow" }] })
@@ -81,6 +85,13 @@
     close()
     notice.value = message
     await Promise.all([refresh(), refreshAudit()])
+  }
+
+  // Пункт T-076: только читатель/автор в архиве и только у владельца (`10-flows/permanent-delete.md` §1).
+  const permanentDeleteOpen = ref(false)
+  const onPermanentlyDeleted = () => {
+    permanentDeleteOpen.value = false
+    void navigateTo("/admin/users")
   }
 
   const submitArchive = async (mode: "admin" | "emergency") => {
@@ -333,7 +344,9 @@
         </ul>
       </template>
 
-      <div v-if="card.canArchive || card.canRestore || card.canRevokeSessions" class="mt-9 flex flex-wrap gap-3">
+      <div
+        v-if="card.canArchive || card.canRestore || card.canRevokeSessions || (isOwner && card.status === 'archived')"
+        class="mt-9 flex flex-wrap gap-3">
         <button
           v-if="card.canArchive"
           type="button"
@@ -373,6 +386,14 @@
           class="min-h-11 border border-zinc-300 px-4 font-sans text-sm dark:border-zinc-700"
           @click="open('email')">
           {{ t("admin.users.changeEmailAction") }}
+        </button>
+        <button
+          v-if="isOwner && card.status === 'archived'"
+          type="button"
+          data-users-open-permanent-delete
+          class="min-h-11 border border-red-700 px-4 font-sans text-sm font-semibold text-red-700 dark:border-red-400 dark:text-red-300"
+          @click="permanentDeleteOpen = true">
+          {{ t("admin.permanentDelete.action") }}
         </button>
       </div>
 
@@ -560,6 +581,14 @@
           </button>
         </div>
       </div>
+
+      <PermanentDeleteDialog
+        v-if="permanentDeleteOpen"
+        entity="user"
+        :id="card.id"
+        :open="permanentDeleteOpen"
+        @update:open="permanentDeleteOpen = false"
+        @deleted="onPermanentlyDeleted" />
     </article>
   </section>
 </template>

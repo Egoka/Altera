@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { computed, onMounted, reactive, ref } from "vue"
+  import PermanentDeleteDialog from "~/components/admin/PermanentDeleteDialog.vue"
 
   const { t } = useI18n()
   const route = useRoute()
@@ -38,6 +39,7 @@
   const archiveId = ref<string | null>(null)
   const successorId = ref("")
   const archiveReason = ref("")
+  const permanentDeleteId = ref<string | null>(null)
   const detail = ref<{ type: "Section" | "Format"; id: string; name: string; articles: number } | null>(null)
   const audit = ref<Awaited<ReturnType<typeof loadAudit>>>([])
 
@@ -161,6 +163,12 @@
    * на месте, поэтому обработчики кнопок гасят исключение вместо своего сообщения.
    */
   const runSectionRestore = (id: string) => restoreSection(id).catch(() => undefined)
+  // Пункт T-076: только рубрика в архиве и только у владельца (`10-flows/permanent-delete.md` §1).
+  const onPermanentlyDeleted = () => {
+    permanentDeleteId.value = null
+    if (detail.value?.type === "Section") detail.value = null
+    void refresh(status.value)
+  }
   const runFormatArchive = (id: string) => archiveFormat(id).catch(() => undefined)
   const runFormatRestore = (id: string) => restoreFormat(id).catch(() => undefined)
   const runSectionMove = (id: string, direction: -1 | 1) => moveSection(id, direction).catch(() => undefined)
@@ -311,6 +319,14 @@
           <span v-else :data-no-restore-section="item.id" class="font-sans text-xs text-zinc-500">
             {{ t("admin.categories.ownerArchiveNote") }}
           </span>
+          <button
+            v-if="isOwner && item.status === 'archived'"
+            type="button"
+            class="taxonomy-action text-red-700"
+            :data-permanent-delete-section="item.id"
+            @click="permanentDeleteId = item.id">
+            {{ t("admin.permanentDelete.action") }}
+          </button>
         </div>
       </article>
       <p
@@ -410,6 +426,14 @@
         </button>
       </div>
     </dialog>
+
+    <PermanentDeleteDialog
+      v-if="permanentDeleteId"
+      entity="section"
+      :id="permanentDeleteId"
+      :open="Boolean(permanentDeleteId)"
+      @update:open="permanentDeleteId = null"
+      @deleted="onPermanentlyDeleted" />
 
     <aside
       v-if="detail"

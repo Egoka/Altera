@@ -1,0 +1,27 @@
+"Тип сущности «Удалить навсегда» (T-076): `user`/`staff` — записи `users`, различаемые по роли."
+enum PermanentDeleteEntity {
+  user
+  staff
+  article
+  section
+  tag
+}
+
+type PermanentDeletePreview {
+  entityType: PermanentDeleteEntity!
+  entityId: ID!
+  "Имя, которое диалог просит ввести точно: заголовок статьи, имя пользователя, название рубрики или тега."
+  name: String!
+  willDelete: [String!]!
+  willKeep: [String!]!
+}
+
+extend type Query {
+  "Усиленный диалог перед необратимым удалением (`owner`, только из архива)."
+  permanentDeletePreview(entity: PermanentDeleteEntity!, id: ID!): PermanentDeletePreview!
+}
+
+extend type Mutation {
+  "Необратимое физическое удаление. `confirmedName` должно точно совпасть с именем сущности."
+  deletePermanently(entity: PermanentDeleteEntity!, id: ID!, confirmedName: String!, reason: String!): Boolean!
+}

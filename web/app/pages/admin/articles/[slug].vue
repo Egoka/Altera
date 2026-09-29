@@ -1,9 +1,12 @@
 <script setup lang="ts">
-  import { ref } from "vue"
+  import { computed, ref } from "vue"
   import { articleDocumentText, type AdminArticleAction } from "~/composables/useAdminArticles"
+  import PermanentDeleteDialog from "~/components/admin/PermanentDeleteDialog.vue"
 
   const { t } = useI18n()
   const route = useRoute()
+  const { summary } = useAdminDashboard()
+  const isOwner = computed(() => summary.value?.role === "owner")
   const id = String(route.params.slug)
   const {
     item,
@@ -48,6 +51,13 @@
     }
     activeAction.value = null
     reason.value = ""
+  }
+
+  // Пункт T-076: только материал в архиве и только у владельца (`10-flows/permanent-delete.md` §1).
+  const permanentDeleteOpen = ref(false)
+  const onPermanentlyDeleted = () => {
+    permanentDeleteOpen.value = false
+    void navigateTo("/admin/articles")
   }
 </script>
 
@@ -126,6 +136,14 @@
           class="min-h-11 border border-red-700 px-4 text-red-700"
           @click="openAction('reject')">
           {{ t("admin.articles.finalReject") }}
+        </button>
+        <button
+          v-if="isOwner && item.status === 'archived'"
+          data-article-open-permanent-delete
+          type="button"
+          class="min-h-11 border border-red-700 px-4 text-red-700"
+          @click="permanentDeleteOpen = true">
+          {{ t("admin.permanentDelete.action") }}
         </button>
       </div>
 
@@ -231,6 +249,14 @@
           </div>
         </section>
       </div>
+
+      <PermanentDeleteDialog
+        v-if="permanentDeleteOpen"
+        entity="article"
+        :id="item.id"
+        :open="permanentDeleteOpen"
+        @update:open="permanentDeleteOpen = false"
+        @deleted="onPermanentlyDeleted" />
     </template>
   </section>
 </template>

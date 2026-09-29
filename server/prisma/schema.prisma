@@ -316,12 +316,29 @@ model Article {
   tags              Tag[]                @relation("ArticleToTag")
   translations      ArticleTranslation[]
   bookmarks         Bookmark[]
+  slugHistory       ArticleSlugHistory[]
 
   @@index([sectionId])
   @@index([formatId])
   @@index([coverAssetId])
   @@index([archivedByActorId])
   @@map("articles")
+}
+
+/// Append-only registry: once a `(locale, slug)` pair is assigned to a material — via the initial
+/// draft slug or `setSlug` (`translation/editor.ts`) — it is reserved forever, including after
+/// permanent deletion (T-076, журнал §26.10, перенесено из AC-T053-2). `articleId` survives the
+/// owning article only as a historical pointer: it is cleared, never the row itself.
+model ArticleSlugHistory {
+  locale    Locale
+  slug      String
+  articleId String?
+  createdAt DateTime @default(now())
+  article   Article? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  @@id([locale, slug])
+  @@index([articleId])
+  @@map("article_slug_history")
 }
 
 model Job {

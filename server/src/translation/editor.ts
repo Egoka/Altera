@@ -862,11 +862,31 @@ export async function setSlug(ctx: GraphQLContext, translationId: string, slug: 
     })
   }
 
+  // Адрес навсегда занят (журнал §26.10, AC-T053-2 → T-076): проверяем и, при необходимости,
+  // резервируем `(locale, slug)` в реестре, который переживает физическое удаление материала.
+  const reserved = await ctx.prisma.articleSlugHistory.findUnique({
+    where: { locale_slug: { locale: translation.locale, slug: value } },
+    select: { articleId: true }
+  })
+  if (reserved && reserved.articleId !== translation.articleId) {
+    throw createApiError("CONFLICT", {
+      requestId: ctx.requestId,
+      entity: "slug",
+      expected: "free",
+      actual: "taken"
+    })
+  }
+
   await ctx.prisma.$transaction(async (tx) => {
     await disableLegacySync(tx)
     await tx.articleTranslation.update({ where: { id: translation.id }, data: { slug: value } })
     if (translation.locale === translation.article.sourceLocale) {
       await tx.article.update({ where: { id: translation.articleId }, data: { slug: value } })
+    }
+    if (!reserved) {
+      await tx.articleSlugHistory.create({
+        data: { locale: translation.locale, slug: value, articleId: translation.articleId }
+      })
     }
   })
 
