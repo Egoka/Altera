@@ -28,7 +28,7 @@ import {
   publicationDatesForStatus
 } from "../../visibility/article"
 import { randomUUID } from "node:crypto"
-import { articleCoverView, ensureCoverBeforeSubmit, setArticleCover } from "../../article/cover"
+import { articleCoverView, setArticleCover } from "../../article/cover"
 import type { FocalPoint } from "../../media"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
@@ -770,66 +770,11 @@ export default {
       return updatedArticle
     },
 
-    requestReview: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureArticleAuthoringAccess(ctx, "translation.submit")
-
-      const article = await ctx.prisma.article.findUnique({
-        where: { id },
-        include: { author: true, section: true, tags: true }
-      })
-      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (article.authorId !== user.id) {
-        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.requestReview" })
-      }
-      if (article.status !== "draft") {
-        throw createApiError("CONFLICT", {
-          requestId: ctx.requestId,
-          entity: "article",
-          expected: "draft",
-          actual: article.status
-        })
-      }
-      ensureActiveSection(article, ctx.requestId)
-      // Обложка обязательна перед публикацией (журнал §29.1, `article-edit.md` §4): подача без
-      // неё — `VALIDATION_ERROR`, и до публикации материал без карточки не доходит.
-      await ensureCoverBeforeSubmit(ctx, article.coverAssetId)
-
-      return ctx.prisma.article.update({
-        where: { id },
-        data: { status: "review" },
-        include: { author: true, section: true, tags: true }
-      })
-    },
-
     setArticleCover: async (
       _parent: unknown,
       args: { articleId: string; assetId?: string | null; focal?: FocalPoint | null },
       ctx: GraphQLContext
     ) => setArticleCover(ctx, { articleId: args.articleId, assetId: args.assetId ?? null, focal: args.focal ?? null }),
-
-    revertToDraft: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureArticleAuthoringAccess(ctx, "translation.withdraw")
-
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
-      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (article.authorId !== user.id) {
-        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.revertToDraft" })
-      }
-      if (article.status !== "review") {
-        throw createApiError("CONFLICT", {
-          requestId: ctx.requestId,
-          entity: "article",
-          expected: "review",
-          actual: article.status
-        })
-      }
-
-      return ctx.prisma.article.update({
-        where: { id },
-        data: { status: "draft" },
-        include: { author: true, section: true, tags: true }
-      })
-    },
 
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
       ensureRole(ctx.currentUser, "admin", "article.setStatus", ctx.requestId)

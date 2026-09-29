@@ -353,6 +353,17 @@ describe("T-040 подача к публикации", () => {
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "sectionId", rule: "required" })
   })
 
+  it("подача с архивной рубрикой отклоняется", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { section: { id: "section-1", slug: "culture", name: "Культура", status: "archived" } })
+    )
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "sectionId", rule: "active" })
+  })
+
   it("подача без текста отклоняется", async () => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(translation({ body: body("   ") }))

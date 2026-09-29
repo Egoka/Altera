@@ -1,10 +1,18 @@
 import { loadFilesSync } from "@graphql-tools/load-files"
 import { mergeTypeDefs } from "@graphql-tools/merge"
 import { buildASTSchema, isEnumType, isInputObjectType, isObjectType, validateSchema } from "graphql"
+import { createSchema } from "graphql-yoga"
 import path from "path"
 import { describe, expect, test } from "vitest"
+import articleResolver from "../src/graphql/article/resolver"
 
 describe("public GraphQL schema", () => {
+  test("assembles the article resolver with the public SDL", () => {
+    const typeDefs = loadFilesSync(path.resolve(__dirname, "../src/graphql"), { extensions: ["graphql"] })
+
+    expect(() => createSchema({ typeDefs: mergeTypeDefs(typeDefs), resolvers: articleResolver })).not.toThrow()
+  })
+
   test("assembles every SDL file into a valid schema", () => {
     const typeDefs = loadFilesSync(path.resolve(__dirname, "../src/graphql"), { extensions: ["graphql"] })
     const schema = buildASTSchema(mergeTypeDefs(typeDefs))
