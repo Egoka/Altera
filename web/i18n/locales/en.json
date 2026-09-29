@@ -1844,6 +1844,89 @@
         "job.cancel": "Cancellation"
       }
     },
+    "aiProcesses": {
+      "eyebrow": "Operations ledger",
+      "title": "AI processes",
+      "description": "History of automated checks, translations, profile reviews and alt text with statuses and diagnostics.",
+      "readOnly": "Read only: processes cannot be started or retried from this section.",
+      "tabsLabel": "AI process view",
+      "tabs": {
+        "records": "Processes",
+        "stats": "Statistics"
+      },
+      "filters": {
+        "search": "Object",
+        "kind": "Kind",
+        "status": "Status",
+        "period": "Period",
+        "verdict": "Verdict",
+        "reason": "Reason category",
+        "sort": "Sorting",
+        "allKinds": "All kinds",
+        "allStatuses": "All statuses"
+      },
+      "kind": {
+        "check": "Check",
+        "translate": "Translation",
+        "profile": "Profile",
+        "alt": "Alt text"
+      },
+      "status": {
+        "created": "Created",
+        "started": "Started",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "period": {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days"
+      },
+      "sort": {
+        "createdAt": "By creation",
+        "duration": "By duration"
+      },
+      "columns": {
+        "process": "Process",
+        "object": "Object",
+        "status": "Status",
+        "verdict": "Verdict",
+        "model": "Model",
+        "prompt": "Prompt",
+        "duration": "Duration",
+        "created": "Created"
+      },
+      "stats": {
+        "processes": "Processes",
+        "totalCost": "Cost for period",
+        "minorUnits": "in minor currency units, aggregate only",
+        "median": "Median duration",
+        "providerErrors": "Provider errors",
+        "reasons": "Rejection reasons",
+        "planShare": "Plan share",
+        "notCalculated": "Not calculated: plan prices are not approved."
+      },
+      "card": {
+        "providerError": "Error class",
+        "model": "Model",
+        "prompt": "Prompt version",
+        "object": "Related object",
+        "reasons": "Reasons and details",
+        "noReasons": "No reasons",
+        "created": "Created",
+        "started": "Started",
+        "finished": "Finished",
+        "openJob": "Open job"
+      },
+      "empty": "No processes during the selected period",
+      "loadError": "Could not load AI processes.",
+      "retry": "Retry request",
+      "previous": "Previous",
+      "next": "Next",
+      "back": "Back to AI processes",
+      "scope": "Viewing scope: {role}"
+    },
     "systemSettings": {
       "eyebrow": "Operations",
       "title": "System settings",

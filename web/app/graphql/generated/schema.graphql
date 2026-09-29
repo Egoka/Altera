@@ -232,6 +232,106 @@ type AccountUser {
   updatedAt: String!
 }
 
+type AdminAiKindCount {
+  count: Int!
+  kind: AdminAiProcessKind!
+}
+
+type AdminAiObject {
+  href: String
+  id: ID!
+  subtitle: String
+  title: String!
+  type: String!
+}
+
+input AdminAiPeriodInput {
+  from: String
+  to: String
+}
+
+type AdminAiProcess {
+  createdAt: String!
+  durationMs: Int
+  finishedAt: String
+  id: ID!
+  jobHref: String
+  kind: AdminAiProcessKind!
+  model: String
+  object: AdminAiObject!
+  promptVersion: String
+  providerErrorClass: String
+  reasons: [AdminAiReason!]!
+  startedAt: String
+  status: AdminAiProcessStatus!
+  verdict: String
+}
+
+enum AdminAiProcessKind {
+  alt
+  check
+  profile
+  translate
+}
+
+enum AdminAiProcessSort {
+  createdAt
+  duration
+}
+
+enum AdminAiProcessStatus {
+  completed
+  created
+  failed
+  running
+  started
+}
+
+type AdminAiReason {
+  category: String!
+  text: String
+}
+
+type AdminAiReasonCount {
+  category: String!
+  count: Int!
+  share: Float!
+}
+
+input AdminAiRecordsFilterInput {
+  kind: AdminAiProcessKind
+  ownZone: Boolean
+  period: AdminAiPeriodInput
+  query: String
+  reason: String
+  status: AdminAiProcessStatus
+  verdict: String
+}
+
+type AdminAiRecordsResponse {
+  items: [AdminAiProcess!]!
+  pagination: PaginationInfo!
+  viewerRole: Role!
+}
+
+type AdminAiStats {
+  kinds: [AdminAiKindCount!]!
+  medianDurationMs: Int
+  periodFrom: String!
+  periodTo: String!
+  planSharePercent: Float
+  processCount: Int!
+  providerErrors: Int!
+  rejectionReasons: [AdminAiReasonCount!]!
+  statuses: [AdminAiStatusCount!]!
+  totalCostMinor: String!
+}
+
+type AdminAiStatusCount {
+  count: Int!
+  status: AdminAiProcessStatus!
+}
+
 type AdminArticle {
   archive: AdminArticleArchive
   articleId: ID!
@@ -2539,6 +2639,8 @@ input PublishLegalVersionInput {
 
 type Query {
   _empty: String
+  adminAiRecord(id: ID!): AdminAiProcess
+  adminAiRecords(filters: AdminAiRecordsFilterInput, limit: Int = 20, page: Int = 1, sort: AdminAiProcessSort = createdAt): AdminAiRecordsResponse!
   adminArticle(id: ID!): AdminArticle!
   adminArticleFilterOptions: AdminArticleFilterOptions!
   adminArticles(filters: AdminArticleFiltersInput, pagination: PaginationInput, sort: AdminArticleSort): AdminArticlesConnection!
@@ -2564,6 +2666,7 @@ type Query {
   """
   adminUser(id: ID!): AdminUserCard
   adminUsers(filters: AdminUserFiltersInput, pagination: PaginationInput): AdminUserList!
+  aiStats(period: AdminAiPeriodInput): AdminAiStats!
   article(slug: String!): Article
   articleDetail(slug: String!): ArticleDetail
   articleStats(slug: String!): ArticleStats
