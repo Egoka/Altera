@@ -175,6 +175,45 @@
     }
   },
   "account": {
+    "export": {
+      "pageTitle": "Data export",
+      "eyebrow": "Your data",
+      "intro": "We will prepare a ZIP with your profile, articles and every revision, original media, and editorial correspondence. Technical image variants and internal notes are excluded.",
+      "privacy": "Privacy policy",
+      "license": "Licence",
+      "includesTitle": "What the archive includes",
+      "scope": {
+        "profile": "Profile, consents, bookmarks, and sessions without IP addresses",
+        "articles": "Articles in every language and revision history",
+        "media": "Master-original media and metadata",
+        "review": "Decision reasons and correspondence with participant roles"
+      },
+      "request": "Request an export",
+      "requesting": "Requesting…",
+      "requested": "The export is queued.",
+      "conflict": "An export is already being prepared.",
+      "rateLimited": "You can request another export in {minutes} min.",
+      "history": "Request history",
+      "empty": "No exports yet.",
+      "update": "Update status",
+      "status": {
+        "queued": "Queued",
+        "running": "Preparing the archive",
+        "stuck": "Taking longer than usual",
+        "ready": "Ready to download",
+        "failed": "Could not prepare the archive",
+        "expired": "Storage period expired"
+      },
+      "expiresAt": "Link valid until {date}",
+      "download": "Download ZIP",
+      "downloadExpired": "The link has expired or the export is unavailable. Request a new archive.",
+      "requestAgain": "Request again",
+      "retry": "Retry",
+      "error": {
+        "dataUnavailable": "The export history could not be loaded. Please try later.",
+        "action": "The action could not be completed. Try again (code: {requestId})"
+      }
+    },
     "archived": {
       "title": "Account archived",
       "body": "Your account is deactivated. Your articles are hidden from readers and do not appear in the feed. You can restore your account at any time.",

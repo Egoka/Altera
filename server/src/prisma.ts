@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
 import type { ErrorCollector } from "./error-collector"
+import type { AccountExportService } from "./account-export"
 import type { MailService } from "./mail/service"
 import type { MediaService } from "./media"
 import type { AppLogger } from "./observability/logger"
@@ -38,6 +39,7 @@ export interface GraphQLContext {
   rateLimiter: RateLimiter
   // История `backend.error` и адаптер внешнего сборщика (`80-observability/error-collector.md`).
   errorCollector: ErrorCollector
+  accountExports?: AccountExportService
 }
 
 // Браузер ходит только через BFF, поэтому адрес приходит заголовком прокси; поле
@@ -60,7 +62,8 @@ export async function createContext(
   mail: MailService,
   media: MediaService,
   rateLimiter: RateLimiter,
-  errorCollector: ErrorCollector
+  errorCollector: ErrorCollector,
+  accountExports?: AccountExportService
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const requestMeta = readRequestMeta(initialContext.request)
@@ -125,6 +128,7 @@ export async function createContext(
     mail,
     media,
     rateLimiter,
-    errorCollector
+    errorCollector,
+    accountExports
   }
 }
