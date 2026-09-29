@@ -308,3 +308,188 @@ export const createSupportRequestNoticeMail = (
     sanitizedBody: `${intro}\n\n${noticeLines(locale, notice, true).join("\n")}`
   }
 }
+
+export const ARTICLE_PUBLISHED_TEMPLATE = "article_published"
+export const ARTICLE_AI_REJECTED_TEMPLATE = "article_ai_rejected"
+export const ARTICLE_REWORK_REQUESTED_TEMPLATE = "article_rework_requested"
+export const ARTICLE_PUBLISHED_MANUAL_TEMPLATE = "article_published_manual"
+export const ARTICLE_REJECTED_FINAL_TEMPLATE = "article_rejected_final"
+export const ARTICLE_UNPUBLISHED_TEMPLATE = "article_unpublished"
+
+/**
+ * [ДОПУЩЕНИЕ] Письма решений по статье (T-051, журнал #14, #43, §20.10–11): состав и частота
+ * отложены до прохода почты (§25.13). Здесь — минимальный текст решения со ссылкой на следующий
+ * шаг (`10-flows/write-and-publish.md` §6, `10-flows/moderation.md` §6); причина или
+ * рекомендации редактора идут как есть, без изменения смысла.
+ */
+export const createArticlePublishedMessage = (locale: Locale, title: string, url: string): MailMessage => {
+  const escapedTitle = escapeHtml(title)
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Your article is published",
+      preheader: "Altera published your article automatically",
+      text: `Hello,\n\nyour article “${title}” passed the check and is published.\n\nOpen the article: ${url}\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>your article “${escapedTitle}” passed the check and is published.</p><p><a href="${escapedUrl}">Open the article</a></p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Материал опубликован",
+    preheader: "Altera опубликовала материал автоматически",
+    text: `Здравствуйте,\n\nматериал «${title}» прошёл проверку и опубликован.\n\nОткрыть материал: ${url}\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>материал «${escapedTitle}» прошёл проверку и опубликован.</p><p><a href="${escapedUrl}">Открыть материал</a></p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export const createArticleAiRejectedMessage = (locale: Locale, title: string, url: string): MailMessage => {
+  const escapedTitle = escapeHtml(title)
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Your article did not pass the check",
+      preheader: "The automatic check did not accept your article",
+      text: `Hello,\n\nyour article “${title}” did not pass the automatic check. The reasons are in your account.\n\nOpen the reasons: ${url}\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>your article “${escapedTitle}” did not pass the automatic check. The reasons are in your account.</p><p><a href="${escapedUrl}">Open the reasons</a></p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Материал не прошёл проверку",
+    preheader: "Автоматическая проверка не пропустила материал",
+    text: `Здравствуйте,\n\nматериал «${title}» не прошёл автоматическую проверку. Причины — в вашем кабинете.\n\nПосмотреть причины: ${url}\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>материал «${escapedTitle}» не прошёл автоматическую проверку. Причины — в вашем кабинете.</p><p><a href="${escapedUrl}">Посмотреть причины</a></p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export const createArticleReworkRequestedMessage = (
+  locale: Locale,
+  title: string,
+  recommendations: string,
+  url: string
+): MailMessage => {
+  const escapedTitle = escapeHtml(title)
+  const escapedRecommendations = escapeHtml(recommendations)
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Your article needs rework",
+      preheader: "The reviewer sent your article back with recommendations",
+      text: `Hello,\n\nthe reviewer sent your article “${title}” back for rework:\n\n${recommendations}\n\nOpen the editor: ${url}\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>the reviewer sent your article “${escapedTitle}” back for rework:</p><p>${escapedRecommendations.replace(/\n/g, "<br>")}</p><p><a href="${escapedUrl}">Open the editor</a></p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Материал нужно доработать",
+    preheader: "Ревьюер вернул материал с рекомендациями",
+    text: `Здравствуйте,\n\nревьюер вернул материал «${title}» на доработку с рекомендациями:\n\n${recommendations}\n\nОткрыть редактор: ${url}\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>ревьюер вернул материал «${escapedTitle}» на доработку с рекомендациями:</p><p>${escapedRecommendations.replace(/\n/g, "<br>")}</p><p><a href="${escapedUrl}">Открыть редактор</a></p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export const createArticlePublishedManualMessage = (locale: Locale, title: string, url: string): MailMessage => {
+  const escapedTitle = escapeHtml(title)
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "The editors published your article",
+      preheader: "Your article is published",
+      text: `Hello,\n\nthe editors reviewed and published your article “${title}”.\n\nOpen the article: ${url}\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>the editors reviewed and published your article “${escapedTitle}”.</p><p><a href="${escapedUrl}">Open the article</a></p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Материал опубликован редакцией",
+    preheader: "Ваш материал опубликован",
+    text: `Здравствуйте,\n\nредакция рассмотрела и опубликовала материал «${title}».\n\nОткрыть материал: ${url}\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>редакция рассмотрела и опубликовала материал «${escapedTitle}».</p><p><a href="${escapedUrl}">Открыть материал</a></p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export const createArticleRejectedFinalMessage = (
+  locale: Locale,
+  title: string,
+  reason: string | null,
+  url: string
+): MailMessage => {
+  const escapedTitle = escapeHtml(title)
+  const escapedUrl = escapeHtml(url)
+  const escapedReason = reason ? escapeHtml(reason) : null
+
+  if (locale === "en") {
+    const reasonLine = escapedReason ? `<p>${escapedReason.replace(/\n/g, "<br>")}</p>` : ""
+    return {
+      subject: "The editors declined your article",
+      preheader: "Your article was declined",
+      text: `Hello,\n\nthe editors declined your article “${title}” for good.${reason ? `\n\n${reason}` : ""}\n\nOpen the decision: ${url}\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>the editors declined your article “${escapedTitle}” for good.</p>${reasonLine}<p><a href="${escapedUrl}">Open the decision</a></p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  const reasonLine = escapedReason ? `<p>${escapedReason.replace(/\n/g, "<br>")}</p>` : ""
+  return {
+    subject: "Материал отклонён редакцией",
+    preheader: "Ваш материал отклонён",
+    text: `Здравствуйте,\n\nредакция окончательно отклонила материал «${title}».${reason ? `\n\n${reason}` : ""}\n\nПосмотреть решение: ${url}\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>редакция окончательно отклонила материал «${escapedTitle}».</p>${reasonLine}<p><a href="${escapedUrl}">Посмотреть решение</a></p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export const createArticleUnpublishedMessage = (
+  locale: Locale,
+  title: string,
+  reason: string,
+  url: string
+): MailMessage => {
+  const escapedTitle = escapeHtml(title)
+  const escapedReason = escapeHtml(reason)
+  const escapedUrl = escapeHtml(url)
+
+  if (locale === "en") {
+    return {
+      subject: "Your article was unpublished",
+      preheader: "The editors removed your article from publication",
+      text: `Hello,\n\nthe editors removed your article “${title}” from publication:\n\n${reason}\n\nOpen the editor: ${url}\n\nAltera — a journal about life.`,
+      html: `<p>Hello,</p><p>the editors removed your article “${escapedTitle}” from publication:</p><p>${escapedReason.replace(/\n/g, "<br>")}</p><p><a href="${escapedUrl}">Open the editor</a></p><p>Altera — a journal about life.</p>`
+    }
+  }
+
+  return {
+    subject: "Материал снят с публикации",
+    preheader: "Редакция сняла материал с публикации",
+    text: `Здравствуйте,\n\nредакция сняла материал «${title}» с публикации:\n\n${reason}\n\nОткрыть редактор: ${url}\n\nAltera — журнал о жизни.`,
+    html: `<p>Здравствуйте,</p><p>редакция сняла материал «${escapedTitle}» с публикации:</p><p>${escapedReason.replace(/\n/g, "<br>")}</p><p><a href="${escapedUrl}">Открыть редактор</a></p><p>Altera — журнал о жизни.</p>`
+  }
+}
+
+export interface ArticleEditTokenMail {
+  message: MailMessage
+  sanitizedBody: string
+}
+
+/** Ссылка несёт токен входа (`routes.md` #68) — копия истории заменяет её плейсхолдером. */
+export const createArticleReworkRequestedMail = (
+  locale: Locale,
+  title: string,
+  recommendations: string,
+  url: string
+): ArticleEditTokenMail => ({
+  message: createArticleReworkRequestedMessage(locale, title, recommendations, url),
+  sanitizedBody: createArticleReworkRequestedMessage(locale, title, recommendations, secretPlaceholder[locale]).text
+})
+
+export const createArticleUnpublishedMail = (
+  locale: Locale,
+  title: string,
+  reason: string,
+  url: string
+): ArticleEditTokenMail => ({
+  message: createArticleUnpublishedMessage(locale, title, reason, url),
+  sanitizedBody: createArticleUnpublishedMessage(locale, title, reason, secretPlaceholder[locale]).text
+})

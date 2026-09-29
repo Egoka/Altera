@@ -610,6 +610,11 @@ model ArticleTranslation {
   reviewClaimedAt  DateTime?
   reeditUntil      DateTime?
   reeditedAt       DateTime?
+  /// Токен ссылки из письма о доработке или снятии с публикации (`routes.md` #68). Срок и то,
+  /// что новое решение заменяет прежний токен — [ДОПУЩЕНИЕ] (`moderation.md` §8,
+  /// `write-and-publish.md` §8): семь дней, один активный токен на версию.
+  editTokenHash    String?           @unique @db.VarChar(64)
+  editTokenExpiresAt DateTime?
   translatorId     String?
   sourceRevisionId String?
   createdAt        DateTime          @default(now())

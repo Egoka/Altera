@@ -56,6 +56,7 @@ const baseTranslation = () => ({
       name: "Вера Орлова",
       handle: "vera",
       email: "private@example.test",
+      locale: "ru",
       nameCheckStatus: "ok",
       avatarCheckStatus: "ok"
     },
@@ -201,6 +202,13 @@ const createHarness = (input: { role?: "moderator" | "admin" | "owner"; reviewer
 
   const cache = { delByTags: vi.fn(async () => undefined) }
   const logger = { log: vi.fn(), metric: vi.fn() }
+  const sentMail: Array<Record<string, unknown>> = []
+  const mail = {
+    send: vi.fn(async (input: Record<string, unknown>) => {
+      sentMail.push(input)
+      return { mailId: "mail-1", messageId: "message-1" }
+    })
+  }
   const currentUser = actor(input.role ?? "moderator")
   const ctx = {
     prisma,
@@ -208,9 +216,10 @@ const createHarness = (input: { role?: "moderator" | "admin" | "owner"; reviewer
     requestId: "req-review",
     cache,
     logger,
+    mail,
     media: { mediaBaseUrl: "https://media.test" }
   }
-  return { ctx, translation, profile, messages, notes, audits, cache, logger }
+  return { ctx, translation, profile, messages, notes, audits, cache, logger, sentMail }
 }
 
 describe("review queue", () => {
