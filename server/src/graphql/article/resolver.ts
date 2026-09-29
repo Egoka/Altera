@@ -580,6 +580,9 @@ export default {
       const slug = `draft-${articleId}`
 
       const newArticle = await ctx.prisma.$transaction(async (tx) => {
+        // Черновик и его исходная языковая версия создаются одной вложенной записью Prisma.
+        // Legacy-trigger иначе успевает создать ту же пару articleId/locale после INSERT статьи.
+        await tx.$executeRawUnsafe(`SET LOCAL "altera.legacy_sync" = 'off'`)
         const section = input.sectionId
           ? await tx.section.findFirst({
               where: { id: input.sectionId, status: "active" },
