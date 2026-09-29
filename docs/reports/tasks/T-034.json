@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "task_id": "T-034",
+  "issue_id": "01a0eb47-96a0-7a44-b270-285f79285873",
+  "work_class": "feature",
+  "source": {
+    "path": "docs/backlog/tasks/T-034-data-export.md",
+    "sha": "869da3e724f2500ccac0e1975af8f293741ed439"
+  },
+  "baseline_sha": "758b0e52094dae0c73bd5d81c5ff447e4b674a77",
+  "tested_sha": "a06a7c4aa242b579041e2c82e645705a750f47ef",
+  "branch": "feat/t034-personal-data-export",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0eb94-c1d8-71cf-8bec-845fc6c185b3",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "В архиве нет файлов вариантов, есть мастер-оригиналы — тест содержимого"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Все строки состояний export.md воспроизводимы — Playwright 4/4 passed"
+    }
+  ],
+  "checks": {
+    "format": "exit 0",
+    "lint": "exit 0",
+    "tests": "content 99, server 1228, web 888 passed, Playwright 4/4 passed (Node 24.12.0)"
+  },
+  "pr": {
+    "number": 374,
+    "url": "https://github.com/Egoka/Altera/pull/374",
+    "base_ref": "app",
+    "base_sha": "758b0e52094dae0c73bd5d81c5ff447e4b674a77",
+    "head_sha": "a06a7c4aa242b579041e2c82e645705a750f47ef",
+    "merge_sha": "7d1d6ad4571a2a3971c2a9ce6ed10f46e68f69e5"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ebe3-e879-7d88-a069-086ec005516e",
+    "sha": "a06a7c4aa242b579041e2c82e645705a750f47ef",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-034.md",
+    "sha256": "b294f62af937639775ce8ba78bb4dede5adb75fd57617ad74ef9ffbc501ee503"
+  },
+  "usage": null
+}
