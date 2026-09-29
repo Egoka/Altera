@@ -38,6 +38,8 @@ model User {
   /// в `archiveReason` и наружу не уходит.
   archivePublicMessage        String?
   isServiceAccount            Boolean                       @default(false)
+  /// Явная пометка тестовой записи: такие аккаунты не входят в продуктовые агрегаты и воронку.
+  isTestAccount               Boolean                       @default(false)
   planTier                    PlanTier                      @default(free)
   planUntil                   DateTime?
   /// Пароль хранится PHC-строкой Argon2id; `null` — аккаунт без пароля, он входит по ссылке
@@ -74,6 +76,7 @@ model User {
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
+  @@index([isTestAccount])
   @@map("users")
 }
 
@@ -603,42 +606,42 @@ model UserLegalConsent {
 }
 
 model ArticleTranslation {
-  id               String            @id @default(uuid())
-  articleId        String
-  locale           Locale
-  slug             String
-  title            String
-  dek              String?
-  excerpt          String?
-  featuredImage    String?
-  body             Json
-  status           ArticleStatus     @default(draft)
-  rejected         Boolean           @default(false)
-  publishedAt      DateTime?
+  id                 String            @id @default(uuid())
+  articleId          String
+  locale             Locale
+  slug               String
+  title              String
+  dek                String?
+  excerpt            String?
+  featuredImage      String?
+  body               Json
+  status             ArticleStatus     @default(draft)
+  rejected           Boolean           @default(false)
+  publishedAt        DateTime?
   /// Точное число квалифицированных прочтений из контура вовлечённости. Порог и приём событий
   /// задаются отдельной спецификацией; очередь ревью только читает сохранённый агрегат (§26.4).
-  readCount        Int               @default(0)
+  readCount          Int               @default(0)
   /// Закрепление ручной проверки. Идентификатор хранится без relation намеренно: удаление или
   /// архив сотрудника не должно менять историческое состояние материала.
-  reviewerId       String?
-  reviewerRole     Role?
-  reviewClaimedAt  DateTime?
-  reeditUntil      DateTime?
-  reeditedAt       DateTime?
+  reviewerId         String?
+  reviewerRole       Role?
+  reviewClaimedAt    DateTime?
+  reeditUntil        DateTime?
+  reeditedAt         DateTime?
   /// Токен ссылки из письма о доработке или снятии с публикации (`routes.md` #68). Срок и то,
   /// что новое решение заменяет прежний токен — [ДОПУЩЕНИЕ] (`moderation.md` §8,
   /// `write-and-publish.md` §8): семь дней, один активный токен на версию.
-  editTokenHash    String?           @unique @db.VarChar(64)
+  editTokenHash      String?           @unique @db.VarChar(64)
   editTokenExpiresAt DateTime?
-  translatorId     String?
-  sourceRevisionId String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  article          Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  translator       User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
-  sourceRevision   ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
-  revisions        ArticleRevision[] @relation("TranslationRevisions")
-  reviewMessages   ReviewMessage[]
+  translatorId       String?
+  sourceRevisionId   String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  article            Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  translator         User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
+  sourceRevision     ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
+  revisions          ArticleRevision[] @relation("TranslationRevisions")
+  reviewMessages     ReviewMessage[]
 
   @@unique([articleId, locale])
   @@unique([locale, slug])

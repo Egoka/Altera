@@ -1,0 +1,92 @@
+query GetStatisticsGrowth($range: StatisticsRangeInput!) {
+  statisticsGrowth(range: $range) {
+    range {
+      from
+      to
+    }
+    registrations
+    activeAccounts
+    enabledAuthors
+    authorsWithPublications
+    daily {
+      date
+      registrations
+      publications
+    }
+  }
+}
+
+query GetStatisticsContent($range: StatisticsRangeInput!) {
+  statisticsContent(range: $range) {
+    range {
+      from
+      to
+    }
+    publications
+    drafts
+    queueSize
+    oldestQueueAgeHours
+    medianDecisionHours
+    rejectionRate
+    manualOverrideRate
+    byLocale {
+      key
+      count
+    }
+    bySection {
+      key
+      label
+      count
+    }
+    topAuthors {
+      id
+      name
+      handle
+      publications
+      qualifiedReads
+      saves
+    }
+    topArticles {
+      id
+      slug
+      title
+      authorId
+      authorName
+      publications
+      qualifiedReads
+      saves
+      totalScore
+    }
+  }
+}
+
+query GetStatisticsAi($range: StatisticsRangeInput!) {
+  statisticsAi(range: $range) {
+    range {
+      from
+      to
+    }
+    total
+    failed
+    failureRate
+    averageDurationMs
+    costMinor
+    byKind {
+      key
+      count
+    }
+    byStatus {
+      key
+      count
+    }
+  }
+}
+
+mutation ExportStatistics($tab: StatisticsTab!, $range: StatisticsRangeInput!) {
+  exportStatistics(tab: $tab, range: $range) {
+    filename
+    contentType
+    rows
+    csv
+  }
+}

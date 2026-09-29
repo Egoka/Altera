@@ -1470,6 +1470,79 @@
       "emptyHint": "Open an available section to get started.",
       "cardError": "Could not load"
     },
+    "statisticsPage": {
+      "eyebrow": "Exact aggregates · stage 1",
+      "title": "Statistics",
+      "description": "Registrations, publications, review queue and AI with service and test records excluded. Values use the selected period.",
+      "period": "Period",
+      "days": "days",
+      "custom": "Custom dates",
+      "from": "From",
+      "to": "To",
+      "export": "Export CSV",
+      "section": "Section",
+      "locale": "Language",
+      "allSections": "All sections",
+      "allLocales": "All languages",
+      "millisecondsShort": "ms",
+      "tabsLabel": "Statistics sections",
+      "tabs": {
+        "growth": "Growth",
+        "content": "Content",
+        "engagement": "Engagement",
+        "finance": "Finance",
+        "ai": "AI",
+        "ranking": "Ranking"
+      },
+      "metrics": {
+        "registrations": "Registrations",
+        "activeAccounts": "Active accounts",
+        "enabledAuthors": "Authors with base access",
+        "authorsWithPublications": "Authors with publications",
+        "publications": "Publications",
+        "drafts": "Drafts",
+        "queueSize": "In review",
+        "oldestQueue": "Oldest item",
+        "medianDecision": "Median decision",
+        "rejectionRate": "Rejection rate",
+        "manualOverrideRate": "Manual publications",
+        "aiTotal": "AI jobs",
+        "aiFailed": "Failures",
+        "aiFailureRate": "Failure rate",
+        "aiDuration": "Average duration",
+        "aiCost": "Cost, minor units"
+      },
+      "dailyTitle": "Daily ledger",
+      "shortRegistrations": "reg.",
+      "shortPublications": "pub.",
+      "empty": "There is no data for this period. Values remain zero; daily aggregates appear after the day closes.",
+      "errorTitle": "Aggregates are unavailable",
+      "errorHint": "Retry the request. Other tabs continue to work independently.",
+      "futureStage": "Later stage",
+      "placeholders": {
+        "engagement": {
+          "title": "Engagement arrives in stage 2",
+          "description": "Opens, qualified reads, repeats and sources will appear after daily engagement aggregates launch."
+        },
+        "finance": {
+          "title": "Finance arrives with paid plans",
+          "description": "Payments, MRR, renewals and refunds are not shown as zero before paid plans launch."
+        },
+        "ranking": {
+          "title": "Ranking arrives with the stage 2 engine",
+          "description": "This area will show aggregate score composition and engine state without exposing the internal formula."
+        }
+      },
+      "topAuthors": "Top authors",
+      "topArticles": "Top articles",
+      "author": "Author",
+      "article": "Article",
+      "publications": "Publications",
+      "reads": "Reads",
+      "saves": "Saves",
+      "score": "Score",
+      "rateLimited": "The export limit is reached. Try again in {minutes} min."
+    },
     "roles": {
       "editor": "Editor",
       "moderator": "Moderator",

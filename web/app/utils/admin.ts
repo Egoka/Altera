@@ -149,6 +149,9 @@ export const getAdminAccessDecision = (envelope: AdminSummaryEnvelope, target: s
 // и `owner`; `editor` и `moderator` раздел не открывают (журнал §5.3).
 export const canReadUsers = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
 
+// Продуктовые агрегаты и их CSV доступны только аналитической группе (`statistics.md` §1).
+export const canReadStatistics = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
+
 // Мутации раздела — `role(admin)`: блокировка, восстановление, отзыв сессий и смена адреса
 // (матрица #52, #80, #105, #113). `analyst` видит карточку без единой кнопки (§9).
 export const canManageUsers = (role: Role): boolean => role === "admin" || role === "owner"
