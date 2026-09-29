@@ -72,6 +72,31 @@ type AccountArchiveState {
   plan: AccountSubscription
 }
 
+type AccountExport {
+  expiresAt: String
+  id: ID!
+  requestedAt: String!
+  scope: [AccountExportScope!]!
+  sizeBytes: Int
+  status: AccountExportStatus!
+}
+
+enum AccountExportScope {
+  articles
+  media
+  profile
+  review
+}
+
+enum AccountExportStatus {
+  expired
+  failed
+  queued
+  ready
+  running
+  stuck
+}
+
 type AccountPlanPeriod {
   endsAt: String
   startsAt: String!
@@ -158,6 +183,7 @@ type AccountUser {
 
   """Состояние смены адреса своей записи (матрица #49)."""
   emailChange: EmailChangeState!
+  exports: [AccountExport!]!
   handle: String!
 
   """
@@ -1825,6 +1851,7 @@ type Mutation {
   deleteSection(id: ID!): Section!
   deleteTag(id: ID!): Tag!
   exportAudit(filters: AuditLogFilters): AuditExport!
+  exportDownload(id: ID!): String!
   grantException(input: GrantPermissionExceptionInput!): PermissionException!
   grantPlan(input: GrantPlanInput!): AdminPlanGrant!
 
@@ -1866,6 +1893,7 @@ type Mutation {
   reportPageError(code: String!, requestId: String, route: String!): Boolean!
   requestAccountArchive(mode: AccountArchiveMode! = self): AccountArchivePreview!
   requestEmailChange(newEmail: String!): EmailChangeState!
+  requestExport(scope: [AccountExportScope!]): AccountExport!
   requestMagicLink(consentVersion: ConsentVersionsInput!, email: String!, locale: Locale!, next: String): MagicLinkRequestResult!
 
   """

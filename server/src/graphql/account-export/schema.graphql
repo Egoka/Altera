@@ -1,0 +1,33 @@
+enum AccountExportScope {
+  profile
+  articles
+  media
+  review
+}
+
+enum AccountExportStatus {
+  queued
+  running
+  ready
+  failed
+  stuck
+  expired
+}
+
+type AccountExport {
+  id: ID!
+  requestedAt: String!
+  status: AccountExportStatus!
+  sizeBytes: Int
+  expiresAt: String
+  scope: [AccountExportScope!]!
+}
+
+extend type AccountUser {
+  exports: [AccountExport!]!
+}
+
+extend type Mutation {
+  requestExport(scope: [AccountExportScope!]): AccountExport!
+  exportDownload(id: ID!): String!
+}
