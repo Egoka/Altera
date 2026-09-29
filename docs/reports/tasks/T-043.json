@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task_id": "T-043",
+  "issue_id": "01a0eaeb-ef74-7ab0-9f26-17272fcdbfef",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-043-review-history-page.md",
+    "sha": "fdf426d56e02685311f60b9f0a0ba760ab4b661b"
+  },
+  "baseline_sha": "d56d40d662b7f74acecf34915dc3ea53c7a8bdc6",
+  "tested_sha": "5e6087b7a90931f2017c35a461d134842dfdf635",
+  "branch": "web/t043-review-history",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0eaf8-f3d2-774c-838a-ba389f74eb68",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "author_reply сохраняется под решением и появляется в общей цепочке: server/tests/review-history.test.ts 6 passed; web/tests/e2e/43-review-history.spec.ts прошёл в CI browser job 109242156989 (5e6087b)"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Playwright воспроизводит переписку и resolve заметки, final rejection, loading, recoverable data error, empty, plan limited, not found, blocked и unauthenticated; CI browser job 109242156989 passed (5e6087b)"
+    }
+  ],
+  "checks": {
+    "format": "passed: pnpm format exit 0 (5e6087b)",
+    "lint": "passed: pnpm lint exit 0 (5e6087b)",
+    "tests": "passed: pnpm test exit 0 — content 99 passed, server 1221 passed / 69 skipped, web 877 passed (5e6087b)",
+    "target_tests": "passed: server review-history 6 passed; web review page and article row 12 passed (5e6087b)",
+    "build": "passed: server build:ci and web build exit 0 (5e6087b)",
+    "typecheck": "passed: web typecheck exit 0 (5e6087b)",
+    "browser_tests": "passed: CI run 36517238423, browser job 109242156989, 7m34s (5e6087b)"
+  },
+  "pr": {
+    "number": 370,
+    "url": "https://github.com/Egoka/Altera/pull/370",
+    "base_ref": "app",
+    "base_sha": "d56d40d662b7f74acecf34915dc3ea53c7a8bdc6",
+    "head_sha": "5e6087b7a90931f2017c35a461d134842dfdf635",
+    "merge_sha": "2bc7f786ad96d7ef906301fa019e3f367c55ab73"
+  },
+  "review": {
+    "actor_id": null,
+    "run_id": null,
+    "sha": null,
+    "verdict": null
+  },
+  "deployment": {
+    "required": true,
+    "environment": "development",
+    "probe_actor_id": null,
+    "probe_run_id": null,
+    "reason": "Изменены server GraphQL entrypoints и web route; controller-managed development deployment/health требуется после merge"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-043.md",
+    "sha256": "9def146b9cfbaa685fdb97c1a94bb6dc6ca21455e40f5144d13f044abb24409a"
+  },
+  "usage": null
+}
