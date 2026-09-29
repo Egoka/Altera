@@ -3,6 +3,7 @@ import { buildArticleCacheTags } from "../cache/key"
 import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
 import { avatarAssetSelect, avatarUrlOf } from "../media"
+import { notifyArticleDecision } from "../mail/article-notifications"
 import type { GraphQLContext } from "../prisma"
 import { calculatePagination, validatePagination, type PaginationInput } from "../utils/admin"
 
@@ -445,6 +446,10 @@ export async function requestReviewRework(
       after: "rework"
     })
   })
+  await notifyArticleDecision(
+    { store: ctx.prisma, mail: ctx.mail },
+    { translationId: id, decision: "rework_requested", recommendations, requestId: ctx.requestId, now }
+  )
   return reloadAfterMutation(ctx, actor, id)
 }
 
@@ -510,6 +515,10 @@ export async function publishReviewManual(
     requestId: ctx.requestId,
     data: { translationId: id, mode: "manual", byRole: actor.role }
   })
+  await notifyArticleDecision(
+    { store: ctx.prisma, mail: ctx.mail },
+    { translationId: id, decision: "published_manual", requestId: ctx.requestId, now }
+  )
   return reloadAfterMutation(ctx, actor, id)
 }
 
@@ -540,6 +549,10 @@ export async function rejectReviewFinal(
     })
     await audit(tx, ctx, actor, id, "translation.reject.final", { before: "in_review", after: "rejected" })
   })
+  await notifyArticleDecision(
+    { store: ctx.prisma, mail: ctx.mail },
+    { translationId: id, decision: "rejected_final", reason: rawReason?.trim() || null, requestId: ctx.requestId, now }
+  )
   return reloadAfterMutation(ctx, actor, id)
 }
 
@@ -576,6 +589,10 @@ export async function unpublishReview(
     await audit(tx, ctx, actor, id, "translation.unpublish", { before: "published", after: "review", reason })
   })
   if (before) await invalidateReviewArticle(ctx, before)
+  await notifyArticleDecision(
+    { store: ctx.prisma, mail: ctx.mail },
+    { translationId: id, decision: "unpublished", reason, requestId: ctx.requestId, now }
+  )
   return reloadAfterMutation(ctx, actor, id)
 }
 

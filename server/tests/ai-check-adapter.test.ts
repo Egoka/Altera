@@ -89,7 +89,15 @@ function fixture(overrides: Partial<AiCheckStoreFixture> = {}): AiCheckStoreFixt
   }
 }
 
-function createHarness(overrides: Partial<AiCheckStoreFixture> = {}, onPublished = async (): Promise<void> => {}) {
+function createHarness(
+  overrides: Partial<AiCheckStoreFixture> = {},
+  onPublished = async (): Promise<void> => {},
+  onDecision?: (input: {
+    translationId: string
+    verdict: "publish" | "reject"
+    originRequestId: string | null
+  }) => Promise<void>
+) {
   const memory = createAiCheckMemoryStore(fixture(overrides))
   const adapter = createFakeAiCheckAdapter()
   const { logger, entries } = createLogCollector()
@@ -99,6 +107,7 @@ function createHarness(overrides: Partial<AiCheckStoreFixture> = {}, onPublished
     adapter,
     logger,
     onPublished,
+    onDecision,
     // Часы шагают на секунду за вызов: длительность записи становится проверяемой величиной.
     now: () => new Date(Date.UTC(2026, 8, 28, 12, 0, tick++))
   })
@@ -311,6 +320,22 @@ describe("AI-адаптер проверки допустимости", () => {
     expect(onPublished).toHaveBeenCalledTimes(2)
     expect(adapter.submissions).toHaveLength(1)
     expect(memory.fixture.status).toBe("published")
+  })
+
+  it("уведомление о решении (T-051) уходит один раз — повтор завершённого задания его не создаёт заново", async () => {
+    const onDecision = vi.fn(async () => {})
+    const { adapter, service } = createHarness({}, undefined, onDecision)
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    await service.runCheck(jobInput)
+    await service.runCheck(jobInput)
+
+    expect(onDecision).toHaveBeenCalledTimes(1)
+    expect(onDecision).toHaveBeenCalledWith({
+      translationId: TRANSLATION_ID,
+      verdict: "publish",
+      originRequestId: "req-1"
+    })
   })
 
   it("вердикт «публиковать» сразу публикует ожидающую ревизию и открывает часовое окно", async () => {

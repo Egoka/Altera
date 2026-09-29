@@ -50,6 +50,16 @@ interface AiCheckServiceOptions {
   adapter: AiCheckAdapter
   logger: AppLogger
   onPublished?: (translationId: string) => Promise<void>
+  /**
+   * Вызывается ровно один раз — когда вердикт действительно применился к ожидающей ревизии
+   * (журнал #14): не на повторной обработке уже завершённого задания. Основа уведомления автору
+   * о решении (T-051).
+   */
+  onDecision?: (input: {
+    translationId: string
+    verdict: AiCheckVerdict
+    originRequestId: string | null
+  }) => Promise<void>
   now?: () => Date
 }
 
@@ -71,7 +81,7 @@ function evidenceJson(result: AiCheckResult): Prisma.InputJsonValue {
 }
 
 export function createAiCheckService(options: AiCheckServiceOptions): AiCheckService {
-  const { store, adapter, logger, onPublished } = options
+  const { store, adapter, logger, onPublished, onDecision } = options
   const now = options.now ?? (() => new Date())
 
   async function markFailed(
@@ -107,7 +117,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
     finishedAt: Date
     durationMs: number
     originRequestId: string | null
-  }): Promise<boolean> {
+  }): Promise<{ transitioned: boolean; verdict: AiCheckVerdict }> {
     const { result } = write
     const bucket = aiCostBucket(write.finishedAt)
 
@@ -217,7 +227,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         },
         select: { id: true }
       })
-      return transitioned && result.verdict === "publish"
+      return { transitioned, verdict: result.verdict }
     })
   }
 
@@ -299,7 +309,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
 
       const finishedAt = now()
       const durationMs = finishedAt.getTime() - startedAt.getTime()
-      const published = await writeResult({
+      const outcome = await writeResult({
         processId: process.id,
         input,
         locale: submission.locale,
@@ -327,7 +337,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         }
       })
 
-      if (published) {
+      if (outcome.transitioned && outcome.verdict === "publish") {
         if (originRequestId) {
           logger.metric?.({
             event: "translation.published",
@@ -336,6 +346,9 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
           })
         }
         await onPublished?.(input.translationId)
+      }
+      if (outcome.transitioned) {
+        await onDecision?.({ translationId: input.translationId, verdict: outcome.verdict, originRequestId })
       }
 
       return { aiProcessId: process.id, verdict: result.verdict }
