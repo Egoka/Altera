@@ -870,6 +870,7 @@
     "retry": "Try again",
     "pricing": "See plans",
     "openEditor": "Edit the article",
+    "openReadOnly": "Open to read and copy",
     "allArticles": "All articles",
     "recommendations": "Reviewer recommendations",
     "locale": {

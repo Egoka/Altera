@@ -64,6 +64,7 @@ const createContext = (overrides: Record<string, unknown> = {}) => {
     },
     requestId: "req-review-history",
     requestMeta: { ip: "127.0.0.1" },
+    logger: { log: vi.fn() },
     rateLimiter: { enforce: vi.fn(async () => ({ remaining: 59 })) },
     prisma: {
       articleTranslation: {
@@ -186,6 +187,13 @@ describe("review history author contract", () => {
     expect(context.rateLimiter.enforce).toHaveBeenCalledWith("account.mutation.user", "author-1", {
       requestId: "req-review-history",
       ip: "127.0.0.1"
+    })
+    expect(context.logger.log).toHaveBeenCalledWith({
+      level: "info",
+      event: "review.reply",
+      requestId: "req-review-history",
+      message: "Author replied to a review decision",
+      data: { translationId: "translation-1", decisionId: "decision-1", byRole: "author" }
     })
   })
 

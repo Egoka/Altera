@@ -251,7 +251,7 @@ describe("author review history page", () => {
 
     expect(wrapper.get("[data-review-state]").attributes("data-review-state")).toBe("final_reject")
     expect(wrapper.text()).toContain("review.readOnly.finalReject")
-    expect(wrapper.find("[data-testid='review-open-editor']").exists()).toBe(false)
+    expect(wrapper.get("[data-testid='review-open-editor']").text()).toBe("review.openReadOnly")
     expect(wrapper.find("[data-testid='review-reply-form-decision-1']").exists()).toBe(false)
   })
 
@@ -264,7 +264,7 @@ describe("author review history page", () => {
 
     expect(wrapper.text()).toContain("review.readOnly.plan")
     expect(wrapper.get("a[href='/pricing']").text()).toBe("review.pricing")
-    expect(wrapper.find("[data-testid='review-open-editor']").exists()).toBe(false)
+    expect(wrapper.get("[data-testid='review-open-editor']").text()).toBe("review.openReadOnly")
     expect(wrapper.find("[data-testid='review-reply-form-decision-1']").exists()).toBe(false)
     expect(wrapper.find("[data-testid='review-note-resolve-note-1']").exists()).toBe(false)
   })

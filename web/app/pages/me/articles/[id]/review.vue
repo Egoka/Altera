@@ -91,7 +91,8 @@
   const date = (value: string) =>
     new Intl.DateTimeFormat(locale.value === "ru" ? "ru-RU" : "en-US", {
       dateStyle: "medium",
-      timeStyle: "short"
+      timeStyle: "short",
+      timeZone: "Europe/Moscow"
     }).format(new Date(value))
 
   const replyDrafts = reactive<Record<string, string>>({})
@@ -317,11 +318,10 @@
           <p class="mt-3 leading-7 text-zinc-600 dark:text-zinc-300">{{ t("review.next.description") }}</p>
           <div class="mt-5 flex flex-wrap gap-3">
             <NuxtLink
-              v-if="!review.readOnly"
               :to="`/me/articles/${translationId}/edit`"
               data-testid="review-open-editor"
               class="rounded-full bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white">
-              {{ t("review.openEditor") }}
+              {{ t(review.readOnly ? "review.openReadOnly" : "review.openEditor") }}
             </NuxtLink>
             <NuxtLink to="/me/articles" class="rounded-full border border-zinc-400 px-5 py-2.5 text-sm font-semibold">
               {{ t("review.allArticles") }}

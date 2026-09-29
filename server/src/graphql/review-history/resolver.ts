@@ -178,6 +178,13 @@ async function replyToDecision(ctx: GraphQLContext, decisionId: string, rawText:
       parentId: decision.id
     }
   })
+  ctx.logger.log({
+    level: "info",
+    event: "review.reply",
+    requestId: ctx.requestId,
+    message: "Author replied to a review decision",
+    data: { translationId: decision.translationId, decisionId: decision.id, byRole: "author" }
+  })
   return toThreadMessage(reply)
 }
 

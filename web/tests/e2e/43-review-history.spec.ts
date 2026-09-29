@@ -46,9 +46,17 @@ test("author replies inside a review decision and resolves its block note", asyn
   })
   await database.handleHistory.update({ where: { handle: authorHandle }, data: { userId: author.id } })
 
+  const reviewerHandle = `t043-reviewer-${key}`
+  await database.handleHistory.create({ data: { handle: reviewerHandle } })
   const reviewer = await database.user.create({
-    data: { email: uniqueEmail("t043-reviewer"), name: "Рецензент", role: "moderator" }
+    data: {
+      email: uniqueEmail("t043-reviewer"),
+      handle: reviewerHandle,
+      name: "Рецензент",
+      role: "moderator"
+    }
   })
+  await database.handleHistory.update({ where: { handle: reviewerHandle }, data: { userId: reviewer.id } })
   const article = await database.article.create({
     data: {
       title: "Как устроен свет",
@@ -161,4 +169,117 @@ test("final rejection keeps the review page readable and closes the thread", asy
   await expect(page.getByText("Редакционное решение окончательное")).toBeVisible()
   await expect(page.getByRole("link", { name: "Исправить материал" })).toHaveCount(0)
   await expect(page.getByRole("textbox", { name: "Ответить рецензенту" })).toHaveCount(0)
+})
+
+test("client navigation exposes loading and recoverable data-error states", async ({ page, database }) => {
+  const key = suffix()
+  const handle = `t043-state-${key}`
+  await database.handleHistory.create({ data: { handle } })
+  const author = await database.user.create({
+    data: {
+      email: uniqueEmail("t043-state"),
+      handle,
+      name: "Мария Соколова",
+      role: "author",
+      planTier: "standard",
+      planUntil: new Date("2099-01-01T00:00:00.000Z")
+    }
+  })
+  await database.handleHistory.update({ where: { handle }, data: { userId: author.id } })
+  const article = await database.article.create({
+    data: {
+      title: "Состояния истории",
+      slug: `t043-state-${key}`,
+      body: "",
+      status: "review",
+      sourceLocale: "ru",
+      authorId: author.id
+    }
+  })
+  const translation = await database.articleTranslation.findFirstOrThrow({ where: { articleId: article.id } })
+  await database.articleTranslation.update({ where: { id: translation.id }, data: { status: "rework" } })
+  const sessionId = await createSessionId(database, author.id)
+  await authenticate(page, author.id, sessionId)
+  await page.goto("/me/articles")
+
+  let releaseRequest!: () => void
+  const blockedRequest = new Promise<void>((resolve) => {
+    releaseRequest = resolve
+  })
+  await page.route("**/api/graphql", async (route) => {
+    const body = route.request().postData() ?? ""
+    if (!body.includes("GetTranslationReview")) return route.continue()
+    await blockedRequest
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: null,
+        errors: [{ message: "Internal server error", extensions: { code: "INTERNAL_ERROR", requestId: "t043" } }]
+      })
+    })
+  })
+
+  const navigation = page.getByRole("link", { name: "История проверки" }).click()
+  await expect(page.locator("[data-review-state='loading']")).toBeVisible()
+  releaseRequest()
+  await navigation
+  await expect(page.locator("[data-review-state='error']")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "История не загрузилась" })).toBeVisible()
+})
+
+test("empty, plan-limited, not-found, blocked and unauthenticated states stay reproducible", async ({
+  page,
+  database
+}) => {
+  const key = suffix()
+  const handle = `t043-access-${key}`
+  await database.handleHistory.create({ data: { handle } })
+  const author = await database.user.create({
+    data: {
+      email: uniqueEmail("t043-access"),
+      handle,
+      name: "Павел Ветров",
+      role: "author",
+      planTier: "standard",
+      planUntil: new Date("2099-01-01T00:00:00.000Z")
+    }
+  })
+  await database.handleHistory.update({ where: { handle }, data: { userId: author.id } })
+  const article = await database.article.create({
+    data: {
+      title: "Новый черновик",
+      slug: `t043-access-${key}`,
+      body: "",
+      status: "draft",
+      sourceLocale: "ru",
+      authorId: author.id
+    }
+  })
+  const translation = await database.articleTranslation.findFirstOrThrow({ where: { articleId: article.id } })
+  const sessionId = await createSessionId(database, author.id)
+  await authenticate(page, author.id, sessionId)
+
+  await page.goto(`/me/articles/${translation.id}/review`)
+  await expect(page.locator("[data-review-state='empty']")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Проверок ещё не было" })).toBeVisible()
+
+  await database.user.update({
+    where: { id: author.id },
+    data: { role: "reader", planTier: "free", planUntil: null }
+  })
+  await page.reload()
+  await expect(page.getByText("План неактивен: история доступна, а повторная подача закрыта.")).toBeVisible()
+  await expect(page.getByRole("link", { name: "Открыть для чтения и копирования" })).toBeVisible()
+
+  const missing = await page.goto(`/me/articles/00000000-0000-4000-8000-000000000043/review`)
+  expect(missing?.status()).toBe(404)
+
+  await database.user.update({ where: { id: author.id }, data: { archivedAt: new Date() } })
+  await page.goto(`/me/articles/${translation.id}/review`)
+  await expect(page).toHaveURL(/\/me\/archived$/)
+
+  await page.context().clearCookies()
+  await page.goto(`/me/articles/${translation.id}/review`)
+  await expect(page).toHaveURL(/\/login\?next=/)
 })

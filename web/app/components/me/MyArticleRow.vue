@@ -143,12 +143,12 @@
       </p>
     </div>
 
-    <div class="flex items-center gap-3 md:justify-end">
+    <div class="flex flex-wrap items-center gap-3 md:justify-end">
       <NuxtLink
         v-if="isRejected"
         :to="reviewPath"
         class="inline-flex min-h-11 items-center justify-center rounded-full border border-zinc-300 px-5 text-sm font-semibold text-zinc-900 transition hover:border-orange-500 hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:border-zinc-700 dark:text-zinc-100">
-        {{ t("myArticles.row.openReadOnly") }}
+        {{ t("myArticles.row.reviewHistory") }}
       </NuxtLink>
       <NuxtLink
         v-else-if="hasReviewHistory && effectiveStatus !== 'archived'"
@@ -157,10 +157,10 @@
         {{ t("myArticles.row.reviewHistory") }}
       </NuxtLink>
       <NuxtLink
-        v-if="!isRejected && effectiveStatus !== 'archived'"
+        v-if="effectiveStatus !== 'archived'"
         :to="editPath"
         class="inline-flex min-h-11 items-center justify-center rounded-full bg-zinc-950 px-5 text-sm font-semibold text-white transition hover:bg-orange-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-orange-400">
-        {{ t("myArticles.row.edit") }}
+        {{ t(isRejected ? "myArticles.row.openReadOnly" : "myArticles.row.edit") }}
       </NuxtLink>
       <NuxtLink
         v-if="effectiveStatus === 'archived'"

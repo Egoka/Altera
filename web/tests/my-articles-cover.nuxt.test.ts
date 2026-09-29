@@ -123,7 +123,7 @@ describe("строка материала в кабинете", () => {
       translations: [{ ...article().translations[0], status: "review", rejected: true }]
     })
     const rejectedWrapper = mount(MyArticleRow, { props: { article: rejected as never }, global })
-    expect(rejectedWrapper.get("a[href='/me/articles/translation-1/review']").text()).toBe("Открыть для чтения")
-    expect(rejectedWrapper.find("a[href='/me/articles/translation-1/edit']").exists()).toBe(false)
+    expect(rejectedWrapper.get("a[href='/me/articles/translation-1/review']").text()).toBe("История проверки")
+    expect(rejectedWrapper.get("a[href='/me/articles/translation-1/edit']").text()).toBe("Открыть для чтения")
   })
 })
