@@ -40,12 +40,21 @@
     "head_sha": "2b7f45e75700018ab8fbf24d8cda4ad48be7a569",
     "merge_sha": "cc362ff2a0eac917f490db6658fd6d2e86b9fe88"
   },
-  "review": null,
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ea40-17f7-7013-a60c-f18db474edca",
+    "sha": "2b7f45e75700018ab8fbf24d8cda4ad48be7a569",
+    "verdict": "approved"
+  },
   "deployment": {
     "required": false,
     "environment": null,
     "status": "not_run",
     "reason": "Миграций задача не добавляет: `Article.coverAssetId` и `MediaAsset.focalX/focalY` уже есть в схеме (миграция media_assets, T-063). Прод-окружения в РФ нет (журнал §34 п. 1, T-103); выкладка — за контроллером вместе с хостингом."
   },
-  "usage": null
+  "usage": null,
+  "finalization": {
+    "path": "docs/reports/tasks/T-066.md",
+    "sha256": "de6ec4778f736cc7fa1a380168b77ef22f78f9ae3c25cc02812ba1b5e9d6fd61"
+  }
 }
