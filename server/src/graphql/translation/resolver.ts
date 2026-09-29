@@ -4,6 +4,7 @@ import {
   authoringTaxonomy,
   getEditorTranslation,
   listRevisions,
+  reeditTranslation,
   restoreRevision,
   saveTranslation,
   setSlug,
@@ -75,6 +76,9 @@ export default {
 
     withdrawTranslation: async (_parent: unknown, args: { id: string }, ctx: GraphQLContext) =>
       toEditorTranslation(await withdrawTranslation(ctx, args.id)),
+
+    reeditTranslation: async (_parent: unknown, args: { id: string }, ctx: GraphQLContext) =>
+      toEditorTranslation(await reeditTranslation(ctx, args.id)),
 
     restoreRevision: (_parent: unknown, args: { translationId: string; revisionId: string }, ctx: GraphQLContext) =>
       restoreRevision(ctx, args.translationId, args.revisionId),
