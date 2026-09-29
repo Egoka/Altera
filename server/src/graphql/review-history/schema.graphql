@@ -1,0 +1,76 @@
+enum ReviewHistoryKind {
+  rework_request
+  unpublish
+  manual_publish
+  final_reject
+  message
+  ai_decision
+  submitted
+  withdrawn
+  published_auto
+}
+
+type ReviewReason {
+  category: String!
+  anchor: String
+  text: String!
+}
+
+type AuthorAiDecision {
+  decision: String!
+  checkedAt: String
+  reasons: [ReviewReason!]!
+}
+
+type ReviewThreadMessage {
+  id: ID!
+  author: Boolean!
+  byRole: Role
+  text: String!
+  createdAt: String!
+}
+
+type AuthorReviewNote {
+  id: ID!
+  blockId: ID!
+  text: String!
+  resolved: Boolean!
+  createdAt: String!
+  updatedAt: String
+}
+
+type ReviewHistoryItem {
+  id: ID!
+  kind: ReviewHistoryKind!
+  text: String
+  recommendations: String
+  byRole: Role
+  createdAt: String!
+  readAt: String
+  canReply: Boolean!
+  thread: [ReviewThreadMessage!]!
+}
+
+type TranslationReview {
+  translationId: ID!
+  title: String!
+  locale: Locale!
+  status: ArticleStatus!
+  rejected: Boolean!
+  readOnly: Boolean!
+  planLimited: Boolean!
+  reviewState: String
+  aiDecision: AuthorAiDecision!
+  items: [ReviewHistoryItem!]!
+  notes: [AuthorReviewNote!]!
+}
+
+extend type Query {
+  translationReview(id: ID!): TranslationReview!
+}
+
+extend type Mutation {
+  markReviewRead(translationId: ID!): String!
+  replyToDecision(decisionId: ID!, text: String!): ReviewThreadMessage!
+  resolveReviewNote(noteId: ID!): AuthorReviewNote!
+}

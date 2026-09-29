@@ -1098,6 +1098,12 @@ type AuthPayload {
   user: AccountUser!
 }
 
+type AuthorAiDecision {
+  checkedAt: String
+  decision: String!
+  reasons: [ReviewReason!]!
+}
+
 type AuthorCatalog {
   items: [CatalogAuthor!]!
   letters: [String!]!
@@ -1130,6 +1136,15 @@ type AuthorProfile {
   name: String!
   publishedCount: Int!
   redirect: String
+}
+
+type AuthorReviewNote {
+  blockId: ID!
+  createdAt: String!
+  id: ID!
+  resolved: Boolean!
+  text: String!
+  updatedAt: String
 }
 
 """
@@ -1820,6 +1835,7 @@ type Mutation {
   loginWithPassword(email: String!, next: String, password: String!): PasswordLoginResult!
   logout(refreshToken: String): Boolean!
   logoutAll: Boolean!
+  markReviewRead(translationId: ID!): String!
   mergeTags(input: MergeTagsInput!): Tag!
 
   """Только `owner`; аудит `legal.update`, сброс кеша публичной страницы."""
@@ -1839,6 +1855,7 @@ type Mutation {
   removeAvatar: Avatar
   removeBookmark(articleId: ID!): BookmarkState!
   reorderSections(input: ReorderSectionsInput!): [Section!]!
+  replyToDecision(decisionId: ID!, text: String!): ReviewThreadMessage!
 
   """
   Ошибка рендера или запроса на странице. Доступно всем: фронт сообщает о сбое любого
@@ -1864,6 +1881,7 @@ type Mutation {
   Новый пароль по ссылке из письма: прежние сессии отзываются, выдаётся новая.
   """
   resetPassword(password: String!, token: String!): PasswordLoginResult!
+  resolveReviewNote(noteId: ID!): AuthorReviewNote!
 
   """
   Восстановление аккаунта сотрудником (матрица #105): доступ возвращён, статьи остаются в архиве —
@@ -2236,6 +2254,7 @@ type Query {
   Версия для редактора; чужая версия — `NOT_FOUND` (`article-edit.md` §3).
   """
   translation(id: ID!): EditorTranslation
+  translationReview(id: ID!): TranslationReview!
   user(handle: String!): User
 }
 
@@ -2251,6 +2270,44 @@ input ReorderItemInput {
 
 input ReorderSectionsInput {
   items: [ReorderItemInput!]!
+}
+
+type ReviewHistoryItem {
+  byRole: Role
+  canReply: Boolean!
+  createdAt: String!
+  id: ID!
+  kind: ReviewHistoryKind!
+  readAt: String
+  recommendations: String
+  text: String
+  thread: [ReviewThreadMessage!]!
+}
+
+enum ReviewHistoryKind {
+  ai_decision
+  final_reject
+  manual_publish
+  message
+  published_auto
+  rework_request
+  submitted
+  unpublish
+  withdrawn
+}
+
+type ReviewReason {
+  anchor: String
+  category: String!
+  text: String!
+}
+
+type ReviewThreadMessage {
+  author: Boolean!
+  byRole: Role
+  createdAt: String!
+  id: ID!
+  text: String!
 }
 
 input RevokePlanInput {
@@ -2590,6 +2647,20 @@ enum TranslationReadOnlyReason {
   plan
   published
   rejected
+}
+
+type TranslationReview {
+  aiDecision: AuthorAiDecision!
+  items: [ReviewHistoryItem!]!
+  locale: Locale!
+  notes: [AuthorReviewNote!]!
+  planLimited: Boolean!
+  readOnly: Boolean!
+  rejected: Boolean!
+  reviewState: String
+  status: ArticleStatus!
+  title: String!
+  translationId: ID!
 }
 
 """SEO версии: описание и публичный адрес (`article-edit.md` §5 зона 5)."""

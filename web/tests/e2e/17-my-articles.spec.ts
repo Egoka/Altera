@@ -82,8 +82,8 @@ test("shows every author article state and keeps rejected material read-only", a
   const rejectedRow = page.getByRole("article", { name: "Отклонённый материал" })
   await expect(rejectedRow.getByRole("link", { name: "Открыть для чтения" })).toHaveAttribute(
     "href",
-    // Адрес кабинета называет языковую версию, а не материал (`article-edit.md` §3).
-    "/me/articles/translation-6"
+    // История проверки называет языковую версию, а не материал (`review-history.md` §3).
+    "/me/articles/translation-6/review"
   )
   await expect(rejectedRow.getByRole("link", { name: /Редактировать/ })).toHaveCount(0)
 })
