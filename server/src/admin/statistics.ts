@@ -25,6 +25,7 @@ export interface StatisticsRangeInput {
 interface StatisticsRange {
   from: Date
   to: Date
+  aggregateTo: Date
   fromIso: string
   toIso: string
 }
@@ -124,7 +125,15 @@ interface TranslationRow {
   status: string
   publishedAt: Date | null
   createdAt: Date
+  revisions: Array<{ id: string; createdAt: Date }>
   reviewMessages: ReviewMessageRow[]
+}
+
+interface RejectedCheckRow {
+  objectId: string
+  revisionId: string | null
+  createdAt: Date
+  finishedAt: Date | null
 }
 
 interface ArticleRow {
@@ -160,7 +169,7 @@ const publicAccountWhere = {
 
 function ensureStatisticsReader(ctx: GraphQLContext) {
   const actor = ensureAuthenticated(ctx.currentUser, ctx.requestId)
-  if (!STATISTICS_ROLES.has(actor.role)) {
+  if (actor.archivedAt || !STATISTICS_ROLES.has(actor.role)) {
     throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "stats.read" })
   }
   return actor
@@ -193,7 +202,8 @@ function resolveRange(input: StatisticsRangeInput, now: Date, requestId: string)
   if (from > to) {
     throw createApiError("VALIDATION_ERROR", { requestId, field: "from", rule: "before-to" })
   }
-  return { from, to, fromIso: from.toISOString(), toIso: to.toISOString() }
+  const aggregateTo = input.period === "CUSTOM" ? new Date(to.getTime() + 1) : to
+  return { from, to, aggregateTo, fromIso: from.toISOString(), toIso: to.toISOString() }
 }
 
 const inRange = (value: Date | null, range: StatisticsRange): value is Date =>
@@ -248,6 +258,7 @@ async function readArticles(
           status: true,
           publishedAt: true,
           createdAt: true,
+          revisions: { select: { id: true, createdAt: true }, orderBy: { createdAt: "asc" } },
           reviewMessages: { select: { kind: true, createdAt: true }, orderBy: { createdAt: "asc" } }
         }
       }
@@ -319,7 +330,7 @@ export async function getContentStatistics(
   const range = resolveRange(input, now, ctx.requestId)
   const articles = await readArticles(ctx, input, range)
   const translationIds = articles.flatMap((article) => article.translations.map(({ id }) => id))
-  const rejectedChecks =
+  const rejectedChecks: RejectedCheckRow[] =
     translationIds.length === 0
       ? []
       : await ctx.prisma.aiProcess.findMany({
@@ -330,9 +341,14 @@ export async function getContentStatistics(
             objectType: AI_CHECK_OBJECT_TYPE,
             objectId: { in: translationIds }
           },
-          select: { objectId: true }
+          select: { objectId: true, revisionId: true, createdAt: true, finishedAt: true }
         })
-  const rejectedTranslationIds = new Set(rejectedChecks.map(({ objectId }) => objectId))
+  const rejectedChecksByTranslation = new Map<string, RejectedCheckRow[]>()
+  for (const check of rejectedChecks) {
+    const rows = rejectedChecksByTranslation.get(check.objectId) ?? []
+    rows.push(check)
+    rejectedChecksByTranslation.set(check.objectId, rows)
+  }
   const publicationsByLocale = new Map<string, number>([
     ["en", 0],
     ["ru", 0]
@@ -361,10 +377,17 @@ export async function getContentStatistics(
         (message) => submitted && DECISION_KINDS.has(message.kind) && message.createdAt >= submitted.createdAt
       )
       if (submitted && decision && inRange(decision.createdAt, range)) {
+        const revision = [...translation.revisions].reverse().find(({ createdAt }) => createdAt <= decision.createdAt)
+        const hasPriorReject = (rejectedChecksByTranslation.get(translation.id) ?? []).some(
+          (check) =>
+            revision !== undefined &&
+            check.revisionId === revision.id &&
+            (check.finishedAt ?? check.createdAt) <= decision.createdAt
+        )
         decisions.push({
           kind: decision.kind,
           durationHours: (decision.createdAt.getTime() - submitted.createdAt.getTime()) / 3_600_000,
-          manualOverride: decision.kind === "manual_publish" && rejectedTranslationIds.has(translation.id)
+          manualOverride: decision.kind === "manual_publish" && hasPriorReject
         })
       }
 
@@ -448,7 +471,7 @@ export async function getAiStatistics(
       select: { kind: true, status: true, durationMs: true, objectType: true, objectId: true }
     }),
     ctx.prisma.aiCostAggregate.findMany({
-      where: { bucketStart: { gte: range.from }, bucketEnd: { lte: range.to } },
+      where: { bucketStart: { gte: range.from }, bucketEnd: { lte: range.aggregateTo } },
       select: { kind: true, totalCostMinor: true, processCount: true }
     })
   ])) as [AiProcessRow[], AiCostRow[]]

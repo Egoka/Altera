@@ -53,6 +53,7 @@ function context(role: ServiceRole) {
                 status: "published",
                 publishedAt: new Date("2026-09-12T10:00:00.000Z"),
                 createdAt: new Date("2026-09-05T10:00:00.000Z"),
+                revisions: [{ id: "revision-1", createdAt: new Date("2026-09-11T07:00:00.000Z") }],
                 reviewMessages: [
                   { kind: "submitted", createdAt: new Date("2026-09-11T08:00:00.000Z") },
                   { kind: "manual_publish", createdAt: new Date("2026-09-12T10:00:00.000Z") }
@@ -64,6 +65,7 @@ function context(role: ServiceRole) {
                 status: "draft",
                 publishedAt: null,
                 createdAt: new Date("2026-09-06T10:00:00.000Z"),
+                revisions: [],
                 reviewMessages: []
               }
             ]
@@ -83,6 +85,7 @@ function context(role: ServiceRole) {
                 status: "review",
                 publishedAt: null,
                 createdAt: new Date("2026-09-15T10:00:00.000Z"),
+                revisions: [],
                 reviewMessages: [{ kind: "submitted", createdAt: new Date("2026-09-15T10:00:00.000Z") }]
               }
             ]
@@ -92,7 +95,14 @@ function context(role: ServiceRole) {
       aiProcess: {
         findMany: vi.fn().mockImplementation((args) =>
           args.where?.verdict === "reject"
-            ? Promise.resolve([{ objectId: "translation-1" }])
+            ? Promise.resolve([
+                {
+                  objectId: "translation-1",
+                  revisionId: "revision-1",
+                  createdAt: new Date("2026-09-11T09:00:00.000Z"),
+                  finishedAt: new Date("2026-09-11T09:01:00.000Z")
+                }
+              ])
             : Promise.resolve([
                 {
                   kind: "check",
@@ -204,6 +214,16 @@ describe("статистика роста", () => {
     expect(ctx.prisma.user.findMany).not.toHaveBeenCalled()
   })
 
+  it("не выполняет запросы для архивированного аналитика", async () => {
+    const { ctx } = context("analyst")
+    ctx.currentUser!.archivedAt = new Date("2026-09-20T10:00:00.000Z")
+
+    await expect(getGrowthStatistics(ctx, { period: "DAYS_30" }, NOW)).rejects.toMatchObject({
+      extensions: { code: "FORBIDDEN", action: "stats.read" }
+    })
+    expect(ctx.prisma.user.findMany).not.toHaveBeenCalled()
+  })
+
   it("проверяет обе границы произвольного периода", async () => {
     const { ctx } = context("analyst")
 
@@ -272,6 +292,38 @@ describe("статистика контента", () => {
       })
     )
   })
+
+  it("не считает ручную публикацию override после reject другой ревизии", async () => {
+    const { ctx } = context("admin")
+    vi.mocked(ctx.prisma.aiProcess.findMany).mockResolvedValue([
+      {
+        objectId: "translation-1",
+        revisionId: "revision-other",
+        createdAt: new Date("2026-09-11T09:00:00.000Z"),
+        finishedAt: new Date("2026-09-11T09:01:00.000Z")
+      }
+    ] as never)
+
+    const result = await getContentStatistics(ctx, { period: "DAYS_30" }, NOW)
+
+    expect(result.manualOverrideRate).toBe(0)
+  })
+
+  it("не считает ручную публикацию override, если reject завершился позднее решения", async () => {
+    const { ctx } = context("admin")
+    vi.mocked(ctx.prisma.aiProcess.findMany).mockResolvedValue([
+      {
+        objectId: "translation-1",
+        revisionId: "revision-1",
+        createdAt: new Date("2026-09-12T09:00:00.000Z"),
+        finishedAt: new Date("2026-09-12T11:00:00.000Z")
+      }
+    ] as never)
+
+    const result = await getContentStatistics(ctx, { period: "DAYS_30" }, NOW)
+
+    expect(result.manualOverrideRate).toBe(0)
+  })
 })
 
 describe("статистика AI", () => {
@@ -295,6 +347,21 @@ describe("статистика AI", () => {
         where: {
           bucketStart: { gte: new Date("2026-08-31T12:00:00.000Z") },
           bucketEnd: { lte: new Date("2026-09-29T12:00:00.000Z") }
+        }
+      })
+    )
+  })
+
+  it("включает суточный cost bucket последнего дня произвольного периода", async () => {
+    const { ctx } = context("owner")
+
+    await getAiStatistics(ctx, { period: "CUSTOM", from: "2026-09-01", to: "2026-09-01" }, NOW)
+
+    expect(ctx.prisma.aiCostAggregate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          bucketStart: { gte: new Date("2026-09-01T00:00:00.000Z") },
+          bucketEnd: { lte: new Date("2026-09-02T00:00:00.000Z") }
         }
       })
     )
