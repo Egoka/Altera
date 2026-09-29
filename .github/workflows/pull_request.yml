@@ -294,6 +294,12 @@ jobs:
         env:
           T040_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
         run: pnpm --filter server exec vitest run tests/translation-editor-database.test.ts
+      # T-052: создание черновика пересекается с legacy-trigger, а принадлежность статьи журналу
+      # подтверждается сохранением вторым редактором и отсутствием каскада при архиве первого.
+      - name: Проверить редакционные статьи T-052
+        env:
+          T052_TEST_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm --filter server exec vitest run tests/editorial-articles-database.test.ts
       - name: Check build output
         run: test -f server/dist/server.js
       - name: Deploy migrations to isolated CI database

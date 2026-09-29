@@ -203,6 +203,8 @@ T069_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<по�
 pnpm --filter server exec vitest run tests/translation-editor.test.ts
 T040_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/<база> \
   pnpm --filter server exec vitest run tests/translation-editor-database.test.ts
+T052_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/<база> \
+  pnpm --filter server exec vitest run tests/editorial-articles-database.test.ts
 pnpm --filter nuxt-app exec vitest run tests/editor-states.test.ts \
   tests/editor-components.nuxt.test.ts tests/graphql-upload-proxy.test.ts
 T069_TEST_DATABASE_URL=postgresql://<пользователь>@<хост>:<порт>/<база> \
@@ -227,6 +229,11 @@ Playwright на настоящем API двумя вкладками.
 `altera.legacy_sync` правка `articles.status` переписывает текст языковой версии наследными
 значениями, с `SET LOCAL "altera.legacy_sync" = 'off'` — нет, и второй ревизии от trigger не
 появляется. Это поведение живёт в PostgreSQL, двойник Prisma его не исполняет.
+
+Набор T-052 на настоящей базе проверяет редакционный черновик целиком: создание отключает этот
+же trigger до вложенной записи исходной языковой версии, второй действующий `editor` сохраняет
+материал с собственной записью в истории ревизий, а архив создавшей служебной записи не меняет
+статус принадлежащей журналу статьи.
 
 Критерий 3 — строки состояний `article-edit.md` §8; каждую воспроизводит сценарий Playwright:
 загрузка (скелет при переходе из кабинета), пусто, ошибка данных (версия без ревизий — ответ
