@@ -55,7 +55,7 @@ const reviewItemInclude = {
 const profileReviewSelect = {
   id: true,
   name: true,
-  prevName: true,
+  pendingName: true,
   handle: true,
   avatarAssetId: true,
   prevAvatarId: true,
@@ -659,8 +659,8 @@ function toProfileItem(record: ProfileReviewRecord, mediaBaseUrl: string): Profi
   if (record.avatarCheckStatus === "pending") fields.push("avatar")
   return {
     userId: record.id,
-    name: record.name,
-    previousName: record.prevName,
+    name: record.pendingName ?? record.name,
+    previousName: record.name,
     handle: record.handle,
     avatarAssetId: record.avatarAssetId,
     previousAvatarId: record.prevAvatarId,
@@ -723,19 +723,17 @@ export async function decideProfileCheck(
     const status = input.verdict === "accept" ? "ok" : "rejected"
     const data: Prisma.UserUncheckedUpdateManyInput = { [field]: status }
     if (input.field === "name") {
-      const previousName = profile.prevName
-      if (input.verdict === "reject") {
-        if (!previousName) {
-          throw createApiError("CONFLICT", {
-            requestId: ctx.requestId,
-            entity: "profileName",
-            expected: "previousVersion",
-            actual: "none"
-          })
-        }
-        data.name = previousName
+      const proposedName = profile.pendingName
+      if (!proposedName) {
+        throw createApiError("CONFLICT", {
+          requestId: ctx.requestId,
+          entity: "profileName",
+          expected: "proposedVersion",
+          actual: "none"
+        })
       }
-      data.prevName = null
+      if (input.verdict === "accept") data.name = proposedName
+      data.pendingName = null
     } else {
       if (input.verdict === "reject") {
         if (!profile.prevAvatarId) {

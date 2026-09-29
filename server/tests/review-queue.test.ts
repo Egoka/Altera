@@ -93,8 +93,8 @@ const createHarness = (input: { role?: "moderator" | "admin" | "owner"; reviewer
   const audits: Array<Record<string, unknown>> = []
   const profile = {
     id: "profile-1",
-    name: "Новая подпись",
-    prevName: "Старая подпись",
+    name: "Старая подпись",
+    pendingName: "Новая подпись",
     handle: "profile-one",
     avatarAssetId: "avatar-new",
     prevAvatarId: "avatar-old",
@@ -376,26 +376,34 @@ describe("profile review queue", () => {
       })
     ])
     expect(page.items[0]).not.toHaveProperty("email")
+    expect(harness.profile.name).toBe("Старая подпись")
 
     const result = await decideProfileCheck(
       harness.ctx as never,
       { userId: "profile-1", field: "name", verdict: "accept", reason: null },
       now
     )
-    expect(result).toMatchObject({ userId: "profile-1", nameStatus: "ok", avatarStatus: "pending" })
+    expect(result).toMatchObject({
+      userId: "profile-1",
+      name: "Новая подпись",
+      previousName: "Новая подпись",
+      nameStatus: "ok",
+      avatarStatus: "pending"
+    })
     expect(harness.audits).toContainEqual(
       expect.objectContaining({ action: "profile.check", entityType: "user", entityId: "profile-1" })
     )
   })
 
-  it("restores the previous name on rejection and refuses an avatar rejection without a previous version", async () => {
+  it("keeps the public name on rejection and refuses an avatar rejection without a previous version", async () => {
     const nameHarness = createHarness()
     const rejected = await decideProfileCheck(
       nameHarness.ctx as never,
       { userId: "profile-1", field: "name", verdict: "reject", reason: "Не соответствует правилам" },
       now
     )
-    expect(rejected).toMatchObject({ name: "Старая подпись", previousName: null, nameStatus: "rejected" })
+    expect(rejected).toMatchObject({ name: "Старая подпись", previousName: "Старая подпись", nameStatus: "rejected" })
+    expect(nameHarness.profile).toMatchObject({ name: "Старая подпись", pendingName: null })
 
     const avatarHarness = createHarness()
     avatarHarness.profile.prevAvatarId = null
