@@ -70,8 +70,17 @@ const createArticle = async (database: PrismaClient, body: string) => {
       planTier: "standard"
     }
   })
-  const section = await database.section.create({
-    data: { name: "Культура", slug: `culture-${randomUUID()}`, order: 1 }
+  const sectionSlug = `culture-${randomUUID()}`
+  const section = await database.$transaction(async (tx) => {
+    await tx.sectionSlugHistory.create({ data: { slug: sectionSlug } })
+    const created = await tx.section.create({
+      data: { name: "Культура", slug: sectionSlug, order: 1 }
+    })
+    await tx.sectionSlugHistory.update({
+      where: { slug: sectionSlug },
+      data: { ownerSectionId: created.id, redirectToSectionId: created.id }
+    })
+    return created
   })
   const owner = await database.mediaAsset.create({
     data: {
@@ -234,10 +243,10 @@ describe.skipIf(!testDatabaseUrl)("T-048 AI-проверка в очереди �
       expect(JSON.stringify(adapter.submissions[0])).not.toContain("Автор Материала")
       expect(adapter.submissions[0].images).toMatchObject([{ role: "cover", license: "own" }])
 
-      // Прямая постановка без перехода подачи не выдаёт черновик за ожидающий AI-результат.
+      // Отказ AI переводит ожидающую проверку в ручную ветку вместе с записанными причинами.
       await expect(
         database.articleTranslation.findUniqueOrThrow({ where: { id: translationId } })
-      ).resolves.toMatchObject({ status: "draft" })
+      ).resolves.toMatchObject({ status: "review" })
     })
   })
 

@@ -58,6 +58,7 @@ import {
   startRateLimitCounterPrune,
   type RateLimitDatabaseClient
 } from "./rate-limits"
+import { createAccountExportService, createPrismaAccountExportStore, registerAccountExportJob } from "./account-export"
 
 const PORT = process.env.PORT || 4000
 const cache = createCache({ redisUrl: process.env.REDIS_URL })
@@ -88,6 +89,10 @@ const rateLimiter = createRateLimiter({
 })
 
 const jobStore = createPrismaJobStore(prisma)
+const accountExports = createAccountExportService({
+  store: createPrismaAccountExportStore(prisma),
+  storage: storageConfig.storage
+})
 // Очередь AI-описания: конвейеру нужна только постановка задания, поэтому идентификаторы задания
 // и AI-процесса остаются внутри модуля AI (`upload-pipeline.md` п. 6а).
 const aiAltQueue = createPrismaAiAltQueue(prisma, logger)
@@ -106,7 +111,7 @@ const media = createMediaService({
 const yoga = createYoga<GraphQLContext>({
   schema,
   context: (initialContext) =>
-    createContext(initialContext, cache, logger, piiHasher, mail, media, rateLimiter, errorCollector),
+    createContext(initialContext, cache, logger, piiHasher, mail, media, rateLimiter, errorCollector, accountExports),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {
@@ -168,6 +173,7 @@ const mediaGateway = storageConfig.local
   : yoga
 const server = createServer(withHealth(mediaGateway, health))
 registerHousekeepingJob(prisma)
+registerAccountExportJob(accountExports)
 // Чистка медиа-сирот (`retention-and-orphans.md` §2 п. 5–6): обработчик задания есть всегда, а
 // расписание включается признаком — окно и интервал ещё не утверждены владельцем (журнал §33 п. 3).
 registerMediaPurgeJob(createMediaPurgeDeps(prisma, storageConfig.storage))

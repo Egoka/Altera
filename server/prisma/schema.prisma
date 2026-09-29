@@ -68,6 +68,7 @@ model User {
   reviewNotes                 ReviewNote[]           @relation("ReviewNoteCreator")
   supportRequests             SupportRequest[]
   answeredSupportRequests     SupportRequest[]       @relation("SupportRequestAnswer")
+  accountExports              AccountExport[]
 
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
@@ -343,12 +344,33 @@ model Job {
   aiProcesses        AiProcess[]
   mailMessages       MailMessage[]
   backendErrors      BackendError[]
+  accountExport      AccountExport?
 
   @@index([status, availableAt])
   @@index([kind, status])
   @@index([objectType, objectId])
   @@index([originRequestId])
   @@map("jobs")
+}
+
+/// Подготовленная пользовательская выгрузка. Архив хранится в ObjectStorage не дольше семи дней;
+/// строка сохраняет историю запросов и состояние фонового задания (`30-account/reader/export.md`).
+model AccountExport {
+  id          String    @id @default(uuid())
+  userId      String
+  jobId       String    @unique
+  scope       Json
+  storageKey  String?   @unique
+  sizeBytes   Int?
+  readyAt     DateTime?
+  expiresAt   DateTime?
+  requestedAt DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([userId, requestedAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("account_exports")
 }
 
 model JobAttempt {

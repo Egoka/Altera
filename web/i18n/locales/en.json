@@ -175,6 +175,45 @@
     }
   },
   "account": {
+    "export": {
+      "pageTitle": "Data export",
+      "eyebrow": "Your data",
+      "intro": "We will prepare a ZIP with your profile, articles and every revision, original media, and editorial correspondence. Technical image variants and internal notes are excluded.",
+      "privacy": "Privacy policy",
+      "license": "Licence",
+      "includesTitle": "What the archive includes",
+      "scope": {
+        "profile": "Profile, consents, bookmarks, and sessions without IP addresses",
+        "articles": "Articles in every language and revision history",
+        "media": "Master-original media and metadata",
+        "review": "Decision reasons and correspondence with participant roles"
+      },
+      "request": "Request an export",
+      "requesting": "Requesting…",
+      "requested": "The export is queued.",
+      "conflict": "An export is already being prepared.",
+      "rateLimited": "You can request another export in {minutes} min.",
+      "history": "Request history",
+      "empty": "No exports yet.",
+      "update": "Update status",
+      "status": {
+        "queued": "Queued",
+        "running": "Preparing the archive",
+        "stuck": "Taking longer than usual",
+        "ready": "Ready to download",
+        "failed": "Could not prepare the archive",
+        "expired": "Storage period expired"
+      },
+      "expiresAt": "Link valid until {date}",
+      "download": "Download ZIP",
+      "downloadExpired": "The link has expired or the export is unavailable. Request a new archive.",
+      "requestAgain": "Request again",
+      "retry": "Retry",
+      "error": {
+        "dataUnavailable": "The export history could not be loaded. Please try later.",
+        "action": "The action could not be completed. Try again (code: {requestId})"
+      }
+    },
     "archived": {
       "title": "Account archived",
       "body": "Your account is deactivated. Your articles are hidden from readers and do not appear in the feed. You can restore your account at any time.",
@@ -691,6 +730,7 @@
       "archivedStaff": "Archived by the editorial team",
       "reeditUntil": "Re-edit until {date}",
       "openReadOnly": "Open read-only",
+      "reviewHistory": "Review history",
       "edit": "Edit",
       "open": "Open",
       "noCover": "No cover"
@@ -859,6 +899,103 @@
         "offline": "No network: we will retry once you are back online.",
         "unknown": "The action did not go through, try again."
       }
+    }
+  },
+  "review": {
+    "pageTitle": "Review: {title}",
+    "untitled": "Untitled",
+    "eyebrow": "Review history",
+    "back": "Back to my articles",
+    "retry": "Try again",
+    "pricing": "See plans",
+    "openEditor": "Edit the article",
+    "openReadOnly": "Open to read and copy",
+    "allArticles": "All articles",
+    "recommendations": "Reviewer recommendations",
+    "locale": {
+      "ru": "Russian version",
+      "en": "English version"
+    },
+    "state": {
+      "loading": "Loading history",
+      "empty": "No checks yet",
+      "pending": "Automated check in progress",
+      "queued": "Waiting for a reviewer",
+      "in_review": "With a reviewer",
+      "rework": "Returned for rework",
+      "published": "Published",
+      "final_reject": "Rejected by the editorial team",
+      "history": "Decision history",
+      "error": "History unavailable"
+    },
+    "empty": {
+      "title": "No checks yet",
+      "description": "The automated decision and editorial messages appear here after the first submission."
+    },
+    "error": {
+      "title": "History could not be loaded",
+      "description": "Check your connection and try again. Any reply you entered stays in the form."
+    },
+    "readOnly": {
+      "finalReject": "The editorial decision is final. The article remains available to read and copy.",
+      "plan": "Your plan is inactive: history remains available, but resubmission is disabled."
+    },
+    "ai": {
+      "eyebrow": "Automated check",
+      "publish": "Check passed",
+      "reject": "The article did not pass the check",
+      "noRepeat": "After your changes, a reviewer will read the article; the automated check will not run again."
+    },
+    "reason": {
+      "rights": "Copyright",
+      "illegal": "Prohibited material",
+      "spam_ads": "Spam and advertising",
+      "third_party_pd": "Third-party personal data",
+      "age": "Age restrictions",
+      "topic_rules": "Topic rules"
+    },
+    "notes": {
+      "title": "Block notes",
+      "block": "Block {id}",
+      "resolve": "Mark resolved",
+      "resolved": "Resolved"
+    },
+    "history": {
+      "title": "Decision history"
+    },
+    "kind": {
+      "rework_request": "Rework requested",
+      "unpublish": "Unpublished",
+      "manual_publish": "Published by the editorial team",
+      "final_reject": "Final rejection",
+      "message": "Editorial message",
+      "ai_decision": "Automated decision",
+      "submitted": "Submitted for review",
+      "withdrawn": "Submission withdrawn",
+      "published_auto": "Published automatically"
+    },
+    "role": {
+      "reader": "Reader",
+      "author": "Author",
+      "editor": "Editor",
+      "moderator": "Reviewer",
+      "analyst": "Analyst",
+      "admin": "Administrator",
+      "owner": "Owner",
+      "system": "System"
+    },
+    "thread": {
+      "empty": "No replies yet.",
+      "reply": "Reply to the reviewer",
+      "send": "Send reply"
+    },
+    "next": {
+      "title": "What happens next",
+      "description": "Edit the article and submit it again. An automated decision cannot be appealed; after a final rejection the text remains available to read and copy."
+    },
+    "errors": {
+      "reply": "The reply was not sent. Your text is still here — try again.",
+      "rateLimited": "Too many actions. Wait and send the reply again."
     }
   },
   "footer": {
