@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task_id": "T-076",
+  "issue_id": "01a0ed7b-e7df-73f5-af12-81d806ed39bd",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-076-permanent-delete.md",
+    "sha": "869da3e724f2500ccac0e1975af8f293741ed439"
+  },
+  "baseline_sha": "3bd78fba007756ac74a0b714fe69479700984e82",
+  "tested_sha": "84fe1cd24ab35d94fd2e8a494dee92a66dd375bd",
+  "branch": "web/t076-permanent-delete",
+  "worktree": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0edda-7c9c-7593-9ec4-de4645c4aa50",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Удаление неархивированной сущности возвращает CONFLICT — тест server/tests/permanent-delete-database.test.ts на реальном PostgreSQL 16; CI run 36596840450 — success на SHA 84fe1cd2."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Запись аудита остаётся после удаления сущности — server/tests/permanent-delete-database.test.ts; CI run 36596840450 — success."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Слаг и хэндл удалённой сущности не выдаются повторно — тесты резервирования в permanent-delete-database.test.ts и translation-editor-database.test.ts (setSlug); CI run 36596840450 — success."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 1278 passed / 81 skipped; web 912 passed; @altera/content 99 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed (4 configurations, 0 errors)",
+    "ci": "https://github.com/Egoka/Altera/actions/runs/36596840450",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 384,
+    "url": "https://github.com/Egoka/Altera/pull/384",
+    "base_ref": "app",
+    "base_sha": "3bd78fba007756ac74a0b714fe69479700984e82",
+    "head_sha": "84fe1cd24ab35d94fd2e8a494dee92a66dd375bd",
+    "merge_sha": "2c940cc1cfbb956c5aee46df448ffd79ff00d1fa"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ee6d-e2b7-728c-9301-646768f5fa43",
+    "sha": "84fe1cd24ab35d94fd2e8a494dee92a66dd375bd",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ (permanent-delete мутация, миграция, каскад) и web/ (диалог, composable, страницы архива)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-076.md",
+    "sha256": "0d7a4c77e975d8c540f2279639ec91843445e86bda0d512e0bdce5eb8d5b0cea"
+  },
+  "remaining": [
+    "Обезличивание финансовых записей (F-01) — за границами задачи",
+    "Прод-окружение в РФ нет (T-103); деплой проверяется на Render dev"
+  ],
+  "usage": null
+}
