@@ -1,0 +1,22 @@
+{
+  "task_id": "T-049",
+  "tested_sha": "c67693cb6614c06078bc6855558e4dcde9e0a846",
+  "pr": {
+    "number": 364,
+    "head_sha": "c67693cb6614c06078bc6855558e4dcde9e0a846",
+    "merge_sha": "7af833987b1c58ffda4b2eddb886deb060815ef7"
+  },
+  "review": {
+    "sha": "c67693cb6614c06078bc6855558e4dcde9e0a846",
+    "verdict": "approved",
+    "run_id": "01a0ec72-2699-7ccc-9c77-26dcf23f6042",
+    "reviewer_agent_id": "db94a617-807c-4eec-981f-51fd4b3217d4"
+  },
+  "deployment": {
+    "probe_actor_id": null,
+    "probe_run_id": null
+  },
+  "finalization": {
+    "sha256": "263ec8b4c728b4daf19531ef3421c049365ccd369a0c6343acf22c2bfa0efa46"
+  }
+}
