@@ -232,6 +232,166 @@ type AccountUser {
   updatedAt: String!
 }
 
+type AdminArticle {
+  archive: AdminArticleArchive
+  articleId: ID!
+  author: AdminArticleAuthor!
+  body: JSON!
+  cover: AdminArticleCover
+  decisions: [AdminArticleDecision!]!
+  dek: String
+  editorial: Boolean!
+  excerpt: String
+  format: AdminArticleTaxonomy
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  readCount: Int!
+  rejected: Boolean!
+  revisions: [AdminArticleRevision!]!
+  section: AdminArticleTaxonomy
+  siblings: [AdminArticleSibling!]!
+  slug: String!
+  status: String!
+  tags: [AdminArticleTaxonomy!]!
+  title: String!
+  updatedAt: String!
+}
+
+type AdminArticleArchive {
+  actorId: ID
+  at: String!
+  reason: String
+  role: Role
+}
+
+type AdminArticleAuthor {
+  handle: String!
+  id: ID!
+  name: String!
+}
+
+type AdminArticleCover {
+  alt: String
+  id: ID!
+  variants: JSON!
+}
+
+type AdminArticleDecision {
+  byRole: Role
+  createdAt: String!
+  id: ID!
+  kind: ReviewHistoryKind!
+  recommendations: String
+  replies: [AdminArticleDecisionReply!]!
+  text: String
+}
+
+type AdminArticleDecisionReply {
+  byRole: Role
+  createdAt: String!
+  id: ID!
+  text: String
+}
+
+type AdminArticleFilterOption {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type AdminArticleFilterOptions {
+  formats: [AdminArticleFilterOption!]!
+  sections: [AdminArticleFilterOption!]!
+  tags: [AdminArticleFilterOption!]!
+}
+
+input AdminArticleFiltersInput {
+  archiveRole: Role
+  author: String
+  formatId: ID
+  locale: Locale
+  publishedFrom: String
+  publishedTo: String
+  search: String
+  sectionId: ID
+  status: AdminArticleTab
+  tagId: ID
+}
+
+type AdminArticleRevision {
+  author: AdminArticleRevisionAuthor!
+  body: JSON!
+  createdAt: String!
+  id: ID!
+  kind: ArticleRevisionKind!
+  note: String
+  size: Int!
+  title: String!
+}
+
+type AdminArticleRevisionAuthor {
+  handle: String!
+  id: ID!
+  name: String!
+  role: Role!
+}
+
+type AdminArticleRow {
+  archive: AdminArticleArchive
+  articleId: ID!
+  author: AdminArticleAuthor!
+  editorial: Boolean!
+  format: AdminArticleTaxonomy
+  id: ID!
+  locale: Locale!
+  publishedAt: String
+  readCount: Int!
+  rejected: Boolean!
+  section: AdminArticleTaxonomy
+  slug: String!
+  status: String!
+  tags: [AdminArticleTaxonomy!]!
+  title: String!
+  updatedAt: String!
+}
+
+type AdminArticleSibling {
+  id: ID!
+  locale: Locale!
+  rejected: Boolean!
+  slug: String!
+  status: ArticleStatus!
+  title: String!
+}
+
+enum AdminArticleSort {
+  published
+  reads
+  title
+  updated
+}
+
+enum AdminArticleTab {
+  all
+  archived
+  draft
+  published
+  rejected
+  review
+}
+
+type AdminArticleTaxonomy {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type AdminArticlesConnection {
+  items: [AdminArticleRow!]!
+  pagination: PaginationInfo!
+}
+
 type AdminEmailChangeResult {
   changedAt: String!
 
@@ -1921,7 +2081,7 @@ type Mutation {
   возврата (журнал #50). Повторная блокировка уже закрытого административно аккаунта — `CONFLICT`.
   """
   archiveAccount(id: ID!, internalReason: String!, mode: AccountArchiveMode = admin, publicMessage: String, reasonCategory: AccountArchiveReasonCategory!): AdminUserCard!
-  archiveArticle(id: ID!): Article!
+  archiveArticle(id: ID!, reason: String): Article!
   archiveFormat(id: ID!): AdminFormat!
   archiveSection(id: ID!, reason: String!, successorId: ID!): Section!
   archiveStaffAccount(id: ID!, reason: String!): AdminStaffMember!
@@ -2344,6 +2504,9 @@ input PublishLegalVersionInput {
 
 type Query {
   _empty: String
+  adminArticle(id: ID!): AdminArticle!
+  adminArticleFilterOptions: AdminArticleFilterOptions!
+  adminArticles(filters: AdminArticleFiltersInput, pagination: PaginationInput, sort: AdminArticleSort): AdminArticlesConnection!
   adminGrant(id: ID!): AdminPlanGrant
   adminGrants: [AdminPlanGrant!]!
   adminJob(id: ID!): AdminJobCard

@@ -1,0 +1,169 @@
+enum AdminArticleTab {
+  all
+  draft
+  review
+  published
+  rejected
+  archived
+}
+
+enum AdminArticleSort {
+  updated
+  published
+  title
+  reads
+}
+
+input AdminArticleFiltersInput {
+  status: AdminArticleTab
+  locale: Locale
+  sectionId: ID
+  formatId: ID
+  tagId: ID
+  author: String
+  archiveRole: Role
+  publishedFrom: String
+  publishedTo: String
+  search: String
+}
+
+type AdminArticleAuthor {
+  id: ID!
+  name: String!
+  handle: String!
+}
+
+type AdminArticleTaxonomy {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type AdminArticleArchive {
+  at: String!
+  actorId: ID
+  role: Role
+  reason: String
+}
+
+type AdminArticleCover {
+  id: ID!
+  alt: String
+  variants: JSON!
+}
+
+type AdminArticleSibling {
+  id: ID!
+  locale: Locale!
+  title: String!
+  slug: String!
+  status: ArticleStatus!
+  rejected: Boolean!
+}
+
+type AdminArticleRevisionAuthor {
+  id: ID!
+  name: String!
+  handle: String!
+  role: Role!
+}
+
+type AdminArticleRevision {
+  id: ID!
+  title: String!
+  body: JSON!
+  kind: ArticleRevisionKind!
+  note: String
+  size: Int!
+  createdAt: String!
+  author: AdminArticleRevisionAuthor!
+}
+
+type AdminArticleDecisionReply {
+  id: ID!
+  text: String
+  byRole: Role
+  createdAt: String!
+}
+
+type AdminArticleDecision {
+  id: ID!
+  kind: ReviewHistoryKind!
+  text: String
+  recommendations: String
+  byRole: Role
+  createdAt: String!
+  replies: [AdminArticleDecisionReply!]!
+}
+
+type AdminArticleRow {
+  id: ID!
+  articleId: ID!
+  title: String!
+  slug: String!
+  locale: Locale!
+  status: String!
+  rejected: Boolean!
+  readCount: Int!
+  publishedAt: String
+  updatedAt: String!
+  editorial: Boolean!
+  author: AdminArticleAuthor!
+  section: AdminArticleTaxonomy
+  format: AdminArticleTaxonomy
+  tags: [AdminArticleTaxonomy!]!
+  archive: AdminArticleArchive
+}
+
+type AdminArticle {
+  id: ID!
+  articleId: ID!
+  title: String!
+  slug: String!
+  locale: Locale!
+  status: String!
+  rejected: Boolean!
+  readCount: Int!
+  publishedAt: String
+  updatedAt: String!
+  editorial: Boolean!
+  author: AdminArticleAuthor!
+  section: AdminArticleTaxonomy
+  format: AdminArticleTaxonomy
+  tags: [AdminArticleTaxonomy!]!
+  archive: AdminArticleArchive
+  dek: String
+  excerpt: String
+  body: JSON!
+  cover: AdminArticleCover
+  revisions: [AdminArticleRevision!]!
+  decisions: [AdminArticleDecision!]!
+  siblings: [AdminArticleSibling!]!
+}
+
+type AdminArticlesConnection {
+  items: [AdminArticleRow!]!
+  pagination: PaginationInfo!
+}
+
+type AdminArticleFilterOption {
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+type AdminArticleFilterOptions {
+  sections: [AdminArticleFilterOption!]!
+  formats: [AdminArticleFilterOption!]!
+  tags: [AdminArticleFilterOption!]!
+}
+
+extend type Query {
+  adminArticles(
+    filters: AdminArticleFiltersInput
+    pagination: PaginationInput
+    sort: AdminArticleSort
+  ): AdminArticlesConnection!
+  adminArticle(id: ID!): AdminArticle!
+  adminArticleFilterOptions: AdminArticleFilterOptions!
+}

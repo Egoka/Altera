@@ -33,6 +33,8 @@ import type { FocalPoint } from "../../media"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
 
+const STAFF_ARTICLE_ARCHIVE_ROLES = new Set(["moderator", "admin", "owner"])
+
 interface MyArticleTranslationRecord {
   id: string
   locale: string
@@ -661,8 +663,21 @@ export default {
       return updatedArticle
     },
 
-    archiveArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+    archiveArticle: async (
+      _parent: any,
+      { id, reason: rawReason }: { id: string; reason?: string | null },
+      ctx: GraphQLContext
+    ) => {
       const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const staffArchive = !user.archivedAt && STAFF_ARTICLE_ARCHIVE_ROLES.has(user.role)
+      const reason = rawReason?.trim() ?? ""
+      if (staffArchive && !reason) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "reason",
+          rule: "required"
+        })
+      }
 
       const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
         const article = await transaction.article.findUnique({
@@ -670,7 +685,7 @@ export default {
           include: { author: true, section: true, tags: true }
         })
         if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-        if (article.authorId !== user.id) {
+        if (!staffArchive && article.authorId !== user.id) {
           throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
         }
         if (article.status === "archived") {
@@ -689,7 +704,7 @@ export default {
             archivedAt: new Date(),
             archivedByActorId: user.id,
             archivedByRole: user.role,
-            archiveReason: "author"
+            archiveReason: staffArchive ? reason : "author"
           },
           include: { author: true, section: true, tags: true }
         })
@@ -700,7 +715,13 @@ export default {
             actorRole: user.role,
             entityType: "article",
             entityId: id,
-            diff: { status: { from: article.status, to: "archived" } },
+            diff: staffArchive
+              ? {
+                  status: { from: article.status, to: "archived" },
+                  reason,
+                  actorRoleLevel: user.role
+                }
+              : { status: { from: article.status, to: "archived" } },
             requestId: ctx.requestId
           }
         })
@@ -715,7 +736,8 @@ export default {
 
     restoreArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
-      ensureActiveAuthor(user, "article.restore", ctx.requestId, { logger: ctx.logger })
+      const ownerRestore = !user.archivedAt && user.role === "owner"
+      if (!ownerRestore) ensureActiveAuthor(user, "article.restore", ctx.requestId, { logger: ctx.logger })
 
       const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
         const article = await transaction.article.findUnique({
@@ -723,7 +745,7 @@ export default {
           include: { author: true, section: true, tags: true }
         })
         if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-        if (article.authorId !== user.id) {
+        if (!ownerRestore && article.authorId !== user.id) {
           throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
         }
         if (article.status !== "archived") {
@@ -735,8 +757,8 @@ export default {
           })
         }
         if (
-          article.archivedByActorId !== user.id ||
-          (article.archivedByRole !== "author" && article.archivedByRole !== "reader")
+          (!ownerRestore && article.archivedByActorId !== user.id) ||
+          (!ownerRestore && article.archivedByRole !== "author" && article.archivedByRole !== "reader")
         ) {
           throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
         }
@@ -760,7 +782,9 @@ export default {
             actorRole: user.role,
             entityType: "article",
             entityId: id,
-            diff: { status: { from: "archived", to: restoredStatus } },
+            diff: ownerRestore
+              ? { status: { from: "archived", to: restoredStatus }, actorRoleLevel: user.role }
+              : { status: { from: "archived", to: restoredStatus } },
             requestId: ctx.requestId
           }
         })
