@@ -1,0 +1,207 @@
+fragment AdminReviewQueueFields on AdminReviewQueueItem {
+  id
+  articleId
+  title
+  slug
+  locale
+  status
+  state
+  rejected
+  publishedAt
+  readCount
+  createdAt
+  updatedAt
+  author {
+    id
+    name
+    handle
+  }
+  section {
+    slug
+    name
+  }
+  editorial
+  reviewer {
+    role
+    mine
+  }
+}
+
+fragment AdminReviewItemFields on AdminReviewItem {
+  id
+  articleId
+  title
+  slug
+  locale
+  status
+  state
+  rejected
+  publishedAt
+  readCount
+  createdAt
+  updatedAt
+  author {
+    id
+    name
+    handle
+  }
+  section {
+    slug
+    name
+  }
+  editorial
+  reviewer {
+    role
+    mine
+  }
+  body
+  revisions {
+    id
+    title
+    body
+    createdAt
+    notes {
+      id
+      blockId
+      text
+      resolved
+      createdAt
+      updatedAt
+    }
+  }
+  decisions {
+    id
+    kind
+    text
+    recommendations
+    byRole
+    createdAt
+    replies {
+      id
+      text
+      byRole
+      createdAt
+    }
+  }
+  aiDecision {
+    verdict
+    reasons
+    finishedAt
+  }
+}
+
+query GetAdminReviewQueue($filters: ReviewQueueFiltersInput, $pagination: PaginationInput, $sort: ReviewQueueSort) {
+  reviewQueue(filters: $filters, pagination: $pagination, sort: $sort) {
+    items {
+      ...AdminReviewQueueFields
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+query GetAdminReviewItem($id: ID!) {
+  reviewItem(id: $id) {
+    ...AdminReviewItemFields
+  }
+}
+
+query GetProfileReviewQueue($pagination: PaginationInput) {
+  profileReviewQueue(pagination: $pagination) {
+    items {
+      userId
+      name
+      handle
+      avatarAssetId
+      previousAvatarId
+      nameStatus
+      avatarStatus
+      fields
+      updatedAt
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+mutation ClaimReview($id: ID!) {
+  claimReview(id: $id) {
+    ...AdminReviewItemFields
+  }
+}
+
+mutation ReleaseReview($id: ID!) {
+  releaseReview(id: $id) {
+    ...AdminReviewItemFields
+  }
+}
+
+mutation RequestAdminReviewRework($id: ID!, $recommendations: String!) {
+  requestReviewRework(id: $id, recommendations: $recommendations) {
+    ...AdminReviewItemFields
+  }
+}
+
+mutation PublishAdminReviewManual($id: ID!, $message: String) {
+  publishReviewManual(id: $id, message: $message) {
+    ...AdminReviewItemFields
+  }
+}
+
+mutation RejectAdminReviewFinal($id: ID!, $reason: String) {
+  rejectReviewFinal(id: $id, reason: $reason) {
+    ...AdminReviewItemFields
+  }
+}
+
+mutation UnpublishAdminReview($id: ID!, $reason: String!) {
+  unpublishReview(id: $id, reason: $reason) {
+    ...AdminReviewItemFields
+  }
+}
+
+mutation ReplyInAdminReviewDecision($decisionId: ID!, $text: String!) {
+  replyInReviewDecision(decisionId: $decisionId, text: $text) {
+    id
+    text
+    byRole
+    createdAt
+  }
+}
+
+mutation CreateAdminReviewNote($input: CreateAdminReviewNoteInput!) {
+  createReviewNote(input: $input) {
+    id
+    blockId
+    text
+    resolved
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DecideAdminProfileCheck($input: ProfileReviewDecisionInput!) {
+  decideProfileCheck(input: $input) {
+    userId
+    name
+    handle
+    avatarAssetId
+    previousAvatarId
+    nameStatus
+    avatarStatus
+    fields
+    updatedAt
+  }
+}

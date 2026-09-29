@@ -37,6 +37,7 @@ const roleSectionIds: Partial<Record<Role, readonly string[]>> = {
     "dashboard",
     "categories",
     "tags",
+    "review",
     "users",
     "admins",
     "subscriptions",
@@ -80,6 +81,10 @@ export const getAdminNavigation = (role: Role): AdminNavigationItem[] =>
   (roleSectionIds[role] ?? []).flatMap((id) => (sections[id] ? [sections[id]] : []))
 
 export const canManageTaxonomy = (role: Role): boolean => role === "admin" || role === "owner"
+
+export const canReadReviews = (role: Role): boolean => role === "moderator" || role === "admin" || role === "owner"
+
+export const canDecideReviews = (role: Role): boolean => role === "moderator" || role === "owner"
 
 // Настройки системы: `admin` читает без секретов (журнал §28.11), `owner` — владелец раздела.
 export const canReadSystemSettings = (role: Role): boolean => role === "admin" || role === "owner"
