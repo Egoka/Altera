@@ -230,7 +230,12 @@ test.describe("страница подтверждения по таблице �
     await page.goto(`/auth/verify?token=${token}`)
 
     await expect(page.locator("[data-verify-state='blocked']")).toBeVisible()
-    await expect(page.getByRole("link", { name: /оспорить/i })).toHaveAttribute("href", `/auth/appeal?token=${token}`)
+    // Ссылка входа меняется на отдельный 24-часовой токен формы оспаривания (T-061, `blocked-appeal.md`).
+    const appealLink = page.getByRole("link", { name: /оспорить/i })
+    await expect(appealLink).toHaveAttribute("href", /^\/auth\/appeal\?token=[0-9a-f]{64}$/)
+    expect(await appealLink.getAttribute("href")).not.toBe(`/auth/appeal?token=${token}`)
+    const appealTokens = await withPrisma((prisma) => prisma.accountAppealToken.count({ where: { user: { email } } }))
+    expect(appealTokens).toBe(1)
 
     const sessions = await withPrisma((prisma) => prisma.session.findMany({ where: { user: { email } } }))
     expect(sessions).toHaveLength(0)

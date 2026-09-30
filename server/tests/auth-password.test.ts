@@ -11,6 +11,7 @@ import {
   verifyPassword
 } from "../src/auth/password"
 import { isBlockedPassword } from "../src/auth/password-blocklist"
+import { hashOpaqueToken } from "../src/auth/token-hash"
 import { createTestRateLimiter } from "./helpers/rate-limit"
 
 // Проверка фиктивного хэша обёрнута в `vi.fn` поверх настоящей функции: по умолчанию каждый тест
@@ -90,6 +91,7 @@ function createWorld(options: { users?: FakeUser[]; publishedTerms?: number | nu
   const users = [...(options.users ?? [])]
   const passwordTokens: FakePasswordToken[] = []
   const magicLinkTokens: { email: string; tokenHash: string }[] = []
+  const appealTokens: { userId: string; tokenHash: string; expiresAt: Date }[] = []
   const sessions: FakeSession[] = []
   const sentMail: { to: string; template: string; subject: string; text: string; sanitizedBody: string }[] = []
   const logs: { event: string; level: string; data?: Record<string, unknown> }[] = []
@@ -176,6 +178,12 @@ function createWorld(options: { users?: FakeUser[]; publishedTerms?: number | nu
         return create
       })
     },
+    accountAppealToken: {
+      upsert: vi.fn(async ({ create }: { create: { userId: string; tokenHash: string; expiresAt: Date } }) => {
+        appealTokens.push({ userId: create.userId, tokenHash: create.tokenHash, expiresAt: create.expiresAt })
+        return create
+      })
+    },
     session: {
       create: vi.fn(async ({ data }: { data: { userId: string; tokenHash: string; limited: boolean } }) => {
         const created = {
@@ -246,7 +254,7 @@ function createWorld(options: { users?: FakeUser[]; publishedTerms?: number | nu
     }
   }
 
-  return { ctx, users, passwordTokens, magicLinkTokens, sessions, sentMail, logs }
+  return { ctx, users, passwordTokens, magicLinkTokens, appealTokens, sessions, sentMail, logs }
 }
 
 /** Токен из письма: он есть только в ссылке, поэтому берётся из текста так же, как у читателя. */
@@ -517,7 +525,12 @@ describe("вход по паролю", () => {
     )
 
     expect(result).toMatchObject({ outcome: "archived_admin", session: null })
-    expect((result as unknown as { appealToken: string }).appealToken).toBeTruthy()
+    const { appealToken } = result as unknown as { appealToken: string }
+    // Форма оспаривания принимает только токен из `account_appeal_tokens`, а не токен согласия.
+    expect(world.appealTokens).toEqual([
+      { userId: "user-blocked@example.test", tokenHash: hashOpaqueToken(appealToken), expiresAt: expect.any(Date) }
+    ])
+    expect(world.magicLinkTokens).toHaveLength(0)
     expect(world.sessions).toHaveLength(0)
   })
 
