@@ -618,7 +618,30 @@
     "goneDescription": "Этот материал больше недоступен публично.",
     "goneHome": "На главную",
     "gonePublished": "Был опубликован",
-    "report": "Пожаловаться"
+    "report": "Пожаловаться",
+    "readingTime": "{count} мин чтения",
+    "tags": "Темы материала",
+    "published": "Опубликовано {date}",
+    "translationPublished": "Перевод опубликован {date}",
+    "updated": "Обновлено {date}",
+    "aboutAuthor": "Об авторе",
+    "preview": "Предпросмотр",
+    "previewStatus": "Статус: {status}",
+    "reeditUntil": "Перередактировать до {time}",
+    "openEditor": "Открыть редактор",
+    "language": {
+      "ru": "Русская версия",
+      "en": "English version"
+    },
+    "status": {
+      "draft": "черновик",
+      "ai_check": "автопроверка",
+      "review": "на рассмотрении",
+      "in_review": "на рассмотрении",
+      "rework": "на доработке",
+      "published": "опубликовано",
+      "archived": "в архиве"
+    }
   },
   "reading": {
     "translation": "Перевод",

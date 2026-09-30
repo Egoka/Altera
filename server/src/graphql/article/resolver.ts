@@ -30,6 +30,7 @@ import {
 import { randomUUID } from "node:crypto"
 import { articleCoverView, setArticleCover } from "../../article/cover"
 import type { FocalPoint } from "../../media"
+import { createArticlePreviewToken, loadArticlePage, type ArticlePageArgs } from "../../article/public-page"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
 
@@ -192,7 +193,15 @@ export default {
       }
     },
 
-    article: async (_parent: any, args: { slug: string }, ctx: GraphQLContext) => {
+    article: async (
+      _parent: unknown,
+      args: { slug: string; locale?: "ru" | "en"; sectionSlug?: string; preview?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      if (args.locale && args.sectionSlug) {
+        return loadArticlePage(ctx, args as ArticlePageArgs)
+      }
+
       return readThroughPublicCache(
         {
           cache: ctx.cache,
@@ -213,6 +222,9 @@ export default {
         }
       )
     },
+
+    articlePreviewToken: (_parent: unknown, args: { translationId: string }, ctx: GraphQLContext) =>
+      createArticlePreviewToken(ctx, args.translationId),
 
     gone: async (
       _parent: unknown,
@@ -941,6 +953,12 @@ export default {
      * Обложка материала в кабинете автора. Черновик без обложки показывает заполнитель именно
      * здесь и только здесь (`article-covers.md` п. 4): в лентах дефолтных изображений нет.
      */
+    cover: (parent: { coverAssetId?: string | null }, _args: unknown, ctx: GraphQLContext) =>
+      articleCoverView(ctx, parent.coverAssetId ?? null)
+  },
+
+  ArticlePage: {
+    /** Публичная страница использует тот же готовый набор вариантов и единый alt медиафайла. */
     cover: (parent: { coverAssetId?: string | null }, _args: unknown, ctx: GraphQLContext) =>
       articleCoverView(ctx, parent.coverAssetId ?? null)
   },

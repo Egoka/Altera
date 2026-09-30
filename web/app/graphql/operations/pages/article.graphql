@@ -1,16 +1,40 @@
-query GetArticle($slug: String!) {
-  article(slug: $slug) {
+query GetArticle($locale: Locale!, $sectionSlug: String!, $slug: String!, $preview: String) {
+  article(locale: $locale, sectionSlug: $sectionSlug, slug: $slug, preview: $preview) {
     id
+    translationId
+    locale
     title
     slug
     dek
     body
     excerpt
     featuredImage
+    cover {
+      variants
+      alt
+    }
+    bodyAssets {
+      id
+      alt
+      caption
+      attribution
+      variants
+      width
+      height
+    }
     status
+    preview
+    reeditUntil
     publishedAt
+    firstPublishedAt
     createdAt
     updatedAt
+    readingTime
+    isTranslation
+    sibling {
+      locale
+      path
+    }
     author {
       id
       name
@@ -20,6 +44,10 @@ query GetArticle($slug: String!) {
       socialLinks
     }
     section {
+      name
+      slug
+    }
+    format {
       name
       slug
     }

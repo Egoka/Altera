@@ -1389,6 +1389,49 @@ input ArticleFiltersInput {
   tagIds: [ID!]
 }
 
+"""
+Публичная языковая версия для SSR-страницы чтения (`20-public/article.md`).
+"""
+type ArticlePage {
+  author: User!
+
+  """Документ каталога `@altera/content`; строкового HTML в базе нет."""
+  body: JSON!
+
+  """Готовые медиафайлы, на которые ссылаются изображения документа."""
+  bodyAssets: [MediaAsset!]!
+  cover: ArticleCover
+  createdAt: String!
+  dek: String
+  excerpt: String
+  featuredImage: String
+  firstPublishedAt: String
+  format: Format
+  id: ID!
+  isTranslation: Boolean!
+  locale: Locale!
+  preview: Boolean!
+  publishedAt: String
+  readingTime: Int!
+  reeditUntil: String
+  section: Section
+  sibling: ArticlePageSibling
+  slug: String!
+
+  """Статус виден только в session-bound предпросмотре."""
+  status: ArticleStatus
+  tags: [Tag!]!
+  title: String!
+  translationId: ID!
+  updatedAt: String!
+}
+
+"""Опубликованная языковая пара, доступная читателю из переключателя."""
+type ArticlePageSibling {
+  locale: Locale!
+  path: String!
+}
+
 type ArticleRevisionEntry {
   createdAt: String!
   id: ID!
@@ -2895,8 +2938,11 @@ type Query {
   adminUser(id: ID!): AdminUserCard
   adminUsers(filters: AdminUserFiltersInput, pagination: PaginationInput): AdminUserList!
   aiStats(period: AdminAiPeriodInput): AdminAiStats!
-  article(slug: String!): Article
+  article(locale: Locale, preview: String, sectionSlug: String, slug: String!): ArticlePage
   articleDetail(slug: String!): ArticleDetail
+
+  """Короткоживущий токен предпросмотра, привязанный к текущей сессии."""
+  articlePreviewToken(translationId: ID!): String!
   articleStats(slug: String!): ArticleStats
   articles(filters: ArticleFiltersInput!, pagination: PaginationInput!, search: SearchInput, sort: SortInput!): ArticlesResponse!
   articlesBySection(limit: Int = 10, page: Int = 1, sectionSlug: String!): ArticlesBySectionResponse!

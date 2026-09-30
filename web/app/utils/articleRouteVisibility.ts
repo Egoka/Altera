@@ -15,7 +15,7 @@ interface GoneArticleEnvelope<TArticle> {
 export type ArticleRouteState<TArticle> =
   | { kind: "visible"; article: TArticle }
   | { kind: "gone"; statusCode: 410 }
-  | { kind: "error"; statusCode: 404 | 500; code: string; requestId: string | undefined }
+  | { kind: "error"; statusCode: 403 | 404 | 500; code: string; requestId: string | undefined }
 
 function extension(error: GraphQLErrorLike | undefined, key: string): string | undefined {
   const value = error?.extensions?.[key]
@@ -30,6 +30,16 @@ function getErrorState(errors: readonly GraphQLErrorLike[] | undefined) {
       statusCode: 404 as const,
       code: "NOT_FOUND",
       requestId: extension(notFound, "requestId")
+    }
+  }
+
+  const forbidden = errors?.find((error) => extension(error, "code") === "FORBIDDEN")
+  if (forbidden) {
+    return {
+      kind: "error" as const,
+      statusCode: 403 as const,
+      code: "FORBIDDEN",
+      requestId: extension(forbidden, "requestId")
     }
   }
 
