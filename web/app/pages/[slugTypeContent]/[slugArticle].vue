@@ -169,6 +169,7 @@
           <div class="flex items-center gap-5">
             <NuxtLink
               v-if="article.sibling"
+              data-testid="article-sibling"
               :to="article.sibling.path"
               class="font-semibold text-zinc-700 underline decoration-zinc-300 underline-offset-4 hover:text-orange-800 dark:text-zinc-300 dark:decoration-zinc-700 dark:hover:text-orange-300">
               {{ article.sibling.locale === "en" ? t("article.language.en") : t("article.language.ru") }}
@@ -176,6 +177,8 @@
             <ReadingArticleBookmark
               :article-id="article.id"
               :login-path="`/login?next=${encodeURIComponent(route.path)}`" />
+            <!-- Кнопка «Пожаловаться» ведёт в редакцию со ссылкой на этот материал (журнал §37 п. 9). -->
+            <ReadingReportButton :path="route.path" />
           </div>
         </div>
       </div>

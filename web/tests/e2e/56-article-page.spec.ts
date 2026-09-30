@@ -100,10 +100,9 @@ test("страница материала рендерит документ, е�
   await expect(page.getByText("Город просыпается раньше трамваев.")).toBeVisible()
   await expect(page.getByAltText("Пустая трамвайная остановка на рассвете")).toBeVisible()
   await expect(page.getByAltText("Свет в окнах ранним утром")).toBeVisible()
-  await expect(page.getByRole("link", { name: /English/ })).toHaveAttribute(
-    "href",
-    "/en/culture/city-before-the-first-tram"
-  )
+  // «English» есть и у переключателя языка в шапке сайта; языковая пара — ссылка самого материала.
+  await expect(page.getByTestId("article-sibling")).toHaveText(/English/)
+  await expect(page.getByTestId("article-sibling")).toHaveAttribute("href", "/en/culture/city-before-the-first-tram")
   await expect(page.getByRole("link", { name: "Войти, чтобы сохранить материал" })).toBeVisible()
 })
 
