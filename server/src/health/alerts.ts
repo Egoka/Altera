@@ -73,20 +73,72 @@ export interface HealthAlertsOptions {
   recipients: () => Promise<readonly AlertRecipient[]>
   logger: AppLogger
   requestId?: () => string
+  /** Append-only история для `/admin/errors`; сбой записи не влияет на readiness и оповещение. */
+  history?: (health: Health) => Promise<void>
 }
 
+const healthHistorySignature = (health: Health): string =>
+  JSON.stringify({
+    status: health.status,
+    components: COMPONENT_NAMES.map((name) => {
+      const component = health.components[name]
+      return [name, component.status, component.adapter]
+    }),
+    backups: BACKUP_KINDS.map((kind) => {
+      const backup = health.backups[kind]
+      return [kind, backup.status, backup.ageSeconds === null ? null : Math.floor(backup.ageSeconds / 3600)]
+    })
+  })
+
 /**
- * Запись `system.health` (#53) и оповещение получателям. Пишется при смене набора причин, а не на
- * каждой проверке: `/health` опрашивают постоянно, и запись на каждый опрос забила бы журнал, не
- * добавив нового. Уровни — `info` и `warn`: состояние не аудит (спецификация п. 8).
+ * Запись `system.health` (#53) и оповещение получателям. История сохраняет смену общего статуса,
+ * адаптера/статуса компонента и часового бакета возраста копии; оповещения дедуплицируются отдельно
+ * по набору причин. Так постоянный polling `/health` не забивает журнал одинаковыми снимками.
+ * Уровни — `info` и `warn`: состояние не аудит (спецификация п. 8).
  */
 export function createHealthAlerts(options: HealthAlertsOptions): (health: Health) => Promise<HealthAlert | null> {
   const nextRequestId = options.requestId ?? (() => `health:${randomUUID()}`)
   let reported: string | undefined
+  let recordedHealth: string | undefined
+  let scheduledHealth: string | undefined
+  let scheduledWrite: Promise<boolean> | undefined
+  let historyQueue: Promise<void> = Promise.resolve()
 
   return async (health) => {
     const reasons = healthAlertReasons(health)
     const signature = reasons.join(" ")
+    const snapshotSignature = healthHistorySignature(health)
+    const shouldRecord = snapshotSignature !== scheduledHealth
+
+    if (shouldRecord && options.history) {
+      scheduledHealth = snapshotSignature
+      const write = historyQueue.then(async () => {
+        try {
+          await options.history!(health)
+          recordedHealth = snapshotSignature
+          return true
+        } catch (error: unknown) {
+          options.logger.log({
+            level: "error",
+            event: "backend.error",
+            requestId: nextRequestId(),
+            message: "Health history write failed",
+            error
+          })
+          return false
+        }
+      })
+      scheduledWrite = write
+      historyQueue = write.then(() => undefined)
+      const written = await write
+      if (scheduledWrite === write) {
+        scheduledWrite = undefined
+        if (!written) scheduledHealth = recordedHealth
+      }
+    } else if (options.history && scheduledWrite) {
+      await scheduledWrite
+    }
+
     if (signature === reported) return null
     const first = reported === undefined
     reported = signature

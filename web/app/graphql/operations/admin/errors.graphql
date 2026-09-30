@@ -1,0 +1,129 @@
+fragment AdminErrorRow on ErrorLogItem {
+  id
+  signature
+  stream
+  service
+  code
+  route
+  requestId
+  occurrences
+  workStatus
+  assignedActorId
+  assignedActorRole
+  firstSeenAt
+  lastSeenAt
+  updatedAt
+}
+
+query GetAdminErrors($filters: ErrorLogFilters, $pagination: PaginationInput) {
+  errorLog(filters: $filters, pagination: $pagination) {
+    items {
+      ...AdminErrorRow
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+
+query GetAdminError($id: ID!) {
+  errorEntry(id: $id) {
+    id
+    signature
+    service
+    code
+    route
+    requestId
+    message
+    stack
+    occurrencesCount
+    workStatus
+    assignedActorId
+    assignedActorRole
+    firstSeenAt
+    lastSeenAt
+    updatedAt
+    occurrences {
+      id
+      requestId
+      jobId
+      occurredAt
+    }
+    statusHistory {
+      fromStatus
+      toStatus
+      changedByActorId
+      changedByActorRole
+      comment
+      createdAt
+    }
+  }
+}
+
+query GetAdminErrorStats($period: ErrorPeriodInput!) {
+  errorStats(period: $period) {
+    currentTotal
+    previousTotal
+    timeline {
+      bucket
+      count
+    }
+    byService {
+      key
+      count
+    }
+    byCode {
+      key
+      count
+    }
+  }
+}
+
+query GetAdminHealthHistory($period: ErrorPeriodInput!) {
+  healthHistory(period: $period) {
+    id
+    status
+    checkedAt
+    components {
+      name
+      status
+      adapter
+      latencyMs
+    }
+    backups {
+      kind
+      status
+      ageHours
+    }
+  }
+}
+
+mutation SetAdminErrorWorkStatus($id: ID!, $status: ErrorWorkStatus!, $expectedUpdatedAt: String!, $comment: String) {
+  setErrorWorkStatus(id: $id, status: $status, expectedUpdatedAt: $expectedUpdatedAt, comment: $comment) {
+    id
+    workStatus
+    updatedAt
+  }
+}
+
+mutation ResolveAdminErrors($ids: [ID!]!) {
+  resolveErrors(ids: $ids) {
+    id
+    workStatus
+    updatedAt
+  }
+}
+
+mutation ExportAdminErrors($filters: ErrorLogFilters) {
+  exportErrors(filters: $filters) {
+    filename
+    contentType
+    rows
+    csv
+  }
+}

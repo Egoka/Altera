@@ -545,12 +545,27 @@ model BackendErrorStatusHistory {
   fromStatus         BackendErrorWorkStatus?
   toStatus           BackendErrorWorkStatus
   changedByActorId   String
-  changedByActorRole Role
+  changedByActorRole Role?
   comment            String?
   createdAt          DateTime                @default(now())
 
   @@index([backendErrorId, createdAt])
   @@map("backend_error_status_history")
+}
+
+/// Append-only история смен состояния `/health` для раздела админки T-081. JSON содержит только
+/// публичный контракт health: имена адаптеров, статусы, задержки и возраст копий — без настроек.
+model SystemHealthSnapshot {
+  id         String   @id @default(uuid())
+  status     String
+  signature  String
+  components Json
+  backups    Json
+  checkedAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([checkedAt])
+  @@map("system_health_snapshots")
 }
 
 model LegalText {

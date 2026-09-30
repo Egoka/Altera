@@ -45,3 +45,4 @@ export {
   type StaffRecipientsClient
 } from "./alerts"
 export { DEPENDENCY_CHECK_INTERVAL_MS, throttleAsync } from "./throttle"
+export { createPrismaHealthHistory, type HealthHistoryClient } from "./history"

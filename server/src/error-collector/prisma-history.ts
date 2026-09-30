@@ -13,6 +13,7 @@ interface ErrorEventRow {
 
 /** Узкий срез Prisma-клиента: история только добавляется и группируется, `update` ей не нужен. */
 export interface ErrorHistoryClient {
+  $transaction<T>(run: (client: ErrorHistoryTransactionClient) => Promise<T>): Promise<T>
   backendErrorEvent: {
     create(args: { data: ErrorOccurrence }): Promise<unknown>
     groupBy(args: {
@@ -25,10 +26,90 @@ export interface ErrorHistoryClient {
   }
 }
 
+interface ErrorHistoryTransactionClient {
+  backendErrorEvent: {
+    create(args: { data: ErrorOccurrence }): Promise<unknown>
+  }
+  backendError: {
+    updateManyAndReturn(args: {
+      where: Record<string, unknown>
+      data: Record<string, unknown>
+      select: { id: true }
+    }): Promise<Array<{ id: string }>>
+    upsert(args: {
+      where: { signature: string }
+      create: Record<string, unknown>
+      update: Record<string, unknown>
+    }): Promise<unknown>
+  }
+  backendErrorStatusHistory: {
+    create(args: { data: Record<string, unknown> }): Promise<unknown>
+  }
+}
+
+async function appendOccurrence(client: ErrorHistoryTransactionClient, occurrence: ErrorOccurrence): Promise<void> {
+  await client.backendErrorEvent.create({ data: occurrence })
+  // Клиентские ошибки остаются отдельным неизменяемым потоком без рабочих статусов (§2 п. 1).
+  if (occurrence.stream === "page") return
+
+  const latest = {
+    service: occurrence.service,
+    code: occurrence.code,
+    errorClass: occurrence.errorType,
+    sanitizedMessage: occurrence.message ?? occurrence.code,
+    route: occurrence.route,
+    requestId: occurrence.requestId,
+    sanitizedStack: occurrence.stack,
+    jobId: occurrence.jobId,
+    lastSeenAt: occurrence.occurredAt
+  }
+
+  const [reopened] = await client.backendError.updateManyAndReturn({
+    where: { signature: occurrence.signature, workStatus: "resolved" },
+    data: {
+      ...latest,
+      occurrenceCount: { increment: 1 },
+      workStatus: "new_record",
+      assignedActorId: null,
+      assignedActorRole: null
+    },
+    select: { id: true }
+  })
+  if (reopened) {
+    await client.backendErrorStatusHistory.create({
+      data: {
+        backendErrorId: reopened.id,
+        fromStatus: "resolved",
+        toStatus: "new_record",
+        changedByActorId: "system:error-collector",
+        changedByActorRole: null,
+        comment: "Reopened by a new occurrence"
+      }
+    })
+    return
+  }
+
+  // Нативный upsert по уникальной сигнатуре не теряет событие при двух одновременных первых
+  // вхождениях: один запрос создаёт проекцию, второй атомарно увеличивает её счётчик.
+  await client.backendError.upsert({
+    where: { signature: occurrence.signature },
+    create: {
+      signature: occurrence.signature,
+      ...latest,
+      firstSeenAt: occurrence.occurredAt,
+      occurrenceCount: 1
+    },
+    update: {
+      ...latest,
+      occurrenceCount: { increment: 1 }
+    }
+  })
+}
+
 export function createPrismaErrorHistory(client: ErrorHistoryClient): ErrorHistory {
   return {
     async append(occurrence) {
-      await client.backendErrorEvent.create({ data: occurrence })
+      await client.$transaction((transaction) => appendOccurrence(transaction, occurrence))
     },
 
     async listGroups(filter) {
