@@ -3,7 +3,7 @@ import { PrismaClient, type Role } from "../../../server/src/generated/prisma/in
 import { expect, test } from "./helpers/test"
 import { createSessionId, signAccessToken } from "./helpers/session-token"
 
-const databaseUrl = process.env.T081_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
+const databaseUrl = process.env.T069_TEST_DATABASE_URL ?? "postgresql://test:test@127.0.0.1:5432/test"
 const prisma = new PrismaClient({ datasourceUrl: databaseUrl })
 const run = `${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`
 const roles = ["admin", "owner", "analyst", "author", "limitAdmin"] as const
