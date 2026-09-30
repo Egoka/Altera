@@ -44,6 +44,14 @@ const entryIds = {
   system: `t079-${run}-system`
 }
 const subjectUserId = `t079-${run}-target`
+/**
+ * Общий `requestId` фикстур прогона — фильтр списка на странице. Список отдаёт первые 20 записей по
+ * убыванию времени, а параллельные спеки пишут журнал позже фикстур (`stats.export` и
+ * `admin.read.personal` попадают прямо в зону аналитика) и вытесняли их на вторую страницу. Под
+ * фильтром в выдаче только записи прогона, а зона роли применяется поверх него: запись чужой зоны
+ * скрыта зоной, а не вытеснением, — `admin` и `owner` под тем же фильтром её видят.
+ */
+const fixtureRequestId = `t079-${run}-req`
 
 // После T-023 токен авторизует запрос только вместе с живой сессией (ADR-0009 п. 3).
 const sessionIds: Record<string, string> = {}
@@ -84,7 +92,7 @@ async function seedAuditEntries() {
         entityType: "article",
         entityId: `t079-${run}-article`,
         diff: { reason: "t079 editorial" },
-        requestId: `t079-${run}-req-editorial`,
+        requestId: fixtureRequestId,
         createdAt
       },
       {
@@ -95,7 +103,7 @@ async function seedAuditEntries() {
         entityType: "articleTranslation",
         entityId: `t079-${run}-translation`,
         diff: { reason: "t079 moderation" },
-        requestId: `t079-${run}-req-moderation`,
+        requestId: fixtureRequestId,
         createdAt
       },
       {
@@ -106,7 +114,7 @@ async function seedAuditEntries() {
         entityType: "planGrant",
         entityId: `t079-${run}-grant`,
         diff: { tier: "standard" },
-        requestId: `t079-${run}-req-finance`,
+        requestId: fixtureRequestId,
         createdAt
       },
       {
@@ -119,7 +127,7 @@ async function seedAuditEntries() {
         subject: subjectUserId,
         context: `/admin/users/${subjectUserId}`,
         purpose: "user.card.open",
-        requestId: `t079-${run}-req-personal`,
+        requestId: fixtureRequestId,
         createdAt
       },
       {
@@ -130,7 +138,7 @@ async function seedAuditEntries() {
         entityType: "systemSetting",
         entityId: `t079-${run}-setting`,
         diff: { key: "t079" },
-        requestId: `t079-${run}-req-closed`,
+        requestId: fixtureRequestId,
         createdAt
       },
       {
@@ -141,7 +149,7 @@ async function seedAuditEntries() {
         entityType: "articleTranslation",
         entityId: `t079-${run}-ai`,
         diff: { verdict: "publish" },
-        requestId: `t079-${run}-req-system`,
+        requestId: fixtureRequestId,
         createdAt
       }
     ]
@@ -202,7 +210,7 @@ test.describe("admin audit", () => {
     test(`${role} видит только записи своей зоны`, async ({ page }) => {
       await page.setExtraHTTPHeaders({ authorization: `Bearer ${signToken(role)}` })
 
-      const response = await page.goto("/admin/audit?period=30d")
+      const response = await page.goto(`/admin/audit?period=30d&requestId=${fixtureRequestId}`)
 
       expect(response?.status()).toBe(200)
       for (const id of visible) await expect(page.locator(`[data-audit-row="${id}"]`)).toBeVisible()
@@ -237,9 +245,7 @@ test.describe("admin audit", () => {
       return route.continue()
     })
 
-    // Фильтр по коду оставляет в списке только фикстуру этого прогона: страница отдаёт 20 записей,
-    // и соседние спеки, которые пишут свои записи аудита, иначе вытесняют её на вторую страницу.
-    await page.goto("/admin/audit?period=30d&action=settings.change")
+    await page.goto(`/admin/audit?period=30d&requestId=${fixtureRequestId}`)
     await requestStarted
 
     await expect(page.locator("[data-audit-loading]")).toBeVisible()
@@ -285,7 +291,7 @@ test.describe("admin audit", () => {
   test("фильтры сохраняются в адресе страницы", async ({ page }) => {
     await page.setExtraHTTPHeaders({ authorization: `Bearer ${signToken("admin")}` })
 
-    await page.goto(`/admin/audit?entity=user:${subjectUserId}&period=30d`)
+    await page.goto(`/admin/audit?entity=user:${subjectUserId}&period=30d&requestId=${fixtureRequestId}`)
 
     await expect(page.locator(`[data-audit-row="${entryIds.personal}"]`)).toBeVisible()
     await expect(page.locator(`[data-audit-row="${entryIds.closed}"]`)).toHaveCount(0)
@@ -295,7 +301,10 @@ test.describe("admin audit", () => {
     await page.locator("[data-audit-filter-entity-id]").fill("")
     await page.locator("[data-audit-apply]").click()
 
-    await expect(page).toHaveURL((url) => url.searchParams.get("action") === "settings.change")
+    await expect(page).toHaveURL(
+      (url) =>
+        url.searchParams.get("action") === "settings.change" && url.searchParams.get("requestId") === fixtureRequestId
+    )
     await expect(page.locator(`[data-audit-row="${entryIds.closed}"]`)).toBeVisible()
     await expect(page.locator(`[data-audit-row="${entryIds.personal}"]`)).toHaveCount(0)
   })
@@ -307,7 +316,7 @@ test.describe("admin audit", () => {
     const testActors = { actorId: { in: Object.values(userIds) } }
     const before = await prisma.auditLog.count({ where: testActors })
 
-    await page.goto("/admin/audit?period=30d&action=settings.change")
+    await page.goto(`/admin/audit?period=30d&requestId=${fixtureRequestId}`)
     await expect(page.locator(`[data-audit-row="${entryIds.closed}"]`)).toBeVisible()
     await page.locator(`[data-audit-open="${entryIds.closed}"]`).click()
     await expect(page.locator("[data-audit-detail]")).toBeVisible()
@@ -320,7 +329,7 @@ test.describe("admin audit", () => {
   test("аналитик не получает кнопку экспорта", async ({ page }) => {
     await page.setExtraHTTPHeaders({ authorization: `Bearer ${signToken("analyst")}` })
 
-    await page.goto("/admin/audit?period=30d")
+    await page.goto(`/admin/audit?period=30d&requestId=${fixtureRequestId}`)
 
     await expect(page.locator(`[data-audit-row="${entryIds.finance}"]`)).toBeVisible()
     await expect(page.locator("[data-audit-export]")).toHaveCount(0)
