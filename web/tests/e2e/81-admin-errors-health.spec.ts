@@ -15,7 +15,10 @@ const roleOf: Record<TestRole, Role> = {
   author: "author",
   limitAdmin: "admin"
 }
-const userIds = Object.fromEntries(roles.map((role) => [role, `t081-${role}`])) as Record<TestRole, string>
+const userIds = Object.fromEntries(roles.map((role) => [role, `t081-${role.toLowerCase()}`])) as Record<
+  TestRole,
+  string
+>
 const sessions = {} as Record<TestRole, string>
 const errorId = randomUUID()
 const errorCode = `T081_${run}`
