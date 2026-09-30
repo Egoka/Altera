@@ -35,7 +35,22 @@ async function upsertUser(role: (typeof serviceRoles)[number] | "author") {
   sessionIds[role] = await createSessionId(prisma, id)
 }
 
+// Сводка роста считает только публичные аккаунты: служебные, тестовые и адреса `@example.test`
+// вне расчёта (`dashboard.md`, `statistics.md` §1), поэтому подписка оформлена на отдельного читателя.
+async function upsertPublicReader() {
+  const handle = "t069-public"
+  await prisma.handleHistory.upsert({ where: { handle }, update: {}, create: { handle } })
+  const reader = await prisma.user.upsert({
+    where: { email: `${handle}@example.org` },
+    update: { archivedAt: null },
+    create: { id: handle, email: `${handle}@example.org`, handle, name: "T069 public reader", role: "reader" }
+  })
+  await prisma.handleHistory.update({ where: { handle }, data: { userId: reader.id } })
+  return reader
+}
+
 async function seedWorkingData() {
+  const reader = await upsertPublicReader()
   const article = await prisma.article.upsert({
     where: { slug: "t069-editorial-review" },
     update: { isEditorial: true, status: "review" },
@@ -119,13 +134,13 @@ async function seedWorkingData() {
     }),
     prisma.planGrant.upsert({
       where: { id: "t069-plan" },
-      update: { revokedAt: null },
+      update: { revokedAt: null, userId: reader.id },
       create: {
         id: "t069-plan",
         reason: "T069 fixture",
         startsAt: new Date("2026-01-01T00:00:00.000Z"),
         tier: "standard",
-        userId: userIds.author
+        userId: reader.id
       }
     })
   ])
