@@ -43,16 +43,35 @@ type AccountUser {
   photoUrl: String
   role: Role!
   handle: String!
+  handleConfirmed: Boolean!
+  handleChangedAt: String
   locale: Locale!
   avatarAssetId: ID
   prevAvatarId: ID
   nameCheckStatus: ProfileCheckStatus!
+  pendingName: String
+  nameCheckReason: String
   avatarCheckStatus: ProfileCheckStatus!
+  avatarCheckReason: String
   socialLinks: JSON
+  archivedAt: String
   createdAt: String!
   updatedAt: String!
   articles: [Article!]
   _count: UserCount
+}
+
+input UpdateProfileInput {
+  name: String!
+  handle: String!
+  bio: String
+  socialLinks: JSON
+  locale: Locale!
+}
+
+type HandleAvailability {
+  handle: String!
+  available: Boolean!
 }
 
 type UserCount {
@@ -71,6 +90,7 @@ extend type Query {
   user(handle: String!): User
   me: AccountUser
   myArticlesStats: UserArticleStats
+  checkHandle(handle: String!): HandleAvailability!
 
   # Публичная страница автора живёт в собственном модуле: `author(handle)` отдаёт профиль
   # по `20-public/author.md` §4, лента — `feed(scope: author)`. Черновые `author`,
@@ -81,4 +101,10 @@ extend type Query {
   # отдаёт маску адреса без записи аудита, `adminUser(id)` — полный адрес с записью
   # `admin.read.personal` (`40-admin/users.md` §3, §8). Черновые `users` и `adminUser` отдавали
   # весь `AccountUser` и писали чтение ПДн на каждую строку списка, поэтому сняты вместе с T-073.
+}
+
+extend type Mutation {
+  updateProfile(input: UpdateProfileInput!): AccountUser!
+  # Решение модератора по имени на проверке — `decideProfileCheck` очереди проверки
+  # (`review-queue/schema.graphql`, `40-admin/review-queue.md` §5).
 }

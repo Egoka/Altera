@@ -751,7 +751,10 @@ export async function decideProfileCheck(
       }
       if (input.verdict === "accept") data.name = proposedName
       data.pendingName = null
+      // Причину отказа автор видит в настройках профиля (T-031); принятое значение её снимает.
+      data.nameCheckReason = input.verdict === "accept" ? null : reason
     } else {
+      data.avatarCheckReason = input.verdict === "accept" ? null : reason
       if (input.verdict === "reject") {
         if (!profile.prevAvatarId) {
           throw createApiError("CONFLICT", {

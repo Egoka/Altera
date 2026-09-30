@@ -18,11 +18,16 @@ model User {
   photoUrl                    String?
   role                        Role                          @default(reader)
   handle                      String                        @unique
+  /// Пользователь явно сохранил допустимый хэндл; до этого публикация закрыта.
+  handleConfirmed             Boolean                       @default(false)
+  handleChangedAt             DateTime?
   locale                      Locale                        @default(ru)
   avatarAssetId               String?
   prevAvatarId                String?
   nameCheckStatus             ProfileCheckStatus            @default(ok)
+  nameCheckReason             String?
   avatarCheckStatus           ProfileCheckStatus            @default(ok)
+  avatarCheckReason           String?
   socialLinks                 Json?
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime                      @updatedAt

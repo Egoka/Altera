@@ -44,7 +44,7 @@ describe("T-065 контракт мутаций аватара", () => {
   it("`removeAvatar` ответа не требует, `revertAvatar` принимает аккаунт и причину", () => {
     expect(
       errorsOf(/* GraphQL */ `
-        mutation ManageAvatar($userId: ID!, $reason: String) {
+        mutation ManageAvatar($userId: ID!, $reason: String!) {
           removeAvatar {
             assetId
           }

@@ -100,7 +100,10 @@ function createPrismaDouble(users: MemoryUser[], assets: MemoryAsset[]) {
       }),
       updateMany: vi.fn(async ({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) => {
         const user = find(where.id as string)
-        const matches = user !== null && (!("prevAvatarId" in where) || user.prevAvatarId === where.prevAvatarId)
+        const matches =
+          user !== null &&
+          (!("prevAvatarId" in where) || user.prevAvatarId === where.prevAvatarId) &&
+          (!("avatarAssetId" in where) || user.avatarAssetId === where.avatarAssetId)
         if (!matches) return { count: 0 }
         Object.assign(user, data)
         return { count: 1 }
@@ -125,6 +128,9 @@ function createPrismaDouble(users: MemoryUser[], assets: MemoryAsset[]) {
         return data
       })
     },
+    aiProcess: {
+      create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => data)
+    },
     $transaction: vi.fn(async (run: (tx: unknown) => Promise<unknown>) => run(client))
   }
 
@@ -138,6 +144,7 @@ interface ContextOptions {
   uploadEnabled?: boolean
   uploaded?: MediaAssetRecord
   currentUser?: null
+  avatarVerdict?: "publish" | "reject"
 }
 
 const uploadedAsset = (id: string): MediaAssetRecord => ({
@@ -177,6 +184,20 @@ function createContext(options: ContextOptions = {}) {
     requestMeta: { ip: "203.0.113.10", userAgent: null },
     cache,
     rateLimiter: createTestRateLimiter(),
+    aiCheck: {
+      model: "fake-check",
+      promptVersion: "fake-1",
+      check: vi.fn(async () => ({
+        verdict: options.avatarVerdict ?? "publish",
+        reasons: [],
+        evidence: [],
+        manipulationAttempt: false,
+        adult: false,
+        model: "fake-check",
+        promptVersion: "fake-1",
+        costMinor: 0
+      }))
+    },
     media: {
       uploadEnabled: options.uploadEnabled ?? true,
       mediaBaseUrl: MEDIA_BASE,
@@ -207,6 +228,39 @@ describe("T-065 аватар аккаунта", () => {
       expect(view?.url).toBe(`${MEDIA_BASE}/${READY_VARIANTS.items[0]!.key}`)
       // Состояние проверки не мешает показу: автопроверка идёт следом (журнал §29.5).
       expect(actor.avatarCheckStatus).toBe("ok")
+    })
+
+    it("отправляет новую версию адаптеру T-048 и помечает подозрительную для ручной проверки", async () => {
+      const { ctx, actor } = createContext({ avatarVerdict: "reject" })
+
+      await uploadAccountAvatar(ctx, { file })
+
+      expect(ctx.aiCheck.check).toHaveBeenCalledWith(
+        expect.objectContaining({ translationId: "profile:author-1:avatar", images: [expect.any(Object)] })
+      )
+      expect(actor.avatarCheckStatus).toBe("pending")
+    })
+
+    it("не записывает результат проверки поверх более нового аватара", async () => {
+      const { ctx, actor } = createContext()
+      vi.mocked(ctx.aiCheck.check).mockImplementationOnce(async () => {
+        actor.avatarAssetId = "asset-newer"
+        return {
+          verdict: "publish",
+          reasons: [],
+          evidence: [],
+          manipulationAttempt: false,
+          adult: false,
+          model: "fake-check",
+          promptVersion: "fake-1",
+          costMinor: 0
+        }
+      })
+
+      await expect(uploadAccountAvatar(ctx, { file })).rejects.toMatchObject({
+        extensions: { code: "CONFLICT", entity: "avatar", actual: "changed" }
+      })
+      expect(actor.avatarAssetId).toBe("asset-newer")
     })
 
     it("сбрасывает кеш публичных страниц автора — иначе гость видел бы прежний аватар", async () => {
@@ -332,7 +386,7 @@ describe("T-065 аватар аккаунта", () => {
     it("сбрасывает кеш страниц автора, чей аватар вернули", async () => {
       const { ctx, cache } = withPrevious()
 
-      await revertAccountAvatar(ctx, { userId: "author-1" })
+      await revertAccountAvatar(ctx, { userId: "author-1", reason: "Нарушает правила профиля" })
 
       expect(cache.dropped).toEqual(["author:vera", "home"])
     })
@@ -343,7 +397,9 @@ describe("T-065 аватар аккаунта", () => {
         users: [memoryUser({ id: "author-1", avatarAssetId: "asset-new" })]
       })
 
-      await expect(revertAccountAvatar(ctx, { userId: "author-1" })).rejects.toMatchObject({
+      await expect(
+        revertAccountAvatar(ctx, { userId: "author-1", reason: "Нарушает правила профиля" })
+      ).rejects.toMatchObject({
         extensions: { code: "CONFLICT", entity: "avatar" }
       })
       expect(auditLogs).toHaveLength(0)
@@ -352,7 +408,9 @@ describe("T-065 аватар аккаунта", () => {
     it("неизвестный аккаунт — NOT_FOUND", async () => {
       const { ctx } = createContext({ actor: { id: "moderator-1", role: "moderator" } })
 
-      await expect(revertAccountAvatar(ctx, { userId: "нет-такого" })).rejects.toMatchObject({
+      await expect(
+        revertAccountAvatar(ctx, { userId: "нет-такого", reason: "Нарушает правила профиля" })
+      ).rejects.toMatchObject({
         extensions: { code: "NOT_FOUND", entity: "user" }
       })
     })
@@ -363,7 +421,9 @@ describe("T-065 аватар аккаунта", () => {
         users: [memoryUser({ id: "author-1", avatarAssetId: "asset-new", prevAvatarId: "asset-old" })]
       })
 
-      await expect(revertAccountAvatar(ctx, { userId: "author-1" })).rejects.toMatchObject({
+      await expect(
+        revertAccountAvatar(ctx, { userId: "author-1", reason: "Нарушает правила профиля" })
+      ).rejects.toMatchObject({
         extensions: { code: "FORBIDDEN", action: "profile.review.decide" }
       })
       expect(auditLogs).toHaveLength(0)
@@ -377,9 +437,18 @@ describe("T-065 аватар аккаунта", () => {
           assets: [{ id: "asset-old", processingStatus: "ready", deletedAt: null, variants: READY_VARIANTS }]
         })
 
-        await revertAccountAvatar(ctx, { userId: "author-1" })
+        await revertAccountAvatar(ctx, { userId: "author-1", reason: "Нарушает правила профиля" })
         expect(users.find((user) => user.id === "author-1")!.avatarAssetId).toBe("asset-old")
       }
+    })
+
+    it("требует понятную пользователю причину отката", async () => {
+      const { ctx, auditLogs } = withPrevious()
+
+      await expect(revertAccountAvatar(ctx, { userId: "author-1", reason: "  " })).rejects.toMatchObject({
+        extensions: { code: "VALIDATION_ERROR", field: "reason", rule: "required" }
+      })
+      expect(auditLogs).toHaveLength(0)
     })
   })
 

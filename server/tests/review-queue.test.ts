@@ -399,6 +399,7 @@ describe("profile review queue", () => {
       nameStatus: "ok",
       avatarStatus: "pending"
     })
+    expect(harness.profile).toMatchObject({ nameCheckReason: null })
     expect(harness.audits).toContainEqual(
       expect.objectContaining({ action: "profile.check", entityType: "user", entityId: "profile-1" })
     )
@@ -412,7 +413,12 @@ describe("profile review queue", () => {
       now
     )
     expect(rejected).toMatchObject({ name: "Старая подпись", previousName: "Старая подпись", nameStatus: "rejected" })
-    expect(nameHarness.profile).toMatchObject({ name: "Старая подпись", pendingName: null })
+    // Причина отказа остаётся автору в настройках профиля (T-031).
+    expect(nameHarness.profile).toMatchObject({
+      name: "Старая подпись",
+      pendingName: null,
+      nameCheckReason: "Не соответствует правилам"
+    })
 
     const avatarHarness = createHarness()
     avatarHarness.profile.prevAvatarId = null

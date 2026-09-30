@@ -4,6 +4,8 @@ import articleResolver from "../src/graphql/article/resolver"
 
 const activeAuthor = {
   id: "author-1",
+  name: "Автор",
+  handleConfirmed: true,
   role: "author",
   archivedAt: null,
   planTier: "standard",

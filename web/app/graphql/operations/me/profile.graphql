@@ -7,12 +7,22 @@ query GetMyProfile {
     photoUrl
     role
     handle
+    handleConfirmed
+    handleChangedAt
     locale
     avatarAssetId
     prevAvatarId
     nameCheckStatus
+    pendingName
+    nameCheckReason
     avatarCheckStatus
+    avatarCheckReason
     socialLinks
+    archivedAt
+    avatar {
+      assetId
+      url
+    }
     createdAt
   }
   myArticlesStats {
@@ -21,5 +31,48 @@ query GetMyProfile {
     draft
     review
     archived
+  }
+}
+
+query CheckHandle($handle: String!) {
+  checkHandle(handle: $handle) {
+    handle
+    available
+  }
+}
+
+mutation UpdateProfile($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    id
+    name
+    pendingName
+    nameCheckStatus
+    nameCheckReason
+    handle
+    handleConfirmed
+    handleChangedAt
+    bio
+    locale
+    socialLinks
+    avatarCheckStatus
+    avatarCheckReason
+    avatar {
+      assetId
+      url
+    }
+  }
+}
+
+mutation UploadAvatar($file: File!) {
+  uploadAvatar(file: $file) {
+    assetId
+    url
+  }
+}
+
+mutation RemoveAvatar {
+  removeAvatar {
+    assetId
+    url
   }
 }

@@ -35,6 +35,7 @@ const author = {
   id: "author-1",
   name: "Пётр Соколов",
   handle: "petr",
+  handleConfirmed: true,
   role: "author",
   archivedAt: null,
   planTier: "standard",
@@ -81,7 +82,7 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
   article: {
     id: "article-1",
     authorId: "author-1",
-    author: { name: "Пётр Соколов", handle: "petr" },
+    author: { name: "Пётр Соколов", handle: "petr", handleConfirmed: true },
     isEditorial: false,
     status: "draft",
     sourceLocale: "ru",
@@ -334,6 +335,18 @@ describe("T-040 сохранение версии", () => {
 })
 
 describe("T-040 подача к публикации", () => {
+  it("не пропускает первую подачу с выданным, но не подтверждённым хэндлом", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { author: { name: "Пётр Соколов", handle: "petr", handleConfirmed: false } })
+    )
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
+    expect(prisma.articleTranslation.update).not.toHaveBeenCalled()
+  })
+
   it("критерий 2: подача без обложки отвечает VALIDATION_ERROR", async () => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(translation({}, { coverAssetId: null }))
@@ -391,10 +404,10 @@ describe("T-040 подача к публикации", () => {
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "title", rule: "required" })
   })
 
-  it("первая подача без публичного имени или handle отклоняется", async () => {
+  it("первая подача без публичного имени отклоняется", async () => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(
-      translation({}, { author: { name: "Пётр Соколов", handle: "" } })
+      translation({}, { author: { name: "", handle: "petr", handleConfirmed: true } })
     )
 
     const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
@@ -413,6 +426,18 @@ describe("T-040 подача к публикации", () => {
 
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
     expect(prisma.job.create).not.toHaveBeenCalled()
+  })
+
+  it("редакционный материал не требует от сотрудника подтверждённого хэндла", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { isEditorial: true, author: { name: "Редакция", handle: "editor", handleConfirmed: false } })
+    )
+    const editor = { ...author, id: "editor-1", name: "Редактор", handle: "editor", role: "editor" }
+
+    const result = await submitTranslation(context(prisma, editor), "translation-1")
+
+    expect(result.status).toBe("ai_check")
   })
 
   it("первая подача атомарно переводит версию в ai_check и ставит задание", async () => {

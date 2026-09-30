@@ -10,6 +10,7 @@ import type { AppLogger } from "./observability/logger"
 import type { PiiHasher } from "./observability/privacy"
 import type { RateLimiter } from "./rate-limits"
 import type { SessionMeta } from "./auth/session"
+import type { AiCheckAdapter } from "./ai"
 import { getRequestId, setRequestUserSnapshot } from "./observability/request-tracing"
 
 if (!process.env.JWT_ACCESS_SECRET) {
@@ -39,6 +40,8 @@ export interface GraphQLContext {
   rateLimiter: RateLimiter
   // История `backend.error` и адаптер внешнего сборщика (`80-observability/error-collector.md`).
   errorCollector: ErrorCollector
+  // Автопроверка имени и аватара использует тот же утверждённый адаптер, что и подача статьи.
+  aiCheck: AiCheckAdapter
   accountExports?: AccountExportService
 }
 
@@ -63,6 +66,7 @@ export async function createContext(
   media: MediaService,
   rateLimiter: RateLimiter,
   errorCollector: ErrorCollector,
+  aiCheck: AiCheckAdapter,
   accountExports?: AccountExportService
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
@@ -129,6 +133,7 @@ export async function createContext(
     media,
     rateLimiter,
     errorCollector,
+    aiCheck,
     accountExports
   }
 }

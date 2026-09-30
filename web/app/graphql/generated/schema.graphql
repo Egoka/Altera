@@ -199,6 +199,7 @@ type AccountUser {
   Состояние своей архивированной записи; полному аккаунту — `FORBIDDEN` (матрица #116).
   """
   archiveState: AccountArchiveState!
+  archivedAt: String
   articles: [Article!]
 
   """
@@ -207,6 +208,7 @@ type AccountUser {
   """
   avatar: Avatar
   avatarAssetId: ID
+  avatarCheckReason: String
   avatarCheckStatus: ProfileCheckStatus!
   bio: String
 
@@ -221,6 +223,8 @@ type AccountUser {
   emailChange: EmailChangeState!
   exports: [AccountExport!]!
   handle: String!
+  handleChangedAt: String
+  handleConfirmed: Boolean!
 
   """
   Есть ли у аккаунта хотя бы одна статья: без неё авторские разделы скрыты (журнал §8.21).
@@ -235,6 +239,7 @@ type AccountUser {
   isArchived: Boolean!
   locale: Locale!
   name: String!
+  nameCheckReason: String
   nameCheckStatus: ProfileCheckStatus!
 
   """
@@ -242,6 +247,7 @@ type AccountUser {
   а в кабинете видит «задать пароль» вместо «сменить пароль».
   """
   passwordSet: Boolean!
+  pendingName: String
   photoUrl: String
   prevAvatarId: ID
 
@@ -2216,6 +2222,11 @@ type GrowthStatistics {
   registrations: Int!
 }
 
+type HandleAvailability {
+  available: Boolean!
+  handle: String!
+}
+
 type HealthBackupHistoryItem {
   ageHours: Int
   kind: String!
@@ -2588,7 +2599,7 @@ type Mutation {
   Откат аватара к предыдущей версии рецензентом (матрица #120, журнал §29.5): пишется
   `profile.check` (#85) с `verdict: reverted`. Прежней версии нет — `CONFLICT`.
   """
-  revertAvatar(reason: String, userId: ID!): Avatar
+  revertAvatar(reason: String!, userId: ID!): Avatar
   revokeAllSessions: SessionRevokeAllResult!
   revokeException(id: ID!, reason: String!): PermissionException!
   revokeOwner(id: ID!, reason: String!): AdminStaffMember!
@@ -2632,6 +2643,7 @@ type Mutation {
   unpublishReview(id: ID!, reason: String!): AdminReviewItem!
   updateArticle(id: ID!, input: UpdateArticleInput!): Article!
   updateFormat(id: ID!, input: UpdateFormatInput!): AdminFormat!
+  updateProfile(input: UpdateProfileInput!): AccountUser!
   updateSection(expectedUpdatedAt: String, id: ID!, input: UpdateSectionInput!): Section!
   updateTag(id: ID!, input: UpdateTagInput!): Tag!
 
@@ -2953,6 +2965,7 @@ type Query {
   author(handle: String!): AuthorProfile!
   authorCatalog(letter: String, locale: Locale!, page: Int! = 1, section: String, sort: AuthorCatalogSort! = recent): AuthorCatalog!
   authoringTaxonomy: AuthoringTaxonomy!
+  checkHandle(handle: String!): HandleAvailability!
   errorEntry(id: ID!): ErrorEntry!
   errorLog(filters: ErrorLogFilters, pagination: PaginationInput): ErrorLogPage!
   errorStats(period: ErrorPeriodInput!): ErrorStats!
@@ -3557,6 +3570,14 @@ input UpdateFormatInput {
   name: String
   nameEn: String
   slug: String
+}
+
+input UpdateProfileInput {
+  bio: String
+  handle: String!
+  locale: Locale!
+  name: String!
+  socialLinks: JSON
 }
 
 input UpdateSectionInput {

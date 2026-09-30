@@ -50,6 +50,8 @@ const createDraft = async (): Promise<Fixture> =>
       data: {
         email: uniqueEmail("t066"),
         handle,
+        // Первая подача требует явно сохранённого хэндла (T-031): автор его уже подтвердил.
+        handleConfirmed: true,
         name: "Пётр Соколов",
         role: "author",
         // Загрузка медиа версии статьи требует активного плана (матрица #39).

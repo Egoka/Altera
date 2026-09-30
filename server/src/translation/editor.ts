@@ -74,7 +74,7 @@ export const EDITOR_TRANSLATION_SELECT = {
       id: true,
       slug: true,
       authorId: true,
-      author: { select: { name: true, handle: true } },
+      author: { select: { name: true, handle: true, handleConfirmed: true } },
       isEditorial: true,
       status: true,
       sourceLocale: true,
@@ -471,10 +471,12 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
     if (current.article.section.status !== "active") validationError(ctx, "sectionId", "active")
     await ensureCoverBeforeSubmit({ requestId: ctx.requestId, prisma: tx }, current.article.coverAssetId)
     await ensureImageLicenses(ctx, tx, current)
-    if (
-      !current.article.firstPublishedAt &&
-      (current.article.author.name.trim() === "" || current.article.author.handle.trim() === "")
-    ) {
+    // Первая публикация требует публичной личности автора: имени и явно сохранённого хэндла (T-031).
+    // Редакционная статья выходит от имени журнала (T-052), поэтому у сотрудника проверяется только
+    // заполненность профиля, как до T-031.
+    const author = current.article.author
+    const handleMissing = current.article.isEditorial ? author.handle.trim() === "" : !author.handleConfirmed
+    if (!current.article.firstPublishedAt && (author.name.trim() === "" || handleMissing)) {
       validationError(ctx, "profile", "required")
     }
     await ensureSubmissionQueue(ctx, tx, current.article.authorId)

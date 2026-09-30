@@ -38,8 +38,8 @@ export default {
 
     removeAvatar: (_parent: unknown, _args: unknown, ctx: GraphQLContext) => removeAccountAvatar(ctx),
 
-    revertAvatar: (_parent: unknown, args: { userId: string; reason?: string | null }, ctx: GraphQLContext) =>
-      revertAccountAvatar(ctx, { userId: args.userId, reason: args.reason ?? null })
+    revertAvatar: (_parent: unknown, args: { userId: string; reason: string }, ctx: GraphQLContext) =>
+      revertAccountAvatar(ctx, args)
   },
 
   AccountUser: {

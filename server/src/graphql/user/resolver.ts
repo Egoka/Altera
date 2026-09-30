@@ -9,6 +9,7 @@ import { ensureAuthenticated } from "../../exceptions/permissions"
 
 import { publicUserSelect } from "../../visibility/article"
 import { publicDisplayName } from "../../visibility/display-name"
+import { checkHandle, updateProfile, type ProfileInput } from "../../account/profile"
 
 export default {
   Query: {
@@ -54,7 +55,14 @@ export default {
       }
 
       return stats
-    }
+    },
+
+    checkHandle: (_parent: unknown, args: { handle: string }, ctx: GraphQLContext) => checkHandle(ctx, args.handle)
+  },
+
+  Mutation: {
+    updateProfile: (_parent: unknown, args: { input: ProfileInput }, ctx: GraphQLContext) =>
+      updateProfile(ctx, args.input)
   },
 
   // Публичный тип: пока имя не задано, наружу уходит хэндл, а не пустая строка (T-126).

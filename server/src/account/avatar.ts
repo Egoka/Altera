@@ -3,6 +3,7 @@ import { createApiError } from "../errors/graphql-error"
 import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
 import { avatarAssetSelect, avatarViewOf, type AvatarView, type SquareCrop, type UploadSource } from "../media"
 import type { GraphQLContext } from "../prisma"
+import { persistAutomaticProfileCheck, runAutomaticProfileCheck } from "./profile-check"
 
 /**
  * Аватар аккаунта (`docs/spec/85-media-and-binary/avatars.md`, журнал §29.5).
@@ -93,9 +94,46 @@ export async function uploadAccountAvatar(ctx: GraphQLContext, input: UploadAvat
     data: {
       prevAvatarId: user.avatarAssetId,
       avatarAssetId: asset.id,
-      // Автоматическая проверка — отдельная задача; до неё новая версия не «на проверке».
-      avatarCheckStatus: "ok"
+      avatarCheckStatus: "pending",
+      avatarCheckReason: null
     }
+  })
+
+  // Профиль использует тот же адаптер T-048. Отказ автоматики не скрывает аватар: он переводит
+  // версию в ручную очередь, где рецензент может вернуть `prevAvatarId`.
+  const checkInput = {
+    userId: user.id,
+    field: "avatar" as const,
+    locale: user.locale,
+    value: asset.id,
+    versionId: asset.id,
+    images: [
+      {
+        assetId: asset.id,
+        role: "cover" as const,
+        alt: asset.alt,
+        caption: asset.caption,
+        attribution: asset.attribution,
+        license: asset.license,
+        licenseNote: asset.licenseNote
+      }
+    ]
+  }
+  const check = await runAutomaticProfileCheck(ctx, checkInput)
+  await ctx.prisma.$transaction(async (tx) => {
+    const updated = await tx.user.updateMany({
+      where: { id: user.id, avatarAssetId: asset.id },
+      data: { avatarCheckStatus: check.status }
+    })
+    if (updated.count !== 1) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "avatar",
+        expected: asset.id,
+        actual: "changed"
+      })
+    }
+    await persistAutomaticProfileCheck(tx, ctx, checkInput, check)
   })
   await invalidateAuthorViews(ctx, user.handle)
 
@@ -121,7 +159,7 @@ export async function removeAccountAvatar(ctx: GraphQLContext, now = new Date())
   await ctx.prisma.$transaction(async (tx) => {
     await tx.user.update({
       where: { id: owner.id },
-      data: { avatarAssetId: null, prevAvatarId: null, avatarCheckStatus: "ok" }
+      data: { avatarAssetId: null, prevAvatarId: null, avatarCheckStatus: "ok", avatarCheckReason: null }
     })
     if (owner.avatarAssetId) {
       await tx.mediaAsset.updateMany({
@@ -138,7 +176,7 @@ export async function removeAccountAvatar(ctx: GraphQLContext, now = new Date())
 export interface RevertAvatarInput {
   userId: string
   /** Причина словами для автора; внутренних признаков проверки в ней нет (`profile-edit.md` §4). */
-  reason?: string | null
+  reason: string
 }
 
 /**
@@ -161,13 +199,21 @@ export async function revertAccountAvatar(ctx: GraphQLContext, input: RevertAvat
     })
   }
 
-  const reason = input.reason?.trim() || null
+  const reason = input.reason.trim()
+  if (!reason) {
+    throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "reason", rule: "required" })
+  }
   const restoredId = target.prevAvatarId
   await ctx.prisma.$transaction(async (tx) => {
     const reverted = await tx.user.updateMany({
       // Условие держит одновременный откат двумя рецензентами: второй не переставит связи ещё раз.
       where: { id: target.id, prevAvatarId: restoredId },
-      data: { avatarAssetId: restoredId, prevAvatarId: null, avatarCheckStatus: "rejected" }
+      data: {
+        avatarAssetId: restoredId,
+        prevAvatarId: null,
+        avatarCheckStatus: "rejected",
+        avatarCheckReason: reason
+      }
     })
     if (reverted.count !== 1) {
       throw createApiError("CONFLICT", {
