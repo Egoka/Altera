@@ -60,20 +60,26 @@ describe("контракт стоимости AI-процессов", () => {
     expect(fields).not.toContain("objectId")
   })
 
-  it("схема API не отдаёт стоимость отдельной AI-записи", () => {
+  it("схема API отдаёт стоимость только в агрегате, а не в записи или карточке", () => {
     const schema = graphqlSchema()
-    const costFields: string[] = []
+    const process = schema.getType("AdminAiProcess")
+    const stats = schema.getType("AdminAiStats")
+    const query = schema.getQueryType()
+    const mutation = schema.getMutationType()
 
-    for (const type of Object.values(schema.getTypeMap())) {
-      if (!isObjectType(type) || type.name.startsWith("__")) continue
-      for (const field of Object.values(type.getFields())) {
-        if (/cost|price/i.test(field.name)) costFields.push(`${type.name}.${field.name}`)
-      }
-    }
+    expect(isObjectType(process)).toBe(true)
+    expect(isObjectType(stats)).toBe(true)
+    if (!isObjectType(process) || !isObjectType(stats)) return
 
-    // Стоимости в схеме пока нет вовсе: раздел `/admin/ai` и его агрегаты — T-078. Тест держит
-    // границу: новое поле стоимости не должно появиться у записи процесса.
-    expect(costFields.filter((field) => /^Ai/.test(field))).toEqual([])
-    expect(schema.getType("AiProcess")).toBeUndefined()
+    expect(Object.keys(process.getFields()).filter((field) => /cost|price|amount|minor/i.test(field))).toEqual([])
+    expect(Object.keys(stats.getFields())).toContain("totalCostMinor")
+    expect(Object.keys(stats.getFields())).toContain("processCount")
+    expect(query?.getFields()).toMatchObject({
+      adminAiRecords: expect.any(Object),
+      adminAiRecord: expect.any(Object),
+      aiStats: expect.any(Object)
+    })
+    expect(mutation?.getFields()).not.toHaveProperty("retryAiProcess")
+    expect(mutation?.getFields()).not.toHaveProperty("runAiProcess")
   })
 })

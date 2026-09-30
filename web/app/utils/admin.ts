@@ -150,6 +150,14 @@ export const canReadUsers = (role: Role): boolean => role === "analyst" || role 
 // (матрица #52, #80, #105, #113). `analyst` видит карточку без единой кнопки (§9).
 export const canManageUsers = (role: Role): boolean => role === "admin" || role === "owner"
 
+// AI-процессы (`40-admin/ai-processes.md` §1): модератор читает свою рабочую зону, остальные
+// служебные роли — общую историю. Ни одна из этих ролей не запускает и не повторяет процесс.
+export const canReadAiProcesses = (role: Role): boolean =>
+  role === "moderator" || role === "analyst" || role === "admin" || role === "owner"
+
+// Стоимость доступна только агрегатом и только финансовому контуру (§4).
+export const canReadAiStats = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
+
 // Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Порядок — порядок
 // журнала; названия для экрана лежат в словаре (`admin.users.reasonCategory.*`).
 export const ARCHIVE_REASON_CATEGORIES = [

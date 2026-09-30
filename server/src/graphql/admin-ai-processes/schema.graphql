@@ -1,0 +1,110 @@
+enum AdminAiProcessKind {
+  check
+  translate
+  profile
+  alt
+}
+
+enum AdminAiProcessStatus {
+  created
+  started
+  running
+  completed
+  failed
+}
+
+enum AdminAiProcessSort {
+  createdAt
+  duration
+}
+
+type AdminAiObject {
+  id: ID!
+  type: String!
+  title: String!
+  subtitle: String
+  href: String
+}
+
+type AdminAiReason {
+  category: String!
+  text: String
+}
+
+type AdminAiProcess {
+  id: ID!
+  kind: AdminAiProcessKind!
+  status: AdminAiProcessStatus!
+  verdict: String
+  object: AdminAiObject!
+  reasons: [AdminAiReason!]!
+  providerErrorClass: String
+  model: String
+  promptVersion: String
+  createdAt: String!
+  startedAt: String
+  finishedAt: String
+  durationMs: Int
+  jobHref: String
+}
+
+type AdminAiRecordsResponse {
+  items: [AdminAiProcess!]!
+  pagination: PaginationInfo!
+  viewerRole: Role!
+}
+
+type AdminAiKindCount {
+  kind: AdminAiProcessKind!
+  count: Int!
+}
+
+type AdminAiStatusCount {
+  status: AdminAiProcessStatus!
+  count: Int!
+}
+
+type AdminAiReasonCount {
+  category: String!
+  count: Int!
+  share: Float!
+}
+
+type AdminAiStats {
+  processCount: Int!
+  totalCostMinor: String!
+  medianDurationMs: Int
+  planSharePercent: Float
+  kinds: [AdminAiKindCount!]!
+  statuses: [AdminAiStatusCount!]!
+  rejectionReasons: [AdminAiReasonCount!]!
+  providerErrors: Int!
+  periodFrom: String!
+  periodTo: String!
+}
+
+input AdminAiPeriodInput {
+  from: String
+  to: String
+}
+
+input AdminAiRecordsFilterInput {
+  kind: AdminAiProcessKind
+  status: AdminAiProcessStatus
+  verdict: String
+  reason: String
+  period: AdminAiPeriodInput
+  query: String
+  ownZone: Boolean
+}
+
+extend type Query {
+  adminAiRecords(
+    filters: AdminAiRecordsFilterInput
+    sort: AdminAiProcessSort = createdAt
+    page: Int = 1
+    limit: Int = 20
+  ): AdminAiRecordsResponse!
+  adminAiRecord(id: ID!): AdminAiProcess
+  aiStats(period: AdminAiPeriodInput): AdminAiStats!
+}
