@@ -2146,6 +2146,13 @@ type Mutation {
   """Только `owner`; аудит `legal.update`, сброс кеша публичной страницы."""
   publishLegalVersion(input: PublishLegalVersionInput!): AdminLegalVersion!
   publishReviewManual(id: ID!, message: String): AdminReviewItem!
+
+  """
+  Перередактирование после автопубликации (журнал #9): в течение часа после автопубликации
+  автор один раз снимает версию с публикации и возвращается в черновик. `FORBIDDEN` — окно
+  закрыто или уже использовано.
+  """
+  reeditTranslation(id: ID!): EditorTranslation!
   refreshSession(refreshToken: String!): AuthPayload!
 
   """
