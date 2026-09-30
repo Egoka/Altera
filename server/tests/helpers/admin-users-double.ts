@@ -30,6 +30,18 @@ export interface MemoryUser {
   archivePublicMessage: string | null
   planTier: "free" | "standard" | "pro"
   planUntil: Date | null
+  accountAppeal: MemoryAppeal | null
+}
+
+export interface MemoryAppeal {
+  id: string
+  message: string
+  status: "submitted" | "restored" | "confirmed"
+  submittedAt: Date
+  decidedAt: Date | null
+  decidedByActorId: string | null
+  decidedByRole: MemoryRole | null
+  decisionReason: string | null
 }
 
 export interface MemoryArticle {
@@ -92,6 +104,7 @@ export const memoryUser = (overrides: Partial<MemoryUser> & { id: string }): Mem
   archivePublicMessage: null,
   planTier: "free",
   planUntil: null,
+  accountAppeal: null,
   ...overrides
 })
 

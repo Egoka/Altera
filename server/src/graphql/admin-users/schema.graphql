@@ -98,6 +98,16 @@ type AdminUserBaseAuthorship {
   enabledAt: String
 }
 
+type AdminUserAppeal {
+  id: ID!
+  message: String!
+  status: AccountAppealStatus!
+  submittedAt: String!
+  decidedAt: String
+  decidedByRole: Role
+  decisionReason: String
+}
+
 """
 Карточка пользователя (§3, §5). Её открытие — чтение персональных данных: сервер пишет
 `admin.read.personal` (#67) с актором, субъектом, контекстом и целью от системы.
@@ -140,6 +150,9 @@ type AdminUserCard {
   (журнал §26.6). Ни IP, ни местоположения в сессии нет (журнал §25.9).
   """
   sessions: [AccountSession!]
+  "Оспаривание скрыто от analyst вместе с действиями решения."
+  appeal: AdminUserAppeal
+  canDecideAppeal: Boolean!
   canArchive: Boolean!
   canRestore: Boolean!
   canRevokeSessions: Boolean!

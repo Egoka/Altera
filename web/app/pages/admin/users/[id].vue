@@ -12,8 +12,18 @@
   const { t } = useI18n()
   const route = useRoute()
   const { summary } = useAdminDashboard()
-  const { loadCard, loadAudit, archive, restore, revokeSessions, changeEmail, requestId, errorCode, actionPending } =
-    useAdminUser()
+  const {
+    loadCard,
+    loadAudit,
+    archive,
+    restore,
+    revokeSessions,
+    changeEmail,
+    decideAppeal,
+    requestId,
+    errorCode,
+    actionPending
+  } = useAdminUser()
 
   const isOwner = computed(() => summary.value?.role === "owner")
 
@@ -40,7 +50,7 @@
     { default: () => [], lazy: true, server: false, watch: [id] }
   )
 
-  type Dialog = "archive" | "emergency" | "restore" | "sessions" | "email"
+  type Dialog = "archive" | "emergency" | "restore" | "sessions" | "email" | "appeal_restore" | "appeal_confirm"
   const dialog = ref<Dialog | null>(null)
   const reasonCategory = ref<ArchiveReasonCategory>("rules_violation")
   const publicMessage = ref("")
@@ -48,6 +58,7 @@
   const restoreReason = ref("")
   const newEmail = ref("")
   const emailReason = ref("")
+  const appealReason = ref("")
   const notice = ref<string | null>(null)
 
   const open = (next: Dialog) => {
@@ -130,6 +141,18 @@
       newEmail.value = ""
       emailReason.value = ""
       await afterChange(t("admin.users.emailDone", { email: result.adminChangeEmail.emailMasked }))
+    }
+  }
+
+  const submitAppealDecision = async () => {
+    if (!card.value?.appeal || (dialog.value !== "appeal_restore" && dialog.value !== "appeal_confirm")) return
+    const decision = dialog.value === "appeal_restore" ? "restore" : "confirm_block"
+    const result = await decideAppeal({ id: card.value.appeal.id, decision, reason: appealReason.value })
+    if (result) {
+      appealReason.value = ""
+      await afterChange(
+        t(decision === "restore" ? "admin.users.appealRestoredDone" : "admin.users.appealConfirmedDone")
+      )
     }
   }
 </script>
@@ -344,6 +367,33 @@
         </ul>
       </template>
 
+      <article v-if="card.appeal" data-users-appeal class="mt-8 border border-zinc-300 p-5 dark:border-zinc-700">
+        <h2 class="font-sans text-base font-semibold">{{ t("admin.users.appealTitle") }}</h2>
+        <p class="mt-2 text-sm text-zinc-500">
+          {{ t(`admin.users.appealStatus.${card.appeal.status}`) }} · {{ formatDate(card.appeal.submittedAt) }}
+        </p>
+        <p class="mt-4 whitespace-pre-wrap text-sm">{{ card.appeal.message }}</p>
+        <p v-if="card.appeal.decisionReason" class="mt-3 text-sm">
+          {{ t("admin.users.appealDecisionReason") }}: {{ card.appeal.decisionReason }}
+        </p>
+        <div v-if="card.canDecideAppeal" class="mt-5 flex flex-wrap gap-3">
+          <button
+            type="button"
+            data-users-open-appeal-restore
+            class="min-h-11 border border-zinc-950 px-4 text-sm font-semibold dark:border-zinc-100"
+            @click="open('appeal_restore')">
+            {{ t("admin.users.appealRestore") }}
+          </button>
+          <button
+            type="button"
+            data-users-open-appeal-confirm
+            class="min-h-11 border border-red-700 px-4 text-sm font-semibold text-red-700 dark:border-red-400 dark:text-red-300"
+            @click="open('appeal_confirm')">
+            {{ t("admin.users.appealConfirm") }}
+          </button>
+        </div>
+      </article>
+
       <div
         v-if="card.canArchive || card.canRestore || card.canRevokeSessions || (isOwner && card.status === 'archived')"
         class="mt-9 flex flex-wrap gap-3">
@@ -364,7 +414,7 @@
           {{ t("admin.users.emergencyAction") }}
         </button>
         <button
-          v-if="card.canRestore"
+          v-if="card.canRestore && !card.canDecideAppeal"
           type="button"
           data-users-open-restore
           class="min-h-11 border border-zinc-950 px-4 font-sans text-sm font-semibold text-zinc-950 dark:border-zinc-100 dark:text-zinc-100"
@@ -589,6 +639,43 @@
         :open="permanentDeleteOpen"
         @update:open="permanentDeleteOpen = false"
         @deleted="onPermanentlyDeleted" />
+
+      <div
+        v-if="dialog === 'appeal_restore' || dialog === 'appeal_confirm'"
+        :data-users-dialog="dialog"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t(dialog === 'appeal_restore' ? 'admin.users.appealRestore' : 'admin.users.appealConfirm')"
+        class="mt-7 bg-white px-4 py-5 font-sans text-sm dark:bg-zinc-900">
+        <h2 class="text-base font-semibold">
+          {{ t(dialog === "appeal_restore" ? "admin.users.appealRestore" : "admin.users.appealConfirm") }}
+        </h2>
+        <p v-if="dialog === 'appeal_confirm'" class="mt-3 text-red-700 dark:text-red-300">
+          {{ t("admin.users.appealConfirmWarning") }}
+        </p>
+        <label class="mt-4 block text-xs text-zinc-500" for="appeal-reason">
+          {{ t("admin.users.appealDecisionReason") }}
+        </label>
+        <textarea
+          id="appeal-reason"
+          v-model="appealReason"
+          data-users-appeal-reason
+          rows="3"
+          class="mt-1 w-full border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-950"></textarea>
+        <div class="mt-5 flex gap-3">
+          <button
+            type="button"
+            data-users-confirm-appeal
+            :disabled="actionPending"
+            class="min-h-11 border border-zinc-950 px-4 font-semibold disabled:opacity-40 dark:border-zinc-100"
+            @click="submitAppealDecision">
+            {{ t("admin.users.confirm") }}
+          </button>
+          <button type="button" data-users-cancel class="min-h-11 border border-zinc-300 px-4" @click="close">
+            {{ t("admin.users.cancel") }}
+          </button>
+        </div>
+      </div>
     </article>
   </section>
 </template>

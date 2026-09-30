@@ -6,6 +6,8 @@ import {
   GetAdminUsersDocument,
   RestoreAccountDocument,
   RevokeUserSessionsDocument,
+  DecideAppealDocument,
+  type AccountAppealDecision,
   type AccountArchiveMode,
   type AdminUserFiltersInput,
   type AdminUserPlanFilter,
@@ -174,7 +176,28 @@ export const useAdminUser = () => {
         >
     )
 
-  return { requestId, errorCode, actionPending, loadCard, loadAudit, archive, restore, revokeSessions, changeEmail }
+  const decideAppeal = (input: { id: string; decision: AccountAppealDecision; reason: string }) =>
+    run(
+      () =>
+        useGraphQL(DecideAppealDocument, input) as Promise<
+          GraphQLEnvelope<{
+            decideAppeal: { id: string | null; status: string; submittedAt: string | null; decidedAt: string | null }
+          }>
+        >
+    )
+
+  return {
+    requestId,
+    errorCode,
+    actionPending,
+    loadCard,
+    loadAudit,
+    archive,
+    restore,
+    revokeSessions,
+    changeEmail,
+    decideAppeal
+  }
 }
 
 /** Список раздела: фильтры, сортировка и страница читаются из адреса (§4). */
