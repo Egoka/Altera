@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest"
+import { beforeAll, describe, expect, it, onTestFinished, vi } from "vitest"
 import {
   ARGON2_PROFILE,
   assertPasswordAcceptable,
@@ -7,10 +7,18 @@ import {
   needsRehash,
   parsePasswordHash,
   passwordLength,
+  verifyAgainstDummyPassword,
   verifyPassword
 } from "../src/auth/password"
 import { isBlockedPassword } from "../src/auth/password-blocklist"
 import { createTestRateLimiter } from "./helpers/rate-limit"
+
+// Проверка фиктивного хэша обёрнута в `vi.fn` поверх настоящей функции: по умолчанию каждый тест
+// платит за неё полный Argon2id, а подменяет её только тест корзины IP (причина — у него).
+vi.mock("../src/auth/password", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../src/auth/password")>()
+  return { ...actual, verifyAgainstDummyPassword: vi.fn(actual.verifyAgainstDummyPassword) }
+})
 
 /**
  * Ветка пароля T-115: регистрация с паролем, подтверждение адреса, вход, сброс письмом и смена
@@ -688,6 +696,15 @@ describe("лимит попыток входа по паролю", () => {
   })
 
   it("корзина адреса запроса отсекает перебор по разным аккаунтам на тридцать первой попытке", async () => {
+    // Тридцать неизвестных адресов — тридцать проверок фиктивного хэша с профилем продукта
+    // (m=19 MiB, t=2): ~30 мс каждая в покое и в разы дольше, когда хук pre-commit гоняет наборы
+    // content, web и server параллельно, — тест упирался в таймаут 5 с. Он проверяет счёт корзины,
+    // а не стоимость хэша, поэтому подменяется только длительность проверки: исход тот же
+    // (`false` → неуспех → штраф обеих корзин). Настоящая проверка остаётся в «вход по паролю».
+    const dummyCheck = vi.mocked(verifyAgainstDummyPassword).mockClear().mockResolvedValue(false)
+    onTestFinished(() => {
+      dummyCheck.mockReset()
+    })
     const world = createWorld()
 
     for (let attempt = 1; attempt <= 30; attempt += 1) {
@@ -697,6 +714,9 @@ describe("лимит попыток входа по паролю", () => {
 
     const limited = await failLogin(world, "nobody-31@example.test")
     expect((limited as { extensions: { code: string } }).extensions.code).toBe("RATE_LIMITED")
+    // Каждая из тридцати попыток прошла равную по стоимости проверку, а тридцать первая отклонена
+    // до чтения базы и хэширования: перебор сверх лимита не тратит процессор сервера.
+    expect(dummyCheck).toHaveBeenCalledTimes(30)
   })
 
   it("пишет rate_limit.hit с корзиной, но без адреса и пароля", async () => {
