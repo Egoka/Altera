@@ -113,8 +113,8 @@ test.describe("AI processes", () => {
     await authorize(page, "analyst")
     await page.goto("/admin/ai?period=7d")
 
-    for (const status of statuses) {
-      await expect(page.locator(`[data-ai-status="${status}"]`)).toBeVisible()
+    for (const [index, status] of statuses.entries()) {
+      await expect(page.locator(`[data-ai-row="${processIds[index]}"][data-ai-status="${status}"]`)).toBeVisible()
     }
     await expect(page.locator("[data-ai-readonly-note]")).toBeVisible()
     await expect(page.locator("[data-ai-action]")).toHaveCount(0)
