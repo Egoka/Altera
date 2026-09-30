@@ -30,6 +30,7 @@ import {
 import { ensureCoverBeforeSubmit } from "../article/cover"
 import { enqueueAiCheck } from "../ai/queue"
 import { AI_CHECK_OBJECT_TYPE } from "../ai/store"
+import { buildArticleCacheTags } from "../cache/key"
 import type { GraphQLContext } from "../prisma"
 
 /** Статусы, в которых автор правит версию (`article-edit.md` §4). */
@@ -66,10 +67,12 @@ export const EDITOR_TRANSLATION_SELECT = {
   rejected: true,
   publishedAt: true,
   reeditUntil: true,
+  reeditedAt: true,
   updatedAt: true,
   article: {
     select: {
       id: true,
+      slug: true,
       authorId: true,
       author: { select: { name: true, handle: true } },
       isEditorial: true,
@@ -676,6 +679,106 @@ export async function withdrawTranslation(ctx: GraphQLContext, id: string): Prom
 
   const now = new Date()
   return toView(ctx, { ...translation, status: "draft", updatedAt: now }, user, now)
+}
+
+/** Может ли версия быть снята на перередактирование прямо сейчас (`article-edit.md` §4, access-matrix #100). */
+function canReedit(
+  translation: Pick<EditorTranslation, "status" | "rejected" | "reeditUntil" | "reeditedAt">,
+  now: Date
+): boolean {
+  return (
+    translation.status === "published" &&
+    !translation.rejected &&
+    translation.reeditedAt === null &&
+    translation.reeditUntil !== null &&
+    now.getTime() <= translation.reeditUntil.getTime()
+  )
+}
+
+/**
+ * Перередактирование после автопубликации (`article-edit.md` §4, `write-and-publish.md` §4,
+ * журнал #9): в течение часа после автопубликации автор один раз снимает версию с публикации и
+ * возвращается в черновик; повторная подача снова идёт через AI. `reeditedAt` хранится навсегда,
+ * поэтому право не возвращается, даже если версия опубликуется заново.
+ */
+export async function reeditTranslation(
+  ctx: GraphQLContext,
+  id: string,
+  now = new Date()
+): Promise<EditorTranslationView> {
+  const user = ensureEditorActor(ctx, "translation.reedit")
+  const translation = await loadTranslation(ctx, id)
+  ensureOwnTranslationMutation(ctx, translation, user, "translation.reedit")
+
+  if (!canReedit(translation, now)) {
+    throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "translation.reedit" })
+  }
+
+  const withinWindowSec = translation.publishedAt
+    ? Math.round((now.getTime() - translation.publishedAt.getTime()) / 1000)
+    : null
+
+  const current = await ctx.prisma.$transaction(async (tx) => {
+    await lockTranslation(tx, translation.id)
+    const current = await loadTranslationFrom(ctx, tx, translation.id)
+    ensureOwnTranslationMutation(ctx, current, user, "translation.reedit")
+    if (!canReedit(current, now)) {
+      throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "translation.reedit" })
+    }
+
+    await disableLegacySync(tx)
+    const changed = await tx.articleTranslation.updateMany({
+      where: { id: current.id, status: "published", reeditedAt: null },
+      data: { status: "draft", publishedAt: null, reeditUntil: null, reeditedAt: now }
+    })
+    if (changed.count !== 1) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "translation",
+        expected: "published",
+        actual: "changed"
+      })
+    }
+    await mirrorLegacyArticle(tx, current, {
+      title: current.title,
+      dek: current.dek,
+      excerpt: current.excerpt,
+      body: asDocument(current.body),
+      status: "draft"
+    })
+    if (current.locale === current.article.sourceLocale) {
+      await tx.article.update({ where: { id: current.articleId }, data: { publishedAt: null } })
+    }
+    await tx.auditLog.create({
+      data: {
+        action: "translation.reedit",
+        actorId: user.id,
+        actorRole: user.role,
+        entityType: "article_translation",
+        entityId: current.id,
+        diff: { translationId: current.id, withinWindowSec },
+        requestId: ctx.requestId
+      }
+    })
+    return current
+  })
+
+  await ctx.cache.delByTags(buildArticleCacheTags(current.article))
+
+  ctx.logger.log({
+    level: "info",
+    event: "translation.reedit",
+    requestId: ctx.requestId,
+    message: "Translation reedited within the auto-publish window",
+    data: { translationId: current.id, status: "draft", withinWindowSec }
+  })
+
+  return toView(
+    ctx,
+    { ...current, status: "draft", publishedAt: null, reeditUntil: null, reeditedAt: now, updatedAt: now },
+    user,
+    now
+  )
 }
 
 export interface RevisionEntry {

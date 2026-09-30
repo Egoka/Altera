@@ -5,6 +5,7 @@ import {
   authoringTaxonomy,
   getEditorTranslation,
   listRevisions,
+  reeditTranslation,
   restoreRevision,
   saveTranslation,
   setSlug,
@@ -75,6 +76,7 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
   rejected: false,
   publishedAt: null,
   reeditUntil: null,
+  reeditedAt: null,
   updatedAt: new Date("2026-09-28T10:00:00.000Z"),
   article: {
     id: "article-1",
@@ -100,6 +102,7 @@ interface PrismaDouble {
   articleSlugHistory: Record<string, ReturnType<typeof vi.fn>>
   articleRevision: Record<string, ReturnType<typeof vi.fn>>
   article: Record<string, ReturnType<typeof vi.fn>>
+  auditLog: Record<string, ReturnType<typeof vi.fn>>
   mediaAsset: Record<string, ReturnType<typeof vi.fn>>
   job: Record<string, ReturnType<typeof vi.fn>>
   aiProcess: Record<string, ReturnType<typeof vi.fn>>
@@ -133,6 +136,7 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
       findUnique: vi.fn().mockResolvedValue(null),
       update: vi.fn().mockResolvedValue({})
     },
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
     mediaAsset: {
       findUnique: vi.fn().mockResolvedValue(readyCover),
       findMany: vi.fn().mockResolvedValue([readyCover])
@@ -542,6 +546,88 @@ describe("T-040 подача к публикации", () => {
     const extensions = await extensionsOf(withdrawTranslation(context(prisma), "translation-1"))
 
     expect(extensions).toMatchObject({ code: "CONFLICT", entity: "translation", actual: status })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+})
+
+describe("T-044 перередактирование после автопубликации", () => {
+  const publishedAt = new Date("2026-09-29T10:00:00.000Z")
+  const reeditUntil = new Date("2026-09-29T11:00:00.000Z")
+  const published = (overrides: Record<string, unknown> = {}) =>
+    translation({ status: "published", publishedAt, reeditUntil, reeditedAt: null, ...overrides })
+
+  it("в открытом окне снимает версию в draft, ставит reeditedAt и пишет аудит с withinWindowSec", async () => {
+    const prisma = prismaDouble()
+    const now = new Date("2026-09-29T10:30:00.000Z")
+    prisma.articleTranslation.findUnique.mockResolvedValue(published())
+    const ctx = context(prisma)
+
+    const result = await reeditTranslation(ctx, "translation-1", now)
+
+    expect(result.status).toBe("draft")
+    expect(result.reeditUntil).toBeNull()
+    expect(prisma.articleTranslation.updateMany).toHaveBeenCalledWith({
+      where: { id: "translation-1", status: "published", reeditedAt: null },
+      data: { status: "draft", publishedAt: null, reeditUntil: null, reeditedAt: now }
+    })
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: "translation.reedit",
+          diff: { translationId: "translation-1", withinWindowSec: 1800 }
+        })
+      })
+    )
+    expect((ctx as unknown as { cache: { delByTags: ReturnType<typeof vi.fn> } }).cache.delByTags).toHaveBeenCalled()
+  })
+
+  it("критерий 1: второе перередактирование той же версии отвечает FORBIDDEN", async () => {
+    const prisma = prismaDouble()
+    // Первое перередактирование уже отмечено `reeditedAt`: право не возвращается.
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      published({ reeditedAt: new Date("2026-09-29T10:05:00.000Z") })
+    )
+
+    const extensions = await extensionsOf(
+      reeditTranslation(context(prisma), "translation-1", new Date("2026-09-29T10:10:00.000Z"))
+    )
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("критерий 2: по истечении часового окна действие недоступно — FORBIDDEN", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(published())
+
+    const extensions = await extensionsOf(
+      reeditTranslation(context(prisma), "translation-1", new Date("2026-09-29T11:00:01.000Z"))
+    )
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+
+  it.each(["draft", "ai_check", "review", "rework", "archived"])(
+    "версия в статусе %s отвечает FORBIDDEN, а не снимается с публикации",
+    async (status) => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published({ status }))
+
+      const extensions = await extensionsOf(reeditTranslation(context(prisma), "translation-1"))
+
+      expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+      expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+    }
+  )
+
+  it("чужая версия отвечает FORBIDDEN до любого перехода", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(published({}, { authorId: "author-2" }))
+
+    const extensions = await extensionsOf(reeditTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
     expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
   })
 })
