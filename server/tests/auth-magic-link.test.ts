@@ -37,6 +37,13 @@ interface FakeToken {
   usedAt: Date | null
 }
 
+interface FakeAppealToken {
+  id: string
+  userId: string
+  tokenHash: string
+  expiresAt: Date
+}
+
 interface WorldOptions {
   users?: FakeUser[]
   tokens?: FakeToken[]
@@ -52,6 +59,7 @@ interface WorldOptions {
 function createWorld(options: WorldOptions = {}) {
   const users = [...(options.users ?? [])]
   const tokens = [...(options.tokens ?? [])]
+  const appealTokens: FakeAppealToken[] = []
   const sessions: { userId: string; tokenHash: string; limited: boolean }[] = []
   const consents: { userId: string; legalTextId: string }[] = []
   const logs: { event: string; level: string; data?: Record<string, unknown> }[] = []
@@ -153,6 +161,28 @@ function createWorld(options: WorldOptions = {}) {
         return { count: 1 }
       })
     },
+    accountAppealToken: {
+      upsert: vi.fn(
+        async ({
+          where,
+          create,
+          update
+        }: {
+          where: { userId: string }
+          create: FakeAppealToken
+          update: Partial<FakeAppealToken>
+        }) => {
+          const existing = appealTokens.find((record) => record.userId === where.userId)
+          if (existing) {
+            Object.assign(existing, update)
+            return existing
+          }
+          const record = { id: `appeal-token-${appealTokens.length + 1}`, ...create }
+          appealTokens.push(record)
+          return record
+        }
+      )
+    },
     session: {
       create: vi.fn(async ({ data }: { data: { userId: string; tokenHash: string; limited: boolean } }) => {
         sessions.push({ userId: data.userId, tokenHash: data.tokenHash, limited: data.limited })
@@ -182,7 +212,7 @@ function createWorld(options: WorldOptions = {}) {
     }
   }
 
-  return { ctx, users, tokens, sessions, consents, logs, sentMail }
+  return { ctx, users, tokens, appealTokens, sessions, consents, logs, sentMail }
 }
 
 const consent = (termsVersion: number | null, privacyVersion: number | null) => ({ termsVersion, privacyVersion })
@@ -470,7 +500,10 @@ describe("verifyMagicLink", () => {
 
     const result = await resolver.Mutation.verifyMagicLink({}, { token }, world.ctx as never)
 
-    expect(result).toMatchObject({ outcome: "archived_admin", session: null, appealToken: token })
+    expect(result).toMatchObject({ outcome: "archived_admin", session: null, appealToken: expect.any(String) })
+    expect(result.appealToken).not.toBe(token)
+    expect(world.appealTokens).toHaveLength(1)
+    expect(world.appealTokens[0]!.expiresAt.getTime() - Date.now()).toBeGreaterThan(23 * 60 * 60 * 1000)
     expect(world.sessions).toHaveLength(0)
     expect(world.logs.at(-1)).toMatchObject({ event: "auth.login.failed", data: { reason: "archived_admin" } })
   })
@@ -677,11 +710,15 @@ describe("acceptConsent and an archived account", () => {
     )
     const verified = await resolver.Mutation.verifyMagicLink({}, { token: verifyToken }, verifying.ctx as never)
 
-    expect(accepted).toEqual({ ...verified, appealToken: acceptToken })
-    expect(accepted).toMatchObject({ outcome: "archived_admin", session: null })
+    expect(accepted).toMatchObject({ outcome: "archived_admin", session: null, appealToken: expect.any(String) })
+    expect(verified).toMatchObject({ outcome: "archived_admin", session: null, appealToken: expect.any(String) })
+    expect(accepted.appealToken).not.toBe(acceptToken)
+    expect(verified.appealToken).not.toBe(verifyToken)
+    expect(accepting.appealTokens).toHaveLength(1)
     expect(accepting.sessions, "сессии заблокированному аккаунту нет").toHaveLength(0)
     expect(accepting.consents, "согласие заблокированного аккаунта не записывается").toHaveLength(0)
-    // Форма оспаривания открывается тем же токеном (журнал #48), поэтому он не гасится.
+    // Форма получает отдельный токен на 24 часа, а ссылка входа не гасится и может быть
+    // запрошена заново, если пользователь потерял страницу результата.
     expect(accepting.tokens[0]!.usedAt).toBeNull()
     expect(accepting.logs.at(-1)).toMatchObject({ event: "auth.login.failed", data: { reason: "archived_admin" } })
   })

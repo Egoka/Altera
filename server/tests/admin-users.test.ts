@@ -196,6 +196,41 @@ describe("карточка пользователя", () => {
     expect(adminCard).toMatchObject({ canRestore: true, canArchive: false })
   })
 
+  it("показывает открытое оспаривание только admin/owner и даёт им решить его", async () => {
+    const appealed = memoryUser({
+      id: "reader-appeal",
+      handle: "appealed",
+      archivedAt: new Date("2026-09-20T00:00:00.000Z"),
+      archiveMode: "admin",
+      archiveReasonCategory: "rules_violation",
+      accountAppeal: {
+        id: "appeal-1",
+        message: "Прошу ещё раз проверить обстоятельства блокировки.",
+        status: "submitted",
+        submittedAt: new Date("2026-09-21T00:00:00.000Z"),
+        decidedAt: null,
+        decidedByActorId: null,
+        decidedByRole: null,
+        decisionReason: null
+      }
+    })
+    const prisma = new MemoryPrisma({ users: [appealed] })
+
+    const analystCard = await getAdminUser(adminUsersContext(prisma, staff("analyst")), appealed.id, now)
+    const adminCard = await getAdminUser(adminUsersContext(prisma, staff("admin")), appealed.id, now)
+
+    expect(analystCard).toMatchObject({ appeal: null, canDecideAppeal: false })
+    expect(adminCard).toMatchObject({
+      appeal: {
+        id: "appeal-1",
+        message: "Прошу ещё раз проверить обстоятельства блокировки.",
+        status: "submitted",
+        submittedAt: new Date("2026-09-21T00:00:00.000Z")
+      },
+      canDecideAppeal: true
+    })
+  })
+
   it("показывает базовое авторство с датой первого «Создать статью» и статьи по статусам", async () => {
     const prisma = new MemoryPrisma({
       users: [author],

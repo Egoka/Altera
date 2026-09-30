@@ -1,0 +1,73 @@
+fragment AdminAiProcessRow on AdminAiProcess {
+  id
+  kind
+  status
+  verdict
+  object {
+    id
+    type
+    title
+    subtitle
+    href
+  }
+  reasons {
+    category
+    text
+  }
+  providerErrorClass
+  model
+  promptVersion
+  createdAt
+  startedAt
+  finishedAt
+  durationMs
+  jobHref
+}
+
+query GetAdminAiRecords($filters: AdminAiRecordsFilterInput, $sort: AdminAiProcessSort, $page: Int, $limit: Int) {
+  adminAiRecords(filters: $filters, sort: $sort, page: $page, limit: $limit) {
+    items {
+      ...AdminAiProcessRow
+    }
+    pagination {
+      currentPage
+      totalPages
+      totalItems
+      itemsPerPage
+      hasNextPage
+      hasPreviousPage
+    }
+    viewerRole
+  }
+}
+
+query GetAdminAiRecord($id: ID!) {
+  adminAiRecord(id: $id) {
+    ...AdminAiProcessRow
+  }
+}
+
+query GetAdminAiStats($period: AdminAiPeriodInput) {
+  aiStats(period: $period) {
+    processCount
+    totalCostMinor
+    medianDurationMs
+    planSharePercent
+    kinds {
+      kind
+      count
+    }
+    statuses {
+      status
+      count
+    }
+    rejectionReasons {
+      category
+      count
+      share
+    }
+    providerErrors
+    periodFrom
+    periodTo
+  }
+}

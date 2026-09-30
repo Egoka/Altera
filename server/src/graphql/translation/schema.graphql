@@ -137,11 +137,17 @@ extend type Mutation {
   ): SaveTranslationResult!
   """
   Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
-  перед первой публикацией — публичное имя и адрес профиля (§25.4). Переход в `ai_check` и
-  решения проверки — T-049.
+  перед первой публикацией — публичное имя и адрес профиля (§25.4). Первая подача переходит в
+  `ai_check`; повтор после отказа AI — в `review` без нового AI.
   """
   submitTranslation(id: ID!): EditorTranslation!
   withdrawTranslation(id: ID!): EditorTranslation!
+  """
+  Перередактирование после автопубликации (журнал #9): в течение часа после автопубликации
+  автор один раз снимает версию с публикации и возвращается в черновик. `FORBIDDEN` — окно
+  закрыто или уже использовано.
+  """
+  reeditTranslation(id: ID!): EditorTranslation!
   restoreRevision(translationId: ID!, revisionId: ID!): SaveTranslationResult!
   setTaxonomy(articleId: ID!, sectionId: ID, formatId: ID, tagIds: [ID!]!): EditorArticle!
   setSlug(translationId: ID!, slug: String!): TranslationSeo!

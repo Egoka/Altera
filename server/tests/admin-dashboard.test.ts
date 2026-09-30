@@ -61,6 +61,30 @@ describe("admin dashboard", () => {
     expect(summary.cards).toEqual([])
   })
 
+  it("keeps test accounts out of growth registrations and grants", async () => {
+    const ctx = context("analyst")
+
+    await getAdminSummary(ctx, 30)
+
+    expect(ctx.prisma.user.count).toHaveBeenCalledWith({
+      where: {
+        isServiceAccount: false,
+        isTestAccount: false,
+        email: { not: { endsWith: "@example.test" } },
+        createdAt: { gte: expect.any(Date) }
+      }
+    })
+    expect(ctx.prisma.planGrant.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        user: {
+          isServiceAccount: false,
+          isTestAccount: false,
+          email: { not: { endsWith: "@example.test" } }
+        }
+      })
+    })
+  })
+
   it("keeps successful cards when one card fails and exposes only its requestId", async () => {
     const ctx = context("admin")
     vi.mocked(ctx.prisma.backendError.count).mockRejectedValueOnce(new Error("database secret"))

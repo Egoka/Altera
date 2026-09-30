@@ -1,13 +1,12 @@
 import { authorCacheTag } from "../cache"
 import { createApiError } from "../errors/graphql-error"
-import { ensureAuthenticated, ensurePermission } from "../exceptions/permissions"
+import { ensureAuthenticated } from "../exceptions/permissions"
 import { Prisma, type Locale } from "../generated/prisma"
 import type { GraphQLContext } from "../prisma"
 import { persistAutomaticProfileCheck, runAutomaticProfileCheck } from "./profile-check"
 
 const HANDLE_PATTERN = /^[a-z0-9-]{3,32}$/
 const UPDATE_ACTION = "profile.update"
-const REVIEW_ACTION = "profile.review.decide"
 
 export interface ProfileInput {
   name: string
@@ -140,66 +139,4 @@ export async function updateProfile(ctx: GraphQLContext, input: ProfileInput) {
     }
     throw error
   }
-}
-
-export interface ProfileReviewInput {
-  userId: string
-  field: "name"
-  verdict: "approve" | "reject"
-  reason?: string | null
-}
-
-export async function decideProfileCheck(ctx: GraphQLContext, input: ProfileReviewInput) {
-  const actor = ensureAuthenticated(ctx.currentUser, ctx.requestId)
-  ensurePermission(actor, "moderate", REVIEW_ACTION, ctx.requestId)
-  const target = await ctx.prisma.user.findUnique({ where: { id: input.userId } })
-  if (!target) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "user" })
-  if (target.nameCheckStatus !== "pending" || !target.pendingName) {
-    throw createApiError("CONFLICT", {
-      requestId: ctx.requestId,
-      entity: "profileCheck",
-      expected: "pending",
-      actual: target.nameCheckStatus
-    })
-  }
-  const reason = input.reason?.trim() || null
-  if (input.verdict === "reject" && !reason) {
-    throw createApiError("VALIDATION_ERROR", { requestId: ctx.requestId, field: "reason", rule: "required" })
-  }
-  await ctx.prisma.$transaction(async (tx) => {
-    const result = await tx.user.updateMany({
-      where: { id: target.id, pendingName: target.pendingName, nameCheckStatus: "pending" },
-      data:
-        input.verdict === "approve"
-          ? { name: target.pendingName!, pendingName: null, nameCheckStatus: "ok", nameCheckReason: null }
-          : { pendingName: null, nameCheckStatus: "rejected", nameCheckReason: reason }
-    })
-    if (result.count !== 1) {
-      throw createApiError("CONFLICT", {
-        requestId: ctx.requestId,
-        entity: "profileCheck",
-        expected: "pendingVersion",
-        actual: "changed"
-      })
-    }
-    await tx.auditLog.create({
-      data: {
-        action: "profile.check",
-        actorId: actor.id,
-        actorRole: actor.role,
-        entityType: "user",
-        entityId: target.id,
-        diff: {
-          userId: target.id,
-          field: "name",
-          verdict: input.verdict === "approve" ? "ok" : "rejected",
-          byRole: actor.role,
-          reason
-        },
-        requestId: ctx.requestId
-      }
-    })
-  })
-  await ctx.cache.delByTags([authorCacheTag(target.handle), "home"])
-  return ctx.prisma.user.findUnique({ where: { id: target.id } })
 }

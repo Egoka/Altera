@@ -31,12 +31,14 @@ const sections: Record<string, AdminNavigationItem> = {
 
 const roleSectionIds: Partial<Record<Role, readonly string[]>> = {
   editor: ["dashboard", "articles", "mail", "audit"],
-  moderator: ["dashboard", "review", "ai", "audit", "mail"],
+  moderator: ["dashboard", "articles", "review", "ai", "audit", "mail"],
   analyst: ["dashboard", "users", "subscriptions", "payments", "grants", "statistics", "ai", "audit", "mail"],
   admin: [
     "dashboard",
     "categories",
     "tags",
+    "articles",
+    "review",
     "users",
     "admins",
     "subscriptions",
@@ -81,12 +83,28 @@ export const getAdminNavigation = (role: Role): AdminNavigationItem[] =>
 
 export const canManageTaxonomy = (role: Role): boolean => role === "admin" || role === "owner"
 
+export const canReadReviews = (role: Role): boolean => role === "moderator" || role === "admin" || role === "owner"
+
+export const canDecideReviews = (role: Role): boolean => role === "moderator" || role === "owner"
+
+export const canReadArticles = (role: Role): boolean =>
+  role === "editor" || role === "moderator" || role === "admin" || role === "owner"
+
+export const canArchiveArticles = (role: Role): boolean => role === "moderator" || role === "admin" || role === "owner"
+
+export const canRestoreArticles = (role: Role): boolean => role === "owner"
+
+export const canRejectArticles = (role: Role): boolean => role === "moderator" || role === "owner"
+
 // Настройки системы: `admin` читает без секретов (журнал §28.11), `owner` — владелец раздела.
 export const canReadSystemSettings = (role: Role): boolean => role === "admin" || role === "owner"
 
 // Обращения (`00-registries/admin-sections.md` #23, журнал §37 п. 13): очередь ведут `admin` и
 // `owner` (матрица #117); прочим служебным ролям раздел недоступен `[ДОПУЩЕНИЕ]`.
 export const canReadSupportRequests = (role: Role): boolean => role === "admin" || role === "owner"
+
+// Ошибки и состояние содержат технические детали инцидентов и доступны только `admin`/`owner`.
+export const canReadErrors = (role: Role): boolean => role === "admin" || role === "owner"
 
 // Юридические тексты (`40-admin/legal-texts.md` §1): `admin` читает версии и статистику согласий,
 // черновик и публикацию делает только `owner` (матрица #96).
@@ -131,9 +149,20 @@ export const getAdminAccessDecision = (envelope: AdminSummaryEnvelope, target: s
 // и `owner`; `editor` и `moderator` раздел не открывают (журнал §5.3).
 export const canReadUsers = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
 
+// Продуктовые агрегаты и их CSV доступны только аналитической группе (`statistics.md` §1).
+export const canReadStatistics = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
+
 // Мутации раздела — `role(admin)`: блокировка, восстановление, отзыв сессий и смена адреса
 // (матрица #52, #80, #105, #113). `analyst` видит карточку без единой кнопки (§9).
 export const canManageUsers = (role: Role): boolean => role === "admin" || role === "owner"
+
+// AI-процессы (`40-admin/ai-processes.md` §1): модератор читает свою рабочую зону, остальные
+// служебные роли — общую историю. Ни одна из этих ролей не запускает и не повторяет процесс.
+export const canReadAiProcesses = (role: Role): boolean =>
+  role === "moderator" || role === "analyst" || role === "admin" || role === "owner"
+
+// Стоимость доступна только агрегатом и только финансовому контуру (§4).
+export const canReadAiStats = (role: Role): boolean => role === "analyst" || role === "admin" || role === "owner"
 
 // Четыре базовые категории причины блокировки, утверждённые журналом §38 п. 1. Порядок — порядок
 // журнала; названия для экрана лежат в словаре (`admin.users.reasonCategory.*`).

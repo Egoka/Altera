@@ -1,0 +1,72 @@
+# История проверки авторской языковой версии (`review-history.md`).
+query GetTranslationReview($id: ID!) {
+  translationReview(id: $id) {
+    translationId
+    title
+    locale
+    status
+    rejected
+    readOnly
+    planLimited
+    reviewState
+    aiDecision {
+      decision
+      checkedAt
+      reasons {
+        category
+        anchor
+        text
+      }
+    }
+    items {
+      id
+      kind
+      text
+      recommendations
+      byRole
+      createdAt
+      readAt
+      canReply
+      thread {
+        id
+        author
+        byRole
+        text
+        createdAt
+      }
+    }
+    notes {
+      id
+      blockId
+      text
+      resolved
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+mutation MarkReviewRead($translationId: ID!) {
+  markReviewRead(translationId: $translationId)
+}
+
+mutation ReplyToDecision($decisionId: ID!, $text: String!) {
+  replyToDecision(decisionId: $decisionId, text: $text) {
+    id
+    author
+    byRole
+    text
+    createdAt
+  }
+}
+
+mutation ResolveReviewNote($noteId: ID!) {
+  resolveReviewNote(noteId: $noteId) {
+    id
+    blockId
+    text
+    resolved
+    createdAt
+    updatedAt
+  }
+}

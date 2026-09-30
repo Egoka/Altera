@@ -1,0 +1,27 @@
+fragment AccountExportFields on AccountExport {
+  id
+  requestedAt
+  status
+  sizeBytes
+  expiresAt
+  scope
+}
+
+query GetMyAccountExports {
+  me {
+    id
+    exports {
+      ...AccountExportFields
+    }
+  }
+}
+
+mutation RequestAccountExport($scope: [AccountExportScope!]) {
+  requestExport(scope: $scope) {
+    ...AccountExportFields
+  }
+}
+
+mutation DownloadAccountExport($id: ID!) {
+  exportDownload(id: $id)
+}

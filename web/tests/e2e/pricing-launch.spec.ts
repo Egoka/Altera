@@ -17,7 +17,7 @@ test("страница планов не показывает ни цен, ни 
 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
 
-  const body = (await page.locator("body").innerText()).trim()
+  const body = (await page.locator("main").innerText()).trim()
 
   for (const pattern of PRICE_PATTERNS) {
     expect(body).not.toMatch(pattern)

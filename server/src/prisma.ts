@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken"
 import { YogaInitialContext } from "graphql-yoga"
 import type { Cache } from "./cache"
 import type { ErrorCollector } from "./error-collector"
+import type { AccountExportService } from "./account-export"
 import type { MailService } from "./mail/service"
 import type { MediaService } from "./media"
 import type { AppLogger } from "./observability/logger"
@@ -41,6 +42,7 @@ export interface GraphQLContext {
   errorCollector: ErrorCollector
   // Автопроверка имени и аватара использует тот же утверждённый адаптер, что и подача статьи.
   aiCheck: AiCheckAdapter
+  accountExports?: AccountExportService
 }
 
 // Браузер ходит только через BFF, поэтому адрес приходит заголовком прокси; поле
@@ -64,7 +66,8 @@ export async function createContext(
   media: MediaService,
   rateLimiter: RateLimiter,
   errorCollector: ErrorCollector,
-  aiCheck: AiCheckAdapter
+  aiCheck: AiCheckAdapter,
+  accountExports?: AccountExportService
 ): Promise<GraphQLContext> {
   const requestId = getRequestId()
   const requestMeta = readRequestMeta(initialContext.request)
@@ -130,6 +133,7 @@ export async function createContext(
     media,
     rateLimiter,
     errorCollector,
-    aiCheck
+    aiCheck,
+    accountExports
   }
 }

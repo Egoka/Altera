@@ -152,6 +152,66 @@
         "action": "Back to sign in"
       }
     },
+    "appeal": {
+      "eyebrow": "Account access is restricted",
+      "title": "Appeal an account restriction",
+      "loading": {
+        "title": "Loading restriction details"
+      },
+      "restrictedAt": "Access was restricted on {date}",
+      "reasonCategory": {
+        "rules_violation": "Publication rules violation",
+        "spam_and_manipulation": "Spam and manipulation",
+        "law_or_rights_violation": "Violation of law or third-party rights",
+        "security_threat": "Security threat"
+      },
+      "hiddenData": "Your account and articles are hidden, but the data is preserved.",
+      "rules": "Publication rules",
+      "plan": {
+        "title": "Paid plan",
+        "body": "Your {tier} plan is paid through {date}. Its term keeps running and restricted time is not refunded. If access is restored, the remaining period becomes available again."
+      },
+      "form": {
+        "label": "Why the decision should be reviewed",
+        "hint": "Describe the circumstances and facts that should be checked",
+        "once": "You can submit this appeal only once.",
+        "validation": "Write between 20 and 2000 characters.",
+        "submit": "Submit appeal",
+        "submitting": "Submitting…"
+      },
+      "submitted": {
+        "title": "Appeal submitted",
+        "body": "Submitted on {date}. A staff member will review it; it cannot be submitted again."
+      },
+      "restored": {
+        "title": "Account restored",
+        "body": "Account access is open again. Articles remain archived and can be restored one by one after signing in.",
+        "login": "Sign in"
+      },
+      "confirmed": {
+        "title": "Restriction confirmed",
+        "body": "The decision was made on {date}. Another appeal is not available.",
+        "contact": "Request a data export through support"
+      },
+      "notFound": {
+        "title": "The link is not valid",
+        "body": "The link is unknown, expired, or already used. Request a new sign-in link."
+      },
+      "forbidden": {
+        "title": "An appeal is not available",
+        "body": "This account was archived by its owner. Contact support to restore it."
+      },
+      "rateLimited": {
+        "title": "Too many attempts",
+        "body": "Try opening the form again in about {minutes} min."
+      },
+      "error": {
+        "title": "The appeal form is unavailable",
+        "body": "Try again later or give support code {requestId}."
+      },
+      "newLink": "Request a new sign-in link",
+      "contact": "Contact the editorial team"
+    },
     "confirm": {
       "loading": {
         "title": "Confirming the address…",
@@ -175,6 +235,45 @@
     }
   },
   "account": {
+    "export": {
+      "pageTitle": "Data export",
+      "eyebrow": "Your data",
+      "intro": "We will prepare a ZIP with your profile, articles and every revision, original media, and editorial correspondence. Technical image variants and internal notes are excluded.",
+      "privacy": "Privacy policy",
+      "license": "Licence",
+      "includesTitle": "What the archive includes",
+      "scope": {
+        "profile": "Profile, consents, bookmarks, and sessions without IP addresses",
+        "articles": "Articles in every language and revision history",
+        "media": "Master-original media and metadata",
+        "review": "Decision reasons and correspondence with participant roles"
+      },
+      "request": "Request an export",
+      "requesting": "Requesting…",
+      "requested": "The export is queued.",
+      "conflict": "An export is already being prepared.",
+      "rateLimited": "You can request another export in {minutes} min.",
+      "history": "Request history",
+      "empty": "No exports yet.",
+      "update": "Update status",
+      "status": {
+        "queued": "Queued",
+        "running": "Preparing the archive",
+        "stuck": "Taking longer than usual",
+        "ready": "Ready to download",
+        "failed": "Could not prepare the archive",
+        "expired": "Storage period expired"
+      },
+      "expiresAt": "Link valid until {date}",
+      "download": "Download ZIP",
+      "downloadExpired": "The link has expired or the export is unavailable. Request a new archive.",
+      "requestAgain": "Request again",
+      "retry": "Retry",
+      "error": {
+        "dataUnavailable": "The export history could not be loaded. Please try later.",
+        "action": "The action could not be completed. Try again (code: {requestId})"
+      }
+    },
     "archived": {
       "title": "Account archived",
       "body": "Your account is deactivated. Your articles are hidden from readers and do not appear in the feed. You can restore your account at any time.",
@@ -727,6 +826,7 @@
       "archivedStaff": "Archived by the editorial team",
       "reeditUntil": "Re-edit until {date}",
       "openReadOnly": "Open read-only",
+      "reviewHistory": "Review history",
       "edit": "Edit",
       "open": "Open",
       "noCover": "No cover"
@@ -897,6 +997,103 @@
       }
     }
   },
+  "review": {
+    "pageTitle": "Review: {title}",
+    "untitled": "Untitled",
+    "eyebrow": "Review history",
+    "back": "Back to my articles",
+    "retry": "Try again",
+    "pricing": "See plans",
+    "openEditor": "Edit the article",
+    "openReadOnly": "Open to read and copy",
+    "allArticles": "All articles",
+    "recommendations": "Reviewer recommendations",
+    "locale": {
+      "ru": "Russian version",
+      "en": "English version"
+    },
+    "state": {
+      "loading": "Loading history",
+      "empty": "No checks yet",
+      "pending": "Automated check in progress",
+      "queued": "Waiting for a reviewer",
+      "in_review": "With a reviewer",
+      "rework": "Returned for rework",
+      "published": "Published",
+      "final_reject": "Rejected by the editorial team",
+      "history": "Decision history",
+      "error": "History unavailable"
+    },
+    "empty": {
+      "title": "No checks yet",
+      "description": "The automated decision and editorial messages appear here after the first submission."
+    },
+    "error": {
+      "title": "History could not be loaded",
+      "description": "Check your connection and try again. Any reply you entered stays in the form."
+    },
+    "readOnly": {
+      "finalReject": "The editorial decision is final. The article remains available to read and copy.",
+      "plan": "Your plan is inactive: history remains available, but resubmission is disabled."
+    },
+    "ai": {
+      "eyebrow": "Automated check",
+      "publish": "Check passed",
+      "reject": "The article did not pass the check",
+      "noRepeat": "After your changes, a reviewer will read the article; the automated check will not run again."
+    },
+    "reason": {
+      "rights": "Copyright",
+      "illegal": "Prohibited material",
+      "spam_ads": "Spam and advertising",
+      "third_party_pd": "Third-party personal data",
+      "age": "Age restrictions",
+      "topic_rules": "Topic rules"
+    },
+    "notes": {
+      "title": "Block notes",
+      "block": "Block {id}",
+      "resolve": "Mark resolved",
+      "resolved": "Resolved"
+    },
+    "history": {
+      "title": "Decision history"
+    },
+    "kind": {
+      "rework_request": "Rework requested",
+      "unpublish": "Unpublished",
+      "manual_publish": "Published by the editorial team",
+      "final_reject": "Final rejection",
+      "message": "Editorial message",
+      "ai_decision": "Automated decision",
+      "submitted": "Submitted for review",
+      "withdrawn": "Submission withdrawn",
+      "published_auto": "Published automatically"
+    },
+    "role": {
+      "reader": "Reader",
+      "author": "Author",
+      "editor": "Editor",
+      "moderator": "Reviewer",
+      "analyst": "Analyst",
+      "admin": "Administrator",
+      "owner": "Owner",
+      "system": "System"
+    },
+    "thread": {
+      "empty": "No replies yet.",
+      "reply": "Reply to the reviewer",
+      "send": "Send reply"
+    },
+    "next": {
+      "title": "What happens next",
+      "description": "Edit the article and submit it again. An automated decision cannot be appealed; after a final rejection the text remains available to read and copy."
+    },
+    "errors": {
+      "reply": "The reply was not sent. Your text is still here — try again.",
+      "rateLimited": "Too many actions. Wait and send the reply again."
+    }
+  },
   "footer": {
     "about": "About",
     "pricing": "Plans and pricing",
@@ -961,6 +1158,176 @@
       "close": "Close"
     },
     "contentTypes": "Content Types",
+    "articles": {
+      "title": "Articles by version",
+      "description": "Every language version with exact reads, revisions, decision history and the staff archive. Article text is read-only here.",
+      "tab": {
+        "all": "All",
+        "draft": "Drafts",
+        "review": "In review",
+        "published": "Published",
+        "rejected": "Rejected",
+        "archived": "Archive"
+      },
+      "state": {
+        "draft": "Draft",
+        "ai_check": "AI check",
+        "review": "Queued",
+        "in_review": "In review",
+        "rework": "Rework",
+        "published": "Published",
+        "rejected": "Editorially rejected",
+        "archived": "Archived"
+      },
+      "search": "Title or slug (3+ characters)",
+      "locale": "Language",
+      "anyLocale": "All languages",
+      "author": "Author handle or “editorial”",
+      "section": "Section",
+      "anySection": "All sections",
+      "format": "Format",
+      "anyFormat": "All formats",
+      "tag": "Tag",
+      "anyTag": "All tags",
+      "archiveRole": "Archived by",
+      "anyArchiveRole": "Any role",
+      "archiveRoleValue": {
+        "reader": "Reader",
+        "author": "Author",
+        "editor": "Editor",
+        "moderator": "Reviewer",
+        "admin": "Administrator",
+        "owner": "Owner"
+      },
+      "publishedFrom": "Published from",
+      "publishedTo": "Published through",
+      "sort": "Sort",
+      "sortValue": {
+        "updated": "Recently updated",
+        "published": "Recently published",
+        "title": "Title",
+        "reads": "Reads"
+      },
+      "material": "Version and author",
+      "status": "State",
+      "reads": "Exact reads",
+      "readsShort": "reads",
+      "updated": "Updated",
+      "empty": "No versions match these filters.",
+      "error": "The articles list is unavailable.",
+      "cardError": "The article version is unavailable.",
+      "previous": "Previous",
+      "next": "Next",
+      "back": "Back to versions",
+      "preview": "Preview",
+      "openReview": "Open review queue",
+      "archive": "Archive",
+      "restore": "Restore",
+      "finalReject": "Reject finally",
+      "archivedBy": "Archived by",
+      "content": "Current revision",
+      "decisions": "Decision history",
+      "cover": "Cover",
+      "revisions": "Revisions",
+      "languages": "Other languages",
+      "conflict": "Another staff member already changed this article. Refresh the card.",
+      "reason": "Reason",
+      "reasonRequired": "Enter an archive reason.",
+      "actionError": "The action failed.",
+      "confirm": "Confirm",
+      "action": {
+        "archive": "Archive article",
+        "restore": "Restore article",
+        "reject": "Reject version finally"
+      },
+      "warning": {
+        "archive": "The public page will return 410 and article media will no longer be available through it.",
+        "restore": "A previously published article returns to publication immediately without another review.",
+        "reject": "The author will no longer be able to edit this version. A comment is optional."
+      }
+    },
+    "review": {
+      "title": "Review queue",
+      "description": "Manual review of articles, AI decisions and public visibility. Administrators can inspect the queue without deciding.",
+      "tabsLabel": "Queue sections",
+      "tab": { "materials": "Articles", "profiles": "Names and avatars" },
+      "search": "Title or handle",
+      "filterState": "State",
+      "allStates": "All states",
+      "sort": "Order",
+      "sortAge": "Oldest first",
+      "sortUpdated": "Recently updated",
+      "state": {
+        "queued": "Queued",
+        "in_review": "In review",
+        "rework": "In rework",
+        "published": "Published",
+        "review": "Queued"
+      },
+      "material": "Article and author",
+      "stateLabel": "State",
+      "reads": "Exact reads",
+      "readsShort": "reads",
+      "updated": "Updated",
+      "empty": "No articles match this view.",
+      "emptyProfiles": "No name or avatar checks are pending.",
+      "error": "The review queue could not be loaded.",
+      "cardError": "The review card could not be loaded.",
+      "back": "Back to queue",
+      "readOnly": "Read-only mode: decisions are available to moderators and owners.",
+      "conflict": "Another reviewer changed this article. Refresh the card before the next action.",
+      "refresh": "Refresh card",
+      "claim": "Claim review",
+      "release": "Release",
+      "rework": "Request rework",
+      "publish": "Publish manually",
+      "finalReject": "Reject finally",
+      "unpublish": "Unpublish",
+      "content": "Current revision",
+      "aiDecision": "AI decision",
+      "aiOverrideWarning": "Manual publication overrides the AI decision. Confirm this exception intentionally.",
+      "history": "Decisions and discussion",
+      "noHistory": "No decisions yet.",
+      "reply": "Reply in discussion",
+      "send": "Send",
+      "blockNote": "Block note",
+      "revision": "Choose revision",
+      "blockId": "Block ID",
+      "noteText": "Note text",
+      "addNote": "Add note",
+      "requiredText": "This decision requires text.",
+      "actionError": "The decision was not saved. Your text remains in the form.",
+      "confirm": "Confirm decision",
+      "accept": "Accept",
+      "reject": "Reject",
+      "profileField": { "name": "Name", "avatar": "Avatar" },
+      "previousValue": "Previous value",
+      "newValue": "New value",
+      "profileSince": "Waiting since",
+      "action": {
+        "rework": "Request rework",
+        "publish": "Publish manually",
+        "reject": "Reject finally",
+        "unpublish": "Unpublish"
+      },
+      "actionText": {
+        "rework": "Required recommendations for the author",
+        "publish": "Comment for manual publication",
+        "reject": "Reason for final rejection",
+        "unpublish": "Required unpublish reason"
+      },
+      "decision": {
+        "rework_request": "Rework requested",
+        "unpublish": "Unpublished",
+        "manual_publish": "Published manually",
+        "final_reject": "Final rejection",
+        "message": "Message",
+        "ai_decision": "AI decision",
+        "submitted": "Submitted for review",
+        "withdrawn": "Withdrawn",
+        "published_auto": "Published automatically"
+      }
+    },
     "users": {
       "allModes": "Any mode",
       "allPlans": "Any plan",
@@ -1057,6 +1424,18 @@
       "profileChecks": "Name and avatar checks",
       "publicMessageHint": "A short, plain explanation; it goes to the user",
       "publicMessageLabel": "Explanation for the user",
+      "appealTitle": "Account restriction appeal",
+      "appealStatus": {
+        "submitted": "Awaiting a decision",
+        "restored": "Account restored",
+        "confirmed": "Restriction confirmed"
+      },
+      "appealDecisionReason": "Decision reason for the user",
+      "appealRestore": "Restore after appeal",
+      "appealConfirm": "Confirm restriction",
+      "appealConfirmWarning": "This decision is final: another appeal will not be available.",
+      "appealRestoredDone": "Appeal accepted: the account was restored and the decision was saved.",
+      "appealConfirmedDone": "Restriction confirmed and the decision was saved.",
       "readOnlyCardNote": "The card is read-only: your role has no actions here.",
       "readOnlyNote": "An analyst reads the section without actions: blocking, restoring, session revocation and address change belong to admin and owner.",
       "reasonCategory": {
@@ -1156,6 +1535,23 @@
       "forbidden": "Not enough rights for this action.",
       "ownerArchiveNote": "Archived by the owner — only the owner restores it"
     },
+    "permanentDelete": {
+      "action": "Delete permanently",
+      "title": "Delete permanently",
+      "hint": "This action is irreversible: the entity and its related data will be physically deleted, with no way to restore them.",
+      "willDelete": "Will be deleted",
+      "willKeep": "Will remain",
+      "confirmLabel": "Type exactly \"{name}\" to confirm",
+      "reasonLabel": "Reason for deletion",
+      "cancel": "Cancel",
+      "confirm": "Delete permanently",
+      "previewError": "Could not load the deletion preview.",
+      "errorForbidden": "Not enough rights for this action.",
+      "errorNotFound": "Record not found.",
+      "errorConflict": "This entity cannot be deleted: check its archive status and related materials.",
+      "errorValidation": "The typed name does not match, or the reason is empty.",
+      "errorGeneric": "The deletion could not be completed."
+    },
     "active": "Active",
     "inactive": "Inactive",
     "table": {
@@ -1181,6 +1577,83 @@
       "empty": "No data yet",
       "emptyHint": "Open an available section to get started.",
       "cardError": "Could not load"
+    },
+    "statisticsPage": {
+      "eyebrow": "Exact aggregates · stage 1",
+      "title": "Statistics",
+      "description": "Registrations, publications, review queue and AI with service and test records excluded. Values use the selected period.",
+      "period": "Period",
+      "days": "days",
+      "custom": "Custom dates",
+      "from": "From",
+      "to": "To",
+      "export": "Export CSV",
+      "section": "Section",
+      "locale": "Language",
+      "allSections": "All sections",
+      "allLocales": "All languages",
+      "millisecondsShort": "ms",
+      "tabsLabel": "Statistics sections",
+      "tabs": {
+        "growth": "Growth",
+        "content": "Content",
+        "engagement": "Engagement",
+        "finance": "Finance",
+        "ai": "AI",
+        "ranking": "Ranking"
+      },
+      "metrics": {
+        "registrations": "Registrations",
+        "activeAccounts": "Active accounts",
+        "enabledAuthors": "Authors with base access",
+        "authorsWithPublications": "Authors with publications",
+        "publications": "Publications",
+        "drafts": "Drafts",
+        "queueSize": "In review",
+        "oldestQueue": "Oldest item",
+        "medianDecision": "Median decision",
+        "rejectionRate": "Rejection rate",
+        "manualOverrideRate": "Manual publications",
+        "aiTotal": "AI jobs",
+        "aiFailed": "Failures",
+        "aiFailureRate": "Failure rate",
+        "aiDuration": "Average duration",
+        "aiCost": "Cost, minor units"
+      },
+      "dailyTitle": "Daily ledger",
+      "shortRegistrations": "reg.",
+      "shortPublications": "pub.",
+      "empty": "There is no data for this period. Values remain zero; daily aggregates appear after the day closes.",
+      "errorTitle": "Aggregates are unavailable",
+      "errorHint": "Retry the request. Other tabs continue to work independently.",
+      "futureStage": "Later stage",
+      "placeholders": {
+        "engagement": {
+          "title": "Engagement arrives in stage 2",
+          "description": "Opens, qualified reads, repeats and sources will appear after daily engagement aggregates launch."
+        },
+        "finance": {
+          "title": "Finance arrives with paid plans",
+          "description": "Payments, MRR, renewals and refunds are not shown as zero before paid plans launch."
+        },
+        "ranking": {
+          "title": "Ranking arrives with the stage 2 engine",
+          "description": "This area will show aggregate score composition and engine state without exposing the internal formula."
+        }
+      },
+      "topAuthors": "Top authors",
+      "topArticles": "Top articles",
+      "byLocale": "Publications by language",
+      "bySection": "Publications by section",
+      "aiByKind": "AI jobs by kind",
+      "aiByStatus": "AI jobs by status",
+      "author": "Author",
+      "article": "Article",
+      "publications": "Publications",
+      "reads": "Reads",
+      "saves": "Saves",
+      "score": "Score",
+      "rateLimited": "The export limit is reached. Try again in {minutes} min."
     },
     "roles": {
       "editor": "Editor",
@@ -1365,6 +1838,9 @@
       "filterRecipient": "Recipient",
       "filterQuery": "Subject or messageId",
       "allStatuses": "All statuses",
+      "allStreams": "All streams",
+      "defaultStream": "Backend (default)",
+      "stream": { "backend": "Backend", "page": "Pages" },
       "period7": "7 days",
       "period30": "30 days",
       "status": {
@@ -1495,6 +1971,62 @@
       "exportConfirmText": "The file describes personal data reads. Personal fields stay out of the export: only time, code, actor role, entity type and requestId.",
       "exportConfirmAction": "Download"
     },
+    "errors": {
+      "eyebrow": "Operations console",
+      "title": "Errors and health",
+      "description": "Backend error groups, client-side events, and dependency health history.",
+      "export": "Export CSV",
+      "health": "System health",
+      "healthUnknown": "no data yet",
+      "healthDegraded": "One or more dependencies need attention.",
+      "healthStale": "Showing the last known health check; the latest refresh failed.",
+      "checkNow": "Check now",
+      "backupAge": "{hours} h since last successful backup",
+      "backupAgeUnknown": "last successful backup unknown",
+      "systemActor": "system",
+      "tabs": "Error and health sections",
+      "tab": { "log": "Log", "charts": "Trends", "health": "Health history" },
+      "conflict": "This entry changed. Refresh before trying again.",
+      "rateLimited": "Export limit reached. Retry in {seconds} s.",
+      "loadError": "The data could not be loaded.",
+      "currentTotal": "Errors during period",
+      "previousTotal": "Previous period",
+      "timeline": "Timeline",
+      "timelineChart": "Error frequency over time",
+      "byService": "By service",
+      "byCode": "By code",
+      "search": "Code, route, or requestId",
+      "service": "Service",
+      "allServices": "All services",
+      "code": "Error code / class",
+      "route": "Route / job kind",
+      "hours": "hours",
+      "days": "days",
+      "allStatuses": "All statuses",
+      "status": { "new": "New", "in_progress": "In progress", "resolved": "Resolved" },
+      "selected": "Selected: {count}",
+      "resolve": "Mark resolved",
+      "resolveConfirm": "Mark the selected entries as resolved: {count}?",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "empty": "No errors during the selected period",
+      "select": "Select",
+      "error": "Error",
+      "statusLabel": "Status",
+      "assignee": "Assignee",
+      "occurrences": "Occurrences",
+      "lastSeen": "Last event",
+      "firstSeen": "First event",
+      "previous": "Previous",
+      "next": "Next",
+      "back": "Back to error log",
+      "refresh": "Refresh",
+      "workflow": "Error workflow",
+      "comment": "Status change comment",
+      "diagnostics": "Diagnostics",
+      "recentOccurrences": "Recent events",
+      "history": "Status history"
+    },
     "jobs": {
       "title": "Background jobs",
       "description": "Queue-wide job list with statuses, queue metrics and a job card.",
@@ -1555,6 +2087,89 @@
         "job.retry": "Retry",
         "job.cancel": "Cancellation"
       }
+    },
+    "aiProcesses": {
+      "eyebrow": "Operations ledger",
+      "title": "AI processes",
+      "description": "History of automated checks, translations, profile reviews and alt text with statuses and diagnostics.",
+      "readOnly": "Read only: processes cannot be started or retried from this section.",
+      "tabsLabel": "AI process view",
+      "tabs": {
+        "records": "Processes",
+        "stats": "Statistics"
+      },
+      "filters": {
+        "search": "Object",
+        "kind": "Kind",
+        "status": "Status",
+        "period": "Period",
+        "verdict": "Verdict",
+        "reason": "Reason category",
+        "sort": "Sorting",
+        "allKinds": "All kinds",
+        "allStatuses": "All statuses"
+      },
+      "kind": {
+        "check": "Check",
+        "translate": "Translation",
+        "profile": "Profile",
+        "alt": "Alt text"
+      },
+      "status": {
+        "created": "Created",
+        "started": "Started",
+        "running": "Running",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "period": {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days"
+      },
+      "sort": {
+        "createdAt": "By creation",
+        "duration": "By duration"
+      },
+      "columns": {
+        "process": "Process",
+        "object": "Object",
+        "status": "Status",
+        "verdict": "Verdict",
+        "model": "Model",
+        "prompt": "Prompt",
+        "duration": "Duration",
+        "created": "Created"
+      },
+      "stats": {
+        "processes": "Processes",
+        "totalCost": "Cost for period",
+        "minorUnits": "in minor currency units, aggregate only",
+        "median": "Median duration",
+        "providerErrors": "Provider errors",
+        "reasons": "Rejection reasons",
+        "planShare": "Plan share",
+        "notCalculated": "Not calculated: plan prices are not approved."
+      },
+      "card": {
+        "providerError": "Error class",
+        "model": "Model",
+        "prompt": "Prompt version",
+        "object": "Related object",
+        "reasons": "Reasons and details",
+        "noReasons": "No reasons",
+        "created": "Created",
+        "started": "Started",
+        "finished": "Finished",
+        "openJob": "Open job"
+      },
+      "empty": "No processes during the selected period",
+      "loadError": "Could not load AI processes.",
+      "retry": "Retry request",
+      "previous": "Previous",
+      "next": "Next",
+      "back": "Back to AI processes",
+      "scope": "Viewing scope: {role}"
     },
     "systemSettings": {
       "eyebrow": "Operations",

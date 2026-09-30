@@ -1,0 +1,188 @@
+enum ReviewQueueState {
+  queued
+  in_review
+  rework
+  published
+}
+
+enum ReviewQueueSort {
+  age
+  updated
+}
+
+enum ProfileReviewField {
+  name
+  avatar
+}
+
+enum ProfileReviewVerdict {
+  accept
+  reject
+}
+
+type AdminReviewAuthor {
+  id: ID!
+  name: String!
+  handle: String!
+}
+
+type AdminReviewSection {
+  slug: String!
+  name: String!
+}
+
+type AdminReviewClaim {
+  role: Role!
+  mine: Boolean!
+}
+
+type AdminReviewQueueItem {
+  id: ID!
+  articleId: ID!
+  title: String!
+  slug: String!
+  locale: Locale!
+  status: ArticleStatus!
+  state: ReviewQueueState
+  rejected: Boolean!
+  publishedAt: String
+  readCount: Int!
+  createdAt: String!
+  updatedAt: String!
+  author: AdminReviewAuthor!
+  section: AdminReviewSection
+  editorial: Boolean!
+  reviewer: AdminReviewClaim
+}
+
+type AdminReviewQueuePage {
+  items: [AdminReviewQueueItem!]!
+  pagination: PaginationInfo!
+}
+
+type AdminReviewReply {
+  id: ID!
+  text: String!
+  byRole: Role
+  createdAt: String!
+}
+
+type AdminReviewDecision {
+  id: ID!
+  kind: ReviewHistoryKind!
+  text: String
+  recommendations: String
+  byRole: Role
+  createdAt: String!
+  replies: [AdminReviewReply!]!
+}
+
+type AdminReviewNote {
+  id: ID!
+  blockId: ID!
+  text: String!
+  resolved: Boolean!
+  createdAt: String!
+  updatedAt: String
+}
+
+type AdminReviewRevision {
+  id: ID!
+  title: String!
+  body: JSON!
+  createdAt: String!
+  notes: [AdminReviewNote!]!
+}
+
+type AdminReviewAiDecision {
+  verdict: String
+  reasons: JSON
+  finishedAt: String
+}
+
+type AdminReviewItem {
+  id: ID!
+  articleId: ID!
+  title: String!
+  slug: String!
+  locale: Locale!
+  status: ArticleStatus!
+  state: ReviewQueueState
+  rejected: Boolean!
+  publishedAt: String
+  readCount: Int!
+  createdAt: String!
+  updatedAt: String!
+  author: AdminReviewAuthor!
+  section: AdminReviewSection
+  editorial: Boolean!
+  reviewer: AdminReviewClaim
+  body: JSON!
+  revisions: [AdminReviewRevision!]!
+  decisions: [AdminReviewDecision!]!
+  aiDecision: AdminReviewAiDecision
+}
+
+type ProfileReviewItem {
+  userId: ID!
+  name: String!
+  previousName: String
+  handle: String!
+  avatarAssetId: ID
+  previousAvatarId: ID
+  avatarUrl: String
+  previousAvatarUrl: String
+  nameStatus: String!
+  avatarStatus: String!
+  fields: [ProfileReviewField!]!
+  updatedAt: String!
+}
+
+type ProfileReviewQueuePage {
+  items: [ProfileReviewItem!]!
+  pagination: PaginationInfo!
+}
+
+input ReviewQueueFiltersInput {
+  states: [ReviewQueueState!]
+  locale: Locale
+  sectionId: ID
+  editorial: Boolean
+  search: String
+}
+
+input CreateAdminReviewNoteInput {
+  translationId: ID!
+  revisionId: ID!
+  blockId: ID!
+  text: String!
+}
+
+input ProfileReviewDecisionInput {
+  userId: ID!
+  field: ProfileReviewField!
+  verdict: ProfileReviewVerdict!
+  reason: String
+}
+
+extend type Query {
+  reviewQueue(
+    filters: ReviewQueueFiltersInput
+    pagination: PaginationInput
+    sort: ReviewQueueSort = age
+  ): AdminReviewQueuePage!
+  reviewItem(id: ID!): AdminReviewItem!
+  profileReviewQueue(pagination: PaginationInput): ProfileReviewQueuePage!
+}
+
+extend type Mutation {
+  claimReview(id: ID!): AdminReviewItem!
+  releaseReview(id: ID!): AdminReviewItem!
+  requestReviewRework(id: ID!, recommendations: String!): AdminReviewItem!
+  publishReviewManual(id: ID!, message: String): AdminReviewItem!
+  rejectReviewFinal(id: ID!, reason: String): AdminReviewItem!
+  unpublishReview(id: ID!, reason: String!): AdminReviewItem!
+  replyInReviewDecision(decisionId: ID!, text: String!): AdminReviewReply!
+  createReviewNote(input: CreateAdminReviewNoteInput!): AdminReviewNote!
+  decideProfileCheck(input: ProfileReviewDecisionInput!): ProfileReviewItem!
+}

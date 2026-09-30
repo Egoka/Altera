@@ -64,6 +64,7 @@ const prismaMock = (grants: GrantRow[] = [], role: "reader" | "author" = "reader
 
   const $transaction = vi.fn(async (operation: (client: unknown) => Promise<unknown>) =>
     operation({
+      $executeRawUnsafe: vi.fn(),
       planGrant: { findMany: planGrantFindMany, create: planGrantCreate },
       user: { findUnique: userFindUnique, update: userUpdate },
       auditLog: { create: auditLogCreate },

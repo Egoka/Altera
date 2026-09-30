@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "task_id": "T-051",
+  "issue_id": "01a0ea73-17ca-776d-9d39-16321173f32b",
+  "work_class": "feature",
+  "source": {
+    "path": "docs/backlog/tasks/T-051-decision-notifications-email.md",
+    "sha": "a3653364c88544c45854bc148c5eb43e2765e890"
+  },
+  "baseline_sha": "1c1c8a8dc9bf137e3ed97120fa2ad719c3e900fd",
+  "tested_sha": "a4bad919f2c2d9ffbaab1568918e11911e54378b",
+  "branch": "server/t051-decision-notifications-email",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0edfa-f5bb-7072-86f1-bf9b77be5b22",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Каждое решение создаёт запись в истории писем с адресом автора — тест passed"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Письмо на языке аккаунта — тест с `en` passed"
+    }
+  ],
+  "checks": {
+    "format": "exit 0",
+    "lint": "exit 0",
+    "tests": "passed"
+  },
+  "pr": {
+    "number": 386,
+    "url": "https://github.com/Egoka/Altera/pull/386",
+    "base_ref": "app",
+    "base_sha": "1c1c8a8dc9bf137e3ed97120fa2ad719c3e900fd",
+    "head_sha": "a4bad919f2c2d9ffbaab1568918e11911e54378b",
+    "merge_sha": "f6ad12af47629bb9478d754c7d6b953cff970994"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ee44-0512-7d7a-8c34-9c9c87e7b7cd",
+    "sha": "a4bad919f2c2d9ffbaab1568918e11911e54378b",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-051.md",
+    "sha256": "587130e2752e9b33d5be7570e8411e5c8f2b5fa162ab93ab9f3c71359aa83052"
+  },
+  "usage": null
+}

@@ -65,6 +65,14 @@ export interface AiCheckMediaFixture {
 export interface AiCheckStoreFixture {
   translationId: string
   revisionId: string
+  latestRevisionId: string
+  articleId: string
+  status: string
+  articleStatus: string
+  updatedAt: Date
+  publishedAt: Date | null
+  firstPublishedAt: Date | null
+  reeditUntil: Date | null
   locale: "ru" | "en"
   title: string
   dek: string | null
@@ -103,6 +111,39 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
   }
 
   const writer = {
+    articleTranslation: {
+      async findUnique({ where }: { where: { id: string } }) {
+        if (where.id !== fixture.translationId) return null
+        return {
+          id: fixture.translationId,
+          articleId: fixture.articleId,
+          locale: fixture.locale,
+          status: fixture.status,
+          updatedAt: fixture.updatedAt,
+          revisions: [{ id: fixture.latestRevisionId }],
+          article: { sourceLocale: fixture.locale }
+        }
+      },
+      async updateMany({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) {
+        if (
+          where.id !== fixture.translationId ||
+          where.status !== fixture.status ||
+          (where.updatedAt instanceof Date && where.updatedAt.getTime() !== fixture.updatedAt.getTime())
+        ) {
+          return { count: 0 }
+        }
+        Object.assign(fixture, data)
+        return { count: 1 }
+      }
+    },
+    article: {
+      async update({ data }: { data: Record<string, unknown> }) {
+        if (typeof data.status === "string") fixture.articleStatus = data.status
+        if (data.publishedAt instanceof Date) fixture.publishedAt = data.publishedAt
+        if (data.firstPublishedAt instanceof Date) fixture.firstPublishedAt = data.firstPublishedAt
+        return { id: fixture.articleId }
+      }
+    },
     aiProcess: {
       async update({ where, data }: { where: { id: string }; data: Record<string, unknown> }) {
         Object.assign(requireProcess(where.id), data)
@@ -154,6 +195,9 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
         if (where.id !== fixture.translationId) return null
         return {
           id: fixture.translationId,
+          articleId: fixture.articleId,
+          status: fixture.status,
+          updatedAt: fixture.updatedAt,
           locale: fixture.locale,
           title: fixture.title,
           dek: fixture.dek,
@@ -179,7 +223,9 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
 
     async findProcessByJob(jobId: string) {
       for (const process of processes.values()) {
-        if (process.jobId === jobId && process.kind === "check") return { id: process.id, status: process.status }
+        if (process.jobId === jobId && process.kind === "check") {
+          return { id: process.id, status: process.status, verdict: process.verdict }
+        }
       }
       return null
     },
@@ -206,7 +252,7 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
         durationMs: null
       }
       processes.set(process.id, process)
-      return { id: process.id, status: process.status }
+      return { id: process.id, status: process.status, verdict: process.verdict }
     },
 
     async updateProcess(processId: string, data: Record<string, unknown>) {

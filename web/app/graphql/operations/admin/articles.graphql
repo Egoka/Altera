@@ -1,24 +1,47 @@
-query GetAdminArticles(
-  $pagination: PaginationInput! = { page: 1, limit: 20 }
-  $sort: SortInput! = { field: "updatedAt", direction: DESC }
-  $filters: ArticleFiltersInput! = { base: {} }
-) {
-  articles(pagination: $pagination, sort: $sort, filters: $filters) {
-    articles {
-      id
-      title
-      slug
-      status
-      publishedAt
-      updatedAt
-      author {
-        name
-        slug: handle
-      }
-      section {
-        name
-        slug
-      }
+fragment AdminArticleRowFields on AdminArticleRow {
+  id
+  articleId
+  title
+  slug
+  locale
+  status
+  rejected
+  readCount
+  publishedAt
+  updatedAt
+  editorial
+  author {
+    id
+    name
+    handle
+  }
+  section {
+    id
+    name
+    slug
+  }
+  format {
+    id
+    name
+    slug
+  }
+  tags {
+    id
+    name
+    slug
+  }
+  archive {
+    at
+    actorId
+    role
+    reason
+  }
+}
+
+query GetAdminArticles($filters: AdminArticleFiltersInput, $pagination: PaginationInput, $sort: AdminArticleSort) {
+  adminArticles(filters: $filters, pagination: $pagination, sort: $sort) {
+    items {
+      ...AdminArticleRowFields
     }
     pagination {
       currentPage
@@ -31,16 +54,122 @@ query GetAdminArticles(
   }
 }
 
-mutation ChangeArticleStatus($id: ID!, $status: ArticleStatus!) {
-  setArticleStatus(id: $id, status: $status) {
-    id
-    ...ArticleStatusValue
-    publishedAt
+query GetAdminArticleFilterOptions {
+  adminArticleFilterOptions {
+    sections {
+      id
+      name
+      slug
+    }
+    formats {
+      id
+      name
+      slug
+    }
+    tags {
+      id
+      name
+      slug
+    }
   }
 }
 
-mutation BulkDeleteArticles($ids: [ID!]!) {
-  bulkDeleteArticles(ids: $ids) {
+query GetAdminArticle($id: ID!) {
+  adminArticle(id: $id) {
     id
+    articleId
+    title
+    slug
+    locale
+    status
+    rejected
+    readCount
+    publishedAt
+    updatedAt
+    editorial
+    dek
+    excerpt
+    body
+    author {
+      id
+      name
+      handle
+    }
+    section {
+      id
+      name
+      slug
+    }
+    format {
+      id
+      name
+      slug
+    }
+    tags {
+      id
+      name
+      slug
+    }
+    archive {
+      at
+      actorId
+      role
+      reason
+    }
+    cover {
+      id
+      alt
+      variants
+    }
+    siblings {
+      id
+      locale
+      title
+      slug
+      status
+      rejected
+    }
+    revisions {
+      id
+      title
+      kind
+      note
+      size
+      createdAt
+      author {
+        id
+        name
+        handle
+        role
+      }
+    }
+    decisions {
+      id
+      kind
+      text
+      recommendations
+      byRole
+      createdAt
+      replies {
+        id
+        text
+        byRole
+        createdAt
+      }
+    }
+  }
+}
+
+mutation ArchiveAdminArticle($id: ID!, $reason: String!) {
+  archiveArticle(id: $id, reason: $reason) {
+    id
+    status
+  }
+}
+
+mutation RestoreAdminArticle($id: ID!) {
+  restoreArticle(id: $id) {
+    id
+    status
   }
 }

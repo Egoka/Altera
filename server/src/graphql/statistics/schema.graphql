@@ -1,0 +1,115 @@
+enum StatisticsPeriod {
+  DAYS_7
+  DAYS_30
+  DAYS_90
+  CUSTOM
+}
+
+enum StatisticsTab {
+  GROWTH
+  CONTENT
+  AI
+}
+
+input StatisticsRangeInput {
+  period: StatisticsPeriod!
+  from: String
+  to: String
+  sectionId: ID
+  locale: Locale
+}
+
+type StatisticsRange {
+  from: String!
+  to: String!
+}
+
+type StatisticsBucket {
+  key: String!
+  count: Int!
+}
+
+type StatisticsLabelBucket {
+  key: String!
+  label: String!
+  count: Int!
+}
+
+type GrowthDailyPoint {
+  date: String!
+  registrations: Int!
+  publications: Int!
+}
+
+type GrowthStatistics {
+  range: StatisticsRange!
+  registrations: Int!
+  activeAccounts: Int!
+  enabledAuthors: Int!
+  authorsWithPublications: Int!
+  daily: [GrowthDailyPoint!]!
+}
+
+type TopAuthorStatistics {
+  id: ID!
+  name: String!
+  handle: String!
+  publications: Int!
+  qualifiedReads: Int
+  saves: Int!
+}
+
+type TopArticleStatistics {
+  id: ID!
+  slug: String!
+  title: String!
+  authorId: ID!
+  authorName: String!
+  publications: Int!
+  qualifiedReads: Int
+  saves: Int!
+  totalScore: Float
+}
+
+type ContentStatistics {
+  range: StatisticsRange!
+  publications: Int!
+  drafts: Int!
+  queueSize: Int!
+  oldestQueueAgeHours: Float
+  medianDecisionHours: Float
+  rejectionRate: Float!
+  manualOverrideRate: Float!
+  byLocale: [StatisticsBucket!]!
+  bySection: [StatisticsLabelBucket!]!
+  topAuthors: [TopAuthorStatistics!]!
+  topArticles: [TopArticleStatistics!]!
+}
+
+type AiStatistics {
+  range: StatisticsRange!
+  total: Int!
+  failed: Int!
+  failureRate: Float!
+  averageDurationMs: Float
+  costMinor: String!
+  byKind: [StatisticsBucket!]!
+  byStatus: [StatisticsBucket!]!
+}
+
+type StatisticsExport {
+  filename: String!
+  contentType: String!
+  rows: Int!
+  csv: String!
+}
+
+extend type Query {
+  statisticsGrowth(range: StatisticsRangeInput!): GrowthStatistics!
+  statisticsContent(range: StatisticsRangeInput!): ContentStatistics!
+  statisticsAi(range: StatisticsRangeInput!): AiStatistics!
+}
+
+extend type Mutation {
+  exportStatistics(tab: StatisticsTab!, range: StatisticsRangeInput!): StatisticsExport!
+}

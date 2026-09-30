@@ -1,10 +1,11 @@
 import { GraphQLError } from "graphql"
 import { describe, expect, it, vi } from "vitest"
-import { createDocument, createParagraph, createText } from "@altera/content"
+import { createDocument, createFigure, createParagraph, createText } from "@altera/content"
 import {
   authoringTaxonomy,
   getEditorTranslation,
   listRevisions,
+  reeditTranslation,
   restoreRevision,
   saveTranslation,
   setSlug,
@@ -21,7 +22,14 @@ import {
  */
 
 const NODE_ID = "0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7b"
+const FIGURE_ID = "0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7c"
+const BODY_ASSET_ID = "0b7e4c1a-3f2d-4c8e-9a1b-2c3d4e5f6a7d"
 const body = (text = "Текст материала") => createDocument([createParagraph([createText(text)], NODE_ID)])
+const bodyWithImage = () =>
+  createDocument([
+    createParagraph([createText("Текст материала")], NODE_ID),
+    createFigure(BODY_ASSET_ID, "normal", FIGURE_ID)
+  ])
 
 const author = {
   id: "author-1",
@@ -40,6 +48,8 @@ const expiredAuthor = { ...author, planUntil: new Date("2020-01-01T00:00:00.000Z
 /** Готовая обложка: запись `ready`, у которой собран хотя бы один кадр карточки. */
 const readyCover = {
   id: "cover-1",
+  attribution: "Фото: автор",
+  license: "own",
   processingStatus: "ready",
   deletedAt: null,
   alt: "Вид на залив",
@@ -67,10 +77,12 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
   rejected: false,
   publishedAt: null,
   reeditUntil: null,
+  reeditedAt: null,
   updatedAt: new Date("2026-09-28T10:00:00.000Z"),
   article: {
     id: "article-1",
     authorId: "author-1",
+    author: { name: "Пётр Соколов", handle: "petr", handleConfirmed: true },
     isEditorial: false,
     status: "draft",
     sourceLocale: "ru",
@@ -88,12 +100,17 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
 
 interface PrismaDouble {
   articleTranslation: Record<string, ReturnType<typeof vi.fn>>
+  articleSlugHistory: Record<string, ReturnType<typeof vi.fn>>
   articleRevision: Record<string, ReturnType<typeof vi.fn>>
   article: Record<string, ReturnType<typeof vi.fn>>
+  auditLog: Record<string, ReturnType<typeof vi.fn>>
   mediaAsset: Record<string, ReturnType<typeof vi.fn>>
+  job: Record<string, ReturnType<typeof vi.fn>>
+  aiProcess: Record<string, ReturnType<typeof vi.fn>>
   section: Record<string, ReturnType<typeof vi.fn>>
   format: Record<string, ReturnType<typeof vi.fn>>
   tag: Record<string, ReturnType<typeof vi.fn>>
+  $queryRaw: ReturnType<typeof vi.fn>
   $executeRawUnsafe: ReturnType<typeof vi.fn>
   $transaction: ReturnType<typeof vi.fn>
 }
@@ -104,7 +121,12 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
       findUnique: vi.fn().mockResolvedValue(translation()),
       findFirst: vi.fn().mockResolvedValue(null),
       update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       count: vi.fn().mockResolvedValue(0)
+    },
+    articleSlugHistory: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({})
     },
     articleRevision: {
       create: vi.fn().mockResolvedValue({ id: "revision-10", createdAt: new Date("2026-09-28T10:05:00.000Z") }),
@@ -115,10 +137,20 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
       findUnique: vi.fn().mockResolvedValue(null),
       update: vi.fn().mockResolvedValue({})
     },
-    mediaAsset: { findUnique: vi.fn().mockResolvedValue(readyCover) },
+    auditLog: { create: vi.fn().mockResolvedValue({}) },
+    mediaAsset: {
+      findUnique: vi.fn().mockResolvedValue(readyCover),
+      findMany: vi.fn().mockResolvedValue([readyCover])
+    },
+    job: { create: vi.fn().mockResolvedValue({ id: "job-1" }) },
+    aiProcess: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ id: "ai-process-1" })
+    },
     section: { findFirst: vi.fn().mockResolvedValue({ id: "section-1" }), findMany: vi.fn().mockResolvedValue([]) },
     format: { findFirst: vi.fn().mockResolvedValue({ id: "format-1" }), findMany: vi.fn().mockResolvedValue([]) },
     tag: { count: vi.fn().mockResolvedValue(0) },
+    $queryRaw: vi.fn().mockResolvedValue([]),
     $executeRawUnsafe: vi.fn().mockResolvedValue(0),
     $transaction: vi.fn(),
     ...(overrides as object)
@@ -194,6 +226,31 @@ describe("T-040 сохранение версии", () => {
     expect(prisma.articleTranslation.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "translation-1" } })
     )
+  })
+
+  it("повторно проверяет базовую ревизию под блокировкой перед записью", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique
+      .mockResolvedValueOnce(translation())
+      .mockResolvedValueOnce(translation({ revisions: [{ id: "revision-10" }] }))
+
+    const extensions = await extensionsOf(
+      saveTranslation(context(prisma), {
+        id: "translation-1",
+        baseRevisionId: "revision-9",
+        patch: { title: "Устаревшая правка" },
+        kind: "manual"
+      })
+    )
+
+    expect(extensions).toMatchObject({
+      code: "CONFLICT",
+      entity: "revision",
+      expected: "revision-10",
+      actual: "revision-9"
+    })
+    expect(prisma.$queryRaw).toHaveBeenCalled()
+    expect(prisma.articleRevision.create).not.toHaveBeenCalled()
   })
 
   it("наследная строка обновляется той же транзакцией с выключенной синхронизацией", async () => {
@@ -280,10 +337,11 @@ describe("T-040 сохранение версии", () => {
 describe("T-040 подача к публикации", () => {
   it("не пропускает первую подачу с выданным, но не подтверждённым хэндлом", async () => {
     const prisma = prismaDouble()
-
-    const extensions = await extensionsOf(
-      submitTranslation(context(prisma, { ...author, handleConfirmed: false }), "translation-1")
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { author: { name: "Пётр Соколов", handle: "petr", handleConfirmed: false } })
     )
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
 
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
     expect(prisma.articleTranslation.update).not.toHaveBeenCalled()
@@ -317,6 +375,17 @@ describe("T-040 подача к публикации", () => {
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "sectionId", rule: "required" })
   })
 
+  it("подача с архивной рубрикой отклоняется", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { section: { id: "section-1", slug: "culture", name: "Культура", status: "archived" } })
+    )
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "sectionId", rule: "active" })
+  })
+
   it("подача без текста отклоняется", async () => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(translation({ body: body("   ") }))
@@ -326,19 +395,135 @@ describe("T-040 подача к публикации", () => {
     expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "body", rule: "required" })
   })
 
-  it("заполненная версия уходит в review", async () => {
+  it("подача без заголовка отклоняется", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(translation({ title: "  " }))
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "title", rule: "required" })
+  })
+
+  it("первая подача без публичного имени отклоняется", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { author: { name: "", handle: "petr", handleConfirmed: true } })
+    )
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
+  })
+
+  it("для редакционного материала проверяет профиль автора, а не редактора", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { isEditorial: true, author: { name: "", handle: "" } })
+    )
+    const editor = { ...author, id: "editor-1", name: "Редактор", handle: "editor", role: "editor" }
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma, editor), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "profile", rule: "required" })
+    expect(prisma.job.create).not.toHaveBeenCalled()
+  })
+
+  it("редакционный материал не требует от сотрудника подтверждённого хэндла", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      translation({}, { isEditorial: true, author: { name: "Редакция", handle: "editor", handleConfirmed: false } })
+    )
+    const editor = { ...author, id: "editor-1", name: "Редактор", handle: "editor", role: "editor" }
+
+    const result = await submitTranslation(context(prisma, editor), "translation-1")
+
+    expect(result.status).toBe("ai_check")
+  })
+
+  it("первая подача атомарно переводит версию в ai_check и ставит задание", async () => {
     const prisma = prismaDouble()
 
     const result = await submitTranslation(context(prisma), "translation-1")
 
-    expect(result.status).toBe("review")
-    expect(prisma.articleTranslation.update).toHaveBeenCalledWith({
-      where: { id: "translation-1" },
-      data: { status: "review" }
+    expect(result.status).toBe("ai_check")
+    expect(result.currentRevisionId).toBe("revision-9")
+    expect(prisma.articleTranslation.updateMany).toHaveBeenCalledWith({
+      where: { id: "translation-1", status: "draft", rejected: false },
+      data: { status: "ai_check" }
     })
     expect(prisma.article.update).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ status: "review" }) })
+      expect.objectContaining({ data: expect.objectContaining({ status: "ai_check" }) })
     )
+    expect(prisma.job.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ kind: "ai.check", objectId: "translation-1" }) })
+    )
+    expect(prisma.aiProcess.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ revisionId: "revision-9" }) })
+    )
+    const locks = prisma.$queryRaw.mock.calls.map(([query]) => (query as { strings: string[] }).strings.join(" "))
+    expect(locks.some((query) => query.includes('FROM "article_translations"') && query.includes("FOR UPDATE"))).toBe(
+      true
+    )
+    expect(locks.some((query) => query.includes('FROM "users"') && query.includes("FOR UPDATE"))).toBe(true)
+  })
+
+  it("после сохранённого отказа AI повторная подача идёт в review без нового задания", async () => {
+    const prisma = prismaDouble()
+    prisma.aiProcess.findFirst.mockResolvedValue({ id: "ai-process-rejected" })
+
+    const result = await submitTranslation(context(prisma), "translation-1")
+
+    expect(result.status).toBe("review")
+    expect(prisma.articleTranslation.updateMany).toHaveBeenCalledWith({
+      where: { id: "translation-1", status: "draft", rejected: false },
+      data: { status: "review" }
+    })
+    expect(prisma.job.create).not.toHaveBeenCalled()
+    expect(prisma.aiProcess.create).not.toHaveBeenCalled()
+  })
+
+  it("повторная подача после ручной доработки остаётся в ветке review", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(translation({ status: "rework" }))
+
+    const result = await submitTranslation(context(prisma), "translation-1")
+
+    expect(result.status).toBe("review")
+    expect(prisma.job.create).not.toHaveBeenCalled()
+  })
+
+  it("подача с изображением без атрибуции отклоняется до задания", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(translation({ body: bodyWithImage() }))
+    prisma.mediaAsset.findMany.mockResolvedValue([
+      readyCover,
+      { id: BODY_ASSET_ID, attribution: "", license: "cc_by", deletedAt: null, processingStatus: "ready" }
+    ])
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "VALIDATION_ERROR", field: "images", rule: "license" })
+    expect(prisma.job.create).not.toHaveBeenCalled()
+  })
+
+  it("чужая версия отвечает FORBIDDEN до любого перехода", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(translation({}, { authorId: "author-2" }))
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.submit" })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+
+  it.each(["ai_check", "review", "published"])("подача из статуса %s отвечает CONFLICT", async (status) => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(translation({ status }))
+
+    const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "CONFLICT", entity: "translation", actual: status })
+    expect(prisma.job.create).not.toHaveBeenCalled()
   })
 
   it("очередь из пяти материалов останавливает шестую подачу", async () => {
@@ -357,10 +542,118 @@ describe("T-040 подача к публикации", () => {
     const result = await withdrawTranslation(context(prisma), "translation-1")
 
     expect(result.status).toBe("draft")
-    expect(prisma.articleTranslation.update).toHaveBeenCalledWith({
-      where: { id: "translation-1" },
+    expect(prisma.articleTranslation.updateMany).toHaveBeenCalledWith({
+      where: { id: "translation-1", status: "review", rejected: false },
       data: { status: "draft" }
     })
+  })
+
+  it("повторная подача отозванной AI-проверки создаёт новую ревизию и новое задание", async () => {
+    const prisma = prismaDouble()
+    prisma.aiProcess.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "ai-process-withdrawn" })
+
+    const result = await submitTranslation(context(prisma), "translation-1")
+
+    expect(result.status).toBe("ai_check")
+    expect(result.currentRevisionId).toBe("revision-10")
+    expect(prisma.articleRevision.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ translationId: "translation-1", kind: "manual" }) })
+    )
+    expect(prisma.aiProcess.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ revisionId: "revision-10" }) })
+    )
+  })
+
+  it.each(["draft", "rework", "published"])("отзыв из статуса %s отвечает CONFLICT", async (status) => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(translation({ status }))
+
+    const extensions = await extensionsOf(withdrawTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "CONFLICT", entity: "translation", actual: status })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+})
+
+describe("T-044 перередактирование после автопубликации", () => {
+  const publishedAt = new Date("2026-09-29T10:00:00.000Z")
+  const reeditUntil = new Date("2026-09-29T11:00:00.000Z")
+  const published = (overrides: Record<string, unknown> = {}) =>
+    translation({ status: "published", publishedAt, reeditUntil, reeditedAt: null, ...overrides })
+
+  it("в открытом окне снимает версию в draft, ставит reeditedAt и пишет аудит с withinWindowSec", async () => {
+    const prisma = prismaDouble()
+    const now = new Date("2026-09-29T10:30:00.000Z")
+    prisma.articleTranslation.findUnique.mockResolvedValue(published())
+    const ctx = context(prisma)
+
+    const result = await reeditTranslation(ctx, "translation-1", now)
+
+    expect(result.status).toBe("draft")
+    expect(result.reeditUntil).toBeNull()
+    expect(prisma.articleTranslation.updateMany).toHaveBeenCalledWith({
+      where: { id: "translation-1", status: "published", reeditedAt: null },
+      data: { status: "draft", publishedAt: null, reeditUntil: null, reeditedAt: now }
+    })
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: "translation.reedit",
+          diff: { translationId: "translation-1", withinWindowSec: 1800 }
+        })
+      })
+    )
+    expect((ctx as unknown as { cache: { delByTags: ReturnType<typeof vi.fn> } }).cache.delByTags).toHaveBeenCalled()
+  })
+
+  it("критерий 1: второе перередактирование той же версии отвечает FORBIDDEN", async () => {
+    const prisma = prismaDouble()
+    // Первое перередактирование уже отмечено `reeditedAt`: право не возвращается.
+    prisma.articleTranslation.findUnique.mockResolvedValue(
+      published({ reeditedAt: new Date("2026-09-29T10:05:00.000Z") })
+    )
+
+    const extensions = await extensionsOf(
+      reeditTranslation(context(prisma), "translation-1", new Date("2026-09-29T10:10:00.000Z"))
+    )
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+
+  it("критерий 2: по истечении часового окна действие недоступно — FORBIDDEN", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(published())
+
+    const extensions = await extensionsOf(
+      reeditTranslation(context(prisma), "translation-1", new Date("2026-09-29T11:00:01.000Z"))
+    )
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+  })
+
+  it.each(["draft", "ai_check", "review", "rework", "archived"])(
+    "версия в статусе %s отвечает FORBIDDEN, а не снимается с публикации",
+    async (status) => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published({ status }))
+
+      const extensions = await extensionsOf(reeditTranslation(context(prisma), "translation-1"))
+
+      expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+      expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+    }
+  )
+
+  it("чужая версия отвечает FORBIDDEN до любого перехода", async () => {
+    const prisma = prismaDouble()
+    prisma.articleTranslation.findUnique.mockResolvedValue(published({}, { authorId: "author-2" }))
+
+    const extensions = await extensionsOf(reeditTranslation(context(prisma), "translation-1"))
+
+    expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.reedit" })
+    expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
   })
 })
 

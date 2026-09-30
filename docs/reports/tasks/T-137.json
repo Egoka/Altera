@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "task_id": "T-137",
+  "issue_id": "01a0e510-877d-7ead-81bf-7949f9e85791",
+  "work_class": "docs",
+  "source": {
+    "path": "docs/backlog/tasks/T-137-legal-review-ai-check-and-436fz.md",
+    "sha": "0ddd177a206962d58de68304bd3d82121d6e0d6e"
+  },
+  "baseline_sha": "76e46e6ab48a98568f87d5c44c55c4b0d9a45eec",
+  "tested_sha": "133554d22555d38ea231fed94bfbf41d1c1253a4",
+  "branch": "docs/t137-legal-review-rf",
+  "implementer_id": "b7f90cba-518a-4130-993a-f047a4355f96",
+  "implementer_run_id": "01a0e55a-a276-723a-9d1a-b5e01be559e5",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "docs/spec/40-admin/legal-review-rf-draft.md создан; перечень ограничений (7 норм) и заключение по 436-ФЗ переданы владельцу; PR #330 слит"
+    },
+    {
+      "id": "AC-2",
+      "status": "pending",
+      "evidence": "внешний гейт: юрист проверяет черновик, владелец утверждает"
+    }
+  ],
+  "checks": {
+    "format": "not_applicable: задача не меняет продуктовый код",
+    "lint": "not_applicable: задача не меняет продуктовый код",
+    "tests": "not_applicable: задача не меняет продуктовый код"
+  },
+  "pr": {
+    "number": 330,
+    "url": "https://github.com/Egoka/Altera/pull/330",
+    "base_ref": "app",
+    "base_sha": "7d10987d0c6beb445a98873f37b1f52edb96d8aa",
+    "head_sha": "133554d22555d38ea231fed94bfbf41d1c1253a4",
+    "merge_sha": "49b2e49080da54061d7cae518f403870c1a3c61b"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ebe3-fea7-745a-9239-8b1d7c00dfb0",
+    "sha": "133554d22555d38ea231fed94bfbf41d1c1253a4",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "Задача меняет только документацию (docs/)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-137.md",
+    "sha256": "c20ce4d81e514a696366a4836c12fae4f85fbf98e4726ced70eabfff2fba1dc3"
+  },
+  "usage": null
+}

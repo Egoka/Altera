@@ -74,26 +74,6 @@ type HandleAvailability {
   available: Boolean!
 }
 
-enum ProfileReviewField {
-  name
-}
-
-enum ProfileReviewVerdict {
-  approve
-  reject
-}
-
-type ProfileReviewResult {
-  id: ID!
-  handle: String!
-  name: String!
-  pendingName: String
-  nameCheckStatus: ProfileCheckStatus!
-  nameCheckReason: String
-  avatarCheckStatus: ProfileCheckStatus!
-  avatarCheckReason: String
-}
-
 type UserCount {
   articles: Int!
 }
@@ -125,10 +105,6 @@ extend type Query {
 
 extend type Mutation {
   updateProfile(input: UpdateProfileInput!): AccountUser!
-  decideProfileCheck(
-    userId: ID!
-    field: ProfileReviewField!
-    verdict: ProfileReviewVerdict!
-    reason: String
-  ): ProfileReviewResult!
+  # Решение модератора по имени на проверке — `decideProfileCheck` очереди проверки
+  # (`review-queue/schema.graphql`, `40-admin/review-queue.md` §5).
 }

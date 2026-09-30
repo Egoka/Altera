@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { canManageTaxonomy, getAdminAccessDecision, getAdminNavigation, parseAdminPeriod } from "../app/utils/admin"
+import {
+  canDecideReviews,
+  canManageTaxonomy,
+  canReadReviews,
+  getAdminAccessDecision,
+  getAdminNavigation,
+  parseAdminPeriod
+} from "../app/utils/admin"
 
 describe("admin shell role navigation", () => {
   it.each([
     ["editor", ["/admin", "/admin/articles", "/admin/mail", "/admin/audit"]],
-    ["moderator", ["/admin", "/admin/review", "/admin/ai", "/admin/audit", "/admin/mail"]],
+    ["moderator", ["/admin", "/admin/articles", "/admin/review", "/admin/ai", "/admin/audit", "/admin/mail"]],
     [
       "analyst",
       [
@@ -25,6 +32,8 @@ describe("admin shell role navigation", () => {
         "/admin",
         "/admin/categories",
         "/admin/tags",
+        "/admin/articles",
+        "/admin/review",
         "/admin/users",
         "/admin/admins",
         "/admin/subscriptions",
@@ -43,6 +52,13 @@ describe("admin shell role navigation", () => {
     ]
   ] as const)("shows only the %s default sections", (role, expectedRoutes) => {
     expect(getAdminNavigation(role).map(({ to }) => to)).toEqual(expectedRoutes)
+  })
+
+  it("lets admin read reviews while only moderator and owner can decide", () => {
+    expect(canReadReviews("admin")).toBe(true)
+    expect(canDecideReviews("admin")).toBe(false)
+    expect(canDecideReviews("moderator")).toBe(true)
+    expect(canDecideReviews("owner")).toBe(true)
   })
 
   it("gives owner every active section and keeps deferred complaints hidden", () => {

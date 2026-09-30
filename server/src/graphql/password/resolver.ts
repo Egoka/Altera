@@ -1,4 +1,5 @@
 import type { GraphQLContext } from "../../prisma"
+import { issueAccountAppealToken } from "../../account/appeal"
 import { createApiError } from "../../errors/graphql-error"
 import { ensureAuthenticated } from "../../exceptions/permissions"
 import { isEmailAddress, normalizeEmail } from "../../auth/email-address"
@@ -192,9 +193,9 @@ async function completePasswordLogin(
       data: { reason: "archived_admin" }
     })
 
-    // Токен оспаривания ветки ссылки — тот же токен входа (журнал #48); здесь его роль
-    // выполняет выданный одноразовый токен: форма оспаривания принимает именно такой.
-    return { ...outcomeOnly("archived_admin"), appealToken: await issueConsentToken(ctx, user, null) }
+    // Как и вход по ссылке, вход по паролю выдаёт отдельный 24-часовой токен формы оспаривания
+    // (журнал #48, `blocked-appeal.md`): форма принимает только его.
+    return { ...outcomeOnly("archived_admin"), appealToken: await issueAccountAppealToken(ctx, user.id) }
   }
 
   if (user.archivedAt) {

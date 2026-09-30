@@ -8,7 +8,7 @@
     "sha": "76e46e6ab48a98568f87d5c44c55c4b0d9a45eec"
   },
   "baseline_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
-  "tested_sha": "cfa67c4dda571c9d8df1094d807a288087c3f0f9",
+  "tested_sha": "4cffd3a95f8f56a9b40ee6dc5902a5fdbffd7f59",
   "branch": "server/t048-ai-check-adapter",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0e4e1-608c-7238-a398-fe461a8ec172",
@@ -43,15 +43,15 @@
     "number": 325,
     "url": "https://github.com/Egoka/Altera/pull/325",
     "base_ref": "app",
-    "base_sha": "eade0b29470d855b610eb8b11318316f6bba2c11",
-    "head_sha": "cfa67c4dda571c9d8df1094d807a288087c3f0f9",
-    "merge_sha": null
+    "base_sha": "49b2e49080da54061d7cae518f403870c1a3c61b",
+    "head_sha": "4cffd3a95f8f56a9b40ee6dc5902a5fdbffd7f59",
+    "merge_sha": "b47b273294c9e2a30e5433bcea171114ec065d05"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0e85d-ff08-7b16-a656-30dda86003fa",
+    "sha": "4cffd3a95f8f56a9b40ee6dc5902a5fdbffd7f59",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -61,7 +61,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-048.md",
-    "sha256": "cdbfd2e10f7ceeadf0fb6c3959d116a8fa22bdee7fe87eacd9ea33e5ea26faf9"
+    "sha256": "c1a9d6f43850cd63c5220a81b8a2e718de34db5070729715160b0b8ef64fd7cc"
   },
   "usage": null
 }

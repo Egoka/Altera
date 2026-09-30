@@ -2,6 +2,7 @@
   import type { AdminStaffCard, AdminStaffRow } from "@/composables/useAdminStaff"
   import type { AdminStaffExceptionTerm, AssignableStaffRole, Role } from "~/graphql/generated/graphql"
   import { staffFiltersToQuery } from "~/utils/adminStaffFilters"
+  import PermanentDeleteDialog from "~/components/admin/PermanentDeleteDialog.vue"
 
   const { t } = useI18n()
 
@@ -213,6 +214,14 @@
   }
 
   const detail = computed<AdminStaffCard | null>(() => card.value)
+
+  // Пункт T-076: только запись в архиве и без роли `owner` (`10-flows/permanent-delete.md` §1).
+  const permanentDeleteId = ref<string | null>(null)
+  const onPermanentlyDeleted = () => {
+    permanentDeleteId.value = null
+    closeCard()
+    void refresh()
+  }
 </script>
 
 <template>
@@ -461,6 +470,13 @@
               {{ t("admin.staff.archivedRoleHint") }}
             </p>
             <Button variant="outline" @click="openReason('restore')">{{ t("admin.staff.restore") }}</Button>
+            <Button
+              variant="outline"
+              class="text-red-700"
+              :data-permanent-delete-staff="detail.id"
+              @click="permanentDeleteId = detail.id">
+              {{ t("admin.permanentDelete.action") }}
+            </Button>
           </template>
         </div>
       </aside>
@@ -636,5 +652,13 @@
         </template>
       </div>
     </AppDialog>
+
+    <PermanentDeleteDialog
+      v-if="permanentDeleteId"
+      entity="staff"
+      :id="permanentDeleteId"
+      :open="Boolean(permanentDeleteId)"
+      @update:open="permanentDeleteId = null"
+      @deleted="onPermanentlyDeleted" />
   </div>
 </template>

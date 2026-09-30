@@ -8,7 +8,7 @@
     "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
   },
   "baseline_sha": "11cc7a37538da89d0f9b24c2a1dacd16d4381fed",
-  "tested_sha": "29685b4870a97c1ba16b9b1ab3e124a3cc278fcd",
+  "tested_sha": "34f90e8d1da30f60b63b88bd05357fe2d6df19fc",
   "branch": "server/t065-avatars",
   "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
   "implementer_run_id": "01a0e7a0-025e-7967-99cd-4c85c4b3e196",
@@ -44,14 +44,14 @@
     "url": "https://github.com/Egoka/Altera/pull/348",
     "base_ref": "app",
     "base_sha": "11cc7a37538da89d0f9b24c2a1dacd16d4381fed",
-    "head_sha": "29685b4870a97c1ba16b9b1ab3e124a3cc278fcd",
-    "merge_sha": null
+    "head_sha": "34f90e8d1da30f60b63b88bd05357fe2d6df19fc",
+    "merge_sha": "59f74e5d8dcc774cb43d1f0ee1a5f688b9f6da18"
   },
   "review": {
-    "actor_id": null,
-    "run_id": null,
-    "sha": null,
-    "verdict": null
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0ea40-4b0e-7daf-8748-7895a8625d2b",
+    "sha": "34f90e8d1da30f60b63b88bd05357fe2d6df19fc",
+    "verdict": "approved"
   },
   "deployment": {
     "required": true,
@@ -61,7 +61,7 @@
   },
   "finalization": {
     "path": "docs/reports/tasks/T-065.md",
-    "sha256": "d40fcb71f3d7ce886245d7a451c6fc3c7749d2c6b6a4072f666e31cd3289e343"
+    "sha256": "4f93a33a6e5b1682d6cf5f2a1db4a7c8339013e79eafd6198f27c6367e18d2d7"
   },
   "usage": null
 }

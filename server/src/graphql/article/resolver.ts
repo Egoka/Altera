@@ -28,10 +28,12 @@ import {
   publicationDatesForStatus
 } from "../../visibility/article"
 import { randomUUID } from "node:crypto"
-import { articleCoverView, ensureCoverBeforeSubmit, setArticleCover } from "../../article/cover"
+import { articleCoverView, setArticleCover } from "../../article/cover"
 import type { FocalPoint } from "../../media"
 
 type MyArticleStatus = "draft" | "ai_check" | "review" | "rework" | "published" | "rejected" | "archived"
+
+const STAFF_ARTICLE_ARCHIVE_ROLES = new Set(["moderator", "admin", "owner"])
 
 interface MyArticleTranslationRecord {
   id: string
@@ -595,6 +597,9 @@ export default {
       const slug = `draft-${articleId}`
 
       const newArticle = await ctx.prisma.$transaction(async (tx) => {
+        // Черновик и его исходная языковая версия создаются одной вложенной записью Prisma.
+        // Legacy-trigger иначе успевает создать ту же пару articleId/locale после INSERT статьи.
+        await tx.$executeRawUnsafe(`SET LOCAL "altera.legacy_sync" = 'off'`)
         const section = input.sectionId
           ? await tx.section.findFirst({
               where: { id: input.sectionId, status: "active" },
@@ -673,8 +678,21 @@ export default {
       return updatedArticle
     },
 
-    archiveArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
+    archiveArticle: async (
+      _parent: any,
+      { id, reason: rawReason }: { id: string; reason?: string | null },
+      ctx: GraphQLContext
+    ) => {
       const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
+      const staffArchive = !user.archivedAt && STAFF_ARTICLE_ARCHIVE_ROLES.has(user.role)
+      const reason = rawReason?.trim() ?? ""
+      if (staffArchive && !reason) {
+        throw createApiError("VALIDATION_ERROR", {
+          requestId: ctx.requestId,
+          field: "reason",
+          rule: "required"
+        })
+      }
 
       const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
         const article = await transaction.article.findUnique({
@@ -682,7 +700,7 @@ export default {
           include: { author: true, section: true, tags: true }
         })
         if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-        if (article.authorId !== user.id) {
+        if (!staffArchive && article.authorId !== user.id) {
           throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.archive" })
         }
         if (article.status === "archived") {
@@ -701,7 +719,7 @@ export default {
             archivedAt: new Date(),
             archivedByActorId: user.id,
             archivedByRole: user.role,
-            archiveReason: "author"
+            archiveReason: staffArchive ? reason : "author"
           },
           include: { author: true, section: true, tags: true }
         })
@@ -712,7 +730,13 @@ export default {
             actorRole: user.role,
             entityType: "article",
             entityId: id,
-            diff: { status: { from: article.status, to: "archived" } },
+            diff: staffArchive
+              ? {
+                  status: { from: article.status, to: "archived" },
+                  reason,
+                  actorRoleLevel: user.role
+                }
+              : { status: { from: article.status, to: "archived" } },
             requestId: ctx.requestId
           }
         })
@@ -727,7 +751,8 @@ export default {
 
     restoreArticle: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
       const user = ensureAuthenticated(ctx.currentUser, ctx.requestId)
-      ensureActiveAuthor(user, "article.restore", ctx.requestId, { logger: ctx.logger })
+      const ownerRestore = !user.archivedAt && user.role === "owner"
+      if (!ownerRestore) ensureActiveAuthor(user, "article.restore", ctx.requestId, { logger: ctx.logger })
 
       const { article, updatedArticle } = await ctx.prisma.$transaction(async (transaction) => {
         const article = await transaction.article.findUnique({
@@ -735,7 +760,7 @@ export default {
           include: { author: true, section: true, tags: true }
         })
         if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-        if (article.authorId !== user.id) {
+        if (!ownerRestore && article.authorId !== user.id) {
           throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
         }
         if (article.status !== "archived") {
@@ -747,8 +772,8 @@ export default {
           })
         }
         if (
-          article.archivedByActorId !== user.id ||
-          (article.archivedByRole !== "author" && article.archivedByRole !== "reader")
+          (!ownerRestore && article.archivedByActorId !== user.id) ||
+          (!ownerRestore && article.archivedByRole !== "author" && article.archivedByRole !== "reader")
         ) {
           throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.restore" })
         }
@@ -772,7 +797,9 @@ export default {
             actorRole: user.role,
             entityType: "article",
             entityId: id,
-            diff: { status: { from: "archived", to: restoredStatus } },
+            diff: ownerRestore
+              ? { status: { from: "archived", to: restoredStatus }, actorRoleLevel: user.role }
+              : { status: { from: "archived", to: restoredStatus } },
             requestId: ctx.requestId
           }
         })
@@ -785,67 +812,11 @@ export default {
       return updatedArticle
     },
 
-    requestReview: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureArticleAuthoringAccess(ctx, "translation.submit")
-
-      const article = await ctx.prisma.article.findUnique({
-        where: { id },
-        include: { author: true, section: true, tags: true }
-      })
-      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (article.authorId !== user.id) {
-        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.requestReview" })
-      }
-      if (article.status !== "draft") {
-        throw createApiError("CONFLICT", {
-          requestId: ctx.requestId,
-          entity: "article",
-          expected: "draft",
-          actual: article.status
-        })
-      }
-      ensurePublicIdentity(article, ctx.requestId)
-      ensureActiveSection(article, ctx.requestId)
-      // Обложка обязательна перед публикацией (журнал §29.1, `article-edit.md` §4): подача без
-      // неё — `VALIDATION_ERROR`, и до публикации материал без карточки не доходит.
-      await ensureCoverBeforeSubmit(ctx, article.coverAssetId)
-
-      return ctx.prisma.article.update({
-        where: { id },
-        data: { status: "review" },
-        include: { author: true, section: true, tags: true }
-      })
-    },
-
     setArticleCover: async (
       _parent: unknown,
       args: { articleId: string; assetId?: string | null; focal?: FocalPoint | null },
       ctx: GraphQLContext
     ) => setArticleCover(ctx, { articleId: args.articleId, assetId: args.assetId ?? null, focal: args.focal ?? null }),
-
-    revertToDraft: async (_parent: any, { id }: { id: string }, ctx: GraphQLContext) => {
-      const user = ensureArticleAuthoringAccess(ctx, "translation.withdraw")
-
-      const article = await ctx.prisma.article.findUnique({ where: { id } })
-      if (!article) throw createApiError("NOT_FOUND", { requestId: ctx.requestId, entity: "article" })
-      if (article.authorId !== user.id) {
-        throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "article.revertToDraft" })
-      }
-      if (article.status !== "review") {
-        throw createApiError("CONFLICT", {
-          requestId: ctx.requestId,
-          entity: "article",
-          expected: "review",
-          actual: article.status
-        })
-      }
-
-      return ctx.prisma.article.update({
-        where: { id },
-        data: { status: "draft" },
-        include: { author: true, section: true, tags: true }
-      })
-    },
 
     setArticleStatus: async (_parent: any, { id, status }: { id: string; status: any }, ctx: GraphQLContext) => {
       ensureRole(ctx.currentUser, "admin", "article.setStatus", ctx.requestId)

@@ -10,11 +10,13 @@ import {
   createBackupMonitorFromEnv,
   createHealthAlerts,
   createHealthCheck,
+  createPrismaHealthHistory,
   createProviderProbes,
   createStaffRecipients,
   redisReadiness,
   withHealth,
   type BackupRunsClient,
+  type HealthHistoryClient,
   type MailHistoryClient,
   type StaffRecipientsClient
 } from "./health"
@@ -58,6 +60,7 @@ import {
   startRateLimitCounterPrune,
   type RateLimitDatabaseClient
 } from "./rate-limits"
+import { createAccountExportService, createPrismaAccountExportStore, registerAccountExportJob } from "./account-export"
 
 const PORT = process.env.PORT || 4000
 const cache = createCache({ redisUrl: process.env.REDIS_URL })
@@ -88,6 +91,10 @@ const rateLimiter = createRateLimiter({
 })
 
 const jobStore = createPrismaJobStore(prisma)
+const accountExports = createAccountExportService({
+  store: createPrismaAccountExportStore(prisma),
+  storage: storageConfig.storage
+})
 const aiCheck = createAiCheckAdapterFromEnv(process.env)
 // Очередь AI-описания: конвейеру нужна только постановка задания, поэтому идентификаторы задания
 // и AI-процесса остаются внутри модуля AI (`upload-pipeline.md` п. 6а).
@@ -107,7 +114,18 @@ const media = createMediaService({
 const yoga = createYoga<GraphQLContext>({
   schema,
   context: (initialContext) =>
-    createContext(initialContext, cache, logger, piiHasher, mail, media, rateLimiter, errorCollector, aiCheck),
+    createContext(
+      initialContext,
+      cache,
+      logger,
+      piiHasher,
+      mail,
+      media,
+      rateLimiter,
+      errorCollector,
+      aiCheck,
+      accountExports
+    ),
   logging: false,
   maskedErrors: { isDev: false, maskError },
   cors: {
@@ -129,7 +147,8 @@ const yoga = createYoga<GraphQLContext>({
 // (журнал §40 п. 2); канал доставки отложен (§40 п. 1).
 const healthAlerts = createHealthAlerts({
   recipients: createStaffRecipients(prisma as unknown as StaffRecipientsClient),
-  logger
+  logger,
+  history: createPrismaHealthHistory(prisma as unknown as HealthHistoryClient)
 })
 const health = createHealthCheck(
   {
@@ -169,12 +188,13 @@ const mediaGateway = storageConfig.local
   : yoga
 const server = createServer(withHealth(mediaGateway, health))
 registerHousekeepingJob(prisma)
+registerAccountExportJob(accountExports)
 // Чистка медиа-сирот (`retention-and-orphans.md` §2 п. 5–6): обработчик задания есть всегда, а
 // расписание включается признаком — окно и интервал ещё не утверждены владельцем (журнал §33 п. 3).
 registerMediaPurgeJob(createMediaPurgeDeps(prisma, storageConfig.storage))
 // AI-проверка допустимости: `real` ждёт утверждения владельцем (журнал §32 п. 2), поэтому вне
 // разработки адаптер отвечает недоступностью провайдера, а не выносит вердикт.
-registerAiCheckJob({ client: prisma, adapter: aiCheck, logger })
+registerAiCheckJob({ client: prisma, adapter: aiCheck, logger, cache, mail })
 // AI-описание изображений: выбор модели — отдельный проход (`upload-pipeline.md` п. 6а), поэтому
 // вне разработки адаптер отвечает недоступностью провайдера, а не выдумывает описание.
 registerAiAltJob({

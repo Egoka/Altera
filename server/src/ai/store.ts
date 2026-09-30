@@ -2,8 +2,8 @@
  * Хранилище записей AI-проверки: узкий интерфейс поверх Prisma.
  *
  * Сервис проверки не получает весь `PrismaClient`, потому что запись результата — это ровно
- * четыре таблицы: AI-процесс, агрегат стоимости, комментарий в историю решений и аудит. Границы
- * видны по интерфейсу, а двойник в тестах не повторяет клиент целиком.
+ * таблицы результата и условный переход версии. Границы видны по интерфейсу, а двойник в тестах
+ * не повторяет клиент целиком.
  */
 
 import { Prisma, type AiProcessStatus, type PrismaClient } from "../generated/prisma"
@@ -13,6 +13,8 @@ import type { AiCheckSubmissionStore } from "./submission"
 export interface AiCheckResultWriter {
   aiProcess: Pick<Prisma.TransactionClient["aiProcess"], "update">
   aiCostAggregate: Pick<Prisma.TransactionClient["aiCostAggregate"], "upsert">
+  articleTranslation: Pick<Prisma.TransactionClient["articleTranslation"], "findUnique" | "updateMany">
+  article: Pick<Prisma.TransactionClient["article"], "update">
   reviewMessage: Pick<Prisma.TransactionClient["reviewMessage"], "create">
   auditLog: Pick<Prisma.TransactionClient["auditLog"], "create">
 }
@@ -20,6 +22,7 @@ export interface AiCheckResultWriter {
 export interface AiCheckProcessRecord {
   id: string
   status: AiProcessStatus
+  verdict: string | null
 }
 
 export interface AiCheckStore extends AiCheckSubmissionStore {
@@ -44,7 +47,10 @@ export function createPrismaAiCheckStore(client: PrismaClient): AiCheckStore {
     mediaAsset: client.mediaAsset,
 
     async findProcessByJob(jobId) {
-      return client.aiProcess.findFirst({ where: { jobId, kind: "check" }, select: { id: true, status: true } })
+      return client.aiProcess.findFirst({
+        where: { jobId, kind: "check" },
+        select: { id: true, status: true, verdict: true }
+      })
     },
 
     async createProcess(input) {
@@ -58,7 +64,7 @@ export function createPrismaAiCheckStore(client: PrismaClient): AiCheckStore {
           revisionId: input.revisionId,
           ...(input.createdAt ? { createdAt: input.createdAt } : {})
         },
-        select: { id: true, status: true }
+        select: { id: true, status: true, verdict: true }
       })
     },
 

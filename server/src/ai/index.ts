@@ -4,9 +4,14 @@
  * Объём T-048 — интерфейс, `fake`, запись результата и связь с очередью (журнал §32 п. 3).
  */
 
+import { randomUUID } from "node:crypto"
 import type { PrismaClient } from "../generated/prisma"
+import type { Cache } from "../cache"
+import { buildArticleCacheTags } from "../cache/key"
 import { registerJobHandler } from "../jobs/job-handlers"
 import type { JobHandler } from "../jobs/job-worker"
+import { notifyArticleDecision } from "../mail/article-notifications"
+import type { MailService } from "../mail/service"
 import type { AppLogger } from "../observability/logger"
 import { AI_CHECK_JOB_KIND, parseAiCheckJobParameters } from "./queue"
 import { createAiCheckService } from "./service"
@@ -19,6 +24,7 @@ export { createUnavailableAiCheckAdapter } from "./adapters/unavailable"
 export {
   AI_CHECK_JOB_KIND,
   createPrismaAiCheckQueue,
+  enqueueAiCheck,
   parseAiCheckJobParameters,
   type AiCheckQueue,
   type EnqueueAiCheckInput
@@ -43,14 +49,49 @@ interface AiCheckJobOptions {
   client: PrismaClient
   adapter: AiCheckAdapter
   logger: AppLogger
+  cache?: Pick<Cache, "delByTags">
+  mail?: MailService
 }
 
 /** Обработчик задания `ai.check`: параметры очереди → вердикт и его запись. */
 export function createAiCheckJobHandler(options: AiCheckJobOptions): JobHandler {
+  const cache = options.cache
+  const mail = options.mail
   const service = createAiCheckService({
     store: createPrismaAiCheckStore(options.client),
     adapter: options.adapter,
-    logger: options.logger
+    logger: options.logger,
+    onPublished: cache
+      ? async (translationId) => {
+          const translation = await options.client.articleTranslation.findUnique({
+            where: { id: translationId },
+            select: {
+              article: {
+                select: {
+                  slug: true,
+                  author: { select: { handle: true } },
+                  section: { select: { slug: true } },
+                  tags: { select: { slug: true } }
+                }
+              }
+            }
+          })
+          if (translation) await cache.delByTags(buildArticleCacheTags(translation.article))
+        }
+      : undefined,
+    // Письмо автору о решении AI (T-051) — ровно один раз, на первом реальном переходе.
+    onDecision: mail
+      ? async ({ translationId, verdict, originRequestId }) => {
+          await notifyArticleDecision(
+            { store: options.client, mail },
+            {
+              translationId,
+              decision: verdict === "publish" ? "published" : "ai_rejected",
+              requestId: originRequestId ?? randomUUID()
+            }
+          )
+        }
+      : undefined
   })
 
   return async (job) => {

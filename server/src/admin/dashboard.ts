@@ -31,6 +31,11 @@ interface CardDefinition {
 const metric = (id: string, value: number): AdminSummaryMetric => ({ id, value })
 const openAiStatuses = ["created", "started", "running"] as const
 const reviewArticleStatuses = ["review", "in_review", "rework"] as const
+const publicAccountWhere = {
+  isServiceAccount: false,
+  isTestAccount: false,
+  email: { not: { endsWith: "@example.test" } }
+} as const
 
 const cards: Record<string, CardDefinition> = {
   editorial: {
@@ -83,9 +88,12 @@ const cards: Record<string, CardDefinition> = {
     href: "/admin/statistics",
     read: async (ctx, periodStart) => {
       const [registrations, activePlans] = await Promise.all([
-        ctx.prisma.user.count({ where: { isServiceAccount: false, createdAt: { gte: periodStart } } }),
+        ctx.prisma.user.count({
+          where: { ...publicAccountWhere, createdAt: { gte: periodStart } }
+        }),
         ctx.prisma.planGrant.count({
           where: {
+            user: { ...publicAccountWhere },
             startsAt: { lte: new Date() },
             revokedAt: null,
             OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }]

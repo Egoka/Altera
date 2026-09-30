@@ -1,7 +1,7 @@
+-- `pendingName` уже создан очередью проверки (20260929180000_review_profile_pending_name).
 ALTER TABLE "users"
 ADD COLUMN "handleConfirmed" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN "handleChangedAt" TIMESTAMP(3),
-ADD COLUMN "pendingName" TEXT,
 ADD COLUMN "nameCheckReason" TEXT,
 ADD COLUMN "avatarCheckReason" TEXT;
 
