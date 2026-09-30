@@ -66,6 +66,8 @@ const createArticle = async (database: PrismaClient, body: string) => {
       name: "Автор Материала",
       email: "author@example.test",
       handle: "author",
+      // Первая подача требует явно сохранённого хэндла (T-031).
+      handleConfirmed: true,
       role: "author",
       planTier: "standard"
     }
