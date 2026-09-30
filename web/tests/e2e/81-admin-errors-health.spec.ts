@@ -202,6 +202,9 @@ test.describe("T-081 admin errors and health", () => {
         prisma.auditLog.count({ where: { action: "admin.change", entityType: "errorWorkItem", entityId: errorId } })
       )
       .toBe(1)
+    // Кнопки заблокированы, пока страница перечитывает карточку после смены статуса. Правка «другого
+    // сотрудника» должна случиться после этого перечитывания, иначе оно подхватит свежий `updatedAt`.
+    await expect(page.locator('[data-error-status="resolved"]')).toBeEnabled()
 
     await prisma.backendError.update({ where: { id: errorId }, data: { sanitizedMessage: "Changed concurrently" } })
     await page.locator('[data-error-status="resolved"]').click()
