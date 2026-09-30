@@ -81,5 +81,17 @@ describe("контракт стоимости AI-процессов", () => {
     })
     expect(mutation?.getFields()).not.toHaveProperty("retryAiProcess")
     expect(mutation?.getFields()).not.toHaveProperty("runAiProcess")
+
+    const costFields: string[] = []
+    for (const type of Object.values(schema.getTypeMap())) {
+      if (!isObjectType(type) || type.name.startsWith("__")) continue
+      for (const field of Object.values(type.getFields())) {
+        if (/cost|price/i.test(field.name)) costFields.push(`${type.name}.${field.name}`)
+      }
+    }
+    // T-075 открыл только агрегированную стоимость раздела статистики. Граница остаётся строгой:
+    // стоимость доступна у агрегата, но отдельного API-типа процесса по-прежнему нет.
+    expect(costFields.filter((field) => /^Ai/.test(field))).toEqual(["AiStatistics.costMinor"])
+    expect(schema.getType("AiProcess")).toBeUndefined()
   })
 })

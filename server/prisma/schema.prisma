@@ -38,6 +38,8 @@ model User {
   /// в `archiveReason` и наружу не уходит.
   archivePublicMessage        String?
   isServiceAccount            Boolean                       @default(false)
+  /// Явная пометка тестовой записи: такие аккаунты не входят в продуктовые агрегаты и воронку.
+  isTestAccount               Boolean                       @default(false)
   planTier                    PlanTier                      @default(free)
   planUntil                   DateTime?
   /// Пароль хранится PHC-строкой Argon2id; `null` — аккаунт без пароля, он входит по ссылке
@@ -76,6 +78,7 @@ model User {
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
   @@index([avatarCheckStatus])
+  @@index([isTestAccount])
   @@map("users")
 }
 
