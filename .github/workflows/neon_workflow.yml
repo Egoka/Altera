@@ -33,20 +33,60 @@ jobs:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
+      # neondatabase/create-branch-action@v6 ждёт ответа API не дольше 10 секунд и не
+      # повторяет запрос: 2026-10-01 в 15:33–15:36 UTC API Neon отвечал медленнее, и прогоны
+      # PR #396 и #397 упали с «AxiosError: timeout of 10000ms exceeded», хотя ветка не
+      # создалась. Здесь те же вызовы с таймаутом 30 секунд и тремя попытками. Как и экшен,
+      # шаг сначала ищет ветку по имени, поэтому повтор после запроса, который всё же дошёл до
+      # Neon, не создаёт вторую ветку.
       - name: Create Neon Branch
         id: create_neon_branch
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: ${{ env.NEON_BRANCH }}
-          api_key: ${{ secrets.NEON_API_KEY }}
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          api="https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches"
+          # Поиск повторяет сам curl, молча (-s без -S): исход, удачный или нет, сообщает шаг.
+          find_branch() {
+            curl -fs --max-time 30 --retry 3 --retry-all-errors --retry-delay 5 --get \
+              -H "Authorization: Bearer $NEON_API_KEY" --data-urlencode "search=$NEON_BRANCH" "$api" |
+              jq -r --arg name "$NEON_BRANCH" 'first(.branches[] | select(.name == $name) | .id) // empty'
+          }
+          body=$(jq -n --arg name "$NEON_BRANCH" '{branch: {name: $name}, endpoints: [{type: "read_write"}]}')
+          id=""
+          for attempt in 1 2 3; do
+            if ! id=$(find_branch); then
+              echo "::error::API Neon не ответил на поиск ветки $NEON_BRANCH."
+              exit 1
+            fi
+            if [ -n "$id" ]; then
+              echo "Ветка $NEON_BRANCH уже есть ($id)."
+              break
+            fi
+            # Создание вслепую не повторяется: следующая попытка сначала ищет ветку.
+            if id=$(curl -fs --max-time 30 -X POST -H "Authorization: Bearer $NEON_API_KEY" \
+              -H "Content-Type: application/json" -d "$body" "$api" | jq -re '.branch.id'); then
+              echo "Создана ветка $NEON_BRANCH ($id)."
+              break
+            fi
+            id=""
+            echo "Попытка $attempt: API Neon не подтвердил создание ветки."
+            if [ "$attempt" -lt 3 ]; then sleep 10; fi
+          done
+          if [ -z "$id" ]; then
+            echo "::error::Ветка $NEON_BRANCH не создана за три попытки."
+            exit 1
+          fi
+          echo "branch_id=$id" >> "$GITHUB_OUTPUT"
 
       # Ветка создана и живёт до конца этого прогона. Проверки на ней добавляются сюда, до
-      # удаления. URL доступны как steps.create_neon_branch.outputs.db_url (прямое
-      # подключение) и steps.create_neon_branch.outputs.db_url_pooled (через пулер).
-      # Печатать их в лог нельзя: в них логин и пароль базы.
+      # удаления; её id — steps.create_neon_branch.outputs.branch_id. Строку подключения даёт
+      # GET /projects/{project_id}/connection_uri с branch_id, database_name=neondb,
+      # role_name=neondb_owner и pooled=true|false. В ней логин и пароль базы: перед записью в
+      # $GITHUB_OUTPUT её маскируют (::add-mask::) и в лог не печатают.
       #
-      # Пример миграций — пока не включён, решение отдельное:
+      # Пример миграций — пока не включён, решение отдельное (db_url и db_url_pooled — строки
+      # подключения из connection_uri):
       #      - name: Миграции Prisma
       #        run: cd server && npx prisma migrate deploy
       #        env:
