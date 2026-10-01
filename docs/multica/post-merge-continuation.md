@@ -14,12 +14,13 @@
 Пополнять запас до трёх Todo из `docs/backlog/tasks`, проверяя дубли, зависимости
 и полезный остаток задачи. Три Todo не разрешают три product writer.
 
-Уборку выполнять по [контракту очистки](autonomy-cleanup.md). Пока общий fence
-новых запусков не подтверждён, удаление не разрешено даже после успешного dry-run.
-Запрет относится к локальному worktree и локальной ветке: гонка возможна только с
-dispatch на тот же путь. Remote head-ветку снимает сам GitHub при merge по настройке
-`delete_branch_on_merge` ([автоматический PR и merge](pr-auto-merge.md)); отдельного
-разрешения и подтверждённого fence это не требует.
+Локальный worktree и локальную ветку задачи убирает сам `controller.py done` после
+успешного Done по [контракту очистки](autonomy-cleanup.md): fence — последовательная
+рабочая папка Multica, проверенная полным списком запусков. Результат — поля `cleanup`
+и `cleanup_pending` вывода `done`; `skipped` с причиной означает, что worktree остался и
+будет досмотрен при следующем Done или `controller.py cleanup`. Вручную worktree задачи
+не удалять. Remote head-ветку снимает сам GitHub при merge по настройке
+`delete_branch_on_merge` ([автоматический PR и merge](pr-auto-merge.md)).
 
 Прежние подробности сохранены в `history/2026-09-15-before-controller/post-merge-continuation.md`
 для аудита; они не подключаются в активный prompt.

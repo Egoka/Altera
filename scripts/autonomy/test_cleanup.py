@@ -78,7 +78,7 @@ class CleanupTests(unittest.TestCase):
         git(self.repo, "config", "user.email", "cleanup@example.invalid")
         git(self.repo, "config", "merge.ff", "true")
         git(self.repo, "config", "commit.gpgsign", "false")
-        (self.repo / ".gitignore").write_text("ignored/\n")
+        (self.repo / ".gitignore").write_text("ignored/\n.env\nnode_modules/\ndist/\n.storage/\n.husky/_/\n")
         (self.repo / "product.txt").write_text("base\n")
         git(self.repo, "add", ".")
         git(self.repo, "commit", "-m", "base")
@@ -185,6 +185,22 @@ class CleanupTests(unittest.TestCase):
         (self.worktree / "ignored" / "report.md").write_text("evidence")
         self.assert_preserved("dirty")
 
+    def test_regenerable_ignored_artifacts_do_not_block_cleanup(self):
+        # Зависимости, сборка и локальное хранилище разработки есть в каждом рабочем worktree.
+        for path in ("node_modules/pkg/index.js", "web/node_modules/pkg/index.js",
+                     "packages/content/dist/index.js", ".husky/_/pre-commit", "server/.storage/upload.bin"):
+            target = self.worktree / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("generated\n")
+        result = self.run_cleanup(apply=True)
+        self.assertEqual(result["status"], "removed", result)
+        self.assertFalse(self.worktree.exists())
+
+    def test_ignored_secret_outside_regenerable_list_blocks_cleanup(self):
+        (self.worktree / "web").mkdir()
+        (self.worktree / "web" / ".env").write_text("TOKEN=local\n")
+        self.assert_preserved("dirty")
+
     def test_tracked_modification_blocks_cleanup(self):
         (self.worktree / "product.txt").write_text("new work")
         self.assert_preserved("dirty")
@@ -204,6 +220,79 @@ class CleanupTests(unittest.TestCase):
     def test_unknown_run_state_or_missing_identity_fails_closed(self):
         self.evidence["runs"] = [{"id": "run-2", "status": "mysterious"}]
         self.assert_preserved("run")
+
+    def test_multica_queue_states_are_known_active_states(self):
+        for state in ("waiting_local_directory", "dispatched"):
+            with self.subTest(state=state):
+                self.evidence["runs"] = [{"id": "run-2", "task_id": "task-1", "status": state}]
+                self.assert_preserved("active")
+
+    def fence(self, runs, caller="run-self", in_use=False):
+        self.evidence.update(fence="exclusive", caller_run_id=caller, worktree_in_use=in_use, runs=runs)
+
+    def test_exclusive_fence_allows_caller_and_waiting_runs_of_other_tasks(self):
+        # Папка Multica исполняет один запуск: ожидающие стартуют только после вызывающего.
+        self.fence([{"id": "run-self", "status": "running"},
+                    {"id": "run-2", "status": "waiting_local_directory", "task_id": "task-2"},
+                    {"id": "autopilot", "status": "queued"},
+                    {"id": "old", "status": "completed", "task_id": "task-1"}])
+        result = self.run_cleanup(apply=True)
+        self.assertEqual(result["status"], "removed", result)
+        self.assertFalse(self.worktree.exists())
+
+    def test_exclusive_fence_without_caller_requires_idle_workspace(self):
+        # Без вызывающего запуска папка Multica свободна: ожидающий запуск может стартовать сразу.
+        self.fence([{"id": "old", "status": "completed", "task_id": "task-2"}], caller=None)
+        self.assertEqual(self.run_cleanup()["status"], "eligible")
+        self.fence([{"id": "run-2", "status": "queued", "task_id": "task-2"}], caller=None)
+        self.assert_preserved("idle")
+
+    def test_unknown_run_state_is_named_in_reason(self):
+        self.evidence["runs"] = [{"id": "run-2", "task_id": "task-2", "status": "expired"}]
+        self.assert_preserved("expired")
+
+    def test_exclusive_fence_blocks_any_other_executing_run(self):
+        for state in ("running", "dispatched", "starting", "claimed"):
+            with self.subTest(state=state):
+                self.fence([{"id": "run-self", "status": "running"},
+                            {"id": "other", "status": state, "task_id": "task-2"}])
+                self.assert_preserved("executing")
+
+    def test_exclusive_fence_keeps_worktree_of_task_with_waiting_run(self):
+        self.fence([{"id": "run-self", "status": "running"},
+                    {"id": "rework", "status": "queued", "task_id": "task-1"}])
+        self.assert_preserved("active")
+
+    def test_exclusive_fence_requires_visible_caller_run(self):
+        self.fence([{"id": "run-self", "status": "completed"}])
+        self.assert_preserved("caller")
+
+    def test_exclusive_fence_requires_worktree_free_of_local_processes(self):
+        for in_use in (True, None):
+            with self.subTest(in_use=in_use):
+                self.fence([{"id": "run-self", "status": "running"}], in_use=in_use)
+                self.assert_preserved("in use")
+
+    def test_repeat_check_catches_process_entering_worktree(self):
+        self.fence([{"id": "run-self", "status": "running"}])
+        def race(provider):
+            if provider.reads == 2:
+                self.evidence["worktree_in_use"] = True
+        self.provider.on_read = race
+        self.assert_preserved("in use")
+
+    def test_pr_base_outside_branch_history(self):
+        # GitHub base.sha — вершина app при последнем обновлении PR, а ветку не догоняют до app
+        # (решение владельца 2026-09-19): у merge-коммита она законно не предок head.
+        tree = git(self.repo, "rev-parse", self.base + "^{tree}")
+        foreign = git(self.repo, "commit-tree", "-p", self.base, "-m", "app moved", tree)
+        self.receipt["pr"]["base_sha"] = foreign
+        self.evidence["pr"]["base_sha"] = foreign
+        self.evidence["task"]["receipt_sha256"] = digest(self.receipt)
+        if self.merge_mode == "merge":
+            self.assertEqual(self.run_cleanup()["status"], "eligible")
+        else:
+            self.assert_preserved("merge-base")
 
     def test_stale_or_incomplete_evidence_blocks_cleanup(self):
         self.evidence["observed_at"] = time.time() - 301
@@ -397,6 +486,26 @@ class MergeCommitCleanupTests(CleanupTests):
         parents = git(self.repo, "rev-list", "--parents", "-n", "1", self.merge).split()[1:]
         self.assertEqual(parents, [self.base, self.head])
         self.assertEqual(self.run_cleanup()["status"], "eligible")
+
+    def test_merge_after_parallel_app_change_keeps_branch_history_in_app(self):
+        # Параллельный PR раньше изменил тот же файл: diff merge-коммита идёт от новой вершины app
+        # и не совпадает с diff PR, но все коммиты ветки остаются в истории app.
+        git(self.repo, "reset", "--hard", self.base)
+        (self.repo / "product.txt").write_text("parallel edit\n")
+        git(self.repo, "commit", "-am", "parallel PR")
+        git(self.repo, "merge", "--no-ff", "-X", "theirs", "-m", "merge feature", self.branch)
+        merge = git(self.repo, "rev-parse", "HEAD")
+        self.finalization.parent.mkdir(parents=True, exist_ok=True)
+        self.finalization.write_text("Verified task-1 report for " + self.head + "\n")
+        git(self.repo, "add", "docs/reports/finalization.md")
+        git(self.repo, "commit", "-m", "finalization report")
+        git(self.repo, "push", "--force", "origin", "app")
+        self.receipt["pr"]["merge_sha"] = merge
+        self.evidence["pr"]["merge_sha"] = merge
+        self.evidence["task"]["receipt_sha256"] = digest(self.receipt)
+        self.evidence["task"]["artifacts"] = [{"id": "gitblob:" + git(self.repo, "rev-parse", "origin/app:docs/reports/finalization.md"),
+                                               "sha256": self.receipt["finalization"]["sha256"]}]
+        self.assertEqual(self.run_cleanup(apply=True)["status"], "removed")
 
     def test_merge_commit_with_other_second_parent_is_rejected(self):
         # Та же правка другим коммитом: содержимое совпадает, но PR head в merge не входит.

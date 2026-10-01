@@ -169,8 +169,9 @@ Receipt для контроллера держи во временном фай�
 6. Done. Для задачи с готовым итогом в `app` и завершённой пробой моложе 55 минут (если выкладка
    обязательна): receipt из `origin/app` плюс локально `deployment.probe_actor_id` =
    `db94a617-807c-4eec-981f-51fd4b3217d4` и `deployment.probe_run_id` = run пробы; прогрей
-   `/health`; `controller.py verify`, при `ok` — `controller.py done`. Одна свежая проба годится
-   всем задачам, чей `merge_sha` входит в задеплоенный коммит.
+   `/health`; `controller.py verify`, при `ok` — `controller.py done` с таймаутом Bash 600000 мс:
+   после Done контроллер сам убирает worktree задачи. Одна свежая проба годится всем задачам, чей
+   `merge_sha` входит в задеплоенный коммит.
 7. Каждое решение по карточке — один комментарий, последняя строка которого
    `ALTERA_FINALIZE_V1 {"task": "<T-ID>", "stage": "<review|receipt|probe|done|blocked|return>", "sha": "<итоговый head>", "reason": "<код>"}`.
 8. Возврат. Карточки проекта в `blocked` с `metadata.rework_task` (одна или несколько T-ID через
