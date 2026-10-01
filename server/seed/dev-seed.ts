@@ -37,8 +37,18 @@ import {
   SupportTopic,
   TaxonomyStatus
 } from "../src/generated/prisma"
-import { masterKey, variantKey } from "../src/storage/keys"
-import { createMediaWriter, inPool, renderAvatar, renderCover } from "./dev-media"
+import {
+  AVATAR_VARIANT_WIDTHS,
+  avatarUrlOf,
+  coverViewOf,
+  createPrismaMediaAssetStore,
+  createSharpImageProcessor,
+  ensureVariants,
+  type MediaAssetRecord
+} from "../src/media"
+import { masterKey } from "../src/storage/keys"
+import { createLocalStorage } from "../src/storage/local"
+import { inPool, renderAvatar, renderCover } from "./dev-media"
 import { seedDatabase } from "./seed"
 
 const prisma = new PrismaClient()
@@ -56,7 +66,6 @@ interface MediaSpec {
   width: number
   height: number
   status: MediaProcessingStatus
-  variants: { width: number; format: string; key: string }[]
   seed: number
   paletteIndex: number
 }
@@ -848,7 +857,9 @@ async function main(): Promise<void> {
   // ----- Медиа: план записей и файлов ---------------------------------------
   // Файлы пишутся в локальное хранилище по раскладке `src/storage/keys.ts`; раздача `/media`
   // отдаёт публично только варианты готовых медиа, которые служат обложкой опубликованной
-  // статьи или аватаром активного аккаунта (`storage/access.ts`).
+  // статьи или аватаром активного аккаунта (`storage/access.ts`). Набор вариантов собирает
+  // конвейер сервера (`media/variants.ts`), а не сид: иначе при смене матрицы или формата
+  // набора сид снова отстанет, и обложки пропадут из лент.
   console.log("5/12 медиа: план")
   const mediaRows: Prisma.MediaAssetCreateManyInput[] = []
   const mediaSpecs: MediaSpec[] = []
@@ -870,16 +881,7 @@ async function main(): Promise<void> {
             [1200, 900],
             [1080, 1080]
           ] as const)
-    const widths = input.purpose === "avatar" ? [128, 256] : [480, 960]
     const key = masterKey({ assetId: id, createdAt: input.createdAt, extension: "png" })
-    const variants =
-      status === MediaProcessingStatus.ready
-        ? widths.map((w) => ({
-            width: w,
-            format: "webp",
-            key: variantKey({ assetId: id, createdAt: input.createdAt, width: w, format: "webp" })
-          }))
-        : []
     mediaRows.push({
       id,
       ownerId: input.ownerId,
@@ -890,9 +892,11 @@ async function main(): Promise<void> {
       width,
       height,
       sha256: "",
-      variants,
-      focalX: chance(0.5) ? Number(rand().toFixed(2)) : null,
-      focalY: chance(0.5) ? Number(rand().toFixed(2)) : null,
+      // Фокус ставит только выбор обложки (`setArticleCover`), и по нему конвейер режет кадры
+      // карточек: без кадров обложка не готова к публикации (`isCoverReady`), а аватару и файлу
+      // медиатеки кадры не нужны (`cropsFor`).
+      focalX: input.purpose === "cover" ? Number(rand().toFixed(2)) : null,
+      focalY: input.purpose === "cover" ? Number(rand().toFixed(2)) : null,
       alt:
         input.purpose === "avatar"
           ? "Аватар автора"
@@ -932,17 +936,10 @@ async function main(): Promise<void> {
       width,
       height,
       status,
-      variants,
       seed: int(1, 2 ** 30),
       paletteIndex: input.paletteIndex
     })
     return id
-  }
-  const variantUrl = (assetId: string, width: number): string => {
-    const variant = (mediaRows.find((row) => row.id === assetId)!.variants as { width: number; key: string }[]).find(
-      (v) => v.width === width
-    )!
-    return `${MEDIA_BASE_URL}/${variant.key}`
   }
 
   // Аватары: у половины авторов текущий, у части — ещё и прежний.
@@ -1037,14 +1034,17 @@ async function main(): Promise<void> {
     const hasSection = status !== ArticleStatus.draft || chance(0.5)
     const id = uuid()
     const dekPool = sourceLocale === Locale.en ? SENTENCES_EN : SENTENCES_RU
-    const coverId = chance(0.85)
-      ? planMedia({
-          ownerId: author.id,
-          purpose: "cover",
-          createdAt,
-          paletteIndex: SECTION_TOPICS.findIndex((entry) => entry.slug === sectionSlug)
-        })
-      : null
+    // Обложка обязательна до отправки на проверку (`ensureCoverBeforeSubmit`, журнал §29.1):
+    // без неё может остаться только черновик.
+    const coverId =
+      status !== ArticleStatus.draft || chance(0.85)
+        ? planMedia({
+            ownerId: author.id,
+            purpose: "cover",
+            createdAt,
+            paletteIndex: SECTION_TOPICS.findIndex((entry) => entry.slug === sectionSlug)
+          })
+        : null
     articleRows.push({
       id,
       title,
@@ -1052,7 +1052,6 @@ async function main(): Promise<void> {
       dek: chance(0.85) ? pick(dekPool) : null,
       excerpt: chance(0.6) ? pick(dekPool) : null,
       body: bodyDocument(title, sourceLocale),
-      featuredImage: coverId ? variantUrl(coverId, 960) : null,
       status,
       sourceLocale,
       isEditorial,
@@ -1076,11 +1075,11 @@ async function main(): Promise<void> {
   }
 
   // ----- Медиа: файлы в хранилище и записи ----------------------------------
-  const writer = await createMediaWriter(STORAGE_ROOT)
-  console.log(
-    `   файлы: ${mediaSpecs.length} изображений → ${writer.root}${writer.webp ? "" : " (cwebp не найден: варианты в PNG)"}`
-  )
-  let written = 0
+  // Подпись ссылок сиду не нужна: он только кладёт и читает объекты, а не выдаёт адреса.
+  const storage = createLocalStorage({ root: STORAGE_ROOT, mediaBaseUrl: MEDIA_BASE_URL, signingSecret: "dev-seed" })
+  const mediaStore = createPrismaMediaAssetStore(prisma)
+  const processor = createSharpImageProcessor()
+  console.log(`   файлы: ${mediaSpecs.length} изображений → ${STORAGE_ROOT}`)
   await inPool(mediaSpecs, 8, async (spec) => {
     const row = mediaRows.find((entry) => entry.id === spec.id)!
     const png =
@@ -1090,19 +1089,43 @@ async function main(): Promise<void> {
     row.sha256 = crypto.createHash("sha256").update(png).digest("hex")
     row.byteSize = png.length
     // Незавершённая загрузка ещё не дошла до хранилища.
-    if (spec.status !== MediaProcessingStatus.uploading) await writer.put(spec.key, png, "image/png")
-    for (const variant of spec.variants) await writer.variant(spec.key, variant.key, variant.width)
-    written += 1
-    if (written % 100 === 0) console.log(`   ${written}/${mediaSpecs.length}`)
+    if (spec.status !== MediaProcessingStatus.uploading) await storage.put(spec.key, png, { contentType: "image/png" })
   })
   await prisma.mediaAsset.createMany({ data: mediaRows })
+
+  // Варианты готовых записей — тем же шагом, что у задания `media.process`: AVIF и WebP по
+  // матрице, заполнитель, у обложек — кадры карточек по фокусу; у аватара свой квадратный набор.
+  const readyMedia = new Map<string, MediaAssetRecord>()
+  const readySpecs = mediaSpecs.filter((spec) => spec.status === MediaProcessingStatus.ready)
+  let processed = 0
+  await inPool(readySpecs, 4, async (spec) => {
+    const record = (await mediaStore.findById(spec.id))!
+    const master = (await storage.get(spec.key))!
+    const variants = await ensureVariants(record, master.body, {
+      store: mediaStore,
+      storage,
+      processor,
+      variantWidths: spec.purpose === "avatar" ? AVATAR_VARIANT_WIDTHS : undefined
+    })
+    readyMedia.set(spec.id, { ...record, variants })
+    processed += 1
+    if (processed % 100 === 0) console.log(`   варианты: ${processed}/${readySpecs.length}`)
+  })
+
   for (const plan of avatarPlan) {
     await prisma.user.update({
       where: { id: plan.userId },
-      data: { avatarAssetId: plan.avatarId, prevAvatarId: plan.previousId, photoUrl: variantUrl(plan.avatarId, 256) }
+      data: {
+        avatarAssetId: plan.avatarId,
+        prevAvatarId: plan.previousId,
+        photoUrl: avatarUrlOf(readyMedia.get(plan.avatarId), MEDIA_BASE_URL)
+      }
     })
   }
 
+  for (const row of articleRows) {
+    if (row.coverAssetId) row.featuredImage = coverViewOf(readyMedia.get(row.coverAssetId), MEDIA_BASE_URL)?.url ?? null
+  }
   await prisma.article.createMany({ data: articleRows })
   for (let offset = 0; offset < articleTags.length; offset += 500) {
     const chunk = articleTags.slice(offset, offset + 500)
