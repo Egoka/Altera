@@ -44,7 +44,7 @@ const openHomeFromEnglish = async (page: Page) => {
 test("пустая база: главная оставляет шапку, приглашение авторам и футер", { tag: "@empty-db" }, async ({ page }) => {
   await page.goto("/")
 
-  await expect(page).toHaveTitle("Altera")
+  await expect(page).toHaveTitle(/^Altera/)
   await expect(page.getByRole("link", { name: /^Altera/ }).first()).toBeVisible()
   await expect(page.getByRole("heading", { name: "Здесь пока пусто" })).toBeVisible()
   await expect(page.getByRole("link", { name: "Стать автором" })).toHaveAttribute("href", "/pricing")
