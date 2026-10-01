@@ -7,6 +7,7 @@ import {
   reeditTranslation,
   restoreRevision,
   saveTranslation,
+  saveTranslationPublished,
   setSlug,
   setTaxonomy,
   submitTranslation,
@@ -70,6 +71,12 @@ export default {
       args: { id: string; baseRevisionId: string; patch: SaveTranslationPatch; kind: "autosave" | "manual" },
       ctx: GraphQLContext
     ) => saveTranslation(ctx, { id: args.id, baseRevisionId: args.baseRevisionId, patch: args.patch, kind: args.kind }),
+
+    saveTranslationPublished: (
+      _parent: unknown,
+      args: { id: string; baseRevisionId: string; patch: SaveTranslationPatch },
+      ctx: GraphQLContext
+    ) => saveTranslationPublished(ctx, { id: args.id, baseRevisionId: args.baseRevisionId, patch: args.patch }),
 
     submitTranslation: async (_parent: unknown, args: { id: string }, ctx: GraphQLContext) =>
       toEditorTranslation(await submitTranslation(ctx, args.id)),

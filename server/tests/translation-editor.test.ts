@@ -8,6 +8,7 @@ import {
   reeditTranslation,
   restoreRevision,
   saveTranslation,
+  saveTranslationPublished,
   setSlug,
   setTaxonomy,
   submitTranslation,
@@ -92,6 +93,7 @@ const translation = (overrides: Record<string, unknown> = {}, articleOverrides: 
     format: null,
     tags: [],
     translations: [{ id: "translation-1", locale: "ru", status: "draft", rejected: false }],
+    publishedEdit: null,
     ...articleOverrides
   },
   revisions: [{ id: "revision-9" }],
@@ -107,6 +109,7 @@ interface PrismaDouble {
   mediaAsset: Record<string, ReturnType<typeof vi.fn>>
   job: Record<string, ReturnType<typeof vi.fn>>
   aiProcess: Record<string, ReturnType<typeof vi.fn>>
+  publishedArticleEdit: Record<string, ReturnType<typeof vi.fn>>
   section: Record<string, ReturnType<typeof vi.fn>>
   format: Record<string, ReturnType<typeof vi.fn>>
   tag: Record<string, ReturnType<typeof vi.fn>>
@@ -131,7 +134,8 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
     articleRevision: {
       create: vi.fn().mockResolvedValue({ id: "revision-10", createdAt: new Date("2026-09-28T10:05:00.000Z") }),
       findMany: vi.fn().mockResolvedValue([]),
-      findFirst: vi.fn().mockResolvedValue(null)
+      findFirst: vi.fn().mockResolvedValue(null),
+      findUnique: vi.fn().mockResolvedValue(null)
     },
     article: {
       findUnique: vi.fn().mockResolvedValue(null),
@@ -146,6 +150,12 @@ const prismaDouble = (overrides: Partial<Record<string, unknown>> = {}): PrismaD
     aiProcess: {
       findFirst: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({ id: "ai-process-1" })
+    },
+    publishedArticleEdit: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      create: vi.fn().mockResolvedValue({ id: "edit-1" }),
+      update: vi.fn().mockResolvedValue({}),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 })
     },
     section: { findFirst: vi.fn().mockResolvedValue({ id: "section-1" }), findMany: vi.fn().mockResolvedValue([]) },
     format: { findFirst: vi.fn().mockResolvedValue({ id: "format-1" }), findMany: vi.fn().mockResolvedValue([]) },
@@ -516,7 +526,7 @@ describe("T-040 подача к публикации", () => {
     expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
   })
 
-  it.each(["ai_check", "review", "published"])("подача из статуса %s отвечает CONFLICT", async (status) => {
+  it.each(["ai_check", "review"])("подача из статуса %s отвечает CONFLICT", async (status) => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(translation({ status }))
 
@@ -564,7 +574,7 @@ describe("T-040 подача к публикации", () => {
     )
   })
 
-  it.each(["draft", "rework", "published"])("отзыв из статуса %s отвечает CONFLICT", async (status) => {
+  it.each(["draft", "rework"])("отзыв из статуса %s отвечает CONFLICT", async (status) => {
     const prisma = prismaDouble()
     prisma.articleTranslation.findUnique.mockResolvedValue(translation({ status }))
 
@@ -782,5 +792,266 @@ describe("T-040 ревизии, таксономия и адрес", () => {
     expect(result.sections).toHaveLength(1)
     expect(prisma.section.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { status: "active" } }))
     expect(prisma.format.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { status: "active" } }))
+  })
+})
+
+describe("T-122 правка опубликованной статьи через проверку", () => {
+  const editRevisionBody = body("Исправленный текст")
+  const activeEdit = (overrides: Record<string, unknown> = {}) => ({
+    id: "edit-1",
+    translationId: "translation-1",
+    latestRevisionId: "edit-revision-1",
+    status: "draft",
+    latestRevision: { title: "Исправленный заголовок", dek: "Лид", excerpt: null, body: editRevisionBody },
+    ...overrides
+  })
+  const published = (articleOverrides: Record<string, unknown> = {}) =>
+    translation({ status: "published", publishedAt: new Date("2026-09-20T10:00:00.000Z") }, articleOverrides)
+
+  describe("saveTranslationPublished", () => {
+    it("критерий 1: первое сохранение заводит копию от текущей ревизии публичного снимка", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+
+      const result = await saveTranslationPublished(context(prisma), {
+        id: "translation-1",
+        baseRevisionId: "revision-9",
+        patch: { title: "Новый заголовок" }
+      })
+
+      expect(result).toEqual({ revisionId: "revision-10", savedAt: "2026-09-28T10:05:00.000Z" })
+      expect(prisma.articleRevision.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ translationId: "translation-1", title: "Новый заголовок", kind: "manual" })
+        })
+      )
+      expect(prisma.publishedArticleEdit.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            articleId: "article-1",
+            translationId: "translation-1",
+            latestRevisionId: "revision-10",
+            status: "draft",
+            createdById: "author-1"
+          })
+        })
+      )
+      // Публичная строка не меняется: редактор пишет только в ревизию и в `PublishedArticleEdit`.
+      expect(prisma.articleTranslation.update).not.toHaveBeenCalled()
+    })
+
+    it("устаревшая база (ревизия копии сменилась) отвечает CONFLICT", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit())
+
+      const extensions = await extensionsOf(
+        saveTranslationPublished(context(prisma), {
+          id: "translation-1",
+          baseRevisionId: "revision-9",
+          patch: { title: "Ещё правка" }
+        })
+      )
+
+      expect(extensions).toMatchObject({ code: "CONFLICT", entity: "revision", expected: "edit-revision-1" })
+      expect(prisma.articleRevision.create).not.toHaveBeenCalled()
+    })
+
+    it("критерий 3: другая языковая версия статьи уже на проверке отвечает CONFLICT", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit({ translationId: "translation-en-1" }))
+
+      const extensions = await extensionsOf(
+        saveTranslationPublished(context(prisma), {
+          id: "translation-1",
+          baseRevisionId: "revision-9",
+          patch: { title: "Ещё правка" }
+        })
+      )
+
+      expect(extensions).toMatchObject({ code: "CONFLICT", entity: "publishedArticleEdit", actual: "otherTranslation" })
+      expect(prisma.articleRevision.create).not.toHaveBeenCalled()
+    })
+
+    it("критерий 3: копия этой же версии уже на AI-проверке отвечает FORBIDDEN", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit({ status: "ai_check" }))
+
+      const extensions = await extensionsOf(
+        saveTranslationPublished(context(prisma), {
+          id: "translation-1",
+          baseRevisionId: "edit-revision-1",
+          patch: { title: "Ещё правка" }
+        })
+      )
+
+      expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.save.published" })
+    })
+
+    it("черновик (не published) отвечает FORBIDDEN", async () => {
+      const prisma = prismaDouble()
+
+      const extensions = await extensionsOf(
+        saveTranslationPublished(context(prisma), {
+          id: "translation-1",
+          baseRevisionId: "revision-9",
+          patch: { title: "Ещё правка" }
+        })
+      )
+
+      expect(extensions).toMatchObject({ code: "FORBIDDEN", action: "translation.save.published" })
+    })
+  })
+
+  describe("подача и отзыв копии", () => {
+    it("без активной копии подача отвечает CONFLICT", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+
+      const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+      expect(extensions).toMatchObject({ code: "CONFLICT", entity: "publishedArticleEdit", actual: "none" })
+    })
+
+    it("критерий 2 (ветка AI): первая подача копии переводит её в ai_check и ставит задание", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit())
+      prisma.articleRevision.findUnique.mockResolvedValue({
+        id: "edit-revision-1",
+        title: "Исправленный заголовок",
+        dek: "Лид",
+        excerpt: null,
+        body: editRevisionBody
+      })
+
+      const result = await submitTranslation(context(prisma), "translation-1")
+
+      // Публичная версия остаётся `published`: читатель видит прежний текст, пока копия на проверке.
+      expect(result.status).toBe("published")
+      expect(result.readOnlyReason).toBe("ai_check")
+      expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+      expect(prisma.publishedArticleEdit.updateMany).toHaveBeenCalledWith({
+        where: { id: "edit-1", status: "draft" },
+        data: { status: "ai_check" }
+      })
+      expect(prisma.job.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ kind: "ai.check", objectId: "translation-1" }) })
+      )
+    })
+
+    it("критерий 2 (ветка AI): пишет событие #92 translation.edit.published с веткой ai", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit())
+      prisma.articleRevision.findUnique.mockResolvedValue({
+        id: "edit-revision-1",
+        title: "Исправленный заголовок",
+        dek: "Лид",
+        excerpt: null,
+        body: editRevisionBody
+      })
+      const log = vi.fn()
+      const ctx = { ...context(prisma), logger: { log } } as never
+
+      await submitTranslation(ctx, "translation-1")
+
+      expect(log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: "translation.edit.published",
+          data: expect.objectContaining({ translationId: "translation-1", branch: "ai" })
+        })
+      )
+    })
+
+    it("критерий 2 (ручная ветка): после отказа AI повторная подача копии идёт в review без нового задания", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit({ status: "rework" }))
+      prisma.articleRevision.findUnique.mockResolvedValue({
+        id: "edit-revision-1",
+        title: "Исправленный заголовок",
+        dek: "Лид",
+        excerpt: null,
+        body: editRevisionBody
+      })
+
+      const result = await submitTranslation(context(prisma), "translation-1")
+
+      expect(result.status).toBe("published")
+      expect(result.readOnlyReason).toBe("in_review")
+      expect(prisma.publishedArticleEdit.updateMany).toHaveBeenCalledWith({
+        where: { id: "edit-1", status: "rework" },
+        data: { status: "review" }
+      })
+      expect(prisma.job.create).not.toHaveBeenCalled()
+    })
+
+    it("критерий 3: вторая подача, пока первая копия уже review, отвечает CONFLICT", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit({ status: "review" }))
+
+      const extensions = await extensionsOf(submitTranslation(context(prisma), "translation-1"))
+
+      expect(extensions).toMatchObject({ code: "CONFLICT", entity: "publishedArticleEdit", actual: "review" })
+      expect(prisma.job.create).not.toHaveBeenCalled()
+    })
+
+    it("отзыв копии с проверки возвращает её в draft, публичная строка не меняется", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+      prisma.publishedArticleEdit.findUnique.mockResolvedValue(activeEdit({ status: "ai_check" }))
+
+      const result = await withdrawTranslation(context(prisma), "translation-1")
+
+      expect(result.status).toBe("published")
+      expect(prisma.articleTranslation.updateMany).not.toHaveBeenCalled()
+      expect(prisma.publishedArticleEdit.updateMany).toHaveBeenCalledWith({
+        where: { articleId: "article-1", translationId: "translation-1", status: { in: ["ai_check", "review"] } },
+        data: { status: "draft" }
+      })
+    })
+  })
+
+  describe("редактор показывает копию поверх публичного снимка", () => {
+    it("с активной копией readOnlyReason и содержимое берутся от копии", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(
+        published({ publishedEdit: activeEdit({ status: "ai_check" }) })
+      )
+
+      const result = await getEditorTranslation(context(prisma), "translation-1")
+
+      expect(result.readOnlyReason).toBe("ai_check")
+      expect(result.status).toBe("published")
+      expect(result.title).toBe("Исправленный заголовок")
+      expect(result.currentRevisionId).toBe("edit-revision-1")
+    })
+
+    it("без активной копии версия остаётся обычным read-only published", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(published())
+
+      const result = await getEditorTranslation(context(prisma), "translation-1")
+
+      expect(result.readOnlyReason).toBe("published")
+      expect(result.title).toBe("Заголовок")
+      expect(result.currentRevisionId).toBe("revision-9")
+    })
+
+    it("копия другой языковой версии не влияет на эту версию", async () => {
+      const prisma = prismaDouble()
+      prisma.articleTranslation.findUnique.mockResolvedValue(
+        published({ publishedEdit: activeEdit({ translationId: "translation-en-1", status: "ai_check" }) })
+      )
+
+      const result = await getEditorTranslation(context(prisma), "translation-1")
+
+      expect(result.readOnlyReason).toBe("published")
+      expect(result.title).toBe("Заголовок")
+    })
   })
 })
