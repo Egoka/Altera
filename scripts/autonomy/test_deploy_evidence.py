@@ -91,6 +91,16 @@ class DeployEvidenceTests(unittest.TestCase):
         for payload in ([], {"status": "ok", "revision": "a" * 40, "checks": {"postgres": 1, "redis": 1}}):
             with patch.object(d.urllib.request, "urlopen", return_value=Response(payload)):
                 self.assertIs(d.health("https://example.test/health", "a" * 40), False)
+        # С T-088 `degraded` значит недоступный провайдер или копию без отметки, а не неготовую площадку.
+        degraded = dict(valid, status="degraded", components={"mail": {"status": "down"}, "storage": {"status": "down"}})
+        with patch.object(d.urllib.request, "urlopen", return_value=Response(degraded)):
+            self.assertIs(d.health("https://example.test/health", "a" * 40), True)
+        for status in ("unavailable", "starting", None):
+            with patch.object(d.urllib.request, "urlopen", return_value=Response(dict(valid, status=status))):
+                self.assertIs(d.health("https://example.test/health", "a" * 40), False)
+        redis_down = dict(degraded, checks={"postgres": True, "redis": False, "migrations": True})
+        with patch.object(d.urllib.request, "urlopen", return_value=Response(redis_down)):
+            self.assertIs(d.health("https://example.test/health", "a" * 40), False)
 
     def test_native_run_binding_rejects_messages_from_other_execution(self):
         for message in self.messages: message["task_id"] = "native-run"
