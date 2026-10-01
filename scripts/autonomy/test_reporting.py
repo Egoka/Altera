@@ -115,6 +115,64 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(result["executions"]["autopilot"], 1)
         self.assertEqual(result["tokens"]["input_tokens"]["observed"], 200)
 
+    def test_agent_task_history_is_paged_by_cursor_without_gaps(self):
+        # Multica CLI 0.6 отдаёт историю агента страницами по 200 с курсором `--before`;
+        # без листания старые задачи автопилота выпадали, и аудит падал на partial executions.
+        size = reporting.AGENT_TASKS_PAGE
+        newest = reporting.timestamp("2026-09-20T12:00:00Z")
+        history = [run(f"t{index:04d}", created_at=reporting.iso(newest - reporting.timedelta(seconds=index // 2)))
+                   for index in range(size + 5)]
+        history[-1]["id"] = "ap-old"
+        calls = []
+
+        def command(args):
+            if "issue" in args and "list" in args:
+                return {"issues": [], "has_more": False}
+            if "autopilot" in args and "list" in args:
+                return {"autopilots": [{"id": "ap", "project_id": "project"}]}
+            if "autopilot" in args and "runs" in args:
+                return {"runs": [{"id": "event", "task_id": "ap-old", "autopilot_id": "ap"}], "total": 1}
+            if "agent" in args and "list" in args:
+                return [{"id": "agent"}]
+            if "agent" in args and "tasks" in args:
+                calls.append(args)
+                limit = int(args[args.index("--limit") + 1])
+                rows = history
+                if "--before" in args:
+                    # Сервер сравнивает (created_at, id) с микросекундами, а JSON CLI отдаёт секунды.
+                    moment, identifier = args[args.index("--before") + 1].split("|")
+                    cursor = (reporting.timestamp(moment), identifier)
+                    rows = [row for row in history if (reporting.timestamp(row["created_at"]), row["id"]) < cursor]
+                return rows[:limit]
+            return []
+
+        data = reporting.collect_live("multica", "https://example.test", "workspace", "project",
+                                      "owner/repo", run_json=command)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(data["coverage"]["agent_tasks:agent"], {"status": "complete", "records": size + 5})
+        self.assertEqual(data["coverage"]["executions"]["missing_autopilot_task_ids"], [])
+        self.assertEqual(data["coverage"]["executions"]["status"], "complete")
+        self.assertEqual([row["id"] for row in data["agent_tasks"]], ["ap-old"])
+
+    def test_stalled_agent_task_cursor_is_visible_partial_coverage(self):
+        size = reporting.AGENT_TASKS_PAGE
+        same_second = [run(f"t{index:04d}", created_at="2026-09-20T12:00:00Z") for index in range(size)]
+
+        def command(args):
+            if "issue" in args and "list" in args:
+                return {"issues": [], "has_more": False}
+            if "agent" in args and "list" in args:
+                return [{"id": "agent"}]
+            if "agent" in args and "tasks" in args:
+                return same_second
+            return []
+
+        data = reporting.collect_live("multica", "https://example.test", "workspace", "project",
+                                      "owner/repo", run_json=command)
+        self.assertEqual(data["coverage"]["agent_tasks:agent"]["status"], "partial")
+        self.assertEqual(data["coverage"]["agent_tasks:agent"]["reason"], "pagination_stalled")
+        self.assertEqual(data["coverage"]["executions"]["status"], "partial")
+
     def test_collection_failure_or_page_cap_is_visible_partial_coverage(self):
         def command(args):
             if "issue" in args and "list" in args:
