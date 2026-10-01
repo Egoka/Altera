@@ -60,6 +60,22 @@ const stubs = {
 }
 
 const graphQLRequest = vi.fn()
+const headSpy = vi.fn()
+const seoMetaSpy = vi.fn()
+
+/** `useHead`/`useSeoMeta` принимают значения или геттеры — тест читает актуальный результат. */
+const resolveGetters = (value: unknown): Record<string, unknown> => {
+  const resolved = typeof value === "function" ? value() : value
+  if (!resolved || typeof resolved !== "object") return {}
+  return Object.fromEntries(
+    Object.entries(resolved as Record<string, unknown>).map(([key, field]) => [
+      key,
+      typeof field === "function" ? field() : field
+    ])
+  )
+}
+const lastHeadCall = () => resolveGetters(headSpy.mock.calls.at(-1)?.[0])
+const lastSeoMetaCall = () => resolveGetters(seoMetaSpy.mock.calls.at(-1)?.[0])
 
 /** Состояние собирается из ответа `feed`: страница сама разбирает конверт GraphQL. */
 const respondWith = (envelope: unknown) => graphQLRequest.mockResolvedValue(envelope)
@@ -79,7 +95,11 @@ beforeEach(() => {
   vi.stubGlobal("useI18n", () => ({ t, locale: ref("ru") }))
   // Русская локаль адрес не префиксует (`prefix_except_default`).
   vi.stubGlobal("useLocalePath", () => (path: string) => path)
-  vi.stubGlobal("useHead", vi.fn())
+  headSpy.mockReset()
+  seoMetaSpy.mockReset()
+  vi.stubGlobal("useHead", headSpy)
+  vi.stubGlobal("useSeoMeta", seoMetaSpy)
+  vi.stubGlobal("useRequestURL", () => new URL("https://altera.test/"))
   vi.stubGlobal("createError", (input: object) => Object.assign(new Error("feed failed"), input))
   vi.stubGlobal("useGraphQL", graphQLRequest)
   vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => {
@@ -148,5 +168,26 @@ describe("главная", () => {
     await renderHome()
 
     expect(graphQLRequest).toHaveBeenCalledWith(expect.anything(), { locale: "ru" })
+  })
+
+  it("отдаёт canonical, hreflang и JSON-LD главной (`home.md` §10)", async () => {
+    respondWith({ data: { feed: { locale: "ru", sections: [] } } })
+
+    await renderHome()
+
+    const seoMeta = lastSeoMetaCall()
+    expect(seoMeta.description).toBe("footer.description")
+    expect(seoMeta.ogType).toBe("website")
+    expect(seoMeta.robots).toBe("index, follow")
+
+    const head = lastHeadCall()
+    expect(head.link).toEqual([
+      { rel: "canonical", href: "https://altera.test/" },
+      { rel: "alternate", hreflang: "ru-RU", href: "https://altera.test/" },
+      { rel: "alternate", hreflang: "en-US", href: "https://altera.test/en" },
+      { rel: "alternate", hreflang: "x-default", href: "https://altera.test/" }
+    ])
+    const types = (head.script as { innerHTML: string }[]).map((entry) => JSON.parse(entry.innerHTML)["@type"])
+    expect(types).toEqual(["WebSite", "Organization"])
   })
 })

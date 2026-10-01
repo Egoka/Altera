@@ -46,6 +46,8 @@ beforeEach(() => {
   vi.stubGlobal("useRequestEvent", () => event)
   vi.stubGlobal("setResponseStatus", setResponseStatus)
   vi.stubGlobal("useSeoMeta", vi.fn())
+  vi.stubGlobal("useHead", vi.fn())
+  vi.stubGlobal("useRequestURL", () => new URL("https://altera.test/culture/withdrawn-article"))
   vi.stubGlobal("createError", (value: unknown) => value)
 })
 

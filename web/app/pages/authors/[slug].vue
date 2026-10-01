@@ -19,8 +19,7 @@
    * неизвестный хэндл и аккаунт без них — 404, архивированный — 410 (§8, журнал §28.2),
    * прежний и записанный не в том регистре хэндл — 301 на канонический (§3).
    *
-   * Подписка на автора и число подписчиков — этап 3 (F-10, §6), их здесь нет. Мета, canonical,
-   * hreflang, Open Graph и JSON-LD (§10) ставит T-100 вместе с остальными публичными страницами.
+   * Подписка на автора и число подписчиков — этап 3 (F-10, §6), их здесь нет.
    */
   definePageMeta({ layout: "default" })
 
@@ -114,7 +113,69 @@
   // действие пустого состояния — переключатель языка, а не чужая лента.
   const otherLocalePath = computed(() => switchLocalePath(locale.value === "ru" ? "en" : "ru"))
 
-  useHead(() => ({ title: author.value?.name }))
+  /**
+   * SEO профиля (`author.md` §10): hreflang — пара всегда (профиль общий для локалей, в отличие
+   * от материала), canonical несёт `page`, если он не первый — тот же помощник, что у пагинации.
+   */
+  const origin = useRequestURL().origin
+  const canonicalUrl = computed(() => withQuery(`${origin}${pagePath.value}`, { page: pageInfo.value?.page ?? 1 }))
+  const profileUrl = computed(() => `${origin}${localePath(`/authors/${author.value?.handle ?? handle.value}`)}`)
+  const hreflangUrl = (target: "ru" | "en") =>
+    `${origin}${localePath(`/authors/${author.value?.handle ?? handle.value}`, target)}`
+  const authorsIndexUrl = computed(() => `${origin}${localePath("/authors")}`)
+  const homeUrl = computed(() => `${origin}${localePath("/")}`)
+  const sameAs = computed(() => (author.value?.links ?? []).map((link) => link.url))
+  const metaTitle = computed(() =>
+    author.value ? t("authorPage.meta.titleTemplate", { name: author.value.name }) : undefined
+  )
+  const metaDescription = computed(() => author.value?.bio?.trim() || t("authorPage.meta.descriptionFallback"))
+
+  useSeoMeta({
+    title: () => metaTitle.value,
+    description: () => metaDescription.value,
+    ogTitle: () => metaTitle.value,
+    ogDescription: () => metaDescription.value,
+    ogType: "profile",
+    ogImage: () => author.value?.avatar ?? undefined,
+    robots: () => (isGone.value ? "noindex, nofollow" : "index, follow")
+  })
+
+  useHead(() => ({
+    link: author.value
+      ? [
+          { rel: "canonical", href: canonicalUrl.value },
+          { rel: "alternate", hreflang: "ru-RU", href: hreflangUrl("ru") },
+          { rel: "alternate", hreflang: "en-US", href: hreflangUrl("en") }
+        ]
+      : [],
+    script: author.value
+      ? [
+          {
+            type: "application/ld+json",
+            innerHTML: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Person",
+              name: author.value.name,
+              url: profileUrl.value,
+              image: author.value.avatar ?? undefined,
+              sameAs: sameAs.value.length ? sameAs.value : undefined
+            })
+          },
+          {
+            type: "application/ld+json",
+            innerHTML: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: t("common.home"), item: homeUrl.value },
+                { "@type": "ListItem", position: 2, name: t("common.authors"), item: authorsIndexUrl.value },
+                { "@type": "ListItem", position: 3, name: author.value.name, item: profileUrl.value }
+              ]
+            })
+          }
+        ]
+      : []
+  }))
 </script>
 
 <template>
