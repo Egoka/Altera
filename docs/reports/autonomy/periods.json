@@ -1,12 +1,9 @@
 {
   "30": {
-    "covered_days": 8,
+    "covered_days": 9,
     "days": 30,
-    "executions": 1020,
+    "executions": 1022,
     "missing_dates": [
-      "2026-08-30",
-      "2026-08-31",
-      "2026-09-01",
       "2026-09-02",
       "2026-09-03",
       "2026-09-04",
@@ -25,7 +22,9 @@
       "2026-09-23",
       "2026-09-24",
       "2026-09-25",
-      "2026-09-26"
+      "2026-09-26",
+      "2026-09-29",
+      "2026-09-30"
     ],
     "tasks": {
       "created": 107,
@@ -36,9 +35,9 @@
     },
     "timings": {
       "execution_seconds": {
-        "count": 962,
+        "count": 964,
         "median": 204.0,
-        "p90": 1102.0,
+        "p90": 1113.0,
         "samples": [
           0.0,
           0.0,
@@ -142,6 +141,7 @@
           33.0,
           33.0,
           33.0,
+          34.0,
           34.0,
           34.0,
           34.0,
@@ -1001,6 +1001,7 @@
           4402.0,
           4453.0,
           4539.0,
+          30001.0,
           36046.0
         ]
       },
@@ -1086,9 +1087,9 @@
         ]
       },
       "queue_seconds": {
-        "count": 965,
-        "median": 80.0,
-        "p90": 3667.0,
+        "count": 967,
+        "median": 81.0,
+        "p90": 3699.0,
         "samples": [
           0.0,
           0.0,
@@ -1885,6 +1886,7 @@
           2035.0,
           2060.0,
           2061.0,
+          2070.0,
           2091.0,
           2155.0,
           2158.0,
@@ -2032,6 +2034,7 @@
           6297.0,
           6373.0,
           6986.0,
+          7022.0,
           7229.0,
           7284.0,
           7375.0,
@@ -2061,40 +2064,39 @@
     "tokens": {
       "cache_read_tokens": {
         "complete": false,
-        "known_runs": 909,
-        "observed": 3296033687,
-        "total_runs": 1020
+        "known_runs": 911,
+        "observed": 3300559704,
+        "total_runs": 1022
       },
       "cache_write_tokens": {
         "complete": false,
-        "known_runs": 909,
-        "observed": 78022339,
-        "total_runs": 1020
+        "known_runs": 911,
+        "observed": 78129055,
+        "total_runs": 1022
       },
       "input_tokens": {
         "complete": false,
-        "known_runs": 909,
-        "observed": 21438925,
-        "total_runs": 1020
+        "known_runs": 911,
+        "observed": 21439032,
+        "total_runs": 1022
       },
       "output_tokens": {
         "complete": false,
-        "known_runs": 909,
-        "observed": 18297528,
-        "total_runs": 1020
+        "known_runs": 911,
+        "observed": 18316061,
+        "total_runs": 1022
       }
     }
   },
   "7": {
-    "covered_days": 2,
+    "covered_days": 3,
     "days": 7,
-    "executions": 305,
+    "executions": 307,
     "missing_dates": [
-      "2026-09-22",
-      "2026-09-23",
-      "2026-09-24",
       "2026-09-25",
-      "2026-09-26"
+      "2026-09-26",
+      "2026-09-29",
+      "2026-09-30"
     ],
     "tasks": {
       "created": 29,
@@ -2105,7 +2107,7 @@
     },
     "timings": {
       "execution_seconds": {
-        "count": 259,
+        "count": 261,
         "median": 285.0,
         "p90": 1077.0,
         "samples": [
@@ -2124,6 +2126,7 @@
           30.0,
           32.0,
           33.0,
+          34.0,
           36.0,
           36.0,
           36.0,
@@ -2367,7 +2370,8 @@
           4092.0,
           4276.0,
           4402.0,
-          4539.0
+          4539.0,
+          30001.0
         ]
       },
       "lead_seconds": {
@@ -2438,9 +2442,9 @@
         ]
       },
       "queue_seconds": {
-        "count": 261,
-        "median": 1398.0,
-        "p90": 5714.0,
+        "count": 263,
+        "median": 1405.0,
+        "p90": 5735.0,
         "samples": [
           0.0,
           0.0,
@@ -2590,6 +2594,7 @@
           1963.0,
           2023.0,
           2035.0,
+          2070.0,
           2091.0,
           2155.0,
           2158.0,
@@ -2689,6 +2694,7 @@
           6252.0,
           6297.0,
           6373.0,
+          7022.0,
           7284.0,
           7375.0,
           7534.0,
@@ -2709,27 +2715,27 @@
     "tokens": {
       "cache_read_tokens": {
         "complete": false,
-        "known_runs": 250,
-        "observed": 962074094,
-        "total_runs": 305
+        "known_runs": 252,
+        "observed": 966600111,
+        "total_runs": 307
       },
       "cache_write_tokens": {
         "complete": false,
-        "known_runs": 250,
-        "observed": 35240984,
-        "total_runs": 305
+        "known_runs": 252,
+        "observed": 35347700,
+        "total_runs": 307
       },
       "input_tokens": {
         "complete": false,
-        "known_runs": 250,
-        "observed": 615267,
-        "total_runs": 305
+        "known_runs": 252,
+        "observed": 615374,
+        "total_runs": 307
       },
       "output_tokens": {
         "complete": false,
-        "known_runs": 250,
-        "observed": 5167969,
-        "total_runs": 305
+        "known_runs": 252,
+        "observed": 5186502,
+        "total_runs": 307
       }
     }
   }
