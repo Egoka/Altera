@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "task_id": "T-100",
+  "issue_id": "01a0e985-2315-7d9a-a46b-09f3de131b65",
+  "work_class": "code",
+  "source": {
+    "path": "docs/backlog/tasks/T-100-seo-meta-hreflang.md",
+    "sha": "bb67f06498463bc3375e7ddff8bea4ad35facad3"
+  },
+  "baseline_sha": "b849c002cf6c611b7767cd0d2c5e67b15b4b8db8",
+  "tested_sha": "c6b06001d117efac3149a69788c13dd3efa12d5e",
+  "branch": "web/t100-seo-meta",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0f8b0-377b-7a72-a92e-b8d434be4c28",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Unit-тесты home-page.nuxt.test.ts, public-pages.nuxt.test.ts проверяют useSeoMeta/useHead canonical/hreflang/JSON-LD; CI зелёный"
+    }
+  ],
+  "checks": {
+    "format": "exit 0",
+    "lint": "exit 0",
+    "tests": "exit 0: content 99 passed, server 1373 passed/81 skipped, web 970 passed"
+  },
+  "pr": {
+    "number": 400,
+    "url": "https://github.com/Egoka/Altera/pull/400",
+    "base_ref": "app",
+    "base_sha": "b849c002cf6c611b7767cd0d2c5e67b15b4b8db8",
+    "head_sha": "c6b06001d117efac3149a69788c13dd3efa12d5e",
+    "merge_sha": "7e02ac15bb0660b6c395c1924f879e19915dfdd0"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f921-fd87-7c66-bd7e-d7d4d9b071a3",
+    "sha": "c6b06001d117efac3149a69788c13dd3efa12d5e",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": false,
+    "reason": "PR затрагивает только web/ (фронтенд, тесты, i18n)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-100.md",
+    "sha256": "672e538ecb4d8f4f9ba558a5afa5959ed035d99a7d737e9333d27f5d1fcff241"
+  },
+  "usage": null
+}

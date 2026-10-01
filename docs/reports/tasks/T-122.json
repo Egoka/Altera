@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task_id": "T-122",
+  "issue_id": "01a0eaec-0709-7ef9-9d6f-de28b6055dbe",
+  "work_class": "code",
+  "source": {
+    "path": "docs/backlog/tasks/T-122-edit-published-via-check.md",
+    "sha": "1c8b14678f5a1c88f3021810738bf033ece53774"
+  },
+  "baseline_sha": "b849c002cf6c611b7767cd0d2c5e67b15b4b8db8",
+  "tested_sha": "9a5be70276b6bb320ac9251d614963265e68a9c9",
+  "branch": "server/t122-published-article-edit",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0f86e-493d-7996-92a8-b201be7f7ed3",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "ai-check-adapter.test.ts, translation-editor.test.ts: публичная строка не трогается, пока копия в ai_check"
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "reject → publishedEdit.status rework, title живой строки не меняется, reviewMessage создаётся; повторная подача → review без job.create"
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "saveTranslationPublished с активной копией → CONFLICT; submitTranslation повторная → CONFLICT/FORBIDDEN; @@unique на PublishedArticleEdit.articleId"
+    }
+  ],
+  "checks": {
+    "format": "exit 0",
+    "lint": "exit 0",
+    "tests": "exit 0: server 1389 passed/81 skipped, web 967 passed"
+  },
+  "pr": {
+    "number": 399,
+    "url": "https://github.com/Egoka/Altera/pull/399",
+    "base_ref": "app",
+    "base_sha": "b849c002cf6c611b7767cd0d2c5e67b15b4b8db8",
+    "head_sha": "9a5be70276b6bb320ac9251d614963265e68a9c9",
+    "merge_sha": "1eeadfffe31d93a149eab9cc6426381375b01c1c"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f922-094f-7873-869b-f4613fee303a",
+    "sha": "9a5be70276b6bb320ac9251d614963265e68a9c9",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR затрагивает server/ (prisma-миграция, resolver, service)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-122.md",
+    "sha256": "584a977ef3f844d0b3892693b4734ce1e5b2052c9ec0a0906bb4992939106d91"
+  },
+  "usage": null
+}
