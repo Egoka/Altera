@@ -1,18 +1,13 @@
 /**
  * Бинарные данные для локальной базы разработки: процедурные изображения без внешних
- * зависимостей и запись их в локальное хранилище по раскладке `src/storage/keys.ts`.
+ * зависимостей.
  *
- * Оригиналы — PNG (кодировщик ниже, только `zlib`). Варианты — WebP через `cwebp`, если он
- * установлен (`brew install webp`); без него вариант получает байты PNG с честным
- * `contentType: image/png` в `.meta.json`, и раздача `/media` отдаёт его как PNG.
+ * Оригиналы — PNG (кодировщик ниже, только `zlib`). Варианты из них собирает конвейер сервера
+ * (`src/media/variants.ts`), а в хранилище их кладёт его же локальный адаптер.
  */
-import { execFile } from "node:child_process"
-import { mkdir, stat, writeFile } from "node:fs/promises"
-import { dirname, join, resolve } from "node:path"
-import { promisify } from "node:util"
+import { stat } from "node:fs/promises"
+import { join, resolve } from "node:path"
 import { deflateSync } from "node:zlib"
-
-const run = promisify(execFile)
 
 // ---------------------------------------------------------------------------
 // PNG
@@ -217,58 +212,11 @@ export function renderAvatar(size: number, seed: number, paletteIndex: number): 
 // Локальное хранилище
 // ---------------------------------------------------------------------------
 
-export interface MediaWriter {
-  readonly root: string
-  readonly webp: boolean
-  /** Пишет объект и `.meta.json` так же, как `createLocalStorage().put`. */
-  put(key: string, body: Buffer, contentType: string): Promise<void>
-  /** Вариант заданной ширины из уже записанного оригинала; возвращает фактический тип. */
-  variant(masterKey: string, variantKey: string, width: number): Promise<string>
-}
-
-async function hasCwebp(): Promise<boolean> {
-  try {
-    await run("cwebp", ["-version"])
-    return true
-  } catch {
-    return false
-  }
-}
-
-export async function createMediaWriter(root: string): Promise<MediaWriter> {
-  const absolute = resolve(root)
-  const webp = await hasCwebp()
-  const put = async (key: string, body: Buffer, contentType: string) => {
-    const path = join(absolute, key)
-    await mkdir(dirname(path), { recursive: true })
-    await writeFile(path, body)
-    await writeFile(`${path}.meta.json`, JSON.stringify({ contentType }))
-  }
-  return {
-    root: absolute,
-    webp,
-    put,
-    async variant(masterKey, variantKey, width) {
-      const source = join(absolute, masterKey)
-      const target = join(absolute, variantKey)
-      await mkdir(dirname(target), { recursive: true })
-      if (webp) {
-        await run("cwebp", ["-quiet", "-q", "78", "-resize", String(width), "0", source, "-o", target])
-        await writeFile(`${target}.meta.json`, JSON.stringify({ contentType: "image/webp" }))
-        return "image/webp"
-      }
-      const { readFile } = await import("node:fs/promises")
-      await put(variantKey, await readFile(source), "image/png")
-      return "image/png"
-    }
-  }
-}
-
 export async function byteSize(root: string, key: string): Promise<number> {
   return (await stat(join(resolve(root), key))).size
 }
 
-/** Ограниченный параллелизм: `cwebp` — отдельный процесс на каждый вариант. */
+/** Ограниченный параллелизм: кодирование вариантов занимает пул потоков `sharp`. */
 export async function inPool<T>(items: readonly T[], limit: number, task: (item: T) => Promise<void>): Promise<void> {
   let next = 0
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
