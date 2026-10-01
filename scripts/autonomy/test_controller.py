@@ -828,7 +828,7 @@ class CleanupAfterDoneTests(unittest.TestCase):
                 patch.object(c.Live, "cleanup_task", side_effect=AssertionError("must not attempt")):
             with patch.object(c.CleanupEvidence, "fence_ready", return_value=False):
                 self.assertEqual(self.live.cleanup_pending(str(self.root))[0]["status"], "deferred")
-            with patch.object(c.CleanupEvidence, "fence_ready", return_value=True):
+            with patch.object(c.CleanupEvidence, "fence_ready", side_effect=AssertionError("budget is checked first")):
                 result = self.live.cleanup_pending(str(self.root), deadline=c.time.monotonic() - 1)
         self.assertEqual(result, [{"status": "deferred", "reason": "cleanup time budget is spent"}])
 
@@ -857,14 +857,14 @@ class CleanupAfterDoneTests(unittest.TestCase):
         config = self.root / "config.json"
         config.write_text(json.dumps({**self.config, "state_dir": str(self.root)}))
         seen = []
-        with patch.object(c.Live, "cleanup_command", lambda inner, state_dir, apply=True: seen.append(apply) or {"ok": True}), \
+        with patch.object(c.Live, "cleanup_command", lambda inner, state_dir, limit=5, apply=True: seen.append((limit, apply)) or {"ok": True}), \
                 patch("sys.stdout"):
-            with patch("sys.argv", ["controller.py", "cleanup", "--config", str(config), "--dry-run"]):
+            with patch("sys.argv", ["controller.py", "cleanup", "--config", str(config), "--dry-run", "--limit", "20"]):
                 self.assertEqual(c.main(), 0)
             with patch("sys.argv", ["controller.py", "done", "--config", str(config)]), patch("sys.stderr"):
                 with self.assertRaises(SystemExit):
                     c.main()
-        self.assertEqual(seen, [False])
+        self.assertEqual(seen, [(20, False)])
 
     def test_cleanup_failure_keeps_done_result(self):
         with patch.object(c.Live, "cleanup_task", side_effect=RuntimeError("network")):

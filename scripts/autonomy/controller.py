@@ -208,7 +208,6 @@ class CleanupEvidence:
         self.source = source
         self.state_dir = Path(state_dir)
         self.caller_agent_id = caller_agent_id
-        self.agents = None
 
     @contextlib.contextmanager
     def guard(self, receipt):
@@ -235,13 +234,11 @@ class CleanupEvidence:
         """Незавершённые запуски всех агентов workspace и запуск вызывающего агента."""
         source = self.source
         runs, own = [], []
-        if self.agents is None:
-            # Состав агентов за минуту уборки не меняется; запуски перечитываются каждый раз.
-            self.agents = [agent.get("id") if isinstance(agent, dict) else None
-                           for agent in rows(source.multica_read("agent", "list", "--include-archived"), "agents")]
-            if not all(self.agents):
-                raise RuntimeError("agent without id")
-        for agent_id in self.agents:
+        agents = [agent.get("id") if isinstance(agent, dict) else None
+                  for agent in rows(source.multica_read("agent", "list", "--include-archived"), "agents")]
+        if not all(agents):
+            raise RuntimeError("agent without id")
+        for agent_id in agents:
             for run in rows(source.multica_read("agent", "tasks", agent_id), "tasks"):
                 status = str(run.get("status") or "").lower()
                 if status in worktree_cleanup.TERMINAL_RUNS:
@@ -598,6 +595,8 @@ class Live:
                 candidates.append(verified)
         if not candidates:
             return []
+        if deadline is not None and time.monotonic() >= deadline:
+            return [{"status": "deferred", "reason": "cleanup time budget is spent"}]
         # Чужой исполняемый запуск провалит каждую попытку: одна предпроверка вместо полного чтения на итог.
         if apply and not CleanupEvidence(self, state_dir, os.environ.get("MULTICA_AGENT_ID")).fence_ready():
             return [{"status": "deferred", "reason": "dispatch fence is not exclusive now"}]
@@ -699,13 +698,14 @@ def main():
     parser.add_argument("--phase", choices=["merge", "done"], default="done")
     # Пробный прогон уборки по живым доказательствам: что и почему было бы удалено.
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--limit", type=int, default=5)
     args = parser.parse_args()
     if args.action != "cleanup" and not args.receipt:
         parser.error("--receipt is required for " + args.action)
     config = json.loads(Path(args.config).read_text())
     live = Live(config)
     if args.action == "cleanup":
-        result = live.cleanup_command(config["state_dir"], apply=not args.dry_run)
+        result = live.cleanup_command(config["state_dir"], limit=max(args.limit, 1), apply=not args.dry_run)
         print(json.dumps(result, ensure_ascii=False))
         return 0
     receipt = json.loads(Path(args.receipt).read_text())
