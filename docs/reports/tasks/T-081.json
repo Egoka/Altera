@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task_id": "T-081",
+  "issue_id": "01a0e6dc-17f8-7389-a28b-85985c691ec8",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-081-admin-errors-health.md",
+    "sha": "efea1a797ec93f6a57fa61156ab237442c7a76e7"
+  },
+  "baseline_sha": "6039ec6cddacdbce5dddbb33ed485a8edf935a1e",
+  "tested_sha": "65cf93f0ce7be8ecff647b524a2733d8fcb30ff0",
+  "branch": "feat/t081-admin-errors-health",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e8e1-6082-7abf-b21b-28caf1cba868",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Раздел /admin/errors реализован: журнал ошибок с фильтрами, деталями, трендами, историей состояния и bulk resolve; CSV-экспорт; health-переходы и системный актор для автоматического reopening. Playwright-тесты 10 сценариев T-081 Chromium, server 1233 passed / 69 skipped, web 880 passed, content 99 passed. PR #360 слит в app."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 1233 passed / 69 skipped; web 880 passed; content 99 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 360,
+    "url": "https://github.com/Egoka/Altera/pull/360",
+    "base_ref": "app",
+    "base_sha": "6039ec6cddacdbce5dddbb33ed485a8edf935a1e",
+    "head_sha": "65cf93f0ce7be8ecff647b524a2733d8fcb30ff0",
+    "merge_sha": "e38c4e0893939308f4803428652554b0d568b226"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f6d8-fec8-7e04-89e9-44f3191fcedd",
+    "sha": "65cf93f0ce7be8ecff647b524a2733d8fcb30ff0",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ (модуль admin/errors, миграции, health-переходы) и web/ (страницы, composables, E2E)"
+  },
+  "finalization": {
+    "path": "docs/reports/tasks/T-081.md",
+    "sha256": "9d33590a1e8f8c8f07335c830d028de44a2802a8c453def1b35589612f8b96c8"
+  },
+  "usage": null
+}
