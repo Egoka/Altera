@@ -16,6 +16,23 @@ class Ineligible(Exception):
     """Недостаточно доказательств для безопасного удаления."""
 
 
+TERMINAL_RUNS = {"completed", "succeeded", "failed", "cancelled", "canceled"}
+# `dispatched` и `starting` могут начать работу в любой момент, поэтому считаются исполняемыми.
+EXECUTING_RUNS = {"running", "starting", "dispatched"}
+WAITING_RUNS = {"queued", "pending", "waiting", "waiting_approval", "waiting_local_directory", "blocked"}
+# Игнорируемые артефакты, которые воспроизводятся установкой зависимостей, сборкой и тестами.
+REGENERABLE_DIRS = {"node_modules", ".nuxt", ".output", "dist", "test-results", "coverage"}
+REGENERABLE_PREFIXES = ("server/src/generated/", ".husky/_/", "server/.storage/")
+
+
+def _regenerable(path):
+    if path.startswith(REGENERABLE_PREFIXES):
+        return True
+    parts = Path(path.rstrip("/")).parts
+    # Имя самого файла не в счёт: регенерируемым бывает только каталог.
+    return any(part in REGENERABLE_DIRS for part in (parts if path.endswith("/") else parts[:-1]))
+
+
 def canonical_hash(value):
     return hashlib.sha256(json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
@@ -125,21 +142,35 @@ def _validate_evidence(receipt, evidence, max_age, artifact_id=None):
         for key in ("number", "head_sha", "base_ref", "base_sha", "merge_sha", "url")
     ):
         raise Ineligible("live PR identity or merged state does not match")
-    terminal = {"completed", "succeeded", "failed", "cancelled", "canceled"}
-    active = {"running", "queued", "pending", "starting", "waiting", "waiting_approval", "blocked"}
+    # Исключительный fence: адаптер подтвердил, что запуски исполняются по одному (общая папка
+    # Multica), и перечислил все запуски workspace. Кроме вызывающего, никто не исполняется, а
+    # ожидающие запуски других задач стартуют только после него.
+    exclusive = evidence.get("fence") == "exclusive"
+    caller = evidence.get("caller_run_id") if exclusive else None
+    if exclusive and evidence.get("worktree_in_use") is not False:
+        raise Ineligible("worktree is in use by a local process or its use is unknown")
+    if caller is not None and not any(run.get("id") == caller and run.get("status") == "running"
+                                      for run in evidence["runs"]):
+        raise Ineligible("caller run is not visible as running in the inventory")
     for run in evidence["runs"]:
         status = run.get("status")
-        if status in terminal:
+        if status in TERMINAL_RUNS:
             continue
-        if status not in active:
+        if status not in EXECUTING_RUNS | WAITING_RUNS:
             raise Ineligible("unknown run state")
+        if caller is not None and run.get("id") == caller and status == "running":
+            continue
         associations = [run.get("task_id"), run.get("branch"), run.get("worktree")]
-        if not any(associations):
-            raise Ineligible("active run has unknown ownership")
         if (run.get("task_id") == receipt["task_id"] or run.get("branch") == receipt["branch"]
                 or (run.get("worktree") and
                     _under(Path(run["worktree"]).resolve(), Path(receipt["worktree"]).resolve()))):
             raise Ineligible("active or queued run owns the task, branch or worktree")
+        if exclusive:
+            if status in EXECUTING_RUNS:
+                raise Ineligible("another run is executing; dispatch fence is not exclusive")
+            continue
+        if not any(associations):
+            raise Ineligible("active run has unknown ownership")
         if not all(associations):
             raise Ineligible("active run ownership inventory is incomplete")
 
@@ -180,28 +211,37 @@ def _validate_git(repo, receipt, target, remote, require_worktree):
     if remote_head not in (None, head):
         raise Ineligible("remote branch head changed")
     # Доверенное live PR evidence связывает SHA с сервером. Git проверяет сами объекты.
-    _git(repo, "merge-base", "--is-ancestor", pr["base_sha"], head)
     _git(repo, "merge-base", "--is-ancestor", pr["merge_sha"], "refs/remotes/" + remote + "/app")
     parents = _git(repo, "rev-list", "--parents", "-n", "1", pr["merge_sha"]).split()[1:]
     if len(parents) not in (1, 2):
         raise Ineligible("unsupported merge shape")
-    if len(parents) == 2 and parents[1] != head:
-        raise Ineligible("merge parent is not verified PR head")
-    before = pr["base_sha"]
-    # Полный binary diff сохраняет пути, режимы, удаления и точное содержимое.
-    flags = ("--binary", "--full-index", "--no-ext-diff", "--no-textconv", "--no-renames")
-    feature_diff = _git(repo, "diff", *flags, before, head, "--")
-    merged_diff = _git(repo, "diff", *flags, parents[0], pr["merge_sha"], "--")
-    if not feature_diff or feature_diff != merged_diff:
-        raise Ineligible("actual PR diff and merged diff differ or are empty")
+    if len(parents) == 2:
+        # Head — второй родитель merge-коммита из origin/app: все коммиты ветки сохранены в истории
+        # app по SHA, удаление refs ничего не теряет. Сверка diff от base PR здесь лишняя: ветку не
+        # догоняют до app (решение владельца 2026-09-19), и diff законно расходится с base PR.
+        if parents[1] != head:
+            raise Ineligible("merge parent is not verified PR head")
+    else:
+        # Squash не делает head предком app: содержимое подтверждается только полным diff.
+        _git(repo, "merge-base", "--is-ancestor", pr["base_sha"], head)
+        # Полный binary diff сохраняет пути, режимы, удаления и точное содержимое.
+        flags = ("--binary", "--full-index", "--no-ext-diff", "--no-textconv", "--no-renames")
+        feature_diff = _git(repo, "diff", *flags, pr["base_sha"], head, "--")
+        merged_diff = _git(repo, "diff", *flags, parents[0], pr["merge_sha"], "--")
+        if not feature_diff or feature_diff != merged_diff:
+            raise Ineligible("actual PR diff and merged diff differ or are empty")
     if require_worktree:
         if _git(target, "rev-parse", "HEAD") != head:
             raise Ineligible("worktree head changed")
         entries = _git(target, "ls-files", "-v", "-z").split("\0")
         if any(item and (item[0].islower() or item[0] == "S") for item in entries):
             raise Ineligible("index flags can hide unsaved files")
-        if _git(target, "status", "--porcelain=v1", "--untracked-files=all", "--ignored=matching"):
-            raise Ineligible("dirty worktree includes tracked, untracked or ignored artifacts")
+        status = _git_bytes(target, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignored=matching")
+        for entry in filter(None, status.decode().split("\0")):
+            # Игнорируемое из списка воспроизводимого удаляется вместе с worktree; всё прочее —
+            # незаписанная работа или локальные секреты, их разбирают отдельно.
+            if entry[:3] != "!! " or not _regenerable(entry[3:]):
+                raise Ineligible("dirty worktree includes tracked, untracked or non-regenerable ignored artifacts")
         if (target / ".gitmodules").exists():
             raise Ineligible("submodule worktrees require separate proof")
     return remote_head

@@ -1,5 +1,6 @@
 """Проверки контракта завершения и подавления повторных событий."""
 import copy
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -625,6 +626,312 @@ class ReviewEquivalenceTests(unittest.TestCase):
     def test_identical_head_is_equivalent_without_git(self):
         live = c.Live({"repo": "/nonexistent"})
         self.assertTrue(live.review_equivalent(self.reviewed, self.reviewed, self.base, "T-123"))
+
+
+class CleanupEvidenceTests(unittest.TestCase):
+    """Живые доказательства уборки: внешний I/O подменён, правила адаптера настоящие."""
+
+    def setUp(self):
+        CompletionTests.setUp(self)
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.verified = {**copy.deepcopy(self.receipt), "branch": "feat/t-123", "verified": True,
+                         "accepted_at": "2026-10-01T00:00:00+00:00", "enforcement": "managed_path_only"}
+        (self.root / "verified").mkdir()
+        (self.root / "verified" / "T-123.json").write_text(json.dumps(self.verified))
+        self.answers = {
+            ("agent", "list", "--include-archived"): {"agents": [{"id": "finalizer"}, {"id": "developer"}]},
+            ("agent", "tasks", "finalizer"): [{"id": "run-self", "issue_id": None, "status": "running"},
+                                              {"id": "old", "issue_id": "issue-123", "status": "completed"}],
+            ("agent", "tasks", "developer"): {"tasks": [
+                {"id": "run-q", "issue_id": "issue-9", "status": "waiting_local_directory"},
+                {"id": "run-r", "issue_id": "issue-123", "status": "queued"}]},
+            ("issue", "get", "issue-9"): {"id": "issue-9", "metadata": {"task_id": "T-9"}},
+            ("issue", "get", "issue-123"): {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                                            "metadata": {"task_id": "T-123"}, "status": "done"},
+        }
+        answers = self.answers
+
+        class FakeLive(c.Live):
+            def multica_read(inner, *args):
+                return copy.deepcopy(answers[args])
+
+            def gh(inner, endpoint):
+                self.assertEqual(endpoint, "repos/example/project/pulls/123")
+                return {"number": 123, "state": "closed", "merged": True, "merge_commit_sha": "c" * 40,
+                        "html_url": "https://github.com/example/project/pull/123",
+                        "head": {"sha": "b" * 40}, "base": {"ref": "app", "sha": "a" * 40}}
+
+        self.live = FakeLive({"repo": str(self.root), "github_repo": "example/project", "workspace_id": "workspace",
+                              "project_id": "project", "cleanup_owned_root": str(self.root / "owned")})
+        self.evidence = c.CleanupEvidence(self.live, self.root, "finalizer")
+
+    def test_inventory_identifies_caller_and_maps_waiting_runs_to_tasks(self):
+        runs, caller = self.evidence.inventory(self.receipt)
+        self.assertEqual(caller, "run-self")
+        self.assertEqual(runs, [{"id": "run-self", "status": "running"},
+                                {"id": "run-q", "status": "waiting_local_directory", "task_id": "T-9"},
+                                {"id": "run-r", "status": "queued", "task_id": "T-123"}])
+
+    def test_inventory_fails_closed_on_ambiguous_caller_or_payload(self):
+        self.answers[("agent", "tasks", "finalizer")].append({"id": "run-2", "status": "running"})
+        with self.assertRaises(RuntimeError):
+            self.evidence.inventory(self.receipt)
+        self.answers[("agent", "tasks", "finalizer")].pop()
+        self.answers[("agent", "list", "--include-archived")] = {"unexpected": []}
+        with self.assertRaises(RuntimeError):
+            self.evidence.inventory(self.receipt)
+
+    def test_read_reports_exclusive_fence_and_controller_acceptance(self):
+        receipt = self.live.cleanup_receipt(self.verified, str(self.root / "owned" / "task"))
+        with patch.object(self.evidence, "app_artifact", return_value=("e" * 40, "d" * 64)), \
+                patch.object(self.evidence, "worktree_in_use", return_value=False):
+            value = self.evidence.read(receipt)
+            self.assertEqual(value["fence"], "exclusive")
+            self.assertEqual(value["caller_run_id"], "run-self")
+            self.assertIs(value["worktree_in_use"], False)
+            self.assertIs(value["complete"], True)
+            self.assertEqual(value["task"], {
+                "id": "T-123", "status": "done", "confirmed_done": True, "finalized_in_app": True,
+                "receipt_sha256": c.worktree_cleanup.canonical_hash(receipt),
+                "artifacts": [{"id": "gitblob:" + "e" * 40, "sha256": "d" * 64}]})
+            self.assertEqual(value["pr"], {**receipt["pr"], "state": "MERGED"})
+            # Итог, не принятый контроллером, или не тот receipt не подтверждают Done.
+            changed = copy.deepcopy(receipt)
+            changed["tested_sha"] = "f" * 40
+            self.assertIs(self.evidence.read(changed)["task"]["confirmed_done"], False)
+            (self.root / "verified" / "T-123.json").unlink()
+            self.assertIs(self.evidence.read(receipt)["task"]["confirmed_done"], False)
+
+    def test_read_requires_native_done_in_project(self):
+        self.answers[("issue", "get", "issue-123")]["status"] = "in_review"
+        receipt = self.live.cleanup_receipt(self.verified, str(self.root / "owned" / "task"))
+        with patch.object(self.evidence, "app_artifact", return_value=None), \
+                patch.object(self.evidence, "worktree_in_use", return_value=False):
+            task = self.evidence.read(receipt)["task"]
+        self.assertEqual(task["status"], "in_review")
+        self.assertIs(task["confirmed_done"], False)
+        self.assertIs(task["finalized_in_app"], False)
+
+    def test_guard_requires_held_dispatch_lock(self):
+        with self.assertRaises(RuntimeError):
+            with self.evidence.guard(self.receipt):
+                pass
+        with c.lock(self.root / "dispatch.lock"):
+            with self.evidence.guard(self.receipt):
+                pass
+
+    def test_worktree_in_use_reads_process_working_directories(self):
+        target = self.root / "owned" / "task"
+        target.mkdir(parents=True)
+
+        def lsof(stdout, code=0):
+            return subprocess.CompletedProcess(["lsof"], code, stdout=stdout, stderr="")
+
+        cases = [(lsof(f"p1\nn{self.root}\np2\nn{target}/web\n"), True),
+                 (lsof(f"p1\nn{self.root}\np2\nn{self.root}/owned/task-2\n"), False),
+                 (lsof("", 1), None)]
+        for completed, expected in cases:
+            with self.subTest(expected=expected), patch.object(c.subprocess, "run", return_value=completed):
+                self.assertIs(c.CleanupEvidence.worktree_in_use(str(target)), expected)
+        with patch.object(c.subprocess, "run", side_effect=OSError("no lsof")):
+            self.assertIsNone(c.CleanupEvidence.worktree_in_use(str(target)))
+
+
+class CleanupAfterDoneTests(unittest.TestCase):
+    """Уборка встроена в Done, но никогда не меняет его результат."""
+
+    def setUp(self):
+        CompletionTests.setUp(self)
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.receipt["branch"] = "feat/t-123"
+        self.state = {"status": "in_review", "status_category": "started"}
+        state, facts = self.state, self.facts
+
+        class VerifiedLive(c.Live):
+            def facts(inner, receipt):
+                return facts
+
+            def multica(inner, *args):
+                if args[:2] == ("issue", "status"):
+                    state.update(status="done", status_category="completed")
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, **state}
+
+        self.config = {"repo": str(self.root), "github_repo": "example/project", "workspace_id": "workspace",
+                       "project_id": "project", "cleanup_owned_root": str(self.root / "owned")}
+        self.live = VerifiedLive(self.config)
+
+    def test_done_cleans_task_worktree_and_pending_ones(self):
+        (self.root / "verified").mkdir()
+        older = {**copy.deepcopy(self.receipt), "task_id": "T-1", "branch": "feat/t-1", "verified": True}
+        (self.root / "verified" / "T-1.json").write_text(json.dumps(older))
+        trees = [{"worktree": str(self.root / "owned" / "t-1"), "branch": "refs/heads/feat/t-1"}]
+        calls = []
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
+                patch.object(c.Live, "cleanup_task", lambda inner, verified, state_dir: calls.append(verified["task_id"]) or {"status": "removed"}):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["cleanup"], {"status": "removed"})
+        self.assertEqual(result["cleanup_pending"], [{"task_id": "T-1", "status": "removed"}])
+        self.assertEqual(calls, ["T-123", "T-1"])
+
+    def test_cleanup_failure_keeps_done_result(self):
+        with patch.object(c.Live, "cleanup_task", side_effect=RuntimeError("network")):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["cleanup"], {"status": "skipped", "reason": "cleanup failed: RuntimeError"})
+        self.assertTrue((self.root / "verified" / "T-123.json").exists())
+
+    def test_reconciled_done_also_cleans(self):
+        self.state.update(status="done", status_category="completed")
+        with patch.object(c.Live, "cleanup_task", return_value={"status": "absent"}), \
+                patch.object(c.worktree_cleanup, "_worktrees", return_value=[]):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertTrue(result["reconciled"], result)
+        self.assertEqual(result["cleanup"], {"status": "absent"})
+
+    def test_unconfigured_cleanup_leaves_done_unchanged(self):
+        del self.config["cleanup_owned_root"]
+        with patch.object(c.Live, "cleanup_task", side_effect=AssertionError("cleanup is disabled")):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertEqual(result, {"ok": True, "phase": "done", "task_id": "T-123"})
+
+    def test_cleanup_task_uses_git_worktree_of_branch_and_live_fence(self):
+        verified = {**copy.deepcopy(self.receipt), "verified": True}
+        trees = [{"worktree": str(self.root), "branch": "refs/heads/app"},
+                 {"worktree": str(self.root / "owned" / "t-123"), "branch": "refs/heads/feat/t-123"}]
+        captured = {}
+
+        def fake_cleanup(repo, receipt, provider, **options):
+            captured.update(receipt=receipt, provider=provider, **options)
+            return {"status": "removed"}
+
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
+                patch.object(c.worktree_cleanup, "cleanup", side_effect=fake_cleanup), \
+                patch.dict(c.os.environ, {"MULTICA_AGENT_ID": "finalizer"}):
+            self.assertEqual(self.live.cleanup_task(verified, str(self.root)), {"status": "removed"})
+        self.assertEqual(captured["receipt"]["worktree"], str(self.root / "owned" / "t-123"))
+        self.assertEqual(captured["receipt"]["pr"]["url"], "https://github.com/example/project/pull/123")
+        self.assertIs(captured["apply"], True)
+        self.assertEqual(captured["owned_root"], str(self.root / "owned"))
+        self.assertIsInstance(captured["provider"], c.CleanupEvidence)
+        self.assertEqual(captured["provider"].caller_agent_id, "finalizer")
+
+    def test_cleanup_task_without_branch_or_worktree_does_nothing(self):
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=[]), \
+                patch.object(c.worktree_cleanup, "cleanup", side_effect=AssertionError("nothing to clean")):
+            self.assertEqual(self.live.cleanup_task({**self.receipt, "verified": True}, str(self.root))["status"], "absent")
+            receipt = {**self.receipt, "verified": True}
+            del receipt["branch"]
+            self.assertEqual(self.live.cleanup_task(receipt, str(self.root))["status"], "skipped")
+
+    def test_cleanup_command_sweeps_under_dispatch_lock(self):
+        seen = []
+
+        def pending(inner, state_dir, limit=3, exclude=()):
+            with self.assertRaises(BlockingIOError):
+                with (Path(state_dir) / "dispatch.lock").open("a") as stream:
+                    c.fcntl.flock(stream, c.fcntl.LOCK_EX | c.fcntl.LOCK_NB)
+            seen.append(limit)
+            return [{"task_id": "T-1", "status": "removed"}]
+
+        with patch.object(c.Live, "cleanup_pending", pending):
+            result = self.live.cleanup_command(str(self.root))
+        self.assertEqual(result, {"ok": True, "phase": "cleanup", "results": [{"task_id": "T-1", "status": "removed"}]})
+        self.assertEqual(seen, [5])
+
+
+class CleanupIntegrationTests(unittest.TestCase):
+    """Адаптер контроллера и настоящий `cleanup.py` на временном Git-репозитории."""
+
+    def git(self, cwd, *args):
+        return subprocess.check_output(["git", "-C", str(cwd), *args], stderr=subprocess.PIPE, text=True).strip()
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name).resolve()
+        self.repo, self.owned, self.state = root / "repository", root / "owned", root / "state"
+        self.repo.mkdir()
+        self.git(self.repo, "init", "-b", "app")
+        for key, value in (("maintenance.auto", "false"), ("user.name", "Cleanup Test"),
+                           ("user.email", "cleanup@example.invalid"), ("commit.gpgsign", "false")):
+            self.git(self.repo, "config", key, value)
+        (self.repo / ".gitignore").write_text("node_modules/\n")
+        (self.repo / "product.txt").write_text("base\n")
+        self.git(self.repo, "add", ".")
+        self.git(self.repo, "commit", "-m", "base")
+        base = self.git(self.repo, "rev-parse", "HEAD")
+        remote = root / "origin.git"
+        self.git(self.repo, "init", "--bare", str(remote))
+        self.git(remote, "config", "maintenance.auto", "false")
+        self.git(self.repo, "remote", "add", "origin", str(remote))
+        self.worktree = self.owned / "t-123"
+        self.git(self.repo, "worktree", "add", "-b", "feat/t-123", str(self.worktree))
+        (self.worktree / "product.txt").write_text("feature\n")
+        self.git(self.worktree, "commit", "-am", "feature")
+        (self.worktree / "node_modules").mkdir()
+        (self.worktree / "node_modules" / "pkg.js").write_text("installed\n")
+        head = self.git(self.worktree, "rev-parse", "HEAD")
+        self.git(self.repo, "merge", "--no-ff", "-m", "merge feature", "feat/t-123")
+        merge = self.git(self.repo, "rev-parse", "HEAD")
+        report = self.repo / "docs" / "reports" / "tasks" / "T-123.md"
+        report.parent.mkdir(parents=True)
+        report.write_text(f"T-123 tested {head}\n")
+        self.git(self.repo, "add", ".")
+        self.git(self.repo, "commit", "-m", "finalization")
+        self.git(self.repo, "push", "-q", "origin", "app", "feat/t-123")
+        self.verified = {
+            "schema_version": 1, "task_id": "T-123", "issue_id": "issue-123", "tested_sha": head,
+            "branch": "feat/t-123", "verified": True,
+            "pr": {"number": 123, "head_sha": head, "base_ref": "app", "base_sha": base, "merge_sha": merge},
+            "finalization": {"path": "docs/reports/tasks/T-123.md", "sha256": hashlib.sha256(report.read_bytes()).hexdigest()}}
+        (self.state / "verified").mkdir(parents=True)
+        (self.state / "verified" / "T-123.json").write_text(json.dumps(self.verified))
+        self.tasks = [{"id": "run-self", "issue_id": None, "status": "running"}]
+        tasks, pull = self.tasks, {"number": 123, "state": "closed", "merged": True, "merge_commit_sha": merge,
+                                   "html_url": "https://github.com/example/project/pull/123",
+                                   "head": {"sha": head}, "base": {"ref": "app", "sha": base}}
+
+        class FakeLive(c.Live):
+            def multica_read(inner, *args):
+                if args[:2] == ("agent", "list"):
+                    return [{"id": "finalizer"}]
+                if args[:2] == ("agent", "tasks"):
+                    return copy.deepcopy(tasks)
+                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                        "metadata": {"task_id": "T-123"}, "status": "done"}
+
+            def gh(inner, endpoint):
+                return copy.deepcopy(pull)
+
+        self.live = FakeLive({"repo": str(self.repo), "github_repo": "example/project", "workspace_id": "workspace",
+                              "project_id": "project", "cleanup_owned_root": str(self.owned),
+                              "cleanup_log_dir": str(root / "cleanup-logs")})
+
+    def cleanup(self):
+        with c.lock(self.state / "dispatch.lock"), \
+                patch.object(c.CleanupEvidence, "worktree_in_use", return_value=False), \
+                patch.dict(c.os.environ, {"MULTICA_AGENT_ID": "finalizer"}):
+            return self.live.cleanup_task(self.verified, str(self.state))
+
+    def test_done_task_worktree_and_branch_are_removed(self):
+        result = self.cleanup()
+        self.assertEqual(result["status"], "removed", result)
+        self.assertFalse(self.worktree.exists())
+        self.assertEqual(self.git(self.repo, "branch", "--list", "feat/t-123"), "")
+        self.assertEqual(self.git(self.repo, "ls-remote", "origin", "feat/t-123"), "")
+
+    def test_waiting_rework_of_the_same_task_keeps_worktree(self):
+        self.tasks.append({"id": "rework", "issue_id": "issue-123", "status": "queued"})
+        result = self.cleanup()
+        self.assertEqual(result["status"], "skipped", result)
+        self.assertIn("active", result["reason"])
+        self.assertTrue(self.worktree.exists())
 
 
 if __name__ == "__main__":
