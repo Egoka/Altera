@@ -61,6 +61,22 @@ export interface AiCheckMediaFixture {
   licenseNote: string | null
 }
 
+/** Активная копия правки опубликованной статьи (T-122) и содержимое её последней ревизии. */
+export interface StoredPublishedArticleEdit {
+  id: string
+  translationId: string
+  latestRevisionId: string
+  status: string
+}
+
+export interface StoredEditRevision {
+  id: string
+  title: string
+  dek: string | null
+  excerpt: string | null
+  body: unknown
+}
+
 /** Данные подачи. Тест меняет поля на месте: ссылку держит и двойник, и сам тест. */
 export interface AiCheckStoreFixture {
   translationId: string
@@ -76,11 +92,16 @@ export interface AiCheckStoreFixture {
   locale: "ru" | "en"
   title: string
   dek: string | null
+  excerpt?: string | null
   body: unknown
   sectionSlug: string | null
   tags: string[]
   coverAssetId: string | null
   media: AiCheckMediaFixture[]
+  /// T-122: копия правки опубликованной статьи, если она на проверке у этой же версии.
+  publishedEdit?: StoredPublishedArticleEdit | null
+  /// T-122: содержимое ревизии копии — отдельно от `title`/`body` публичного снимка.
+  editRevision?: StoredEditRevision | null
 }
 
 export interface AiCheckMemoryStore {
@@ -133,6 +154,54 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
           return { count: 0 }
         }
         Object.assign(fixture, data)
+        return { count: 1 }
+      },
+      // T-122: промотирование копии пишет содержимое напрямую, без условия на `status`/`updatedAt` —
+      // публичная строка весь срок проверки остаётся `published`, менять ей не́чего сравнивать.
+      async update({ where, data }: { where: { id: string }; data: Record<string, unknown> }) {
+        if (where.id !== fixture.translationId) throw new Error(`translation not found: ${where.id}`)
+        Object.assign(fixture, data)
+        return { id: fixture.translationId }
+      }
+    },
+    articleRevision: {
+      async findUnique({ where }: { where: { id: string } }) {
+        if (fixture.editRevision && where.id === fixture.editRevision.id) return { ...fixture.editRevision }
+        if (where.id === fixture.latestRevisionId) {
+          return { title: fixture.title, dek: fixture.dek, excerpt: fixture.excerpt ?? null, body: fixture.body }
+        }
+        return null
+      }
+    },
+    publishedArticleEdit: {
+      async findUnique({ where }: { where: { articleId: string } }) {
+        if (!fixture.publishedEdit || where.articleId !== fixture.articleId) return null
+        return { ...fixture.publishedEdit }
+      },
+      async updateMany({ where, data }: { where: Record<string, unknown>; data: Record<string, unknown> }) {
+        const edit = fixture.publishedEdit
+        if (
+          !edit ||
+          where.id !== edit.id ||
+          where.status !== edit.status ||
+          where.latestRevisionId !== edit.latestRevisionId
+        ) {
+          return { count: 0 }
+        }
+        Object.assign(edit, data)
+        return { count: 1 }
+      },
+      async deleteMany({ where }: { where: Record<string, unknown> }) {
+        const edit = fixture.publishedEdit
+        if (
+          !edit ||
+          where.id !== edit.id ||
+          where.status !== edit.status ||
+          where.latestRevisionId !== edit.latestRevisionId
+        ) {
+          return { count: 0 }
+        }
+        fixture.publishedEdit = null
         return { count: 1 }
       }
     },
@@ -211,8 +280,13 @@ export function createAiCheckMemoryStore(fixture: AiCheckStoreFixture): AiCheckM
     },
     articleRevision: {
       async findFirst({ where }: { where: { id: string; translationId: string } }) {
-        if (where.id !== fixture.revisionId || where.translationId !== fixture.translationId) return null
-        return { id: fixture.revisionId, title: fixture.title, dek: fixture.dek, body: fixture.body }
+        if (where.translationId !== fixture.translationId) return null
+        if (where.id === fixture.revisionId) {
+          return { id: fixture.revisionId, title: fixture.title, dek: fixture.dek, body: fixture.body }
+        }
+        // T-122: подача копии правки опубликованной статьи ссылается на свою, отдельную ревизию.
+        if (fixture.editRevision && where.id === fixture.editRevision.id) return { ...fixture.editRevision }
+        return null
       }
     },
     mediaAsset: {

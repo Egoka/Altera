@@ -439,3 +439,105 @@ describe("AI-адаптер проверки допустимости", () => {
     ).rejects.toThrow("AI check provider is not configured")
   })
 })
+
+describe("T-122 правка опубликованной статьи через проверку", () => {
+  const EDIT_REVISION_ID = "edit-revision-1"
+  const editJobInput = {
+    jobId: "job-edit-1",
+    translationId: TRANSLATION_ID,
+    revisionId: EDIT_REVISION_ID,
+    originRequestId: "req-edit-1"
+  }
+
+  function publishedEditFixture(editStatus: string, overrides: Partial<AiCheckStoreFixture> = {}) {
+    return {
+      status: "published",
+      articleStatus: "published",
+      publishedAt: new Date("2026-09-20T10:00:00.000Z"),
+      publishedEdit: {
+        id: "edit-1",
+        translationId: TRANSLATION_ID,
+        latestRevisionId: EDIT_REVISION_ID,
+        status: editStatus
+      },
+      editRevision: {
+        id: EDIT_REVISION_ID,
+        title: "Исправленный заголовок",
+        dek: "Исправленный лид",
+        excerpt: null,
+        body: createDocument([createParagraph([createText("Исправленный текст подачи.")], BLOCK_ONE)])
+      },
+      ...overrides
+    }
+  }
+
+  it("критерий 1: принятие копии публикует её содержимое, не меняя статус published", async () => {
+    const onPublished = vi.fn(async () => {})
+    const onDecision = vi.fn(async () => {})
+    const { memory, adapter, service } = createHarness(publishedEditFixture("ai_check"), onPublished, onDecision)
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    const outcome = await service.runCheck(editJobInput)
+
+    expect(outcome.verdict).toBe("publish")
+    // Публичная строка остаётся `published` весь срок проверки и после решения: дата публикации и
+    // переход в `ai.decision`-ветку статьи (`ArticleStatus`) её не касаются (журнал §41 п. 7).
+    expect(memory.fixture.status).toBe("published")
+    expect(memory.fixture.articleStatus).toBe("published")
+    expect(memory.fixture.publishedAt).toEqual(new Date("2026-09-20T10:00:00.000Z"))
+    // Содержимое копии промотировано в публичную строку.
+    expect(memory.fixture.title).toBe("Исправленный заголовок")
+    expect(memory.fixture.dek).toBe("Исправленный лид")
+    // Копия удалена: вторую правку снова можно начать.
+    expect(memory.fixture.publishedEdit).toBeNull()
+    // Кеш инвалидируется (как у обычной публикации), но без метрики и письма первой публикации —
+    // это не первая публикация, а правка уже опубликованного материала.
+    expect(onPublished).toHaveBeenCalledWith(TRANSLATION_ID)
+    expect(onDecision).not.toHaveBeenCalled()
+  })
+
+  it("критерий 2: отказ AI оставляет прежнюю версию опубликованной и переводит копию в rework", async () => {
+    const onPublished = vi.fn(async () => {})
+    const { memory, adapter, service } = createHarness(publishedEditFixture("ai_check"), onPublished)
+    adapter.setFixture(TRANSLATION_ID, { verdict: "reject", categories: ["illegal"] })
+
+    const outcome = await service.runCheck(editJobInput)
+
+    expect(outcome.verdict).toBe("reject")
+    expect(memory.fixture.status).toBe("published")
+    // Прежний текст не тронут — промотирования не было.
+    expect(memory.fixture.title).toBe("Вечер на Оке")
+    expect(memory.fixture.publishedEdit).toMatchObject({ id: "edit-1", status: "rework" })
+    expect(memory.reviewMessages).toHaveLength(1)
+    expect(memory.reviewMessages[0]).toMatchObject({ translationId: TRANSLATION_ID, kind: "ai_decision" })
+    expect(onPublished).not.toHaveBeenCalled()
+  })
+
+  it("поздний результат по уже снятой копии не промотирует и не трогает публичную версию", async () => {
+    const onPublished = vi.fn(async () => {})
+    const { memory, adapter, service } = createHarness(publishedEditFixture("ai_check"), onPublished)
+    // Копию отозвали (или она уже промотирована другим прогоном) до завершения этого задания.
+    memory.fixture.publishedEdit = null
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    const outcome = await service.runCheck(editJobInput)
+
+    expect(outcome.verdict).toBe("publish")
+    expect(memory.fixture.title).toBe("Вечер на Оке")
+    expect(onPublished).not.toHaveBeenCalled()
+  })
+
+  it("копия, уже промотированная в rework, не применяется повторно к чужому вердикту ai_check", async () => {
+    const onPublished = vi.fn(async () => {})
+    const { memory, adapter, service } = createHarness(publishedEditFixture("rework"), onPublished)
+    adapter.setFixture(TRANSLATION_ID, { verdict: "publish" })
+
+    const outcome = await service.runCheck(editJobInput)
+
+    expect(outcome.verdict).toBe("publish")
+    // Копия в `rework` ждёт повторной подачи автора, а не решения этого задания.
+    expect(memory.fixture.title).toBe("Вечер на Оке")
+    expect(memory.fixture.publishedEdit).toMatchObject({ status: "rework" })
+    expect(onPublished).not.toHaveBeenCalled()
+  })
+})

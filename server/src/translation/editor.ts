@@ -47,10 +47,9 @@ const REVISION_PAGE_LIMIT = 50
 /**
  * Почему редактор открыт только на чтение.
  *
- * Значения — перечень `article-edit.md` §4 плюс `published`. Спецификация его не называет, потому
- * что правка опубликованной версии идёт копией через AI-проверку (журнал §41); эта работа —
- * T-122, и до неё редактор показывает опубликованную версию режимом чтения, а не даёт записать
- * в публичный текст.
+ * Значения — перечень `article-edit.md` §4 плюс `published`: без активной копии правки версия
+ * read-only целиком, с активной копией (журнал §41, T-122) значение берётся от состояния копии —
+ * `ai_check`/`in_review` на проверке, иначе автор пишет в копию.
  */
 export type ReadOnlyReason = "none" | "plan" | "rejected" | "archived" | "ai_check" | "in_review" | "published"
 
@@ -86,6 +85,18 @@ export const EDITOR_TRANSLATION_SELECT = {
       translations: {
         select: { id: true, locale: true, status: true, rejected: true },
         orderBy: { locale: "asc" }
+      },
+      // Активная копия правки опубликованной статьи (T-122, журнал §41): максимум одна на статью,
+      // независимо от языковой версии. Принадлежность к этой версии проверяется по `translationId`
+      // при чтении, а не здесь: у другой языковой версии той же статьи тоже есть доступ к выборке.
+      publishedEdit: {
+        select: {
+          id: true,
+          translationId: true,
+          latestRevisionId: true,
+          status: true,
+          latestRevision: { select: { title: true, dek: true, excerpt: true, body: true } }
+        }
       }
     }
   },
@@ -173,12 +184,33 @@ function ensureOwnTranslationMutation(
   throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action })
 }
 
+type ActivePublishedEdit = NonNullable<EditorTranslation["article"]["publishedEdit"]>
+
+/**
+ * Активная копия правки, принадлежащая именно этой языковой версии. У статьи она одна
+ * (уникальность по `articleId`), поэтому копия другой языковой версии сюда не попадает: для этой
+ * версии её как будто нет (T-122, журнал §41 п. 4).
+ */
+function activeEditFor(translation: EditorTranslation): ActivePublishedEdit | null {
+  const edit = translation.article.publishedEdit
+  return edit && edit.translationId === translation.id ? edit : null
+}
+
 export function readOnlyReasonFor(translation: EditorTranslation, user: EditorActor, now: Date): ReadOnlyReason {
   if (translation.article.status === "archived") return "archived"
   if (translation.rejected) return "rejected"
   if (translation.status === "ai_check") return "ai_check"
   if (translation.status === "review" || translation.status === "in_review") return "in_review"
-  if (translation.status === "published") return "published"
+  if (translation.status === "published") {
+    const edit = activeEditFor(translation)
+    if (edit?.status === "ai_check") return "ai_check"
+    if (edit?.status === "review") return "in_review"
+    if (edit?.status === "draft" || edit?.status === "rework") {
+      if ((user.role === "reader" || user.role === "author") && !hasActiveAuthorPlan(user, now)) return "plan"
+      return "none"
+    }
+    return "published"
+  }
   // Служебная роль плана не имеет: её доступ к редакционному материалу даёт право `editorial`.
   if ((user.role === "reader" || user.role === "author") && !hasActiveAuthorPlan(user, now)) return "plan"
   return "none"
@@ -190,14 +222,30 @@ function toView(
   user: EditorActor,
   now: Date
 ): EditorTranslationView {
-  const currentRevisionId = translation.revisions[0]?.id
+  const activeEdit = activeEditFor(translation)
+  const currentRevisionId = activeEdit?.latestRevisionId ?? translation.revisions[0]?.id
   if (!currentRevisionId) {
     // Версия без ревизий — сломанные данные: черновик заводится вместе с первой ревизией.
     // Это `INTERNAL_ERROR` словаря, а не необработанное исключение: страница показывает строку
     // «Ошибка данных» (§8), а журнал не считает такой ответ сбоем без диагноза.
     throw createApiError("INTERNAL_ERROR", { requestId: ctx.requestId })
   }
-  return { ...translation, currentRevisionId, readOnlyReason: readOnlyReasonFor(translation, user, now) }
+  // Редактор показывает копию поверх публичного снимка (T-122, журнал §41 п. 2): читатель и
+  // другие запросы по-прежнему видят `translation.title`/`body` — только эта функция подменяет их.
+  const overlay = activeEdit
+    ? {
+        title: activeEdit.latestRevision.title,
+        dek: activeEdit.latestRevision.dek,
+        excerpt: activeEdit.latestRevision.excerpt,
+        body: activeEdit.latestRevision.body
+      }
+    : {}
+  return {
+    ...translation,
+    ...overlay,
+    currentRevisionId,
+    readOnlyReason: readOnlyReasonFor(translation, user, now)
+  }
 }
 
 async function loadTranslationFrom(
@@ -310,6 +358,116 @@ export async function saveTranslation(
   return { revisionId: saved.revisionId, savedAt: saved.savedAt.toISOString() }
 }
 
+export interface SaveTranslationPublishedInput {
+  id: string
+  baseRevisionId: string
+  patch: SaveTranslationPatch
+}
+
+/**
+ * Сохранение правки опубликованной статьи в копии (`article-edit.md` §4, журнал §41 п. 2).
+ *
+ * Публичная строка `ArticleTranslation`/`Article` не меняется: новая ревизия привязана к той же
+ * версии (история и база сохранения общие), а состояние копии живёт в `PublishedArticleEdit`.
+ * Первое сохранение заводит копию; `baseRevisionId` для него — текущая ревизия публичного снимка,
+ * для последующих — `latestRevisionId` уже существующей копии (ADR-0033).
+ */
+export async function saveTranslationPublished(
+  ctx: GraphQLContext,
+  input: SaveTranslationPublishedInput
+): Promise<SaveTranslationResult> {
+  const user = ensureEditorActor(ctx, "translation.save.published")
+  const translation = await loadTranslation(ctx, input.id)
+  ensureOwnTranslationMutation(ctx, translation, user, "translation.save.published")
+
+  if (translation.status !== "published" || translation.rejected) {
+    throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "translation.save.published" })
+  }
+  if (translation.article.status === "archived") {
+    throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "translation.save.published" })
+  }
+
+  const body = input.patch.body === undefined ? asDocument(translation.body) : readBodyPatch(ctx, input.patch.body)
+  const title = input.patch.title === undefined ? translation.title : (input.patch.title ?? "")
+  const lead = input.patch.lead === undefined ? translation.dek : normalizeOptional(input.patch.lead)
+  const excerpt =
+    input.patch.seoDescription === undefined ? translation.excerpt : normalizeOptional(input.patch.seoDescription)
+  const bodyValue = body as unknown as Prisma.InputJsonValue
+
+  const saved = await ctx.prisma.$transaction(async (tx) => {
+    await lockArticle(tx, translation.articleId)
+    const existing = await tx.publishedArticleEdit.findUnique({ where: { articleId: translation.articleId } })
+
+    if (existing && existing.translationId !== translation.id) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "publishedArticleEdit",
+        expected: "none",
+        actual: "otherTranslation"
+      })
+    }
+    if (existing && existing.status !== "draft" && existing.status !== "rework") {
+      throw createApiError("FORBIDDEN", { requestId: ctx.requestId, action: "translation.save.published" })
+    }
+
+    const currentRevisionId = existing?.latestRevisionId ?? translation.revisions[0]?.id ?? null
+    if (currentRevisionId !== input.baseRevisionId) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "revision",
+        expected: currentRevisionId ?? "",
+        actual: input.baseRevisionId
+      })
+    }
+
+    const revision = await tx.articleRevision.create({
+      data: {
+        translationId: translation.id,
+        title,
+        dek: lead,
+        excerpt,
+        body: bodyValue,
+        kind: "manual",
+        createdById: user.id
+      },
+      select: { id: true, createdAt: true }
+    })
+
+    if (existing) {
+      await tx.publishedArticleEdit.update({
+        where: { id: existing.id },
+        data: { latestRevisionId: revision.id, status: "draft" }
+      })
+    } else {
+      try {
+        await tx.publishedArticleEdit.create({
+          data: {
+            articleId: translation.articleId,
+            translationId: translation.id,
+            latestRevisionId: revision.id,
+            status: "draft",
+            createdById: user.id
+          }
+        })
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          throw createApiError("CONFLICT", {
+            requestId: ctx.requestId,
+            entity: "publishedArticleEdit",
+            expected: "none",
+            actual: "otherTranslation"
+          })
+        }
+        throw error
+      }
+    }
+
+    return { revisionId: revision.id, savedAt: revision.createdAt }
+  })
+
+  return { revisionId: saved.revisionId, savedAt: saved.savedAt.toISOString() }
+}
+
 function normalizeOptional(value: string | null): string | null {
   if (value === null) return null
   const trimmed = value.trim()
@@ -394,6 +552,15 @@ async function lockAuthor(tx: TransactionClient, authorId: string): Promise<void
 }
 
 /**
+ * Активная копия правки живёт одна на статью (T-122): лочим строку `articles`, а не только
+ * переводимую версию, иначе две языковые версии одной статьи могли бы одновременно пройти
+ * проверку уникальности и обе создать себе копию.
+ */
+async function lockArticle(tx: TransactionClient, articleId: string): Promise<void> {
+  await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "articles" WHERE "id" = ${articleId} FOR UPDATE`)
+}
+
+/**
  * Выключает синхронизацию наследной строки до конца транзакции. Параметр сеанса, а не изменение
  * схемы: `SET LOCAL` действует только внутри этой транзакции и на соседние запросы не влияет.
  */
@@ -440,6 +607,8 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
   const user = ensureEditorActor(ctx, "translation.submit")
   const translation = await loadTranslation(ctx, id)
   ensureOwnTranslationMutation(ctx, translation, user, "translation.submit")
+
+  if (translation.status === "published") return submitPublishedEdit(ctx, translation, user)
 
   if (!EDITABLE_STATUSES.has(translation.status) || translation.rejected) {
     throw createApiError("CONFLICT", {
@@ -577,6 +746,123 @@ export async function submitTranslation(ctx: GraphQLContext, id: string): Promis
   )
 }
 
+/**
+ * Подача копии правки опубликованной статьи (T-122, журнал §41 п. 2–3): первая подача копии
+ * уходит в `ai_check`, повторная после отказа AI — прямо в `review` (ручная ветка ревьюера,
+ * журнал #14), как и у обычной подачи. Публичная строка `ArticleTranslation` не меняется.
+ */
+async function submitPublishedEdit(
+  ctx: GraphQLContext,
+  translation: EditorTranslation,
+  user: EditorActor
+): Promise<EditorTranslationView> {
+  const now = new Date()
+  const submitted = await ctx.prisma.$transaction(async (tx) => {
+    await lockArticle(tx, translation.articleId)
+    const edit = await tx.publishedArticleEdit.findUnique({
+      where: { articleId: translation.articleId },
+      select: { id: true, translationId: true, latestRevisionId: true, status: true }
+    })
+    if (!edit || edit.translationId !== translation.id) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "publishedArticleEdit",
+        expected: "draft",
+        actual: "none"
+      })
+    }
+    if (edit.status !== "draft" && edit.status !== "rework") {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "publishedArticleEdit",
+        expected: "draft",
+        actual: edit.status
+      })
+    }
+
+    const revision = await tx.articleRevision.findUnique({
+      where: { id: edit.latestRevisionId },
+      select: { id: true, title: true, dek: true, excerpt: true, body: true }
+    })
+    if (!revision) throw createApiError("INTERNAL_ERROR", { requestId: ctx.requestId })
+
+    if (revision.title.trim() === "") validationError(ctx, "title", "required")
+    if (toPlainText(asDocument(revision.body)).trim() === "") validationError(ctx, "body", "required")
+    await ensureImageLicenses(ctx, tx, { ...translation, body: revision.body })
+    await ensureSubmissionQueue(ctx, tx, translation.article.authorId)
+
+    const targetStatus: "ai_check" | "review" = edit.status === "rework" ? "review" : "ai_check"
+    const changed = await tx.publishedArticleEdit.updateMany({
+      where: { id: edit.id, status: edit.status },
+      data: { status: targetStatus }
+    })
+    if (changed.count !== 1) {
+      throw createApiError("CONFLICT", {
+        requestId: ctx.requestId,
+        entity: "publishedArticleEdit",
+        expected: edit.status,
+        actual: "changed"
+      })
+    }
+
+    const enqueued =
+      targetStatus === "review"
+        ? null
+        : await enqueueAiCheck(tx, { translationId: translation.id, revisionId: revision.id, requestId: ctx.requestId })
+
+    return { edit, revision, targetStatus, enqueued }
+  })
+
+  if (submitted.enqueued) {
+    ctx.logger.log({
+      level: "info",
+      event: "ai.job.created",
+      jobId: submitted.enqueued.jobId,
+      originRequestId: ctx.requestId,
+      message: "AI check job created",
+      data: { kind: "check", translationId: translation.id, revisionId: submitted.revision.id }
+    })
+  }
+
+  // Реестр событий #92: правка опубликованной статьи — исключение из заморозки реестров
+  // (журнал §41 п. 6), по образцу #45 `translation.submit`.
+  ctx.logger.log({
+    level: "info",
+    event: "translation.edit.published",
+    requestId: ctx.requestId,
+    message: "Published article edit submitted for review",
+    data: {
+      translationId: translation.id,
+      revisionId: submitted.revision.id,
+      branch: submitted.targetStatus === "ai_check" ? "ai" : "manual"
+    }
+  })
+
+  return toView(
+    ctx,
+    {
+      ...translation,
+      article: {
+        ...translation.article,
+        publishedEdit: {
+          id: submitted.edit.id,
+          translationId: submitted.edit.translationId,
+          latestRevisionId: submitted.revision.id,
+          status: submitted.targetStatus,
+          latestRevision: {
+            title: submitted.revision.title,
+            dek: submitted.revision.dek,
+            excerpt: submitted.revision.excerpt,
+            body: submitted.revision.body
+          }
+        }
+      }
+    },
+    user,
+    now
+  )
+}
+
 async function ensureImageLicenses(
   ctx: GraphQLContext,
   client: PrismaClient | TransactionClient,
@@ -639,6 +925,8 @@ export async function withdrawTranslation(ctx: GraphQLContext, id: string): Prom
   const translation = await loadTranslation(ctx, id)
   ensureOwnTranslationMutation(ctx, translation, user, "translation.withdraw")
 
+  if (translation.status === "published") return withdrawPublishedEdit(ctx, translation, user)
+
   if (!WITHDRAWABLE_STATUSES.has(translation.status) || translation.rejected) {
     throw createApiError("CONFLICT", {
       requestId: ctx.requestId,
@@ -681,6 +969,51 @@ export async function withdrawTranslation(ctx: GraphQLContext, id: string): Prom
 
   const now = new Date()
   return toView(ctx, { ...translation, status: "draft", updatedAt: now }, user, now)
+}
+
+/**
+ * Отзыв копии правки опубликованной статьи с проверки (T-122, журнал §41 п. 4): копия
+ * возвращается в черновик, публичная строка весь срок остаётся неизменной. Работу над копией
+ * можно продолжить и подать снова.
+ */
+async function withdrawPublishedEdit(
+  ctx: GraphQLContext,
+  translation: EditorTranslation,
+  user: EditorActor
+): Promise<EditorTranslationView> {
+  const changed = await ctx.prisma.publishedArticleEdit.updateMany({
+    where: { articleId: translation.articleId, translationId: translation.id, status: { in: ["ai_check", "review"] } },
+    data: { status: "draft" }
+  })
+  if (changed.count !== 1) {
+    throw createApiError("CONFLICT", {
+      requestId: ctx.requestId,
+      entity: "publishedArticleEdit",
+      expected: "ai_check",
+      actual: "changed"
+    })
+  }
+
+  ctx.logger.log({
+    level: "info",
+    event: "translation.withdraw",
+    requestId: ctx.requestId,
+    message: "Published article edit withdrawn from review",
+    data: { translationId: translation.id, status: "draft" }
+  })
+
+  const now = new Date()
+  const edit = await ctx.prisma.publishedArticleEdit.findUnique({
+    where: { articleId: translation.articleId },
+    select: {
+      id: true,
+      translationId: true,
+      latestRevisionId: true,
+      status: true,
+      latestRevision: { select: { title: true, dek: true, excerpt: true, body: true } }
+    }
+  })
+  return toView(ctx, { ...translation, article: { ...translation.article, publishedEdit: edit } }, user, now)
 }
 
 /** Может ли версия быть снята на перередактирование прямо сейчас (`article-edit.md` §4, access-matrix #100). */

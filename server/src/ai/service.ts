@@ -117,7 +117,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
     finishedAt: Date
     durationMs: number
     originRequestId: string | null
-  }): Promise<{ transitioned: boolean; verdict: AiCheckVerdict }> {
+  }): Promise<{ transitioned: boolean; verdict: AiCheckVerdict; publishedEditPromoted: boolean }> {
     const { result } = write
     const bucket = aiCostBucket(write.finishedAt)
 
@@ -196,7 +196,56 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         }
       }
 
-      if (transitioned && result.verdict === "reject") {
+      /**
+       * Копия правки опубликованной статьи (T-122, журнал §41 п. 2–3). Публичная строка остаётся
+       * `published` весь срок проверки: `applies` выше это условие не находит, поэтому решение
+       * копии ищется и применяется отдельно, по активной `PublishedArticleEdit` этой статьи.
+       */
+      const edit =
+        !applies && translation?.status === "published"
+          ? await writer.publishedArticleEdit.findUnique({
+              where: { articleId: translation.articleId },
+              select: { id: true, translationId: true, latestRevisionId: true, status: true }
+            })
+          : null
+      const editApplies =
+        edit?.translationId === write.input.translationId &&
+        edit.latestRevisionId === write.input.revisionId &&
+        edit.status === "ai_check"
+
+      let publishedEditPromoted = false
+      if (editApplies && edit) {
+        if (result.verdict === "publish") {
+          const revision = await writer.articleRevision.findUnique({
+            where: { id: write.input.revisionId },
+            select: { title: true, dek: true, excerpt: true, body: true }
+          })
+          if (revision) {
+            const changed = await writer.publishedArticleEdit.deleteMany({
+              where: { id: edit.id, status: "ai_check", latestRevisionId: write.input.revisionId }
+            })
+            if (changed.count === 1) {
+              await writer.articleTranslation.update({
+                where: { id: write.input.translationId },
+                data: {
+                  title: revision.title,
+                  dek: revision.dek,
+                  excerpt: revision.excerpt,
+                  body: revision.body as unknown as Prisma.InputJsonValue
+                }
+              })
+              publishedEditPromoted = true
+            }
+          }
+        } else {
+          await writer.publishedArticleEdit.updateMany({
+            where: { id: edit.id, status: "ai_check", latestRevisionId: write.input.revisionId },
+            data: { status: "rework" }
+          })
+        }
+      }
+
+      if ((transitioned || editApplies) && result.verdict === "reject") {
         await writer.reviewMessage.create({
           data: {
             translationId: write.input.translationId,
@@ -227,7 +276,7 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
         },
         select: { id: true }
       })
-      return { transitioned, verdict: result.verdict }
+      return { transitioned, verdict: result.verdict, publishedEditPromoted }
     })
   }
 
@@ -345,6 +394,12 @@ export function createAiCheckService(options: AiCheckServiceOptions): AiCheckSer
             data: { translationId: input.translationId }
           })
         }
+        await onPublished?.(input.translationId)
+      }
+      // Промотирование копии правки меняет публичное содержимое версии, хотя её статус не
+      // переходил (он весь срок проверки остаётся `published`) — кеш инвалидируется отдельно
+      // от метрики и письма первой публикации, которые этому случаю не подходят.
+      if (outcome.publishedEditPromoted) {
         await onPublished?.(input.translationId)
       }
       if (outcome.transitioned) {

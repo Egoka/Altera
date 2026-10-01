@@ -13,10 +13,18 @@ import type { AiCheckSubmissionStore } from "./submission"
 export interface AiCheckResultWriter {
   aiProcess: Pick<Prisma.TransactionClient["aiProcess"], "update">
   aiCostAggregate: Pick<Prisma.TransactionClient["aiCostAggregate"], "upsert">
-  articleTranslation: Pick<Prisma.TransactionClient["articleTranslation"], "findUnique" | "updateMany">
+  articleTranslation: Pick<Prisma.TransactionClient["articleTranslation"], "findUnique" | "updateMany" | "update">
   article: Pick<Prisma.TransactionClient["article"], "update">
   reviewMessage: Pick<Prisma.TransactionClient["reviewMessage"], "create">
   auditLog: Pick<Prisma.TransactionClient["auditLog"], "create">
+  /// Содержимое ревизии подачи — читается на промотирование копии правки в публичную строку.
+  articleRevision: Pick<Prisma.TransactionClient["articleRevision"], "findUnique">
+  /// Копия правки опубликованной статьи (T-122): найти активную копию по ревизии подачи и
+  /// применить решение AI к ней, не трогая публичную строку `articleTranslation`.
+  publishedArticleEdit: Pick<
+    Prisma.TransactionClient["publishedArticleEdit"],
+    "findUnique" | "updateMany" | "deleteMany"
+  >
 }
 
 export interface AiCheckProcessRecord {

@@ -10,6 +10,7 @@ export const LOG_EVENT_CODES = [
   "translation.submit",
   "translation.withdraw",
   "translation.reedit",
+  "translation.edit.published",
   "ai.job.created",
   "ai.job.started",
   "ai.job.running",

@@ -79,6 +79,7 @@ model User {
   supportRequests             SupportRequest[]
   answeredSupportRequests     SupportRequest[]              @relation("SupportRequestAnswer")
   accountExports              AccountExport[]
+  publishedArticleEdits       PublishedArticleEdit[]        @relation("PublishedArticleEditAuthor")
 
   @@unique([id, role, isServiceAccount])
   @@index([nameCheckStatus])
@@ -330,40 +331,41 @@ model TagSlugHistory {
 }
 
 model Article {
-  id                String               @id @default(uuid())
+  id                String                @id @default(uuid())
   // T-020 сконвертировала тела в документ `content`: `ArticleTranslation.body` и
   // `ArticleRevision.body` хранят документ, а не JSON-строку. Старые локализованные поля
   // и trigger `t015_sync_legacy_article` остаются до перевода API на языковые версии:
   // действующие резолверы всё ещё читают и пишут `articles.body` как строку.
   title             String
-  slug              String               @unique
+  slug              String                @unique
   dek               String?
   body              String
   excerpt           String?
   featuredImage     String?
-  status            ArticleStatus        @default(draft)
+  status            ArticleStatus         @default(draft)
   publishedAt       DateTime?
-  sourceLocale      Locale               @default(ru)
-  isEditorial       Boolean              @default(false)
+  sourceLocale      Locale                @default(ru)
+  isEditorial       Boolean               @default(false)
   firstPublishedAt  DateTime?
   archivedAt        DateTime?
   archivedByActorId String?
   archivedByRole    Role?
   archiveReason     String?
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
   authorId          String
   sectionId         String?
   formatId          String?
   coverAssetId      String?
-  author            User                 @relation(fields: [authorId], references: [id])
-  section           Section?             @relation(fields: [sectionId], references: [id], onDelete: Restrict)
-  format            Format?              @relation(fields: [formatId], references: [id], onDelete: SetNull)
-  coverAsset        MediaAsset?          @relation("ArticleCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
-  tags              Tag[]                @relation("ArticleToTag")
+  author            User                  @relation(fields: [authorId], references: [id])
+  section           Section?              @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  format            Format?               @relation(fields: [formatId], references: [id], onDelete: SetNull)
+  coverAsset        MediaAsset?           @relation("ArticleCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
+  tags              Tag[]                 @relation("ArticleToTag")
   translations      ArticleTranslation[]
   bookmarks         Bookmark[]
   slugHistory       ArticleSlugHistory[]
+  publishedEdit     PublishedArticleEdit?
 
   @@index([sectionId])
   @@index([formatId])
@@ -650,7 +652,7 @@ model UserLegalConsent {
 }
 
 model ArticleTranslation {
-  id                 String            @id @default(uuid())
+  id                 String                 @id @default(uuid())
   articleId          String
   locale             Locale
   slug               String
@@ -659,12 +661,12 @@ model ArticleTranslation {
   excerpt            String?
   featuredImage      String?
   body               Json
-  status             ArticleStatus     @default(draft)
-  rejected           Boolean           @default(false)
+  status             ArticleStatus          @default(draft)
+  rejected           Boolean                @default(false)
   publishedAt        DateTime?
   /// Точное число квалифицированных прочтений из контура вовлечённости. Порог и приём событий
   /// задаются отдельной спецификацией; очередь ревью только читает сохранённый агрегат (§26.4).
-  readCount          Int               @default(0)
+  readCount          Int                    @default(0)
   /// Закрепление ручной проверки. Идентификатор хранится без relation намеренно: удаление или
   /// архив сотрудника не должно менять историческое состояние материала.
   reviewerId         String?
@@ -675,17 +677,18 @@ model ArticleTranslation {
   /// Токен ссылки из письма о доработке или снятии с публикации (`routes.md` #68). Срок и то,
   /// что новое решение заменяет прежний токен — [ДОПУЩЕНИЕ] (`moderation.md` §8,
   /// `write-and-publish.md` §8): семь дней, один активный токен на версию.
-  editTokenHash      String?           @unique @db.VarChar(64)
+  editTokenHash      String?                @unique @db.VarChar(64)
   editTokenExpiresAt DateTime?
   translatorId       String?
   sourceRevisionId   String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  article            Article           @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  translator         User?             @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
-  sourceRevision     ArticleRevision?  @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
-  revisions          ArticleRevision[] @relation("TranslationRevisions")
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  article            Article                @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  translator         User?                  @relation("ArticleTranslator", fields: [translatorId], references: [id], onDelete: SetNull)
+  sourceRevision     ArticleRevision?       @relation("TranslationSourceRevision", fields: [sourceRevisionId], references: [id], onDelete: SetNull)
+  revisions          ArticleRevision[]      @relation("TranslationRevisions")
   reviewMessages     ReviewMessage[]
+  publishedEdits     PublishedArticleEdit[]
 
   @@unique([articleId, locale])
   @@unique([locale, slug])
@@ -697,28 +700,53 @@ model ArticleTranslation {
 }
 
 model ArticleRevision {
-  id                 String               @id @default(uuid())
-  translationId      String
-  title              String
-  dek                String?
-  excerpt            String?
-  body               Json
-  kind               ArticleRevisionKind
-  createdById        String
-  note               String?
-  restoredFromId     String?
-  createdAt          DateTime             @default(now())
-  translation        ArticleTranslation   @relation("TranslationRevisions", fields: [translationId], references: [id], onDelete: Cascade)
-  createdBy          User                 @relation("ArticleRevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  restoredFrom       ArticleRevision?     @relation("RestoredArticleRevision", fields: [restoredFromId], references: [id], onDelete: SetNull)
-  restoredRevisions  ArticleRevision[]    @relation("RestoredArticleRevision")
-  sourceTranslations ArticleTranslation[] @relation("TranslationSourceRevision")
-  reviewNotes        ReviewNote[]
+  id                     String                 @id @default(uuid())
+  translationId          String
+  title                  String
+  dek                    String?
+  excerpt                String?
+  body                   Json
+  kind                   ArticleRevisionKind
+  createdById            String
+  note                   String?
+  restoredFromId         String?
+  createdAt              DateTime               @default(now())
+  translation            ArticleTranslation     @relation("TranslationRevisions", fields: [translationId], references: [id], onDelete: Cascade)
+  createdBy              User                   @relation("ArticleRevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  restoredFrom           ArticleRevision?       @relation("RestoredArticleRevision", fields: [restoredFromId], references: [id], onDelete: SetNull)
+  restoredRevisions      ArticleRevision[]      @relation("RestoredArticleRevision")
+  sourceTranslations     ArticleTranslation[]   @relation("TranslationSourceRevision")
+  reviewNotes            ReviewNote[]
+  publishedEditsAsLatest PublishedArticleEdit[] @relation("PublishedArticleEditLatestRevision")
 
   @@index([translationId, createdAt])
   @@index([createdById])
   @@index([restoredFromId])
   @@map("article_revisions")
+}
+
+/// Активная копия правки опубликованной статьи (T-122, журнал §41). Публичной остаётся строка
+/// `ArticleTranslation`/`Article`: эта таблица — только состояние копии и указатель на её
+/// последнюю ревизию в общей истории `ArticleRevision` версии. Уникальность по `articleId`, а не
+/// по `translationId`: одновременно на статью допускается ровно одна активная правка независимо
+/// от языковой версии (журнал §41 п. 4).
+model PublishedArticleEdit {
+  id               String                     @id @default(uuid())
+  articleId        String                     @unique
+  translationId    String
+  latestRevisionId String
+  status           PublishedArticleEditStatus @default(draft)
+  createdById      String
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  article          Article                    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  translation      ArticleTranslation         @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  latestRevision   ArticleRevision            @relation("PublishedArticleEditLatestRevision", fields: [latestRevisionId], references: [id], onDelete: Restrict)
+  createdBy        User                       @relation("PublishedArticleEditAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([translationId])
+  @@index([latestRevisionId])
+  @@map("published_article_edits")
 }
 
 model MediaAsset {
@@ -1054,6 +1082,18 @@ enum LegalTextStatus {
   draft
   published
   previous
+}
+
+/// Состояние активной копии правки опубликованной статьи (T-122, журнал §41 п. 2–4).
+enum PublishedArticleEditStatus {
+  /// Автор правит копию, ещё не подана.
+  draft
+  /// Копия на AI-проверке (журнал §41 п. 2).
+  ai_check
+  /// Ручная ветка ревьюера после отказа AI (журнал §41 п. 3, #14).
+  review
+  /// AI отклонил копию, автор дорабатывает её перед повторной подачей (журнал §41 п. 3).
+  rework
 }
 
 enum ArticleRevisionKind {
