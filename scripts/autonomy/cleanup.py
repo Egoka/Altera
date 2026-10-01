@@ -17,8 +17,8 @@ class Ineligible(Exception):
 
 
 TERMINAL_RUNS = {"completed", "succeeded", "failed", "cancelled", "canceled"}
-# `dispatched` и `starting` могут начать работу в любой момент, поэтому считаются исполняемыми.
-EXECUTING_RUNS = {"running", "starting", "dispatched"}
+# `claimed`, `dispatched` и `starting` могут начать работу в любой момент, поэтому считаются исполняемыми.
+EXECUTING_RUNS = {"running", "starting", "dispatched", "claimed"}
 WAITING_RUNS = {"queued", "pending", "waiting", "waiting_approval", "waiting_local_directory", "blocked"}
 # Игнорируемые артефакты, которые воспроизводятся установкой зависимостей, сборкой и тестами.
 REGENERABLE_DIRS = {"node_modules", ".nuxt", ".output", "dist", "test-results", "coverage"}
@@ -157,7 +157,8 @@ def _validate_evidence(receipt, evidence, max_age, artifact_id=None):
         if status in TERMINAL_RUNS:
             continue
         if status not in EXECUTING_RUNS | WAITING_RUNS:
-            raise Ineligible("unknown run state")
+            # Статус приходит из API запусков и секретом не является; без имени причину не разобрать.
+            raise Ineligible("unknown run state: " + str(status)[:40])
         if caller is not None and run.get("id") == caller and status == "running":
             continue
         associations = [run.get("task_id"), run.get("branch"), run.get("worktree")]
@@ -168,6 +169,9 @@ def _validate_evidence(receipt, evidence, max_age, artifact_id=None):
         if exclusive:
             if status in EXECUTING_RUNS:
                 raise Ineligible("another run is executing; dispatch fence is not exclusive")
+            if caller is None:
+                # Папку никто не занимает: ожидающий запуск может стартовать до удаления.
+                raise Ineligible("workspace is not idle and no caller run holds the shared folder")
             continue
         if not any(associations):
             raise Ineligible("active run has unknown ownership")

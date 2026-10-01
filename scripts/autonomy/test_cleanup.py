@@ -240,12 +240,19 @@ class CleanupTests(unittest.TestCase):
         self.assertEqual(result["status"], "removed", result)
         self.assertFalse(self.worktree.exists())
 
-    def test_exclusive_fence_without_caller_allows_only_waiting_runs(self):
+    def test_exclusive_fence_without_caller_requires_idle_workspace(self):
+        # Без вызывающего запуска папка Multica свободна: ожидающий запуск может стартовать сразу.
+        self.fence([{"id": "old", "status": "completed", "task_id": "task-2"}], caller=None)
+        self.assertEqual(self.run_cleanup()["status"], "eligible")
         self.fence([{"id": "run-2", "status": "queued", "task_id": "task-2"}], caller=None)
-        self.assertEqual(self.run_cleanup(apply=True)["status"], "removed")
+        self.assert_preserved("idle")
+
+    def test_unknown_run_state_is_named_in_reason(self):
+        self.evidence["runs"] = [{"id": "run-2", "task_id": "task-2", "status": "expired"}]
+        self.assert_preserved("expired")
 
     def test_exclusive_fence_blocks_any_other_executing_run(self):
-        for state in ("running", "dispatched", "starting"):
+        for state in ("running", "dispatched", "starting", "claimed"):
             with self.subTest(state=state):
                 self.fence([{"id": "run-self", "status": "running"},
                             {"id": "other", "status": state, "task_id": "task-2"}])

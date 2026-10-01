@@ -679,9 +679,27 @@ class CleanupEvidenceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.evidence.inventory(self.receipt)
         self.answers[("agent", "tasks", "finalizer")].pop()
-        self.answers[("agent", "list", "--include-archived")] = {"unexpected": []}
+        self.answers[("agent", "tasks", "developer")]["has_more"] = True
         with self.assertRaises(RuntimeError):
             self.evidence.inventory(self.receipt)
+        self.answers[("agent", "list", "--include-archived")] = {"unexpected": []}
+        with self.assertRaises(RuntimeError):
+            c.CleanupEvidence(self.live, self.root, "finalizer").inventory(self.receipt)
+
+    def test_inventory_without_caller_agent_reports_no_caller(self):
+        runs, caller = c.CleanupEvidence(self.live, self.root, None).inventory(self.receipt)
+        self.assertIsNone(caller)
+        self.assertIn({"id": "run-self", "status": "running"}, runs)
+
+    def test_fence_ready_mirrors_cleanup_rules(self):
+        self.assertTrue(self.evidence.fence_ready())
+        self.assertFalse(c.CleanupEvidence(self.live, self.root, None).fence_ready())
+        self.answers[("agent", "tasks", "developer")]["tasks"].append({"id": "x", "issue_id": None, "status": "running"})
+        self.assertFalse(c.CleanupEvidence(self.live, self.root, "finalizer").fence_ready())
+        self.answers[("agent", "tasks", "finalizer")] = []
+        self.assertFalse(c.CleanupEvidence(self.live, self.root, "finalizer").fence_ready())
+        self.answers[("agent", "tasks", "developer")] = []
+        self.assertTrue(c.CleanupEvidence(self.live, self.root, None).fence_ready())
 
     def test_read_reports_exclusive_fence_and_controller_acceptance(self):
         receipt = self.live.cleanup_receipt(self.verified, str(self.root / "owned" / "task"))
@@ -772,12 +790,81 @@ class CleanupAfterDoneTests(unittest.TestCase):
         trees = [{"worktree": str(self.root / "owned" / "t-1"), "branch": "refs/heads/feat/t-1"}]
         calls = []
         with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
-                patch.object(c.Live, "cleanup_task", lambda inner, verified, state_dir: calls.append(verified["task_id"]) or {"status": "removed"}):
+                patch.object(c.CleanupEvidence, "fence_ready", return_value=True), \
+                patch.object(c.Live, "cleanup_task", lambda inner, verified, state_dir, apply=True: calls.append(verified["task_id"]) or {"status": "removed"}):
             result = self.live.transition(self.receipt, "done", str(self.root))
         self.assertTrue(result["ok"], result)
         self.assertEqual(result["cleanup"], {"status": "removed"})
         self.assertEqual(result["cleanup_pending"], [{"task_id": "T-1", "status": "removed"}])
         self.assertEqual(calls, ["T-123", "T-1"])
+        self.assertEqual(c.Live.cleanup_attempts(self.root), {})
+
+    def write_verified_tasks(self, *task_ids):
+        (self.root / "verified").mkdir(exist_ok=True)
+        for task_id in task_ids:
+            value = {**copy.deepcopy(self.receipt), "task_id": task_id, "branch": "feat/" + task_id, "verified": True}
+            (self.root / "verified" / (task_id + ".json")).write_text(json.dumps(value))
+        return [{"worktree": str(self.root / "owned" / task_id), "branch": "refs/heads/feat/" + task_id} for task_id in task_ids]
+
+    def test_pending_rotates_by_last_attempt_so_stuck_tasks_do_not_block_others(self):
+        trees = self.write_verified_tasks("T-1", "T-2", "T-3")
+        c.Live.cleanup_attempts(self.root, {"T-1": "2026-09-30T00:00:00+00:00", "T-2": "2026-09-29T00:00:00+00:00"})
+        calls = []
+
+        def stuck(inner, verified, state_dir, apply=True):
+            calls.append(verified["task_id"])
+            return {"status": "skipped", "reason": "dirty worktree"}
+
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
+                patch.object(c.CleanupEvidence, "fence_ready", return_value=True), \
+                patch.object(c.Live, "cleanup_task", stuck):
+            self.live.cleanup_pending(str(self.root), limit=2)
+            self.live.cleanup_pending(str(self.root), limit=2)
+        self.assertEqual(calls, ["T-3", "T-2", "T-1", "T-3"])
+
+    def test_pending_defers_without_exclusive_fence_or_time_budget(self):
+        trees = self.write_verified_tasks("T-1")
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
+                patch.object(c.Live, "cleanup_task", side_effect=AssertionError("must not attempt")):
+            with patch.object(c.CleanupEvidence, "fence_ready", return_value=False):
+                self.assertEqual(self.live.cleanup_pending(str(self.root))[0]["status"], "deferred")
+            with patch.object(c.CleanupEvidence, "fence_ready", return_value=True):
+                result = self.live.cleanup_pending(str(self.root), deadline=c.time.monotonic() - 1)
+        self.assertEqual(result, [{"status": "deferred", "reason": "cleanup time budget is spent"}])
+
+    def test_dry_run_neither_requires_fence_nor_records_attempts(self):
+        trees = self.write_verified_tasks("T-1")
+        modes = []
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
+                patch.object(c.CleanupEvidence, "fence_ready", side_effect=AssertionError("dry run needs no fence")), \
+                patch.object(c.Live, "cleanup_task", lambda inner, verified, state_dir, apply=True: modes.append(apply) or {"status": "eligible"}):
+            result = self.live.cleanup_command(str(self.root), apply=False)
+        self.assertEqual(result["results"], [{"task_id": "T-1", "status": "eligible"}])
+        self.assertIs(result["applied"], False)
+        self.assertEqual(modes, [False])
+        self.assertFalse((self.root / "cleanup-attempts.json").exists())
+
+    def test_protected_shared_folder_is_never_cleaned(self):
+        shared = self.root / "owned" / "autopilot"
+        self.config["cleanup_protected_worktrees"] = [str(shared)]
+        trees = [{"worktree": str(shared), "branch": "refs/heads/feat/t-123"}]
+        with patch.object(c.worktree_cleanup, "_worktrees", return_value=trees), \
+                patch.object(c.worktree_cleanup, "cleanup", side_effect=AssertionError("protected")):
+            result = self.live.cleanup_task({**self.receipt, "verified": True}, str(self.root))
+        self.assertEqual(result, {"status": "skipped", "reason": "worktree is protected by configuration"})
+
+    def test_cli_cleanup_needs_no_receipt_and_other_actions_do(self):
+        config = self.root / "config.json"
+        config.write_text(json.dumps({**self.config, "state_dir": str(self.root)}))
+        seen = []
+        with patch.object(c.Live, "cleanup_command", lambda inner, state_dir, apply=True: seen.append(apply) or {"ok": True}), \
+                patch("sys.stdout"):
+            with patch("sys.argv", ["controller.py", "cleanup", "--config", str(config), "--dry-run"]):
+                self.assertEqual(c.main(), 0)
+            with patch("sys.argv", ["controller.py", "done", "--config", str(config)]), patch("sys.stderr"):
+                with self.assertRaises(SystemExit):
+                    c.main()
+        self.assertEqual(seen, [False])
 
     def test_cleanup_failure_keeps_done_result(self):
         with patch.object(c.Live, "cleanup_task", side_effect=RuntimeError("network")):
@@ -832,7 +919,7 @@ class CleanupAfterDoneTests(unittest.TestCase):
     def test_cleanup_command_sweeps_under_dispatch_lock(self):
         seen = []
 
-        def pending(inner, state_dir, limit=3, exclude=()):
+        def pending(inner, state_dir, limit=3, exclude=(), deadline=None, apply=True):
             with self.assertRaises(BlockingIOError):
                 with (Path(state_dir) / "dispatch.lock").open("a") as stream:
                     c.fcntl.flock(stream, c.fcntl.LOCK_EX | c.fcntl.LOCK_NB)
@@ -841,7 +928,8 @@ class CleanupAfterDoneTests(unittest.TestCase):
 
         with patch.object(c.Live, "cleanup_pending", pending):
             result = self.live.cleanup_command(str(self.root))
-        self.assertEqual(result, {"ok": True, "phase": "cleanup", "results": [{"task_id": "T-1", "status": "removed"}]})
+        self.assertEqual(result, {"ok": True, "phase": "cleanup", "applied": True,
+                                  "results": [{"task_id": "T-1", "status": "removed"}]})
         self.assertEqual(seen, [5])
 
 
@@ -892,10 +980,15 @@ class CleanupIntegrationTests(unittest.TestCase):
             "finalization": {"path": "docs/reports/tasks/T-123.md", "sha256": hashlib.sha256(report.read_bytes()).hexdigest()}}
         (self.state / "verified").mkdir(parents=True)
         (self.state / "verified" / "T-123.json").write_text(json.dumps(self.verified))
+        self.head, self.base = head, base
         self.tasks = [{"id": "run-self", "issue_id": None, "status": "running"}]
         tasks, pull = self.tasks, {"number": 123, "state": "closed", "merged": True, "merge_commit_sha": merge,
                                    "html_url": "https://github.com/example/project/pull/123",
                                    "head": {"sha": head}, "base": {"ref": "app", "sha": base}}
+        issue = {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
+                 "metadata": {"task_id": "T-123"}, "status": "done"}
+        self.facts = None
+        test = self
 
         class FakeLive(c.Live):
             def multica_read(inner, *args):
@@ -903,8 +996,14 @@ class CleanupIntegrationTests(unittest.TestCase):
                     return [{"id": "finalizer"}]
                 if args[:2] == ("agent", "tasks"):
                     return copy.deepcopy(tasks)
-                return {"id": "issue-123", "workspace_id": "workspace", "project_id": "project",
-                        "metadata": {"task_id": "T-123"}, "status": "done"}
+                return copy.deepcopy(issue)
+
+            def multica(inner, *args):
+                test.assertEqual(args[:2], ("issue", "get"))
+                return copy.deepcopy(issue)
+
+            def facts(inner, receipt):
+                return copy.deepcopy(test.facts)
 
             def gh(inner, endpoint):
                 return copy.deepcopy(pull)
@@ -925,6 +1024,27 @@ class CleanupIntegrationTests(unittest.TestCase):
         self.assertFalse(self.worktree.exists())
         self.assertEqual(self.git(self.repo, "branch", "--list", "feat/t-123"), "")
         self.assertEqual(self.git(self.repo, "ls-remote", "origin", "feat/t-123"), "")
+
+    def test_done_transition_removes_worktree_through_real_cleanup(self):
+        # Done уже записан в карточке: сверка перезаписывает принятый итог и под своим lock убирает worktree.
+        receipt = {key: value for key, value in copy.deepcopy(self.verified).items() if key != "verified"}
+        receipt.update(source={"path": "docs/backlog/tasks/T-123.md"}, baseline_sha=self.base,
+                       implementer_id="developer", implementer_run_id="run-d",
+                       criteria=[{"id": "AC1", "status": "passed", "evidence": "ci:1"}],
+                       review={"actor_id": "reviewer", "run_id": "run-r", "sha": self.head, "verdict": "approved"},
+                       deployment={"required": False, "reason": "Документация"})
+        self.facts = {"issue_scope_valid": True, "pr": copy.deepcopy(receipt["pr"]), "state": "MERGED",
+                      "ci": {"sha": self.head, "passed": True}, "review": copy.deepcopy(receipt["review"]),
+                      "review_completed": True, "review_trusted": True, "merge_in_app": True,
+                      "finalization_sha256": receipt["finalization"]["sha256"], "requires_deploy": False,
+                      "implementer_trusted": True, "files_complete": True}
+        with patch.object(c.CleanupEvidence, "worktree_in_use", return_value=False), \
+                patch.dict(c.os.environ, {"MULTICA_AGENT_ID": "finalizer"}):
+            result = self.live.transition(receipt, "done", str(self.state))
+        self.assertTrue(result["reconciled"], result)
+        self.assertEqual(result["cleanup"]["status"], "removed", result)
+        self.assertEqual(result["cleanup_pending"], [])
+        self.assertFalse(self.worktree.exists())
 
     def test_waiting_rework_of_the_same_task_keeps_worktree(self):
         self.tasks.append({"id": "rework", "issue_id": "issue-123", "status": "queued"})

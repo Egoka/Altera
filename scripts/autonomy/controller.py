@@ -187,6 +187,9 @@ def rows(value, key):
     if isinstance(value, list):
         return value
     if isinstance(value, dict) and isinstance(value.get(key), list):
+        # Полный history endpoint страниц не отдаёт; признак продолжения значит неполный инвентарь.
+        if value.get("has_more"):
+            raise RuntimeError("paginated multica payload is incomplete")
         return value[key]
     raise RuntimeError("unexpected multica payload")
 
@@ -205,6 +208,7 @@ class CleanupEvidence:
         self.source = source
         self.state_dir = Path(state_dir)
         self.caller_agent_id = caller_agent_id
+        self.agents = None
 
     @contextlib.contextmanager
     def guard(self, receipt):
@@ -231,10 +235,13 @@ class CleanupEvidence:
         """Незавершённые запуски всех агентов workspace и запуск вызывающего агента."""
         source = self.source
         runs, own = [], []
-        for agent in rows(source.multica_read("agent", "list", "--include-archived"), "agents"):
-            agent_id = agent.get("id") if isinstance(agent, dict) else None
-            if not agent_id:
+        if self.agents is None:
+            # Состав агентов за минуту уборки не меняется; запуски перечитываются каждый раз.
+            self.agents = [agent.get("id") if isinstance(agent, dict) else None
+                           for agent in rows(source.multica_read("agent", "list", "--include-archived"), "agents")]
+            if not all(self.agents):
                 raise RuntimeError("agent without id")
+        for agent_id in self.agents:
             for run in rows(source.multica_read("agent", "tasks", agent_id), "tasks"):
                 status = str(run.get("status") or "").lower()
                 if status in worktree_cleanup.TERMINAL_RUNS:
@@ -253,6 +260,19 @@ class CleanupEvidence:
         if self.caller_agent_id and len(own) != 1:
             raise RuntimeError("caller run is not uniquely identified")
         return runs, (own[0] if own else None)
+
+    def fence_ready(self):
+        """Предпроверка досборки: сейчас исполняется только вызывающий запуск (правила `cleanup.py`)."""
+        try:
+            runs, caller = self.inventory({})
+        except Exception:
+            return False
+        for run in runs:
+            if caller is not None and run["id"] == caller and run["status"] == "running":
+                continue
+            if run["status"] not in worktree_cleanup.WAITING_RUNS or caller is None:
+                return False
+        return True
 
     def app_artifact(self, path):
         """Git blob и SHA-256 итога в `origin/app`; `cleanup.py` читает тот же remote-tracking ref."""
@@ -283,16 +303,18 @@ class CleanupEvidence:
 
     def read(self, receipt):
         source = self.source
-        observed = time.time()
         issue = source.multica_read("issue", "get", receipt.get("issue_id", ""))
         done = source.issue_scope(receipt, issue) and source.issue_done(issue)
         pr = source.gh(f"repos/{source.gh_repo}/pulls/{int(receipt['pr']['number'])}")
         artifact = self.app_artifact(receipt.get("finalization", {}).get("path"))
+        # Свежесть важна для запусков и процессов: время фиксируется перед их чтением.
+        observed = time.time()
         runs, caller = self.inventory(receipt)
+        in_use = self.worktree_in_use(receipt["worktree"])
         merged = bool(pr.get("merged"))
         return {
             "observed_at": observed, "complete": True, "fence": "exclusive", "caller_run_id": caller,
-            "worktree_in_use": self.worktree_in_use(receipt["worktree"]),
+            "worktree_in_use": in_use,
             "task": {"id": receipt["task_id"], "status": "done" if done else str(issue.get("status")),
                      "confirmed_done": bool(done and self.verified(receipt)),
                      "finalized_in_app": bool(artifact and artifact[1] == receipt["finalization"]["sha256"]),
@@ -514,7 +536,7 @@ class Live:
         pr.setdefault("url", f"https://github.com/{self.gh_repo}/pull/{pr.get('number')}")
         return receipt
 
-    def cleanup_task(self, verified, state_dir):
+    def cleanup_task(self, verified, state_dir, apply=True):
         root = self.config.get("cleanup_owned_root")
         if not root:
             return {"status": "disabled", "reason": "cleanup_owned_root is not configured"}
@@ -526,55 +548,96 @@ class Live:
                  if tree.get("branch") == "refs/heads/" + branch]
         if not paths:
             return {"status": "absent", "reason": "no worktree is checked out on the task branch"}
+        # Общая рабочая папка Multica тоже лежит в `.worktrees` и может оказаться на ветке задачи.
+        protected = {Path(path).resolve() for path in self.config.get("cleanup_protected_worktrees", [])}
+        if Path(paths[0]).resolve() in protected:
+            return {"status": "skipped", "reason": "worktree is protected by configuration"}
         receipt = self.cleanup_receipt(verified, paths[0])
         provider = CleanupEvidence(self, state_dir, os.environ.get("MULTICA_AGENT_ID"))
         return worktree_cleanup.cleanup(self.repo, receipt, provider, owned_root=root,
-                                        log_dir=self.config.get("cleanup_log_dir"), apply=True)
+                                        log_dir=self.config.get("cleanup_log_dir"), apply=apply)
 
-    def safe_cleanup(self, verified, state_dir):
+    def safe_cleanup(self, verified, state_dir, apply=True):
         try:
-            return self.cleanup_task(verified, state_dir)
+            return self.cleanup_task(verified, state_dir, apply)
         except Exception as error:
             # Уборка не отменяет Done; текст исключения может содержать URL с credentials.
             return {"status": "skipped", "reason": "cleanup failed: " + type(error).__name__}
 
-    def cleanup_pending(self, state_dir, limit=3, exclude=()):
-        """Досборка: принятые контроллером итоги, чьи worktree ещё открыты, старые первыми."""
+    @staticmethod
+    def cleanup_attempts(state_dir, value=None):
+        """Время последней попытки по задаче: досборка не застревает на одних и тех же итогах."""
+        path = Path(state_dir) / "cleanup-attempts.json"
+        if value is None:
+            try:
+                stored = json.loads(path.read_text())
+                return stored if isinstance(stored, dict) else {}
+            except (OSError, ValueError):
+                return {}
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as output:
+            temporary = Path(output.name)
+            output.write(json.dumps(value, sort_keys=True) + "\n")
+        try:
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def cleanup_pending(self, state_dir, limit=3, exclude=(), deadline=None, apply=True):
+        """Досборка: принятые итоги, чьи worktree ещё открыты; давно не проверявшиеся первыми."""
         if not self.config.get("cleanup_owned_root"):
             return []
         checked_out = {tree.get("branch") for tree in worktree_cleanup._worktrees(self.repo)}
-        results = []
+        candidates = []
         for path in sorted((Path(state_dir) / "verified").glob("*.json")):
-            if len(results) >= limit:
-                break
             try:
                 verified = json.loads(path.read_text())
             except (OSError, ValueError):
                 continue
-            if (not isinstance(verified, dict) or verified.get("verified") is not True
-                    or verified.get("task_id") in exclude or "refs/heads/" + str(verified.get("branch")) not in checked_out):
-                continue
-            results.append({"task_id": verified["task_id"], **self.safe_cleanup(verified, state_dir)})
+            if (isinstance(verified, dict) and verified.get("verified") is True
+                    and verified.get("task_id") not in exclude and "refs/heads/" + str(verified.get("branch")) in checked_out):
+                candidates.append(verified)
+        if not candidates:
+            return []
+        # Чужой исполняемый запуск провалит каждую попытку: одна предпроверка вместо полного чтения на итог.
+        if apply and not CleanupEvidence(self, state_dir, os.environ.get("MULTICA_AGENT_ID")).fence_ready():
+            return [{"status": "deferred", "reason": "dispatch fence is not exclusive now"}]
+        attempts = self.cleanup_attempts(state_dir)
+        candidates.sort(key=lambda item: attempts.get(item["task_id"], ""))
+        results = []
+        for verified in candidates[:limit]:
+            if deadline is not None and time.monotonic() >= deadline:
+                results.append({"status": "deferred", "reason": "cleanup time budget is spent"})
+                break
+            result = self.safe_cleanup(verified, state_dir, apply)
+            results.append({"task_id": verified["task_id"], **result})
+            if apply:
+                attempts[verified["task_id"]] = dt.datetime.now(dt.timezone.utc).isoformat()
+                if result.get("status") == "removed":
+                    attempts.pop(verified["task_id"])
+                self.cleanup_attempts(state_dir, attempts)
         return results
 
     def after_done(self, receipt, state_dir):
         """Уборка под тем же dispatch.lock, что и Done; её результат Done не меняет."""
         if not self.config.get("cleanup_owned_root"):
             return {}
+        # Done вызывают из Bash-инструмента агента: досборка укладывается в бюджет, остальное — `cleanup`.
+        deadline = time.monotonic() + float(self.config.get("cleanup_budget_seconds", 45))
         try:
             verified = json.loads((Path(state_dir) / "verified" / (receipt["task_id"] + ".json")).read_text())
             result = {"cleanup": self.safe_cleanup(verified, state_dir)}
         except (OSError, ValueError) as error:
             result = {"cleanup": {"status": "skipped", "reason": "cleanup failed: " + type(error).__name__}}
         try:
-            result["cleanup_pending"] = self.cleanup_pending(state_dir, exclude={receipt["task_id"]})
+            result["cleanup_pending"] = self.cleanup_pending(state_dir, limit=2, exclude={receipt["task_id"]}, deadline=deadline)
         except Exception as error:
             result["cleanup_pending"] = [{"status": "skipped", "reason": "cleanup failed: " + type(error).__name__}]
         return result
 
-    def cleanup_command(self, state_dir, limit=5):
+    def cleanup_command(self, state_dir, limit=5, apply=True):
         with lock(Path(state_dir) / "dispatch.lock"):
-            return {"ok": True, "phase": "cleanup", "results": self.cleanup_pending(state_dir, limit=limit)}
+            return {"ok": True, "phase": "cleanup", "applied": apply,
+                    "results": self.cleanup_pending(state_dir, limit=limit, apply=apply)}
 
     def transition(self, receipt, phase, state_dir):
         if not re.fullmatch(r"[A-Za-z0-9_-]+", receipt.get("task_id", "")):
@@ -634,13 +697,15 @@ def main():
     # Готовность к merge и к Done — разные вопросы: `deployment` и `finalization`
     # относятся только к Done. Без выбора фазы отказ Done читается как запрет слияния.
     parser.add_argument("--phase", choices=["merge", "done"], default="done")
+    # Пробный прогон уборки по живым доказательствам: что и почему было бы удалено.
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     if args.action != "cleanup" and not args.receipt:
         parser.error("--receipt is required for " + args.action)
     config = json.loads(Path(args.config).read_text())
     live = Live(config)
     if args.action == "cleanup":
-        result = live.cleanup_command(config["state_dir"])
+        result = live.cleanup_command(config["state_dir"], apply=not args.dry_run)
         print(json.dumps(result, ensure_ascii=False))
         return 0
     receipt = json.loads(Path(args.receipt).read_text())

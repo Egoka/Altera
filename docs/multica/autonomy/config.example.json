@@ -11,6 +11,8 @@
   "state_dir": "/Users/egorbondarenko/WebstormProjects/Altera/.git/autonomy-state",
   "cleanup_owned_root": "/Users/egorbondarenko/WebstormProjects/Altera/.worktrees",
   "cleanup_log_dir": "/Users/egorbondarenko/WebstormProjects/.autonomy-cleanup/Altera",
+  "cleanup_protected_worktrees": ["/Users/egorbondarenko/WebstormProjects/Altera/.worktrees/autopilot"],
+  "cleanup_budget_seconds": 45,
   "controller_agent_ids": ["d08ef989-e4d4-4772-bc33-335127a85f0f"],
   "daily_agent_ids": ["b1c275c8-c97d-4b3c-a671-0a908d5fbdc7"],
   "reviewer_ids": ["db94a617-807c-4eec-981f-51fd4b3217d4"],
