@@ -62,7 +62,11 @@ def render_deploy(messages, config, now, run_id=None):
 
 
 def health(url, expected_sha):
-    """Реальная HTTP-проверка с конечным timeout; никаких URL из receipt."""
+    """Реальная HTTP-проверка с конечным timeout; никаких URL из receipt.
+
+    Готовность площадки — `revision` и `checks.*`. С T-088 `degraded` ставят и недоступный
+    провайдер (почта, хранилище отложены журналом §34), и копия без отметки прогона; выкладку
+    это не отменяет, поэтому принимаются `ok` и `degraded`, а `unavailable` — нет."""
     if not isinstance(url, str) or not url.startswith("https://") or not isinstance(expected_sha, str) or not re.fullmatch(r"[0-9a-f]{40}", expected_sha):
         return False
     try:
@@ -73,6 +77,6 @@ def health(url, expected_sha):
             if not isinstance(value, dict) or not isinstance(value.get("checks"), dict):
                 return False
             checks = value["checks"]
-            return value.get("status") == "ok" and value.get("revision") == expected_sha and set(checks) == {"postgres", "redis", "migrations"} and all(checks[name] is True for name in ("postgres", "redis", "migrations"))
+            return value.get("status") in ("ok", "degraded") and value.get("revision") == expected_sha and set(checks) == {"postgres", "redis", "migrations"} and all(checks[name] is True for name in ("postgres", "redis", "migrations"))
     except (OSError, ValueError, TypeError):
         return False
