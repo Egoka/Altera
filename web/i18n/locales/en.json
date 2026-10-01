@@ -2396,7 +2396,11 @@
     "goneTitle": "This author page is unavailable",
     "goneDescription": "The account has been withdrawn, and its stories are no longer shown.",
     "goneAction": "All authors",
-    "pagination": "Author story pages"
+    "pagination": "Author story pages",
+    "meta": {
+      "titleTemplate": "{name} — author at Altera",
+      "descriptionFallback": "Author profile on Altera."
+    }
   },
   "bookmarks": {
     "pageTitle": "Bookmarks",

@@ -2396,7 +2396,11 @@
     "goneTitle": "Страница автора недоступна",
     "goneDescription": "Аккаунт снят с публикации, его материалы больше не показываются.",
     "goneAction": "Все авторы",
-    "pagination": "Страницы материалов автора"
+    "pagination": "Страницы материалов автора",
+    "meta": {
+      "titleTemplate": "{name} — автор Altera",
+      "descriptionFallback": "Профиль автора в журнале Altera."
+    }
   },
   "bookmarks": {
     "pageTitle": "Закладки",

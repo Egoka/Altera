@@ -43,7 +43,54 @@
     return typeof data?.requestId === "string" ? data.requestId : undefined
   })
 
-  useHead({ title: "Altera" })
+  /**
+   * SEO главной (`home.md` §10): название издания и слоган — существующий текст подвала, без
+   * отдельного дубля в словаре. `WebSite` без `SearchAction`: поиск — этап 3 (§2 зона 1), адреса
+   * у него ещё нет.
+   */
+  const origin = useRequestURL().origin
+  const siteDescription = computed(() => t("footer.description"))
+  const siteTitle = computed(() => `Altera — ${siteDescription.value.replace(/\.\s*$/, "")}`)
+  const canonicalUrl = computed(() => `${origin}${locale.value === "en" ? "/en" : "/"}`)
+
+  useSeoMeta({
+    title: () => siteTitle.value,
+    description: () => siteDescription.value,
+    ogTitle: () => siteTitle.value,
+    ogDescription: () => siteDescription.value,
+    ogType: "website",
+    robots: "index, follow"
+  })
+
+  useHead({
+    link: () => [
+      { rel: "canonical", href: canonicalUrl.value },
+      { rel: "alternate", hreflang: "ru-RU", href: `${origin}/` },
+      { rel: "alternate", hreflang: "en-US", href: `${origin}/en` },
+      { rel: "alternate", hreflang: "x-default", href: `${origin}/` }
+    ],
+    script: () => [
+      {
+        type: "application/ld+json",
+        innerHTML: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Altera",
+          url: canonicalUrl.value,
+          description: siteDescription.value
+        })
+      },
+      {
+        type: "application/ld+json",
+        innerHTML: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Altera",
+          url: origin
+        })
+      }
+    ]
+  })
 </script>
 
 <template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { GET_ARTICLE, GET_GONE_ARTICLE } from "~/query"
   import { getArticleRouteState, getGoneArticleRouteState } from "~/utils/articleRouteVisibility"
+  import { fallbackVariant, readMediaVariants } from "~/utils/mediaVariants"
 
   definePageMeta({ layout: "default" })
 
@@ -55,14 +56,106 @@
   if (state.value.kind === "gone" && requestEvent) setResponseStatus(requestEvent, 410)
   if (article.value?.preview && requestEvent) setResponseHeader(requestEvent, "X-Robots-Tag", "noindex, nofollow")
 
+  /**
+   * SEO материала (`article.md` §10): canonical и hreflang строят тот же адрес, что и сервер
+   * (`publicPath` в `server/src/article/public-page.ts`) — сестра уже приходит с готовым
+   * `sibling.path`. Предпросмотр и снятый материал (`noindex`) не получают canonical, hreflang
+   * и JSON-LD: индексировать и связывать hreflang-парой нечего.
+   */
+  const origin = useRequestURL().origin
+  const localePrefix = computed(() => (locale.value === "en" ? "/en" : ""))
+  const canonicalUrl = computed(() => `${origin}${localePrefix.value}/${sectionSlug.value}/${slugArticle.value}`)
+  const ogImageUrl = computed(() => {
+    const variants = article.value?.cover?.variants
+    return variants ? fallbackVariant(readMediaVariants(variants))?.url : undefined
+  })
+  const isTextUpdated = computed(() => {
+    if (!article.value?.updatedAt || !article.value.publishedAt) return false
+    return new Date(article.value.updatedAt).getTime() > new Date(article.value.publishedAt).getTime()
+  })
+  const datePublishedIso = computed(() => article.value?.publishedAt ?? article.value?.firstPublishedAt ?? undefined)
+  const dateModifiedIso = computed(() => (isTextUpdated.value ? article.value?.updatedAt : datePublishedIso.value))
+  const authorProfileUrl = computed(() =>
+    article.value ? `${origin}${localePrefix.value}/authors/${article.value.author.slug}` : undefined
+  )
+  const sectionUrl = computed(() =>
+    article.value?.section ? `${origin}${localePrefix.value}/${article.value.section.slug}` : undefined
+  )
+  const indexable = computed(() => Boolean(article.value) && !article.value?.preview && state.value.kind !== "gone")
+
   useSeoMeta({
     title: () => {
       if (goneArticle.value) return `${goneArticle.value.title} — ${t("article.goneTitle")} — Altera`
       return article.value ? `${article.value.title} — Altera` : "Altera"
     },
     description: () => article.value?.excerpt ?? article.value?.dek ?? undefined,
-    robots: () => (state.value.kind === "gone" || article.value?.preview ? "noindex, nofollow" : undefined)
+    ogTitle: () => (article.value ? `${article.value.title} — Altera` : undefined),
+    ogDescription: () => article.value?.excerpt ?? article.value?.dek ?? undefined,
+    ogType: () => (article.value ? "article" : undefined),
+    ogImage: () => ogImageUrl.value,
+    articlePublishedTime: () => datePublishedIso.value,
+    articleModifiedTime: () => dateModifiedIso.value,
+    articleAuthor: () => (authorProfileUrl.value ? [authorProfileUrl.value] : undefined),
+    articleSection: () => article.value?.section?.name,
+    robots: () => (indexable.value ? "index, follow" : "noindex, nofollow")
   })
+
+  useHead(() => ({
+    link: indexable.value
+      ? [
+          { rel: "canonical", href: canonicalUrl.value },
+          ...(article.value?.sibling
+            ? [
+                { rel: "alternate", hreflang: locale.value === "en" ? "en-US" : "ru-RU", href: canonicalUrl.value },
+                {
+                  rel: "alternate",
+                  hreflang: article.value.sibling.locale === "en" ? "en-US" : "ru-RU",
+                  href: `${origin}${article.value.sibling.path}`
+                }
+              ]
+            : [])
+        ]
+      : [],
+    script:
+      indexable.value && article.value
+        ? [
+            {
+              type: "application/ld+json",
+              innerHTML: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Article",
+                headline: article.value.title,
+                description: article.value.excerpt ?? article.value.dek ?? undefined,
+                image: ogImageUrl.value ? [ogImageUrl.value] : undefined,
+                author: { "@type": "Person", name: article.value.author.name, url: authorProfileUrl.value },
+                datePublished: datePublishedIso.value,
+                dateModified: dateModifiedIso.value,
+                articleSection: article.value.section?.name,
+                mainEntityOfPage: canonicalUrl.value
+              })
+            },
+            {
+              type: "application/ld+json",
+              innerHTML: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: t("common.home"), item: `${origin}${localePrefix.value}/` },
+                  ...(sectionUrl.value && article.value.section
+                    ? [{ "@type": "ListItem", position: 2, name: article.value.section.name, item: sectionUrl.value }]
+                    : []),
+                  {
+                    "@type": "ListItem",
+                    position: sectionUrl.value && article.value.section ? 3 : 2,
+                    name: article.value.title,
+                    item: canonicalUrl.value
+                  }
+                ]
+              })
+            }
+          ]
+        : []
+  }))
 
   const formattedFirstPublishedAt = computed(() => {
     const value = goneArticle.value?.firstPublishedAt

@@ -85,6 +85,22 @@ const stubs = {
 const graphQLRequest = vi.fn()
 const navigate = vi.fn()
 const setStatus = vi.fn()
+const headSpy = vi.fn()
+const seoMetaSpy = vi.fn()
+
+/** `useHead`/`useSeoMeta` принимают значения или геттеры — тест читает актуальный результат. */
+const resolveGetters = (value: unknown): Record<string, unknown> => {
+  const resolved = typeof value === "function" ? value() : value
+  if (!resolved || typeof resolved !== "object") return {}
+  return Object.fromEntries(
+    Object.entries(resolved as Record<string, unknown>).map(([key, field]) => [
+      key,
+      typeof field === "function" ? field() : field
+    ])
+  )
+}
+const lastHeadCall = () => resolveGetters(headSpy.mock.calls.at(-1)?.[0])
+const lastSeoMetaCall = () => resolveGetters(seoMetaSpy.mock.calls.at(-1)?.[0])
 const requestEvent = { node: {} }
 const routeQuery = ref<Record<string, unknown>>({})
 const routeParams = ref<Record<string, unknown>>({})
@@ -131,7 +147,9 @@ beforeEach(() => {
   vi.stubGlobal("watch", watch)
   vi.stubGlobal("onBeforeUnmount", onBeforeUnmount)
   vi.stubGlobal("useI18n", () => ({ t, locale: ref("ru") }))
-  vi.stubGlobal("useHead", vi.fn())
+  headSpy.mockReset()
+  seoMetaSpy.mockReset()
+  vi.stubGlobal("useHead", headSpy)
   vi.stubGlobal("definePageMeta", vi.fn())
   vi.stubGlobal("navigateTo", navigate)
   vi.stubGlobal("useRoute", () => ({ query: routeQuery.value, params: routeParams.value }))
@@ -140,7 +158,8 @@ beforeEach(() => {
   vi.stubGlobal("useSwitchLocalePath", () => (target: string) => `/${target}${routePath.value}`)
   vi.stubGlobal("useRequestEvent", () => requestEvent)
   vi.stubGlobal("setResponseStatus", setStatus)
-  vi.stubGlobal("useSeoMeta", vi.fn())
+  vi.stubGlobal("useSeoMeta", seoMetaSpy)
+  vi.stubGlobal("useRequestURL", () => new URL("https://altera.test/authors/vera"))
   vi.stubGlobal("createError", (input: object) => Object.assign(new Error("request failed"), input))
   vi.stubGlobal("useGraphQL", graphQLRequest)
   vi.stubGlobal("useAsyncData", async (_key: unknown, handler: () => Promise<unknown>) => {
@@ -564,6 +583,40 @@ describe("страница автора", () => {
     pending()
 
     expect((await render(AuthorPage)).find('[data-zone="skeleton"]').exists()).toBe(true)
+  })
+
+  it("отдаёт canonical с page, hreflang-пару и JSON-LD профиля (`author.md` §10)", async () => {
+    routeQuery.value = { page: "2" }
+    // Дефолтный стаб `useLocalePath` не умеет второй аргумент (целевая локаль) — hreflang на
+    // другую локаль его требует, в отличие от остальных тестов этого файла.
+    vi.stubGlobal("useLocalePath", () => (path: string, target?: string) => (target === "en" ? `/en${path}` : path))
+    respondWith(authorPage({ feed: { pageInfo: { page: 2, totalPages: 2, hasNext: false } } }))
+
+    await render(AuthorPage)
+
+    const seoMeta = lastSeoMetaCall()
+    expect(seoMeta.title).toBe("authorPage.meta.titleTemplate:Вера Орлова")
+    expect(seoMeta.ogType).toBe("profile")
+    expect(seoMeta.robots).toBe("index, follow")
+
+    const head = lastHeadCall()
+    expect(head.link).toEqual([
+      { rel: "canonical", href: "https://altera.test/authors/vera?page=2" },
+      { rel: "alternate", hreflang: "ru-RU", href: "https://altera.test/authors/vera" },
+      { rel: "alternate", hreflang: "en-US", href: "https://altera.test/en/authors/vera" }
+    ])
+    const types = (head.script as { innerHTML: string }[]).map((entry) => JSON.parse(entry.innerHTML)["@type"])
+    expect(types).toEqual(["Person", "BreadcrumbList"])
+  })
+
+  it("снятый аккаунт не получает canonical, hreflang и JSON-LD", async () => {
+    respondWith({ errors: [{ extensions: { code: "ARCHIVED" } }] })
+
+    await render(AuthorPage)
+
+    const head = lastHeadCall()
+    expect(head.link).toEqual([])
+    expect(head.script).toEqual([])
   })
 })
 
