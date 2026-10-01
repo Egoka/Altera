@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task_id": "T-075",
+  "issue_id": "01a0eafa-ba58-7a8a-b07d-7097eb1354a7",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-075-admin-statistics.md",
+    "sha": "1f51618f2de155c4112c72e5a6c31b8c55858cb2"
+  },
+  "baseline_sha": "aeba40c1d994f985e897a82de0e1b0092aa9d5bb",
+  "tested_sha": "e0b0bfdf0bfcb77e4153b1e84178e350f4d0d50d",
+  "branch": "feat/t075-admin-statistics",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0eb44-9ffc-730b-ab26-c5bf84d8b96c",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Playwright 4 сценария: все строки состояний statistics.md воспроизведены, включая роли и ошибочные состояния."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Unit-тест admin-statistics.test.ts: экспорт пишет action stats.export с полями actorId, actorRole, entityType, diff. При RATE_LIMITED аудит не пишется повторно."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "content 99 passed; server 1238 passed / 69 skipped; web 891 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 372,
+    "url": "https://github.com/Egoka/Altera/pull/372",
+    "base_ref": "app",
+    "base_sha": "66381e825665cd7ae9fe5ec394e9fff707af269f",
+    "head_sha": "e0b0bfdf0bfcb77e4153b1e84178e350f4d0d50d",
+    "merge_sha": "04daed7d326b9780de60fbe7fc3cc1abeacfbaf1"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f7de-4b8a-726d-bf07-2110e3003a13",
+    "sha": "e0b0bfdf0bfcb77e4153b1e84178e350f4d0d50d",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ и web/ (статистика, GraphQL, Playwright). Деплой включает merge SHA"
+  },
+  "remaining": [],
+  "usage": null,
+  "finalization": {
+    "path": "docs/reports/tasks/T-075.md",
+    "sha256": "add839396ae9b9264a65e09f321a617ef95f62e428325ea5ece00b64303c7cd1"
+  }
+}

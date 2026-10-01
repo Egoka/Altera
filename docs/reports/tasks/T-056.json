@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "T-056",
+  "issue_id": "01a0e946-2744-7925-9cf6-7e3f20631e9a",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-056-article-page.md",
+    "sha": "e24edc08a312517ad31e75e8aed8ee8894d08df6"
+  },
+  "baseline_sha": "aeba40c1d994f985e897a82de0e1b0092aa9d5bb",
+  "tested_sha": "cf5fc3b4e07d52fcf47b3a7956940916567a8a81",
+  "branch": "web/t056-article-page",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e951-0bc2-76e5-baec-b1b569a27e70",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Playwright e2e 56-article-page.spec.ts: опубликованный материал с документом, предпросмотр со статусом и окном перередактирования, снятый 410 с публичными метаданными."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Серверный тест article-page.test.ts: bodyAssets[].alt из MediaAsset, не из document node. Компонентный тест article-document.nuxt.test.ts: img alt равен значению из asset."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Серверный тест: hides a preview from a guest even when a token-shaped value is supplied — NOT_FOUND при token-shaped строке без сессии."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "content 99 passed; server 1225 passed; web 870 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 361,
+    "url": "https://github.com/Egoka/Altera/pull/361",
+    "base_ref": "app",
+    "base_sha": "04daed7d326b9780de60fbe7fc3cc1abeacfbaf1",
+    "head_sha": "cf5fc3b4e07d52fcf47b3a7956940916567a8a81",
+    "merge_sha": "389c7e24f847d30d9b48838a44f23a0191577887"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f714-b8c5-711f-a28c-8ca2bb46a9fe",
+    "sha": "cf5fc3b4e07d52fcf47b3a7956940916567a8a81",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ и web/ (страница материала, preview, GraphQL). Деплой включает merge SHA"
+  },
+  "remaining": [],
+  "usage": null,
+  "finalization": {
+    "path": "docs/reports/tasks/T-056.md",
+    "sha256": "706a39e50b293b0340b903e4814d92f5e3984327eb7c623e2708fa2a209ffcca"
+  }
+}

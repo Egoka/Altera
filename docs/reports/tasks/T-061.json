@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task_id": "T-061",
+  "issue_id": "01a0e985-0434-72a9-be27-93a4c6f6051d",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-061-blocked-appeal.md",
+    "sha": "617d2e180801a7da26e3925f2d1312d6aa86e414"
+  },
+  "baseline_sha": "aeba40c1d994f985e897a82de0e1b0092aa9d5bb",
+  "tested_sha": "615ad0dbc03558c64397fe9db5da206fbf434728",
+  "branch": "feat/t061-blocked-appeal",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0ebe9-aae6-7141-b8bb-11e72b927889",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Повторная отправка обращения возвращает CONFLICT. Покрыто unit-тестом account-appeal.test.ts."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Playwright 10 passed: loading, form, submitted, restored, confirmed и все ошибочные состояния воспроизводимы."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "content 99 passed; server 1237 passed; web 899 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 375,
+    "url": "https://github.com/Egoka/Altera/pull/375",
+    "base_ref": "app",
+    "base_sha": "e38c4e0893939308f4803428652554b0d568b226",
+    "head_sha": "615ad0dbc03558c64397fe9db5da206fbf434728",
+    "merge_sha": "66381e825665cd7ae9fe5ec394e9fff707af269f"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f7de-2041-76b9-9529-98a81a89eeaf",
+    "sha": "615ad0dbc03558c64397fe9db5da206fbf434728",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ и web/ (appeal, admin users, GraphQL, Playwright). Деплой включает merge SHA"
+  },
+  "remaining": [],
+  "usage": null,
+  "finalization": {
+    "path": "docs/reports/tasks/T-061.md",
+    "sha256": "e63227ee5b015a47a087b40c99508afb6d666634195ff5b45e9ad0d20fa6fcf9"
+  }
+}
