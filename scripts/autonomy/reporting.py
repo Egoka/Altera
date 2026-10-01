@@ -18,6 +18,8 @@ from deploy_evidence import parse_timestamp
 
 TOKEN_FIELDS = ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens")
 MOSCOW = ZoneInfo("Europe/Moscow")
+# Предел `multica agent tasks --limit`; дальше история листается курсором `--before`.
+AGENT_TASKS_PAGE = 200
 
 
 def timestamp(value):
@@ -732,6 +734,33 @@ def collect_live(multica, server_url, workspace, project, repository, *,
         coverage.setdefault(source, {"status": "partial", "reason": "page_cap", "records": len(collected)})
         return collected
 
+    def agent_history(identifier):
+        # Курсор `--before` — «created_at|id» с микросекундами, а JSON CLI отдаёт время до секунды.
+        # Берём следующую секунду: страницы перекрываются, но не теряют задачи; повторы снимаем по id.
+        source, collected, seen, cursor = f"agent_tasks:{identifier}", [], set(), None
+        for _ in range(max_pages):
+            args = ["agent", "tasks", identifier, "--limit", str(AGENT_TASKS_PAGE)]
+            value = get(base + args + (["--before", cursor] if cursor else []) + ["--output", "json"], source)
+            if value is None:
+                return collected
+            if not isinstance(value, list) and not (isinstance(value, dict) and isinstance(value.get("tasks"), list)):
+                coverage[source] = {"status": "partial", "reason": "unexpected_payload"}
+                return collected
+            page = rows(value, "tasks")
+            fresh = [row for row in page if row.get("id") not in seen]
+            seen.update(row.get("id") for row in fresh)
+            collected.extend(fresh)
+            if len(page) < AGENT_TASKS_PAGE:
+                coverage[source] = {"status": "complete", "records": len(collected)}
+                return collected
+            oldest = timestamp(page[-1].get("created_at"))
+            if not fresh or oldest is None or not page[-1].get("id"):
+                coverage[source] = {"status": "partial", "reason": "pagination_stalled", "records": len(collected)}
+                return collected
+            cursor = f"{iso(oldest.replace(microsecond=0) + timedelta(seconds=1))}|{page[-1]['id']}"
+        coverage[source] = {"status": "partial", "reason": "page_cap", "records": len(collected)}
+        return collected
+
     issues = pages(["issue", "list", "--project", project, "--sort", "created_at", "--direction", "asc"],
                    "issues", "issues")
     executions = []
@@ -753,7 +782,7 @@ def collect_live(multica, server_url, workspace, project, repository, *,
         identifier = agent.get("id")
         if not identifier:
             continue
-        for task in multica_list(["agent", "tasks", identifier], "tasks", f"agent_tasks:{identifier}"):
+        for task in agent_history(identifier):
             if task.get("issue_id") in issue_ids or task.get("id") in ap_links:
                 item = dict(task)
                 item["role"] = item.get("role") or agent.get("role") or agent.get("name") or "unknown"

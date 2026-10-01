@@ -65,12 +65,16 @@ python3 -m unittest discover -s scripts/autonomy -p test_reporting.py
 
 CLI использует только read-only `multica issue list/runs`, `agent list/tasks`, `autopilot list/runs` и `gh api` GET.
 Таймаут отдельного чтения — 60 секунд; при ошибке read-only команда повторяется один раз, всего не более двух попыток. `--max-pages` ограничивает число страниц каждого endpoint, по умолчанию 100;
-достижение лимита даёт `partial`, а не полноту. Issue list постраничный по 100; issue runs и agent tasks используют
-документированный полный history endpoint. Autopilot usage, не найденный у агента, остаётся известной попыткой с
+достижение лимита даёт `partial`, а не полноту. Issue list постраничный по 100; issue runs используют
+документированный полный history endpoint. Agent tasks с Multica CLI 0.6 отдаются страницами по 200, новые первыми;
+следующая страница запрашивается курсором `--before "<created_at>|<id>"`. JSON CLI отдаёт время до секунды, а курсор
+сравнивается с микросекундами, поэтому collector берёт следующую секунду после последней строки: страницы
+перекрываются, повторы снимаются по id. Страница из одних повторов даёт `partial` с причиной `pagination_stalled`.
+Autopilot usage, не найденный у агента, остаётся известной попыткой с
 неизвестными токенами. Связи autopilot без native task ID отражаются в coverage и не получают выдуманных execution ID.
 
 Неуспех отдельного источника не уничтожает уже прочитанные данные. Collector сохраняет JSON с `coverage` и причинами
-`source_command_failed`, `page_cap` или `unexpected_payload`; исходные stderr не публикуются. Успешный exit code collector
+`source_command_failed`, `page_cap`, `pagination_stalled` или `unexpected_payload`; исходные stderr не публикуются. Успешный exit code collector
 означает наличие среза, а не полноту или здоровье источников. Для scheduler решение о повторном сборе принимается по
 `coverage`. CLI рендера работает офлайн; он доверяет явно переданному snapshot и не повышает его достоверность.
 
