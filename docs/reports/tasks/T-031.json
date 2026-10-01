@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "task_id": "T-031",
+  "issue_id": "01a0e946-2388-79ae-ad52-7126115a46b0",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-031-profile-edit-name-handle-avatar.md",
+    "sha": "9501c46738941a4f66ecd6e3955a13d88cae93b3"
+  },
+  "baseline_sha": "aeba40c1d994f985e897a82de0e1b0092aa9d5bb",
+  "tested_sha": "e987c9ca4ca64abce8a227c48c6df9c3a42cf144",
+  "branch": "feat/t031-profile-edit",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0e984-64f9-7c24-b1bb-95f6814fb191",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "submitTranslation проверяет name и handleConfirmed; ensurePublicIdentity в setArticleStatus. Тесты: translation-editor.test.ts, article-draft-first.test.ts и profile-edit.test.ts."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "HandleHistory сохраняет оба адреса. Тест profile-edit.test.ts: normalizes and permanently reserves a changed handle — проверяет handles.get(old-handle) === user-1."
+    },
+    {
+      "id": "AC-3",
+      "status": "passed",
+      "evidence": "Playwright 4/4: ready, pending (имя/аватар), rejected с причиной, data_error, forbidden, unauthenticated redirect. Nuxt unit-тесты дополнительно проверяют UI-состояния."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "content 99 passed; server 1233 passed / 69 skipped; web 871 passed",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 362,
+    "url": "https://github.com/Egoka/Altera/pull/362",
+    "base_ref": "app",
+    "base_sha": "04daed7d326b9780de60fbe7fc3cc1abeacfbaf1",
+    "head_sha": "e987c9ca4ca64abce8a227c48c6df9c3a42cf144",
+    "merge_sha": "8082a390714c69ee7c0f3cc7883375018cb205b5"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f714-8e61-7d82-b9cc-69fefb5e2e58",
+    "sha": "e987c9ca4ca64abce8a227c48c6df9c3a42cf144",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ и web/ (профиль, аватар, GraphQL, Playwright). Деплой включает merge SHA"
+  },
+  "remaining": [],
+  "usage": null,
+  "finalization": {
+    "path": "docs/reports/tasks/T-031.md",
+    "sha256": "0360b19f79baeb24e13d846d6655b39c7c04377aa7add80b3725b8c1a63180cd"
+  }
+}

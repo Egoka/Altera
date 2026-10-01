@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task_id": "T-044",
+  "issue_id": "01a0ee49-a948-7140-a6e7-6bffa8ecc4e2",
+  "work_class": "product",
+  "source": {
+    "path": "docs/backlog/tasks/T-044-reedit-window.md",
+    "sha": "c30aafd6cf3fe68490c1b468da640d49b77ee881"
+  },
+  "baseline_sha": "aeba40c1d994f985e897a82de0e1b0092aa9d5bb",
+  "tested_sha": "c2834be4746af7116f441092fbd9278019a1a940",
+  "branch": "agent/altera/972fa839af3f",
+  "implementer_id": "b0f3bc32-dd95-471e-b40e-517aaf83edf0",
+  "implementer_run_id": "01a0ee4a-130b-7634-9ff7-972fa839af3f",
+  "criteria": [
+    {
+      "id": "AC-1",
+      "status": "passed",
+      "evidence": "Тест translation-editor.test.ts: второе перередактирование той же версии отвечает FORBIDDEN."
+    },
+    {
+      "id": "AC-2",
+      "status": "passed",
+      "evidence": "Тест translation-editor.test.ts: по истечении часового окна действие недоступно — FORBIDDEN, с подменой now на 1 с после reeditUntil."
+    }
+  ],
+  "checks": {
+    "format": "passed",
+    "lint": "passed",
+    "tests": "server 1300 passed / 81 skipped",
+    "server_build_ci": "passed",
+    "web_typecheck": "passed",
+    "environment": "Node 24.12.0, pnpm 10.18.3"
+  },
+  "pr": {
+    "number": 387,
+    "url": "https://github.com/Egoka/Altera/pull/387",
+    "base_ref": "app",
+    "base_sha": "b03760f1c2971fe9df91d2a33fbbfd7026dc16a3",
+    "head_sha": "c2834be4746af7116f441092fbd9278019a1a940",
+    "merge_sha": "228d4e41100509091121f3ce5ec861d50f7c0fa0"
+  },
+  "review": {
+    "actor_id": "db94a617-807c-4eec-981f-51fd4b3217d4",
+    "run_id": "01a0f7dd-f799-733d-b53e-cbec9991c160",
+    "sha": "c2834be4746af7116f441092fbd9278019a1a940",
+    "verdict": "approved"
+  },
+  "deployment": {
+    "required": true,
+    "reason": "PR меняет server/ (translation editor, GraphQL resolver). Деплой включает merge SHA"
+  },
+  "remaining": [],
+  "usage": null,
+  "finalization": {
+    "path": "docs/reports/tasks/T-044.md",
+    "sha256": "8d2b40976cdc320af99142a8c8fab516c648032961bad264c793c9c9ba11e36c"
+  }
+}
