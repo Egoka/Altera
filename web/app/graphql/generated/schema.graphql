@@ -2615,6 +2615,13 @@ type Mutation {
   saveTranslation(baseRevisionId: ID!, id: ID!, kind: SaveTranslationKind! = autosave, patch: SaveTranslationPatch!): SaveTranslationResult!
 
   """
+  Сохранение правки опубликованной версии в копии (журнал §41 п. 2): публичной остаётся прежняя
+  версия, новая публикуется только после AI-проверки. `CONFLICT` — другая правка этой статьи уже
+  на проверке (журнал §41 п. 4, матрица #19).
+  """
+  saveTranslationPublished(baseRevisionId: ID!, id: ID!, patch: SaveTranslationPatch!): SaveTranslationResult!
+
+  """
   Выбор обложки и кадрирования (`article-covers.md` п. 1–3): запись медиа становится обложкой
   материала, фокусная точка задаёт кадр карточек, кадры собираются до ответа. `assetId: null`
   снимает обложку. Опубликованный материал обложку так не меняет — правка идёт в копии через
@@ -2637,7 +2644,8 @@ type Mutation {
   """
   Подача к публикации. Обязательны заголовок, текст, рубрика (журнал §25.3) и обложка (§29.1);
   перед первой публикацией — публичное имя и адрес профиля (§25.4). Первая подача переходит в
-  `ai_check`; повтор после отказа AI — в `review` без нового AI.
+  `ai_check`; повтор после отказа AI — в `review` без нового AI. Для `published` версии с активной
+  копией подаёт копию (журнал §41 п. 2–3, T-122) — публичная версия не меняется.
   """
   submitTranslation(id: ID!): EditorTranslation!
   unpublishReview(id: ID!, reason: String!): AdminReviewItem!
@@ -2660,6 +2668,10 @@ type Mutation {
   """
   uploadMedia(attribution: String!, file: File!, license: MediaLicense!, translationId: ID!): MediaAsset!
   verifyMagicLink(token: String!): VerifyMagicLinkResult!
+
+  """
+  Для `published` версии с активной копией отзывает копию с проверки (T-122), а не саму версию.
+  """
   withdrawTranslation(id: ID!): EditorTranslation!
 }
 
@@ -3505,9 +3517,9 @@ type TopAuthorStatistics {
 """
 Почему редактор открыт только на чтение (`article-edit.md` §4).
 
-`published` спецификация в перечне не называет: по журналу §41 автор правит опубликованную
-версию копией через AI-проверку. Эта работа — T-122; до неё опубликованная версия открывается
-режимом чтения, а не записью в публичный текст.
+`published` без активной копии — обычное read-only; с активной копией (журнал §41, T-122)
+редактор пишет в копию, а не в публичный текст, поэтому значение берётся от состояния самой
+копии: `ai_check`/`in_review` — копия на проверке, `none` — копия редактируется.
 """
 enum TranslationReadOnlyReason {
   ai_check
