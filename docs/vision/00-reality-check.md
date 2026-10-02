@@ -629,39 +629,41 @@ magic link в логе, отсутствие rate limit, отсутствие т
 sitemap и RSS реализованы (T-099)
 [ФАКТ: `web/server/routes/sitemap.xml.get.ts`].
 
-Действительно не реализовано:
+Сверка 2026-10-02 (`app` `a1e57592`, Multica и receipt): все пункты прежнего списка
+«действительно не реализовано» закрыты задачами с независимой приёмкой.
 
-- **Редактор статьи — заглушки**: `/me/articles/[slug]/edit.vue` выводит
-  `<div>/me/articles/:slug/edit</div>` [ФАКТ: `web/app/pages/me/articles/[slug]/edit.vue:10`];
-  `/admin/articles/new.vue` — `<div>/admin/articles/new</div>`
-  [ФАКТ: `web/app/pages/admin/articles/new.vue:9`]; пакет `content` реализован (T-041),
-  редактор не начат.
-- **Дефекты входа по ссылке** (T-123): `web/server/utils/sessionCookie.ts:1-135` не
-  содержит `isLoginTokenExchange` [ФАКТ: `web/server/utils/sessionCookie.ts:1-135`];
-  переход из веб-почты отклонялся CSRF-проверкой без исключения
-  [ФАКТ: `web/server/api/graphql.post.ts:26-32`].
-- **Ротация refresh-cookie** (T-124): `web/server/api/graphql.post.ts:1-70` не содержит
-  логики вызова `refreshSession` при ответе `UNAUTHENTICATED` и атомарной ротации
-  [ФАКТ: `web/server/api/graphql.post.ts:1-70`].
-- **i18n неполный**: ссылки рубрик в шапке без `localePath`, названия без `nameEn` на `/en`
-  [ФАКТ: `web/app/components/app/header.vue:77,79`].
-- **SEO**: canonical, hreflang, JSON-LD глобально не заданы — T-100 не начата
-  [ФАКТ: `web/app/pages/index.vue:1-78`]; страница авторов содержит только
-  `useHead({ title })` [ФАКТ: `web/app/pages/authors/index.vue:98`].
-- **Кандидаты backlog** (T-127–T-134):
-  тексты первого запуска кабинета — текст invite не различает первый запуск
-  [ФАКТ: `web/app/pages/me/index.vue:141-143`] (T-127);
-  кэш плана — `grantPlan` не обновляет `role`/`planTier`/`planUntil` в `User`
-  [ФАКТ: `server/src/admin/grants.ts:126-152`] (T-128);
-  `/en` локаль — `articlePath` без `localePath`
-  [ФАКТ: `web/app/components/article/Card.vue:38-40`] (T-129);
-  открытый редирект офлайн — `value.startsWith("/")` пропускает `//external.com`
-  [ФАКТ: `web/app/composables/useOfflinePage.ts:87`] (T-130);
-  уведомления поддержки синхронны — `await notifyStaff(...)` до ответа
-  [ФАКТ: `server/src/support/requests.ts:159`] (T-131);
-  иерархия рубрик — `restoreSection` без проверки статуса и роли архивировавшего
-  [ФАКТ: `server/src/taxonomy/service.ts:499-528`] (T-132);
-  инвариант владельцев — `ensureOwnerRemains` без `SELECT … FOR UPDATE`
-  [ФАКТ: `server/src/admin/staff.ts:613-624`] (T-133);
-  ПД в /admin/mail — `recipientEmail: String` раскрывает e-mail получателя
-  [ФАКТ: `server/src/graphql/mail/schema.graphql:25`] (T-134).
+- **Редактор статьи** — T-040 (PR #357, ALTE-151): заглушку `/me/articles/[slug]/edit`
+  заменил редактор языковой версии [ФАКТ: `web/app/pages/me/articles/[id]/edit.vue:1-30`];
+  проверка и публикация — T-048 (PR #325) и T-049 (PR #364), конвейер медиа — T-063 (PR #326).
+- **Вход по ссылке** — T-123 (PR #233, ALTE-116): `isLoginTokenExchange` есть
+  [ФАКТ: `web/server/utils/sessionCookie.ts:176`, `web/server/api/graphql.post.ts:47`].
+- **Ротация refresh-cookie** — T-124 (PR #313, ALTE-131): BFF меняет истёкший access по ответу
+  `UNAUTHENTICATED` и повторяет запрос [ФАКТ: `web/server/api/graphql.post.ts:96`].
+- **i18n шапки и карточек** — T-129 (PR #258, ALTE-121): ссылки рубрик идут через `localePath`,
+  на `/en` выводится `nameEn` [ФАКТ: `web/app/components/app/header.vue:30-31,87`,
+  `web/app/components/article/Card.vue:43-44`].
+- **SEO** — T-100 (PR #400, ALTE-158): canonical, hreflang и JSON-LD на публичных страницах
+  [ФАКТ: `web/app/pages/index.vue`, `web/app/pages/[slugTypeContent]/[slugArticle].vue`,
+  `web/app/pages/authors/[slug].vue`].
+- **Кандидаты T-127–T-134** закрыты: T-127 (PR #308), T-128 (PR #247), T-130 (PR #255;
+  [ФАКТ: `web/app/composables/useOfflinePage.ts:37,45`]), T-131 (PR #252: отказ уведомления
+  не ломает ответ, `notifyStaff` перехватывает ошибки
+  [ФАКТ: `server/src/support/requests.ts:159,175`]), T-132 (PR #227), T-133 (PR #261;
+  [ФАКТ: `server/src/admin/staff.ts:366-388`]), T-134 (PR #230;
+  [ФАКТ: `server/src/graphql/mail/schema.graphql:28-30`]).
+
+Действительно не реализовано (2026-10-02):
+
+- **Заглушки вне бэклога**: `/admin/articles/new`, `/admin/articles/[slug]/edit` и `/admin/me`
+  выводят только путь [ФАКТ: `web/app/pages/admin/articles/new.vue:10`,
+  `web/app/pages/admin/articles/[slug]/edit.vue:10`, `web/app/pages/admin/me.vue:10`];
+  задачи и строки реестра у них нет. `/me/articles/[id]` — заглушка без строки в реестре
+  маршрутов [ФАКТ: `web/app/pages/me/articles/[id]/index.vue:2-16`].
+- **Пометка 18+** (T-136, ALTE-154 `blocked`): способ показа, подтверждение возраста и влияние
+  на выдачу ждут решения архитектора и дизайнера и утверждения владельца.
+- **Юридическая проверка 436-ФЗ** (T-137, ALTE-139 `in_review`): черновик слит (PR #330),
+  проверка юристом и утверждение владельцем (AC-2) не выполнены; часть критериев помечена
+  `[ЖДЁТ ЮРИСТА]` [ФАКТ: `docs/spec/40-admin/ai-check-criteria.md:98`].
+- **Прод-окружение в РФ** (E-17, T-103–T-107): ждёт решения владельца Q-01; хостинг, S3,
+  почтовый провайдер и домен отложены (журнал §34).
+- **Отложены владельцем**: рейтинг (F-02: T-042, T-085) и AI-перевод (F-09: T-046).
