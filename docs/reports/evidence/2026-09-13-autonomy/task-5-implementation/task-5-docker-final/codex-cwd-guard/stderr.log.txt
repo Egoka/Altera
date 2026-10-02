@@ -1,1 +1,0 @@
-ALTERA_RUNTIME rejected protocol cwd or framing

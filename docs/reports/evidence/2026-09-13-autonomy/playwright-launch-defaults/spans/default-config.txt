@@ -1,5 +1,0 @@
-    defaultConfig = {
-      browser: {
-        launchOptions: {},
-        contextOptions: {}
-      },

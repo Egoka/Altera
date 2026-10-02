@@ -76,6 +76,20 @@ class DailyRuntimeTests(unittest.TestCase):
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(self.publications, ["2026-09-15"])
 
+    def test_snapshots_older_than_retention_are_removed_by_whole_days(self):
+        snapshots = self.root / "daily" / "snapshots"
+        for name in ("2026-08-31", "2026-09-01", "2026-09-14", "notes"):
+            (snapshots / name).mkdir(parents=True)
+            (snapshots / name / "digest.json").write_text("{}")
+        result = self.run_daily(lambda _: snapshot())
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(sorted(path.name for path in snapshots.iterdir()),
+                         ["2026-09-01", "2026-09-14", "2026-09-15", "notes"])
+        # Нулевой срок выключает уборку, а не удаляет всё.
+        self.assertEqual(daily_runtime.prune_snapshots(snapshots, "2026-09-15", 0), [])
+        self.assertEqual(daily_runtime.prune_snapshots(snapshots, "2026-09-15", 1), ["2026-09-01"])
+        self.assertTrue((snapshots / "notes").is_dir())
+
     def test_before_model_files_exist_and_native_handoff_is_bounded(self):
         data = snapshot()
         data["issues"] = [{"id": str(index), "title": "RAW HISTORY " * 100,
