@@ -308,6 +308,70 @@ class ReportingTests(unittest.TestCase):
             self.assertIn("2026-09-15", (root / "PROGRESS.md").read_text())
             self.assertEqual(json.loads(path.read_text())["revision"], 2)
 
+    def github_history(self):
+        """Полная история GitHub в срезе: PR и CI других суток и сырые объекты API."""
+        data = snapshot()
+        repository = {"id": 42, "full_name": "owner/repo", "description": "x" * 500}
+        user = {"id": 7, "login": "bot", "avatar_url": "https://example.test/a.png"}
+        data["receipts"] = [{"task_id": "T-1", "issue_id": "issue", "verified": True,
+                             "accepted_at": "2026-09-14T09:00:00Z", "pr": {"number": 3}}]
+        data["pull_requests"] = [
+            {"number": 1, "created_at": "2026-09-01T08:00:00Z", "head": {"sha": "old", "ref": "old", "repo": repository}},
+            {"number": 2, "created_at": "2026-09-14T08:00:00Z", "title": "today", "user": user,
+             "head": {"sha": "today-sha", "ref": "today", "repo": repository}, "_links": {"self": "https://example.test"}},
+            {"number": 3, "created_at": "2026-09-10T08:00:00Z", "merged_at": "2026-09-11T08:00:00Z",
+             "head": {"sha": "receipt-sha", "ref": "t-1", "repo": repository}}]
+        data["ci_runs"] = [
+            {"id": 10, "created_at": "2026-09-01T08:00:00Z", "head_sha": "old", "repository": repository},
+            {"id": 11, "created_at": "2026-09-14T08:05:00Z", "head_sha": "today-sha", "conclusion": "success",
+             "repository": repository, "head_repository": repository, "actor": user, "logs_url": "https://example.test"},
+            {"id": 12, "created_at": "2026-09-10T08:05:00Z", "head_sha": "receipt-sha", "conclusion": "success"}]
+        return data
+
+    def test_report_keeps_only_day_cohort_github_evidence(self):
+        report = reporting.build_report(self.github_history(), "2026-09-15")
+        self.assertEqual([row["number"] for row in report["pull_requests"]], [2, 3])
+        self.assertEqual(report["pull_requests"][0], {"number": 2, "created_at": "2026-09-14T08:00:00Z",
+                                                      "head": {"sha": "today-sha", "ref": "today"}})
+        self.assertEqual([row["id"] for row in report["ci_runs"]], [11, 12])
+        self.assertEqual(report["ci_runs"][0], {"id": 11, "created_at": "2026-09-14T08:05:00Z",
+                                                "head_sha": "today-sha", "conclusion": "success"})
+
+    def published_before_compaction(self, data, report_date, root):
+        with patch.object(reporting, "compact_report", side_effect=lambda report: report):
+            reporting.publish(data, report_date, root)
+        return root / "docs/reports/autonomy" / f"{report_date}.json"
+
+    def test_compacting_published_reports_keeps_digest_revision_and_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            published = json.loads(self.published_before_compaction(self.github_history(), "2026-09-15",
+                                                                    Path(directory)).read_text())
+        self.assertEqual(len(published["ci_runs"]), 3)
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            (folder / ".history" / "2026-09-15").mkdir(parents=True)
+            (folder / "2026-09-15.json").write_text(reporting.encoded(published))
+            (folder / ".history" / "2026-09-15" / "old.json").write_text(reporting.encoded(published))
+            changed = reporting.compact_published(folder)
+            self.assertEqual(len(changed), 2)
+            compact = json.loads((folder / "2026-09-15.json").read_text())
+            self.assertEqual(reporting.content_digest(compact), reporting.content_digest(published))
+            self.assertEqual((compact["content_sha256"], compact["revision"]),
+                             (published["content_sha256"], published["revision"]))
+            self.assertEqual([row["id"] for row in compact["ci_runs"]], [11, 12])
+            self.assertEqual(reporting.compact_published(folder), [])
+
+    def test_publish_compacts_days_published_before_compaction(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            older = self.published_before_compaction(self.github_history(), "2026-09-15", root)
+            self.assertEqual(len(json.loads(older.read_text())["ci_runs"]), 3)
+            later = snapshot()
+            later["collected_at"] = "2026-09-16T08:00:00Z"
+            reporting.publish(later, "2026-09-16", root)
+            self.assertEqual([row["id"] for row in json.loads(older.read_text())["ci_runs"]], [11, 12])
+            self.assertEqual(list((older.parent / ".history").glob("**/*.json")), [])
+
     def test_period_metrics_report_missing_days_and_do_not_average_daily_medians(self):
         one, two = snapshot(), snapshot()
         one["executions"] = [run("a", started_at="2026-09-14T08:00:00Z",

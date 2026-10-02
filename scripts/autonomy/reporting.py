@@ -280,7 +280,7 @@ def build_report(snapshot, report_date):
                     "CI и receipt не заменяют независимый review; неизвестное покрытие не означает 0%.",
                     "Повторный сбор может уточнить поздний usage и ранее опубликованные сутки."],
     }
-    return sanitize(report)
+    return compact_report(sanitize(report))
 
 
 def aggregate_period(reports, report_date, days):
@@ -457,11 +457,83 @@ def encoded(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
+def fields(row, names):
+    return {key: row[key] for key in names if key in row}
+
+
+def pr_evidence(row):
+    # REST head/base.repo отражает весь репозиторий сейчас, а не evidence PR.
+    result = fields(row, ("id", "number", "state", "draft", "created_at", "createdAt", "closed_at",
+                          "merged_at", "mergedAt", "merge_commit_sha", "headRefOid", "baseRefOid",
+                          "headRefName", "baseRefName", "reviewDecision", "merged"))
+    for branch in ("head", "base"):
+        if isinstance(row.get(branch), dict):
+            result[branch] = fields(row[branch], ("sha", "ref"))
+    if isinstance(row.get("reviews"), list):
+        result["reviews"] = []
+        for review in row["reviews"]:
+            evidence = fields(review, ("id", "state", "commit_id", "submitted_at", "submittedAt", "actor_id"))
+            if isinstance(review.get("user"), dict):
+                evidence["actor_id"] = review["user"].get("id")
+            result["reviews"].append(evidence)
+    return result
+
+
+def ci_evidence(row):
+    return fields(row, ("id", "databaseId", "workflow_id", "name", "path", "event", "status", "conclusion",
+                        "head_sha", "headSha", "head_branch", "headBranch", "created_at", "createdAt",
+                        "run_started_at", "startedAt", "completed_at", "completedAt", "run_attempt", "run_number"))
+
+
+def accepted_evidence(report, start, end):
+    return [row for row in report.get("task_evidence", [])
+            if row.get("verified") is True and in_window(row.get("accepted_at"), start, end)]
+
+
+def period_github_evidence(report, accepted, start, end):
+    """PR и CI когорты суток только с полями evidence.
+
+    PR — созданные или слитые в окне и PR принятых receipt; CI — запуски окна и head этих PR.
+    Это всё, что из GitHub входит в digest: полная история и сырые объекты API к суткам не относятся.
+    """
+    receipt_prs = {str(row["pr"].get("number")) for row in accepted if isinstance(row.get("pr"), dict)}
+    prs = [row for row in report.get("pull_requests", [])
+           if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt", "merged_at", "mergedAt"))
+           or str(row.get("number")) in receipt_prs]
+    pr_shas = {row.get("headRefOid") or (row.get("head") or {}).get("sha") for row in prs}
+    pr_shas.discard(None)
+    ci = [row for row in report.get("ci_runs", [])
+          if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt"))
+          or (row.get("head_sha") or row.get("headSha")) in pr_shas]
+    return [pr_evidence(row) for row in prs], [ci_evidence(row) for row in ci]
+
+
+def compact_report(report):
+    """Опубликованный отчёт хранит из GitHub только evidence когорты суток; digest от этого не меняется."""
+    start, end = day_window(report["date"])
+    prs, ci = period_github_evidence(report, accepted_evidence(report, start, end), start, end)
+    return {**report, "pull_requests": prs, "ci_runs": ci}
+
+
+def compact_published(directory):
+    """Ужать опубликованные сутки и `.history` до вида `compact_report`; ревизия и content_sha256 сохраняются.
+
+    Файл переписывается только при совпадении digest: смысл отчёта сжатие менять не вправе.
+    """
+    changed = []
+    for path in sorted(directory.glob("????-??-??.json")) + sorted(directory.glob(".history/*/*.json")):
+        report = json.loads(path.read_text())
+        compact = compact_report(report)
+        if compact != report and content_digest(compact) == content_digest(report):
+            atomic_write(path, encoded(compact))
+            changed.append(path)
+    return changed
+
+
 def content_digest(report):
     """Ключ закрытой когорты; текущий инвентарь не является событием этих суток."""
     start, end = day_window(report["date"])
-    accepted = [row for row in report.get("task_evidence", [])
-                if row.get("verified") is True and in_window(row.get("accepted_at"), start, end)]
+    accepted = accepted_evidence(report, start, end)
     task_ids = report.get("period_task_ids")
     if task_ids is None:  # Совместимость с уже опубликованными отчётами schema_version=1.
         task_ids = [row["task_id"] for row in report.get("task_evidence", [])
@@ -477,41 +549,8 @@ def content_digest(report):
             return sorted((stable(item) for item in value), key=encoded)
         return value
 
-    def fields(row, names):
-        return {key: row[key] for key in names if key in row}
-
-    def pr_evidence(row):
-        # REST head/base.repo отражает весь репозиторий сейчас, а не evidence PR.
-        result = fields(row, ("id", "number", "state", "draft", "created_at", "createdAt", "closed_at",
-                              "merged_at", "mergedAt", "merge_commit_sha", "headRefOid", "baseRefOid",
-                              "headRefName", "baseRefName", "reviewDecision", "merged"))
-        for branch in ("head", "base"):
-            if isinstance(row.get(branch), dict):
-                result[branch] = fields(row[branch], ("sha", "ref"))
-        if isinstance(row.get("reviews"), list):
-            result["reviews"] = []
-            for review in row["reviews"]:
-                evidence = fields(review, ("id", "state", "commit_id", "submitted_at", "submittedAt", "actor_id"))
-                if isinstance(review.get("user"), dict):
-                    evidence["actor_id"] = review["user"].get("id")
-                result["reviews"].append(evidence)
-        return result
-
-    def ci_evidence(row):
-        return fields(row, ("id", "databaseId", "workflow_id", "name", "path", "event", "status", "conclusion",
-                            "head_sha", "headSha", "head_branch", "headBranch", "created_at", "createdAt",
-                            "run_started_at", "startedAt", "completed_at", "completedAt", "run_attempt", "run_number"))
-
-    receipt_prs = {str(row["pr"].get("number")) for row in accepted if isinstance(row.get("pr"), dict)}
-    prs = [row for row in report.get("pull_requests", [])
-           if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt", "merged_at", "mergedAt"))
-           or str(row.get("number")) in receipt_prs]
+    prs, ci = period_github_evidence(report, accepted, start, end)
     pr_numbers = {str(row.get("number")) for row in prs}
-    pr_shas = {row.get("headRefOid") or (row.get("head") or {}).get("sha") for row in prs}
-    pr_shas.discard(None)
-    ci = [row for row in report.get("ci_runs", [])
-          if any(in_window(row.get(field), start, end) for field in ("created_at", "createdAt"))
-          or (row.get("head_sha") or row.get("headSha")) in pr_shas]
     coverage = {}
     for key, value in report.get("source_coverage", {}).items():
         if ":" in key:
@@ -529,8 +568,7 @@ def content_digest(report):
         "period_task_ids": sorted(set(task_ids)),
         "accepted_evidence": [{key: value for key, value in row.items()
                                if key not in {"title", "status", "identifier", "issue_id"}} for row in accepted],
-        "pull_requests": [pr_evidence(row) for row in prs],
-        "ci_runs": [ci_evidence(row) for row in ci], "source_coverage": coverage,
+        "pull_requests": prs, "ci_runs": ci, "source_coverage": coverage,
     })
     semantic = stable(semantic)
     return hashlib.sha256(encoded(semantic).encode()).hexdigest()
@@ -562,6 +600,9 @@ def publish(snapshot, report_date, root):
     contained(root / "PROGRESS.md")
     contained(directory / "periods.json")
     contained(directory / f"{report_date}.md")
+    # Сутки, опубликованные до сжатия, ужимаются здесь же: иначе они остаются полной копией истории GitHub.
+    if directory.is_dir():
+        compact_published(directory)
     previous = json.loads(output.read_text()) if output.exists() else None
     if previous and content_digest(previous) == digest:
         report = previous

@@ -129,7 +129,15 @@ Cache не складывается с input в условный billing total, 
 ## Машинный контракт
 
 Snapshot версии 1 содержит `collected_at`, `scope`, `coverage`, `issues`, `executions`, `agent_tasks`, `receipts`,
-`pull_requests`, `ci_runs`; дополнительные измерения — `delivery`, `disk`. Минимальный пример нормализованного receipt:
+`pull_requests`, `ci_runs`; дополнительные измерения — `delivery`, `disk`.
+
+Snapshot несёт полную историю GitHub, а опубликованный отчёт — только evidence когорты суток: PR, созданные
+или слитые в окне, PR принятых receipt и CI окна и их head, с полями из `content_digest`. Сырые объекты API
+(`repository`, `actor`, ссылки) и записи других суток в отчёт не попадают: до 2026-10-02 они раздували
+суточный JSON до 38 МБ при неизменном digest. `reporting.publish` ужимает так же и сутки, опубликованные
+раньше, если digest при этом не меняется; ревизия и `content_sha256` сохраняются. Снимки в
+`<state_dir>/daily/snapshots` хранятся `daily_snapshot_retention_days` суток (по умолчанию 14; 0 —
+бессрочно): последние сутки собираются заново из живых источников, старый снимок нужен только для разбора. Минимальный пример нормализованного receipt:
 
 ```json
 {

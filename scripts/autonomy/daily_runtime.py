@@ -4,6 +4,8 @@ import datetime as dt
 import json
 import os
 from pathlib import Path
+import re
+import shutil
 import sys
 from zoneinfo import ZoneInfo
 
@@ -34,6 +36,26 @@ def collect_snapshot(config):
         roots.append(Path(config["runtime_workspace_root"]))
     snapshot["disk"] = measure_resources(roots, max_entries=1_000_000, timeout_seconds=30)
     return snapshot
+
+
+def prune_snapshots(directory, date, keep_days):
+    """Сырые снимки нужны для разбора недавних запусков; сутки старше срока удаляются каталогом целиком.
+
+    Суточный запуск собирает последние закрытые сутки заново из живых источников, поэтому старый
+    снимок ничего не восстанавливает. Сбой удаления запуск не роняет: каталог останется до следующего.
+    """
+    if keep_days < 1 or not directory.is_dir():
+        return []
+    cutoff = (dt.date.fromisoformat(date) - dt.timedelta(days=keep_days)).isoformat()
+    removed = []
+    for path in sorted(directory.iterdir()):
+        if path.is_dir() and not path.is_symlink() and re.fullmatch(r"\d{4}-\d{2}-\d{2}", path.name) and path.name < cutoff:
+            try:
+                shutil.rmtree(path)
+            except OSError:
+                continue
+            removed.append(path.name)
+    return removed
 
 
 def source_status(value):
@@ -97,6 +119,7 @@ def run(config, args, agent_id, *, collect=collect_snapshot, model=native_model,
             if not snapshot_path.exists():
                 reporting.atomic_write(snapshot_path, reporting.encoded(reporting.sanitize(snapshot)))
                 snapshot_path.chmod(0o600)
+            prune_snapshots(root / "daily" / "snapshots", date, int(config.get("daily_snapshot_retention_days", 14)))
             # Каждый запуск сохраняет доступный срез; incompleteness не маскируется модельным анализом.
             prepared_root = root / "daily" / "prepared"
             reporting.publish(snapshot, date, prepared_root)
