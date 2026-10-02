@@ -11,7 +11,7 @@
 |---|---|---|---|
 | [T-098](../tasks/T-098-robots-noindex.md) | `robots.txt` с запретом обучения ИИ; `noindex` служебных страниц | завершена (PR #59, merge fd8d703f; приёмка ALTE-24) | — |
 | [T-099](../tasks/T-099-sitemap-rss.md) | Sitemap по локалям и RSS | завершена (PR #180, merge f974d630; приёмка ALTE-99) | T-054 |
-| [T-100](../tasks/T-100-seo-meta-hreflang.md) | Meta, canonical, hreflang, Open Graph и JSON-LD на публичных страницах | зависит: T-054, T-056, T-057 | T-054, T-056, T-057 |
+| [T-100](../tasks/T-100-seo-meta-hreflang.md) | Meta, canonical, hreflang, Open Graph и JSON-LD на публичных страницах | завершена (PR #400, merge 7e02ac15; приёмка ALTE-158) | T-054, T-056, T-057 |
 
 ## Границы
 Индексация поиска (F-03).
