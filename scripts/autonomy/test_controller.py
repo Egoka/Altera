@@ -933,6 +933,71 @@ class CleanupAfterDoneTests(unittest.TestCase):
         self.assertEqual(seen, [5])
 
 
+class BacklogSyncAfterDoneTests(unittest.TestCase):
+    """Сверка бэклога встроена в Done, включается ключом и никогда не меняет его результат."""
+
+    def setUp(self):
+        CleanupAfterDoneTests.setUp(self)
+        del self.config["cleanup_owned_root"]
+        self.config["backlog_sync_root"] = str(self.root / "sync")
+
+    def test_done_publishes_backlog_sync_with_full_project_inventory(self):
+        calls = []
+        issues = [{"identifier": "ALTE-1"}]
+
+        def publish(config, task_id, rows):
+            calls.append((config["backlog_sync_root"], task_id, rows))
+            return {"status": "published", "pr": 7}
+
+        with patch.object(c.Live, "project_issues", return_value=issues), \
+                patch.object(c.backlog_sync, "publish", side_effect=publish):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertEqual(result, {"ok": True, "phase": "done", "task_id": "T-123",
+                                  "backlog_sync": {"status": "published", "pr": 7}})
+        self.assertEqual(calls, [(str(self.root / "sync"), "T-123", issues)])
+
+    def test_reconciled_done_also_syncs(self):
+        self.state.update(status="done", status_category="completed")
+        with patch.object(c.Live, "project_issues", return_value=[]), \
+                patch.object(c.backlog_sync, "publish", return_value={"status": "unchanged"}):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertTrue(result["reconciled"], result)
+        self.assertEqual(result["backlog_sync"], {"status": "unchanged"})
+
+    def test_sync_failure_keeps_done_result_and_hides_unsafe_details(self):
+        with patch.object(c.Live, "project_issues", return_value=[]), \
+                patch.object(c.backlog_sync, "publish", side_effect=c.backlog_sync.PublishError("Command failed: git push (exit 1)")):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["backlog_sync"], {"status": "skipped",
+                                                  "reason": "backlog sync failed: Command failed: git push (exit 1)"})
+        with patch.object(c.Live, "project_issues", side_effect=ValueError("https://token@example.test")):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertEqual(result["backlog_sync"], {"status": "skipped", "reason": "backlog sync failed: ValueError"})
+        self.assertTrue((self.root / "verified" / "T-123.json").exists())
+
+    def test_unconfigured_sync_is_not_attempted(self):
+        del self.config["backlog_sync_root"]
+        with patch.object(c.backlog_sync, "publish", side_effect=AssertionError("sync is disabled")):
+            result = self.live.transition(self.receipt, "done", str(self.root))
+        self.assertEqual(result, {"ok": True, "phase": "done", "task_id": "T-123"})
+
+    def test_project_issues_reads_every_page_of_the_project(self):
+        pages = [{"issues": [{"identifier": f"ALTE-{n}"} for n in range(100)], "has_more": True},
+                 {"issues": [{"identifier": "ALTE-100"}], "has_more": False}]
+        seen = []
+
+        def read(inner, *args):
+            seen.append(args)
+            return pages[len(seen) - 1]
+
+        with patch.object(c.Live, "multica_read", read):
+            issues = self.live.project_issues()
+        self.assertEqual(len(issues), 101)
+        self.assertEqual([args[args.index("--offset") + 1] for args in seen], ["0", "100"])
+        self.assertTrue(all(args[:4] == ("issue", "list", "--project", "project") for args in seen))
+
+
 class CleanupIntegrationTests(unittest.TestCase):
     """Адаптер контроллера и настоящий `cleanup.py` на временном Git-репозитории."""
 

@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import backlog_sync
 import cleanup as worktree_cleanup
 from deploy_evidence import health, render_deploy
 
@@ -616,10 +617,37 @@ class Live:
                 self.cleanup_attempts(state_dir, attempts)
         return results
 
+    def project_issues(self):
+        """Все карточки проекта постранично: сверке бэклога нужен полный инвентарь."""
+        issues, offset = [], 0
+        while True:
+            page = self.multica_read("issue", "list", "--project", self.config["project_id"],
+                                     "--limit", "100", "--offset", str(offset))
+            batch = page if isinstance(page, list) else page.get("issues", [])
+            issues.extend(batch)
+            offset += len(batch)
+            more = page.get("has_more") if isinstance(page, dict) else None
+            if not batch or more is False or (more is None and len(batch) < 100):
+                return issues
+
+    def sync_backlog(self, receipt):
+        """Статусы `docs/backlog` по факту Multica после Done; сбой сверки Done не отменяет."""
+        try:
+            return backlog_sync.publish(self.config, receipt["task_id"], self.project_issues())
+        except (backlog_sync.PublishError, ExternalCommandError) as error:
+            # Тексты этих ошибок собраны без stderr и аргументов с credentials.
+            return {"status": "skipped", "reason": f"backlog sync failed: {error}"}
+        except Exception as error:
+            return {"status": "skipped", "reason": "backlog sync failed: " + type(error).__name__}
+
     def after_done(self, receipt, state_dir):
-        """Уборка под тем же dispatch.lock, что и Done; её результат Done не меняет."""
-        if not self.config.get("cleanup_owned_root"):
-            return {}
+        """Уборка и сверка бэклога под тем же dispatch.lock, что и Done; их результат Done не меняет."""
+        result = self.cleanup_after_done(receipt, state_dir) if self.config.get("cleanup_owned_root") else {}
+        if self.config.get("backlog_sync_root"):
+            result["backlog_sync"] = self.sync_backlog(receipt)
+        return result
+
+    def cleanup_after_done(self, receipt, state_dir):
         # Done вызывают из Bash-инструмента агента: досборка укладывается в бюджет, остальное — `cleanup`.
         deadline = time.monotonic() + float(self.config.get("cleanup_budget_seconds", 45))
         try:
